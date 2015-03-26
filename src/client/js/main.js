@@ -63,6 +63,7 @@ require.config({
         //node_modules
         'jszip': 'lib/jszip/jszip',
         'superagent': 'lib/superagent/superagent',
+        'debug': 'lib/debug/debug',
 
 
         'codemirror': 'lib/codemirror/codemirror.amd',

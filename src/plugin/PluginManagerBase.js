@@ -1,3 +1,5 @@
+/*globals define*/
+
 /*
  * Copyright (C) 2014 Vanderbilt University, All rights reserved.
  *
@@ -11,16 +13,16 @@
 // TODO: Make this class testable
 // TODO: PluginManager should download the plugins
 
-'use strict';
-define([
-        './PluginBase',
-        './PluginContext',
-        'common/LogManager'],
-    function (PluginBase, PluginContext, LogManager) {
 
-        var PluginManagerBase = function (storage, Core, plugins, gmeConfig) {
+define(['./PluginBase',
+        './PluginContext'],
+    function (PluginBase, PluginContext) {
+        'use strict';
+
+        var PluginManagerBase = function (storage, Core, Logger, plugins, gmeConfig) {
             this.gmeConfig = gmeConfig; // global configuration of webgme
-            this.logger = LogManager.create("PluginManager");
+            this.LoggerClass = Logger;
+            this.logger = Logger.createWithGmeConfig('gme:plugin:PluginManagerBase', gmeConfig);
             this._Core = Core;       // webgme core class is used to operate on objects
             this._storage = storage; // webgme storage
             this._plugins = plugins; // key value pair of pluginName: pluginType - plugins are already loaded/downloaded
@@ -245,13 +247,15 @@ define([
 
             var plugin = new PluginClass();
 
-            var pluginLogger = LogManager.create('Plugin.' + name);
+            var pluginLogger = this.LoggerClass.createWithGmeConfig('gme:plugin:' + name, this.gmeConfig);
 
             plugin.initialize(pluginLogger, managerConfiguration.blobClient, self.gmeConfig);
 
             plugin.setCurrentConfig(this._pluginConfigs[name]);
             for (var key in managerConfiguration.pluginConfig) {
-                if (managerConfiguration.pluginConfig.hasOwnProperty(key) && plugin._currentConfig.hasOwnProperty(key)) {
+                if (managerConfiguration.pluginConfig.hasOwnProperty(key) &&
+                    plugin._currentConfig.hasOwnProperty(key)) {
+
                     plugin._currentConfig[key] = managerConfiguration.pluginConfig[key];
                 }
             }
@@ -263,24 +267,11 @@ define([
 
                 }
 
-                //set logging level at least to INFO level since the plugins write messages with INFO level onto the console
-                var logLevel = LogManager.getLogLevel();
-                if (logLevel < LogManager.logLevels.INFO) {
-                    // elevate log level if it is less then info
-                    LogManager.setLogLevel(LogManager.logLevels.INFO);
-                }
-
-                // TODO: Would be nice to log to file and to console at the same time.
-                //LogManager.setFileLogPath('PluginManager.log');
-
                 plugin.configure(pluginContext);
 
                 var startTime = (new Date()).toISOString();
 
                 plugin.main(function (err, result) {
-                    //set logging level back to previous value
-                    LogManager.setLogLevel(logLevel);
-
                     // set common information (meta info) about the plugin and measured execution times
                     result.setFinishTime((new Date()).toISOString());
                     result.setStartTime(startTime);

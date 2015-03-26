@@ -27,13 +27,6 @@ describe('Client tests', function () {
 
     gmeConfig.addOn.enable = true;
 
-    requirejs.config({
-        paths: {
-            //'eventDispatcher': 'common/EventDispatcher',
-            ' /socket.io/socket.io.js': 'socketio-client'
-        }
-    });
-
     ClientClass = requirejs('client/js/client');
 
     testTerritory = function (level, cb) {

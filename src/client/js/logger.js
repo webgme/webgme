@@ -4,14 +4,14 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['lib/debug/debug'], function () {
+define(['debug'], function (_debug) {
     'use strict';
     // Separate namespaces using ',' a leading '-' will disable the namespace.
     // Each part takes a regex.
     //      ex: localStorage.debug = '*,-socket\.io*,-engine\.io*'
     //      will log all but socket.io and engine.io
     function createLogger(name, options) {
-        var log = debug(name),
+        var log = typeof debug !== 'undefined' ? debug(name) : _debug(name),
             level,
             levels = {
                 silly: 0,
@@ -70,7 +70,12 @@ define(['lib/debug/debug'], function () {
         return log;
     }
 
+    function createWithGmeConfig(name, gmeConfig) {
+        return createLogger(name, gmeConfig.client.log);
+    }
+
     return {
-        create: createLogger
+        create: createLogger,
+        createWithGmeConfig: createWithGmeConfig
     };
 });

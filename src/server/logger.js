@@ -62,6 +62,11 @@ function createLogger(name, options) {
     return winston.loggers.add(name, winstonOptions);
 }
 
+function createWithGmeConfig(name, gmeConfig) {
+    return createLogger(name, gmeConfig.server.log);
+}
+
 module.exports = {
-    create: createLogger
+    create: createLogger,
+    createWithGmeConfig: createWithGmeConfig
 };

@@ -6,6 +6,7 @@
  */
 
 global.TESTING = true;
+global.WebGMEGlobal = {};
 
 process.env.NODE_ENV = 'test';
 
@@ -30,6 +31,7 @@ var gmeConfig = require('../config'),
         return new Commit(new Local(options || {}), options || {});
     },
     Log = requirejs('../src/common/LogManager'),
+    Logger = require('../src/server/logger'),
     generateKey = requirejs('common/util/key'),
 
     GMEAuth = requirejs('server/auth/gmeauth'),
@@ -215,12 +217,20 @@ function loadNodes(parameters, done) {
 
 WebGME.addToRequireJsPaths(gmeConfig);
 
+requirejs.config({
+    paths: {
+        js: 'client/js',
+        ' /socket.io/socket.io.js': 'socketio-client'
+    }
+});
+
 module.exports = {
     getGmeConfig: getGmeConfig,
 
     WebGME: WebGME,
     Storage: Storage,
     Log: Log,
+    Logger: Logger,
     generateKey: generateKey,
 
     GMEAuth: GMEAuth,

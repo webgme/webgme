@@ -6,7 +6,7 @@ define([
     'common/util/guid',
     'common/core/core',
     'common/storage/clientstorage',
-    'common/LogManager',
+    'js/logger',
     'common/util/url',
     'common/core/users/meta',
     'common/core/users/tojson',
@@ -23,7 +23,7 @@ define([
     GUID,
     Core,
     Storage,
-    LogManager,
+    Logger,
     URL,
     BaseMeta,
     ToJson,
@@ -135,7 +135,7 @@ define([
 
     function Client(gmeConfig) {
       var _self = this,
-        logger = LogManager.create("client"),
+        logger = Logger.create('gme:client', gmeConfig.client.log),
         _database = null,
         _projectName = null,
         _project = null,
@@ -257,7 +257,7 @@ define([
       }
 
       function newDatabase() {
-        var storageOptions ={log: LogManager.create('client-storage'), host: _configuration.host},
+        var storageOptions ={log: Logger.create('gme:client:storage', gmeConfig.client.log), host: _configuration.host},
             protocolStr;
         if(typeof TESTING !== 'undefined'){
           protocolStr = gmeConfig.server.https.enable ? 'https' : 'http';

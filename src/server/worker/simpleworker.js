@@ -186,7 +186,7 @@ requirejs(['server/worker/constants',
             project.setUser(userId);
             var plugins = {};
             plugins[name] = interpreter;
-            var manager = new PluginManagerBase(project, Core, plugins, gmeConfig);
+            var manager = new PluginManagerBase(project, Core, Logger, plugins, gmeConfig);
             context.managerConfig.blobClient = new BlobClient({
               serverPort: gmeConfig.server.port,
               httpsecure: gmeConfig.server.https.enable,
