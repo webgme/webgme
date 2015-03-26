@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, WebGMEGlobal*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -6,10 +6,10 @@
  */
 
 define([
-    'common/LogManager',
+    'js/logger',
     'text!./templates/CommitDialog.html',
     'css!./styles/CommitDialog.css'
-], function (logManager,
+], function (Logger,
         commitDialogTemplate) {
 
     "use strict";
@@ -18,7 +18,7 @@ define([
     var CommitDialog;
 
     CommitDialog = function (client) {
-        this._logger = logManager.create("CommitDialog");
+        this._logger = Logger.create('gme:Dialogs:Commit:CommitDialog', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
 
