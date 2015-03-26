@@ -2,7 +2,6 @@
 
 define([
         'js/PanelBase/PanelBase',
-        'js/Widgets/LogLevelManager/LogLevelManagerWidget',
         'js/Widgets/NetworkStatus/NetworkStatusWidget',
         'js/Widgets/BranchStatus/BranchStatusWidget',
         'js/Widgets/BranchSelector/BranchSelectorWidget',
@@ -11,7 +10,6 @@ define([
     ],
     function (
         PanelBase,
-        LogLevelManagerWidget,
         NetworkStatusWidget,
         BranchStatusWidget,
         BranchSelectorWidget,
@@ -84,10 +82,6 @@ define([
             var k = new KeyboardManagerWidget(keyBoardManagerEl);
             navBarInner.append(keyBoardManagerEl).append(separator.clone());
         }
-
-        var logLevelManagerEl = widgetPlaceHolder.clone();
-        var l = new LogLevelManagerWidget(logLevelManagerEl);
-        navBarInner.append(logLevelManagerEl).append(separator.clone());
 
         var networkStatusEl = widgetPlaceHolder.clone();
         var n = new NetworkStatusWidget(networkStatusEl, this._client);
