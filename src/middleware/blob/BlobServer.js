@@ -3,9 +3,8 @@
  */
 
 
-define(['common/LogManager',
-        'mime',
-        'blob/BlobMetadata'], function(logManager, mime, BlobMetadata) {
+define(['mime',
+        'blob/BlobMetadata'], function(mime, BlobMetadata) {
 
     function createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger) {
         __app.get('/rest/blob/metadata', ensureAuthenticated, function (req, res) {

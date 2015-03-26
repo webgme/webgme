@@ -1,9 +1,10 @@
-define(['common/LogManager'], function (logManager) {
+define([], function () {
     //here you can define global variables for your middleware
     var counter = 0,
         ensureAuthenticated,
         gmeConfig, //global config is passed by server/standalone.js
-        logger = logManager.create('ExampleRestComponent');
+        Logger = require(require('path').join(requirejs.s.contexts._.config.baseUrl, 'server/logger')),
+        logger;
         //how to define your own logger which will use the global settings
 
     var ExampleRestComponent = function (req, res, next) {
@@ -24,6 +25,7 @@ define(['common/LogManager'], function (logManager) {
 
     var setup = function (_gmeConfig, _ensureAuthenticated) {
         gmeConfig = _gmeConfig;
+        logger = Logger.create('gme:server:middleware:ExampleRestComponent', gmeConfig.server.log)
         ensureAuthenticated = _ensureAuthenticated;
         return ExampleRestComponent;
     };
