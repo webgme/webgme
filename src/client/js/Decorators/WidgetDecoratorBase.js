@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-define(['common/LogManager'], function (logManager) {
+define(['js/logger'], function (Logger) {
 
     "use strict";
 
@@ -8,7 +8,8 @@ define(['common/LogManager'], function (logManager) {
         DECORATOR_ID = "WidgetDecoratorBase";
 
     WidgetDecoratorBase = function (params) {
-        this.logger = params.logger || logManager.create(this.DECORATORID);
+        this.logger = params.logger || Logger.create('gme:Decorators:' +
+            this.DECORATORID, WebGMEGlobal.gmeConfig.client.log);
         this.preferencesHelper = params.preferencesHelper;
         this.decoratorParams = {};
         _.extend(this.decoratorParams, this.DECORATOR_DEFAULT_PARAMS, params.decoratorParams);

@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
     'js/Constants',
     'js/NodePropertyNames',
@@ -13,16 +13,16 @@ define(['common/LogManager',
     'js/Utils/ExportManager',
     'js/Utils/ImportManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-    'js/DragDrop/DragHelper'], function (logManager,
-                                                        util,
-                                                        CONSTANTS,
-                                                        nodePropertyNames,
-                                                        REGISTRY_KEYS,
-                                                        GMEConcepts,
-                                                        ExportManager,
-                                                        ImportManager,
-                                                        DiagramDesignerWidgetConstants,
-                                                        DragHelper) {
+    'js/DragDrop/DragHelper'], function (Logger,
+                                        util,
+                                        CONSTANTS,
+                                        nodePropertyNames,
+                                        REGISTRY_KEYS,
+                                        GMEConcepts,
+                                        ExportManager,
+                                        ImportManager,
+                                        DiagramDesignerWidgetConstants,
+                                        DragHelper) {
 
     "use strict";
 

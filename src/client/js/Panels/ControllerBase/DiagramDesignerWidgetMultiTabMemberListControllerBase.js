@@ -1,6 +1,6 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
         'common/util/guid',
         'js/Constants',
         'js/NodePropertyNames',
@@ -8,7 +8,7 @@ define(['common/LogManager',
         'js/Utils/GMEConcepts',
         'js/Utils/GMEVisualConcepts',
         'js/DragDrop/DragHelper',
-        'js/Utils/PreferencesHelper'], function (logManager,
+        'js/Utils/PreferencesHelper'], function (Logger,
                                    generateGuid,
                                    CONSTANTS,
                                    nodePropertyNames,
@@ -29,7 +29,9 @@ define(['common/LogManager',
         MEMBER_POSITION_REGISTRY_KEY = REGISTRY_KEYS.POSITION;
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase = function (options) {
-        this.logger = logManager.create(options.loggerName || "DiagramDesignerWidgetMultiTabMemberListControllerBase");
+        var loggerName = options.loggerName || 'gme:Panels:ControllerBase:' +
+            'DiagramDesignerWidgetMultiTabMemberListControllerBase';
+        this.logger = Logger.create(loggerName, WebGMEGlobal.client.log);
 
         this._client = options.client;
 

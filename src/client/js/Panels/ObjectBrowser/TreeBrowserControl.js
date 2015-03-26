@@ -4,20 +4,20 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['common/LogManager',
+define(['js/logger',
         'js/Utils/GMEConcepts',
         'js/NodePropertyNames',
         'js/Utils/ExportManager',
         'js/Utils/ImportManager',
         'js/Constants',
         'js/RegistryKeys',
-        'css!./styles/TreeBrowserControl.css'], function (logManager,
-                                                                       GMEConcepts,
-                                                                       nodePropertyNames,
-                                                                       ExportManager,
-                                                                       ImportManager,
-                                                                       CONSTANTS,
-                                                                       REGISTRY_KEYS) {
+        'css!./styles/TreeBrowserControl.css'], function (Logger,
+                                                           GMEConcepts,
+                                                           nodePropertyNames,
+                                                           ExportManager,
+                                                           ImportManager,
+                                                           CONSTANTS,
+                                                           REGISTRY_KEYS) {
 
     "use strict";
 
@@ -47,7 +47,7 @@ define(['common/LogManager',
             getNodeClass;
 
         //get logger instance for this component
-        logger = logManager.create("TreeBrowserControl");
+        logger = Logger.create('gme:Panels:ObjectBrowser:TreeBrowserControl', WebGMEGlobal.gmeConfig.client.log);
         this._logger = logger;
 
         this._client = client;

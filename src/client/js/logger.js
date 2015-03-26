@@ -6,7 +6,10 @@
 
 define(['lib/debug/debug'], function () {
     'use strict';
-    //var debug = require('debug');
+    // Separate namespaces using ',' a leading '-' will disable the namespace.
+    // Each part takes a regex.
+    //      ex: localStorage.debug = '*,-socket\.io*,-engine\.io*'
+    //      will log all but socket.io and engine.io
     function createLogger(name, options) {
         var log = debug(name),
             level,
@@ -22,7 +25,12 @@ define(['lib/debug/debug'], function () {
                 warn: 8,
                 error: 9
             };
-        options = options || {};
+        if (!options) {
+            throw new Error('options required in logger');
+        }
+        if (options.hasOwnProperty('level') === false) {
+            throw new Error('options.level required in logger');
+        }
         level = levels[options.level];
         if (typeof level === 'undefined') {
             level = levels.info;

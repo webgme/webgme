@@ -1,11 +1,11 @@
-/*globals define,_*/
+/*globals define, _, WebGMEGlobal*/
 /*
  * @author brollb / https://github/brollb
  *
  */
 
-define(['common/LogManager',
-    './ErrorDecorator'], function (logManager,
+define(['js/logger',
+    './ErrorDecorator'], function (Logger,
                                    ErrorDecorator) {
 
    "use strict";
@@ -48,7 +48,8 @@ define(['common/LogManager',
 
         this._initializeUI();
 
-        this.logger = logManager.create(name + "_" + this.id);
+        this.logger = Logger.create('gme:Widgets:BlockEditor:ItemBase:' + name + '_' + this.id,
+            WebGMEGlobal.gmeConfig.client.log);
         this.logger.debug("Created");
     };
 

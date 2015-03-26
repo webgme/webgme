@@ -3,7 +3,7 @@
  * @author brollb / https:// github/brollb
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
     'js/Constants',
     'js/NodePropertyNames',
@@ -12,7 +12,7 @@ define(['common/LogManager',
     'js/Utils/ExportManager',
     'js/Widgets/BlockEditor/BlockEditorWidget.Constants',
     'js/Widgets/BlockEditor/BlockEditorWidget.Utils',
-    'js/DragDrop/DragHelper'], function (logManager,
+    'js/DragDrop/DragHelper'], function (Logger,
                                          util,
                                          CONSTANTS,
                                          nodePropertyNames,

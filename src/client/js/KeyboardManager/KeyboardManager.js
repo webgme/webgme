@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal, alert*/
 
-define(['common/LogManager'], function (logManager) {
+define(['js/logger'], function (Logger) {
     "use strict";
 
     var specialKeys = {
@@ -18,10 +18,11 @@ define(['common/LogManager'], function (logManager) {
         UPDATE_BROWSER_MESSAGE = 'Your browser seems to be out of date :(. Please update your browser to the latest and greatest version!',
         _txtArea,
         _enabled = false,
-        _logger = logManager.create('KeyboardManager'),
+        _logger,
         _listener = null;
 
     var _captureFocus = function () {
+        _logger = _logger || Logger.create('gme:KeyboardManager:KeyboardManager', WebGMEGlobal.gmeConfig.client.log);
         if (WebGMEGlobal.SUPPORTS_TOUCH === true) {
             return;
         }
@@ -34,6 +35,7 @@ define(['common/LogManager'], function (logManager) {
     };
 
     var _setListener = function (l) {
+        _logger = _logger || Logger.create('gme:KeyboardManager:KeyboardManager', WebGMEGlobal.gmeConfig.client.log);
         if (_listener !== l) {
             _listener = l;
 
@@ -65,6 +67,7 @@ define(['common/LogManager'], function (logManager) {
     };
 
     var _setEnabled = function (enabled) {
+        _logger = _logger || Logger.create('gme:KeyboardManager:KeyboardManager', WebGMEGlobal.gmeConfig.client.log);
         if (WebGMEGlobal.SUPPORTS_TOUCH === true) {
             return;
         }

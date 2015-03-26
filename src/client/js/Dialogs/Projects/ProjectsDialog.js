@@ -1,4 +1,4 @@
-/*globals define, angular*/
+/*globals define, angular, WebGMEGlobal*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -8,7 +8,7 @@
 
 define( [
   'angular',
-  'common/LogManager',
+  'js/logger',
   'js/Loader/LoaderCircles',
   'js/Utils/GMEConcepts',
   'js/Dialogs/Import/ImportDialog',
@@ -19,7 +19,7 @@ define( [
 
   'css!./styles/ProjectsDialog.css'
 
-], function ( ng, logManager, LoaderCircles, GMEConcepts, ImportDialog, projectsDialogTemplate, ConfirmDialog,
+], function ( ng, Logger, LoaderCircles, GMEConcepts, ImportDialog, projectsDialogTemplate, ConfirmDialog,
               DeleteDialogTemplate ) {
 
   "use strict";
@@ -42,7 +42,7 @@ define( [
   } );
 
   ProjectsDialog = function ( client ) {
-    this._logger = logManager.create( "ProjectsDialog" );
+    this._logger = Logger.create('gme:Dialogs:Projects:ProjectsDialog', WebGMEGlobal.gmeConfig.client.log);
 
     this._client = client;
     this._projectNames = [];

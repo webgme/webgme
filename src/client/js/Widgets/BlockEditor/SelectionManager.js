@@ -1,13 +1,13 @@
-/*globals define*/
+/*globals define, WebGMEGlobal*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * @author brollb / https://github/brollb
  */
 
-define(['common/LogManager',
-        'js/util'], function (logManager,
-                                 clientUtil) {
+define(['js/logger',
+        'js/util'], function (Logger,
+                              clientUtil) {
 
     "use strict";
 
@@ -18,7 +18,8 @@ define(['common/LogManager',
         MOUSE_EVENT_POSTFIX = "SelectionManager";
 
     SelectionManager = function (options) {
-        this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "SelectionManager"));
+        var loggerName = options && options.loggerName || 'gme:Widgets:BlockEditor:SelectionManager';
+        this.logger = (options && options.logger) || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this._blockEditor = options ? options.blockEditor : null;
 

@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
     'common/util/guid',
     'js/Constants',
@@ -10,7 +10,7 @@ define(['common/LogManager',
     './MetaRelations',
     './MetaEditorConstants',
     'js/DragDrop/DragHelper',
-    'js/Controls/Dialog'], function (logManager,
+    'js/Controls/Dialog'], function (Logger,
                                         util,
                                         generateGuid,
                                         CONSTANTS,
