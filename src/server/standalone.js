@@ -60,6 +60,7 @@ define(['common/storage/serverstorage',
             Logger = require(Path.join(requirejs.s.contexts._.config.baseUrl, 'server/logger'));
         this.serverUrl = '';
 
+
         /**
          * Gets the server's url based on the gmeConfig that was given to the constructor.
          * @returns {string}

@@ -22,7 +22,7 @@ define(['js/logger',
     SelectionManager = function (options) {
         var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:SelectionManager';
         this.logger = (options && options.logger) || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
-        
+
         this._diagramDesigner = options ? options.diagramDesigner : null;
 
         if (this._diagramDesigner === undefined || this._diagramDesigner === null) {
