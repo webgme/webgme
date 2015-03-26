@@ -7,7 +7,9 @@ function(ASSERT,Child, process, CONSTANTS){
             _myWorkers = {},
             _idToPid = {},
             _waitingRequests = [],
-            gmeConfig = _parameters.globConf;
+            gmeConfig = _parameters.globConf,
+            Logger = require(require('path').join(requirejs.s.contexts._.config.baseUrl, 'server/logger')),
+            logger = Logger.create('gme:server:worker:serverworkermanager', gmeConfig.server.log);
 
         //helping functions
         //TODO always check if this works properly
@@ -20,7 +22,7 @@ function(ASSERT,Child, process, CONSTANTS){
                 var worker = Child.fork(getBaseDir()+'/server/worker/simpleworker.js', [],
                     { execArgv: process.execArgv.filter(function (arg) { return arg.indexOf('--debug-brk') !== 0 }) });
                 _myWorkers[worker.pid] = {worker:worker,state:CONSTANTS.workerStates.initializing,type:null,cb:null};
-                //console.log('workerPid forked', worker.pid);
+                logger.debug('workerPid forked ' + worker.pid);
                 worker.on('message', messageHandling);
                 _workerCount++;
 
@@ -41,7 +43,7 @@ function(ASSERT,Child, process, CONSTANTS){
         function freeAllWorkers(){
             Object.keys(_myWorkers).forEach(function(workerPid) {
                 _myWorkers[workerPid].worker.kill();
-                //console.log('workerPid killed', workerPid);
+                logger.debug('workerPid killed: ' + workerPid);
             });
         }
         function stop() {
@@ -135,7 +137,7 @@ function(ASSERT,Child, process, CONSTANTS){
                         assignRequest(msg.pid);
                         break;
                     case CONSTANTS.msgTypes.info:
-                        console.log(msg.info);
+                        logger.debug(msg.info);
                         break;
                     case CONSTANTS.msgTypes.query:
                         cFunction = worker.cb;

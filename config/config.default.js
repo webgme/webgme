@@ -89,7 +89,7 @@ var path = require('path'),
                 transports: [{
                     transportType: 'Console',
                     options: {
-                        level: 'warn',
+                        level: 'info',
                         colorize: true,
                         timestamp: true,
                         prettyPrint: true,

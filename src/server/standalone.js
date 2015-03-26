@@ -1,5 +1,4 @@
-define(['common/LogManager',
-    'common/storage/serverstorage',
+define(['common/storage/serverstorage',
     'fs',
     'express',
     'express-session',
@@ -26,8 +25,7 @@ define(['common/LogManager',
     'common/util/guid',
     'common/util/assert',
     'url'
-], function (LogManager,
-             Storage,
+], function (Storage,
              FS,
              Express,
              session,
@@ -106,7 +104,7 @@ define(['common/LogManager',
             //creating the proper storage for the standalone server
             __storageOptions = {
                 combined: __httpServer,
-                logger: LogManager.create('StandAloneWebGMEServer-socket.io')
+                logger: Logger.create('gme:server:standalone:socket.io', gmeConfig.server.log)
             };
             if (true === gmeConfig.authentication.enable) {
                 __storageOptions.sessioncheck = __sessionStore.check;
@@ -115,7 +113,7 @@ define(['common/LogManager',
                 __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
             }
 
-            __storageOptions.log = LogManager.create('StandAloneWebGMEServer-storage');
+            __storageOptions.log = Logger.create('gme:server:standalone:storage', gmeConfig.server.log);
             __storageOptions.getToken = __gmeAuth.getToken;
 
             __storageOptions.sessionToUser = __sessionStore.getSessionUser;
@@ -346,11 +344,11 @@ define(['common/LogManager',
             var restComponent,
                 keys = Object.keys(gmeConfig.rest.components),
                 i;
-            __logger.info('initializing external REST modules');
+            logger.debug('initializing external REST modules');
             for (i = 0; i < keys.length; i++) {
                 restComponent = requirejs(gmeConfig.rest.components[keys[i]]);
                 if (restComponent) {
-                    __logger.info('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
+                    logger.debug('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
                         ' - /rest/external/' + keys[i]);
                     __app.use('/rest/external/' + keys[i], restComponent(gmeConfig, ensureAuthenticated));
                 } else {
@@ -363,7 +361,7 @@ define(['common/LogManager',
             httpResult.sendFile(path, function (err) {
                 //TODO we should check for all kind of error that should be handled differently
                 if (err && err.code !== 'ECONNRESET') {
-                    __logger.error(path);
+                    logger.error('expressFileSending failed for: ' + path);
                     httpResult.sendStatus(404);
                 }
             });
@@ -371,7 +369,7 @@ define(['common/LogManager',
 
         //here starts the main part
         //variables
-        var __logger = null,
+        var logger = null,
             __storage = null,
             __storageOptions = {},
             __gmeAuth = null,
@@ -391,28 +389,24 @@ define(['common/LogManager',
             __reportedRequestCounter = 0,
             __requestCheckInterval = 2500;
 
-        //creating the logmanager
-        LogManager.setLogLevel(gmeConfig.log.level);
-        LogManager.useColors(true);
-        LogManager.setFileLogPath(gmeConfig.log.file);
-        __logger = Logger.create("StandAloneWebGMEServer-main", gmeConfig.server.log);
-        //end of logmanager initializing stuff
+        //creating the logger
+        logger = Logger.create('gme:server:standalone', gmeConfig.server.log);
 
-        __logger.info("starting standalone server initialization");
+        logger.debug("starting standalone server initialization");
         //initializing https extra infos
         if (gmeConfig.server.https.enable === true) { //TODO move this from here
             __secureSiteInfo.key = FS.readFileSync(gmeConfig.server.https.keyFile);
             __secureSiteInfo.certificate = FS.readFileSync(gmeConfig.server.https.certificateFile);
         }
 
-        __logger.info("initializing session storage");
+        logger.debug("initializing session storage");
         __sessionStore = new SSTORE();
 
-        __logger.info("initializing authentication modules");
+        logger.debug("initializing authentication modules");
         //TODO: do we need to create this even though authentication is disabled?
         __gmeAuth = new GMEAUTH(__sessionStore, gmeConfig);
 
-        __logger.info("initializing passport module for user management");
+        logger.debug("initializing passport module for user management");
         //TODO in the long run this also should move to some database
         Passport.serializeUser(
             function (user, done) {
@@ -424,7 +418,7 @@ define(['common/LogManager',
                 done(null, __users[id]);
             });
 
-        __logger.info("initializing static server");
+        logger.debug("initializing static server");
         __app = Express();
 
         //__app.configure(function () {
@@ -445,13 +439,13 @@ define(['common/LogManager',
                 var infoguid = GUID(),
                     infotxt = "request[" + infoguid + "]:" + req.headers.host + " - " + req.protocol.toUpperCase() + "(" + req.httpVersion + ") - " + req.method.toUpperCase() + " - " + req.originalUrl + " - " + req.ip + " - " + req.headers['user-agent'],
                     infoshort = "incoming[" + infoguid + "]: " + req.originalUrl;
-                __logger.info(infoshort);
+                logger.debug(infoshort);
                 var end = res.end;
                 res.end = function (chunk, encoding) {
                     res.end = end;
                     res.end(chunk, encoding);
                     infotxt += " -> " + res.statusCode;
-                    __logger.info(infotxt);
+                    logger.debug(infotxt);
                 };
                 next();
             });
@@ -477,16 +471,16 @@ define(['common/LogManager',
             if (gmeConfig.executor.enable) {
                 var executorRest = requirejs('executor/Executor');
                 __app.use('/rest/executor', executorRest(gmeConfig));
-                __logger.info('Executor listening at rest/executor');
+                logger.debug('Executor listening at rest/executor');
             } else {
-                __logger.info('Executor not enabled. Add "enableExecutor: true" to config.js for activation.');
+                logger.debug('Executor not enabled. Add "enableExecutor: true" to config.js for activation.');
             }
 
             setupExternalRestModules();
 
         //});
 
-        __logger.info("creating login routing rules for the static server");
+        logger.debug("creating login routing rules for the static server");
         __app.get('/',ensureAuthenticated,function(req,res){
             expressFileSending(res, __clientBaseDir + '/index.html');
         });
@@ -536,20 +530,20 @@ define(['common/LogManager',
         });
 
         //TODO: only node_worker/index.html and common/util/common are using this
-        __logger.info("creating decorator specific routing rules");
+        logger.debug("creating decorator specific routing rules");
         __app.get('/bin/getconfig.js', ensureAuthenticated, function (req, res) {
             res.status(200);
             res.setHeader('Content-type', 'application/javascript');
             res.end("define([],function(){ return " + JSON.stringify(clientConfig) + ";});");
         });
 
-        __logger.info("creating gmeConfig.json specific routing rules");
+        logger.debug("creating gmeConfig.json specific routing rules");
         __app.get('/gmeConfig.json', ensureAuthenticated, function (req, res) {
             res.status(200);
             res.end(JSON.stringify(clientConfig));
         });
 
-        __logger.info("creating decorator specific routing rules");
+        logger.debug("creating decorator specific routing rules");
         __app.get(/^\/decorators\/.*/, ensureAuthenticated, function (req, res) {
             var tryNext = function (index) {
                 var resolvedPath;
@@ -573,7 +567,7 @@ define(['common/LogManager',
             }
         });
 
-        __logger.info("creating plug-in specific routing rules");
+        logger.debug("creating plug-in specific routing rules");
         __app.get(/^\/plugin\/.*/, function (req, res) {
             //first we try to give back the common plugin/modules
             res.sendFile(Path.join(__baseDir, req.path), function (err) {
@@ -601,7 +595,7 @@ define(['common/LogManager',
             });
         });
 
-        __logger.info("creating external library specific routing rules");
+        logger.debug("creating external library specific routing rules");
         __app.get(/^\/extlib\/.*/, ensureAuthenticated, function (req, res) {
             //first we try to give back the common extlib/modules
 
@@ -620,7 +614,7 @@ define(['common/LogManager',
             expressFileSending(res, absPath);
         });
 
-        __logger.info("creating basic static content related routing rules");
+        logger.debug("creating basic static content related routing rules");
         //static contents
         //javascripts - core and transportation related files
         __app.get(/^\/(common|config|bin|middleware)\/.*\.js$/, function (req, res) {
@@ -633,7 +627,7 @@ define(['common/LogManager',
         });
 
 
-        __logger.info("creating blob related rules");
+        logger.debug("creating blob related rules");
 
         var blobBackend;
 
@@ -646,7 +640,7 @@ define(['common/LogManager',
             throw new Error('Only FS and S3 blobs valid blob types.');
         }
 
-        BlobServer.createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger);
+        BlobServer.createExpressBlob(__app, blobBackend, ensureAuthenticated, logger);
 
         //client contents - js/html/css
         //stuff that considered not protected 
@@ -664,7 +658,7 @@ define(['common/LogManager',
             }
         });
 
-        __logger.info("creating token related routing rules");
+        logger.debug("creating token related routing rules");
         __app.get('/gettoken',ensureAuthenticated,function(req,res){
             if (gmeConfig.rest.secure) {
                 __gmeAuth.getToken(req.session.id, function (err, token) {
@@ -701,7 +695,7 @@ define(['common/LogManager',
         });
 
         //TODO: needs to refactor for the /rest/... format
-        __logger.info("creating REST related routing rules");
+        logger.debug("creating REST related routing rules");
         __app.get('/rest/:command',ensureAuthenticated,checkREST,function(req,res){
             __REST.initialize(function (err) {
                 if (err) {
@@ -737,7 +731,7 @@ define(['common/LogManager',
         });
 
 
-        __logger.info("creating server-worker related routing rules");
+        logger.debug("creating server-worker related routing rules");
         __app.get('/worker/simpleResult/*', function (req, res) {
             var urlArray = req.url.split('/');
             if (urlArray.length > 3) {
@@ -764,7 +758,7 @@ define(['common/LogManager',
         });
 
 
-        __logger.info("creating list asset rules");
+        logger.debug("creating list asset rules");
         __app.get('/listAllDecorators', ensureAuthenticated, function (req, res) {
             var names = []; //TODO we add everything in the directories!!!
             for (var i = 0; i < gmeConfig.visualization.decoratorPaths.length; i++) {
@@ -807,7 +801,7 @@ define(['common/LogManager',
         });
 
 
-        __logger.info("creating all other request rule - error 404 -");
+        logger.debug("creating all other request rule - error 404 -");
         __app.get('*', function (req, res) {
             res.sendStatus(404);
         });
@@ -817,7 +811,7 @@ define(['common/LogManager',
             console.log(gmeConfig);
         }
         var networkIfs = OS.networkInterfaces();
-        var addresses = 'Valid addresses of webgme server: ';
+        var addresses = 'Valid addresses of gme web server: ';
         for (var dev in networkIfs) {
             networkIfs[dev].forEach(function (netIf) {
                 if (netIf.family === 'IPv4') {
@@ -828,10 +822,9 @@ define(['common/LogManager',
             });
         }
 
-        __logger.info(addresses);
-        console.log(addresses);
+        logger.info(addresses);
 
-        __logger.info("standalone server initialization completed");
+        logger.debug("standalone server initialization completed");
 
         return {
 
