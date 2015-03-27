@@ -172,7 +172,7 @@ describe('NodeWorker', function () {
             });
         });
 
-        describe.skip('[nonce match]', function () {
+        describe('[nonce match]', function () {
             before(function (done) {
                 var gmeConfig = testFixture.getGmeConfig();
                 this.timeout(5000);
@@ -470,7 +470,7 @@ describe('NodeWorker', function () {
             });
         });
 
-        describe.skip('[nonce not matching]', function () {
+        describe('[nonce not matching]', function () {
             it('worker should not attach', function (done) {
                 var gmeConfig = testFixture.getGmeConfig();
                 this.timeout(5000);
@@ -499,7 +499,7 @@ describe('NodeWorker', function () {
             });
         });
 
-        describe.skip('[https nonce match]', function () {
+        describe('[https nonce match]', function () {
             var nodeTLSRejectUnauthorized;
 
             nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;

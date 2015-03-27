@@ -604,8 +604,9 @@ describe('openContext', function () {
         var storage,
             project,
             commitHash,
-            logger = testFixture.Logger.createWithGmeConfig('opencontext:using server-user-storage:storage', gmeConfig),
-            gmeConfig = testFixture.getGmeConfig();
+            gmeConfig = testFixture.getGmeConfig(),
+            logger = testFixture.Logger.createWithGmeConfig('opencontext:using server-user-storage:storage', gmeConfig);
+
 
         before(function (done) {
             var importParam = {
