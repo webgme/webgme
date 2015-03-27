@@ -1,4 +1,8 @@
+/*globals define, requirejs*/
+/*jshint node:true*/
+
 define([], function () {
+    'use strict';
     //here you can define global variables for your middleware
     var counter = 0,
         ensureAuthenticated,
@@ -25,7 +29,7 @@ define([], function () {
 
     var setup = function (_gmeConfig, _ensureAuthenticated) {
         gmeConfig = _gmeConfig;
-        logger = Logger.create('gme:server:middleware:ExampleRestComponent', gmeConfig.server.log)
+        logger = Logger.create('gme:server:middleware:ExampleRestComponent', gmeConfig.server.log);
         ensureAuthenticated = _ensureAuthenticated;
         return ExampleRestComponent;
     };

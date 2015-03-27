@@ -122,9 +122,57 @@ describe('NodeWorker', function () {
                     done();
                 });
             });
+
+            it('createJob with cmd node -h should return SUCCESS', function (done) {
+                this.timeout(20000);
+                var executorConfig = {
+                        cmd: 'node',
+                        args: ['-h'],
+                        resultArtifacts: [{name: 'all', resultPatterns: []}]
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig)
+                    };
+                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    artifact.save(function (err, hash) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                            var intervalId;
+                            if (err) {
+                                done(new Error(err));
+                                return;
+                            }
+                            intervalId = setInterval(function () {
+                                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                    if (err) {
+                                        done(err);
+                                        return;
+                                    }
+
+                                    if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                        // The job is still running..
+                                        return;
+                                    }
+                                    clearInterval(intervalId);
+                                    should.equal(res.status, 'SUCCESS');
+                                    done();
+                                });
+                            }, 100);
+                        });
+                    });
+                });
+            });
         });
 
-        describe('[nonce match]', function () {
+        describe.skip('[nonce match]', function () {
             before(function (done) {
                 var gmeConfig = testFixture.getGmeConfig();
                 this.timeout(5000);
@@ -422,7 +470,7 @@ describe('NodeWorker', function () {
             });
         });
 
-        describe('[nonce not matching]', function () {
+        describe.skip('[nonce not matching]', function () {
             it('worker should not attach', function (done) {
                 var gmeConfig = testFixture.getGmeConfig();
                 this.timeout(5000);
@@ -451,7 +499,7 @@ describe('NodeWorker', function () {
             });
         });
 
-        describe('[https nonce match]', function () {
+        describe.skip('[https nonce match]', function () {
             var nodeTLSRejectUnauthorized;
 
             nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
@@ -755,5 +803,4 @@ describe('NodeWorker', function () {
             });
         });
     }
-)
-;
+);
