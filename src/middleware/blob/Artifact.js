@@ -61,8 +61,15 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
                     callback(err);
                     return;
                 }
+                var size;
+                if (content.size !== undefined) {
+                    size = content.size;
+                }
+                if (content.length !== undefined) {
+                    size = content.length;
+                }
 
-                self.addMetadataHash(name, hash, function (err, hash) {
+                self.addMetadataHash(name, hash, size, function (err, hash) {
                     callback(err, hash);
                 });
             });
@@ -103,32 +110,43 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
         });
     };
 
-    Artifact.prototype.addMetadataHash = function (name, hash, callback) {
-        var self = this;
+    Artifact.prototype.addMetadataHash = function (name, hash, size, callback) {
+        var self = this,
+            addMetadata = function (size) {
+                if (self.descriptor.content.hasOwnProperty(name)) {
+                    callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
+
+                } else {
+                    self.descriptor.size += size;
+
+                    self.descriptor.content[name] = {
+                        content: hash,
+                        contentType: BlobMetadata.CONTENT_TYPES.SOFT_LINK
+                    };
+                    callback(null, hash);
+                }
+            };
+
+        if (typeof size === 'function') {
+            callback = size;
+            size = undefined;
+        }
 
         if (BlobConfig.hashRegex.test(hash) === false) {
             callback('Blob hash is invalid');
             return;
         }
-        self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            if (self.descriptor.content.hasOwnProperty(name)) {
-                callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
-
-            } else {
-                self.descriptor.size += metadata.size;
-
-                self.descriptor.content[name] = {
-                    content: hash,
-                    contentType: BlobMetadata.CONTENT_TYPES.SOFT_LINK
-                };
-                callback(null, hash);
-            }
-        });
+        if (size === undefined) {
+            self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                addMetadata(metadata.size);
+            });
+        } else {
+            addMetadata(size);
+        }
     };
 
     /**
