@@ -7,6 +7,7 @@
     blob: './middleware/blob',
     executor: './middleware/executor',
     superagent: './client/lib/superagent/superagent',
+    debug: './client/lib/debug/debug',
     js: './client/js/',
     lib: './client/lib/',
     'js/Dialogs/PluginConfig/PluginConfigDialog': '../utils/build/empty/empty'
