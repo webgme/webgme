@@ -387,14 +387,14 @@ define(['js/logger',
      * Called when a new connection is drawn with the creation paramteres
      */
     ConnectionDrawingManager.prototype.onCreateNewConnection = function (params) {
-        this.logger.warning("onCreateNewConnection: " + JSON.stringify(params));
+        this.logger.warn("onCreateNewConnection: " + JSON.stringify(params));
     };
 
     /*
      * Called when a connection's 'src' or 'dst' is being reconnected to a new connector
      */
     ConnectionDrawingManager.prototype.onModifyConnectionEnd = function (params) {
-        this.logger.warning("onModifyConnectionEnd: " + JSON.stringify(params));
+        this.logger.warn("onModifyConnectionEnd: " + JSON.stringify(params));
     };
 
 
@@ -443,7 +443,7 @@ define(['js/logger',
      * Called on connection drawing start, should be overridden to handle the event
      */
     ConnectionDrawingManager.prototype.onStartConnectionCreate = function (params) {
-        this.logger.warning("onStartConnectionCreate with params: '" + JSON.stringify(params));
+        this.logger.warn("onStartConnectionCreate with params: '" + JSON.stringify(params));
     };
 
 
@@ -485,7 +485,7 @@ define(['js/logger',
      * Called on connection reconnect start, should be overridden to handle the event
      */
     ConnectionDrawingManager.prototype.onStartConnectionReconnect = function (params) {
-        this.logger.warning("onStartConnectionReconnect with params: '" + JSON.stringify(params));
+        this.logger.warn("onStartConnectionReconnect with params: '" + JSON.stringify(params));
     };
 
     /*
@@ -635,7 +635,7 @@ define(['js/logger',
      * Called on connection create/reconnect end, should be overridden to handle the event
      */
     ConnectionDrawingManager.prototype.onEndConnectionDraw = function () {
-        this.logger.warning("onEndConnectionDraw NOT OVERRIDDEN");
+        this.logger.warn("onEndConnectionDraw NOT OVERRIDDEN");
     };
 
 

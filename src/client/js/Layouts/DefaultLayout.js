@@ -131,7 +131,7 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 idx = this._centerPanels.indexOf(panel);
 
                 if (idx === -1) {
-                    this._logger.warning("Panel to be removed not found");
+                    this._logger.warn("Panel to be removed not found");
                 } else {
                     this._centerPanels.splice(idx, 1);
                     this._onCenterResize();

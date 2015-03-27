@@ -144,19 +144,19 @@ define(['js/logger',
     /******************* PUBLIC API TO BE OVERRIDDEN IN THE CONTROLLER **********************/
 
     ProjectRepositoryWidget.prototype.onLoadMoreCommits = function (num) {
-        this._logger.warning("onLoadMoreCommits is not overridden in Controller...num: '" + num + "'");
+        this._logger.warn("onLoadMoreCommits is not overridden in Controller...num: '" + num + "'");
     };
 
     ProjectRepositoryWidget.prototype.onLoadCommit = function (params) {
-        this._logger.warning("onLoadCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
+        this._logger.warn("onLoadCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
     };
 
     ProjectRepositoryWidget.prototype.onDeleteBranchClick = function (branch) {
-        this._logger.warning("onDeleteBranchClick is not overridden in Controller...branch: '" + branch + "'");
+        this._logger.warn("onDeleteBranchClick is not overridden in Controller...branch: '" + branch + "'");
     };
 
     ProjectRepositoryWidget.prototype.onCreateBranchFromCommit = function (params) {
-        this._logger.warning("onCreateBranchFromCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
+        this._logger.warn("onCreateBranchFromCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
     };
 
     /******************* PRIVATE API *****************************/

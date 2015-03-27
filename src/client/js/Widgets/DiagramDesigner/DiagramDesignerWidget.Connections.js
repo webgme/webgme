@@ -145,7 +145,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
      * Called when a new connection is being created in the widget by the user
      */
     DiagramDesignerWidget.prototype.onCreateNewConnection = function (params) {
-        this.logger.warning("onCreateNewConnection with parameters: '" + JSON.stringify(params) + "'");
+        this.logger.warn("onCreateNewConnection with parameters: '" + JSON.stringify(params) + "'");
     };
 
     DiagramDesignerWidget.prototype._onModifyConnectionEnd = function (params) {
@@ -173,7 +173,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
      * Called when a new connection is being created in the widget by the user
      */
     DiagramDesignerWidget.prototype.onModifyConnectionEnd = function (params) {
-        this.logger.warning("onModifyConnectionEnd with parameters: '" + JSON.stringify(params) + "'");
+        this.logger.warn("onModifyConnectionEnd with parameters: '" + JSON.stringify(params) + "'");
     };
 
     /*************** NO CONNECTION START / END UI CLASS ADD/REMOVE ***********/
@@ -293,7 +293,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
     };
 
     DiagramDesignerWidget.prototype.onFilterNewConnectionDroppableEnds = function (params) {
-        this.logger.warning("DiagramDesignerWidget.prototype.onFilterNewConnectionDroppableEnds not overridden in controller. params: " + JSON.stringify(params));
+        this.logger.warn("DiagramDesignerWidget.prototype.onFilterNewConnectionDroppableEnds not overridden in controller. params: " + JSON.stringify(params));
 
         return params.availableConnectionEnds;
     };
@@ -426,7 +426,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
     DiagramDesignerWidget.prototype.onFilterReconnectionDroppableEnds = function (params) {
         var srcDragged = params.draggedEnd === DiagramDesignerWidgetConstants.CONNECTION_END_SRC;
 
-        this.logger.warning("DiagramDesignerWidget.prototype.onFilterReconnectionDroppableEnds not overridden in controller. params: " + JSON.stringify(params));
+        this.logger.warn("DiagramDesignerWidget.prototype.onFilterReconnectionDroppableEnds not overridden in controller. params: " + JSON.stringify(params));
 
         if (srcDragged === true) {
             return params.availableConnectionSources;

@@ -113,12 +113,12 @@ define(['js/logger',
     };
 
     PartBrowserWidget.prototype.getDragItems = function (el) {
-        this._logger.warning("PartBrowserWidget.getDragItems is not overridden in the controller!!!");
+        this._logger.warn("PartBrowserWidget.getDragItems is not overridden in the controller!!!");
         return [];
     };
 
     PartBrowserWidget.prototype.getDragEffects = function (el) {
-        this._logger.warning("PartBrowserWidget.getDragEffects is not overridden in the controller!!!");
+        this._logger.warn("PartBrowserWidget.getDragEffects is not overridden in the controller!!!");
         return [];
     };
 

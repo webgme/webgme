@@ -22,7 +22,7 @@ define(['js/logger',
         //get logger instance for this component
         //some comment here
         this.logger = Logger.create('gme:decorators:MetaDecorator:DiagramDesigner:Attribute_' + this.name,
-            WebGMEGlobal.client.log);
+            WebGMEGlobal.gmeConfig.client.log);
         this.logger.debug("Created");
     };
 

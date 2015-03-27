@@ -23,7 +23,7 @@ define(['js/logger',
 
         this._currentNodeId = null;
 
-        this._logger = Logger.create('gme:Panels:Grid:GridPanelContainmentControPointers', WebGMEGlobal.client.log);
+        this._logger = Logger.create('gme:Panels:Grid:GridPanelContainmentControPointers', WebGMEGlobal.gmeConfig.client.log);
 
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDataGridWidgetEventHandlers();

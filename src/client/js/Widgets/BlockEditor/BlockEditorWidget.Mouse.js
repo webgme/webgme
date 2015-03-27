@@ -34,7 +34,7 @@ define(['./BlockEditorWidget.Constants'], function (BlockEditorWidgetConstants) 
             if (self.onItemMouseDown) {
                 self.onItemMouseDown.call(self, itemId, eventDetails);
             } else {
-                logger.warning('onItemMouseDown(itemId, eventDetails) is undefined, ItemID: ' + itemId + ' eventDetails: ' + JSON.stringify(eventDetails));
+                logger.warn('onItemMouseDown(itemId, eventDetails) is undefined, ItemID: ' + itemId + ' eventDetails: ' + JSON.stringify(eventDetails));
             }
         });
 
@@ -47,7 +47,7 @@ define(['./BlockEditorWidget.Constants'], function (BlockEditorWidgetConstants) 
             if (self.onBackgroundMouseDown) {
                 self.onBackgroundMouseDown.call(self, eventDetails);
             } else {
-                logger.warning('onBackgroundMouseDown(eventDetails) is undefined, eventDetails: ' + JSON.stringify(eventDetails));
+                logger.warn('onBackgroundMouseDown(eventDetails) is undefined, eventDetails: ' + JSON.stringify(eventDetails));
             }
         });
 
@@ -58,10 +58,10 @@ define(['./BlockEditorWidget.Constants'], function (BlockEditorWidgetConstants) 
             if (self.onBackgroundDblClick) {
                 self.onBackgroundDblClick.call(self, eventDetails);
             } else {
-                logger.warning('onBackgroundDblClick(eventDetails) is undefined, eventDetails: ' + JSON.stringify(eventDetails));
+                logger.warn('onBackgroundDblClick(eventDetails) is undefined, eventDetails: ' + JSON.stringify(eventDetails));
             }
 
-            logger.warning('dblclick.background, eventDetails: ' + JSON.stringify(eventDetails));
+            logger.warn('dblclick.background, eventDetails: ' + JSON.stringify(eventDetails));
         });
 
         //disable context-menu on right-click

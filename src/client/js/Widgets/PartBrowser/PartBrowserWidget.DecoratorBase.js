@@ -54,7 +54,7 @@ define(['js/logger',
 
     //called by the controller when an event arrives about registered subcomponent ID
     PartBrowserWidgetDecoratorBase.prototype.notifyComponentEvent = function (componentList) {
-        this.logger.warning('notifyComponentEvent ' + componentList);
+        this.logger.warn('notifyComponentEvent ' + componentList);
     };
 
     //initialization code for the decorator

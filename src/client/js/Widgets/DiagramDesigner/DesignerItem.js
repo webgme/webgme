@@ -305,7 +305,7 @@ define(['js/logger',
             if (_.isFunction(this._decoratorInstance[fnName])) {
                 result = this._decoratorInstance[fnName].apply(this._decoratorInstance, args);
             } else {
-                this.logger.warning("DecoratorInstance '" + $.type(this._decoratorInstance) + "' does not have a method with name '" + fnName + "'...");
+                this.logger.warn("DecoratorInstance '" + $.type(this._decoratorInstance) + "' does not have a method with name '" + fnName + "'...");
             }
         } else {
             this.logger.error("DecoratorInstance does not exist...");

@@ -22,7 +22,7 @@ define(['js/logger',
 
         this._setContainerID = null;
 
-        this._logger = Logger.create('gme:Panels:Grid:GridPanelSetsControl', WebGMEGlobal.client.log);
+        this._logger = Logger.create('gme:Panels:Grid:GridPanelSetsControl', WebGMEGlobal.gmeConfig.client.log);
 
         this._logger.debug("Created");
     };

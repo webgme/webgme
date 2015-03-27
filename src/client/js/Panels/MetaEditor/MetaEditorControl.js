@@ -34,7 +34,7 @@ define(['js/logger',
         var self = this;
 
         this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:MetaEditor:MetaEditorControl',
-            WebGMEGlobal.client.log);
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
 

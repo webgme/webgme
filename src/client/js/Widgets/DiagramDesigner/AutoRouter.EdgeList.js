@@ -824,7 +824,7 @@ define(['js/logger',
     AutoRouterEdgeList.prototype.checkSection = function () {
         if (!(this.sectionBlocker === null && this.sectionPtr2Blocked === null)) {
             // This used to be contained in an assert. Generally this fails when the router does not have a clean exit then is asked to reroute.
-            this._logger.warning('sectionBlocker and this.sectionPtr2Blocked are not null. Assuming last run did not exit cleanly. Fixing...');
+            this._logger.warn('sectionBlocker and this.sectionPtr2Blocked are not null. Assuming last run did not exit cleanly. Fixing...');
             this.sectionBlocker = null;
             this.sectionPtr2Blocked = null;
         }

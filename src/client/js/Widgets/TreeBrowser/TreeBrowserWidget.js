@@ -344,7 +344,7 @@ define(['js/logger',
      * @param nodeId
      */
     TreeBrowserWidget.prototype.onNodeOpen = function (nodeId) {
-        this._logger.warning("Default onNodeOpen for node " + nodeId + " called, doing nothing. Please override onNodeOpen(nodeId)");
+        this._logger.warn("Default onNodeOpen for node " + nodeId + " called, doing nothing. Please override onNodeOpen(nodeId)");
     };
 
     /**
@@ -354,7 +354,7 @@ define(['js/logger',
      * @param nodeId
      */
     TreeBrowserWidget.prototype.onNodeClose = function (nodeId) {
-        this._logger.warning("Default onNodeClose for node " + nodeId + " called, doing nothing. Please override onNodeClose(nodeId)");
+        this._logger.warn("Default onNodeClose for node " + nodeId + " called, doing nothing. Please override onNodeClose(nodeId)");
     };
 
     /*
@@ -362,7 +362,7 @@ define(['js/logger',
      * PLEASE OVERIDDE TO HANDLE TITLE CHANGE FOR YOURSELF
      */
     TreeBrowserWidget.prototype.onNodeTitleChanged = function (nodeId, oldText, newText) {
-        this._logger.warning("Default onNodeTitleChanged for node " + nodeId + " called, doing nothing. Please override onNodeTitleChanged(nodeId, oldText, newText)");
+        this._logger.warn("Default onNodeTitleChanged for node " + nodeId + " called, doing nothing. Please override onNodeTitleChanged(nodeId, oldText, newText)");
         return true;
     };
 
@@ -489,12 +489,12 @@ define(['js/logger',
     };
 
     TreeBrowserWidget.prototype.getDragItems = function (el) {
-        this._logger.warning("TreeBrowserWidget.getDragItems is not overridden in the controller!!!");
+        this._logger.warn("TreeBrowserWidget.getDragItems is not overridden in the controller!!!");
         return [];
     };
 
     TreeBrowserWidget.prototype.getDragEffects = function (el) {
-        this._logger.warning("TreeBrowserWidget.getDragEffects is not overridden in the controller!!!");
+        this._logger.warn("TreeBrowserWidget.getDragEffects is not overridden in the controller!!!");
         return [];
     };
 

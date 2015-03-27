@@ -93,11 +93,11 @@ define(['js/logger',
     };
 
     SelectionManager.prototype.onSelectionCommandClicked = function (command, selectedIds) {
-        this.logger.warning("SelectionManager.prototype.onSelectionCommandClicked IS NOT OVERRIDDEN IN HOST COMPONENT. command: '" + command + "', selectedIds: " + selectedIds);
+        this.logger.warn("SelectionManager.prototype.onSelectionCommandClicked IS NOT OVERRIDDEN IN HOST COMPONENT. command: '" + command + "', selectedIds: " + selectedIds);
     };
 
     SelectionManager.prototype.onSelectionChanged = function (selectedIDs) {
-        this.logger.warning("SelectionManager.prototype.onSelectionChanged IS NOT OVERRIDDEN IN HOST COMPONENT. selectedIDs: " + selectedIDs);
+        this.logger.warn("SelectionManager.prototype.onSelectionChanged IS NOT OVERRIDDEN IN HOST COMPONENT. selectedIDs: " + selectedIDs);
     };
 
 

@@ -31,7 +31,7 @@ define(['js/logger',
     DiagramDesignerWidgetMultiTabMemberListControllerBase = function (options) {
         var loggerName = options.loggerName || 'gme:Panels:ControllerBase:' +
             'DiagramDesignerWidgetMultiTabMemberListControllerBase';
-        this.logger = Logger.create(loggerName, WebGMEGlobal.client.log);
+        this.logger = Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
 

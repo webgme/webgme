@@ -20,7 +20,7 @@ define(['js/logger'], function (Logger) {
         //some comment here
 
         this.logger = Logger.create('gme:decorators:MetaDecorator:DiagramDesigner:Aspect_' + this.name,
-            WebGMEGlobal.client.log);
+            WebGMEGlobal.gmeConfig.client.log);
         this.logger.debug("Created");
     };
 

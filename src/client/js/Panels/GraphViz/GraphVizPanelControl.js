@@ -24,7 +24,7 @@ define(['js/logger',
     GraphVizControl = function (options) {
         var self = this;
 
-        this._logger = Logger.create('gme:Panels:GraphViz:GraphVizControl', WebGMEGlobal.client.log);
+        this._logger = Logger.create('gme:Panels:GraphViz:GraphVizControl', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
 

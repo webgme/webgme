@@ -315,24 +315,24 @@ define(['js/Toolbar/ToolbarButton',
     };
 
     DiagramDesignerWidgetTabs.prototype.onTabDeleteClicked = function (tabID) {
-        this.logger.warning('onTabDeleteClicked not implemented: "' + tabID + '"');
+        this.logger.warn('onTabDeleteClicked not implemented: "' + tabID + '"');
     };
 
     DiagramDesignerWidgetTabs.prototype.onTabAddClicked = function () {
         var tabID = this.addTab('New tab', true);
-        this.logger.warning('onTabAddClicked not implemented: "' + tabID + '"');
+        this.logger.warn('onTabAddClicked not implemented: "' + tabID + '"');
     };
 
     DiagramDesignerWidgetTabs.prototype.onTabTitleChanged = function (tabID, oldValue, newValue) {
-        this.logger.warning('onTabTitleChanged not implemented: ID: ' + tabID + ' "' + oldValue + '" --> "' + newValue + '"');
+        this.logger.warn('onTabTitleChanged not implemented: ID: ' + tabID + ' "' + oldValue + '" --> "' + newValue + '"');
     };
 
     DiagramDesignerWidgetTabs.prototype.onSelectedTabChanged = function (tabID) {
-        this.logger.warning('onSelectedTabChanged not implemented: "' + tabID + '"');
+        this.logger.warn('onSelectedTabChanged not implemented: "' + tabID + '"');
     };
 
     DiagramDesignerWidgetTabs.prototype.onTabsSorted = function (newTabIDOrder) {
-        this.logger.warning('onTabsSorted not implemented: "' + newTabIDOrder + '"');
+        this.logger.warn('onTabsSorted not implemented: "' + newTabIDOrder + '"');
     };
 
     return DiagramDesignerWidgetTabs;

@@ -472,7 +472,7 @@ define(['js/Constants',
 
         client.startTransaction();
 
-        //this.logger.warning('saveAttributeDescriptor: ' + name + ', attrDesc: ' + JSON.stringify(attrDesc));
+        //this.logger.warn('saveAttributeDescriptor: ' + name + ', attrDesc: ' + JSON.stringify(attrDesc));
         //if this is an attribute rename
         if (attrName !== attrDesc.name) {
             //name has changed --> delete the descriptor with the old name
