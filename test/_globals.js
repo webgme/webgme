@@ -217,10 +217,12 @@ function loadNodes(parameters, done) {
 
 WebGME.addToRequireJsPaths(gmeConfig);
 
+// This is for the client side test-cases (only add paths here!)
 requirejs.config({
     paths: {
         js: 'client/js',
-        ' /socket.io/socket.io.js': 'socketio-client'
+        ' /socket.io/socket.io.js': 'socketio-client',
+        underscore: 'client/lib/underscore/underscore-min'
     }
 });
 
