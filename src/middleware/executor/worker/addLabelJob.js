@@ -1,3 +1,5 @@
+//TODO: This file must be revised
+
 var nodeRequire = require;
 
 if (process.argv.length != 4) {
@@ -11,7 +13,6 @@ requirejs.config({
     baseUrl: __dirname + '/..',
     paths: {
         //WebGME custom modules
-        "logManager": '../webgme/common/LogManager',
         "eventDispatcher": '../webgme/common/EventDispatcher',
         "notificationManager": 'js/NotificationManager',
         "clientUtil": 'js/util',
