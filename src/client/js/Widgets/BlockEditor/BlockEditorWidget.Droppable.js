@@ -121,13 +121,13 @@ define(['js/DragDrop/DropTarget',
 
 
     BlockEditorWidgetDroppable.prototype.onBackgroundDroppableAccept = function (event, dragInfo) {
-        this.logger.warning("BlockEditorWidget.prototype.onBackgroundDroppableAccept(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo));
+        this.logger.warn("BlockEditorWidget.prototype.onBackgroundDroppableAccept(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo));
         return false;
     };
 
 
     BlockEditorWidgetDroppable.prototype.onBackgroundDrop = function (event, dragInfo, position) {
-        this.logger.warning("BlockEditorWidget.prototype.onBackgroundDrop(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo) + " , position: '" + JSON.stringify(position) + "'");
+        this.logger.warn("BlockEditorWidget.prototype.onBackgroundDrop(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo) + " , position: '" + JSON.stringify(position) + "'");
     };
 
 
@@ -215,7 +215,7 @@ define(['js/DragDrop/DropTarget',
     };
 
     BlockEditorWidgetDroppable.prototype.onItemDrop = function (droppedItems, receiver) {
-        this.logger.warning("BlockEditorWidget.prototype.onItemDrop(event, droppedItems) not overridden in controller!!! droppedItems:" + JSON.stringify(droppedItems) + " , position: '" + JSON.stringify(receiver) + "'");
+        this.logger.warn("BlockEditorWidget.prototype.onItemDrop(event, droppedItems) not overridden in controller!!! droppedItems:" + JSON.stringify(droppedItems) + " , position: '" + JSON.stringify(receiver) + "'");
     };
 
     return BlockEditorWidgetDroppable;

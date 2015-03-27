@@ -1,5 +1,6 @@
-/*globals require, console, define, setTimeout, WebGMEGlobal*/
+/*globals define, setTimeout, requirejs*/
 /*jshint node:true*/
+
 /**
  * @author lattmann / https://github.com/lattmann
  * @author ksmyth / https://github.com/ksmyth
@@ -9,8 +10,7 @@
  curl -X POST -H "Content-Type: application/json" -d {\"status\":\"CREATED\"} http://localhost:8855/rest/executor/update/77704f10a36aa4214f5b0095ba8099e729a10f46
  */
 
-define(['common/LogManager',
-        'fs',
+define(['fs',
         'path',
         'child_process',
         'buffer-equal-constant-time',
@@ -19,7 +19,7 @@ define(['common/LogManager',
         'executor/JobInfo',
         'executor/WorkerInfo'
     ],
-    function (logManager, fs, path, child_process, bufferEqual, DataStore, mkdirp, JobInfo, WorkerInfo) {
+    function (fs, path, childProcess, bufferEqual, DataStore, mkdirp, JobInfo, WorkerInfo) {
         'use strict';
         var jobListDBFile,
             workerListDBFile,
@@ -27,13 +27,22 @@ define(['common/LogManager',
             jobList,
             workerList,
             workerRefreshInterval,
-            logger = logManager.create('REST-Executor'); //TODO: how to define your own logger which will use the global settings
+            labelJobs,
+            labelJobsFilename,
+            Logger,
+            logger;
 
         var workerTimeout = function () {
+            var query;
             if (process.uptime() < workerRefreshInterval / 1000 * 5) {
                 return;
             }
-            workerList.find({lastSeen: {$lt: (new Date()).getTime() / 1000 - workerRefreshInterval / 1000 * 5}}, function (err, docs) {
+            query = {
+                lastSeen: {
+                    $lt: (new Date()).getTime() / 1000 - workerRefreshInterval / 1000 * 5
+                }
+            };
+            workerList.find(query, function (err, docs) {
                 for (var i = 0; i < docs.length; i += 1) {
                     // reset unfinished jobs assigned to worker to CREATED, so they'll be executed by someone else
                     logger.info('worker "' + docs[i].clientId + '" is gone');
@@ -50,10 +59,6 @@ define(['common/LogManager',
                 }
             });
         };
-        setInterval(workerTimeout, 10 * 1000);
-
-        var labelJobs = {}; // map from label to blob hash
-        var labelJobsFilename = 'labelJobs.json'; // TODO put somewhere that makes sense
 
         function updateLabelJobs() {
             var fs = require('fs');
@@ -76,18 +81,25 @@ define(['common/LogManager',
                 }
             });
         }
-        watchLabelJobs();
 
         var ExecutorREST = function (req, res, next) {
 
             var authenticate = function () {
+                var isAuth = true,
+                    workerNonce;
                 if (gmeConfig.executor.nonce) {
-                    if (!req.headers['x-executor-nonce'] || bufferEqual(new Buffer(req.headers['x-executor-nonce']), new Buffer(gmeConfig.executor.nonce)) !== true) {
+                    workerNonce = req.headers['x-executor-nonce'];
+                    if (workerNonce) {
+                        isAuth = bufferEqual(new Buffer(workerNonce), new Buffer(gmeConfig.executor.nonce));
+                    } else {
+                        isAuth = false;
+                    }
+                    if (isAuth === false) {
                         res.sendStatus(403);
-                        return false;
                     }
                 }
-                return true;
+
+                return isAuth;
             };
 
             var url = require('url').parse(req.url);
@@ -392,13 +404,23 @@ define(['common/LogManager',
 
         var setup = function (_gmeConfig) {
             gmeConfig = _gmeConfig;
+            Logger = require(path.join(requirejs.s.contexts._.config.baseUrl, 'server/logger'));
+            logger = Logger.createWithGmeConfig('gme:Executor', _gmeConfig);
+
+            logger.debug('output directory', gmeConfig.executor.outputDir);
             mkdirp.sync(gmeConfig.executor.outputDir);
+
             jobListDBFile = path.join(gmeConfig.executor.outputDir, 'jobList.nedb');
             workerListDBFile = path.join(gmeConfig.executor.outputDir, 'workerList.nedb');
             jobList = new DataStore({filename: jobListDBFile, autoload: true});
             workerList = new DataStore({filename: workerListDBFile, autoload: true});
             workerRefreshInterval = gmeConfig.executor.workerRefreshInterval;
 
+            logger.debug('label-jobs config file', gmeConfig.labelJobs);
+            labelJobs = {}; // map from label to blob hash
+            labelJobsFilename = gmeConfig.executor.labelJobs;
+            watchLabelJobs();
+            setInterval(workerTimeout, 10 * 1000);
             jobList.ensureIndex({fieldName: 'hash', unique: true}, function (err) {
                 if (err) {
                     logger.error('Failure in ExecutorRest');

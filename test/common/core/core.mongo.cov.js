@@ -7,9 +7,9 @@ var testFixture = require('../../_globals.js');
 describe('Core Mongo Coverage', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = new testFixture.WebGME.serverUserStorage({
+        storage = new testFixture.WebGME.serverUserStorage({ //FIXME: Is this necessary??
             globConf: gmeConfig,
-            log: testFixture.Log.create('mongoLog')
+            log: testFixture.Logger.createWithGmeConfig('Core Mongo Coverage:storage', gmeConfig)
         });
 
     it('fails to connect to database', function (done) {
@@ -18,7 +18,8 @@ describe('Core Mongo Coverage', function () {
         gmeConfigAltered.mongo.uri = 'mongodb://127.0.0.1:65535/multi';
         storage = new testFixture.WebGME.serverUserStorage({
             globConf: gmeConfigAltered,
-            log: testFixture.Log.create('mongoLog')
+            log: testFixture.Logger.createWithGmeConfig('Core Mongo Coverage:fails to connect to database:storage',
+                gmeConfig)
         });
         storage.openDatabase(function (err) {
             if (!err) {
@@ -27,10 +28,12 @@ describe('Core Mongo Coverage', function () {
             done();
         });
     });
+
     it('try double database closing', function (done) {
         storage = new testFixture.WebGME.serverUserStorage({
             globConf: gmeConfig,
-            log: testFixture.Log.create('mongoLog')
+            log: testFixture.Logger.createWithGmeConfig('Core Mongo Coverage:try double database closing:storage',
+                gmeConfig)
         });
         storage.openDatabase(function (err) {
             if (err) {

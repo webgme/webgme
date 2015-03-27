@@ -19,7 +19,7 @@ describe('corediff apply', function () {
 
     var database = new testFixture.WebGME.serverUserStorage({
         globConf: gmeConfig,
-        log: testFixture.Log.create('mongoLog')
+        log:  testFixture.Logger.createWithGmeConfig('corediff apply:storage', gmeConfig)
     });
 
     before(function (done) {

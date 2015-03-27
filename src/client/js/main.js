@@ -10,7 +10,8 @@ var DEBUG = false,
     _jqueryVersion = '2.1.0',
     _jqueryUIVersion = '1.10.4',
     _bootstrapVersion = '3.1.1',
-    _angularVersion = '1.3.15';
+    _angularVersion = '1.3.15',
+    WebGMEGlobal = WebGMEGlobal || {};
 
 
 // configure require path and modules
@@ -62,6 +63,7 @@ require.config({
         //node_modules
         'jszip': 'lib/jszip/jszip',
         'superagent': 'lib/superagent/superagent',
+        'debug': 'lib/debug/debug',
 
 
         'codemirror': 'lib/codemirror/codemirror.amd',
@@ -125,6 +127,7 @@ require(
         'js/WebGME',
         'js/util',
         'text!/gmeConfig.json',
+        'js/logger',
 
         'angular',
         //'angular-route',
@@ -133,15 +136,20 @@ require(
 
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
-              backbone, webGME, util, gmeConfigJson) {
+              backbone, webGME, util, gmeConfigJson, Logger) {
 
         'use strict';
-
+        var gmeConfig = JSON.parse(gmeConfigJson);
+        WebGMEGlobal.gmeConfig = gmeConfig;
         domReady(function () {
-            var gmeConfig = JSON.parse(gmeConfigJson);
+
             if (gmeConfig.debug) {
                 DEBUG = gmeConfig.debug;
             }
+
+            var log = Logger.create('gme:main', gmeConfig.client.log);
+            log.debug('domReady, got gmeConfig');
+
 
             //#2 check URL
             var d = util.getURLParameterByName('debug').toLowerCase();
@@ -155,9 +163,9 @@ require(
 
             var keys = Object.keys(gmeConfig.requirejsPaths);
             for (var i = 0; i < keys.length; i += 1) {
-
                 // assume this is a relative path from the current working directory
                 gmeConfig.requirejsPaths[keys[i]] = '/extlib/' + gmeConfig.requirejsPaths[keys[i]];
+                log.debug('Requirejs path resolved: ', keys[i], gmeConfig.requirejsPaths[keys[i]]);
             }
 
             // update client config to route the external lib requests

@@ -6,13 +6,7 @@
 var testFixture = require('../../_globals.js'),
     requirejs = testFixture.requirejs;
 
-//requirejs.config({
-//    //baseUrl: 'src/',
-//    paths: {
-//        //'logManager': 'common/LogManager',
-//        //'util/assert': 'common/util/assert'
-//    }
-//});
+global.WebGMEGlobal.gmeConfig = testFixture.getGmeConfig();
 
 var AutoRouter = requirejs('client/js/Widgets/DiagramDesigner/AutoRouter'),
     assert = requirejs('common/util/assert'),

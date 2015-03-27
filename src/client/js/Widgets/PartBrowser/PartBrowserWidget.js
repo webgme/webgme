@@ -1,16 +1,16 @@
-/*globals define, WebGMEGlobal, alert, _*/
+/*globals define, WebGMEGlobal*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/Constants',
     'js/DragDrop/DragSource',
-    'css!./styles/PartBrowserWidget.css'], function (logManager,
-                                                                 CONSTANTS,
-                                                                 dragSource) {
+    'css!./styles/PartBrowserWidget.css'], function (Logger,
+                                                     CONSTANTS,
+                                                     dragSource) {
 
     "use strict";
 
@@ -19,7 +19,8 @@ define(['common/LogManager',
         PART_CLASS = "part";
 
     PartBrowserWidget = function (container, params) {
-        this._logger = logManager.create("PartBrowserWidget");
+        this._logger = Logger.create('gme:Widgets:PartBrowser:PartBrowserWidget.DecoratorBase',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._el = container;
 
@@ -112,12 +113,12 @@ define(['common/LogManager',
     };
 
     PartBrowserWidget.prototype.getDragItems = function (el) {
-        this._logger.warning("PartBrowserWidget.getDragItems is not overridden in the controller!!!");
+        this._logger.warn("PartBrowserWidget.getDragItems is not overridden in the controller!!!");
         return [];
     };
 
     PartBrowserWidget.prototype.getDragEffects = function (el) {
-        this._logger.warning("PartBrowserWidget.getDragEffects is not overridden in the controller!!!");
+        this._logger.warn("PartBrowserWidget.getDragEffects is not overridden in the controller!!!");
         return [];
     };
 

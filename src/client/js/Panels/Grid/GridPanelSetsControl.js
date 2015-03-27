@@ -1,9 +1,9 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
     'js/Constants',
-    'js/NodePropertyNames'], function (logManager,
+    'js/NodePropertyNames'], function (Logger,
                                     util,
                                     CONSTANTS,
                                     nodePropertyNames) {
@@ -22,7 +22,7 @@ define(['common/LogManager',
 
         this._setContainerID = null;
 
-        this._logger = logManager.create("GridPanelSetsControl");
+        this._logger = Logger.create('gme:Panels:Grid:GridPanelSetsControl', WebGMEGlobal.gmeConfig.client.log);
 
         this._logger.debug("Created");
     };

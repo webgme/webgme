@@ -5,7 +5,7 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
     'js/Loader/LoaderCircles',
     './ProjectRepositoryWidgetControl',
@@ -13,7 +13,7 @@ define(['common/LogManager',
     'raphaeljs',
     'css!./styles/ProjectRepositoryWidget.css'],
         function (
-            logManager,
+            Logger,
             util,
             LoaderCircles,
             ProjectRepositoryWidgetControl,
@@ -59,7 +59,8 @@ define(['common/LogManager',
         //attach its controller
         new ProjectRepositoryWidgetControl(client, this);
 
-        this._logger = logManager.create("ProjectRepositoryWidget");
+        this._logger = Logger.create("gme:Widgets:ProjectRepository:ProjectRepositoryWidget",
+            WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug("Created");
     };
 
@@ -143,19 +144,19 @@ define(['common/LogManager',
     /******************* PUBLIC API TO BE OVERRIDDEN IN THE CONTROLLER **********************/
 
     ProjectRepositoryWidget.prototype.onLoadMoreCommits = function (num) {
-        this._logger.warning("onLoadMoreCommits is not overridden in Controller...num: '" + num + "'");
+        this._logger.warn("onLoadMoreCommits is not overridden in Controller...num: '" + num + "'");
     };
 
     ProjectRepositoryWidget.prototype.onLoadCommit = function (params) {
-        this._logger.warning("onLoadCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
+        this._logger.warn("onLoadCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
     };
 
     ProjectRepositoryWidget.prototype.onDeleteBranchClick = function (branch) {
-        this._logger.warning("onDeleteBranchClick is not overridden in Controller...branch: '" + branch + "'");
+        this._logger.warn("onDeleteBranchClick is not overridden in Controller...branch: '" + branch + "'");
     };
 
     ProjectRepositoryWidget.prototype.onCreateBranchFromCommit = function (params) {
-        this._logger.warning("onCreateBranchFromCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
+        this._logger.warn("onCreateBranchFromCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
     };
 
     /******************* PRIVATE API *****************************/

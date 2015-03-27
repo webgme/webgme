@@ -201,12 +201,12 @@ define(['js/DragDrop/DropTarget'], function (dropTarget) {
 
 
     DataGridWidgetDroppable.prototype.onGridDroppableAccept = function (gridCellDesc, draggedData) {
-        this.logger.warning('default onGridDroppableAccept (gridCellDesc, draggedData) called... returning true');
+        this.logger.warn('default onGridDroppableAccept (gridCellDesc, draggedData) called... returning true');
         return true;
     };
 
     DataGridWidgetDroppable.prototype.onGridDrop = function (gridCellDesc, draggedData) {
-        this.logger.warning('onGridDrop --->\ngridCellDesc: ' + JSON.stringify(gridCellDesc) + "\ndraggedData: " + JSON.stringify(draggedData));
+        this.logger.warn('onGridDrop --->\ngridCellDesc: ' + JSON.stringify(gridCellDesc) + "\ndraggedData: " + JSON.stringify(draggedData));
     };
 
     return DataGridWidgetDroppable;

@@ -5,14 +5,14 @@
  */
 
 define(['jquery',
-        'common/LogManager'], function (_jquery,
-                                 logManager) {
+        'js/logger'], function (_jquery,
+                                 Logger) {
 
     "use strict";
 
     var _stateLoading = false,
         _initialized = false,
-        logger = logManager.create("WebGME.History");
+        logger;
 
     var _saveState = function (stateObj) {
         if (_stateLoading === false) {
@@ -40,7 +40,7 @@ define(['jquery',
         if (_initialized) {
             return;
         }
-
+        logger = Logger.create('gme:WebGME.History', WebGMEGlobal.gmeConfig.client.log);
         _initialized = true;
         WebGMEGlobal.State.on("change", function(model, options) {
             _saveState(WebGMEGlobal.State.toJSON());

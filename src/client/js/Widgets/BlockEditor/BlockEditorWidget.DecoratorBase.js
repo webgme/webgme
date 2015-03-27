@@ -207,36 +207,36 @@ define(['js/Decorators/WidgetDecoratorBase',
 
     //called by the controller when an event arrives about registered component ID
     BlockEditorWidgetDecoratorBase.prototype.notifyComponentEvent = function (componentList) {
-        this.logger.warning('notifyComponentEvent not overridden in decorator' + JSON.stringify(componentList));
+        this.logger.warn('notifyComponentEvent not overridden in decorator' + JSON.stringify(componentList));
     };
 
     //                            Input Fields
     
     BlockEditorWidgetDecoratorBase.prototype.getInputFieldUpdates = function () {
-        this.logger.warning('getInputFieldUpdates not overridden in decorator');
+        this.logger.warn('getInputFieldUpdates not overridden in decorator');
         return {};
     };
 
     BlockEditorWidgetDecoratorBase.prototype.updateInputFields = function () {
-        this.logger.warning('updateInputFields not overridden in decorator');
+        this.logger.warn('updateInputFields not overridden in decorator');
     };
 
     //                            Attribute Info
     BlockEditorWidgetDecoratorBase.prototype.updateAttributeContent = function () {
-        this.logger.warning('updateAttributeContent not overridden in decorator');
+        this.logger.warn('updateAttributeContent not overridden in decorator');
     };
 
     BlockEditorWidgetDecoratorBase.prototype.updateAttributeText = function () {
-        this.logger.warning('updateAttributeText not overridden in decorator');
+        this.logger.warn('updateAttributeText not overridden in decorator');
     };
 
     //                            Stretching/Shifting
     BlockEditorWidgetDecoratorBase.prototype.stretchTo = function () {
-        this.logger.warning('stretchTo not overridden in decorator');
+        this.logger.warn('stretchTo not overridden in decorator');
     };
 
     BlockEditorWidgetDecoratorBase.prototype.updateShifts = function () {
-        this.logger.warning('updateShifts not overridden in decorator');
+        this.logger.warn('updateShifts not overridden in decorator');
     };
 
 

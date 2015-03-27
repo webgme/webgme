@@ -1,8 +1,8 @@
-/*globals define, _, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-        'js/Constants'], function (logManager,
+        'js/Constants'], function (Logger,
                                      DiagramDesignerWidgetConstants,
                                      CONSTANTS) {
 
@@ -35,7 +35,8 @@ define(['common/LogManager',
 
         //get logger instance for this component
         //some comment here
-        this.logger = logManager.create("Port_" + this.id);
+        this.logger = Logger.create('gme:decorators:ModelDecorator:Core:Port_' + this.id,
+            WebGMEGlobal.gmeConfig.client.log);
         this.logger.debug("Created");
     };
 

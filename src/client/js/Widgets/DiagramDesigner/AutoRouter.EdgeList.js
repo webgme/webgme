@@ -1,18 +1,18 @@
-/*globals define*/
+/*globals define, WebGMEGlobal*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * @author brollb / https://github/brollb
  */
 
-define(['common/LogManager',
+define(['js/logger',
        'common/util/assert',
        './AutoRouter.Constants',
        './AutoRouter.Utils',
        './AutoRouter.Path',
        './AutoRouter.Port',
        './AutoRouter.Box',
-       './AutoRouter.Edge'], function (logManager, 
+       './AutoRouter.Edge'], function (Logger,
                                        assert,
                                        CONSTANTS,
                                        Utils,
@@ -25,7 +25,7 @@ define(['common/LogManager',
 
     //----------------------AutoRouterEdgeList
 
-    var _logger = logManager.create('AutoRouterEdgeList');
+    var _logger = Logger.create('gme:Widgets:DiagramDesigner:AutoRouter.EdgeList', WebGMEGlobal.gmeConfig.client.log);
     var AutoRouterEdgeList = function (b) {
         this.owner = null;
 
@@ -824,7 +824,7 @@ define(['common/LogManager',
     AutoRouterEdgeList.prototype.checkSection = function () {
         if (!(this.sectionBlocker === null && this.sectionPtr2Blocked === null)) {
             // This used to be contained in an assert. Generally this fails when the router does not have a clean exit then is asked to reroute.
-            this._logger.warning('sectionBlocker and this.sectionPtr2Blocked are not null. Assuming last run did not exit cleanly. Fixing...');
+            this._logger.warn('sectionBlocker and this.sectionPtr2Blocked are not null. Assuming last run did not exit cleanly. Fixing...');
             this.sectionBlocker = null;
             this.sectionPtr2Blocked = null;
         }

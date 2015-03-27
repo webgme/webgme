@@ -300,7 +300,7 @@ define(['js/Decorators/WidgetDecoratorBase',
 
     //called by the controller when an event arrives about registered component ID
     DiagramDesignerWidgetDecoratorBase.prototype.notifyComponentEvent = function (componentList) {
-        this.logger.warning('notifyComponentEvent not overridden in decorator' + JSON.stringify(componentList));
+        this.logger.warn('notifyComponentEvent not overridden in decorator' + JSON.stringify(componentList));
     };
 
     return DiagramDesignerWidgetDecoratorBase;

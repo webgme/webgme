@@ -1,19 +1,19 @@
-/*globals define*/
+/*globals define, WebGMEGlobal*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * @author brollb / https://github/brollb
  */
 
-define(['common/LogManager',
+define(['js/logger',
         './AutoRouter.Point',
-        './AutoRouter.Size'], function (logManager,
+        './AutoRouter.Size'], function (Logger,
                                             ArPoint,
                                             ArSize) {
 
     'use strict'; 
 
-    var _logger = logManager.create('AutoRouterRect');
+    var _logger = Logger.create('gme:Widgets:DiagramDesigner:AutoRouter.Rect', WebGMEGlobal.gmeConfig.client.log);
     var ArRect = function(Left, Ceil, Right, Floor){
         if(Left === undefined){ //No arguments
             Left = 0;

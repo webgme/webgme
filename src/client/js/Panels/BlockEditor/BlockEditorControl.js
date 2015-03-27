@@ -3,7 +3,7 @@
  * @author brollb / https://github/brollb
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/Constants',
     'js/Widgets/BlockEditor/BlockEditorWidget.Constants',
     'js/NodePropertyNames',
@@ -11,7 +11,7 @@ define(['common/LogManager',
     'js/Utils/PreferencesHelper',
     'js/Utils/DisplayFormat',
     './BlockEditorControl.WidgetEventHandlers',
-    'js/Utils/GMEConcepts'], function (logManager,
+    'js/Utils/GMEConcepts'], function (Logger,
                                         CONSTANTS,
                                         SNAP_CONSTANTS,
                                         nodePropertyNames,
@@ -30,7 +30,8 @@ define(['common/LogManager',
 
     var BlockEditorControl = function(params){
         this._client = params.client;
-        this.logger = params.logger || logManager.create(params.loggerName || "BlockEditorControl");
+        var loggerName = params.loggerName || 'gme:BlockEditor:BlockEditorControl';
+        this.logger = params.logger || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this.snapCanvas = params.widget;
         this._attachClientEventListeners();
@@ -107,7 +108,7 @@ define(['common/LogManager',
                 //make sure that the selectedAspect exist in the node, otherwise fallback to All
                 var aspectNames = this._client.getMetaAspectNames(nodeId) || [];
                 if (aspectNames.indexOf(this._selectedAspect) === -1) {
-                    this.logger.warning('The currently selected aspect "' + this._selectedAspect + '" does not exist in the object "' + desc.name + ' (' + nodeId + ')", falling back to "All"');
+                    this.logger.warn('The currently selected aspect "' + this._selectedAspect + '" does not exist in the object "' + desc.name + ' (' + nodeId + ')", falling back to "All"');
                     this._selectedAspect = CONSTANTS.ASPECT_ALL;
                     WebGMEGlobal.State.registerActiveAspect(CONSTANTS.ASPECT_ALL);
                 }

@@ -5,11 +5,11 @@
  * @author brollb / https://github/brollb
  */
 
-define(['common/LogManager',
+define(['js/logger',
            'common/util/assert',
            './AutoRouter.Constants',
            './AutoRouter.Utils',
-           './AutoRouter.Point'], function ( logManager, assert, CONSTANTS, Utils, ArPoint ) {
+           './AutoRouter.Point'], function ( Logger, assert, CONSTANTS, Utils, ArPoint ) {
 
     'use strict'; 
 

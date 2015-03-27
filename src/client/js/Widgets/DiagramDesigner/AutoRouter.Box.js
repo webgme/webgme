@@ -5,13 +5,13 @@
  * @author brollb / https://github/brollb/
  */
 
-define(['common/LogManager',
+define(['js/logger',
            'common/util/assert',
            './AutoRouter.Constants',
            './AutoRouter.Utils',
            './AutoRouter.Point',
            './AutoRouter.Rect',
-           './AutoRouter.Port'], function (logManager, 
+           './AutoRouter.Port'], function (Logger,
                                            assert, 
                                            CONSTANTS, 
                                            Utils, 

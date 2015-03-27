@@ -3,8 +3,7 @@
     out: "node_worker.classes.build.js",
     baseUrl: "./",
     paths: {
-        eventDispatcher: "../../../common/EventDispatcher",
-        logManager: "../../../common/LogManager",
+        common: "../../../common",
         blob: "../../../middleware/blob",
         core: "../../../common/core",
         executor: "..",

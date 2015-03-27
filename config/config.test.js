@@ -16,4 +16,34 @@ config.blob.fsDir = './test-tmp/blob-storage';
 config.executor.outputDir = './test-tmp/executor';
 config.executor.workerRefreshInterval = 100;
 
+config.server.log = {
+    transports: [{
+        transportType: 'Console',
+        options: {
+            level: 'warn',
+            colorize: true,
+            timestamp: true,
+            prettyPrint: true,
+            depth: 2
+        }
+    }, {
+        transportType: 'File',
+        options: {
+            name: 'info-file',
+            filename: './test-tmp/server.log',
+            level: 'info',
+            json: false
+        }
+    }, {
+        transportType: 'File',
+        options: {
+            name: 'error-file',
+            filename: './test-tmp/server-error.log',
+            level: 'error',
+            handleExceptions: true,
+            json: false
+        }
+    }]
+};
+
 module.exports = config;

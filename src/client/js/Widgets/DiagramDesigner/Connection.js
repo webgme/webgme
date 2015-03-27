@@ -4,12 +4,12 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
     './DiagramDesignerWidget.Constants',
     './DiagramDesignerWidget.OperatingModes',
     './Connection.EditSegment',
-    './Connection.SegmentPoint'], function (logManager,
+    './Connection.SegmentPoint'], function (Logger,
                                             clientUtil,
                             DiagramDesignerWidgetConstants,
                             DiagramDesignerWidgetOperatingModes,
@@ -39,7 +39,8 @@ define(['common/LogManager',
     Connection = function (objId) {
         this.id = objId;
 
-        this.logger = logManager.create("Connection_" + this.id);
+        this.logger = Logger.create('gme:Widgets:DiagramDesigner:Connection_' + this.id,
+            WebGMEGlobal.gmeConfig.client.log);
         this.logger.debug("Created");
     };
 

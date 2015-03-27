@@ -1,12 +1,12 @@
-/*globals define, _*/
+/*globals define, WebGMEGlobal*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 
-define(['common/LogManager',
-        './AttributeDetailsDialog'], function (logManager,
+define(['js/logger',
+        './AttributeDetailsDialog'], function (Logger,
                                                AttributeDetailsDialog) {
 
     "use strict";
@@ -21,7 +21,8 @@ define(['common/LogManager',
 
         //get logger instance for this component
         //some comment here
-        this.logger = logManager.create("Attribute_" + this.name);
+        this.logger = Logger.create('gme:decorators:MetaDecorator:DiagramDesigner:Attribute_' + this.name,
+            WebGMEGlobal.gmeConfig.client.log);
         this.logger.debug("Created");
     };
 

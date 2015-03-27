@@ -1,16 +1,16 @@
-/*globals define, _, DEBUG*/
-
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
-var WebGMEGlobal = WebGMEGlobal || {};
+
 WebGMEGlobal.version = 'x';
 WebGMEGlobal['SUPPORTS_TOUCH'] = 'ontouchstart' in window || navigator.msMaxTouchPoints;
 
 
 // let require load all the toplevel needed script and call us on domReady
-define(['common/LogManager',
+define(['js/logger',
     'text!/gmeConfig.json',
     'text!/package.json',
     'js/client',
@@ -29,7 +29,7 @@ define(['common/LogManager',
     'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper',
     'js/Dialogs/Projects/ProjectsDialog',
-    'js/Utils/InterpreterManager'], function (logManager,
+    'js/Utils/InterpreterManager'], function (Logger,
                                             gmeConfigJson,
                                             packagejson,
                                             Client,
@@ -68,7 +68,7 @@ define(['common/LogManager',
         var layoutManager,
             client,
             loadPanels,
-            logger = logManager.create('WebGME'),
+            logger = Logger.create('gme:WebGME', WebGMEGlobal.gmeConfig.client.log),
             selectObject,
             loadBranch,
             initialThingsToDo = WebGMEUrlManager.parseInitialThingsToDoFromUrl(),

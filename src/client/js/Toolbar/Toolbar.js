@@ -5,7 +5,7 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['common/LogManager',
+define(['js/logger',
     './ToolbarButton',
     './ToolbarSeparator',
     './ToolbarRadioButtonGroup',
@@ -15,7 +15,7 @@ define(['common/LogManager',
     './ToolbarCheckBox',
     './ToolbarDropDownButton',
     './ToolbarColorPicker',
-    'css!./styles/Toolbar.css'], function (logManager,
+    'css!./styles/Toolbar.css'], function (Logger,
                                            ToolbarButton,
                                            ToolbarSeparator,
                                            ToolbarRadioButtonGroup,
@@ -63,7 +63,7 @@ define(['common/LogManager',
             event.preventDefault();
         });
 
-        this._logger = logManager.create("Toolbar");
+        this._logger = Logger.create('gme:Toolbar:Toolbar', WebGMEGlobal.gmeConfig.client.log);
 
         el.append(this._el).append(this._toolbarExt);
     };

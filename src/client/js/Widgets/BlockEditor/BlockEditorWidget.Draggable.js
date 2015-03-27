@@ -216,7 +216,7 @@ define(['js/DragDrop/DragSource',
     };
 
     BlockEditorWidgetDraggable.prototype.getDragItems = function (selectedElements) {
-        this.logger.warning("BlockEditorWidgetDraggable.getDragItems is not overridden in the controller!!! selectedElements: " + selectedElements);
+        this.logger.warn("BlockEditorWidgetDraggable.getDragItems is not overridden in the controller!!! selectedElements: " + selectedElements);
         return [];
     };
 

@@ -1,13 +1,13 @@
-/*globals define, Raphael, window*/
+/*globals define, Raphael, window, WebGMEGlobal*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
-    './DiagramDesignerWidget.Constants'], function (logManager,
+    './DiagramDesignerWidget.Constants'], function (Logger,
                             clientUtil,
                             DiagramDesignerWidgetConstants) {
 
@@ -20,7 +20,8 @@ define(['common/LogManager',
         MOUSE_EVENT_POSTFIX = "SelectionManager";
 
     SelectionManager = function (options) {
-        this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "SelectionManager"));
+        var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:SelectionManager';
+        this.logger = (options && options.logger) || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this._diagramDesigner = options ? options.diagramDesigner : null;
 
@@ -99,11 +100,11 @@ define(['common/LogManager',
     };
 
     SelectionManager.prototype.onSelectionCommandClicked = function (command, selectedIds) {
-        this.logger.warning("SelectionManager.prototype.onSelectionCommandClicked IS NOT OVERRIDDEN IN HOST COMPONENT. command: '" + command + "', selectedIds: " + selectedIds);
+        this.logger.warn("SelectionManager.prototype.onSelectionCommandClicked IS NOT OVERRIDDEN IN HOST COMPONENT. command: '" + command + "', selectedIds: " + selectedIds);
     };
 
     SelectionManager.prototype.onSelectionChanged = function (selectedIDs) {
-        this.logger.warning("SelectionManager.prototype.onSelectionChanged IS NOT OVERRIDDEN IN HOST COMPONENT. selectedIDs: " + selectedIDs);
+        this.logger.warn("SelectionManager.prototype.onSelectionChanged IS NOT OVERRIDDEN IN HOST COMPONENT. selectedIDs: " + selectedIDs);
     };
 
 
@@ -751,7 +752,7 @@ define(['common/LogManager',
     };
 
     SelectionManager.prototype.onSelectionRotated = function (deg, selectedIds) {
-        this.logger.warning("SelectionManager.prototype.onSelectionRotated IS NOT OVERRIDDEN IN HOST COMPONENT. deg: '" + deg + "'deg, selectedIds: " + selectedIds);
+        this.logger.warn("SelectionManager.prototype.onSelectionRotated IS NOT OVERRIDDEN IN HOST COMPONENT. deg: '" + deg + "'deg, selectedIds: " + selectedIds);
     };
 
     SelectionManager.prototype.enableRotation = function (enabled) {

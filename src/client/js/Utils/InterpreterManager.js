@@ -4,12 +4,14 @@ define(['common/core/core',
         'plugin/PluginManagerBase',
         'plugin/PluginResult',
         'blob/BlobClient',
-        'js/Dialogs/PluginConfig/PluginConfigDialog'
+        'js/Dialogs/PluginConfig/PluginConfigDialog',
+        'js/logger'
                                     ], function (Core,
                                                PluginManagerBase,
                                                PluginResult,
                                                BlobClient,
-                                               PluginConfigDialog) {
+                                               PluginConfigDialog,
+                                               Logger) {
     "use strict";
 
     var InterpreterManager = function (client, gmeConfig) {
@@ -17,6 +19,8 @@ define(['common/core/core',
         //this._manager = new PluginManagerBase();
         this.gmeConfig = gmeConfig;
         this._savedConfigs = {};
+        this.logger = Logger.create('gme:InterpreterManager', gmeConfig.client.log);
+        this.logger.debug('InterpreterManager ctor');
     };
 
     var getPlugin = function(name,callback){
@@ -47,11 +51,12 @@ define(['common/core/core',
     InterpreterManager.prototype.run = function (name, silentPluginCfg, callback) {
         var self = this;
         getPlugin(name,function(err,plugin){
+            self.logger.debug('Getting getPlugin in run.');
             if(!err && plugin) {
                 var plugins = {},
                     runWithConfiguration;
                 plugins[name] = plugin;
-                var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, plugins,
+                var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, Logger, plugins,
                     self.gmeConfig);
                 pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
                     //#1: display config to user

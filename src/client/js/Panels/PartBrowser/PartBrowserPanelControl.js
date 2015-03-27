@@ -1,12 +1,12 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Utils/METAAspectHelper',
-    'js/Utils/PreferencesHelper'], function (logManager,
+    'js/Utils/PreferencesHelper'], function (Logger,
                              CONSTANTS,
                              GMEConcepts,
                              nodePropertyNames,
@@ -39,7 +39,7 @@ define(['common/LogManager',
 
         this._initDragDropFeatures();
 
-        this._logger = logManager.create("PartBrowserControl");
+        this._logger = Logger.create("gme:Panels:PartBrowser:PartBrowserControl", WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug("Created");
 
         METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
@@ -82,7 +82,7 @@ define(['common/LogManager',
                 //make sure that the _aspect exist in the node, otherwise fallback to All
                 var aspectNames = this._client.getMetaAspectNames(nodeId) || [];
                 if (aspectNames.indexOf(this._aspect) === -1) {
-                    this._logger.warning('The currently selected aspect "' + this._aspect + '" does not exist in the object "' + nodeId + '", falling back to "All"');
+                    this._logger.warn('The currently selected aspect "' + this._aspect + '" does not exist in the object "' + nodeId + '", falling back to "All"');
                     this._aspect = CONSTANTS.ASPECT_ALL;
                 }
             }
@@ -163,7 +163,7 @@ define(['common/LogManager',
 
     PartBrowserControl.prototype._onUnload = function (gmeID) {
         if (this._containerNodeId === gmeID) {
-            this._logger.warning('Container node got unloaded...');
+            this._logger.warn('Container node got unloaded...');
             this._validChildrenTypeIDs = [];
             this._partBrowserView.clear();
         }

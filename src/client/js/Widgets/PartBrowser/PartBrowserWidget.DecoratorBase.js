@@ -4,8 +4,8 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['common/LogManager',
-        'js/Decorators/WidgetDecoratorBase'], function (logManager,
+define(['js/logger',
+        'js/Decorators/WidgetDecoratorBase'], function (Logger,
                                                         WidgetDecoratorBase) {
     "use strict";
 
@@ -54,7 +54,7 @@ define(['common/LogManager',
 
     //called by the controller when an event arrives about registered subcomponent ID
     PartBrowserWidgetDecoratorBase.prototype.notifyComponentEvent = function (componentList) {
-        this.logger.warning('notifyComponentEvent ' + componentList);
+        this.logger.warn('notifyComponentEvent ' + componentList);
     };
 
     //initialization code for the decorator

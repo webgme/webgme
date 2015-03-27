@@ -1,7 +1,7 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['common/LogManager',
-    'js/Controls/DropDownMenu'], function (logManager,
+define(['js/logger',
+    'js/Controls/DropDownMenu'], function (Logger,
                                             DropDownMenu) {
 
     "use strict";
@@ -10,7 +10,7 @@ define(['common/LogManager',
         NO_BRANCH_TEXT = 'NO BRANCH SELECTED';
 
     BranchSelectorWidget = function (containerEl, client) {
-        this._logger = logManager.create("BranchSelectorWidget");
+        this._logger = Logger.create('gme:Widgets:BranchSelectorWidget', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
         this._el = containerEl;

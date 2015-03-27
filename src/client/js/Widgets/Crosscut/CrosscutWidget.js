@@ -10,7 +10,7 @@ define(['js/DragDrop/DragHelper',
 
     CrosscutWidget = function (container, params) {
         params = params || {};
-        params.loggerName = "CrosscutWidget";
+        params.loggerName = 'gme:Widgets:CrossCut:CrosscutWidget';
 
         params.tabsEnabled = true;
         params.addTabs = true;

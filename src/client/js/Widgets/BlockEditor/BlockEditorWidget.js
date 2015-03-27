@@ -5,7 +5,7 @@
  * @author brollb / https:// github/brollb
  */
 
-define(['common/LogManager',
+define(['js/logger',
         'raphaeljs',
         './BlockEditorWidget.Zoom',
         './BlockEditorWidget.Mouse',
@@ -24,7 +24,7 @@ define(['common/LogManager',
         'js/Loader/LoaderCircles',
         'css!./styles/BlockEditorWidget.css',
         'css!./styles/BlockEditorWidget.DecoratorBase.ConnectionArea.css'
-], function (logManager,
+], function (Logger,
              raphaeljs,
              BlockEditorWidgetZoom,
              BlockEditorWidgetMouse,
@@ -59,7 +59,7 @@ define(['common/LogManager',
 
     BlockEditorWidget = function (container, params) {
         params = params || {};
-        params.loggerName = "BlockEditorWidget";
+        params.loggerName = 'gme:Widgets:BlockEditor:BlockEditorWidget';
 
         // merge default values with the given parameters
         _.extend(params, defaultParams);
@@ -89,7 +89,7 @@ define(['common/LogManager',
         this._zoomRatio = 1;
 
         // if the widget has to support drop feature at all
-        this.logger = logManager.create(params.loggerName);
+        this.logger = Logger.create(params.loggerName, WebGMEGlobal.gmeConfig.client.log);
         this._droppable = params.droppable;
 
         this._init(container, params);
@@ -404,11 +404,11 @@ define(['common/LogManager',
     };
 
     BlockEditorWidget.prototype.onSelectionDelete = function (selectedIds) {
-        this.logger.warning("BlockEditorWidget.onSelectionDelete IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "'");
+        this.logger.warn("BlockEditorWidget.onSelectionDelete IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "'");
     };
 
     BlockEditorWidget.prototype.onSelectionContextMenu = function (selectedIds, mousePos) {
-        this.logger.warning("BlockEditorWidget.onSelectionContextMenu IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "', mousePos: " + JSON.stringify(mousePos));
+        this.logger.warn("BlockEditorWidget.onSelectionContextMenu IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "', mousePos: " + JSON.stringify(mousePos));
     };
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
@@ -429,31 +429,31 @@ define(['common/LogManager',
 
     /* * * * * * * * * * * * * * COPY PASTE API * * * * * * * * * * * * * */
     BlockEditorWidget.prototype.onClipboardCopy = function (selectedIds) {
-        this.logger.warning("BlockEditorWidget.prototype.onClipboardCopy not overridden in controller!!! selectedIds: '" + selectedIds + "'");
+        this.logger.warn("BlockEditorWidget.prototype.onClipboardCopy not overridden in controller!!! selectedIds: '" + selectedIds + "'");
     };
 
     BlockEditorWidget.prototype.onClipboardPaste = function () {
-        this.logger.warning("BlockEditorWidget.prototype.onClipboardPaste not overridden in controller!!!");
+        this.logger.warn("BlockEditorWidget.prototype.onClipboardPaste not overridden in controller!!!");
     };
     /* * * * * * * * * * * * * * END COPY PASTE API * * * * * * * * * * * * * */
 
     /************************* DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
     BlockEditorWidget.prototype.onDragStartLinkableItemDraggable = function (itemID) {
-        this.logger.warning("BlockEditorWidget.prototype.onLinkableItemDraggable not overridden in controller. itemID: " + itemID);
+        this.logger.warn("BlockEditorWidget.prototype.onLinkableItemDraggable not overridden in controller. itemID: " + itemID);
 
         return true;
     };
 
 
     BlockEditorWidget.prototype.onDragStartLinkableItemCopyable = function (itemID) {
-        this.logger.warning("BlockEditorWidget.prototype.onDragStartLinkableItemCopyable not overridden in controller. itemID: " + itemID);
+        this.logger.warn("BlockEditorWidget.prototype.onDragStartLinkableItemCopyable not overridden in controller. itemID: " + itemID);
 
         return true;
     };
 
 
     BlockEditorWidget.prototype.onDragStartDesignerConnectionCopyable = function (connectionID) {
-        this.logger.warning("BlockEditorWidget.prototype.onDragStartDesignerConnectionCopyable not overridden in controller. connectionID: " + connectionID);
+        this.logger.warn("BlockEditorWidget.prototype.onDragStartDesignerConnectionCopyable not overridden in controller. connectionID: " + connectionID);
 
         return true;
     };
@@ -960,11 +960,11 @@ define(['common/LogManager',
 
     /************************* HIGHLIGHTED / UNHIGHLIGHTED EVENT *****************************/
     BlockEditorWidget.prototype.onHighlight = function (idList) {
-        this.logger.warning("BlockEditorWidget.prototype.onHighlight not overridden in controller. idList: " + idList);
+        this.logger.warn("BlockEditorWidget.prototype.onHighlight not overridden in controller. idList: " + idList);
     };
 
     BlockEditorWidget.prototype.onUnhighlight = function (idList) {
-        this.logger.warning("BlockEditorWidget.prototype.onUnhighlight not overridden in controller. idList: " + idList);
+        this.logger.warn("BlockEditorWidget.prototype.onUnhighlight not overridden in controller. idList: " + idList);
     };
     /************************* HIGHLIGHTED / UNHIGHLIGHTED EVENT *****************************/
 

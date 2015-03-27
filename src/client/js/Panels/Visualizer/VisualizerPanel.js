@@ -5,13 +5,13 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/Loader/LoaderProgressBar',
     'js/Constants',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
     '/listAllVisualizerDescriptors',
-    'css!./styles/VisualizerPanel.css'], function (logManager,
+    'css!./styles/VisualizerPanel.css'], function (Logger,
                                     LoaderProgressBar,
                                     CONSTANTS,
                                     PanelBaseWithHeader,
@@ -203,7 +203,7 @@ define(['common/LogManager',
         }
 
         if (this._visualizers[menuDesc.id]) {
-            this.logger.warning("A visualizer with the ID '" + menuDesc.id + "' already exists...");
+            this.logger.warn("A visualizer with the ID '" + menuDesc.id + "' already exists...");
             doCallBack();
         } else {
             li.attr("data-id", menuDesc.id);
@@ -237,7 +237,7 @@ define(['common/LogManager',
             } else {
                 a.append(' <i class="glyphicon glyphicon-warning-sign"></i>');
 
-                this.logger.warning("The visualizer with the ID '" + menuDesc.id + "' is missing 'panel' or 'control'");
+                this.logger.warn("The visualizer with the ID '" + menuDesc.id + "' is missing 'panel' or 'control'");
 
                 doCallBack();
             }

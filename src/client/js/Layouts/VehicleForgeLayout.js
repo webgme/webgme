@@ -6,11 +6,11 @@
  */
 
 define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
-    'common/LogManager',
+    'js/logger',
     './DefaultLayout',
     'text!./templates/DefaultLayout.html',
     'text!./VehicleForgeLayoutConfig.json'], function (_jQueryLayout,
-                                                               logManager,
+                                                               Logger,
                                                                DefaultLayout,
                                                                vehicleForgeLayoutTemplate,
                                                                VehicleForgeLayoutConfigJSON) {
@@ -21,7 +21,7 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         CONFIG = JSON.parse(VehicleForgeLayoutConfigJSON);
 
     VehicleForgeLayout = function () {
-        this._logger = logManager.create('VehicleForgeLayout');
+        this._logger = Logger.create('gme:Layouts:VehicleForgeLayout', WebGMEGlobal.gmeConfig.client.log);
 
         //call parent's constructor
         DefaultLayout.apply(this, [{'logger': this._logger,

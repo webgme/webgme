@@ -100,7 +100,7 @@ define(['js/DragDrop/DragSource',
 
 
     DiagramDesignerWidgetDraggable.prototype.getDragItems = function (selectedElements) {
-        this.logger.warning("DiagramDesignerWidgetDraggable.getDragItems is not overridden in the controller!!! selectedElements: " + selectedElements);
+        this.logger.warn("DiagramDesignerWidgetDraggable.getDragItems is not overridden in the controller!!! selectedElements: " + selectedElements);
         return [];
     };
 

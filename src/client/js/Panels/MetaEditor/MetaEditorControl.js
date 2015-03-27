@@ -1,6 +1,6 @@
 /*globals define, _, $, console, angular, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
     'js/Constants',
     'js/Utils/GMEConcepts',
@@ -10,7 +10,7 @@ define(['common/LogManager',
     './MetaEditorControl.DiagramDesignerWidgetEventHandlers',
     './MetaRelations',
     './MetaEditorConstants',
-    'js/Utils/PreferencesHelper'], function (logManager,
+    'js/Utils/PreferencesHelper'], function (Logger,
                                                         util,
                                                         CONSTANTS,
                                                         GMEConcepts,
@@ -33,7 +33,8 @@ define(['common/LogManager',
     MetaEditorControl = function (options) {
         var self = this;
 
-        this.logger = options.logger || logManager.create(options.loggerName || "MetaEditorControl");
+        this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:MetaEditor:MetaEditorControl',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
 
@@ -1187,7 +1188,7 @@ define(['common/LogManager',
                 /*this.logger.debug('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '"');
                 this._client.delBase(objectID);*/
                 //TEMPORARILY DO NOT ALLOW DELETING INHERITANCE RELATIONSHIP
-                this.logger.warning('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '" is not allowed...');
+                this.logger.warn('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '" is not allowed...');
             }
         }
     };

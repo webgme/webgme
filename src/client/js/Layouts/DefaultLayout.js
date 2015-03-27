@@ -6,10 +6,10 @@
  */
 
 define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
-    'common/LogManager',
+    'js/logger',
     'text!./templates/DefaultLayout.html',
     'text!./DefaultLayoutConfig.json'], function (_jQueryLayout,
-                             logManager,
+                             Logger,
                              defaultLayoutTemplate,
                              DefaultLayoutConfigJSON) {
 
@@ -26,7 +26,8 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         SIDE_PANEL_WIDTH = 202;
 
     DefaultLayout = function (params) {
-        this._logger = (params && params.logger) || logManager.create('DefaultLayout');
+        this._logger = (params && params.logger) || Logger.create('gme:Layouts:DefaultLayout',
+            WebGMEGlobal.gmeConfig.client.log);
         this.panels = (params && params.panels) || CONFIG.panels;
         this._template = (params && params.template) || defaultLayoutTemplate;
     };
@@ -130,7 +131,7 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 idx = this._centerPanels.indexOf(panel);
 
                 if (idx === -1) {
-                    this._logger.warning("Panel to be removed not found");
+                    this._logger.warn("Panel to be removed not found");
                 } else {
                     this._centerPanels.splice(idx, 1);
                     this._onCenterResize();

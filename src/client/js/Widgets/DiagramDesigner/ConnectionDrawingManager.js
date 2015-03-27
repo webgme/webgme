@@ -1,9 +1,9 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-define(['common/LogManager',
+define(['js/logger',
         'js/Constants',
         'js/Widgets/DiagramDesigner/DragScroll',
-        './DiagramDesignerWidget.Constants'], function (logManager,
+        './DiagramDesignerWidget.Constants'], function (Logger,
                                                         CONSTANTS,
                                                         DragScroll,
                                                         DiagramDesignerWidgetConstants) {
@@ -32,7 +32,8 @@ define(['common/LogManager',
      * It draws the connection on a Raphael SVG paper
      */
     ConnectionDrawingManager = function (options) {
-        this.logger = logManager.create(((options && options.loggerName) || "ConnectionDrawingManager"));
+        var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:ConnectionDrawingManager';
+        this.logger = Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this._diagramDesigner = options ? options.diagramDesigner : null;
 
@@ -386,14 +387,14 @@ define(['common/LogManager',
      * Called when a new connection is drawn with the creation paramteres
      */
     ConnectionDrawingManager.prototype.onCreateNewConnection = function (params) {
-        this.logger.warning("onCreateNewConnection: " + JSON.stringify(params));
+        this.logger.warn("onCreateNewConnection: " + JSON.stringify(params));
     };
 
     /*
      * Called when a connection's 'src' or 'dst' is being reconnected to a new connector
      */
     ConnectionDrawingManager.prototype.onModifyConnectionEnd = function (params) {
-        this.logger.warning("onModifyConnectionEnd: " + JSON.stringify(params));
+        this.logger.warn("onModifyConnectionEnd: " + JSON.stringify(params));
     };
 
 
@@ -442,7 +443,7 @@ define(['common/LogManager',
      * Called on connection drawing start, should be overridden to handle the event
      */
     ConnectionDrawingManager.prototype.onStartConnectionCreate = function (params) {
-        this.logger.warning("onStartConnectionCreate with params: '" + JSON.stringify(params));
+        this.logger.warn("onStartConnectionCreate with params: '" + JSON.stringify(params));
     };
 
 
@@ -484,7 +485,7 @@ define(['common/LogManager',
      * Called on connection reconnect start, should be overridden to handle the event
      */
     ConnectionDrawingManager.prototype.onStartConnectionReconnect = function (params) {
-        this.logger.warning("onStartConnectionReconnect with params: '" + JSON.stringify(params));
+        this.logger.warn("onStartConnectionReconnect with params: '" + JSON.stringify(params));
     };
 
     /*
@@ -634,7 +635,7 @@ define(['common/LogManager',
      * Called on connection create/reconnect end, should be overridden to handle the event
      */
     ConnectionDrawingManager.prototype.onEndConnectionDraw = function () {
-        this.logger.warning("onEndConnectionDraw NOT OVERRIDDEN");
+        this.logger.warn("onEndConnectionDraw NOT OVERRIDDEN");
     };
 
 
