@@ -109,8 +109,11 @@ function importProject(parameters, done) {
     } else {
         if (!parameters.mongoUri) {
             result.storage = new Storage({globConf: parameters.gmeConfig});
+        } else {
+            throw new Error('mongoUri option is not implemented yet.');
         }
     }
+
 
     result.storage.openDatabase(function (err) {
         if (err) {

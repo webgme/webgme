@@ -173,6 +173,7 @@ define([
         AllPlugins, AllDecorators;
 
 
+        //FIXME remove TESTING and leave only require here
       if(typeof TESTING === 'undefined') {
           if (window) {
               _configuration.host = window.location.protocol + '//' + window.location.host;
@@ -191,22 +192,23 @@ define([
 
 
 
-      function print_nodes(pretext) {
-        if (pretext) {
-          console.log(pretext);
-        }
-        var nodes = "loaded: ";
-        for (var k in _loadNodes) {
-          nodes += "(" + k + "," + _loadNodes[k].hash + ")";
-        }
-        console.log(nodes);
-        nodes = "stored: ";
-        for (var k in _nodes) {
-          nodes += "(" + k + "," + _nodes[k].hash + ")";
-        }
-        console.log(nodes);
-        return;
-      }
+        //TODO remove it
+      //function print_nodes(pretext) {
+      //  if (pretext) {
+      //    console.log(pretext);
+      //  }
+      //  var nodes = "loaded: ";
+      //  for (var k in _loadNodes) {
+      //    nodes += "(" + k + "," + _loadNodes[k].hash + ")";
+      //  }
+      //  console.log(nodes);
+      //  nodes = "stored: ";
+      //  for (var k in _nodes) {
+      //    nodes += "(" + k + "," + _nodes[k].hash + ")";
+      //  }
+      //  console.log(nodes);
+      //  return;
+      //}
 
       //default configuration
         //FIXME: Are these gme options or not??
@@ -256,6 +258,7 @@ define([
         }
       }
 
+        //FIXME remove TESTING
       function newDatabase() {
         var storageOptions ={log: Logger.create('gme:client:storage', gmeConfig.client.log), host: _configuration.host},
             protocolStr;
@@ -634,7 +637,8 @@ define([
                   }
                 }
 
-                return _project.getBranchHash(branch, _recentCommits[0], branchHashUpdated);
+                  //FIXME should kill the branch watcher gracefully as it is possible now to get a callback, but the branch is already closed here - actually the whole project is closed
+                return (branch === _branch && _database && _project) ? _project.getBranchHash(branch, _recentCommits[0], branchHashUpdated) : null;
 
                 /*if(redoerNeedsClean || !_selfCommits[newhash]){
                   redoerNeedsClean = false;
@@ -973,21 +977,24 @@ define([
       }
 
       //internal functions
-      function cleanUsersTerritories() {
-        for (var i in _users) {
-          var events = [];
-          for (var j in _users[i].PATHS) {
-            events.push({etype: 'unload', eid: j});
-          }
-          // TODO events.push({etype:'complete',eid:null});
-
-
-          _users[i].FN(events);
-          _users[i].PATTERNS = {};
-          _users[i].PATHS = {};
-          _users[i].SENDEVENTS = true;
+        function cleanUsersTerritories() {
+            //look out as the user can remove itself at any time!!!
+            var userIds = Object.keys(_users),
+                i, j, events;
+            for (i = 0; i < userIds.length; i++) {
+                if (_users[userIds[i]]) {
+                    events = [{eid: null, etype: 'complete'}];
+                    for (j in _users[userIds[i]].PATHS
+                        ) {
+                        events.push({etype: 'unload', eid: j});
+                    }
+                    _users[userIds[i]].PATTERNS = {};
+                    _users[userIds[i]].PATHS = {};
+                    _users[userIds[i]].SENDEVENTS = true;
+                    _users[userIds[i]].FN(events);
+                }
+            }
         }
-      }
 
       function reLaunchUsers() {
         for (var i in _users) {
@@ -1084,17 +1091,19 @@ define([
             return ancestors;
         }
 
-      function _getModifiedNodes(newerNodes){
-            var modifiedNodes = [];
-            for(var i in _nodes){
-                if(newerNodes[i]){
-                    if(newerNodes[i].hash !== _nodes[i].hash && _nodes[i].hash !== ""){
-                        modifiedNodes.push(i);
-                    }
-                }
-            }
-            return modifiedNodes;
-        }
+        //TODO should be removed as it is outdated
+      //function _getModifiedNodes(newerNodes){
+      //      var modifiedNodes = [];
+      //      for(var i in _nodes){
+      //          if(newerNodes[i]){
+      //              if(newerNodes[i].hash !== _nodes[i].hash && _nodes[i].hash !== ""){
+      //                  modifiedNodes.push(i);
+      //              }
+      //          }
+      //      }
+      //      return modifiedNodes;
+      //}
+
         function isInChangeTree(path){
             var pathArray = path.split("/"),
                 diffObj = _changeTree,
@@ -1267,37 +1276,38 @@ define([
         return null;
       }
 
-      function _loadChildrenPattern(core, nodesSoFar, node, level, callback) {
-        var path = core.getPath(node);
-        _metaNodes[path] = node;
-        if (!nodesSoFar[path]) {
-          nodesSoFar[path] = {node: node, incomplete: true, basic: true, hash: getStringHash(node)};
-        }
-        if (level > 0) {
-          if (core.getChildrenRelids(nodesSoFar[path].node).length > 0) {
-            core.loadChildren(nodesSoFar[path].node, function (err, children) {
-              if (!err && children) {
-                var missing = children.length;
-                var error = null;
-                for (var i = 0; i < children.length; i++) {
-                  loadChildrenPattern(core, nodesSoFar, children[i], level - 1, function (err) {
-                    error = error || err;
-                    if (--missing === 0) {
-                      callback(error);
-                    }
-                  });
-                }
-              } else {
-                callback(err);
-              }
-            });
-          } else {
-            callback(null);
-          }
-        } else {
-          callback(null);
-        }
-      }
+        //TODO should be removec as a new version is used currently
+      //function _loadChildrenPattern(core, nodesSoFar, node, level, callback) {
+      //  var path = core.getPath(node);
+      //  _metaNodes[path] = node;
+      //  if (!nodesSoFar[path]) {
+      //    nodesSoFar[path] = {node: node, incomplete: true, basic: true, hash: getStringHash(node)};
+      //  }
+      //  if (level > 0) {
+      //    if (core.getChildrenRelids(nodesSoFar[path].node).length > 0) {
+      //      core.loadChildren(nodesSoFar[path].node, function (err, children) {
+      //        if (!err && children) {
+      //          var missing = children.length;
+      //          var error = null;
+      //          for (var i = 0; i < children.length; i++) {
+      //            loadChildrenPattern(core, nodesSoFar, children[i], level - 1, function (err) {
+      //              error = error || err;
+      //              if (--missing === 0) {
+      //                callback(error);
+      //              }
+      //            });
+      //          }
+      //        } else {
+      //          callback(err);
+      //        }
+      //      });
+      //    } else {
+      //      callback(null);
+      //    }
+      //  } else {
+      //    callback(null);
+      //  }
+      //}
 
       //partially optimized
       function loadChildrenPattern(core, nodesSoFar, node, level, callback) {
@@ -1445,17 +1455,18 @@ define([
             var patterns = {},
                 orderedPatternIds = [],
                 error = null,
-                i, j,keysi,keysj,
-                loadNextPattern = function(index){
-                    if(index<orderedPatternIds.length){
-                        loadPattern(_core,orderedPatternIds[index],patterns[orderedPatternIds[index]],_loadNodes,function(err){
-                            error = error || err;
-                            loadNextPattern(index+1);
-                        });
-                    } else {
-                        callback(error);
-                    }
-                };
+                i, j,keysi,keysj;
+                //TODO check and remove as it is not used
+                //loadNextPattern = function(index){
+                //    if(index<orderedPatternIds.length){
+                //        loadPattern(_core,orderedPatternIds[index],patterns[orderedPatternIds[index]],_loadNodes,function(err){
+                //            error = error || err;
+                //            loadNextPattern(index+1);
+                //        });
+                //    } else {
+                //        callback(error);
+                //    }
+                //};
             _loadNodes = {};
             _loadError = 0;
 
@@ -1589,6 +1600,7 @@ define([
             //loading(newRootHash);
           }
         } else {
+            //FIXME missing callback?!
           _msg = "";
         }
       }
@@ -1790,7 +1802,7 @@ define([
             loading(commitObj.root, callback);
           } else {
             logger.error('Cannot view given ' + hash + ' commit as it\'s root cannot be loaded! [' + JSON.stringify(err) + ']');
-            callback(err);
+            callback(err || new Error('commit object cannot be found!'));
           }
         });
       }
@@ -1957,6 +1969,8 @@ define([
             _networkWatcher = networkWatcher();
             serverEventer();
 
+              //FIXME remove option open, and the possibility to open 'first' project
+              // should be clear if it is projectId or projectName
             if (options.open) {
               if (options.project) {
                 openProject(options.project, callback);
@@ -2091,42 +2105,43 @@ define([
         }
       }
 
-      function _copyMoreNodes(parameters) {
-        //now we will use the multiple copy function of the core
-        var nodes = [],
-          copiedNodes,
-          i, j, paths, keys,
-          parent = _nodes[parameters.parentId].node,
-          resultMap = {};
-        keys = Object.keys(parameters);
-        keys.splice(keys.indexOf('parentId'), 1);
-        paths = keys;
-        for (i = 0; i < paths.length; i++) {
-          nodes.push(_nodes[paths[i]].node);
-        }
-
-        copiedNodes = _core.copyNodes(nodes, parent);
-
-        for (i = 0; i < paths.length; i++) {
-          keys = Object.keys(parameters[paths[i]].attributes || {});
-          for (j = 0; j < keys.length; j++) {
-            _core.setAttribute(copiedNodes[i], keys[j], parameters[paths[i]].attributes[keys[j]]);
-          }
-
-          keys = Object.keys(parameters[paths[i]].registry || {});
-          for (j = 0; j < keys.length; j++) {
-            _core.setRegistry(copiedNodes[i], keys[j], parameters[paths[i]].registry[keys[j]]);
-          }
-        }
-
-
-        //creating the result map and storing the nodes to our cache, so the user will know which path became which
-        for (i = 0; i < paths.length; i++) {
-          resultMap[paths[i]] = storeNode(copiedNodes[i]);
-        }
-
-        return resultMap;
-      }
+        //TODO should be removed if the copyMoreNodes is functioning right now
+      //function _copyMoreNodes(parameters) {
+      //  //now we will use the multiple copy function of the core
+      //  var nodes = [],
+      //    copiedNodes,
+      //    i, j, paths, keys,
+      //    parent = _nodes[parameters.parentId].node,
+      //    resultMap = {};
+      //  keys = Object.keys(parameters);
+      //  keys.splice(keys.indexOf('parentId'), 1);
+      //  paths = keys;
+      //  for (i = 0; i < paths.length; i++) {
+      //    nodes.push(_nodes[paths[i]].node);
+      //  }
+      //
+      //  copiedNodes = _core.copyNodes(nodes, parent);
+      //
+      //  for (i = 0; i < paths.length; i++) {
+      //    keys = Object.keys(parameters[paths[i]].attributes || {});
+      //    for (j = 0; j < keys.length; j++) {
+      //      _core.setAttribute(copiedNodes[i], keys[j], parameters[paths[i]].attributes[keys[j]]);
+      //    }
+      //
+      //    keys = Object.keys(parameters[paths[i]].registry || {});
+      //    for (j = 0; j < keys.length; j++) {
+      //      _core.setRegistry(copiedNodes[i], keys[j], parameters[paths[i]].registry[keys[j]]);
+      //    }
+      //  }
+      //
+      //
+      //  //creating the result map and storing the nodes to our cache, so the user will know which path became which
+      //  for (i = 0; i < paths.length; i++) {
+      //    resultMap[paths[i]] = storeNode(copiedNodes[i]);
+      //  }
+      //
+      //  return resultMap;
+      //}
 
       function moveMoreNodes(parameters) {
         var pathsToMove = [],
@@ -2276,14 +2291,15 @@ define([
         }
       }
 
-      function deleteNode(path, msg) {
-        if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
-          _core.deleteNode(_nodes[path].node);
-          //delete _nodes[path];
-          msg = msg || 'deleteNode(' + path + ')';
-          saveRoot(msg);
-        }
-      }
+        //TODO should be removed as there is no user or public API related to this function
+      //function deleteNode(path, msg) {
+      //  if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+      //    _core.deleteNode(_nodes[path].node);
+      //    //delete _nodes[path];
+      //    msg = msg || 'deleteNode(' + path + ')';
+      //    saveRoot(msg);
+      //  }
+      //}
 
       function delMoreNodes(paths, msg) {
         if (_core) {
@@ -2338,7 +2354,7 @@ define([
 
       function delPointer(path, name, msg) {
         if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
-          _core.setPointer(_nodes[path].node, name, undefined);
+          _core.deletePointer(_nodes[path].node, name);
           msg = msg || 'delPointer(' + path + ',' + name + ')';
           saveRoot(msg);
         }
@@ -2798,23 +2814,24 @@ define([
         });
       }
 
-      function getExternalInterpreterConfigUrlAsync(selectedItemsPaths, filename, callback) {
-        var config = {};
-        config.host = window.location.protocol + "//" + window.location.host;
-        config.project = _projectName;
-        config.token = _TOKEN.getToken();
-        config.selected = plainUrl({command: 'node', path: selectedItemsPaths[0] || ""});
-        config.commit = URL.addSpecialChars(_recentCommits[0] || "");
-        config.root = plainUrl({command: 'node'});
-        config.branch = _branch
-        _database.simpleRequest({command: 'generateJsonURL', object: config}, function (err, resId) {
-          if (err) {
-            callback(err);
-          } else {
-            callback(null, window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' + resId + '/' + filename);
-          }
-        });
-      }
+        //TODO should be either removed or refactored as it is currently not used and probably there is no need for such functionality here
+      //function getExternalInterpreterConfigUrlAsync(selectedItemsPaths, filename, callback) {
+      //  var config = {};
+      //  config.host = window.location.protocol + "//" + window.location.host;
+      //  config.project = _projectName;
+      //  config.token = _TOKEN.getToken();
+      //  config.selected = plainUrl({command: 'node', path: selectedItemsPaths[0] || ""});
+      //  config.commit = URL.addSpecialChars(_recentCommits[0] || "");
+      //  config.root = plainUrl({command: 'node'});
+      //  config.branch = _branch
+      //  _database.simpleRequest({command: 'generateJsonURL', object: config}, function (err, resId) {
+      //    if (err) {
+      //      callback(err);
+      //    } else {
+      //      callback(null, window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' + resId + '/' + filename);
+      //    }
+      //  });
+      //}
 
       function getExportLibraryUrlAsync(libraryRootPath, filename, callback) {
         var command = {};
@@ -2903,7 +2920,7 @@ define([
                 return callback(err);
               }
 
-              saveRoot("library have been updated...", callback);
+              saveRoot("library has been updated...", callback);
             });
           });
         });
@@ -3035,309 +3052,313 @@ define([
         });
       }
 
+        //TODO these functions or some successors will be needed when the UI will handle merge tasks!!!
       //TODO probably it would be a good idea to put this functionality to server
-      function getBaseOfCommits(one,other,callback){
-        _project.getCommonAncestorCommit(one,other,callback);
-      }
+      //function getBaseOfCommits(one,other,callback){
+      //  _project.getCommonAncestorCommit(one,other,callback);
+      //}
       //TODO probably this would also beneficial if this would work on server as well
-      function getDiffTree(from,to,callback){
-        var needed = 2,error = null,
-          core = getNewCore(_project, gmeConfig),
-          fromRoot={root:{},commit:from},
-          toRoot={root:{},commit:to},
-          rootsLoaded = function(){
-            if(error){
-              return callback(error,{});
-            }
-            _core.generateTreeDiff(fromRoot.root,toRoot.root,callback);
-          },
-          loadRoot = function(root){
-            _project.loadObject(root.commit,function(err,c){
-              error = error || ( err || c ? null : new Error('no commit object was found'));
-              if(!err && c){
-                core.loadRoot(c.root,function(err,r){
-                  error = error || ( err || r ? null : new Error('no root was found'));
-                  root.root = r;
-                  if(--needed === 0){
-                    rootsLoaded();
-                  }
-                });
-              } else {
-                if(--needed === 0){
-                  rootsLoaded();
-                }
-              }
-            });
-          };
-        loadRoot(fromRoot);
-        loadRoot(toRoot);
+      //function getDiffTree(from,to,callback){
+      //  var needed = 2,error = null,
+      //    core = getNewCore(_project, gmeConfig),
+      //    fromRoot={root:{},commit:from},
+      //    toRoot={root:{},commit:to},
+      //    rootsLoaded = function(){
+      //      if(error){
+      //        return callback(error,{});
+      //      }
+      //      _core.generateTreeDiff(fromRoot.root,toRoot.root,callback);
+      //    },
+      //    loadRoot = function(root){
+      //      _project.loadObject(root.commit,function(err,c){
+      //        error = error || ( err || c ? null : new Error('no commit object was found'));
+      //        if(!err && c){
+      //          core.loadRoot(c.root,function(err,r){
+      //            error = error || ( err || r ? null : new Error('no root was found'));
+      //            root.root = r;
+      //            if(--needed === 0){
+      //              rootsLoaded();
+      //            }
+      //          });
+      //        } else {
+      //          if(--needed === 0){
+      //            rootsLoaded();
+      //          }
+      //        }
+      //      });
+      //    };
+      //  loadRoot(fromRoot);
+      //  loadRoot(toRoot);
+      //
+      //}
 
-      }
-
-      function getConflictOfDiffs(base,extension){
-        return _core.tryToConcatChanges(base,extension);
-      }
-      function getResolve(resolveObject){
-        return _core.applyResolution(resolveObject);
-      }
+      //function getConflictOfDiffs(base,extension){
+      //  return _core.tryToConcatChanges(base,extension);
+      //}
+      //function getResolve(resolveObject){
+      //  return _core.applyResolution(resolveObject);
+      //}
       //TODO move to server
-      function applyDiff(branch,baseCommitHash,branchCommitHash,parents,diff,callback){
-        _project.loadObject(baseCommitHash,function(err,cObject){
-          var core = getNewCore(_project, gmeConfig);
-          if(!err && cObject){
-            core.loadRoot(cObject.root,function(err,root){
-              if(!err && root){
-                core.applyTreeDiff(root,diff,function(err){
-                  if(err){
-                    return callback(err);
-                  }
+      //function applyDiff(branch,baseCommitHash,branchCommitHash,parents,diff,callback){
+      //  _project.loadObject(baseCommitHash,function(err,cObject){
+      //    var core = getNewCore(_project, gmeConfig);
+      //    if(!err && cObject){
+      //      core.loadRoot(cObject.root,function(err,root){
+      //        if(!err && root){
+      //          core.applyTreeDiff(root,diff,function(err){
+      //            if(err){
+      //              return callback(err);
+      //            }
+      //
+      //            core.persist(root,function(err){
+      //              if(err){
+      //                return callback(err);
+      //              }
+      //
+      //              var newHash = _project.makeCommit(parents,core.getHash(root),"merging",function(err){
+      //                if(err){
+      //                  return callback(err);
+      //                }
+      //                _project.setBranchHash(branch,branchCommitHash,newHash,callback);
+      //              });
+      //            });
+      //          });
+      //        } else {
+      //          callback(err || new Error('no root was found'));
+      //        }
+      //      });
+      //    } else {
+      //      callback(err || new Error('no commit object was found'));
+      //    }
+      //  });
+      //}
 
-                  core.persist(root,function(err){
-                    if(err){
-                      return callback(err);
-                    }
+      //function merge(whereBranch,whatCommit,whereCommit,callback){
+      //  ASSERT(_project && typeof whatCommit === 'string' && typeof whereCommit === 'string' && typeof callback === 'function');
+      //  _project.getCommonAncestorCommit(whatCommit,whereCommit,function(err,baseCommit){
+      //    if(!err && baseCommit){
+      //      var base,what,where,baseToWhat,baseToWhere,rootNeeds = 3,error = null,
+      //      rootsLoaded = function(){
+      //          var needed = 2,error = null;
+      //          _core.generateTreeDiff(base,what,function(err,diff){
+      //            error = error || err;
+      //            baseToWhat = diff;
+      //            if(--needed===0){
+      //              if(!error){
+      //                diffsGenerated();
+      //              } else {
+      //                callback(error);
+      //              }
+      //            }
+      //          });
+      //          _core.generateTreeDiff(base,where,function(err,diff){
+      //            error = error || err;
+      //            baseToWhere = diff;
+      //            if(--needed===0){
+      //              if(!error){
+      //                diffsGenerated();
+      //              } else {
+      //                callback(error);
+      //              }
+      //            }
+      //          });
+      //        },
+      //        diffsGenerated = function(){
+      //          var conflict = _core.tryToConcatChanges(baseToWhere,baseToWhat);
+      //          console.log('conflict object',conflict);
+      //          if(conflict.items.length === 0){
+      //            //no conflict
+      //            callback(null,conflict);
+      //            /*
+      //            _core.applyTreeDiff(base,conflict.merge,function(err){
+      //              if(err){
+      //                return callback(err);
+      //              }
+      //              _core.persist(base,function(err){
+      //                if(err){
+      //                  callback(err);
+      //                } else {
+      //                  var newHash = _project.makeCommit([whatCommit,whereCommit],_core.getHash(base), "merging", function(err){
+      //                    if(err){
+      //                      callback(err);
+      //                    } else {
+      //                      _project.setBranchHash(whereBranch,whereCommit,newHash,callback);
+      //                    }
+      //                  });
+      //                }
+      //              });
+      //            });*/
+      //          } else {
+      //            callback(null,conflict);
+      //          }
+      //          /*var endingWhatDiff = _core.concatTreeDiff(baseToWhere,baseToWhat),
+      //            endingWhereDiff = _core.concatTreeDiff(baseToWhat,baseToWhere);
+      //          console.log('kecso endingwhatdiff',endingWhatDiff);
+      //          console.log('kecso endingwherediff',endingWhereDiff);
+      //          if(_core.isEqualDifferences(endingWhereDiff,endingWhatDiff)){
+      //            _core.applyTreeDiff(base,endingWhatDiff,function(err){
+      //              if(err){
+      //                callback(err);
+      //              } else {
+      //                _core.persist(base,function(err){
+      //                  if(err){
+      //                    callback(err);
+      //                  } else {
+      //                    var newHash = _project.makeCommit([whatCommit,whereCommit],_core.getHash(base), "merging", function(err){
+      //                      if(err){
+      //                        callback(err);
+      //                      } else {
+      //                        console.log('setting branch hash after merge');
+      //                        _project.setBranchHash(whereBranch,whereCommit,newHash,callback);
+      //                      }
+      //                    });
+      //                  }
+      //                });
+      //              }
+      //
+      //            });
+      //          } else {
+      //            callback(new Error('there is a conflict...'),{
+      //              baseObject:base,
+      //              baseCommit:baseCommit,
+      //              branch: whereBranch,
+      //              mine:endingWhereDiff,
+      //              mineCommit: whereCommit,
+      //              theirs:endingWhatDiff,
+      //              theirsCommit:whatCommit,
+      //              conflictItems:_core.getConflictItems(endingWhereDiff,endingWhatDiff)});
+      //          }*/
+      //        };
+      //
+      //        _project.loadObject(baseCommit,function(err,baseCommitObject){
+      //          error = error || err;
+      //          if(!error && baseCommitObject){
+      //            _core.loadRoot(baseCommitObject.root,function(err,r){
+      //              error = error || err;
+      //              base = r;
+      //              if(--rootNeeds === 0){
+      //                if(!error){
+      //                  rootsLoaded();
+      //                } else {
+      //                  callback(error);
+      //                }
+      //              }
+      //            });
+      //          } else {
+      //            error = error || new Error('cannot load common ancestor commit');
+      //            if(--rootNeeds === 0){
+      //              callback(error);
+      //            }
+      //          }
+      //        });
+      //        _project.loadObject(whatCommit,function(err,whatCommitObject){
+      //          error = error || err;
+      //          if(!error && whatCommitObject){
+      //            _core.loadRoot(whatCommitObject.root,function(err,r){
+      //              error = error || err;
+      //              what = r;
+      //              if(--rootNeeds === 0){
+      //                if(!error){
+      //                  rootsLoaded();
+      //                } else {
+      //                  callback(error);
+      //                }
+      //              }
+      //            });
+      //          } else {
+      //            error = error || new Error('cannot load the commit to merge');
+      //            if(--rootNeeds === 0){
+      //              callback(error);
+      //            }
+      //          }
+      //        });
+      //        _project.loadObject(whereCommit,function(err,whereCommitObject){
+      //          error = error || err;
+      //          if(!error && whereCommitObject){
+      //            _core.loadRoot(whereCommitObject.root,function(err,r){
+      //              error = error || err;
+      //              where = r;
+      //              if(--rootNeeds === 0){
+      //                if(!error){
+      //                  rootsLoaded();
+      //                } else {
+      //                  callback(error);
+      //                }
+      //              }
+      //            });
+      //          } else {
+      //            error = error || new Error('cannot load the commit to merge into');
+      //            if(--rootNeeds === 0){
+      //              callback(error);
+      //            }
+      //          }
+      //        });
+      //    } else {
+      //      callback(err || new Error('we cannot locate common ancestor commit!!!'));
+      //    }
+      //  });
+      //}
 
-                    var newHash = _project.makeCommit(parents,core.getHash(root),"merging",function(err){
-                      if(err){
-                        return callback(err);
-                      }
-                      _project.setBranchHash(branch,branchCommitHash,newHash,callback);
-                    });
-                  });
-                });
-              } else {
-                callback(err || new Error('no root was found'));
-              }
-            });
-          } else {
-            callback(err || new Error('no commit object was found'));
-          }
-        });
-      }
+      //function resolve(baseObject,mineDiff,branch,mineCommit,theirsCommit,resolvedConflictItems,callback){
+      //  mineDiff = _core.applyResolution(mineDiff,resolvedConflictItems);
+      //  _core.applyTreeDiff(baseObject,mineDiff,function(err){
+      //    if(err){
+      //      callback(err);
+      //    } else {
+      //      _core.persist(baseObject,function(err){
+      //        if(err){
+      //          callback(err);
+      //        } else {
+      //          var newHash = _project.makeCommit([theirsCommit,mineCommit],_core.getHash(baseObject), "merging", function(err){
+      //            if(err){
+      //              callback(err);
+      //            } else {
+      //              console.log('setting branch hash after merge');
+      //              _project.setBranchHash(branch,mineCommit,newHash,callback);
+      //            }
+      //          });
+      //        }
+      //      });
+      //    }
+      //  });
+      //}
 
-      function merge(whereBranch,whatCommit,whereCommit,callback){
-        ASSERT(_project && typeof whatCommit === 'string' && typeof whereCommit === 'string' && typeof callback === 'function');
-        _project.getCommonAncestorCommit(whatCommit,whereCommit,function(err,baseCommit){
-          if(!err && baseCommit){
-            var base,what,where,baseToWhat,baseToWhere,rootNeeds = 3,error = null,
-            rootsLoaded = function(){
-                var needed = 2,error = null;
-                _core.generateTreeDiff(base,what,function(err,diff){
-                  error = error || err;
-                  baseToWhat = diff;
-                  if(--needed===0){
-                    if(!error){
-                      diffsGenerated();
-                    } else {
-                      callback(error);
-                    }
-                  }
-                });
-                _core.generateTreeDiff(base,where,function(err,diff){
-                  error = error || err;
-                  baseToWhere = diff;
-                  if(--needed===0){
-                    if(!error){
-                      diffsGenerated();
-                    } else {
-                      callback(error);
-                    }
-                  }
-                });
-              },
-              diffsGenerated = function(){
-                var conflict = _core.tryToConcatChanges(baseToWhere,baseToWhat);
-                console.log('conflict object',conflict);
-                if(conflict.items.length === 0){
-                  //no conflict
-                  callback(null,conflict);
-                  /*
-                  _core.applyTreeDiff(base,conflict.merge,function(err){
-                    if(err){
-                      return callback(err);
-                    }
-                    _core.persist(base,function(err){
-                      if(err){
-                        callback(err);
-                      } else {
-                        var newHash = _project.makeCommit([whatCommit,whereCommit],_core.getHash(base), "merging", function(err){
-                          if(err){
-                            callback(err);
-                          } else {
-                            _project.setBranchHash(whereBranch,whereCommit,newHash,callback);
-                          }
-                        });
-                      }
-                    });
-                  });*/
-                } else {
-                  callback(null,conflict);
-                }
-                /*var endingWhatDiff = _core.concatTreeDiff(baseToWhere,baseToWhat),
-                  endingWhereDiff = _core.concatTreeDiff(baseToWhat,baseToWhere);
-                console.log('kecso endingwhatdiff',endingWhatDiff);
-                console.log('kecso endingwherediff',endingWhereDiff);
-                if(_core.isEqualDifferences(endingWhereDiff,endingWhatDiff)){
-                  _core.applyTreeDiff(base,endingWhatDiff,function(err){
-                    if(err){
-                      callback(err);
-                    } else {
-                      _core.persist(base,function(err){
-                        if(err){
-                          callback(err);
-                        } else {
-                          var newHash = _project.makeCommit([whatCommit,whereCommit],_core.getHash(base), "merging", function(err){
-                            if(err){
-                              callback(err);
-                            } else {
-                              console.log('setting branch hash after merge');
-                              _project.setBranchHash(whereBranch,whereCommit,newHash,callback);
-                            }
-                          });
-                        }
-                      });
-                    }
-
-                  });
-                } else {
-                  callback(new Error('there is a conflict...'),{
-                    baseObject:base,
-                    baseCommit:baseCommit,
-                    branch: whereBranch,
-                    mine:endingWhereDiff,
-                    mineCommit: whereCommit,
-                    theirs:endingWhatDiff,
-                    theirsCommit:whatCommit,
-                    conflictItems:_core.getConflictItems(endingWhereDiff,endingWhatDiff)});
-                }*/
-              };
-
-              _project.loadObject(baseCommit,function(err,baseCommitObject){
-                error = error || err;
-                if(!error && baseCommitObject){
-                  _core.loadRoot(baseCommitObject.root,function(err,r){
-                    error = error || err;
-                    base = r;
-                    if(--rootNeeds === 0){
-                      if(!error){
-                        rootsLoaded();
-                      } else {
-                        callback(error);
-                      }
-                    }
-                  });
-                } else {
-                  error = error || new Error('cannot load common ancestor commit');
-                  if(--rootNeeds === 0){
-                    callback(error);
-                  }
-                }
-              });
-              _project.loadObject(whatCommit,function(err,whatCommitObject){
-                error = error || err;
-                if(!error && whatCommitObject){
-                  _core.loadRoot(whatCommitObject.root,function(err,r){
-                    error = error || err;
-                    what = r;
-                    if(--rootNeeds === 0){
-                      if(!error){
-                        rootsLoaded();
-                      } else {
-                        callback(error);
-                      }
-                    }
-                  });
-                } else {
-                  error = error || new Error('cannot load the commit to merge');
-                  if(--rootNeeds === 0){
-                    callback(error);
-                  }
-                }
-              });
-              _project.loadObject(whereCommit,function(err,whereCommitObject){
-                error = error || err;
-                if(!error && whereCommitObject){
-                  _core.loadRoot(whereCommitObject.root,function(err,r){
-                    error = error || err;
-                    where = r;
-                    if(--rootNeeds === 0){
-                      if(!error){
-                        rootsLoaded();
-                      } else {
-                        callback(error);
-                      }
-                    }
-                  });
-                } else {
-                  error = error || new Error('cannot load the commit to merge into');
-                  if(--rootNeeds === 0){
-                    callback(error);
-                  }
-                }
-              });
-          } else {
-            callback(err || new Error('we cannot locate common ancestor commit!!!'));
-          }
-        });
-      }
-
-      function resolve(baseObject,mineDiff,branch,mineCommit,theirsCommit,resolvedConflictItems,callback){
-        mineDiff = _core.applyResolution(mineDiff,resolvedConflictItems);
-        _core.applyTreeDiff(baseObject,mineDiff,function(err){
-          if(err){
-            callback(err);
-          } else {
-            _core.persist(baseObject,function(err){
-              if(err){
-                callback(err);
-              } else {
-                var newHash = _project.makeCommit([theirsCommit,mineCommit],_core.getHash(baseObject), "merging", function(err){
-                  if(err){
-                    callback(err);
-                  } else {
-                    console.log('setting branch hash after merge');
-                    _project.setBranchHash(branch,mineCommit,newHash,callback);
-                  }
-                });
-              }
-            });
-          }
-        });
-      }
+        //TODO this should be removed as right now we do not have option where the client would open the project by itself
       //initialization
-      function initialize() {
-        _database = newDatabase();
-        _database.openDatabase(function (err) {
-          if (!err) {
-            _networkWatcher = networkWatcher();
-            serverEventer();
-            _database.getProjectNames(function (err, names) {
-              if (!err && names && names.length > 0) {
-                var projectName = null;
-                  //FIXME: Who sets this project?
-                if (_configuration.project && names.indexOf(_configuration.project) !== -1) {
-                  projectName = _configuration.project;
-                } else {
-                  projectName = names[0];
-                }
-                openProject(projectName, function (err) {
-                  if (err) {
-                    logger.error('Problem during project opening:' + JSON.stringify(err));
-                  }
-                });
-              } else {
-                logger.error('Cannot get project names / There is no project on the server');
-              }
-            });
-          } else {
-            logger.error('Cannot open database');
-          }
-        });
-      }
+      //function initialize() {
+      //  _database = newDatabase();
+      //  _database.openDatabase(function (err) {
+      //    if (!err) {
+      //      _networkWatcher = networkWatcher();
+      //      serverEventer();
+      //      _database.getProjectNames(function (err, names) {
+      //        if (!err && names && names.length > 0) {
+      //          var projectName = null;
+      //            //FIXME: Who sets this project?
+      //          if (_configuration.project && names.indexOf(_configuration.project) !== -1) {
+      //            projectName = _configuration.project;
+      //          } else {
+      //            projectName = names[0];
+      //          }
+      //          openProject(projectName, function (err) {
+      //            if (err) {
+      //              logger.error('Problem during project opening:' + JSON.stringify(err));
+      //            }
+      //          });
+      //        } else {
+      //          logger.error('Cannot get project names / There is no project on the server');
+      //        }
+      //      });
+      //    } else {
+      //      logger.error('Cannot open database');
+      //    }
+      //  });
+      //}
       //FIXME: Who sets this configuration?
-      if (_configuration.autostart) {
-        initialize();
-      }
+      //if (_configuration.autostart) {
+      //  initialize();
+      //}
+
       _redoer = new UndoRedo({
           //eventer
           events: _self.events,
@@ -3472,7 +3493,7 @@ define([
         //JSON functions
         exportItems: exportItems,
         getExportItemsUrlAsync: getExportItemsUrlAsync,
-        getExternalInterpreterConfigUrlAsync: getExternalInterpreterConfigUrlAsync,
+        //getExternalInterpreterConfigUrlAsync: getExternalInterpreterConfigUrlAsync,
         dumpNodeAsync: dumpNodeAsync,
         importNodeAsync: importNodeAsync,
         mergeNodeAsync: mergeNodeAsync,
@@ -3512,13 +3533,13 @@ define([
         redo: _redoer.redo,
 
         //merge
-        getBaseOfCommits: getBaseOfCommits,
-        getDiffTree: getDiffTree,
-        getConflictOfDiffs: getConflictOfDiffs,
-        applyDiff: applyDiff,
-        merge: merge,
-        getResolve: getResolve,
-        resolve: resolve
+        //getBaseOfCommits: getBaseOfCommits,
+        //getDiffTree: getDiffTree,
+        //getConflictOfDiffs: getConflictOfDiffs,
+        //applyDiff: applyDiff,
+        //merge: merge,
+        //getResolve: getResolve,
+        //resolve: resolve
       };
     }
 

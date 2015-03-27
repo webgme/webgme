@@ -541,6 +541,7 @@ define(['common/storage/serverstorage',
         logger.debug("creating gmeConfig.json specific routing rules");
         __app.get('/gmeConfig.json', ensureAuthenticated, function (req, res) {
             res.status(200);
+            res.setHeader('Content-type', 'application/json');
             res.end(JSON.stringify(clientConfig));
         });
 
