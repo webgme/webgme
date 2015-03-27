@@ -45,7 +45,8 @@ var path = require('path'),
             enable: false,
             nonce: null,
             outputDir: './',
-            workerRefreshInterval: 5000
+            workerRefreshInterval: 5000,
+            labelJobs: './labelJobs.json'
         },
 
         log: {
