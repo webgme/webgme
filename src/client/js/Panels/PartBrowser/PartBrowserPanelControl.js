@@ -82,7 +82,7 @@ define(['js/logger',
                 //make sure that the _aspect exist in the node, otherwise fallback to All
                 var aspectNames = this._client.getMetaAspectNames(nodeId) || [];
                 if (aspectNames.indexOf(this._aspect) === -1) {
-                    this._logger.warning('The currently selected aspect "' + this._aspect + '" does not exist in the object "' + nodeId + '", falling back to "All"');
+                    this._logger.warn('The currently selected aspect "' + this._aspect + '" does not exist in the object "' + nodeId + '", falling back to "All"');
                     this._aspect = CONSTANTS.ASPECT_ALL;
                 }
             }
@@ -163,7 +163,7 @@ define(['js/logger',
 
     PartBrowserControl.prototype._onUnload = function (gmeID) {
         if (this._containerNodeId === gmeID) {
-            this._logger.warning('Container node got unloaded...');
+            this._logger.warn('Container node got unloaded...');
             this._validChildrenTypeIDs = [];
             this._partBrowserView.clear();
         }

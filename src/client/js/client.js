@@ -571,7 +571,7 @@ define([
           if (branch === _branch && !_offline) {
             if (!err && typeof newhash === 'string') {
               if (newhash === '') {
-                logger.warning('The current branch ' + branch + ' have been deleted!');
+                logger.warn('The current branch ' + branch + ' have been deleted!');
                 //we should open a viewer with our current commit...
                 var latestCommit = _recentCommits[0];
                 viewerCommit(latestCommit, function (err) {

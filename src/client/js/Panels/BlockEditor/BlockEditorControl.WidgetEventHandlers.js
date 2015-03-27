@@ -197,7 +197,7 @@ define(['js/logger',
             if (GMEConcepts.canDeleteNode(objID)) {
                 objIdList.pushUnique(objID);
             } else {
-                this.logger.warning('Can not delete item with ID: ' + objID + '. Possibly it is the ROOT or FCO');
+                this.logger.warn('Can not delete item with ID: ' + objID + '. Possibly it is the ROOT or FCO');
             }
         }
 
@@ -1195,9 +1195,9 @@ define(['js/logger',
                             this._client.startTransaction();
                             this._client.copyMoreNodes(params);
                             this._client.completeTransaction();
-                            this.logger.warning('Pasted ' + childrenIDs.length + ' items successfully into node (' + parentID + ')');
+                            this.logger.warn('Pasted ' + childrenIDs.length + ' items successfully into node (' + parentID + ')');
                         } else {
-                            this.logger.warning('Can not paste items because not all the items on the clipboard can be created as a child of the currently opened node (' + parentID + ')');
+                            this.logger.warn('Can not paste items because not all the items on the clipboard can be created as a child of the currently opened node (' + parentID + ')');
                         }
                     }
                 }

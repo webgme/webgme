@@ -362,14 +362,14 @@ define(['js/logger',
                     key = this._getDataMemberID(objects[len]);
                     if (this._dataMap.hasOwnProperty(key)) {
                         if( 1 === this._oTable.fnUpdate( objects[len], this._dataMap[key]) ) {
-                            this.logger.warning("Updating object with dataMemberID '" + key + "' was unsuccessful");
+                            this.logger.warn("Updating object with dataMemberID '" + key + "' was unsuccessful");
                         }
                     } else {
-                        this.logger.warning("Can not update object with dataMemberID '" + key + "'. Object with this ID is not present in grid...");
+                        this.logger.warn("Can not update object with dataMemberID '" + key + "'. Object with this ID is not present in grid...");
                     }
                 }
             } else {
-                this.logger.warning("Cannot update grid since dataMemberID is not set. Can not match elements...");
+                this.logger.warn("Cannot update grid since dataMemberID is not set. Can not match elements...");
             }
         }
     };
@@ -398,11 +398,11 @@ define(['js/logger',
                             }
                         }
                     } else {
-                        this.logger.warning("Can not delete object with dataMemberID '" + key + "'. Object with this dataMemberID is not present in grid...");
+                        this.logger.warn("Can not delete object with dataMemberID '" + key + "'. Object with this dataMemberID is not present in grid...");
                     }
                 }
             } else {
-                this.logger.warning("Cannot delete objects from grid since dataMemberID is not set. Can not match elements...");
+                this.logger.warn("Cannot delete objects from grid since dataMemberID is not set. Can not match elements...");
             }
         }
     };
@@ -585,7 +585,7 @@ i,
                 }});
             }
         } else {
-            this.logger.warning("Cell edit is not possible since dataMemberID is not set...");
+            this.logger.warn("Cell edit is not possible since dataMemberID is not set...");
         }
     };*/
 
@@ -1050,19 +1050,19 @@ i,
     /************** PUBLIC API OVERRIDABLES **************************/
 
     DataGridWidget.prototype.onCellEdit = function (params) {
-        this.logger.warning("onCellEdit is not overridden... " + JSON.stringify(params));
+        this.logger.warn("onCellEdit is not overridden... " + JSON.stringify(params));
     };
 
     DataGridWidget.prototype.onColumnsAutoDetected = function (columnDefs) {
-        this.logger.warning("onColumnsAutoDetected is not overridden... " + JSON.stringify(columnDefs));
+        this.logger.warn("onColumnsAutoDetected is not overridden... " + JSON.stringify(columnDefs));
     };
 
     DataGridWidget.prototype.onRowDelete = function (id, aData) {
-        this.logger.warning("onRowDelete is not overridden... ID:'" + id + "'\r\naData:" + JSON.stringify(aData));
+        this.logger.warn("onRowDelete is not overridden... ID:'" + id + "'\r\naData:" + JSON.stringify(aData));
     };
 
     DataGridWidget.prototype.onRowEdit = function (id, oData, nData) {
-        this.logger.warning("onRowEdit is not overridden... ID:'" + id + "'\r\noldData:" + JSON.stringify(oData) + ",\r\nnewData: " + JSON.stringify(nData));
+        this.logger.warn("onRowEdit is not overridden... ID:'" + id + "'\r\noldData:" + JSON.stringify(oData) + ",\r\nnewData: " + JSON.stringify(nData));
     };
 
     DataGridWidget.prototype.createColumnShowHideControl = function (columns, isColumnsGrouped, isActionButtonsInFirstColumn) {

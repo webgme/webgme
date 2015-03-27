@@ -90,7 +90,7 @@ var path = require('path'),
                     transportType: 'Console',
                     //patterns: ['gme:server:*', '-gme:server:worker*'], // ['gme:server:worker:*'], ['gme:server:*', '-gme:server:worker*']
                     options: {
-                        level: 'debug',
+                        level: 'info',
                         colorize: true,
                         timestamp: true,
                         prettyPrint: true,

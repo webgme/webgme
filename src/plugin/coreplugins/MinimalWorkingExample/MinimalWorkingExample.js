@@ -53,7 +53,7 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
         // Using the logger.
         self.logger.debug('This is a debug message.');
         self.logger.info('This is an info message.');
-        self.logger.warning('This is a warning message.');
+        self.logger.warn('This is a warning message.');
         self.logger.error('This is an error message.');
 
         // Using the coreAPI to create an object.

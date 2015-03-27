@@ -41,10 +41,10 @@ define(['js/logger'], function (Logger) {
 
             if (_listener) {
                 if (!_.isFunction(_listener.onKeyDown)) {
-                    _logger.warning('Listener is missing "onKeyDown"...');
+                    _logger.warn('Listener is missing "onKeyDown"...');
                 }
                 if (!_.isFunction(_listener.onKeyUp)) {
-                    _logger.warning('Listener is missing "onKeyUp"...');
+                    _logger.warn('Listener is missing "onKeyUp"...');
                 }
             }
         }

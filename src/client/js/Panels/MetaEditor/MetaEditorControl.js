@@ -1188,7 +1188,7 @@ define(['js/logger',
                 /*this.logger.debug('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '"');
                 this._client.delBase(objectID);*/
                 //TEMPORARILY DO NOT ALLOW DELETING INHERITANCE RELATIONSHIP
-                this.logger.warning('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '" is not allowed...');
+                this.logger.warn('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '" is not allowed...');
             }
         }
     };

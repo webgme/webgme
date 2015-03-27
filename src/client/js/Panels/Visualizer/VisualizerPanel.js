@@ -203,7 +203,7 @@ define(['js/logger',
         }
 
         if (this._visualizers[menuDesc.id]) {
-            this.logger.warning("A visualizer with the ID '" + menuDesc.id + "' already exists...");
+            this.logger.warn("A visualizer with the ID '" + menuDesc.id + "' already exists...");
             doCallBack();
         } else {
             li.attr("data-id", menuDesc.id);
@@ -237,7 +237,7 @@ define(['js/logger',
             } else {
                 a.append(' <i class="glyphicon glyphicon-warning-sign"></i>');
 
-                this.logger.warning("The visualizer with the ID '" + menuDesc.id + "' is missing 'panel' or 'control'");
+                this.logger.warn("The visualizer with the ID '" + menuDesc.id + "' is missing 'panel' or 'control'");
 
                 doCallBack();
             }

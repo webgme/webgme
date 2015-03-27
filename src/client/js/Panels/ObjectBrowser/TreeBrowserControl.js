@@ -230,7 +230,7 @@ define(['js/logger',
             //temporary fix to not allow deleting ROOT AND FCO
             while (i--) {
                 if (!GMEConcepts.canDeleteNode(selectedIds[i])) {
-                    logger.warning('Can not delete item with ID: ' + selectedIds[i] + '. Possibly it is the ROOT or FCO');
+                    logger.warn('Can not delete item with ID: ' + selectedIds[i] + '. Possibly it is the ROOT or FCO');
                     selectedIds.splice(i, 1);
                 }
             }
@@ -647,7 +647,7 @@ define(['js/logger',
             params[childId]['registry'][REGISTRY_KEYS.POSITION] = {x: 100, y: 100};
             client.createChildren(params);
         } else {
-            logger.warning("Can not create child instance of '" + childId + "', in parent object: '" + nodeId + "'");
+            logger.warn("Can not create child instance of '" + childId + "', in parent object: '" + nodeId + "'");
         }
     };
 

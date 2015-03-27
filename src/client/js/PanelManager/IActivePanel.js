@@ -22,15 +22,15 @@ define([], function () {
     };
 
     IActivePanel.prototype.onActivate = function () {
-        this.logger.warning('IActivePanel.prototype.onActivate IS NOT IMPLEMENTED!!!');
+        this.logger.warn('IActivePanel.prototype.onActivate IS NOT IMPLEMENTED!!!');
     };
 
     IActivePanel.prototype.onDeactivate = function () {
-        this.logger.warning('IActivePanel.prototype.onDeactivate IS NOT IMPLEMENTED!!!');
+        this.logger.warn('IActivePanel.prototype.onDeactivate IS NOT IMPLEMENTED!!!');
     };
 
     IActivePanel.prototype.getNodeID = function () {
-        this.logger.warning('IActivePanel.prototype.getNodeID IS NOT IMPLEMENTED!!!');
+        this.logger.warn('IActivePanel.prototype.getNodeID IS NOT IMPLEMENTED!!!');
         return undefined;
     };
 

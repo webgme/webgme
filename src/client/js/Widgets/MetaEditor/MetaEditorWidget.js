@@ -80,7 +80,7 @@ define(['js/logger',
     };
 
     MetaEditorWidget.prototype.onCheckChanged = function (value, isChecked) {
-        this.logger.warning('MetaEditorWidget.onCheckChanged(value, isChecked) is not overridden!');
+        this.logger.warn('MetaEditorWidget.onCheckChanged(value, isChecked) is not overridden!');
     };
 
     MetaEditorWidget.prototype.addFilterItem = function (text, value, iconEl) {

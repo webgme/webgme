@@ -400,13 +400,13 @@ define(['js/logger',
          };
         */
 
-        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getOrderedMemberListInfo(memberListContainerObject) is not overridden for object "' + memberListContainerObject + '", returning default...');
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getOrderedMemberListInfo(memberListContainerObject) is not overridden for object "' + memberListContainerObject + '", returning default...');
 
         return undefined;
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistryKey = function () {
-        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistryKey is not overridden, returning default value...');
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistryKey is not overridden, returning default value...');
         return undefined;
     };
 
@@ -856,7 +856,7 @@ define(['js/logger',
         var itemIDList = [];
         for (i = 0; i < orderedItemEvents.length; i += 1) {
             j = orderedItemEvents[i];
-            //this.logger.warning("ID: " + j.eid);
+            //this.logger.warn("ID: " + j.eid);
             itemIDList.push(j.eid);
         }
 
@@ -864,7 +864,7 @@ define(['js/logger',
         for (i = 0; i < orderedConnectionEvents.length; i += 1) {
             j = orderedConnectionEvents[i];
             var connconn = itemIDList.indexOf(j.desc.srcID) === -1 && itemIDList.indexOf(j.desc.dstID) === -1;
-            //this.logger.warning("ID: " + x.eid + ", SRC: " + x.desc.srcID + ", DST: " + x.desc.dstID + (connconn ? " *****" : ""));
+            //this.logger.warn("ID: " + x.eid + ", SRC: " + x.desc.srcID + ", DST: " + x.desc.dstID + (connconn ? " *****" : ""));
         }*/
         /** END OF --- LOG ORDERED CONNECTION LIST ********************/
 
@@ -1184,7 +1184,7 @@ define(['js/logger',
 
                             len -= 1;
                         } else {
-                            this.logger.warning('Updating connections...Existing connections are less than the needed src-dst combo...');
+                            this.logger.warn('Updating connections...Existing connections are less than the needed src-dst combo...');
                             //let's create a connection
                             var uiComponent = this._widget.createConnection(objDesc);
                             this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + gmeID);
@@ -1543,7 +1543,7 @@ define(['js/logger',
         var result = {'SetID': 'SET_',
                       'Title': 'Tab '};
 
-        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getNewSetNamePrefixDesc is not overridden, returning default value: ' + JSON.stringify(result));
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getNewSetNamePrefixDesc is not overridden, returning default value: ' + JSON.stringify(result));
         return result;
     };
 

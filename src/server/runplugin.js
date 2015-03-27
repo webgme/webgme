@@ -32,7 +32,7 @@ define([
         'use strict';
         function RunPlugin() {
             var main = function (gmeConfig, pluginConfig, callback) {
-                ASSERT(pluginConfig && pluginConfig.pluginName);
+                ASSERT(pluginConfig && pluginConfig.pluginName && callback);
 
                 var Plugin,
                     pluginName = pluginConfig.pluginName,
@@ -67,9 +67,7 @@ define([
                 openContext(storage, gmeConfig, contextParams, function (err, context) {
                     if (err) {
                         logger.error(err);
-                        if (callback) {
-                            callback(err, errorResult);
-                        }
+                        callback(err, errorResult);
                         return;
                     }
                     var pluginManager = new PluginManager(context.project, Core, Logger, plugins, gmeConfig);

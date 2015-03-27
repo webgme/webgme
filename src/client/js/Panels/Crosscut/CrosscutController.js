@@ -848,7 +848,7 @@ define(['js/logger',
                         //it's a pointer that's allowed to be deleted
                         _client.delPointer(lineDesc.GMESrcId, lineDesc.name);
                     } else {
-                        logger.warning('can not delete pointer from: ' + lineDesc.GMESrcId + ', type: ' + lineDesc.name);
+                        logger.warn('can not delete pointer from: ' + lineDesc.GMESrcId + ', type: ' + lineDesc.name);
                     }
                 }
             }
