@@ -49,7 +49,8 @@ require.config({
         //'coreclient': './src/common/core/users',
 
         'superagent': './src/client/lib/superagent/superagent',
-        'jszip': './src/client/lib/jszip/jszip'
+        'jszip': './src/client/lib/jszip/jszip',
+        'debug': './src/client/lib/debug/debug'
 
         // external libraries used by plugins
         //'ejs': './support/ejs/ejs.min',
