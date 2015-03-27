@@ -54,7 +54,7 @@
     "unzip": "=0.1.11"
   },
   "devDependencies": {
-    "chai": "^2.1.2",
+    "chai": "=2.1.2",
     "chance": ">=0.7.3",
     "esprima": "=2.1.0",
     "gulp": "=3.8.11",

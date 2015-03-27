@@ -22,6 +22,7 @@ webgme.addToRequireJsPaths(gmeConfig);
                 projectName,
                 JSON.parse(testFixture.fs.readFileSync(filePath, 'utf8')),
                 'master',
+                true,
                 function (err) {
                     error = error || err;
                     console.log(projectName, 'have been imported: ', err);

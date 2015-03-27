@@ -885,7 +885,7 @@ describe('GME client', function () {
 
         //TODO change the name, plus make the core plugins available if possible
         it('should return the list of available plugin names', function () {
-            expect(client.getAvailableInterpreterNames()).to.empty();
+            expect(client.getAvailableInterpreterNames()).to.empty;
         });
 
         it('should return a list of projects extended with the \'in collection\' meta data', function (done) {
@@ -1108,7 +1108,7 @@ describe('GME client', function () {
         //TODO not implemented, do we need it???
         it('should return the paths of the instances of the node', function () {
             //expect(clientNode.getInheritorIds()).to.deep.equal(['/5185791']);
-            expect(clientNode.getInheritorIds()).to.be.empty();
+            expect(clientNode.getInheritorIds()).to.be.empty;
         });
 
         it('should return the list of available attribute names of the node', function () {
@@ -1221,11 +1221,11 @@ describe('GME client', function () {
         });
 
         it('should return an empty array for an unknown set', function () {
-            expect(clientNode.getMemberIds('unknown_set')).to.empty();
+            expect(clientNode.getMemberIds('unknown_set')).to.empty;
         });
 
         it('should return a list of available attributes of the set containment', function () {
-            expect(clientNode.getMemberAttributeNames('set', '/1400778473')).to.empty();
+            expect(clientNode.getMemberAttributeNames('set', '/1400778473')).to.empty;
         });
 
         it('should return the value of the attribute of the set containment', function () {
@@ -1262,7 +1262,7 @@ describe('GME client', function () {
         });
 
         it('should list the names of the constraints defined on this level of inheritance', function () {
-            expect(clientNode.getOwnConstraintNames()).to.empty();
+            expect(clientNode.getOwnConstraintNames()).to.empty;
         });
 
         it('should return the constraint object of the given name', function () {
@@ -2516,7 +2516,7 @@ describe('GME client', function () {
                     node = client.getNode('/1400778473');
                     expect(node).not.to.equal(null);
                     expect(node.getConstraintNames()).to.deep.equal(['constraint', 'meta']);
-                    expect(node.getOwnConstraintNames()).to.empty();
+                    expect(node.getOwnConstraintNames()).to.empty;
 
                     client.setConstraint('/1400778473', 'myNewConstraint', {
                         info: 'just a plain constraint',
@@ -2580,7 +2580,7 @@ describe('GME client', function () {
                     node = client.getNode(events[1].eid);
                     expect(node).not.to.equal(null);
                     expect(node.getConstraintNames()).not.to.include('constraint');
-                    expect(node.getOwnConstraintNames()).to.empty();
+                    expect(node.getOwnConstraintNames()).to.empty;
 
                     client.removeUI(testId);
                     done();
@@ -2602,7 +2602,7 @@ describe('GME client', function () {
 
                     node = client.getNode('/323573539');
                     expect(node).not.to.equal(null);
-                    expect(node.getMemberIds('newSet')).to.empty();
+                    expect(node.getMemberIds('newSet')).to.empty;
 
 
                     client.addMember('/323573539', '/1697300825', 'newSet', 'basic add member test');
@@ -2883,7 +2883,7 @@ describe('GME client', function () {
                     node = client.getNode('/323573539');
                     expect(node).not.to.equal(null);
                     expect(node.getSetNames()).to.include('newSet');
-                    expect(node.getMemberIds('newSet')).to.empty();
+                    expect(node.getMemberIds('newSet')).to.empty;
 
                     client.removeUI(testId);
                     done();
@@ -2906,7 +2906,7 @@ describe('GME client', function () {
                     node = client.getNode('/323573539');
                     expect(node).not.to.equal(null);
                     expect(node.getSetNames()).to.include('set');
-                    expect(node.getMemberIds('set')).not.to.empty();
+                    expect(node.getMemberIds('set')).not.to.empty;
 
                     node = client.getNode('/701504349');
                     expect(node).not.to.equal(null);
@@ -2921,13 +2921,13 @@ describe('GME client', function () {
                     node = client.getNode('/701504349');
                     expect(node).not.to.equal(null);
                     expect(node.getSetNames()).not.to.include('set');
-                    expect(node.getMemberIds('set')).to.empty();
+                    expect(node.getMemberIds('set')).to.empty;
 
                     node = client.getNode('/323573539');
                     expect(node).not.to.equal(null);
                     //FIXME probably this set should be also removed, although it was overwritten
                     //expect(node.getSetNames()).not.to.include('set');
-                    //expect(node.getMemberIds('set')).to.empty();
+                    //expect(node.getMemberIds('set')).to.empty;
 
                     client.removeUI(testId);
                     done();
@@ -3024,7 +3024,7 @@ describe('GME client', function () {
                     expect(node).not.to.equal(null);
                     expect(node.getAttribute('name')).to.equal(undefined);
                     expect(node.getBaseId()).to.equal(null);
-                    expect(node.getAttributeNames()).to.empty();
+                    expect(node.getAttributeNames()).to.empty;
 
                     return;
                 }
