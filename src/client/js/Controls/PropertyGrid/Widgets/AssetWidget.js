@@ -18,7 +18,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             INPUT_FILE_UPLOAD = $('<input type="file" />'),
             MAX_FILE_SIZE = 100000000,
             ASSET_WIDGET_BASE = $('<div class="asset-widget" />'),
-            ASSET_LINK = $('<a href=""/>');
+            ASSET_LINK = $('<a href="" target="_blank"/>');
 
         AssetWidget = function (propertyDesc) {
             AssetWidget.superclass.call(this, propertyDesc);
