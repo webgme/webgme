@@ -38,6 +38,7 @@ var gmeConfig = require('../config'),
 
     ExecutorClient = requirejs('executor/ExecutorClient'),
     BlobClient = requirejs('blob/BlobClient'),
+    openContext = requirejs('common/util/opencontext'),
 
     should = require('chai').should(),
     expect = require('chai').expect,
@@ -61,13 +62,14 @@ function importProject(parameters, done) {
     //TODO by default it should create a localStorage and put the project there
 
     var result = {
-        storage: {},
-        root: {},
-        commitHash: '',
-        branchName: 'master',
-        project: {},
-        core: {}
-    };
+            storage: {},
+            root: {},
+            commitHash: '',
+            branchName: 'master',
+            project: {},
+            core: {}
+        },
+        contextParam = {};
     /*
      parameters:
      storage - a storage object, where the project should be created (if not given and mongoUri is not defined we
@@ -114,68 +116,96 @@ function importProject(parameters, done) {
         }
     }
 
+    contextParam = {
+        projectName: parameters.projectName,
+        overwriteProject: true,
+        branchName: result.BranchName
+    };
 
-    result.storage.openDatabase(function (err) {
+    openContext(result.storage, parameters.gmeConfig, contextParam, function (err, context) {
+        if (err) {
+            done(err);
+            return;
+        }
+        result.project = context.project;
+        result.core = context.core;
+        result.root = context.rootNode;
+
+        WebGME.serializer.import(result.core,
+            result.root,
+            result.jsonProject,
+            function (err) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                result.core.persist(result.root, function (err) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+
+                    result.project.makeCommit(
+                        [],
+                        result.core.getHash(result.root),
+                        'importing project',
+                        function (err, id) {
+                            if (err) {
+                                done(err);
+                                return;
+                            }
+                            result.commitHash = id;
+                            result.project.getBranchNames(function (err, names) {
+                                var oldHash = '';
+                                if (err) {
+                                    done(err);
+                                    return;
+                                }
+
+                                if (names && names[result.branchName]) {
+                                    oldHash = names[result.branchName];
+                                }
+                                //TODO check the branch naming... probably need to add some layer to the local storage
+                                result.project.setBranchHash(result.branchName,
+                                    oldHash,
+                                    result.commitHash,
+                                    function (err) {
+                                        done(err, result);
+                                    });
+                            });
+                        });
+                });
+            });
+    });
+}
+
+function saveChanges(parameters, done) {
+    'use strict';
+    expect(typeof parameters.project).to.equal('object');
+    expect(typeof parameters.core).to.equal('object');
+    expect(typeof parameters.rootNode).to.equal('object');
+
+    parameters.core.persist(parameters.rootNode, function (err) {
+        var newRootHash;
         if (err) {
             done(err);
             return;
         }
 
-        result.storage.openProject(parameters.projectName, function (err, p) {
-            if (err || !p) {
-                done(err || new Error('unable to create empty project'));
+        newRootHash = parameters.core.getHash(parameters.rootNode);
+        parameters.project.makeCommit([], newRootHash, 'create empty project', function (err, commitHash) {
+            if (err) {
+                done(err);
                 return;
             }
-            result.project = p;
-            result.core = new WebGME.core(result.project, {globConf: parameters.gmeConfig});
-            result.root = result.core.createNode();
-            WebGME.serializer.import(result.core,
-                result.root,
-                result.jsonProject,
-                function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    result.core.persist(result.root, function (err) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
 
-                        result.project.makeCommit(
-                            [],
-                            result.core.getHash(result.root),
-                            'importing project',
-                            function (err, id) {
-                                if (err) {
-                                    done(err);
-                                    return;
-                                }
-                                result.commitHash = id;
-                                result.project.getBranchNames(function (err, names) {
-                                    var oldHash = '';
-                                    if (err) {
-                                        done(err);
-                                        return;
-                                    }
-
-                                    if (names && names[result.branchName]) {
-                                        oldHash = names[result.branchName];
-                                    }
-                                    //TODO check the branch naming... probably need to add some layer to
-                                    // the local storage
-                                    result.project.setBranchHash(result.branchName,
-                                        oldHash,
-                                        result.commitHash,
-                                        function (err) {
-                                            done(err, result);
-                                        });
-                                });
-                            });
-                    });
-
-                });
+            parameters.project.setBranchHash(parameters.branchName || 'master', '', commitHash, function (err) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                done(null, newRootHash, commitHash);
+            });
         });
     });
 }
@@ -234,5 +264,7 @@ module.exports = {
     importProject: importProject,
     checkWholeProject: checkWholeProject,
     exportProject: exportProject,
-    deleteProject: deleteProject
+    deleteProject: deleteProject,
+    saveChanges: saveChanges,
+    openContext: openContext
 };
