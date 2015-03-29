@@ -90,6 +90,7 @@ var path = require('path'),
                         colorize: true,
                         timestamp: true,
                         prettyPrint: true,
+                        handleExceptions: true,
                         depth: 2
                     }
                 }, {

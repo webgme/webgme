@@ -115,6 +115,7 @@ function validateConfig (configOrFileName) {
     assertBoolean('config.executor.enable', config.executor.enable);
     assertString('config.executor.nonce', config.executor.nonce, true);
     assertString('config.executor.outputDir', config.executor.outputDir);
+    assertString('config.executor.labelJobs', config.executor.labelJobs);
     assertNumber('config.executor.workerRefreshInterval', config.executor.workerRefreshInterval);
 
     // mongo configuration
