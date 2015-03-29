@@ -49,11 +49,6 @@ var path = require('path'),
             labelJobs: './labelJobs.json'
         },
 
-        log: {
-            level: 1, // 5 = ALL, 4 = DEBUG, 3 = INFO, 2 = WARNING, 1 = ERROR, 0 = OFF
-            file: 'server.log'
-        },
-
         mongo: {
             uri: 'mongodb://127.0.0.1:27017/multi',
             options: {
