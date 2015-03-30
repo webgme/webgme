@@ -1,4 +1,4 @@
-/*globals require, global, module */
+/*globals requireJS*/
 /* jshint node:true */
 
 /**
@@ -11,7 +11,8 @@ global.WebGMEGlobal = {};
 process.env.NODE_ENV = 'test';
 
 //adding a local storage class to the global Namespace
-var gmeConfig = require('../config'),
+var WebGME = require('../webgme'),
+    gmeConfig = require('../config'),
     getGmeConfig = function () {
         'use strict';
         // makes sure that for each request it returns with a unique object and tests will not interfere
@@ -21,24 +22,22 @@ var gmeConfig = require('../config'),
         }
         return JSON.parse(JSON.stringify(gmeConfig));
     },
-    WebGME = require('../webgme'),
-    requirejs = require('requirejs'),
 
-    Local = requirejs('common/storage/local'),
-    Commit = requirejs('common/storage/commit'),
+    Local = requireJS('common/storage/local'),
+    Commit = requireJS('common/storage/commit'),
     Storage = function (options) {
         'use strict';
         return new Commit(new Local(options || {}), options || {});
     },
     Logger = require('../src/server/logger'),
-    generateKey = requirejs('common/util/key'),
+    generateKey = requireJS('common/util/key'),
 
-    GMEAuth = requirejs('server/auth/gmeauth'),
-    SessionStore = requirejs('server/auth/sessionstore'),
+    GMEAuth = require('../src/server/middleware/auth/gmeauth'),
+    SessionStore = require('../src/server/middleware/auth/sessionstore'),
 
-    ExecutorClient = requirejs('executor/ExecutorClient'),
-    BlobClient = requirejs('blob/BlobClient'),
-    openContext = requirejs('common/util/opencontext'),
+    ExecutorClient = requireJS('common/executor/ExecutorClient'),
+    BlobClient = requireJS('blob/BlobClient'),
+    openContext = requireJS('common/util/opencontext'),
 
     should = require('chai').should(),
     expect = require('chai').expect,
@@ -227,7 +226,7 @@ function deleteProject(/*parameters, done*/) {
 WebGME.addToRequireJsPaths(gmeConfig);
 
 // This is for the client side test-cases (only add paths here!)
-requirejs.config({
+requireJS.config({
     paths: {
         js: 'client/js',
         ' /socket.io/socket.io.js': 'socketio-client',
@@ -249,7 +248,7 @@ module.exports = {
     ExecutorClient: ExecutorClient,
     BlobClient: BlobClient,
 
-    requirejs: requirejs,
+    requirejs: requireJS,
     Q: Q,
     fs: fs,
     superagent: superagent,

@@ -3,7 +3,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-var requirejs = require('requirejs'),
+var webgme = require('../../webgme'),
     program = require('commander'),
     BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$'),
     HASH_REGEXP = new RegExp('^#[0-9a-zA-Z_]*$'),
@@ -12,14 +12,13 @@ var requirejs = require('requirejs'),
     Storage,
     Serialization,
     path = require('path'),
-    gmeConfig = require(path.join(process.cwd(), 'config')),
-    webgme = require('../../webgme');
+    gmeConfig = require(path.join(process.cwd(), 'config'));
 
 webgme.addToRequireJsPaths(gmeConfig);
 
-openContext = requirejs('common/util/opencontext');
-Storage = requirejs('common/storage/serveruserstorage');
-Serialization = requirejs('common/core/users/serialization');
+openContext = webgme.openContext;
+Storage = webgme.serverUserStorage;
+Serialization = webgme.serializer;
 
 var exportProject = function (mongoUri, projectId, branchOrCommit, callback) {
     'use strict';

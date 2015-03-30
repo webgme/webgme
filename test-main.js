@@ -36,8 +36,8 @@ require.config({
 
 
         // MAGIC ... from src/client/js/main.js
-        'executor': './src/middleware/executor',
-        'blob': './src/middleware/blob',
+        'executor': './src/common/executor',
+        'blob': './src/common/blob',
         'common': './src/common',
         //'core': './src/common/core',
         //'storage': './src/common/storage',

@@ -4,18 +4,20 @@
  * @author nabana / https://github.com/nabana
  */
 
-//This is the only module which doesn't check for requirejs, and this is the only which defines the baseUrl
+//This is is the only which defines the baseUrl for requirejs and adds it to the global.requireJS
 var requirejs = require('requirejs'),
     path = require('path'),
     requireJsBase = path.join(__dirname, 'src'),
     fs = require('fs');
 
+global.requireJS = requirejs;
+
 requirejs.config({
     nodeRequire: require,
     baseUrl: requireJsBase,
     paths: {
-        blob: 'middleware/blob',
-        executor: 'middleware/executor'
+        blob: 'common/blob',
+        executor: 'common/executor'
     }
 });
 
@@ -100,16 +102,17 @@ function addToRequireJsPaths(gmeConfig) {
     //console.error(JSON.stringify(requirejs.s.contexts._.config, null, 4)); // TODO remove me
 }
 
-// FIXME: classes must start with uppercase, instances must start with lowercase
 module.exports = {
+    serverStorage: require('./src/server/storage/serverstorage'),
+    serverUserStorage: require('./src/server/storage/serveruserstorage'),
+    standaloneServer: require('./src/server/standalone.js'),
+    runPlugin: require('./src/server/runplugin'),
+
+    requirejs: requirejs,
     addToRequireJsPaths: addToRequireJsPaths,
     clientStorage: requirejs('common/storage/clientstorage'),
-    serverStorage: requirejs('common/storage/serverstorage'),
-    serverUserStorage: requirejs('common/storage/serveruserstorage'),
     core: requirejs('common/core/core'),
-    standaloneServer: requirejs('server/standalone'),
-    runPlugin: requirejs('server/runplugin'),
     serializer: requirejs('common/core/users/serialization'),
     canon: requirejs('common/util/canon'),
-    requirejs: requirejs
+    openContext: requirejs('common/util/opencontext')
 };

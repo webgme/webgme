@@ -1,7 +1,8 @@
-define([],
-function(){
-    'use strict';
-    return {
+/*jshint node:true*/
+
+'use strict';
+
+module.exports = {
         'msgTypes':{
             'request'     : 'request',
             'result'      : 'result',
@@ -38,4 +39,3 @@ function(){
             'getAllInfoTags': 'getAllInfoTags'
         }
     };
-});

@@ -3,21 +3,20 @@
  * @author kecso / https://github.com/kecso
  */
 
-var program = require('commander'),
+var webgme = require('../../webgme'),
+    program = require('commander'),
     HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$"),
     BRANCH_REGEXP = new RegExp("^[0-9a-zA-Z_]*$"),
-    requirejs = require('requirejs'),
     FS = require('fs'),
     openContext,
     Storage,
     path = require('path'),
-    gmeConfig = require(path.join(process.cwd(), 'config')),
-    webgme = require('../../webgme');
+    gmeConfig = require(path.join(process.cwd(), 'config'));
 
 webgme.addToRequireJsPaths(gmeConfig);
 
-openContext = requirejs('common/util/opencontext');
-Storage = requirejs('common/storage/serveruserstorage');
+openContext = webgme.openContext;
+Storage = webgme.serverUserStorage;
 
 var generateDiff = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrCommit, callback) {
     'use strict';

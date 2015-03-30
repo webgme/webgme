@@ -4,8 +4,8 @@
   baseUrl: '../../../src',
   paths: {
     'webgme.classes': '../utils/build/webgme.classes/webgme.classes',
-    blob: './middleware/blob',
-    executor: './middleware/executor',
+    blob: './common/blob',
+    executor: './common/executor',
     superagent: './client/lib/superagent/superagent',
     debug: './client/lib/debug/debug',
     js: './client/js/',

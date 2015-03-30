@@ -10,7 +10,6 @@ describe('standalone server', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,
-        requirejs = require('requirejs'),
 
         should = testFixture.should,
         superagent = testFixture.superagent,
@@ -125,7 +124,7 @@ describe('standalone server', function () {
             {code: 200, url: '/plugin/PluginResult.js'},
             {code: 200, url: '/common/storage/cache.js'},
             {code: 200, url: '/common/storage/client.js'},
-            {code: 200, url: '/middleware/blob/BlobClient.js'}
+            {code: 200, url: '/common/blob/BlobClient.js'}
         ]
     }, {
         type: 'https',
@@ -188,7 +187,7 @@ describe('standalone server', function () {
 
         describe(scenario.type + ' server ' + (scenario.authentication ? 'with' : 'without') + ' auth', function () {
             var nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED,
-                gmeauth,
+                gmeauth = require('../../src/server/middleware/auth/gmeauth'),
                 db;
 
             before(function (done) {
@@ -241,11 +240,7 @@ describe('standalone server', function () {
                     });
 
                 gmeauthDeferred = Q.defer();
-                requirejs(['server/auth/gmeauth'], function (gmeauth) {
-                    gmeauthDeferred.resolve(gmeauth(null /* session */, gmeConfig));
-                }, function (err) {
-                    gmeauthDeferred.reject(err);
-                });
+                gmeauthDeferred.resolve(gmeauth(null /* session */, gmeConfig));
 
                 userReady = gmeauthDeferred.promise.then(function (gmeauth_) {
                     gmeauth = gmeauth_;
@@ -288,15 +283,9 @@ describe('standalone server', function () {
                         done(err);
                         return;
                     }
-                    gmeauth.unload(function (err) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        server.stop(function () {
-                            //console.log('done');
-                            done();
-                        });
+                    server.stop(function () {
+                        //console.log('done');
+                        done();
                     });
                 });
             });
@@ -347,7 +336,7 @@ describe('standalone server', function () {
 
         var db,
             collection,
-            gmeauth,
+            gmeauth = require('../../src/server/middleware/auth/gmeauth'),
             sockets = [],
             socketId,
             gmeConfig = testFixture.getGmeConfig(),
@@ -445,11 +434,7 @@ describe('standalone server', function () {
                 });
 
             gmeauthDeferred = Q.defer();
-            requirejs(['server/auth/gmeauth'], function (gmeauth) {
-                gmeauthDeferred.resolve(gmeauth(null /* session */, gmeConfig));
-            }, function (err) {
-                gmeauthDeferred.reject(err);
-            });
+            gmeauthDeferred.resolve(gmeauth(null /* session */, gmeConfig));
 
             userReady = gmeauthDeferred.promise.then(function (gmeauth_) {
                 gmeauth = gmeauth_;
@@ -484,25 +469,19 @@ describe('standalone server', function () {
                     done(err);
                     return;
                 }
-                gmeauth.unload(function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
 
-                    // destroy all socket io connections
-                    // this will ensures that the server stops as soon as possible and the test will not timeout.
-                    for (socketId in sockets) {
-                        //console.log('socket', socketId, 'destroyed');
-                        if (sockets.hasOwnProperty(socketId)) {
-                            sockets[socketId].destroy();
-                        }
+                // destroy all socket io connections
+                // this will ensures that the server stops as soon as possible and the test will not timeout.
+                for (socketId in sockets) {
+                    //console.log('socket', socketId, 'destroyed');
+                    if (sockets.hasOwnProperty(socketId)) {
+                        sockets[socketId].destroy();
                     }
+                }
 
-                    server.stop(function () {
-                        //console.log('done');
-                        done();
-                    });
+                server.stop(function () {
+                    //console.log('done');
+                    done();
                 });
             });
         });
