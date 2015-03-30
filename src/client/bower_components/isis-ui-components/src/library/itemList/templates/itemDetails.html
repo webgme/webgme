@@ -1,0 +1,9 @@
+<div class="item-details" ng-class="{ 'expanded': shouldBeExpanded(), 'collapsed':!shouldBeExpanded() }">
+    <div class="item-details-header"
+         ng-click="detailsCollapserClick()"
+         ng-if="config.detailsCollapsible">{{::getExpanderLabel()}}<i class="pull-right" ng-class="getExpanderClass()"></i></div>
+    <div class="item-details-contents" ng-if="shouldBeExpanded()">
+        <div ng-if="::item.detailsTemplateUrl" ng-include="::item.detailsTemplateUrl"></div>
+        <div ng-if="::!item.detailsTemplateUrl">{{item.details}}</div>
+    </div>
+</div>

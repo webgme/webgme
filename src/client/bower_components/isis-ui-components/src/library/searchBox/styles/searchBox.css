@@ -1,0 +1,8 @@
+.search-box input {
+  padding: 1ex 5ex 1ex 1ex !important;
+  height: 25px !important;
+  line-height: 1 !important; }
+.search-box button {
+  height: 25px !important;
+  line-height: 1;
+  padding-top: 2px !important; }

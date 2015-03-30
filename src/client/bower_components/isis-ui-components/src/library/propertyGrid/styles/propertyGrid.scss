@@ -1,0 +1,57 @@
+.property-grid {
+
+  .propertygroup-header {
+    color:#bbb;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 80%;
+    border-bottom: 1px solid #bbb;
+    margin-bottom: 1ex;
+  }
+
+  .property-group-container {
+    margin-bottom: 1em;
+  }
+
+  .form-control {
+    padding: 1ex;
+    font-size: 110%;
+    height: 2em;
+    line-height: 2em;
+  }
+
+  .property-grid-row {
+    margin-bottom: 1.25ex;
+  }
+
+}
+
+
+.property-grid.unresponsive {
+
+  .row {
+    margin: 0;
+  }
+
+  .property-label {
+    width: 35%;
+    padding: 0;
+    float: left;
+  }
+
+  .form-control {
+    margin-bottom: .75ex;
+  }
+
+  .property-value {
+
+    width: 100%;
+    margin-right: 1.5ex;
+
+    .form-control {
+      width: auto;
+    }
+
+  }
+
+}

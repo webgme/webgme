@@ -1,0 +1,17 @@
+<li class="item-list-item list-group-item"
+    isis-contextmenu
+    contextmenu="itemContextmenu($event, item)"
+    contextmenu-data="itemContextMenuData"
+    ng-class="item.cssClass">
+    <il-item-header></il-item-header>
+    <div ng-if="item.description" class="description">{{ item.description }}</div>
+    <il-item-details ng-if="item.details || item.detailsTemplateUrl"></il-item-details>
+    <footer>
+        <taxonomy-terms ng-if="item.taxonomyTerms" class="tags" terms="item.taxonomyTerms"></taxonomy-terms>
+        <div ng-if="::item.lastUpdated"
+            class="last-updated">Updated <span am-time-ago="item.lastUpdated.time"></span>
+            <span ng-if="::item.lastUpdated.user"> by <a href="">{{item.lastUpdated.user}}</a></span>
+        </div>
+        <il-item-stats></il-item-stats>
+    </footer>
+</li>

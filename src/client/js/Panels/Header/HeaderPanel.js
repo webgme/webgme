@@ -11,10 +11,9 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/UserProfile/UserProfileWidget',
     'js/Toolbar/Toolbar',
     './DefaultToolbar',
-    'isis-ui-components/dropdownNavigator/dropdownNavigator',
     './ProjectNavigatorController',
     'js/Utils/WebGMEUrlManager'
-], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar, DropDownNavigator, ProjectNavigatorController, WebGMEUrlManager) {
+], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar, ProjectNavigatorController, WebGMEUrlManager) {
 
     "use strict";
 

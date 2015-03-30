@@ -1,0 +1,10 @@
+<div class="stats">
+    <ul class="list-group">
+        <li class="list-group-item pull-left"
+            ng-repeat="statItem in item.stats"
+            tooltip="{{statItem.toolTip}}" tooltip-placement="bottom">
+            <i  ng-if="statItem.iconClass"
+                ng-class="statItem.iconClass"></i>
+            <span class="count">{{ statItem.value }}</span></li>
+    </ul>
+</div>

@@ -1,0 +1,28 @@
+<form class="drop-box new-order-set">
+    <div class="row">
+        <div class="col-md-3">
+            <input type="text" class="form-control" data-ng-model="newItem.id"
+                   placeholder="ID">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <input type="text" class="form-control" data-ng-model="newItem.title"
+                   placeholder="New item name">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <textarea class="form-control edit-workspace-description" rows="5"
+                      data-ng-model="newItem.description"
+                      placeholder="Description"></textarea>
+        </div>
+    </div>
+    <div class="row form-footer">
+        <div class="col-md-8">
+            <button class="btn btn-default btn-submit btn-success"
+                    data-ng-click="createItem(newItem)">Create
+            </button>
+        </div>
+    </div>
+</form>

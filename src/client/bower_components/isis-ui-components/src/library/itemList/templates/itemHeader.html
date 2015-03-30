@@ -1,0 +1,8 @@
+<header>
+        <div ng-if="::item.headerTemplateUrl" ng-include="::item.headerTemplateUrl"></div>
+        <h4 ng-if="::!item.headerTemplateUrl"><a class="item-title"
+               ng-click="itemClick($event, item)"
+               tooltip="{{ item.toolTip }}"
+               tooltip-placement="right">{{ item.title }}</a></h4>
+        <il-item-menu></il-item-menu>
+</header>

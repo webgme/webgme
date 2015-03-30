@@ -1,0 +1,8 @@
+<div class="list-group-wrapper">
+    <ul class="list-group" ng-show="filteredItems.length">
+        <item-list-item
+            ng-repeat="item in filteredItems = ( listData.items | filter: config.filter ) track by $index  ">
+        </item-list-item>
+    </ul>
+    <div class="no-items-to-show-message" ng-if="!filteredItems.length">{{config.noItemsMessage}}</div>
+</div>

@@ -1,0 +1,109 @@
+.tree-navigator {
+  padding: 0;
+  font-size: 110%;
+  -webkit-user-select: none;
+  /* Chrome/Safari */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* IE10+ */
+  -o-user-select: none;
+  user-select: none; }
+  .tree-navigator header {
+    padding: 0.75ex;
+    border-bottom: 1px solid #eee;
+    height: 2em; }
+    .tree-navigator header .scope-selector {
+      padding-right: .5x; }
+    .tree-navigator header a {
+      padding-bottom: .25ex; }
+  .tree-navigator .tree-navigator-nodes {
+    padding: 0.75ex; }
+  .tree-navigator ul.node-list {
+    list-style-type: none;
+    padding: 0; }
+  .tree-navigator ul.node-list > li {
+    padding: 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden; }
+  .tree-navigator ul.node-list ul.node-list {
+    padding: 0 0 0 2ex; }
+  .tree-navigator ul.node-list > li > ul {
+    overflow: hidden;
+    transition: opacity .2s;
+    opacity: 1; }
+  .tree-navigator .node-list > li:not(.expanded) > ul {
+    opacity: 0;
+    height: 0; }
+  .tree-navigator .node-label {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    padding: .4ex;
+    cursor: pointer; }
+  .tree-navigator .node-label:hover,
+  .tree-navigator .node-label:active {
+    text-decoration: none;
+    background-color: #eee; }
+  .tree-navigator .node-label.loading:after {
+    display: block;
+    content: 'Loading...';
+    padding-left: 2ex; }
+  .tree-navigator span.node-extra-info {
+    color: #666;
+    font-size: 80%; }
+  .tree-navigator .node-expander {
+    display: inline-block;
+    text-decoration: none; }
+  .tree-navigator .context-menu {
+    position: fixed;
+    z-index: 1000; }
+  .tree-navigator .icon-arrow-right:after {
+    display: inline-block;
+    content: " ";
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: .75ex 0 .75ex .75ex;
+    border-left-color: #ccc;
+    margin-left: .2ex; }
+  .tree-navigator .icon-arrow-left:before {
+    display: inline-block;
+    content: " ";
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: .75ex .75ex .75ex 0;
+    border-right-color: #ccc;
+    margin-right: .2ex; }
+  .tree-navigator .icon-arrow-down:after {
+    display: inline-block;
+    content: " ";
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: .75ex .75ex 0 .75ex;
+    border-top-color: #ccc;
+    margin-left: .2ex; }
+  .tree-navigator .node-expander:hover .icon-arrow-down:after {
+    border-top-color: #f90; }
+  .tree-navigator .node-expander:hover .icon-arrow-right:after {
+    border-left-color: #f90; }
+  .tree-navigator .node-expander:hover .icon-arrow-left:after {
+    border-right-color: #f90; }
+  .tree-navigator .active-node > .node-label {
+    color: #00235b; }
+    .tree-navigator .active-node > .node-label > .label-text {
+      font-weight: bold; }
+  .tree-navigator .selected-node > .node-label {
+    background-color: rgba(200, 220, 240, 0.2); }
+  .tree-navigator .selected-node > .node-expander {
+    color: #fff; }
+  .tree-navigator .on-drag-enter {
+    background-color: #e5ffe7; }
+  .tree-navigator .on-drag-hover {
+    background-color: #ccffcc; }

@@ -1,0 +1,18 @@
+.create-new-item accordion > .panel-group > .panel {
+  border-radius: 4px;
+  overflow: hidden;
+  background-clip: border-box; }
+.create-new-item .panel-heading {
+  cursor: pointer;
+  padding: 0;
+  background-color: transparent; }
+  .create-new-item .panel-heading .panel-title {
+    font-size: 90%; }
+  .create-new-item .panel-heading:hover {
+    background: #eaeaea; }
+.create-new-item a {
+  text-decoration: none;
+  padding: .75ex 1ex;
+  display: block; }
+.create-new-item form .row {
+  margin-bottom: 1ex; }

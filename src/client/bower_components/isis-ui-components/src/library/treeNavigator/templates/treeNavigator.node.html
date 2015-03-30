@@ -1,0 +1,13 @@
+<li title="{{ ctrl.node.label }}"
+    data-ng-class="ctrl.getClass()">
+
+    <tree-navigator-node-label
+            node="ctrl.node"
+            ></tree-navigator-node-label>
+
+    <tree-navigator-node-list
+            ng-if="ctrl.isExpanded() && ctrl.node.children"
+            parent-node="ctrl.node"
+            nodes="ctrl.node.children"
+            config="config"></tree-navigator-node-list>
+</li>
