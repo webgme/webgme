@@ -1,100 +1,87 @@
-/*globals define, requirejs*/
+/*globals requireJS*/
 /*jshint node: true*/
 
 /**
  * @author kecso / https://github.com/kecso
  * @author pmeijer / https://github.com/pmeijer
  */
+'use strict';
 
-define([
-        'common/util/assert',
-        'plugin/PluginManagerBase',
-        'blob/BlobRunPluginClient',
-        'plugin/PluginResult',
-        'common/core/core',
-        'common/storage/serveruserstorage',
-        'common/util/opencontext',
-        'fs',
-        'path',
-        'blob/BlobFSBackend',
-        'blob/BlobS3Backend'],
-    function (ASSERT,
-              PluginManager,
-              BlobRunPluginClient,
-              PluginResult,
-              Core,
-              Storage,
-              openContext,
-              FS,
-              PATH,
-              BlobFSBackend,
-              BlobS3Backend) {
-        'use strict';
-        function RunPlugin() {
-            var main = function (gmeConfig, pluginConfig, callback) {
-                ASSERT(pluginConfig && pluginConfig.pluginName && callback);
+var ASSERT = requireJS('common/util/assert'),
+    openContext = requireJS('common/util/opencontext'),
+    Core = requireJS('common/core/core'),
 
-                var Plugin,
-                    pluginName = pluginConfig.pluginName,
-                    Logger = require(require('path').join(requirejs.s.contexts._.config.baseUrl, 'server/logger')),
-                    logger = Logger.create('gme:server:runPlugin', gmeConfig.server.log),
-                    storage,
-                    plugins = {},
-                    contextParams,
-                    errorResult = new PluginResult();
+    PluginManager = requireJS('plugin/PluginManagerBase'),
+    PluginResult = requireJS('plugin/PluginResult'),
 
-                pluginConfig.activeSelection = pluginConfig.activeSelection || [];
+    BlobFSBackend = require('./middleware/blob/BlobFSBackend'),
+    BlobRunPluginClient = require('./middleware/blob/BlobRunPluginClient'),
+    Storage = require('./storage/serveruserstorage'),
+    Logger = require('./logger');
 
-                Plugin = requirejs('plugin/' + pluginName + '/' + pluginName + '/' + pluginName);
+function RunPlugin() {
+    var main = function (gmeConfig, pluginConfig, callback) {
+        ASSERT(pluginConfig && pluginConfig.pluginName && callback);
 
-                logger.info('Given plugin : ' + pluginName);
-                logger.info('pluginConfig', {metadata: pluginConfig});
-                logger.debug('basePaths', {metadata: gmeConfig.plugin.basePaths});
+        var Plugin,
+            pluginName = pluginConfig.pluginName,
+            logger = Logger.create('gme:server:runPlugin', gmeConfig.server.log),
+            storage,
+            plugins = {},
+            contextParams,
+            errorResult = new PluginResult();
 
-                storage = new Storage({
-                    globConf: gmeConfig,
-                    log: logger
-                });
+        pluginConfig.activeSelection = pluginConfig.activeSelection || [];
 
-                plugins[pluginName] = Plugin;
-                pluginConfig.branch = pluginConfig.branch || 'master';
+        Plugin = requireJS('plugin/' + pluginName + '/' + pluginName + '/' + pluginName);
 
-                contextParams = {
-                    projectName: pluginConfig.projectName,
-                    branchName: pluginConfig.branch
-                };
+        logger.info('Given plugin : ' + pluginName);
+        logger.info('pluginConfig', {metadata: pluginConfig});
+        logger.debug('basePaths', {metadata: gmeConfig.plugin.basePaths});
 
-                openContext(storage, gmeConfig, contextParams, function (err, context) {
-                    if (err) {
-                        logger.error(err);
-                        callback(err, errorResult);
-                        return;
-                    }
-                    var pluginManager = new PluginManager(context.project, Core, Logger, plugins, gmeConfig);
-                    var blobBackend = new BlobFSBackend(gmeConfig);
-                    //var blobBackend  = new BlobS3Backend();
+        storage = new Storage({
+            globConf: gmeConfig,
+            log: logger
+        });
 
-                    pluginConfig.blobClient = new BlobRunPluginClient(blobBackend);
-                    pluginConfig.commit = context.commitHash;
+        plugins[pluginName] = Plugin;
+        pluginConfig.branch = pluginConfig.branch || 'master';
 
-                    // FIXME: pluginConfig supposed to be managerConfig!
-                    pluginManager.executePlugin(pluginName, pluginConfig, function (err, result) {
-                        logger.debug('result', {metadata: result});
-                        context.project.closeProject(function () {
-                            storage.closeDatabase(function () {
-                                callback(err, result);
-                            });
-                        });
+        contextParams = {
+            projectName: pluginConfig.projectName,
+            branchName: pluginConfig.branch
+        };
+
+        openContext(storage, gmeConfig, contextParams, function (err, context) {
+            if (err) {
+                logger.error(err);
+                callback(err, errorResult);
+                return;
+            }
+            var pluginManager = new PluginManager(context.project, Core, Logger, plugins, gmeConfig);
+            var blobBackend = new BlobFSBackend(gmeConfig);
+            //var blobBackend  = new BlobS3Backend();
+
+            pluginConfig.blobClient = new BlobRunPluginClient(blobBackend);
+            pluginConfig.commit = context.commitHash;
+
+            // FIXME: pluginConfig supposed to be managerConfig!
+            pluginManager.executePlugin(pluginName, pluginConfig, function (err, result) {
+                logger.debug('result', {metadata: result});
+                context.project.closeProject(function () {
+                    storage.closeDatabase(function () {
+                        callback(err, result);
                     });
                 });
-            };
+            });
+        });
+    };
 
-            return {
-                main: main
-            };
-        }
+    return {
+        main: main
+    };
+}
 
-        return RunPlugin();
-    });
+module.exports = RunPlugin();
 
 

@@ -86,7 +86,7 @@ module.exports = function (config) {
 
         // list of files to exclude
         exclude: [
-            'src/middleware/executor/worker/node_modules/**/*.js'
+            'src/server/middleware/executor/worker/node_modules/**/*.js'
         ],
 
 

@@ -3,20 +3,19 @@
  * @author kecso / https://github.com/kecso
  */
 
-var program = require('commander'),
-    requirejs = require('requirejs'),
+var webgme = require('../../webgme'),
+    program = require('commander'),
     FS = require('fs'),
     Storage,
     patchJson,
     openContext,
     path = require('path'),
-    gmeConfig = require(path.join(process.cwd(), 'config')),
-    webgme = require('../../webgme');
+    gmeConfig = require(path.join(process.cwd(), 'config'));
 
 webgme.addToRequireJsPaths(gmeConfig);
 
-Storage = requirejs('common/storage/serveruserstorage');
-openContext = requirejs('common/util/opencontext');
+Storage = webgme.serverUserStorage;
+openContext = webgme.openContext;
 
 var applyPatch = function (mongoUri, projectId, branchOrCommit, patch, noUpdate, callback) {
     'use strict';

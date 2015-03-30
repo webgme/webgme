@@ -7,11 +7,11 @@
  * @author lattmann / https://github.com/lattmann
  */
 
-var requirejs = require('requirejs'),
+var webgme = require('../../webgme'),
     Q = require('q'),
     MongoURI = require('mongo-uri'),
 
-    GMEAuth,
+    GMEAuth = require('../server/middleware/auth/gmeauth'),
 
     main,
 
@@ -20,8 +20,6 @@ var requirejs = require('requirejs'),
     webgme = require('../../webgme');
 
 webgme.addToRequireJsPaths(gmeConfig);
-
-GMEAuth = requirejs('server/auth/gmeauth');
 
 main = function (argv) {
     'use strict';
