@@ -15,19 +15,21 @@ define(['js/logger'], function (Logger) {
 
     PanelManager.prototype.setActivePanel = function (p) {
         if (this._activePanel === p) {
-            return;
-        }
-
-        if (this._activePanel) {
-            //deactivate currently active panel
-            this._activePanel.setActive(false);
-        }
-
-        this._activePanel = undefined;
-
-        if (p && _.isFunction(p.setActive)) {
-            this._activePanel = p;
+            // [lattmann] we need to call setActive in order to get the split panel working correctly
             this._activePanel.setActive(true);
+
+        } else {
+            if (this._activePanel) {
+                //deactivate currently active panel
+                this._activePanel.setActive(false);
+            }
+
+            this._activePanel = undefined;
+
+            if (p && _.isFunction(p.setActive)) {
+                this._activePanel = p;
+                this._activePanel.setActive(true);
+            }
         }
 
         WebGMEGlobal.KeyboardManager.captureFocus();
