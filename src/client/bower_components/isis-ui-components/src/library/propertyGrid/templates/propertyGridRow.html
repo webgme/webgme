@@ -1,0 +1,6 @@
+<div class="property-grid-row row">
+    <property-label
+        data-ng-if="label || label === 0 || label === ''"
+        ng-class="{ 'col-lg-2 col-md-3 col-sm-4 col-xs-8': !unresponsive }">{{label}}</property-label>
+    <property-value data-ng-repeat="value in values"></property-value>
+</div>

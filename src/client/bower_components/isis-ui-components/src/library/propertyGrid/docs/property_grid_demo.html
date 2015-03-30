@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="UTF-8">
+<title></title>
+
+<script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.14/require.min.js"></script>
+
+<!--<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular.min.js"></script>-->
+
+<script type="text/javascript">
+var DEBUG = true,
+        _jqueryVersion = '2.1.0',
+        _jqueryUIVersion = '1.10.4',
+        _bootsrapVersion = '3.1.1';
+
+
+require.config( {
+    baseUrl: "../../../",
+
+    map: {
+        '*': {
+            'css': 'lib/require/require-css/css',
+            'text': 'lib/require/require-text/text'
+        }
+    },
+
+    paths: {
+        'jquery': 'lib/jquery/jquery-' + _jqueryVersion + ( DEBUG ? '.min' : '' ),
+        'bootstrap': 'lib/bootstrap/' + _bootsrapVersion + '/js/bootstrap' + ( DEBUG ? '.min' : '' ),
+
+        'angular': 'lib/angular/angular-1.2.19/angular' + ( DEBUG ? '.min' : '' ),
+        'angular-ui-bootstrap': 'lib/angular/ui-bootstrap/ui-bootstrap-tpls-0.11.0.min'
+    },
+
+    shim: {
+        'angular-ui-bootstrap': ['angular', 'bootstrap'],
+
+        'bootstrap': [
+            'jquery',
+            'css!lib/bootstrap/' + _bootsrapVersion + '/css/bootstrap.min.css',
+            'css!lib/bootstrap/' + _bootsrapVersion + '/css/bootstrap-theme.min.css'
+        ]
+    },
+
+    waitSeconds: 15
+} );
+
+requirejs( [
+    'angular-ui-bootstrap',
+    'isis-ui-components/propertyGrid/propertyGrid'], function ( ngBootstrap, PropertyGrid ) {
+
+    var demoApp = angular.module( 'demoApp', ['ui.bootstrap', 'isis.ui.propertyGrid'] );
+
+    demoApp.controller( 'PropertyGridDemoController', function ( $scope ) {
+        var onChange = function ( item ) {
+
+                    console.log( 'Item changed > ' + item.label, item );
+
+                },
+
+                attributes = [
+                    {
+                        id: 'Name',
+                        label: 'Name',
+                        values: [
+                            {
+                                value: 'This is my name'
+                            }
+                        ],
+                        onChange: onChange
+                    },
+                    {
+
+                        id: 'compound',
+                        label: 'Compound something',
+                        cssClass: '',
+                        values: [
+                            {
+                                value: [
+                                    {
+                                        id: 'Position_x',
+                                        label: 'X',
+                                        values:[
+                                            {
+                                                value: 10
+                                            }
+                                        ]
+                                                //valueWidget: integerValueWidget,
+                                    },
+                                    {
+                                        id: 'Position_y',
+                                        label: 'Y',
+                                        values: [
+                                            {
+                                                value: 30
+                                            }
+                                        ]
+                                                //valueWidget: integerValueWidget,
+                                    },
+                                    {
+                                        id: 'Dabrack',
+                                        label: 'Dabrack',
+                                        values: [
+                                            {
+                                                value: 'This is my name'
+                                            }
+                                        ],
+                                        onChange: onChange
+                                    }
+                                ],
+                                getDisplayValue: function ( value ) {
+                                    var coordinates = value.value;
+
+                                    return coordinates[0].values[0].value + ', ' + coordinates[1].values[0].value;
+                                },
+                                widget: {
+                                    type: 'compound'
+                                }
+                            }
+                        ],
+                        onChange: onChange
+                    },
+                    {
+                        id: 'is_happy',
+                        label: 'Happy or not?',
+                        values: [
+                            { value: true }
+                        ]
+                    },
+                    {
+                        id: 'is_rich',
+                        label: 'Rich or not?',
+                        values: [
+                            { value: false }
+                        ]
+                    },
+                    {
+                        id: 'country',
+                        label: 'Country',
+                        values: [
+                            {
+                                value: 'U.S.A.',
+                                widget: {
+                                    type: 'select',
+                                    defaultValue: 'pol',
+                                    config: {
+                                        multi: false,
+                                        options: [
+                                            {
+                                                label: 'U.S.A.',
+                                                value: 'usa'
+                                            },
+                                            {
+                                                label: 'Poland',
+                                                value: 'pol'
+                                            },
+                                            {
+                                                label: 'England',
+                                                value: 'eng'
+                                            }
+                                        ]
+                                    }
+                                }
+
+                            }
+                        ],
+                        onChange: onChange
+                    }
+                ],
+                visualizationProperties = [
+                    {
+                        id: 'color',
+                        label: 'Color',
+                        values: [
+                            {
+                                value: '#ff0066',
+                                widget: {
+                                    type: 'colorPicker'
+                                }
+                            }
+                        ],
+                        onChange: onChange
+                    },
+
+                    {
+
+                        id: 'Position',
+                        label: 'Position',
+                        cssClass: '',
+                        values: [
+
+                            {
+                                id: 'Position_x',
+                                label: 'X',
+                                value: 10
+                                //valueWidget: integerValueWidget,
+                            },
+                            {
+                                id: 'Position_y',
+                                label: 'Y',
+                                value: 30
+                                //valueWidget: integerValueWidget,
+                            }
+                        ],
+                        onChange: onChange
+                    }
+
+                ],
+                config = {
+                    propertyLabelPostfix: ':',
+                    mode: 'display'
+                },
+                propertyGroup1 = {
+                    label: 'Attributes',
+                    expanded: true,
+                    items: attributes
+                },
+                propertyGroup2 = {
+                    label: 'Visualization properties',
+                    expanded: true,
+                    items: visualizationProperties
+                },
+                propertyGroups = [ propertyGroup1, propertyGroup2 ];
+
+        $scope.grid = {
+            propertyGroups: propertyGroups,
+            config: config,
+            id: 'propertyGrid1'
+        };
+
+    } );
+
+    angular.bootstrap( document, ['demoApp'] );
+
+    console.log( 'Demo controller initialized' );
+} );
+
+</script>
+
+<style>
+    .property-panel {
+        width: 300px;
+        font-size: 11px;
+    }
+
+</style>
+
+</head>
+<body>
+
+<div data-ng-controller="PropertyGridDemoController" style="padding: 10px">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-1">Mode:</div>
+            <div class="col-md-4">
+                <div class="btn-group">
+                    <label class="btn btn-default" ng-model="grid.config.mode" btn-radio="'display'">Display</label>
+                    <label class="btn btn-default" ng-model="grid.config.mode" btn-radio="'edit'">Edit</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p></p>
+
+    <div class="property-panel">
+        <property-grid grid-data="grid" unresponsive="true"></property-grid>
+    </div>
+
+    <div class="container-fluid">
+        <property-grid grid-data="grid"></property-grid>
+    </div>
+`
+</div>
+
+</body>
+</html>

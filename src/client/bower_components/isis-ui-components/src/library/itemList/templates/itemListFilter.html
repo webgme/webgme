@@ -1,0 +1,7 @@
+<div class="item-list-filter">
+    <div class="panel-group">
+        <input class="form-control" placeholder="Type to filter..." ng-model="config.filter.$">
+        <div class="filter-stats"
+             ng-if="config.filter.$ && filteredItems.length">{{filteredItems.length}} matched items</div>
+    </div>
+</div>

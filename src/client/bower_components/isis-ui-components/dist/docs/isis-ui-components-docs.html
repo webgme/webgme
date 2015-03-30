@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html ng-app="isis.ui.demoApp">
+<head>
+    <title>ISIS UI Components Documentation</title>
+
+    <link type="text/css" rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/black-tie/jquery-ui.css">
+    <link type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="isis-ui-components-docs.css">
+    <link type="text/css" rel="stylesheet" href="../isis-ui-components.css">
+
+</head>
+<body ng-cloak>
+<div ng-controller="UIComponentsDemoController" class="container">
+
+    <h1>isis.ui.components</h1>
+
+    <section ng-repeat="component in components" id="{{ component.name }}">
+        <div class="page-header">
+            <h1>{{ component.name }}
+                <small>(isis.ui.{{ component.name }})</small>
+            </h1>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 show-grid" ng-include="component.template">
+
+            </div>
+            <div btf-markdown class="col-md-6" ng-include="component.docs">
+            </div>
+        </div>
+            <div class="row"
+                 ng-if="component.sources">
+
+                <ul class="nav nav-tabs">
+                    <li ng-repeat="sourceFile in component.sources"
+                        ng-click="component.selectedSourceFile = component.sources[$index]">
+                        <a href="#">{{sourceFile.fileName}}</a>
+                    </li>
+                </ul>
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div role="tabpanel"
+                         class="tab-pane active">
+                        <div ui-codemirror
+                             ui-codemirror-opts="component.selectedSourceFile.viewerOptions"
+                             ng-model="component.selectedSourceFile.code"
+                             ui-refresh="component.selectedSourceFile">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+    </section>
+
+</div>
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
+<script src="../../bower_components/angular/angular.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+
+<script src="../isis-ui-components.js"></script>
+<script src="../isis-ui-components-templates.js"></script>
+
+<script src="isis-ui-components-docs.js"></script>
+<script src="isis-ui-components-doc-templates.js"></script>
+
+</body>
+</html>

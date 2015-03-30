@@ -1,0 +1,11 @@
+<div class="validation-error-marker">
+    <i class="trigger-icon glyphicon glyphicon-info-sign"
+        ng-if="invalid && !embedded"
+        isis-contextmenu
+        contextmenu-config="errorMenuConfig">
+    </i>
+    <div class="embedded-messages"
+         ng-if="invalid && embedded"
+         data-ng-include="'/isis-ui-components/templates/validationErrorMarkerMessages.html'">
+    </div>
+</div>

@@ -1,0 +1,33 @@
+[ng\:cloak], [ng-cloak], .ng-cloak {
+  display: none !important;
+}
+
+section {
+  min-height: 80px;
+  margin-bottom: 1em;
+}
+
+.tabbable > .nav-tabs {
+}
+
+.tabbable > .nav-tabs  a {
+  cursor: pointer;
+}
+
+.tabbable > .nav-tabs > li.active a {
+  background-color: #f7f7f7;
+}
+
+.tab-pane {
+  border: 1px solid #ddd;
+  border-top: none;
+}
+
+.green-shadow {
+  border: 1px solid green;
+  box-shadow: 0 0 20px rgba(0,255,50,.8) !important;
+}
+
+.even > .node-label {
+  border-right: 5px solid #e9e9ff;
+}

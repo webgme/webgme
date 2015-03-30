@@ -85,6 +85,9 @@ require.config({
         'angular-route-styles': ['angular'],
         'angular-ui-bootstrap': ['angular'],
 
+        'bower_components/isis-ui-components/dist/isis-ui-components': ['angular'],
+        'bower_components/isis-ui-components/dist/isis-ui-components-templates': ['angular'],
+
         'jquery-ui': ['jquery'],
         'jquery-ui-iPad': ['jquery', 'jquery-ui'],
 
@@ -101,6 +104,7 @@ require.config({
         'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
         'js/WebGME': [
             'js/jquery.WebGME',
+
             'css!' + document.location.pathname + 'css/main.css',
             'css!' + document.location.pathname + 'css/themes/dawn.css',
             'css!fonts/font-awesome/css/font-awesome.min.css',
@@ -132,7 +136,11 @@ require(
         'angular',
         //'angular-route',
         //'angular-route-styles',
-        'angular-ui-bootstrap'
+        'angular-ui-bootstrap',
+
+        'bower_components/isis-ui-components/dist/isis-ui-components',
+        'bower_components/isis-ui-components/dist/isis-ui-components-templates',
+        'css!bower_components/isis-ui-components/dist/isis-ui-components'
 
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
@@ -196,6 +204,7 @@ require(
                     //'ngRoute',
                     //'routeStyles',
                     'ui.bootstrap',
+                    'isis.ui.components',
                     'gme.ui.projectsDialog',
                     'gme.ui.headerPanel'
                 ]).config(function($locationProvider) {

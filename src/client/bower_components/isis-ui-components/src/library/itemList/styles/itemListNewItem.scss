@@ -1,0 +1,31 @@
+.create-new-item {
+
+ .panel-group > .panel {
+    border-radius: 4px;
+    overflow: hidden;
+    background-clip: border-box;
+  }
+
+  .panel-heading {
+    cursor: pointer;
+    padding: 1ex;
+    background-color: transparent;
+    .panel-title {
+      font-size: 90%;
+    }
+
+    &:hover {
+      background: #eaeaea;
+    }
+  }
+
+  a {
+    text-decoration: none;
+    padding: .75ex 1ex;
+    display: block;
+  }
+
+  form .row {
+    margin-bottom: 1ex;
+  }
+}

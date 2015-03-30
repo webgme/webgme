@@ -1,0 +1,20 @@
+.validation-error-marker i.trigger-icon {
+  color: #ff0022;
+  position: absolute;
+  top: .5ex;
+  right: .5ex;
+  height: 1ex; }
+.validation-error-marker .embedded-messages .validation-error-marker-messages {
+  color: #ff0022;
+  background-color: transparent;
+  font-size: 80%; }
+
+.validation-error-marker-messages {
+  background-color: #ff0022;
+  color: #fff;
+  border-radius: 3px;
+  padding: .5ex 1ex; }
+  .validation-error-marker-messages > ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0; }

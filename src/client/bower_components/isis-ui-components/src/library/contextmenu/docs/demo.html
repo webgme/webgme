@@ -1,0 +1,35 @@
+<script type="text/ng-template" id="contextmenu-custom-content.html">
+    <div class="custom-content" style="border:1px solid rgba(0,0,0,.15); padding: 1ex; background-color: #fff;" ng-controller="ContextmenuCustomTemplateController">
+        <div>
+            <button class="btn btn-default btn-sm pull-right" ng-click="closeClick()">Close this <i class="glyphicon glyphicon-remove-sign"></i></button>
+        </div>
+        <div class="clearfix"></div>
+        <div>
+            <p>That you now the result of this equation?</p>
+            <label>2 + 2 = </label><input ng-model="parameter.value" min="0" max="99" required ng-change="isValid(parameter.value)"/>
+            <span ng-if="parameter.invalid" class="label label-danger">This can not be true!</span>
+        </div>
+    </div>
+</script>
+
+<div data-ng-controller="ContextmenuDemoController">
+    <p>Test context-menus here:</p>
+    <button class="btn btn-default"
+            contextmenu="preContextMenu($event)"
+            isis-contextmenu
+            contextmenu-data="menuData">
+        Contextmenu default (right-click)</button>
+    <p></p>
+    <button class="btn btn-default"
+            contextmenu="preContextMenu($event)"
+            isis-contextmenu
+            contextmenu-data="menuData"
+            contextmenu-config="menuConfig1">
+        Contextmenu on click, positioned to left-right</button>
+    <p></p>
+    <button class="btn btn-default"
+            contextmenu="preContextMenu($event)"
+            isis-contextmenu
+            contextmenu-config="menuConfig2">
+            Custom content, appears on mouseover, positioned to left-right</button>
+</div>

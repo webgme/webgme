@@ -1,0 +1,68 @@
+ul.dropdown-navigator {
+
+  font-size: 130%;
+
+  padding: 0;
+  list-style-type: none;
+  color: #fff;
+
+  .menu-contents {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+  }
+
+  > li {
+    display: inline-block;
+    padding: 0;
+    line-height: 2.22em;
+
+    position: relative;
+
+    > .hierarchical-menu {
+      display: none;
+      position: absolute;
+    }
+
+    .label-container {
+      height: 100%;
+      padding: 0 1em;
+    }
+
+  }
+
+  > li:not(.separator):hover {
+    background-color: #00235B;
+    cursor: pointer;
+
+    > .hierarchical-menu{
+      display: block;
+    }
+
+  }
+
+  li.selected {
+    background-color: #EFF5FD;
+  }
+
+  li.gme-root {
+    background-image: url(images/gme-icon.png);
+    background-position: 8px center;
+    background-repeat: no-repeat;
+
+    .label-container {
+      padding-left: 46px;
+    }
+
+  }
+
+  li.separator {
+    padding: 0;
+    cursor: default;
+    font-size: 60%;
+    top: -2px;
+    position: relative;
+    margin: 0 .75ex;
+  }
+
+
+
+}
