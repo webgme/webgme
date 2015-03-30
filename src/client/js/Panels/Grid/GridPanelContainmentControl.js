@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['js/Logger',
+define(['js/logger',
     'js/util',
     'js/Constants',
     'js/Panels/Grid/GridPanelContainmentControl.DataGridWidgetEventHandlers'], function (Logger,

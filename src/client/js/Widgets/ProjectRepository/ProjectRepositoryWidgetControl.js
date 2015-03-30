@@ -1,6 +1,6 @@
 /*globals define, _, WebGMEGlobal*/
 
-define(['js/Logger'], function (Logger) {
+define(['js/logger'], function (Logger) {
 
     "use strict";
 
