@@ -332,11 +332,11 @@ define(['js/logger',
                 if (idx !== -1) {
                     //entity is a box --> delete GME object from the aspect's members list
                     _client.removeMember(aspectNodeID, gmeID, self._selectedMetaAspectSet);
-                    _client.setMeta(gmeID, {});
 
                     //if the items is not present anywhere else, remove it from the META's global sheet too
                     if (self._metaAspectSheetsPerMember[gmeID].length === 1) {
                         _client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                        _client.setMeta(gmeID, {});
                     }
                 } else if (self._connectionListByID.hasOwnProperty(itemsToDelete[len])) {
                     //entity is a connection, just simply delete it
