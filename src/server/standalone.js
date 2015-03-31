@@ -140,6 +140,8 @@ function StandAloneServer(gmeConfig) {
                     logger.info('Server stopped.');
                 });
             }
+
+            process.exit();
         });
     }
 
