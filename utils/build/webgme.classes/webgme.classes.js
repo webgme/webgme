@@ -1,4 +1,5 @@
 /*globals define, document, console, window, eval, GME, docReady, setTimeout*/
+/*jshint browser:true*/
 
 define('webgme.classes',
     [
@@ -95,11 +96,29 @@ define('webgme.classes',
         // See if there is handler attached to body tag when ready
 
         docReady(function() {
+            function evalOnGmeInit() {
+                if (document.body.getAttribute("on-gme-init")) {
+                    eval(document.body.getAttribute("on-gme-init"));
+                } else {
+                    console.warn('To use GME, define a javascript function and set the body ' +
+                    'element\'s on-gme-init property.');
+                }
+            }
 
-            if (document.body.getAttribute("on-gme-init")) {
-                eval(document.body.getAttribute("on-gme-init"));
-            } else {
-                console.warn('To use GME, define a javascript function and set the body element\'s on-gme-init property.');
+            if ( document.readyState === "complete" ) {
+                var http = new XMLHttpRequest(),
+                    configUrl = window.location.origin + '/gmeConfig.json';
+                http.onreadystatechange = function () {
+                    if (http.readyState === 4 && http.status === 200) {
+                        GME.gmeConfig = JSON.parse(http.responseText);
+                        evalOnGmeInit();
+                    } else if (http.readyState === 4 && http.status !== 200) {
+                        console.warn('Could not load gmeConfig at', configUrl);
+                        evalOnGmeInit();
+                    }
+                };
+                http.open('GET', configUrl, true);
+                http.send();
             }
         });
 
