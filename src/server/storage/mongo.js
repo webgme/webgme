@@ -83,7 +83,7 @@ function Database(options) {
                 fsyncConnection(conns[i]);
             }
         } else {
-            callback(new Error("not connected"));
+            callback("not connected");
         }
     }
 
@@ -233,7 +233,7 @@ function Database(options) {
             ASSERT(typeof beginning === "string" && typeof callback === "function");
 
             if (!HASH_REGEXP.test(beginning)) {
-                callback(new Error("hash " + beginning + " not valid"));
+                callback("hash " + beginning + " not valid");
             } else {
                 collection.find({
                     _id: {
@@ -245,9 +245,9 @@ function Database(options) {
                     if (err) {
                         callback(err);
                     } else if (docs.length === 0) {
-                        callback(new Error("hash " + beginning + " not found"));
+                        callback("hash " + beginning + " not found");
                     } else if (docs.length !== 1) {
-                        callback(new Error("hash " + beginning + " not unique"));
+                        callback("hash " + beginning + " not unique");
                     } else {
                         callback(null, docs[0]._id);
                     }
@@ -322,7 +322,7 @@ function Database(options) {
                     _id: branch
                 }, function (err, obj) {
                     if (!err && oldhash !== ((obj && obj.hash) || "")) {
-                        err = new Error("branch hash mismatch");
+                        err = "branch hash mismatch";
                     }
                     callback(err);
                 });
@@ -332,7 +332,7 @@ function Database(options) {
                     hash: oldhash
                 }, function (err, num) {
                     if (!err && num !== 1) {
-                        err = new Error("branch hash mismatch");
+                        err = "branch hash mismatch";
                     }
                     callback(err);
                 });
@@ -354,7 +354,7 @@ function Database(options) {
                 }, function (err, num) {
 
                     if (!err && num !== 1) {
-                        err = new Error("branch hash mismatch");
+                        err = "branch hash mismatch";
                     }
                     callback(err);
                 });

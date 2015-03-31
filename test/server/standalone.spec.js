@@ -588,5 +588,23 @@ describe('standalone server', function () {
                 }).nodeify(done);
         });
 
+
+        it('should return a readable error', function (done) {
+            var projectName = 'DoesntExist';
+            openSocketIo()
+                .then(function (socket) {
+                    return Q.ninvoke(socket, 'emit', 'openProject', projectName)
+                        .then(function () {
+                            return Q.ninvoke(socket, 'emit', 'findHash', projectName, 'asdf');
+                        })
+                        .finally(function () {
+                            socket.disconnect();
+                        });
+                })
+                .nodeify(function (err) {
+                    should.equal(typeof err, 'string');
+                    done();
+                });
+        });
     });
 });
