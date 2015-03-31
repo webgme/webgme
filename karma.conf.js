@@ -78,8 +78,8 @@ module.exports = function (config) {
         // list of files / patterns to load in the browser
         files: [
             {pattern: 'src/**/*.js', included: false},
-            //{pattern: 'test-karma/**/*.spec.js', included: false},
-            {pattern: 'test-karma/client/**/*.spec.js', included: false},
+            {pattern: 'test-karma/**/*.spec.js', included: false},
+            //{pattern: 'test-karma/client/**/*.spec.js', included: false},
             'test-main.js'
         ],
 

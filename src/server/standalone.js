@@ -43,9 +43,12 @@ var Path = require('path'),
 
 function StandAloneServer(gmeConfig) {
     var self = this,
-        clientConfig = getClientConfig(gmeConfig);
+        clientConfig = getClientConfig(gmeConfig),
+
+        sockets;
 
     this.serverUrl = '';
+    this.isRunning = false;
 
 
     /**
@@ -81,6 +84,10 @@ function StandAloneServer(gmeConfig) {
             callback = function () {
             };
         }
+
+        // keeps track of opened sockets
+        sockets = [];
+
         if (gmeConfig.server.https.enable) {
             __httpServer = Https.createServer({
                 key: __secureSiteInfo.key,
@@ -89,6 +96,19 @@ function StandAloneServer(gmeConfig) {
         } else {
             __httpServer = Http.createServer(__app).listen(gmeConfig.server.port, callback);
         }
+
+        __httpServer.on('connection', function (socket) {
+            sockets.push(socket);
+
+            socket.on('close', function () {
+                var i = sockets.indexOf(socket);
+                if (sockets[i].destroyed) {
+                    logger.debug('remove socket from list');
+                    sockets.splice(i, 1);
+                }
+            });
+        });
+
         //creating the proper storage for the standalone server
         __storageOptions = {
             combined: __httpServer,
@@ -110,11 +130,36 @@ function StandAloneServer(gmeConfig) {
         __storage = Storage(__storageOptions); // FIXME: why do not we use the 'new' keyword here?
         //end of storage creation
         __storage.open();
+
+        self.isRunning = true;
+
+        process.on('SIGINT', function () {
+            // stop server gracefully on ctrl+C or cmd+c
+            if (self.isRunning) {
+                stop(function () {
+                    logger.info('Server stopped.');
+                });
+            }
+        });
     }
 
     function stop(callback) {
+        var i;
+        self.isRunning = false;
         try {
+            // close storage first
+            // FIXME: is this call synchronous?
             __storage.close();
+
+            // destroy all open sockets i.e. keep-alive, and socket-io connections
+            for (i = 0; i < sockets.length; i += 1) {
+                if (sockets[i].destroyed === false) {
+                    logger.info('destroyed open socket');
+                    sockets[i].destroy();
+                }
+            }
+
+            // request server close
             __httpServer.close(callback);
         } catch (e) {
             //ignore errors

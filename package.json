@@ -23,6 +23,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "agentkeepalive": "=0.2.4",
     "aws-sdk": "=2.1.17",
     "bcrypt": "=0.8.1",
     "body-parser": "=1.12.2",
