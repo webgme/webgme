@@ -21,10 +21,11 @@ config.server.log = {
     transports: [{
         transportType: 'Console',
         options: {
-            level: 'warn',
+            level: 'error',
             colorize: true,
             timestamp: true,
             prettyPrint: true,
+            handleExceptions: true,
             depth: 2
         }
     }, {

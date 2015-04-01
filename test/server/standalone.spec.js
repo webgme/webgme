@@ -163,7 +163,7 @@ describe('standalone server', function () {
                         should.equal(res.headers.location, requestTest.redirectUrl);
                     }
                     should.not.equal(res.headers.location, url);
-                    console.log(res.headers.location, url, requestTest.redirectUrl);
+                    //console.log(res.headers.location, url, requestTest.redirectUrl);
                     should.equal(res.redirects.length, 1);
                 } else {
                     // was not redirected

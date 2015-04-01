@@ -39,17 +39,78 @@ var Path = require('path'),
     getClientConfig = require('../../config/getclientconfig'),
     GMEAUTH = require('./middleware/auth/gmeauth'),
     SSTORE = require('./middleware/auth/sessionstore'),
-    Logger = require('./logger');
+    Logger = require('./logger'),
+
+    servers = [],
+
+    mainLogger;
+
+
+process.on('SIGINT', function () {
+    var i,
+        error = false,
+        numStops = 0;
+
+    function serverOnStop(server) {
+        server.stop(function (err) {
+            numStops -= 1;
+            if (err) {
+                error = true;
+                server.logger.error('Stopping server failed', {metadata: err});
+            } else {
+                server.logger.info('Server stopped.');
+            }
+
+            if (numStops === 0) {
+                if (error) {
+                    exit(1);
+                } else {
+                    exit(0);
+                }
+
+            }
+        });
+    }
+
+    for (i = 0; i < servers.length; i += 1) {
+        // stop server gracefully on ctrl+C or cmd+c
+        if (servers[i].isRunning) {
+            servers[i].logger.info('Requesting server to stop ...');
+            numStops += 1;
+            serverOnStop(servers[i]);
+        }
+    }
+
+    function exit(code) {
+        process.exit(code);
+    }
+
+    if (numStops === 0) {
+        exit(0);
+    }
+
+});
 
 function StandAloneServer(gmeConfig) {
     var self = this,
         clientConfig = getClientConfig(gmeConfig),
 
-        sockets;
+        sockets = [];
+
+    if (mainLogger) {
+
+    } else {
+        mainLogger = Logger.createWithGmeConfig('gme', gmeConfig, true);
+    }
 
     this.serverUrl = '';
     this.isRunning = false;
 
+    this.start = start;
+    this.stop = stop;
+
+
+    servers.push(this);
 
     /**
      * Gets the server's url based on the gmeConfig that was given to the constructor.
@@ -91,6 +152,8 @@ function StandAloneServer(gmeConfig) {
             return;
         }
 
+        sockets = [];
+
         if (gmeConfig.server.https.enable) {
             __httpServer = Https.createServer({
                 key: __secureSiteInfo.key,
@@ -101,6 +164,18 @@ function StandAloneServer(gmeConfig) {
         }
 
         __httpServer.timeout = gmeConfig.server.timeout;
+
+        __httpServer.on('connection', function (socket) {
+            sockets.push(socket);
+
+            socket.on('close', function () {
+                var i = sockets.indexOf(socket);
+                if (sockets[i].destroyed) {
+                    logger.debug('remove socket from list');
+                    sockets.splice(i, 1);
+                }
+            });
+        });
 
         //creating the proper storage for the standalone server
         __storageOptions = {
@@ -126,19 +201,12 @@ function StandAloneServer(gmeConfig) {
 
         self.isRunning = true;
 
-        process.on('SIGINT', function () {
-            // stop server gracefully on ctrl+C or cmd+c
-            if (self.isRunning) {
-                stop(function () {
-                    logger.info('Server stopped.');
-                });
-            }
 
-            process.exit();
-        });
     }
 
     function stop(callback) {
+        var i;
+
         if (self.isRunning === false) {
             // FIXME: should this be an error?
             callback();
@@ -152,9 +220,19 @@ function StandAloneServer(gmeConfig) {
             // FIXME: is this call synchronous?
             __storage.close();
 
+            // destroy all open sockets i.e. keep-alive, and socket-io connections
+            for (i = 0; i < sockets.length; i += 1) {
+                if (sockets[i].destroyed === false) {
+                    logger.info('destroyed open socket');
+                    sockets[i].destroy();
+                }
+            }
 
             // request server close
-            __httpServer.close(callback);
+            __httpServer.close(function (err) {
+                logger.info('http server closed');
+                callback(err);
+            });
         } catch (e) {
             //ignore errors
             callback(e);
@@ -391,7 +469,7 @@ function StandAloneServer(gmeConfig) {
         httpResult.sendFile(path, function (err) {
             //TODO we should check for all kind of error that should be handled differently
             if (err && err.code !== 'ECONNRESET') {
-                logger.error('expressFileSending failed for: ' + path);
+                logger.warn('expressFileSending failed for: ' + path);
                 httpResult.sendStatus(404);
             }
         });
@@ -421,6 +499,7 @@ function StandAloneServer(gmeConfig) {
 
     //creating the logger
     logger = Logger.create('gme:server:standalone', gmeConfig.server.log);
+    self.logger = logger;
 
     logger.debug("starting standalone server initialization");
     //initializing https extra infos
@@ -754,7 +833,7 @@ function StandAloneServer(gmeConfig) {
                             res.status(httpStatus).send(object);
                         }
                     } else {
-                        res.json(httpStatus, object || null);
+                        res.status(httpStatus).json(object || null);
                     }
                 });
             }

@@ -46,7 +46,7 @@ var initialize = function (parameters) {
         initialized = true;
         gmeConfig = parameters.gmeConfig;
         WEBGME.addToRequireJsPaths(gmeConfig);
-        logger = Logger.create('gme:server:worker:simpleworker:' + process.pid, gmeConfig.server.log);
+        logger = Logger.create('gme:server:worker:simpleworker:' + process.pid, gmeConfig.server.log, true);
         if (gmeConfig.authentication.enable === true) {
             AUTH = GMEAUTH({}, gmeConfig); //FIXME: Should session really be empty object??
         }

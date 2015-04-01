@@ -10,17 +10,20 @@
 
 var winston = require('winston');
 
-function createLogger(name, options) {
+function createLogger(name, options, useHandleExceptions) {
     var winstonOptions = {transports: []},
         i,
         transport,
+        transportOptions,
 
         j,
         len,
         patterns,
         pattern,
         shouldSkip,
-        shouldInclude;
+        shouldInclude,
+
+        logger;
 
     if (!options) {
         throw new Error('options is a mandatory parameter.');
@@ -30,6 +33,12 @@ function createLogger(name, options) {
         throw new Error('options.transports is a mandatory parameter.');
     }
 
+
+    if (winston.loggers.has(name)) {
+        logger = winston.loggers.get(name);
+        logger.warn('tried to create this logger with the same name again.');
+        return logger;
+    }
 
     for (i = 0; i < options.transports.length; i += 1) {
 
@@ -52,9 +61,17 @@ function createLogger(name, options) {
         }
 
         if (shouldInclude && shouldSkip === false) {
+            transportOptions = JSON.parse(JSON.stringify(options.transports[i].options));
             // add the transport
-            options.transports[i].options.label = name;
-            transport = new (winston.transports[options.transports[i].transportType])(options.transports[i].options);
+            transportOptions.label = name;
+            if (useHandleExceptions) {
+                // empty on purpose
+            } else {
+                transportOptions.handleExceptions = false;
+            }
+
+            //console.log(name, winston.loggers.get(name));
+            transport = new (winston.transports[options.transports[i].transportType])(transportOptions);
             winstonOptions.transports.push(transport);
         }
     }
@@ -62,8 +79,8 @@ function createLogger(name, options) {
     return winston.loggers.add(name, winstonOptions);
 }
 
-function createWithGmeConfig(name, gmeConfig) {
-    return createLogger(name, gmeConfig.server.log);
+function createWithGmeConfig(name, gmeConfig, useHandleExceptions) {
+    return createLogger(name, gmeConfig.server.log, useHandleExceptions);
 }
 
 module.exports = {

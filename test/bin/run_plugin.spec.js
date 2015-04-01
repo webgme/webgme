@@ -79,8 +79,8 @@ describe('Run plugin CLI', function () {
             });
 
             nodeUserManager.on('close', function (code) {
-                console.log(stdoutData);
-                console.log(err);
+                //console.log(stdoutData);
+                //console.log(err);
                 stdoutData.should.contain('execution was successful');
                 err.should.contain('MinimalWorkingExample');
                 should.equal(code, 0);

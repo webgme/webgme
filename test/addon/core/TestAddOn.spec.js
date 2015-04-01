@@ -85,10 +85,10 @@ describe('TestAddOn', function () {
                 testFixture.saveChanges({project: project, core: result.core, rootNode: result.root},
                     function (err, rootHash, commitHash) {
                         expect(err).equal(null);
-                        console.log(rootHash);
-                        console.log(commitHash);
+                        //console.log(rootHash);
+                        //console.log(commitHash);
 
-                        console.log(logMessages);
+                        //console.log(logMessages);
                         addOn.stop(function (err) {
                             expect(err).equal(null);
                             expect(logMessages.length).to.equal(3);
