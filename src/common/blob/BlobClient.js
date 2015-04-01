@@ -16,6 +16,12 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             this.serverPort = parameters.serverPort || this.serverPort;
             this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
             this.webgmeclientsession = parameters.webgmeclientsession;
+            this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || {
+                maxSockets: 100,
+                maxFreeSockets: 10,
+                timeout: 60000,
+                keepAliveTimeout: 30000 // free socket keep alive for 30 seconds
+            };
         }
         this.blobUrl = '';
         if (this.httpsecure !== undefined && this.server && this.serverPort) {
@@ -24,6 +30,17 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
 
         // TODO: TOKEN???
         this.blobUrl = this.blobUrl + '/rest/blob/'; // TODO: any ways to ask for this or get it from the configuration?
+
+        this.isNodeOrNodeWebKit = typeof process !== 'undefined';
+        if (this.isNodeOrNodeWebKit) {
+            // node or node-webkit
+            if (this.httpsecure) {
+                this.Agent = require('agentkeepalive').HttpsAgent;
+            } else {
+                this.Agent = require('agentkeepalive');
+            }
+            this.keepaliveAgent = new this.Agent(this.keepaliveAgentOptions);
+        }
     };
 
     BlobClient.prototype.getMetadataURL = function (hash) {
@@ -82,6 +99,11 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
         }
         contentLength = data.hasOwnProperty('length') ? data.length : data.byteLength;
         req = superagent.post(this.getCreateURL(name));
+
+        if (this.isNodeOrNodeWebKit) {
+            req.agent(this.keepaliveAgent);
+        }
+
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
@@ -118,6 +140,11 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
+
+        if (this.isNodeOrNodeWebKit) {
+            req.agent(this.keepaliveAgent);
+        }
+
         req.set('Content-Type', 'application/octet-stream')
             .set('Content-Length', contentLength)
             .send(blob)
@@ -183,6 +210,11 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
+
+        if (this.isNodeOrNodeWebKit) {
+            req.agent(this.keepaliveAgent);
+        }
+
         if (req.pipe) {
             // running on node
             var Writable = require('stream').Writable;
@@ -242,6 +274,11 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
+
+        if (this.isNodeOrNodeWebKit) {
+            req.agent(this.keepaliveAgent);
+        }
+
         req.end(function (err, res) {
             if (err || res.status > 399) {
                 callback(err || res.status);

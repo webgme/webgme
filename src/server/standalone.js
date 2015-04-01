@@ -43,9 +43,12 @@ var Path = require('path'),
 
 function StandAloneServer(gmeConfig) {
     var self = this,
-        clientConfig = getClientConfig(gmeConfig);
+        clientConfig = getClientConfig(gmeConfig),
+
+        sockets;
 
     this.serverUrl = '';
+    this.isRunning = false;
 
 
     /**
@@ -81,6 +84,13 @@ function StandAloneServer(gmeConfig) {
             callback = function () {
             };
         }
+
+        if (self.isRunning) {
+            // FIXME: should this be an error?
+            callback();
+            return;
+        }
+
         if (gmeConfig.server.https.enable) {
             __httpServer = Https.createServer({
                 key: __secureSiteInfo.key,
@@ -89,6 +99,9 @@ function StandAloneServer(gmeConfig) {
         } else {
             __httpServer = Http.createServer(__app).listen(gmeConfig.server.port, callback);
         }
+
+        __httpServer.timeout = gmeConfig.server.timeout;
+
         //creating the proper storage for the standalone server
         __storageOptions = {
             combined: __httpServer,
@@ -110,16 +123,43 @@ function StandAloneServer(gmeConfig) {
         __storage = Storage(__storageOptions); // FIXME: why do not we use the 'new' keyword here?
         //end of storage creation
         __storage.open();
+
+        self.isRunning = true;
+
+        process.on('SIGINT', function () {
+            // stop server gracefully on ctrl+C or cmd+c
+            if (self.isRunning) {
+                stop(function () {
+                    logger.info('Server stopped.');
+                });
+            }
+
+            process.exit();
+        });
     }
 
     function stop(callback) {
+        if (self.isRunning === false) {
+            // FIXME: should this be an error?
+            callback();
+            return;
+        }
+
+        self.isRunning = false;
+
         try {
+            // close storage first
+            // FIXME: is this call synchronous?
             __storage.close();
+
+
+            // request server close
             __httpServer.close(callback);
         } catch (e) {
             //ignore errors
             callback(e);
         }
+
     }
 
     //internal functions

@@ -2,6 +2,7 @@
   "name": "executor_worker",
   "main": "index.html",
   "dependencies": {
+    "agentkeepalive": "=2.0.0",
     "mime": ">=1.2.11",
     "minimatch": ">=0.3.0",
     "pkginfo": ">=0.3.0",
