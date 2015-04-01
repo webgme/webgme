@@ -148,7 +148,7 @@ define(['js/logger',
             //TODO: might need to be changed
             WebGMEGlobal.KeyboardManager = KeyboardManager;
             WebGMEGlobal.KeyboardManager.setEnabled(true);
-            WebGMEGlobal.PanelManager = new PanelManager();
+            WebGMEGlobal.PanelManager = new PanelManager(client);
         });
 
         loadPanels = function (panels) {

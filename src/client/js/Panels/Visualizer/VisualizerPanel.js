@@ -1,4 +1,4 @@
-/*globals define, _, WebGMEGlobal, DEBUG*/
+/*globals define, _, $, WebGMEGlobal, DEBUG*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -11,14 +11,15 @@ define(['js/logger',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
     '/listAllVisualizerDescriptors',
-    'css!./styles/VisualizerPanel.css'], function (Logger,
-                                    LoaderProgressBar,
-                                    CONSTANTS,
-                                    PanelBaseWithHeader,
-                                    SplitPanel,
-                                    VisualizersJSON) {
+    'css!./styles/VisualizerPanel.css'],
+function (Logger,
+          LoaderProgressBar,
+          CONSTANTS,
+          PanelBaseWithHeader,
+          SplitPanel,
+          VisualizersJSON) {
 
-    "use strict";
+    'use strict';
 
     var VisualizerPanel,
         DEFAULT_VISUALIZER = 'ModelEditor';
@@ -26,7 +27,7 @@ define(['js/logger',
     VisualizerPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "Visualizer";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'Visualizer';
         options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = false;
 
         //call parent's constructor
@@ -45,7 +46,7 @@ define(['js/logger',
 
         this._loadVisualizers();
 
-        this.logger.debug("VisualizerPanel ctor finished");
+        this.logger.debug('VisualizerPanel ctor finished');
     };
 
     //inherit from PanelBaseWithHeader
@@ -57,7 +58,7 @@ define(['js/logger',
             btnIconBase = $('<i/>');
 
         //set Widget title
-        this.setTitle("Visualizer");
+        this.setTitle('Visualizer');
 
         this.$el.addClass('visualizer-panel');
 
@@ -65,22 +66,22 @@ define(['js/logger',
         toolbar.addSeparator();
 
         toolbar.addToggleButton({
-            "title": "Split view ON/OFF",
-            "icon": btnIconBase.clone().addClass('gme icon-gme_split-panels'),
-            "clickFn": function (data, toggled) {
+            title: 'Split view ON/OFF',
+            icon: btnIconBase.clone().addClass('gme icon-gme_split-panels'),
+            clickFn: function (data, toggled) {
                 self._p2Editor(toggled);
             }});
 
         this._panel1VisContainer = $('<div/>');
         this._ul1 = $('<ul class="nav nav-pills nav-stacked">');
-        this._ul1.attr("data-id", 'p1');
+        this._ul1.attr('data-id', 'p1');
         this._panel1VisContainer.append($('<div class="pp">Panel 1:</div>'));
         this._panel1VisContainer.append(this._ul1);
 
         this.$el.append(this._panel1VisContainer);
 
         this.$el.on('click', 'ul > li:not(.active)', function (event) {
-            var vis = $(this).attr("data-id"),
+            var vis = $(this).attr('data-id'),
                 ul = $(this).parent();
             self._setActiveVisualizer(vis, ul);
             event.stopPropagation();
@@ -124,7 +125,6 @@ define(['js/logger',
 
     VisualizerPanel.prototype._setActiveVisualizer = function (visualizer, ul) {
         var PanelClass,
-            ControlClass,
             panel = ul.attr('data-id');
 
         this._settingVisualizer = true;
@@ -149,7 +149,9 @@ define(['js/logger',
                 }
 
                 if (this._currentNodeID || this._currentNodeID === CONSTANTS.PROJECT_ROOT_ID) {
-                    if (this._activePanel[panel] && this._activePanel[panel].control && _.isFunction(this._activePanel[panel].control.selectedObjectChanged)) {
+                    if (this._activePanel[panel] && this._activePanel[panel].control &&
+                        _.isFunction(this._activePanel[panel].control.selectedObjectChanged)) {
+
                         this._activePanel[panel].control.selectedObjectChanged(this._currentNodeID);
                     }
                 }
@@ -223,6 +225,7 @@ define(['js/logger',
                     function (panelClass) {
                         self.logger.debug("downloaded: " + menuDesc.panel);
                         self._visualizers[menuDesc.id] = {"panel": panelClass};
+                        WebGMEGlobal.PanelManager.registerPanel(menuDesc.id, li);
                         self._removeLoader(li, loaderDiv);
                         doCallBack();
                     },
