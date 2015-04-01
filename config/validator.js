@@ -144,6 +144,7 @@ function validateConfig (configOrFileName) {
     expectedKeys.push('server');
     assertObject('config.server', config.server);
     assertNumber('config.server.port', config.server.port);
+    assertNumber('config.server.timeout', config.server.timeout);
     assertNumber('config.server.maxWorkers', config.server.maxWorkers);
     assertString('config.server.sessionCookieId', config.server.sessionCookieId);
     assertString('config.server.sessionCookieSecret', config.server.sessionCookieSecret);

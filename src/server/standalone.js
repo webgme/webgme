@@ -85,8 +85,11 @@ function StandAloneServer(gmeConfig) {
             };
         }
 
-        // keeps track of opened sockets
-        sockets = [];
+        if (self.isRunning) {
+            // FIXME: should this be an error?
+            callback();
+            return;
+        }
 
         if (gmeConfig.server.https.enable) {
             __httpServer = Https.createServer({
@@ -97,17 +100,7 @@ function StandAloneServer(gmeConfig) {
             __httpServer = Http.createServer(__app).listen(gmeConfig.server.port, callback);
         }
 
-        __httpServer.on('connection', function (socket) {
-            sockets.push(socket);
-
-            socket.on('close', function () {
-                var i = sockets.indexOf(socket);
-                if (sockets[i].destroyed) {
-                    logger.debug('remove socket from list');
-                    sockets.splice(i, 1);
-                }
-            });
-        });
+        __httpServer.timeout = gmeConfig.server.timeout;
 
         //creating the proper storage for the standalone server
         __storageOptions = {
@@ -146,20 +139,19 @@ function StandAloneServer(gmeConfig) {
     }
 
     function stop(callback) {
-        var i;
+        if (self.isRunning === false) {
+            // FIXME: should this be an error?
+            callback();
+            return;
+        }
+
         self.isRunning = false;
+
         try {
             // close storage first
             // FIXME: is this call synchronous?
             __storage.close();
 
-            // destroy all open sockets i.e. keep-alive, and socket-io connections
-            for (i = 0; i < sockets.length; i += 1) {
-                if (sockets[i].destroyed === false) {
-                    logger.info('destroyed open socket');
-                    sockets[i].destroy();
-                }
-            }
 
             // request server close
             __httpServer.close(callback);
@@ -167,6 +159,7 @@ function StandAloneServer(gmeConfig) {
             //ignore errors
             callback(e);
         }
+
     }
 
     //internal functions
