@@ -55,6 +55,9 @@ define(['./ButtonBase',
     };
 
     ToolbarDropDownButton.prototype.enabled = function (enabled) {
+        if ( !this.el ) {
+            return; // [patrik] this is undefined when entering a model with non-ModelEditor
+        }
         if (enabled === true) {
             this.el.find('.btn').disable(false);
         } else {
