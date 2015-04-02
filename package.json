@@ -88,6 +88,7 @@
   "scripts": {
     "start": "node ./src/bin/start_server.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test",
+    "test_travis": "node ./node_modules/mocha/bin/mocha -R dot --recursive test",
     "test_cover_win": "node_modules\\.bin\\istanbul.cmd --hook-run-in-context cover node_modules\\mocha\\bin\\_mocha -- -R spec --recursive test",
     "test_cover": "node ./node_modules/istanbul/lib/cli.js --hook-run-in-context cover node_modules/mocha/bin/_mocha -- -R spec --recursive test",
     "test_browser": "node ./node_modules/karma/bin/karma start karma.conf.js --browsers Firefox --single-run",
