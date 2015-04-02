@@ -76,7 +76,13 @@ function createLogger(name, options, useHandleExceptions) {
         }
     }
 
-    return winston.loggers.add(name, winstonOptions);
+    logger = winston.loggers.add(name, winstonOptions);
+
+    logger.fork = function (forkedName) {
+        return createLogger(name + ':' + forkedName, options);
+    };
+
+    return logger;
 }
 
 function createWithGmeConfig(name, gmeConfig, useHandleExceptions) {

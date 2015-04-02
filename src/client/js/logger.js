@@ -66,6 +66,9 @@ define(['debug'], function (_debug) {
                 console.error.apply(console, arguments);
             }
         };
+        log.fork = function (forkedName) {
+            return createLogger(name + ':' + forkedName, options);
+        };
 
         return log;
     }
