@@ -182,6 +182,7 @@ function (Logger,
                     this._validVisualizers = validPanels.split(' ');
                     return;
                 }
+            } else {
                 this.logger.error('could not load node in _updateValidVisualizers', currentNodeId);
             }
         } else {
