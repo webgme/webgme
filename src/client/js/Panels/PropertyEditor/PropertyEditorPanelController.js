@@ -45,6 +45,7 @@ define(['js/logger',
         this._client = client;
         this._propertyGrid = propertyGrid;
 
+
         //it should be sorted alphabetically
         this._propertyGrid.setOrdered(true);
 
@@ -55,27 +56,23 @@ define(['js/logger',
 
         this._logger = Logger.create('gme:Panels:PropertyEditor:PropertyEditorController',
             WebGMEGlobal.gmeConfig.client.log);
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     PropertyEditorController.prototype._initEventHandlers = function () {
         var self = this;
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, function (model, activeSelection) {
-            if (activeSelection) {
+            if (activeSelection && activeSelection.length > 0) {
                 self._selectedObjectsChanged(activeSelection);
             } else {
-                self._selectedObjectsChanged([]);
+                self._selectObjectsUsingActiveObject(WebGMEGlobal.State.getActiveObject());
             }
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObjectId) {
-            if (activeObjectId || activeObjectId === CONSTANTS.PROJECT_ROOT_ID) {
-                self._selectedObjectsChanged([activeObjectId]);
-            } else {
-                self._selectedObjectsChanged([]);
-            }
-
+            self._logger.debug('active object changed: ', activeObjectId);
+            self._selectObjectsUsingActiveObject(activeObjectId);
         });
 
         this._propertyGrid.onFinishChange(function (args) {
@@ -85,6 +82,14 @@ define(['js/logger',
         this._propertyGrid.onReset(function (propertyName) {
             self._onReset(propertyName);
         });
+    };
+
+    PropertyEditorController.prototype._selectObjectsUsingActiveObject = function (activeObjectId) {
+        if (activeObjectId || activeObjectId === CONSTANTS.PROJECT_ROOT_ID) {
+            this._selectedObjectsChanged([activeObjectId]);
+        } else {
+            this._selectedObjectsChanged([]);
+        }
     };
 
     PropertyEditorController.prototype._selectedObjectsChanged = function (idList) {
@@ -104,7 +109,8 @@ define(['js/logger',
                 patterns[idList[i]] = { "children": 0 };
             }
 
-            this._territoryId = this._client.addUI(this, function (/*events*/) {
+            this._territoryId = this._client.addUI(this, function (events) {
+                self._logger.info('about to refresh property list', events);
                 self._refreshPropertyList();
             });
             this._client.updateTerritory(this._territoryId, patterns);
@@ -115,6 +121,7 @@ define(['js/logger',
 
     PropertyEditorController.prototype._refreshPropertyList = function () {
         var propList = this._getCommonPropertiesForSelection(this._idList);
+        this._logger.debug('propList', this._idList, propList);
         this._propertyGrid.setPropertyList(propList);
     };
 

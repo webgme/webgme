@@ -49,9 +49,10 @@ define ([
                 searchQuery += '&commit=' + WebGMEGlobal.State.getActiveCommit();
             }
 
-            if (WebGMEGlobal.State.getActiveObject() ||
-                WebGMEGlobal.State.getActiveObject() === '' /* root */) {
+            if (WebGMEGlobal.State.getActiveObject()) {
                 searchQuery += '&node=' + WebGMEGlobal.State.getActiveObject();
+            } else if (WebGMEGlobal.State.getActiveObject() === '' /* root */) { //TODO constants
+                searchQuery += '&node=root';
             }
 
             if (WebGMEGlobal.State.getActiveVisualizer()) {

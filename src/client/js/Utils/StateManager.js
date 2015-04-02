@@ -3,16 +3,21 @@
 define(['jquery',
     'backbone',
     'js/Constants',
+    'js/logger',
     'common/util/assert'], function (_jquery,
                                _backbone,
                                CONSTANTS,
+                               Logger,
                                ASSERT) {
 
     "use strict";
 
     var _WebGMEState,
+        logger,
         WebGMEStateModel = Backbone.Model.extend({
             registerActiveObject: function(objId) {
+                objId = objId === 'root' ? '' : objId;
+                logger.debug('registerActiveObject, objId: ', objId);
                 this.set(CONSTANTS.STATE_ACTIVE_OBJECT, objId);
             },
 
@@ -74,8 +79,12 @@ define(['jquery',
         _initialize = function () {
             //if already initialized, just return
             if (!_WebGMEState) {
+                logger = Logger.create('gme:Utils:StateManager', WebGMEGlobal.gmeConfig.client.log);
                 _WebGMEState = new WebGMEStateModel();
                 _WebGMEState.registerActiveAspect(CONSTANTS.ASPECT_ALL);
+                _WebGMEState.on('change', function (model, options) {
+                    logger.debug('', model, options);
+                });
             }
 
             return _WebGMEState;
