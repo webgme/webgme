@@ -8,6 +8,7 @@
 define(['js/logger',
     'js/Loader/LoaderProgressBar',
     'js/Constants',
+    'js/RegistryKeys',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
     '/listAllVisualizerDescriptors',
@@ -15,6 +16,7 @@ define(['js/logger',
 function (Logger,
           LoaderProgressBar,
           CONSTANTS,
+          REGISTRY_KEYS,
           PanelBaseWithHeader,
           SplitPanel,
           VisualizersJSON) {
@@ -43,6 +45,7 @@ function (Logger,
         this._activeVisualizer = {};
         this._currentNodeID = null;
         this._visualizers = {};
+        this._validVisualizers = null;
 
         this._loadVisualizers();
 
@@ -94,14 +97,17 @@ function (Logger,
 
         this._client.addEventListener(this._client.events.PROJECT_CLOSED, function (__project, nodeId) {
             self._p2Editor(false);
+            self._validVisualizers = null;
         });
 
         this._client.addEventListener(this._client.events.PROJECT_OPENED, function (__project, nodeId) {
             self._p2Editor(false);
+            self._validVisualizers = null;
         });
 
         this._client.addEventListener(this._client.events.BRANCH_CHANGED, function (__project, nodeId) {
             self._p2Editor(false);
+            self._validVisualizers = null;
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
@@ -163,6 +169,49 @@ function (Logger,
         this._settingVisualizer = false;
     };
 
+    VisualizerPanel.prototype._updateValidVisualizers = function (currentNodeId) {
+        var node,
+            validPanels;
+        // Update the validVisualizers
+        if (currentNodeId || currentNodeId === CONSTANTS.PROJECT_ROOT_ID) {
+            //node = self._client.getNode(nodePath); TODO: Register valid panels on each node
+            node = this._client.getNode(CONSTANTS.PROJECT_ROOT_ID);
+            validPanels = node.getRegistry(REGISTRY_KEYS.VALID_PANELS);
+            if (validPanels) {
+                this._validVisualizers = validPanels.split(' ');
+            } else {
+                this._validVisualizers = null;
+            }
+        } else {
+            this.logger.debug('nodePath not given');
+            this._validVisualizers = null;
+        }
+    };
+
+    VisualizerPanel.prototype._updateListedVisualizers = function () {
+        var panel = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel.p1 ? 'p1' : 'p2',
+            ul = panel === 'p1' ? this._ul1 : this._ul2,
+            self = this,
+            setActiveVisualizer = false;
+        // For the active panel hide/show listed visualizers
+        ul.children('li').each(function (index, _li) {
+            var li = $(_li);
+            if (self._validVisualizers === null) {
+                li.show(); // By default fall back on showing all loaded visualizers.
+            } else if (self._validVisualizers.indexOf(li.attr('data-id')) > -1) {
+                li.show();
+            } else {
+                li.hide();
+                if (self._activeVisualizer[panel] === li.attr('data-id')) {
+                    setActiveVisualizer = true;
+                }
+            }
+        });
+        if (setActiveVisualizer) {
+            // TODO: Nodes could have registry with preferred visualizer
+            this._setActiveVisualizer(DEFAULT_VISUALIZER, ul);
+        }
+    };
 
     VisualizerPanel.prototype.setActiveVisualizer = function (visualizer) {
         var panel = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel.p1 ? 'p1' : 'p2',
@@ -224,8 +273,7 @@ function (Logger,
                 require([menuDesc.panel],
                     function (panelClass) {
                         self.logger.debug("downloaded: " + menuDesc.panel);
-                        self._visualizers[menuDesc.id] = {"panel": panelClass};
-                        WebGMEGlobal.PanelManager.registerPanel(menuDesc.id, li);
+                        self._visualizers[menuDesc.id] = {panel: panelClass};
                         self._removeLoader(li, loaderDiv);
                         doCallBack();
                     },
@@ -270,6 +318,8 @@ function (Logger,
 
     VisualizerPanel.prototype.selectedObjectChanged = function (currentNodeId) {
         this._currentNodeID = currentNodeId;
+        this._updateValidVisualizers(currentNodeId);
+        this._updateListedVisualizers();
     };
 
     VisualizerPanel.prototype._p2Editor = function (enabled) {
@@ -277,12 +327,12 @@ function (Logger,
             //show 2 panels
             this._panel2VisContainer = this._panel1VisContainer.clone();
             this._ul2 = this._panel2VisContainer.find('ul');
-            this._ul2.attr("data-id", 'p2');
+            this._ul2.attr('data-id', 'p2');
             this._panel2VisContainer.find('.pp').text('Panel 2:');
             this.$el.append(this._panel2VisContainer);
             //find the selected on
             var activeLi = this._panel2VisContainer.find('ul > li.active'),
-                vis = activeLi.attr("data-id"),
+                vis = activeLi.attr('data-id'),
                 ul = activeLi.parent();
             this._setActiveVisualizer(vis, ul);
         } else {
