@@ -78,8 +78,13 @@ function createLogger(name, options, useHandleExceptions) {
 
     logger = winston.loggers.add(name, winstonOptions);
 
-    logger.fork = function (forkedName) {
-        return createLogger(name + ':' + forkedName, options);
+    logger.fork = function (forkName, useForkName) {
+        forkName = useForkName ? forkName : name + ':' + forkName;
+        return createLogger(forkName, options);
+    };
+
+    logger.forkWithOptions = function (_name, _options, _useHandleExceptions) {
+        return createLogger(_name, _options, _useHandleExceptions);
     };
 
     return logger;

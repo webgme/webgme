@@ -66,8 +66,14 @@ define(['debug'], function (_debug) {
                 console.error.apply(console, arguments);
             }
         };
-        log.fork = function (forkedName) {
-            return createLogger(name + ':' + forkedName, options);
+
+        log.fork = function (forkName, useForkName) {
+            forkName = useForkName ? forkName : name + ':' + forkName;
+            return createLogger(forkName, options);
+        };
+
+        log.forkWithOptions = function (_name, _options) {
+            return createLogger(_name, _options);
         };
 
         return log;
