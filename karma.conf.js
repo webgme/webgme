@@ -79,7 +79,6 @@ module.exports = function (config) {
         files: [
             {pattern: 'src/**/*.js', included: false},
             {pattern: 'test-karma/**/*.spec.js', included: false},
-            //{pattern: 'test-karma/client/**/*.spec.js', included: false},
             'test-main.js'
         ],
 
