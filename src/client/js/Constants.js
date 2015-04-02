@@ -71,7 +71,13 @@ define(['underscore', '/common/Constants.js'], function (underscore, COMMON_CONS
         STATE_ACTIVE_CROSSCUT: 'activeCrosscut',
 
         /* ASPECTs */
-        ASPECT_ALL: 'All'
+        ASPECT_ALL: 'All',
+
+        /* Property groups */
+        PROPERTY_GROUP_META: 'META',
+        PROPERTY_GROUP_PREFERENCES: 'Preferences',
+        PROPERTY_GROUP_ATTRIBUTES: 'Attributes',
+        PROPERTY_GROUP_POINTERS: 'Pointers'
     });
 
 

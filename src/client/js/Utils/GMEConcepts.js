@@ -183,7 +183,7 @@ define(['jquery',
 
         _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.VALID_DECORATORS,
             'ModelDecorator CircleDecorator DefaultDecorator');
-        //MetaDecorator ModelicaDecorator UMLStateMachineDecorator SVGDecorator
+        //TODO: Should these be added too? MetaDecorator ModelicaDecorator UMLStateMachineDecorator SVGDecorator
 
         //create FCO, META, PROJECT_BASE
         // now as we create FCO always on the same relid and with the same GUID project have a more interchangeable base...
