@@ -1,4 +1,5 @@
 /*globals define, _, $, WebGMEGlobal, DEBUG*/
+/*jshint browser:true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -213,7 +214,9 @@ function (Logger,
         });
 
         if (self._validVisualizers) {
-            this._setActiveVisualizer(self._validVisualizers[0], ul);
+            setTimeout(function () {
+                self._setActiveVisualizer(self._validVisualizers[0], ul);
+            }, 0);
         }
     };
 
