@@ -79,7 +79,6 @@ var path = require('path'),
         server: {
             port: 8888,
             maxWorkers: 10,
-            timeout: 120000, // 2 minutes consult with https://nodejs.org/api/http.html#http_server_timeout
             sessionCookieId: 'webgmeSid',
             sessionCookieSecret: 'meWebGMEez',
             log: {

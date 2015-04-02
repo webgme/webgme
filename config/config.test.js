@@ -7,8 +7,6 @@
 var config = require('./config.default');
 
 config.server.port = 9001;
-config.server.timeout = 1500; // usually the default timeout for tests are 2000 ms
-
 
 config.mongo.uri = 'mongodb://127.0.0.1:27017/webgme_tests';
 
