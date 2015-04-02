@@ -182,8 +182,8 @@ define(['jquery',
             'ModelEditor METAAspect SetEditor Crosscut GraphViz');
 
         _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.VALID_DECORATORS,
-            'ModelDecorator CircleDecorator DefaultDecorator');
-        //TODO: Should these be added too? MetaDecorator ModelicaDecorator UMLStateMachineDecorator SVGDecorator
+            'ModelDecorator SVGDecorator CircleDecorator DefaultDecorator');
+        //Currently avaliable: MetaDecorator ModelicaDecorator UMLStateMachineDecorator SVGDecorator
 
         //create FCO, META, PROJECT_BASE
         // now as we create FCO always on the same relid and with the same GUID project have a more interchangeable base...

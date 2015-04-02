@@ -174,47 +174,51 @@ function (Logger,
             validPanels;
         // Update the validVisualizers
         if (currentNodeId || currentNodeId === CONSTANTS.PROJECT_ROOT_ID) {
-            //node = self._client.getNode(nodePath); TODO: Register valid panels on each node
-            node = this._client.getNode(CONSTANTS.PROJECT_ROOT_ID);
-            validPanels = node.getRegistry(REGISTRY_KEYS.VALID_PANELS);
-            if (validPanels) {
-                this._validVisualizers = validPanels.split(' ');
-            } else {
-                this._validVisualizers = null;
+            node = this._client.getNode(currentNodeId);
+            if (node) {
+                validPanels = node.getRegistry(REGISTRY_KEYS.VALID_PANELS);
+                if (validPanels) {
+                    this._validVisualizers = validPanels.split(' ');
+                    return;
+                }
+                this.logger.error('could not load node in _updateValidVisualizers', currentNodeId);
             }
         } else {
             this.logger.debug('nodePath not given');
-            this._validVisualizers = null;
         }
+        this._validVisualizers = null;
+    };
+
+    VisualizerPanel.prototype._getActivePanel = function () {
+        return WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel.p1 ? 'p1' : 'p2';
     };
 
     VisualizerPanel.prototype._updateListedVisualizers = function () {
-        var panel = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel.p1 ? 'p1' : 'p2',
+        var panel = this._getActivePanel(),
             ul = panel === 'p1' ? this._ul1 : this._ul2,
-            self = this,
-            setActiveVisualizer = false;
+            self = this;
         // For the active panel hide/show listed visualizers
         ul.children('li').each(function (index, _li) {
             var li = $(_li);
             if (self._validVisualizers === null) {
-                li.show(); // By default fall back on showing all loaded visualizers.
-            } else if (self._validVisualizers.indexOf(li.attr('data-id')) > -1) {
+                // By default fall back on showing all loaded visualizers.
                 li.show();
             } else {
-                li.hide();
-                if (self._activeVisualizer[panel] === li.attr('data-id')) {
-                    setActiveVisualizer = true;
+                if (self._validVisualizers.indexOf(li.attr('data-id')) > -1) {
+                    li.show();
+                } else {
+                    li.hide();
                 }
             }
         });
-        if (setActiveVisualizer) {
-            // TODO: Nodes could have registry with preferred visualizer
-            this._setActiveVisualizer(DEFAULT_VISUALIZER, ul);
+
+        if (self._validVisualizers) {
+            this._setActiveVisualizer(self._validVisualizers[0], ul);
         }
     };
 
     VisualizerPanel.prototype.setActiveVisualizer = function (visualizer) {
-        var panel = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel.p1 ? 'p1' : 'p2',
+        var panel = this._getActivePanel(),
             ul = panel === 'p1' ? this._ul1 : this._ul2;
 
         this._setActiveVisualizer(visualizer, ul);
