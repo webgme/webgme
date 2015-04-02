@@ -152,7 +152,7 @@ function StandAloneServer(gmeConfig) {
             return;
         }
 
-        sockets = [];
+        sockets = {};
 
         if (gmeConfig.server.https.enable) {
             __httpServer = Https.createServer({
@@ -166,14 +166,13 @@ function StandAloneServer(gmeConfig) {
         __httpServer.timeout = gmeConfig.server.timeout;
 
         __httpServer.on('connection', function (socket) {
-            sockets.push(socket);
+            var socketId = socket.remoteAddress + ':' + socket.remotePort;
+
+            sockets[socketId] = socket;
 
             socket.on('close', function () {
-                var i = sockets.indexOf(socket);
-                if (sockets[i].destroyed) {
-                    logger.debug('remove socket from list');
-                    sockets.splice(i, 1);
-                }
+                logger.debug('remove socket from list ' + socketId);
+                delete sockets[socketId];
             });
         });
 
@@ -205,7 +204,7 @@ function StandAloneServer(gmeConfig) {
     }
 
     function stop(callback) {
-        var i;
+        var key;
 
         if (self.isRunning === false) {
             // FIXME: should this be an error?
@@ -220,19 +219,20 @@ function StandAloneServer(gmeConfig) {
             // FIXME: is this call synchronous?
             __storage.close();
 
-            // destroy all open sockets i.e. keep-alive, and socket-io connections
-            for (i = 0; i < sockets.length; i += 1) {
-                if (sockets[i].destroyed === false) {
-                    logger.info('destroyed open socket');
-                    sockets[i].destroy();
-                }
-            }
-
-            // request server close
+            // request server close - do not accept any new connections.
+            // first we have to request the close then we can destroy the sockets.
             __httpServer.close(function (err) {
                 logger.info('http server closed');
                 callback(err);
             });
+
+            // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
+            for (key in sockets) {
+                if (sockets.hasOwnProperty(key)) {
+                    sockets[key].destroy();
+                    logger.info('destroyed open socket ' + key);
+                }
+            }
         } catch (e) {
             //ignore errors
             callback(e);

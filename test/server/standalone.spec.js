@@ -204,6 +204,7 @@ describe('standalone server', function () {
                 gmeConfig.authentication.guestAccount = 'guestUserName';
                 gmeConfig.server.https.enable = scenario.type === 'https';
 
+                // https://github.com/visionmedia/superagent/issues/205
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
                 dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
