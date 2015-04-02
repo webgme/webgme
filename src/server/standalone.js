@@ -534,7 +534,7 @@ function StandAloneServer(gmeConfig) {
         setInterval(function () {
             if (__reportedRequestCounter !== __requestCounter) {
                 __reportedRequestCounter = __requestCounter;
-                console.log("...handled " + __reportedRequestCounter + " requests so far...");
+                logger.debug("...handled " + __reportedRequestCounter + " requests so far...");
             }
         }, __requestCheckInterval);
         __app.use(function (req, res, next) {
@@ -827,7 +827,7 @@ function StandAloneServer(gmeConfig) {
                             res.status(httpStatus);
                             res.end(/*CANON*/JSON.stringify(object, null, 2));
                         } else {
-                            console.log(httpStatus, JSON.stringify(object, null, 2));
+                            logger.warn(httpStatus, JSON.stringify(object, null, 2));
                             res.status(httpStatus).send(object);
                         }
                     } else {
@@ -915,8 +915,7 @@ function StandAloneServer(gmeConfig) {
     });
 
     if (gmeConfig.debug === true) {
-        console.log('gmeConfig of webgme server:');
-        console.log(gmeConfig);
+        logger.debug('gmeConfig of webgme server', {metadata: gmeConfig});
     }
     var networkIfs = OS.networkInterfaces();
     var addresses = 'Valid addresses of gme web server: ';

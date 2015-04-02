@@ -14,6 +14,7 @@ describe('ExecutorClient', function () {
         expect = testFixture.expect,
         ExecutorClient = testFixture.ExecutorClient,
         executorClient,
+        logger = testFixture.logger,
         server;
 
     before(function (done) {
@@ -103,7 +104,7 @@ describe('ExecutorClient', function () {
                 done();
                 return;
             }
-            console.log(res);
+            logger.debug(res);
             done(new Error('should have failed with 404'));
         });
     });
@@ -126,7 +127,7 @@ describe('ExecutorClient', function () {
                 done();
                 return;
             }
-            console.log(res);
+            logger.debug(res);
             done(new Error('should have failed with 500'));
         });
     });
