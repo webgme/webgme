@@ -1,13 +1,14 @@
-/*globals define, requirejs*/
+/*globals define, requireJS*/
 /*jshint node:true*/
 
-define([], function () {
+    //TODO: reformat me
     'use strict';
-    //here you can define global variables for your middleware
+    // Here you can define global variables for your middleware
+    // To use any requirejs modules from webgme, use the global requireJS.
     var counter = 0,
         ensureAuthenticated,
         gmeConfig, //global config is passed by server/standalone.js
-        Logger = require(require('path').join(requirejs.s.contexts._.config.baseUrl, 'server/logger')),
+        Logger = require('../logger'),
         logger;
         //how to define your own logger which will use the global settings
 
@@ -34,6 +35,4 @@ define([], function () {
         return ExampleRestComponent;
     };
 
-    return setup;
-});
-
+    module.exports = setup;

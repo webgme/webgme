@@ -10,8 +10,7 @@ describe('ExampleRestComponent', function () {
     var webGME = testFixture.WebGME,
         agent = testFixture.superagent.agent(),
         expect = testFixture.expect,
-        server,
-        should = testFixture.should;
+        server;
 
     afterEach(function (done) {
         if (server) {
@@ -25,8 +24,7 @@ describe('ExampleRestComponent', function () {
     it('/rest/external/ExampleRestComponent should return 200', function (done) {
         var gmeConfig = testFixture.getGmeConfig();
         server = null;
-        gmeConfig.rest.components['ExampleRestComponent'] = 'server/middleware/ExampleRestComponent';
-        testFixture.WebGME.addToRequireJsPaths(gmeConfig);
+        gmeConfig.rest.components.ExampleRestComponent = './middleware/ExampleRestComponent';
         server = webGME.standaloneServer(gmeConfig);
         server.start(function () {
             var serverBaseUrl = server.getUrl();
@@ -43,8 +41,7 @@ describe('ExampleRestComponent', function () {
         server = null;
         gmeConfig.authentication.enable = true;
         gmeConfig.authentication.allowGuests = false;
-        gmeConfig.rest.components['ExampleRestComponent'] = 'server/middleware/ExampleRestComponent';
-        testFixture.WebGME.addToRequireJsPaths(gmeConfig);
+        gmeConfig.rest.components.ExampleRestComponent = './middleware/ExampleRestComponent';
         server = webGME.standaloneServer(gmeConfig);
         server.start(function () {
             var serverBaseUrl = server.getUrl();
@@ -64,8 +61,7 @@ describe('ExampleRestComponent', function () {
         server = null;
         gmeConfig.authentication.enable = true;
         gmeConfig.authentication.allowGuests = true;
-        gmeConfig.rest.components['ExampleRestComponent'] = 'server/middleware/ExampleRestComponent';
-        testFixture.WebGME.addToRequireJsPaths(gmeConfig);
+        gmeConfig.rest.components.ExampleRestComponent = './middleware/ExampleRestComponent';
         server = webGME.standaloneServer(gmeConfig);
         server.start(function () {
             var serverBaseUrl = server.getUrl();
@@ -83,7 +79,7 @@ describe('ExampleRestComponent', function () {
                 server = webGME.standaloneServer(gmeConfig);
             };
         server = null;
-        gmeConfig.rest.components['doesNotExist'] = 'server/middleware/doesNotExist';
+        gmeConfig.rest.components.doesNotExist = './middleware/doesNotExist';
         testFixture.WebGME.addToRequireJsPaths(gmeConfig);
 
         expect(loadServer).throw(Error);

@@ -452,7 +452,7 @@ function StandAloneServer(gmeConfig) {
             i;
         logger.debug('initializing external REST modules');
         for (i = 0; i < keys.length; i++) {
-            restComponent = requireJS(gmeConfig.rest.components[keys[i]]);
+            restComponent = require(gmeConfig.rest.components[keys[i]]);
             if (restComponent) {
                 logger.debug('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
                 ' - /rest/external/' + keys[i]);
