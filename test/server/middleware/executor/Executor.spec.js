@@ -38,11 +38,7 @@ describe('Executor', function () {
         server.start(function () {
             var serverBaseUrl = server.getUrl();
             agent.get(serverBaseUrl + '/rest/executor/worker/').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 200);
+                should.equal(res.status, 200, err);
                 done();
             });
         });
@@ -54,11 +50,7 @@ describe('Executor', function () {
         server.start(function () {
             var serverBaseUrl = server.getUrl();
             agent.get(serverBaseUrl + '/rest/executor/worker/').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 404);
+                should.equal(res.status, 404, err);
                 done();
             });
         });

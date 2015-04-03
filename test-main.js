@@ -48,7 +48,7 @@ require.config({
         //'logManager': './src/common/LogManager',
         //'coreclient': './src/common/core/users',
 
-        'superagent': './src/client/lib/superagent/superagent',
+        'superagent': './src/client/lib/superagent/superagent-1.1.0',
         'jszip': './src/client/lib/jszip/jszip',
         'debug': './src/client/lib/debug/debug'
 

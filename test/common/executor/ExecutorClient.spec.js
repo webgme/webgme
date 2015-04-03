@@ -99,7 +99,7 @@ describe('ExecutorClient', function () {
     it('getInfo for non-existing hash should return 404', function (done) {
         executorClient.getInfo('87704f10a36aa4214f5b0095ba8099e729a10f46', function (err, res) {
             if (err) {
-                should.equal(err, 404);
+                should.equal(err.message, 'Not Found');
                 done();
                 return;
             }
@@ -122,7 +122,7 @@ describe('ExecutorClient', function () {
     it('getAllInfo should return 500', function (done) {
         executorClient.getAllInfo(function (err, res) {
             if (err) {
-                should.equal(err, 500);
+                should.equal(err.message, 'Internal Server Error');
                 done();
                 return;
             }
