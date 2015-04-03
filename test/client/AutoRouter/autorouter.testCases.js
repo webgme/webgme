@@ -128,5 +128,9 @@ describe('AutoRouter Test Cases', function () {
         bugPlayer.test('./testCases/issue190.js');
     });
 
+    it('issue/288_double_click_on_connection', function () {
+        bugPlayer.test('./testCases/issue288.js');
+    });
+
 });
 

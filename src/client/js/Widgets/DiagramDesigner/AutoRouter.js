@@ -612,8 +612,7 @@ define(['js/logger',
 
     AutoRouter.prototype.setPathCustomPoints = function(args) { // args.points = [ [x, y], [x2, y2], ... ]
         var path = this.paths[args.path],
-            points = [],
-            i = 0;
+            points;
         if(path === undefined) {
             throw 'AutoRouter: Need to have an AutoRouterPath type to set custom path points';
         }
@@ -625,13 +624,11 @@ define(['js/logger',
         }
 
         // Convert args.points to array of [ArPoint] 's
-        while (i < args.points.length) {
-            points.push(new ArPoint(args.points[i][0], args.points[i][1]));
-            ++i;
-        }
+        points = args.points.map(function(point) {
+            return new ArPoint(point[0], point[1]);
+        });
 
         path.setCustomPathPoints(points);
-
     };
 
     /**
