@@ -47,22 +47,14 @@ describe('BlobServer', function () {
 
     it('should return 200 at /rest/blob/metadata', function (done) {
         agent.get(serverBaseUrl + '/rest/blob/metadata').end(function (err, res) {
-            if (err) {
-                done(err);
-                return;
-            }
-            should.equal(res.status, 200);
+            should.equal(res.status, 200, err);
             done();
         });
     });
 
     it('should return 500 at /rest/blob/metadata/non-existing-hash', function (done) {
         agent.get(serverBaseUrl + '/rest/blob/metadata/non-existing-hash').end(function (err, res) {
-            if (err) {
-                done(err);
-                return;
-            }
-            should.equal(res.status, 500);
+            should.equal(res.status, 500, err);
             done();
         });
     });
@@ -76,18 +68,10 @@ describe('BlobServer', function () {
                 return;
             }
             agent.get(serverBaseUrl + '/rest/blob/metadata/' + hash).end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 200);
+                should.equal(res.status, 200, err);
                 should.equal(res.body.isPublic, false);
                 agent.get(serverBaseUrl + '/rest/blob/metadata').end(function (err, res) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    should.equal(res.status, 200);
+                    should.equal(res.status, 200, err);
                     should.equal(Object.keys(res.body).length, 0);
                     done();
                 });
@@ -111,18 +95,10 @@ describe('BlobServer', function () {
                 return;
             }
             agent.get(serverBaseUrl + '/rest/blob/metadata/' + hash).end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 200);
+                should.equal(res.status, 200, err);
                 should.equal(res.body.isPublic, true);
                 agent.get(serverBaseUrl + '/rest/blob/metadata').end(function (err, res) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    should.equal(res.status, 200);
+                    should.equal(res.status, 200, err);
                     should.equal(res.body[hash].name, 'public.zip');
                     done();
                 });
@@ -144,11 +120,7 @@ describe('BlobServer', function () {
                     return;
                 }
                 agent.get(serverBaseUrl + '/rest/blob/download/' + hash).end(function (err, res) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    should.equal(res.status, 200);
+                    should.equal(res.status, 200, err);
                     should.equal(res.header['content-disposition'], 'attachment; filename=notPublic.zip');
                     done();
                 });
@@ -165,11 +137,7 @@ describe('BlobServer', function () {
                 return;
             }
             agent.get(serverBaseUrl + '/rest/blob/download/' + hash).end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 200);
+                should.equal(res.status, 200, err);
                 should.equal(res.header['content-disposition'], 'attachment; filename=notPublic.zip');
                 done();
             });
@@ -190,11 +158,7 @@ describe('BlobServer', function () {
                     return;
                 }
                 agent.get(serverBaseUrl + '/rest/blob/view/' + hash).end(function (err, res) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    should.equal(res.status, 200);
+                    should.equal(res.status, 200, err);
                     should.equal(res.header['content-disposition'], 'attachment; filename=notPublic.zip');
                     done();
                 });
@@ -211,11 +175,7 @@ describe('BlobServer', function () {
                 return;
             }
             agent.get(serverBaseUrl + '/rest/blob/view/' + hash).end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 200);
+                should.equal(res.status, 200, err);
                 should.equal(res.header['content-disposition'], 'attachment; filename=notPublic.zip');
                 done();
             });

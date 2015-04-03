@@ -150,12 +150,8 @@ describe('standalone server', function () {
         it('returns ' + requestTest.code + ' for ' + url + redirectText, function (done) {
             // TODO: add POST/DELETE etc support
             agent.get(server.getUrl() + url).end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
 
-                should.equal(res.status, requestTest.code);
+                should.equal(res.status, requestTest.code, err);
 
                 if (requestTest.redirectUrl) {
                     // redirected
@@ -324,11 +320,7 @@ describe('standalone server', function () {
 
         it('should return 404 /decorators/DefaultDecorator/DefaultDecorator.js', function (done) {
             agent.get(serverBaseUrl + '/decorators/DefaultDecorator/DefaultDecorator.js').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 404);
+                should.equal(res.status, 404, err);
                 done();
             });
         });
