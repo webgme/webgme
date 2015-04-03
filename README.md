@@ -43,6 +43,8 @@ Options to deploy and run WebGME:
 3. For more complex usages see [webgme-boilerplate](https://github.com/webgme/webgme-boilerplate)
 4. If you have Docker installed: `docker run -p <port>:80 -d webgme/compact`, where <port> is the public host port to be used (e.g.: 80)
 
+After the webgme server is up and there are no error messages in the console. Open a valid webgme address in the browser. The default is `http://127.0.0.1:8888/`, you should see all valid addresses in the console where you started webgme.
+
 # Command line interface
 
 All runnable javascript programs are stored in the `src/bin` directory, you should start them with node from the root directory of the repository, e.g. `node src/bin/start_server.js` starts the web server.
