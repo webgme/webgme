@@ -34,7 +34,7 @@ var Path = require('path'),
     BlobFSBackend = require('./middleware/blob/BlobFSBackend'),
     BlobS3Backend = require('./middleware/blob/BlobS3Backend'),
     BlobServer = require('./middleware/blob/BlobServer'),
-    REST = require('./middleware/rest/rest'),
+    RestServer = require('./middleware/rest/RestServer'),
     Storage = require('./storage/serverstorage'),
     getClientConfig = require('../../config/getclientconfig'),
     GMEAUTH = require('./middleware/auth/gmeauth'),
@@ -304,25 +304,6 @@ function StandAloneServer(gmeConfig) {
         }
     }
 
-    function checkREST(req, res, next) {
-        var baseUrl = gmeConfig.server.https.enable === true ? 'https://' : 'http://' + req.headers.host + '/rest';
-        if (__REST === null) {
-            var restAuthorization;
-            if (gmeConfig.authentication.enable === true) {
-                restAuthorization = __gmeAuth.tokenAuthorization;
-            }
-            __REST = new REST({
-                globConf: gmeConfig,
-                baseUrl: baseUrl,
-                authorization: restAuthorization
-            });
-        } else {
-            __REST.setBaseUrl(baseUrl);
-        }
-        return next();
-    }
-
-
     function ensureAuthenticated(req, res, next) {
         if (true === gmeConfig.authentication.enable) {
             if (req.isAuthenticated() || (req.session && true === req.session.authenticated)) {
@@ -485,7 +466,6 @@ function StandAloneServer(gmeConfig) {
         __users = {},
         __googleAuthenticationSet = false,
         __googleStrategy = PassGoogle.Strategy,
-        __REST = null,
         __canCheckToken = true,
         __httpServer = null,
         __logoutUrl = gmeConfig.authentication.logOutUrl || '/',
@@ -803,41 +783,8 @@ function StandAloneServer(gmeConfig) {
     });
 
     //TODO: needs to refactor for the /rest/... format
-    logger.debug("creating REST related routing rules");
-    __app.get('/rest/:command', ensureAuthenticated, checkREST, function (req, res) {
-        __REST.initialize(function (err) {
-            if (err) {
-                res.sendStatus(500);
-            } else {
-                __REST.doRESTCommand(__REST.request.GET, req.params.command, req.headers.webGMEToken, req.query, function (httpStatus, object) {
-
-                    res.header("Access-Control-Allow-Origin", "*");
-                    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-                    if (req.params.command === __REST.command.etf) {
-                        if (httpStatus === 200) {
-                            var filename = 'exportedNode.json';
-                            if (req.query.output) {
-                                filename = req.query.output;
-                            }
-                            if (filename.indexOf('.') === -1) {
-                                filename += '.json';
-                            }
-                            res.header("Content-Type", "application/json");
-                            res.header("Content-Disposition", "attachment;filename=\"" + filename + "\"");
-                            res.status(httpStatus);
-                            res.end(/*CANON*/JSON.stringify(object, null, 2));
-                        } else {
-                            logger.warn(httpStatus, JSON.stringify(object, null, 2));
-                            res.status(httpStatus).send(object);
-                        }
-                    } else {
-                        res.status(httpStatus).json(object || null);
-                    }
-                });
-            }
-        });
-    });
-
+    logger.debug('creating REST related routing rules');
+    RestServer.createExpressRest(__app, gmeConfig, logger, ensureAuthenticated, __gmeAuth.tokenAuthorization);
 
     logger.debug("creating server-worker related routing rules");
     __app.get('/worker/simpleResult/*', function (req, res) {

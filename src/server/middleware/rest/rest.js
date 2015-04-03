@@ -37,10 +37,12 @@ function Rest(_parameters) {
             'commit': 'commit',
             'node': 'node',
             'dump': 'dump',
-            'etf': 'etf'
+            'etf': 'etf',
+            'seedProject': 'seedProject'
         },
         _HTTPError = {
             'badRequest': 400,
+            'authenticate': 401,
             'forbidden': 403,
             'notFound': 404,
             'internalServerError': 500,
@@ -374,6 +376,8 @@ function Rest(_parameters) {
                     }
                 });
                 break;
+            case _commands.seedProject:
+
             default:
                 printHelp(callback);
         }
