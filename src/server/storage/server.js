@@ -51,7 +51,6 @@ var server = function (_database, options) {
         _databaseOpenCallbacks = [],
         _databaseOpened = false,
         ERROR_DEAD_GUID = 'the given object does not exists',
-        _workerManager = null,
         _connectedWorkers = {},
         _eventHistory = [],
         _events = {},
@@ -658,7 +657,7 @@ var server = function (_database, options) {
             //worker commands
             socket.on('simpleRequest', function (parameters, callback) {
                 var request = function () {
-                    _workerManager.request(parameters, function (err, id) {
+                    options.workerManager.request(parameters, function (err, id) {
                         if (!err && id) {
                             registerConnectedWorker(socket.id, id);
                         }
@@ -686,7 +685,7 @@ var server = function (_database, options) {
             });
 
             socket.on('simpleQuery', function (workerId, parameters, callback) {
-                _workerManager.query(workerId, parameters, callback);
+                options.workerManager.query(workerId, parameters, callback);
             });
 
             //eventing
@@ -704,11 +703,6 @@ var server = function (_database, options) {
                 stopConnectedWorkers(socket.id);
             });
         });
-
-        _workerManager = new SWM({
-            sessionToUser: options.sessionToUser,
-            globConf: gmeConfig
-        });
     }
 
     function close() {
@@ -725,9 +719,6 @@ var server = function (_database, options) {
         var cleanup = function () {
             _objects = {};
             _projects = {};
-            if (_workerManager) {
-                _workerManager.stop();
-            }
             //_references = {};
             _databaseOpened = false;
         };
@@ -748,7 +739,7 @@ var server = function (_database, options) {
     }
 
     function getWorkerResult(resultId, callback) {
-        _workerManager.result(resultId, callback);
+        options.workerManager.result(resultId, callback);
     }
 
     //connected worker handlings for cleanup
@@ -772,9 +763,9 @@ var server = function (_database, options) {
 
     function stopConnectedWorkers(socketId) {
         var i;
-        if (_workerManager) {
+        if (options.workerManager) {
             var stop = function (worker) {
-                _workerManager.result(_connectedWorkers[socketId][i], function (err) {
+                options.workerManager.result(_connectedWorkers[socketId][i], function (err) {
                     if (err) {
                         options.log.error("unable to stop connected worker [" + worker + "] of socket " + socketId);
                     }

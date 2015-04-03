@@ -41,6 +41,8 @@ var Path = require('path'),
     SSTORE = require('./middleware/auth/sessionstore'),
     Logger = require('./logger'),
 
+    ServerWorkerManager = require('./worker/serverworkermanager'),
+
     servers = [],
 
     mainLogger;
@@ -191,6 +193,8 @@ function StandAloneServer(gmeConfig) {
 
         __storageOptions.sessionToUser = __sessionStore.getSessionUser;
 
+        __storageOptions.workerManager = __workerManager;
+
         __storageOptions.globConf = gmeConfig;
         __storage = Storage(__storageOptions); // FIXME: why do not we use the 'new' keyword here?
         //end of storage creation
@@ -216,6 +220,9 @@ function StandAloneServer(gmeConfig) {
             // close storage first
             // FIXME: is this call synchronous?
             __storage.close();
+
+            //kill all remaining workers
+            __workerManager.stop();
 
             // request server close - do not accept any new connections.
             // first we have to request the close then we can destroy the sockets.
@@ -463,6 +470,7 @@ function StandAloneServer(gmeConfig) {
         __secureSiteInfo = {},
         __app = null,
         __sessionStore,
+        __workerManager,
         __users = {},
         __googleAuthenticationSet = false,
         __googleStrategy = PassGoogle.Strategy,
@@ -488,6 +496,12 @@ function StandAloneServer(gmeConfig) {
 
     logger.debug("initializing session storage");
     __sessionStore = new SSTORE();
+
+    logger.debug('initializing server worker manager');
+    __workerManager = new ServerWorkerManager({
+        sessionToUser: __sessionStore.getSessionUser,
+        globConf: gmeConfig
+    });
 
     logger.debug("initializing authentication modules");
     //TODO: do we need to create this even though authentication is disabled?
