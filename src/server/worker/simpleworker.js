@@ -14,6 +14,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     PluginManagerBase = requireJS('plugin/PluginManagerBase'),
     PluginResult = requireJS('plugin/PluginResult'),
     PluginMessage = requireJS('plugin/PluginMessage'),
+    OpenContext = requireJS('common/util/opencontext'),
+
+    FS = require('fs'),
 
     GMEAUTH = require('../middleware/auth/gmeauth'),
     CONSTANT = require('./constants'),
@@ -97,6 +100,7 @@ var exportLibrary = function (name, hash, libraryRootPath, callback) {
     });
 
 };
+
 var dumpMoreNodes = function (name, hash, nodePaths, callback) {
     if (storage) {
         if (initialized) {
@@ -379,6 +383,7 @@ var getAllProjectsInfo = function (userId, callback) {
     }
 
 };
+
 var setProjectInfo = function (webGMESessionId, projectId, info, callback) {
     if (storage) {
         if (initialized) {
@@ -405,6 +410,7 @@ var setProjectInfo = function (webGMESessionId, projectId, info, callback) {
         callback(new Error('no active data connection'));
     }
 };
+
 var getProjectInfo = function (webGMESessionId, projectId, callback) {
     if (storage) {
         if (initialized) {
@@ -477,6 +483,7 @@ var getAllInfoTags = function (webGMESessionId, callback) {
         callback(new Error('no active data connection'));
     }
 };
+
 var setBranch = function (webGMESessionId, projectName, branchName, oldHash, newHash, callback) {
     if (storage) {
         if (initialized) {
@@ -502,6 +509,258 @@ var setBranch = function (webGMESessionId, projectName, branchName, oldHash, new
     } else {
         callback(new Error('no active data connection'));
     }
+};
+
+var getAvailableSeedNames = function () {
+    var result = [], i, names, j;
+    if (gmeConfig.seedProjects.enable !== true) {
+        return result;
+    }
+
+    try {
+        for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
+            names = FS.readdirSync(gmeConfig.plugin.basePaths[i]);
+            for (j = 0; j < names.length; j++) {
+                if (names[j].slice(-5) === '.json' && result.indexOf(names[j].slice(0, -5)) === -1) {
+                    result.push(names[j].slice(0, -5));
+                }
+            }
+        }
+    } catch (e) {
+        return result;
+    }
+    return result;
+};
+
+var getSeedInfo = function (userId, callback) {
+    var result = {
+            db: [],
+            file: getAvailableSeedNames()
+        },
+        createChecked = function () {
+            getAllProjectsInfo(userId, function (err, fullProjectInfo) {
+                console.log(fullProjectInfo);
+                result.db = Object.keys(fullProjectInfo || {});
+
+                callback(null, result);
+            });
+        };
+
+    if (AUTH) {
+        AUTH.getUserAuthInfo(userId, function (err, userData) {
+            if (err) {
+                return callback(err);
+            }
+
+            if (!userData.create) {
+                callback(null, result);
+            }
+
+            createChecked();
+        });
+    } else {
+        createChecked();
+    }
+
+};
+
+var getSeedFromFile = function (name) {
+    var i, names;
+    if (gmeConfig.seedProjects.enable !== true) {
+        return null;
+    }
+
+    try {
+        for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
+            names = FS.readdirSync(gmeConfig.seedProjects.basePaths[i]);
+            if (names.indexOf(name + '.json') !== -1) {
+                return JSON.parse(FS.readFileSync(gmeConfig.seedProjects.basePaths[i] + '/' + name + '.json', 'utf8'));
+            }
+        }
+    } catch (e) {
+        return null;
+    }
+};
+
+//var getSeedFromDb = function (name, branch, commit, callback) {
+//
+//    storage.getProjectNames(function (err, names) {
+//        if (err) {
+//            return callback(err);
+//        }
+//
+//        if (names.indexOf(name) === -1) {
+//            return callback('unknown seed project');
+//        }
+//
+//        //TODO check authorization
+//        storage.openProject(name, function (err, project) {
+//            if (err) {
+//                return callback(err);
+//            }
+//
+//            if (commit) {
+//                project.loadObject(commit, function (err, commitObject) {
+//                    if (err) {
+//                        return callback(err);
+//                    }
+//
+//                    var core = new Core(project, {globConf: gmeConfig});
+//                    core.loadRoot(commitObject.root, function (err, root) {
+//                        if (err) {
+//                            return callback(err);
+//                        }
+//
+//                        Serialization.export(core, root, callback);
+//                    });
+//                });
+//            } else {
+//                project.getBranchNames(function (err, branches) {
+//                    if (err) {
+//                        return callback(err);
+//                    }
+//
+//                    if (!branches[branch]) {
+//                        return callback('seed has no such branch');
+//                    }
+//                    project.loadObject(branches[branch], function (err, commitObject) {
+//                        if (err) {
+//                            return callback(err);
+//                        }
+//
+//                        var core = new Core(project, {globConf: gmeConfig});
+//                        core.loadRoot(commitObject.root, function (err, root) {
+//                            if (err) {
+//                                return callback(err);
+//                            }
+//
+//                            Serialization.export(core, root, callback);
+//                        });
+//                    });
+//                });
+//            }
+//        });
+//    });
+//};
+
+var getSeedFromDb = function (name, branch, commit, callback) {
+    var contextParameters = {
+        projectName: name,
+        createProject: false,
+        overwriteProject: false
+    };
+    if (commit) {
+        contextParameters.commitHash = commit;
+    } else {
+        contextParameters.branchName = branch;
+    }
+    OpenContext(storage, gmeConfig, contextParameters, function (err, result) {
+        if (err) {
+            return callback(err);
+        }
+
+        Serialization.export(result.core, result.rootNode, callback);
+    });
+};
+
+var seedProject = function (parameters, callback) {
+    //check if the seed can be found
+    //try to export the seed
+    //try to create a new project from the seed
+    var checkRights = function () {
+            if (storage === null) {
+                return fail('no database connection');
+            }
+
+            if (parameters.type === 'file') {
+                seed = getSeedFromFile(parameters.seedName);
+                if (seed === null) {
+                    return fail('unknown file seed');
+                }
+                return createProjectfromSeed();
+            }
+
+            //db
+            storage.getProjectNames(function (err, names) {
+                if (err) {
+                    return fail(err);
+                }
+
+                if (names.indexOf(parameters.projectName) !== -1) {
+                    return fail('cannot overwrite project with seeding');
+                }
+
+                if (AUTH) {
+                    AUTH.getAllUserAuthInfo(parameters.userId, function (err, authInfo) {
+                        console.log('userInfo', authInfo);
+                        if (err) {
+                            fail(err);
+                        }
+
+                        if (authInfo.create !== true) {
+                            return fail('user cannot create project');
+                        }
+
+                        getSeedFromDb(parameters.seedName, parameters.seedBranch, parameters.seedCommit, function (err, result) {
+                            if (err || result === null) {
+                                return fail(err || 'unable to get seed project');
+                            }
+
+                            seed = result;
+                            createProjectfromSeed();
+                        });
+                    });
+                } else {
+                    getSeedFromDb(parameters.seedName, parameters.seedBranch, parameters.seedCommit, function (err, result) {
+                        if (err || result === null) {
+                            return fail(err || 'unable to get seed project');
+                        }
+
+                        seed = result;
+                        createProjectfromSeed();
+                    });
+                }
+            });
+        },
+        createProjectfromSeed = function () {
+            var contextParameters = {
+                projectName: parameters.projectName,
+                branchName: parameters.branch,
+                createProject: true,
+                overwriteProject: false
+            };
+            OpenContext(storage, gmeConfig, contextParameters, function (err, result) {
+                if (err) {
+                    return fail(err);
+                }
+                Serialization.import(result.core, result.rootNode, seed, function (err) {
+                    if (err) {
+                        return fail(err);
+                    }
+                    result.core.persist(result.rootNode, function (err) {
+                        if (err) {
+                            return fail(err);
+                        }
+
+                        var newCommit = result.project.makeCommit([result.commitHash], result.core.getHash(result.rootNode), 'seeding project[' + seedName + ']', function (err) {
+                            //TODO
+                        });
+                        result.core.setBranchHash(parameters.branch, result.commitHash, newCommit, function (err) {
+                            if (err) {
+                                return fail(err);
+                            }
+                            callback(null);
+                        });
+                    });
+                });
+            });
+        },
+        fail = function (error) {
+            callback(error);
+        },
+        seed = {};
+
+    checkRights();
 };
 
 //addOn functions
@@ -761,6 +1020,34 @@ process.on('message', function (parameters) {
                 }
             });
             break;
+        case CONSTANT.workerCommands.getSeedInfo:
+            resultId = GUID();
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+            getSeedInfo(parameters.userId, function (err, r) {
+                if (resultRequested === true) {
+                    initResult();
+                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
+                } else {
+                    resultReady = true;
+                    error = err;
+                    result = r;
+                }
+            });
+            break;
+        case CONSTANT.workerCommands.seedProject:
+            resultId = GUID();
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+            seedProject(parameters, function (err, r) {
+                if (resultRequested === true) {
+                    initResult();
+                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
+                } else {
+                    resultReady = true;
+                    error = err;
+                    result = r;
+                }
+            });
+            break;
         case CONSTANT.workerCommands.connectedWorkerStart:
             if (gmeConfig.addOn.enable === true) {
                 initConnectedWorker(parameters.workerName, parameters.webGMESessionId, parameters.project, parameters.branch, function (err) {
@@ -798,6 +1085,7 @@ process.on('message', function (parameters) {
                     resid: null
                 });
             }
+            break;
         case CONSTANT.workerCommands.connectedWorkerStop:
             if (gmeConfig.addOn.enable === true) {
                 connectedworkerStop(function (err) {
@@ -812,6 +1100,7 @@ process.on('message', function (parameters) {
                     resid: null
                 });
             }
+            break;
         default:
             safeSend({error: 'unknown command'});
     }

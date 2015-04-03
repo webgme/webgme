@@ -798,7 +798,15 @@ function StandAloneServer(gmeConfig) {
 
     //TODO: needs to refactor for the /rest/... format
     logger.debug('creating REST related routing rules');
-    RestServer.createExpressRest(__app, gmeConfig, logger, ensureAuthenticated, __gmeAuth.tokenAuthorization);
+    RestServer.createExpressRest(
+        __app,
+        gmeConfig,
+        logger,
+        ensureAuthenticated,
+        __gmeAuth.tokenAuthorization,
+        __gmeAuth.tokenAuth,
+        __workerManager
+    );
 
     logger.debug("creating server-worker related routing rules");
     __app.get('/worker/simpleResult/*', function (req, res) {

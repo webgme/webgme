@@ -76,6 +76,11 @@ var path = require('path'),
             components: {}
         },
 
+        seedProjects: {
+            enable: true,
+            basePaths: [path.join(__dirname, '../seeds')]
+        },
+
         server: {
             port: 8888,
             maxWorkers: 10,

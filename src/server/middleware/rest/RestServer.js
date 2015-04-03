@@ -4,13 +4,15 @@
  */
 
 var REST = require('./rest');
-function createExpressRest(__app, gmeConfig, __logger, ensureAuthenticated, restAuthorization) {
+function createExpressRest(__app, gmeConfig, __logger, ensureAuthenticated, restAuthorization, tokenToUserId, workerManager) {
     'use strict';
 
     var __REST = new REST({
             globConf: gmeConfig,
             baseUrl: '',
-            authorization: restAuthorization
+            authorization: restAuthorization,
+            workerManager: workerManager,
+            tokenToUserId: tokenToUserId
         }),
         logger = __logger.fork('rest');
 
@@ -26,6 +28,7 @@ function createExpressRest(__app, gmeConfig, __logger, ensureAuthenticated, rest
                     req.headers.webGMEToken,
                     req.query,
                     function (httpStatus, object) {
+                        console.log('backAgain',object);
                         res.header("Access-Control-Allow-Origin", "*");
                         res.header("Access-Control-Allow-Headers", "X-Requested-With");
                         if (req.params.command === __REST.command.etf) {

@@ -11,7 +11,9 @@ var Core = requireJS('common/core/core'),
     Logger = require('../../logger');
 
 function Rest(_parameters) {
-    var gmeConfig = _parameters.globConf;
+    var gmeConfig = _parameters.globConf,
+        workerManager = _parameters.workerManager,
+        tokenToUserId = _parameters.tokenToUserId;
     _parameters.baseUrl = _parameters.baseUrl || "http://localhost/rest"; // FIXME: This should come from config
     _parameters.authorization = /*_parameters.authorization || */function (token, projectname, callback) {
         callback(null, true);
@@ -87,6 +89,10 @@ function Rest(_parameters) {
                     'etf': {
                         'description': "Responds with the JSON representation of the pointed node. All sub-nodes are extracted and outer relations of the sub-tree represented by JSON reference objects. It forces file download.",
                         'example': _baseUrl + '/etf?project=projectName&root=rootHash&path=pathOfNode&output=outputFileName'
+                    },
+                    'seedProject': {
+                        'description': 'Creates a project from the given seed.',
+                        'example': _baseUrl + '/seedProject?type=file&seedName=SignalFlowSystem&projectName=myCopyProject'
                     }
                 }
             }
@@ -290,6 +296,73 @@ function Rest(_parameters) {
         });
     }
 
+    function getSeedInfo(userId, callback) {
+        var parameters = {
+            command: 'getSeedInfo',
+            userId: userId
+        };
+        workerManager.request(parameters, function (err, id) {
+            if (!err && id) {
+                workerManager.result(id, function (err, seedInfo) {
+                    if (err) {
+                        return callback(_HTTPError.internalServerError, err);
+                    }
+                    callback(_HTTPError.ok, seedInfo);
+                });
+            } else {
+                //FIXME generate meaningful HTTP result based on the error
+                callback(_HTTPError.forbidden, err);
+            }
+        });
+    }
+
+    //FIXME check for errors  to set HTTPRESULT
+    function createProjectFromSeed(userId, inputParameters, callback) {
+        var parameters = {
+            command: 'seedProject',
+            userId: userId,
+            type: inputParameters.type,
+            seedName: inputParameters.seedName,
+            projectName: inputParameters.projectName,
+            branch: inputParameters.branch || 'master',
+            seedCommit: inputParameters.seedCommit,
+            seedBranch: inputParameters.seedBranch || 'master'
+        };
+        workerManager.request(parameters, function (err, id) {
+            if (!err && id) {
+                workerManager.result(id, function (err) {
+                    if (err) {
+                        return callback(_HTTPError.internalServerError, err);
+                    }
+                    callback(_HTTPError.ok);
+                });
+            } else {
+                //FIXME generate meaningful HTTP result based on the error
+                callback(_HTTPError.forbidden, err);
+            }
+        });
+    }
+
+    function seedProject(token, parameters, callback) {
+        //check parameters
+        if (!(
+            typeof parameters.seedName === 'string' &&
+            typeof parameters.projectName === 'string' &&
+            typeof parameters.type === 'string' &&
+            (parameters.type === 'db' || parameters.type === 'file')
+            )) {
+            return callback(_HTTPError.badRequest);
+        }
+
+        tokenToUserId(token, function (err, userId) {
+            if (err && userId[0] === true) {
+                return callback(_HTTPError.authenticate);
+            }
+
+            createProjectFromSeed(userId[1], parameters, callback);
+        });
+    }
+
     function doGET(command, token, parameters, callback) {
         switch (command) {
             case _commands.help:
@@ -377,7 +450,8 @@ function Rest(_parameters) {
                 });
                 break;
             case _commands.seedProject:
-
+                seedProject(token, parameters, callback);
+                break;
             default:
                 printHelp(callback);
         }
