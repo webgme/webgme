@@ -240,6 +240,21 @@ module.exports = {
     WebGME: WebGME,
     Storage: Storage,
     Logger: Logger,
+    // test logger instance, used by all tests and only tests
+    logger: Logger.create('gme:test', {
+        transports: [{
+            transportType: 'Console',
+            //patterns: [],
+            options: {
+                level: 'warn',
+                colorize: true,
+                timestamp: true,
+                prettyPrint: true,
+                handleExceptions: true, // ignored by default when you create the logger, see the logger.create function
+                depth: 2
+            }
+        }]
+    }, true),
     generateKey: generateKey,
 
     GMEAuth: GMEAuth,

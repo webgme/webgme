@@ -12,7 +12,6 @@ main = function (argv, callback) {
         webGme = require('../../webgme'),
         Command = require('commander').Command,
         program = new Command(),
-        configFilename,
         pluginConfigFilename,
         resolvedPluginConfigFilename,
         pluginConfigJson,
@@ -46,7 +45,6 @@ main = function (argv, callback) {
     branch = program.branch;
     pluginName = program.pluginName;
     activeNode = program.selectedObjID;
-    configFilename = program.config;
     pluginConfigFilename = program.pluginConfigPath;
 
     console.log('Executing ' + pluginName + ' plugin');

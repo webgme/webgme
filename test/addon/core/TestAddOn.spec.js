@@ -11,6 +11,7 @@ describe('TestAddOn', function () {
     var expect = testFixture.expect,
         WebGME = testFixture.WebGME,
         Core = testFixture.WebGME.core,
+        testLogger = testFixture.logger,
         server,
         storage,
         project,
@@ -85,10 +86,10 @@ describe('TestAddOn', function () {
                 testFixture.saveChanges({project: project, core: result.core, rootNode: result.root},
                     function (err, rootHash, commitHash) {
                         expect(err).equal(null);
-                        console.log(rootHash);
-                        console.log(commitHash);
+                        testLogger.debug(rootHash);
+                        testLogger.debug(commitHash);
 
-                        console.log(logMessages);
+                        testLogger.debug(logMessages);
                         addOn.stop(function (err) {
                             expect(err).equal(null);
                             expect(logMessages.length).to.equal(3);

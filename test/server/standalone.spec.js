@@ -10,6 +10,7 @@ describe('standalone server', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,
+        logger = testFixture.logger,
 
         should = testFixture.should,
         superagent = testFixture.superagent,
@@ -163,7 +164,7 @@ describe('standalone server', function () {
                         should.equal(res.headers.location, requestTest.redirectUrl);
                     }
                     should.not.equal(res.headers.location, url);
-                    console.log(res.headers.location, url, requestTest.redirectUrl);
+                    logger.debug(res.headers.location, url, requestTest.redirectUrl);
                     should.equal(res.redirects.length, 1);
                 } else {
                     // was not redirected
@@ -204,6 +205,7 @@ describe('standalone server', function () {
                 gmeConfig.authentication.guestAccount = 'guestUserName';
                 gmeConfig.server.https.enable = scenario.type === 'https';
 
+                // https://github.com/visionmedia/superagent/issues/205
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
                 dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
@@ -284,7 +286,7 @@ describe('standalone server', function () {
                         return;
                     }
                     server.stop(function () {
-                        //console.log('done');
+                        logger.debug('server stopped');
                         done();
                     });
                 });
@@ -337,8 +339,6 @@ describe('standalone server', function () {
         var db,
             collection,
             gmeauth = require('../../src/server/middleware/auth/gmeauth'),
-            sockets = [],
-            socketId,
             gmeConfig = testFixture.getGmeConfig(),
             logIn = function (callback) {
                 agent.post(serverBaseUrl + '/login?redirect=%2F')
@@ -377,8 +377,6 @@ describe('standalone server', function () {
                         socket.on('connect', function () {
                             defer.resolve(socket);
                         });
-
-                        sockets.push(socket);
 
                         return defer.promise;
                     });
@@ -452,6 +450,12 @@ describe('standalone server', function () {
                         write: false,
                         delete: false
                     });
+                //}).then(function () {
+                //    return gmeauth.addUser(gmeConfig.authentication.guestAccount,
+                //        gmeConfig.authentication.guestAccount +'@example.com',
+                //        'plaintext',
+                //        true,
+                //        {overwrite: true});
                 });
             });
 
@@ -470,17 +474,7 @@ describe('standalone server', function () {
                     return;
                 }
 
-                // destroy all socket io connections
-                // this will ensures that the server stops as soon as possible and the test will not timeout.
-                for (socketId in sockets) {
-                    //console.log('socket', socketId, 'destroyed');
-                    if (sockets.hasOwnProperty(socketId)) {
-                        sockets[socketId].destroy();
-                    }
-                }
-
                 server.stop(function () {
-                    //console.log('done');
                     done();
                 });
             });
@@ -496,7 +490,7 @@ describe('standalone server', function () {
                     done(err);
                     return;
                 }
-                //console.log(res);
+                logger.debug(res);
                 should.equal(res.status, 200);
                 done();
             });

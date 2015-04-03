@@ -39,17 +39,78 @@ var Path = require('path'),
     getClientConfig = require('../../config/getclientconfig'),
     GMEAUTH = require('./middleware/auth/gmeauth'),
     SSTORE = require('./middleware/auth/sessionstore'),
-    Logger = require('./logger');
+    Logger = require('./logger'),
+
+    servers = [],
+
+    mainLogger;
+
+
+process.on('SIGINT', function () {
+    var i,
+        error = false,
+        numStops = 0;
+
+    function serverOnStop(server) {
+        server.stop(function (err) {
+            numStops -= 1;
+            if (err) {
+                error = true;
+                server.logger.error('Stopping server failed', {metadata: err});
+            } else {
+                server.logger.info('Server stopped.');
+            }
+
+            if (numStops === 0) {
+                if (error) {
+                    exit(1);
+                } else {
+                    exit(0);
+                }
+
+            }
+        });
+    }
+
+    for (i = 0; i < servers.length; i += 1) {
+        // stop server gracefully on ctrl+C or cmd+c
+        if (servers[i].isRunning) {
+            servers[i].logger.info('Requesting server to stop ...');
+            numStops += 1;
+            serverOnStop(servers[i]);
+        }
+    }
+
+    function exit(code) {
+        process.exit(code);
+    }
+
+    if (numStops === 0) {
+        exit(0);
+    }
+
+});
 
 function StandAloneServer(gmeConfig) {
     var self = this,
         clientConfig = getClientConfig(gmeConfig),
 
-        sockets;
+        sockets = [];
+
+    if (mainLogger) {
+
+    } else {
+        mainLogger = Logger.createWithGmeConfig('gme', gmeConfig, true);
+    }
 
     this.serverUrl = '';
     this.isRunning = false;
 
+    this.start = start;
+    this.stop = stop;
+
+
+    servers.push(this);
 
     /**
      * Gets the server's url based on the gmeConfig that was given to the constructor.
@@ -91,6 +152,8 @@ function StandAloneServer(gmeConfig) {
             return;
         }
 
+        sockets = {};
+
         if (gmeConfig.server.https.enable) {
             __httpServer = Https.createServer({
                 key: __secureSiteInfo.key,
@@ -100,7 +163,16 @@ function StandAloneServer(gmeConfig) {
             __httpServer = Http.createServer(__app).listen(gmeConfig.server.port, callback);
         }
 
-        __httpServer.timeout = gmeConfig.server.timeout;
+        __httpServer.on('connection', function (socket) {
+            var socketId = socket.remoteAddress + ':' + socket.remotePort;
+
+            sockets[socketId] = socket;
+
+            socket.on('close', function () {
+                logger.debug('remove socket from list ' + socketId);
+                delete sockets[socketId];
+            });
+        });
 
         //creating the proper storage for the standalone server
         __storageOptions = {
@@ -126,19 +198,12 @@ function StandAloneServer(gmeConfig) {
 
         self.isRunning = true;
 
-        process.on('SIGINT', function () {
-            // stop server gracefully on ctrl+C or cmd+c
-            if (self.isRunning) {
-                stop(function () {
-                    logger.info('Server stopped.');
-                });
-            }
 
-            process.exit();
-        });
     }
 
     function stop(callback) {
+        var key;
+
         if (self.isRunning === false) {
             // FIXME: should this be an error?
             callback();
@@ -152,9 +217,20 @@ function StandAloneServer(gmeConfig) {
             // FIXME: is this call synchronous?
             __storage.close();
 
+            // request server close - do not accept any new connections.
+            // first we have to request the close then we can destroy the sockets.
+            __httpServer.close(function (err) {
+                logger.info('http server closed');
+                callback(err);
+            });
 
-            // request server close
-            __httpServer.close(callback);
+            // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
+            for (key in sockets) {
+                if (sockets.hasOwnProperty(key)) {
+                    sockets[key].destroy();
+                    logger.info('destroyed open socket ' + key);
+                }
+            }
         } catch (e) {
             //ignore errors
             callback(e);
@@ -391,7 +467,7 @@ function StandAloneServer(gmeConfig) {
         httpResult.sendFile(path, function (err) {
             //TODO we should check for all kind of error that should be handled differently
             if (err && err.code !== 'ECONNRESET') {
-                logger.error('expressFileSending failed for: ' + path);
+                logger.warn('expressFileSending failed for: ' + path);
                 httpResult.sendStatus(404);
             }
         });
@@ -421,6 +497,7 @@ function StandAloneServer(gmeConfig) {
 
     //creating the logger
     logger = Logger.create('gme:server:standalone', gmeConfig.server.log);
+    self.logger = logger;
 
     logger.debug("starting standalone server initialization");
     //initializing https extra infos
@@ -457,7 +534,7 @@ function StandAloneServer(gmeConfig) {
         setInterval(function () {
             if (__reportedRequestCounter !== __requestCounter) {
                 __reportedRequestCounter = __requestCounter;
-                console.log("...handled " + __reportedRequestCounter + " requests so far...");
+                logger.debug("...handled " + __reportedRequestCounter + " requests so far...");
             }
         }, __requestCheckInterval);
         __app.use(function (req, res, next) {
@@ -750,11 +827,11 @@ function StandAloneServer(gmeConfig) {
                             res.status(httpStatus);
                             res.end(/*CANON*/JSON.stringify(object, null, 2));
                         } else {
-                            console.log(httpStatus, JSON.stringify(object, null, 2));
+                            logger.warn(httpStatus, JSON.stringify(object, null, 2));
                             res.status(httpStatus).send(object);
                         }
                     } else {
-                        res.json(httpStatus, object || null);
+                        res.status(httpStatus).json(object || null);
                     }
                 });
             }
@@ -838,8 +915,7 @@ function StandAloneServer(gmeConfig) {
     });
 
     if (gmeConfig.debug === true) {
-        console.log('gmeConfig of webgme server:');
-        console.log(gmeConfig);
+        logger.debug('gmeConfig of webgme server', {metadata: gmeConfig});
     }
     var networkIfs = OS.networkInterfaces();
     var addresses = 'Valid addresses of gme web server: ';

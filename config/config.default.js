@@ -79,7 +79,6 @@ var path = require('path'),
         server: {
             port: 8888,
             maxWorkers: 10,
-            timeout: 120000, // 2 minutes consult with https://nodejs.org/api/http.html#http_server_timeout
             sessionCookieId: 'webgmeSid',
             sessionCookieSecret: 'meWebGMEez',
             log: {
@@ -91,7 +90,7 @@ var path = require('path'),
                         colorize: true,
                         timestamp: true,
                         prettyPrint: true,
-                        handleExceptions: true,
+                        handleExceptions: true, // ignored by default when you create the logger, see the logger.create function
                         depth: 2
                     }
                 }, {
@@ -108,7 +107,7 @@ var path = require('path'),
                         name: 'error-file',
                         filename: './server-error.log',
                         level: 'error',
-                        handleExceptions: true,
+                        handleExceptions: true, // ignored by default when you create the logger, see the logger.create function
                         json: false
                     }
                 }]

@@ -103,7 +103,7 @@ function GMEAuth(session, gmeConfig) {
                             var guestAcc = gmeConfig.authentication.guestAccount;
                             if (!userData) {
                                 logger.error('User "' + guestAcc + '" not found. Create it with ' +
-                                'src/bin/usermanager.js or ' + guestAcc + 'access will not work. ' +
+                                'src/bin/usermanager.js or "' + guestAcc + '" access will not work. ' +
                                 'Disable guest access by setting gmeConfig.authentication.allowGuests = false');
                             }
                         });

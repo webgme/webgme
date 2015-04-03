@@ -67,6 +67,15 @@ define(['debug'], function (_debug) {
             }
         };
 
+        log.fork = function (forkName, useForkName) {
+            forkName = useForkName ? forkName : name + ':' + forkName;
+            return createLogger(forkName, options);
+        };
+
+        log.forkWithOptions = function (_name, _options) {
+            return createLogger(_name, _options);
+        };
+
         return log;
     }
 

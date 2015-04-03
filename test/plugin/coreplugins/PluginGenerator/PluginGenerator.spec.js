@@ -10,6 +10,7 @@ describe('PluginGenerator', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
+        logger = testFixture.logger,
         should = testFixture.should,
         requirejs = testFixture.requirejs,
         esprima = require('esprima'),
@@ -32,8 +33,8 @@ describe('PluginGenerator', function () {
         catch (e) {
             err = e;
             if (logError) {
-                console.error(err.toString());
-                console.error(testString);
+                logger.error(err.toString());
+                logger.error(testString);
             }
         }
         return err;
@@ -91,7 +92,7 @@ describe('PluginGenerator', function () {
                 //console.warn(msg)
             },
             error: function (msg) {
-                console.error(msg);
+                logger.error(msg);
             }
         };
 

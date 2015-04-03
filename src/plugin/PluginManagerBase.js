@@ -164,7 +164,7 @@ define(['./PluginBase',
                                 remaining -= 1;
 
                                 if (err) {
-                                    self.logger.error('unable to load active selection: ' + activeNodePath);
+                                    self.logger.warn('unable to load active selection: ' + activeNodePath);
                                 } else {
                                     pluginContext.activeSelection.push(activeNode);
                                 }

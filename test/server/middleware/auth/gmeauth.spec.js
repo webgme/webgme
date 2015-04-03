@@ -13,7 +13,6 @@ describe('GME authentication', function () {
 
     var gmeConfig = testFixture.getGmeConfig(),
         GMEAuth = testFixture.GMEAuth,
-        should = testFixture.should,
         mongodb = testFixture.mongodb,
         Q = testFixture.Q,
 
@@ -75,8 +74,8 @@ describe('GME authentication', function () {
                     write: false,
                     delete: false
                 });
-            }).
-            nodeify(done);
+            })
+            .nodeify(done);
     });
 
     after(function (done) {
