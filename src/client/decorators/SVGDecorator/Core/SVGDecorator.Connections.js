@@ -27,7 +27,7 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'],
     };
 
     SVGDecoratorConnections.prototype._getCustomConnectionAreas = function (svgFile) {
-        var connAreas = this.svgCache[svgFile].customConnectionAreas,
+        var connAreas = this.svgCache[svgFile] ? this.svgCache[svgFile].customConnectionAreas : null,
             len = connAreas ? connAreas.length : 0,
             connA;
 
