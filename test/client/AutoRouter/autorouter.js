@@ -36,11 +36,11 @@ describe('AutoRouter Tests', function () {
 
         // Check the points
         var finalPoints = router.getPathPoints(path);
-        assert(finalPoints.length === 2, 'Path missing points: '+finalPoints);
-        for (var i = 0; i < finalPoints.length; i++) {
+        assert(finalPoints.length === points.length+2, 'Path missing points: '+finalPoints);
+        for (var i = 1; i < finalPoints.length-1; i++) {
             for (var j = 0; j < 2; j++) {
-                assert(points[i][j] === finalPoints[i][j], 
-                    'Points do not match. Expected '+ points[i][j] +
+                assert(points[i-1][j] === finalPoints[i][j], 
+                    'Points do not match. Expected '+ points[i-1][j] +
                     ' but found '+finalPoints[i][j]);
             }
         }
