@@ -8,7 +8,8 @@
 'use strict';
 
 var mime = require('mime'),
-    BlobMetadata = requireJS('blob/BlobMetadata');
+    BlobMetadata = requireJS('blob/BlobMetadata'),
+    contentDisposition = require('content-disposition');
 
 function createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger) {
     __app.get('/rest/blob/metadata', ensureAuthenticated, function (req, res) {
@@ -136,7 +137,7 @@ function createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger) {
                 var mimeType = mime.lookup(filename);
 
                 if (download || mimeType === 'application/octet-stream' || mimeType === 'application/zip') {
-                    res.setHeader('Content-disposition', 'attachment; filename=' + filename);
+                    res.setHeader('Content-Disposition', contentDisposition(filename, {type: 'attachment'}));
                 }
                 res.setHeader('Content-type', mimeType);
 

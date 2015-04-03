@@ -12,9 +12,11 @@ describe('BlobServer', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         agent = testFixture.superagent.agent(),
         should = testFixture.should,
+        expect = testFixture.expect,
         rimraf = testFixture.rimraf,
         BlobClient = testFixture.BlobClient,
         Artifact = testFixture.requirejs('blob/Artifact'),
+        contentDisposition = require('content-disposition'),
         server,
         serverBaseUrl,
         bcParam = {};
@@ -120,8 +122,38 @@ describe('BlobServer', function () {
                     return;
                 }
                 agent.get(serverBaseUrl + '/rest/blob/download/' + hash).end(function (err, res) {
+                    var checkContentDisposition = function () {
+                        return contentDisposition.parse(res.header['content-disposition']);
+                    };
                     should.equal(res.status, 200, err);
-                    should.equal(res.header['content-disposition'], 'attachment; filename=notPublic.zip');
+                    expect(checkContentDisposition).to.not.throw(TypeError);
+                    should.equal(checkContentDisposition().parameters.filename, 'notPublic.zip');
+                    done();
+                });
+            });
+        });
+    });
+
+    it('should download non-public artifact "Case (1).zip" at /rest/blob/download/valid-hash', function (done) {
+        var bc = new BlobClient(bcParam),
+            artifact = new Artifact('Case (1)', bc);
+        artifact.addFile('tt.txt', 'ttt', function (err/*, fHash*/) {
+            if (err) {
+                done(err);
+                return;
+            }
+            artifact.save(function (err, hash) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                agent.get(serverBaseUrl + '/rest/blob/download/' + hash).end(function (err, res) {
+                    var checkContentDisposition = function () {
+                        return contentDisposition.parse(res.header['content-disposition']);
+                    };
+                    should.equal(res.status, 200, err);
+                    expect(checkContentDisposition).to.not.throw(TypeError);
+                    should.equal(checkContentDisposition().parameters.filename, 'Case (1).zip');
                     done();
                 });
             });
@@ -137,8 +169,12 @@ describe('BlobServer', function () {
                 return;
             }
             agent.get(serverBaseUrl + '/rest/blob/download/' + hash).end(function (err, res) {
+                var checkContentDisposition = function () {
+                    return contentDisposition.parse(res.header['content-disposition']);
+                };
                 should.equal(res.status, 200, err);
-                should.equal(res.header['content-disposition'], 'attachment; filename=notPublic.zip');
+                expect(checkContentDisposition).to.not.throw(TypeError);
+                should.equal(checkContentDisposition().parameters.filename, 'notPublic.zip');
                 done();
             });
         });
@@ -158,8 +194,12 @@ describe('BlobServer', function () {
                     return;
                 }
                 agent.get(serverBaseUrl + '/rest/blob/view/' + hash).end(function (err, res) {
+                    var checkContentDisposition = function () {
+                        return contentDisposition.parse(res.header['content-disposition']);
+                    };
                     should.equal(res.status, 200, err);
-                    should.equal(res.header['content-disposition'], 'attachment; filename=notPublic.zip');
+                    expect(checkContentDisposition).to.not.throw(TypeError);
+                    should.equal(checkContentDisposition().parameters.filename, 'notPublic.zip');
                     done();
                 });
             });
@@ -175,8 +215,12 @@ describe('BlobServer', function () {
                 return;
             }
             agent.get(serverBaseUrl + '/rest/blob/view/' + hash).end(function (err, res) {
+                var checkContentDisposition = function () {
+                    return contentDisposition.parse(res.header['content-disposition']);
+                };
                 should.equal(res.status, 200, err);
-                should.equal(res.header['content-disposition'], 'attachment; filename=notPublic.zip');
+                expect(checkContentDisposition).to.not.throw(TypeError);
+                should.equal(checkContentDisposition().parameters.filename, 'notPublic.zip');
                 done();
             });
         });
