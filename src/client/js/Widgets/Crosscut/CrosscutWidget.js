@@ -54,7 +54,7 @@ define(['js/DragDrop/DragHelper',
     /* OVERWRITE DiagramDesignerWidget.prototype.setBackgroundText */
     CrosscutWidget.prototype.setBackgroundText = function (text, params) {
         params = params || {};
-        params.color = BACKGROUND_TEXT_COLOR;
+        params.color = params.color || BACKGROUND_TEXT_COLOR;
         DiagramDesignerWidget.prototype.setBackgroundText.apply(this, [text, params]);
     };
 
