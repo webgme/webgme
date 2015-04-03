@@ -57,11 +57,12 @@ define(['common/util/assert', 'common/core/core'], function (ASSERT, Core) {
             }
             if (parameters.projectName) {
                 storage.getProjectNames(function (err, projectNames) {
-                    var projectExists = projectNames.indexOf(parameters.projectName) > -1;
+                    var projectExists;
                     if (err) {
                         closeOnError(err);
                         return;
                     }
+                    projectExists = projectNames.indexOf(parameters.projectName) > -1;
                     if (!projectExists && !parameters.createProject && !parameters.overwriteProject) {
                         closeOnError('"' + parameters.projectName + '" does not exists among: ' +
                         projectNames.toString() + '. Set flag "createProject" to create a new project.');
