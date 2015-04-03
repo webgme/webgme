@@ -46,12 +46,12 @@ var initialize = function (parameters) {
         initialized = true;
         gmeConfig = parameters.gmeConfig;
         WEBGME.addToRequireJsPaths(gmeConfig);
-        logger = Logger.create('gme:server:worker:simpleworker:' + process.pid, gmeConfig.server.log, true);
+        logger = Logger.create('gme:server:worker:simpleworker:pid_' + process.pid, gmeConfig.server.log, true);
         if (gmeConfig.authentication.enable === true) {
             AUTH = GMEAUTH({}, gmeConfig); //FIXME: Should session really be empty object??
         }
         storage = new Storage({
-            log: Logger.create('gme:server:worker:simpleworker:storage:' + process.pid, gmeConfig.server.log),
+            log: logger.fork('storage'),
             globConf: gmeConfig
         });
         storage.openDatabase(function (err) {
@@ -524,7 +524,7 @@ var initConnectedWorker = function (name, webGMESessionId, projectName, branchNa
                 if (err) {
                     return callback(err);
                 }
-                _addOn.start({projectName: projectName, branchName: branchName, project: project}, callback);
+                _addOn.start({projectName: projectName, branchName: branchName, project: project, logger: logger.fork(name)}, callback);
             });
         } else {
             callback('unable to connect user\'s storage: ' + err);

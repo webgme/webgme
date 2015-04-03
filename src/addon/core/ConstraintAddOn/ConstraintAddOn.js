@@ -23,9 +23,10 @@ define(['addon/AddOnBase'], function (AddOnBase) {
         return 'ConstraintAddOn';
     };
 
-    ConstraintAddOn.prototype.update = function (root) {
+    ConstraintAddOn.prototype.update = function (root, callback) {
         //TODO if we would like a continuous constraint checking we should use this function as well
         this.root = root;
+        callback(null);
     };
 
     ConstraintAddOn.prototype.query = function (parameters, callback) {
@@ -86,7 +87,7 @@ define(['addon/AddOnBase'], function (AddOnBase) {
     };
 
     ConstraintAddOn.prototype.stop = function (callback) {
-        callback(null);
+        AddOnBase.prototype.stop.call(this, callback);
     };
 
     ConstraintAddOn.prototype.checkProject = function (callback) {

@@ -363,8 +363,9 @@ describe('standalone server', function () {
                             });
 
                         socket.on('error', function (err) {
-                            socket.disconnect();
+                            logger.error(err);
                             defer.reject(err || 'could not connect');
+                            socket.disconnect();
                         });
                         socket.on('connect', function () {
                             defer.resolve(socket);
@@ -466,8 +467,8 @@ describe('standalone server', function () {
                     return;
                 }
 
-                server.stop(function () {
-                    done();
+                server.stop(function (err) {
+                    done(err);
                 });
             });
         });

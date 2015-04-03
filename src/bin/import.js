@@ -12,7 +12,9 @@ var webgme = require('../../webgme'),
     Serialization,
     jsonProject,
     path = require('path'),
-    gmeConfig = require(path.join(process.cwd(), 'config'));
+    gmeConfig = require(path.join(process.cwd(), 'config')),
+    logger = webgme.Logger.create('gme:bin:apply', gmeConfig.bin.log, false);
+
 
 webgme.addToRequireJsPaths(gmeConfig);
 
@@ -26,12 +28,6 @@ var importProject = function (mongoUri, projectId, jsonProject, branchName, over
     var storage,
         project,
         contextParams,
-        silentLog = {
-            debug: function () {
-            },
-            error: function () {
-            }
-        },
         closeContext = function (error, data) {
             try {
                 project.closeProject(function () {
@@ -47,7 +43,7 @@ var importProject = function (mongoUri, projectId, jsonProject, branchName, over
         };
 
     gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
-    storage = new Storage({globConf: gmeConfig, log: silentLog});
+    storage = new Storage({globConf: gmeConfig, log: logger.fork('storage')});
     branchName = branchName || 'master';
 
     contextParams = {

@@ -9,14 +9,19 @@ define([ "common/util/assert", "common/util/key", "common/util/canon" ], functio
 	var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
 
 	function Database (_database,_options) {
-        var gmeConfig = _options.globConf;
+        var gmeConfig = _options.globConf,
+            logger = _options.log.fork('commit');
+        logger.debug('Initializing');
 		ASSERT(typeof _database === "object");
 		ASSERT(typeof _options === "object");
 		ASSERT(typeof gmeConfig.storage.keyType === "string");
 
 		function openProject (projectName, callback) {
 
-			var _project = null;
+			var _project = null,
+                projectLogger = logger.fork('project:' + projectName);
+            projectLogger.debug('Initializing');
+
 			_database.openProject(projectName, function (err, proj) {
 				if (!err && proj) {
 					_project = proj;
@@ -44,6 +49,7 @@ define([ "common/util/assert", "common/util/key", "common/util/canon" ], functio
 			});
 
 			function makeCommit (parents, roothash, msg, callback) {
+                projectLogger.debug('makeCommit', {metadata: arguments});
 				ASSERT(HASH_REGEXP.test(roothash));
 				ASSERT(typeof callback === 'function');
 
@@ -74,13 +80,19 @@ define([ "common/util/assert", "common/util/key", "common/util/canon" ], functio
 			}
 
             function setUser (userId){
+                projectLogger.debug('setUser', {metadata: arguments});
+
                 if(typeof userId === 'string'){
                     _options.user = userId;
                 };
             }
-		}
 
-		return {
+            projectLogger.debug('Ready');
+        }
+
+        logger.debug('Ready');
+
+        return {
 			openDatabase: _database.openDatabase,
 			closeDatabase: _database.closeDatabase,
 			fsyncDatabase: _database.fsyncDatabase,

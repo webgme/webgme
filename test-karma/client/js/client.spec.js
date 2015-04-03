@@ -761,8 +761,11 @@ describe('GME client', function () {
             });
         });
 
-        it('should return the current network state', function () {
-            expect(client.getActualNetworkStatus()).to.equal('connected');
+        it('should return the current network state', function (done) {
+            setTimeout(function(){
+                expect(client.getActualNetworkStatus()).to.equal('connected');
+                done();
+            },100);
         });
 
         it('should return the current branch state', function (done) {

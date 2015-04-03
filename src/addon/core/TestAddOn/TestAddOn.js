@@ -21,28 +21,28 @@ define(['addon/AddOnBase'], function (AddOnBase) {
         return 'TestAddOn';
     };
 
-    TestAddOn.prototype.update = function (root) {
-        this.logger.log('TestAddOn', new Date().getTime(), 'update', this.core.getGuid(root), this.core.getHash(root));
+    TestAddOn.prototype.update = function (root, callback) {
+        this.logger.info('TestAddOn', new Date().getTime(), 'update', this.core.getGuid(root), this.core.getHash(root));
+        callback(null);
     };
 
     TestAddOn.prototype.query = function (parameters, callback) {
-        this.logger.log('TestAddOn', new Date().getTime(), 'query', parameters);
+        this.logger.info('TestAddOn', new Date().getTime(), 'query', parameters);
         callback(null, parameters);
     };
 
     TestAddOn.prototype.stop = function (callback) {
-        this.logger.log('TestAddOn', new Date().getTime(), 'stop');
-        callback(null);
+        var self = this;
+
+        AddOnBase.prototype.stop.call(this, function (err) {
+            self.logger.info('TestAddOn', new Date().getTime(), 'stop');
+            callback(err);
+        });
     };
 
     TestAddOn.prototype.start = function (parameters, callback) {
-        if (parameters.logger) {
-            this.logger = parameters.logger;
-        } else {
-            this.logger = console;
-        }
-        this.logger.log('TestAddOn', new Date().getTime(), 'start');
         AddOnBase.prototype.start.call(this, parameters, callback);
+        this.logger.info('TestAddOn', new Date().getTime(), 'start');
     };
 
     return TestAddOn;

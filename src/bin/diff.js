@@ -11,7 +11,9 @@ var webgme = require('../../webgme'),
     openContext,
     Storage,
     path = require('path'),
-    gmeConfig = require(path.join(process.cwd(), 'config'));
+    gmeConfig = require(path.join(process.cwd(), 'config')),
+    logger = webgme.Logger.create('gme:bin:apply', gmeConfig.bin.log, false);
+
 
 webgme.addToRequireJsPaths(gmeConfig);
 
@@ -24,12 +26,6 @@ var generateDiff = function (mongoUri, projectId, sourceBranchOrCommit, targetBr
         project,
         core,
         contextParams,
-        silentLog = {
-            debug: function () {
-            },
-            error: function () {
-            }
-        },
         closeContext = function (error, data) {
             try {
                 project.closeProject(function () {
@@ -70,7 +66,7 @@ var generateDiff = function (mongoUri, projectId, sourceBranchOrCommit, targetBr
 
     gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
 
-    storage = new Storage({globConf: gmeConfig, log: silentLog});
+    storage = new Storage({globConf: gmeConfig, log: logger.fork('storage')});
 
     contextParams = {
         projectName: projectId,
