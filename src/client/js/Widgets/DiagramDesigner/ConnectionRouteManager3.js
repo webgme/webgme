@@ -1,16 +1,12 @@
-/*globals define, _, WebGMEGlobal*/
+/*globals DEBUG,define, _, WebGMEGlobal*/
 
 define(['js/logger',
         './AutoRouter', 
-        './ConnectionRouteManager3.ActionApplier.js', 
-        'common/util/assert',
-        './Profiler'], function (Logger,
-                                 AutoRouter, 
-                                 ActionApplier, 
-                                 assert, 
-                                 Profiler) {
+        './ConnectionRouteManager3.ActionApplier.js'], function (Logger,
+                                                                 AutoRouter, 
+                                                                 ActionApplier) {
 
-    "use strict";
+    'use strict';
 
     var ConnectionRouteManager3,
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = '_x_',
@@ -23,11 +19,11 @@ define(['js/logger',
         this.diagramDesigner = options ? options.diagramDesigner : null;
 
         if (this.diagramDesigner === undefined || this.diagramDesigner === null) {
-            this.logger.error("Trying to initialize a ConnectionRouteManager3 without a canvas...");
-            throw ("ConnectionRouteManager3 can not be created");
+            this.logger.error('Trying to initialize a ConnectionRouteManager3 without a canvas...');
+            throw ('ConnectionRouteManager3 can not be created');
         }
 
-        this.logger.debug("ConnectionRouteManager3 ctor finished");
+        this.logger.debug('ConnectionRouteManager3 ctor finished');
         this._portSeparator = DESIGNERITEM_SUBCOMPONENT_SEPARATOR;
 
         this._recordActions = DEBUG;
@@ -83,7 +79,7 @@ define(['js/logger',
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
 
-        this._onClear = function(_canvas, eventArgs) {
+        this._onClear = function() {
             self._clearGraph();
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_CLEAR, this._onClear);
@@ -148,10 +144,9 @@ define(['js/logger',
                 pathPoints = [];
             }
 
-            realPathPoints = [];
-            for(var j = 0; j < pathPoints.length; j++) {
-                realPathPoints.push({'x': pathPoints[j][0], 'y': pathPoints[j][1] });
-            }
+            realPathPoints = pathPoints.map(function(point) {
+                return {'x': point[0], 'y': point[1] };
+            });
 
             this.diagramDesigner.items[idList[i]].setConnectionRenderData(realPathPoints);
         }
@@ -188,12 +183,7 @@ define(['js/logger',
         var canvas = this.diagramDesigner,
             connIdList = canvas.connectionIds,
             itemIdList = canvas.itemIds,
-            i = itemIdList.length,
-            connId,
-            srcObjId,
-            srcSubCompId,
-            dstObjId,
-            dstSubCompId;
+            i = itemIdList.length;
 
         while(i--) {
             this.insertBox(itemIdList[i]);
@@ -221,7 +211,6 @@ define(['js/logger',
             dstConnAreas = canvas.items[dstObjId].getConnectionAreas(dstSubCompId, true, connMetaInfo),
             srcPorts = {},
             dstPorts = {},
-            portId,
             j;
 
         this._updatePort(srcObjId, srcSubCompId);//Adding ports for connection
@@ -246,8 +235,10 @@ define(['js/logger',
 
         //Set custom points, if applicable
         if(canvas.items[connId].segmentPoints.length > 0) {
+            var conn = canvas.items[connId],
+                customPoints = conn.segmentPoints.slice();
             this._invokeAutoRouterMethod('setPathCustomPoints', 
-                [{"path": connId, "points": canvas.items[connId].segmentPoints}]);
+                [{'path': connId, 'points': customPoints}]);
         }
 
      };
@@ -267,13 +258,13 @@ define(['js/logger',
 
         boxdefinition = {
             //BOX
-            "x1": bBox.x,
-            "y1": bBox.y,
-            "x2": bBox.x2,
-            "y2": bBox.y2,
+            'x1': bBox.x,
+            'y1': bBox.y,
+            'x2': bBox.x2,
+            'y2': bBox.y2,
 
             //PORTS
-            "ports": []
+            'ports': []
         };
 
         while (j < areas.length) {
@@ -328,8 +319,7 @@ define(['js/logger',
 
     ConnectionRouteManager3.prototype._updatePort = function (objId, subCompId) {
         var longid = objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId,
-            canvas = this.diagramDesigner,
-            connectionMetaInfo = null;
+            canvas = this.diagramDesigner;
 
         if (subCompId !== undefined) { //Updating a port
             //We need to know if the box even exists...
@@ -385,8 +375,7 @@ define(['js/logger',
         //      - Determine the box
         //          - Use the connection angle
         //  - Set the box as a component of the parent
-        var longid = objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId,
-            canvas = this.diagramDesigner,
+        var canvas = this.diagramDesigner,
             connectionMetaInfo = null,
             areas = canvas.items[objId].getConnectionAreas(subCompId, true, connectionMetaInfo) || [],
             j = areas.length,

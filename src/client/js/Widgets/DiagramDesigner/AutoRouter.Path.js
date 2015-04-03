@@ -453,9 +453,23 @@ define( ['js/logger',
         this.attributes = (this.attributes & ~CONSTANTS.PathStartMask) + pathStart;
     };
 
+    /**
+     * Set the custom points of the path and determine start/end points/ports.
+     *
+     * @param {Array<ArPoint>} points
+     * @return {undefined}
+     */
     AutoRouterPath.prototype.setCustomPathPoints = function(points){
         this.customPathData = points;
+
+        // Find the start/endports
+        this.calculateStartEndPorts();
+
         this.points = new ArPointListPath().concat(points);
+
+        // Add the start/end points to the list
+        this.points.unshift(this.startpoint);
+        this.points.push(this.endpoint);
 
         // Set as connected
         this.setState(CONSTANTS.PathStateConnected);
