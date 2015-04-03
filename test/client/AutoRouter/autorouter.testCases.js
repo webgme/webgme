@@ -32,6 +32,9 @@ describe('AutoRouter Test Cases', function () {
             verbose: true,
             before: function (router) {
                 router._assertPortId2PathIsValid();
+                router.graph.paths.forEach(function(path) {
+                    assert(path.hasOwner());
+                });
             },
             after: function (router) {
                 // Call assertValid on every path
@@ -132,5 +135,12 @@ describe('AutoRouter Test Cases', function () {
         bugPlayer.test('./testCases/issue288.js');
     });
 
+    it('creating extra connection segments', function () {
+        bugPlayer.test('./testCases/creating_new_custom_points.js');
+    });
+
+    it('creating extra connection segments (2)', function () {
+        bugPlayer.test('./testCases/custom_points2.js');
+    });
 });
 
