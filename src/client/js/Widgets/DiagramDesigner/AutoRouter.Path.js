@@ -508,15 +508,17 @@ define( ['js/logger',
             this.endports[i].assertValid();
         }
 
-        if (this.isConnected()) {
-            assert(this.points.length !== 0, 
+        if (this.isAutoRouted()) {
+            if (this.isConnected()) {
+                assert(this.points.length !== 0, 
                 'ARPath.assertValid: this.points.length !== 0 FAILED');
-            var points = this.getPointList();
-            points.assertValid();
+                var points = this.getPointList();
+                points.assertValid();
 
-        }else{
-            assert(this.points.length === 0, 
+            } else {
+                assert(this.points.length === 0, 
                 'ARPath.assertValid: this.points.length === 0 FAILED');
+            }
         }
 
         // If it has a startpoint, must also have a startport
