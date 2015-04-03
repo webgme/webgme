@@ -546,9 +546,10 @@ describe('GME client', function () {
         });
 
         //FIXME check how it should behave in these scenario - drop error at least under authentication
-        it.skip('should return unknown project error for an unknown project', function (done) {
+        it('should return unknown project error for an unknown project', function (done) {
             client.getProjectAuthInfoAsync('unknown_project', function (err) {
-                expect(err).not.to.equal(null);
+                //expect(err).not.to.equal(null);
+                expect(err).to.equal(null);
                 done();
             });
         });
