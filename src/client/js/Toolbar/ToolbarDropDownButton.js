@@ -67,7 +67,6 @@ define(['./ButtonBase',
             this.el.find('.btn').disable(false);
         } else {
             this.el.find('.btn').disable(true);
-            this._logger.debug('disabling');
         }
     };
 

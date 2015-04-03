@@ -1,14 +1,13 @@
 /*globals define, _, WebGMEGlobal*/
 
-define(['js/logger', 'js/Constants', 'js/RegistryKeys'], function (Logger, CONSTANTS, REGISTRY_KEYS) {
+define(['js/logger'], function (Logger) {
 
     'use strict';
 
     var PanelManager;
 
-    PanelManager = function (client) {
+    PanelManager = function () {
         this._logger = Logger.create('gme:PanelManager:PanelManager', WebGMEGlobal.gmeConfig.client.log);
-        this._client = client;
         this._activePanel = undefined;
     };
 

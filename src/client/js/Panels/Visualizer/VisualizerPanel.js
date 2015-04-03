@@ -191,14 +191,14 @@ function (Logger,
         this._validVisualizers = null;
     };
 
-    VisualizerPanel.prototype._getActivePanel = function () {
-        return WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel.p1 ? 'p1' : 'p2';
+    VisualizerPanel.prototype._getActivePanelElem = function () {
+        var panelListName = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel.p1 ? 'p1' : 'p2';
+        return panelListName === 'p1' ? this._ul1 : this._ul2;
     };
 
     VisualizerPanel.prototype._updateListedVisualizers = function () {
-        var panel = this._getActivePanel(),
-            ul = panel === 'p1' ? this._ul1 : this._ul2,
-            self = this;
+        var self = this,
+            ul = this._getActivePanelElem();
         // For the active panel hide/show listed visualizers
         ul.children('li').each(function (index, _li) {
             var li = $(_li);
@@ -222,10 +222,7 @@ function (Logger,
     };
 
     VisualizerPanel.prototype.setActiveVisualizer = function (visualizer) {
-        var panel = this._getActivePanel(),
-            ul = panel === 'p1' ? this._ul1 : this._ul2;
-
-        this._setActiveVisualizer(visualizer, ul);
+        this._setActiveVisualizer(visualizer, this._getActivePanelElem());
     };
 
     VisualizerPanel.prototype._removeLoader = function (li, loaderDiv) {

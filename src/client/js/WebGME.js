@@ -78,7 +78,7 @@ define(['js/logger',
         // URL query has higher priority than the config.
         if ((initialThingsToDo.projectToLoad || initialThingsToDo.createNewProject) === false) {
             initialThingsToDo.projectToLoad = gmeConfig.client.defaultProject.name;
-            initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad ||  gmeConfig.client.defaultProject.branch;
+            initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad || gmeConfig.client.defaultProject.branch;
             initialThingsToDo.objectToLoad = initialThingsToDo.objectToLoad || gmeConfig.client.defaultProject.node;
             // TODO: add commit to load
         }
@@ -97,10 +97,10 @@ define(['js/logger',
             WebGMEGlobal.InterpreterManager = new InterpreterManager(client, gmeConfig);
 
             Object.defineProperty(WebGMEGlobal, 'State', {
-                value : StateManager.initialize(),
-                writable : false,
-                enumerable : true,
-                configurable : false}
+                value: StateManager.initialize(),
+                writable: false,
+                enumerable: true,
+                configurable: false}
             );
 
             WebGMEHistory.initialize();
@@ -138,7 +138,7 @@ define(['js/logger',
                 panels.push({'panel': layoutPanels[i].panel,
                     'container': layoutPanels[i].container,
                     'control': layoutPanels[i].control,
-                    'params' : {'client': client}});
+                    'params': {'client': client}});
             }
 
             //load the panels
@@ -272,7 +272,8 @@ define(['js/logger',
             var user = {},
                 userPattern = {},
                 userGuid,
-                nodePath = initialThingsToDo.objectToLoad === 'root' ? '' : initialThingsToDo.objectToLoad;
+                nodePath = initialThingsToDo.objectToLoad === 'root' ?
+                    CONSTANTS.PROJECT_ROOT_ID : initialThingsToDo.objectToLoad;
 
             userPattern[nodePath] = {children: 0};
             logger.debug('selectObject', initialThingsToDo.objectToLoad);
@@ -316,6 +317,6 @@ define(['js/logger',
     };
 
     return {
-        start : _webGMEStart
+        start: _webGMEStart
     };
 });

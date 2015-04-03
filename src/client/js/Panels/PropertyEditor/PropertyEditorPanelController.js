@@ -106,11 +106,11 @@ define(['js/logger',
         if (idList.length > 0) {
             i = idList.length;
             while (i--) {
-                patterns[idList[i]] = { "children": 0 };
+                patterns[idList[i]] = {children: 0};
             }
 
             this._territoryId = this._client.addUI(this, function (events) {
-                self._logger.info('about to refresh property list', events);
+                self._logger.debug('about to refresh property list', events);
                 self._refreshPropertyList();
             });
             this._client.updateTerritory(this._territoryId, patterns);
