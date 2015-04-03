@@ -31,22 +31,22 @@ define(['js/logger',
             REGISTRY_KEYS.IS_ABSTRACT,
             REGISTRY_KEYS.VALID_PLUGINS,
             REGISTRY_KEYS.USED_ADDONS,
+            REGISTRY_KEYS.VALID_PANELS,
+            REGISTRY_KEYS.VALID_DECORATORS
         ],
         PREFERENCES_REGISTRY_KEYS = [REGISTRY_KEYS.DECORATOR,
             REGISTRY_KEYS.DISPLAY_FORMAT,
             REGISTRY_KEYS.SVG_ICON,
             REGISTRY_KEYS.PORT_SVG_ICON],
-        PROPERTY_GROUP_META = 'META',
-        PROPERTY_GROUP_PREFERENCES = 'Preferences',
-        PROPERTY_GROUP_ATTRIBUTES = 'Attributes',
-        PROPERTY_GROUP_POINTERS = 'Pointers',
+
         NON_RESETABLE_POINTRS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
 
     PropertyEditorController = function (client, propertyGrid) {
         this._client = client;
         this._propertyGrid = propertyGrid;
 
-        //it should be sorted aplahbetically
+
+        //it should be sorted alphabetically
         this._propertyGrid.setOrdered(true);
 
         //set custom types here
@@ -56,27 +56,23 @@ define(['js/logger',
 
         this._logger = Logger.create('gme:Panels:PropertyEditor:PropertyEditorController',
             WebGMEGlobal.gmeConfig.client.log);
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     PropertyEditorController.prototype._initEventHandlers = function () {
         var self = this;
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, function (model, activeSelection) {
-            if (activeSelection) {
+            if (activeSelection && activeSelection.length > 0) {
                 self._selectedObjectsChanged(activeSelection);
             } else {
-                self._selectedObjectsChanged([]);
+                self._selectObjectsUsingActiveObject(WebGMEGlobal.State.getActiveObject());
             }
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObjectId) {
-            if (activeObjectId || activeObjectId === CONSTANTS.PROJECT_ROOT_ID) {
-                self._selectedObjectsChanged([activeObjectId]);
-            } else {
-                self._selectedObjectsChanged([]);
-            }
-
+            self._logger.debug('active object changed: ', activeObjectId);
+            self._selectObjectsUsingActiveObject(activeObjectId);
         });
 
         this._propertyGrid.onFinishChange(function (args) {
@@ -86,6 +82,14 @@ define(['js/logger',
         this._propertyGrid.onReset(function (propertyName) {
             self._onReset(propertyName);
         });
+    };
+
+    PropertyEditorController.prototype._selectObjectsUsingActiveObject = function (activeObjectId) {
+        if (activeObjectId || activeObjectId === CONSTANTS.PROJECT_ROOT_ID) {
+            this._selectedObjectsChanged([activeObjectId]);
+        } else {
+            this._selectedObjectsChanged([]);
+        }
     };
 
     PropertyEditorController.prototype._selectedObjectsChanged = function (idList) {
@@ -102,10 +106,11 @@ define(['js/logger',
         if (idList.length > 0) {
             i = idList.length;
             while (i--) {
-                patterns[idList[i]] = { "children": 0 };
+                patterns[idList[i]] = {children: 0};
             }
 
-            this._territoryId = this._client.addUI(this, function (/*events*/) {
+            this._territoryId = this._client.addUI(this, function (events) {
+                self._logger.debug('about to refresh property list', events);
                 self._refreshPropertyList();
             });
             this._client.updateTerritory(this._territoryId, patterns);
@@ -116,6 +121,7 @@ define(['js/logger',
 
     PropertyEditorController.prototype._refreshPropertyList = function () {
         var propList = this._getCommonPropertiesForSelection(this._idList);
+        this._logger.debug('propList', this._idList, propList);
         this._propertyGrid.setPropertyList(propList);
     };
 
@@ -144,9 +150,23 @@ define(['js/logger',
             _isResetableAttribute,
             _isResetableRegistry,
             _isResetablePointer,
+            rootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID),
+            validDecorators = null,
             decoratorNames = _client.getAvailableDecoratorNames();
 
-        decoratorNames.sort(function (a,b) {
+        if (rootNode && rootNode.getRegistry(REGISTRY_KEYS.VALID_DECORATORS)) {
+            validDecorators = rootNode.getRegistry(REGISTRY_KEYS.VALID_DECORATORS).split(' ');
+            this._logger.debug('validDecorators registered on root-node', validDecorators);
+            decoratorNames = decoratorNames.filter(function (avaliableDecorator) {
+                return validDecorators.indexOf(avaliableDecorator) > -1;
+            });
+        } else {
+            this._logger.debug('Could not get validDecorators from root-node');
+            if (!rootNode) {
+                this._logger.warn('rootNode was not avaliable');
+            }
+        }
+        decoratorNames.sort(function (a, b) {
             if (a.toLowerCase() < b.toLowerCase()) {
                 return -1;
             } else {
@@ -547,29 +567,29 @@ define(['js/logger',
                 }
             }
 
-            propList[PROPERTY_GROUP_ATTRIBUTES] = { "name": PROPERTY_GROUP_ATTRIBUTES,
-                "text": PROPERTY_GROUP_ATTRIBUTES,
+            propList[CONSTANTS.PROPERTY_GROUP_ATTRIBUTES] = { "name": CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
+                "text": CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
                 "value": undefined};
 
-            propList[PROPERTY_GROUP_PREFERENCES] = { "name": PROPERTY_GROUP_PREFERENCES,
-                "text": PROPERTY_GROUP_PREFERENCES,
+            propList[CONSTANTS.PROPERTY_GROUP_PREFERENCES] = { "name": CONSTANTS.PROPERTY_GROUP_PREFERENCES,
+                "text": CONSTANTS.PROPERTY_GROUP_PREFERENCES,
                 "value": undefined};
 
-            propList[PROPERTY_GROUP_META] = { "name": PROPERTY_GROUP_META,
-                "text": PROPERTY_GROUP_META,
+            propList[CONSTANTS.PROPERTY_GROUP_META] = { "name": CONSTANTS.PROPERTY_GROUP_META,
+                "text": CONSTANTS.PROPERTY_GROUP_META,
                 "value": undefined};
 
-            propList[PROPERTY_GROUP_POINTERS] = { "name": PROPERTY_GROUP_POINTERS,
-                "text": PROPERTY_GROUP_POINTERS,
+            propList[CONSTANTS.PROPERTY_GROUP_POINTERS] = { "name": CONSTANTS.PROPERTY_GROUP_POINTERS,
+                "text": CONSTANTS.PROPERTY_GROUP_POINTERS,
                 "value": undefined};
 
-            _addItemsToResultList(commonAttrs, PROPERTY_GROUP_ATTRIBUTES, propList, true, false, false);
+            _addItemsToResultList(commonAttrs, CONSTANTS.PROPERTY_GROUP_ATTRIBUTES, propList, true, false, false);
 
-            _addItemsToResultList(commonPreferences, PROPERTY_GROUP_PREFERENCES, propList, false, true, false);
+            _addItemsToResultList(commonPreferences, CONSTANTS.PROPERTY_GROUP_PREFERENCES, propList, false, true, false);
 
-            _addItemsToResultList(commonMeta, PROPERTY_GROUP_META, propList, false, true, false);
+            _addItemsToResultList(commonMeta, CONSTANTS.PROPERTY_GROUP_META, propList, false, true, false);
 
-            _addItemsToResultList(commonPointers, PROPERTY_GROUP_POINTERS, propList, false, false, true);
+            _addItemsToResultList(commonPointers, CONSTANTS.PROPERTY_GROUP_POINTERS, propList, false, false, true);
         }
 
         return propList;
@@ -593,10 +613,10 @@ define(['js/logger',
             keyArr = args.id.split(".");
             setterFn = undefined;
             getterFn = undefined;
-            if (keyArr[0] === PROPERTY_GROUP_ATTRIBUTES) {
+            if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_ATTRIBUTES) {
                 setterFn = "setAttributes";
                 getterFn = "getEditableAttribute";
-            } else if (keyArr[0] === PROPERTY_GROUP_PREFERENCES || keyArr[0] === PROPERTY_GROUP_META) {
+            } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_PREFERENCES || keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
                 setterFn = "setRegistry";
                 getterFn = "getEditableRegistry";
             }
@@ -647,11 +667,11 @@ define(['js/logger',
 
             keyArr = propertyName.split(".");
             delFn = undefined;
-            if (keyArr[0] === PROPERTY_GROUP_ATTRIBUTES) {
+            if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_ATTRIBUTES) {
                 delFn = "delAttributes";
-            } else if (keyArr[0] === PROPERTY_GROUP_PREFERENCES || keyArr[0] === PROPERTY_GROUP_META) {
+            } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_PREFERENCES || keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
                 delFn = "delRegistry";
-            } else if (keyArr[0] === PROPERTY_GROUP_POINTERS && NON_RESETABLE_POINTRS.indexOf(keyArr[1]) === -1) {
+            } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_POINTERS && NON_RESETABLE_POINTRS.indexOf(keyArr[1]) === -1) {
                 delFn = "delPointer";
             }
 

@@ -172,10 +172,18 @@ define(['jquery',
         _client.startTransaction();
 
         //create extra registry entries for root - currently allowed interpreters
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.VALID_PLUGINS, "");
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.VALID_PLUGINS, '');
+
+        //create extra registry entries for root - currently used add-ons
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.USED_ADDONS, 'ConstraintAddOn');
 
         //create extra registry entries for root - currently allowed interpreters
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.USED_ADDONS, "ConstraintAddOn");
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.VALID_PANELS,
+            'ModelEditor METAAspect SetEditor Crosscut GraphViz');
+
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.VALID_DECORATORS,
+            'ModelDecorator SVGDecorator CircleDecorator DefaultDecorator');
+        //Currently avaliable: MetaDecorator ModelicaDecorator UMLStateMachineDecorator SVGDecorator
 
         //create FCO, META, PROJECT_BASE
         // now as we create FCO always on the same relid and with the same GUID project have a more interchangeable base...

@@ -6,7 +6,8 @@
  */
 
 define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
-        'css!./styles/PropertyGridPart.css'], function (PropertyGridWidgetManager) {
+        'js/Constants',
+        'css!./styles/PropertyGridPart.css'], function (PropertyGridWidgetManager, CONSTANTS) {
 
     "use strict";
 
@@ -41,6 +42,10 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         this.__onReset = undefined;
 
         this._name = params.name || undefined;
+
+        if (this._name === CONSTANTS.PROPERTY_GROUP_META) {
+            this._toggleClosed();
+        }
 
         this._parent = params.parent;
 

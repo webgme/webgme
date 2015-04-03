@@ -78,7 +78,7 @@ define(['js/logger',
         // URL query has higher priority than the config.
         if ((initialThingsToDo.projectToLoad || initialThingsToDo.createNewProject) === false) {
             initialThingsToDo.projectToLoad = gmeConfig.client.defaultProject.name;
-            initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad ||  gmeConfig.client.defaultProject.branch;
+            initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad || gmeConfig.client.defaultProject.branch;
             initialThingsToDo.objectToLoad = initialThingsToDo.objectToLoad || gmeConfig.client.defaultProject.node;
             // TODO: add commit to load
         }
@@ -97,10 +97,10 @@ define(['js/logger',
             WebGMEGlobal.InterpreterManager = new InterpreterManager(client, gmeConfig);
 
             Object.defineProperty(WebGMEGlobal, 'State', {
-                value : StateManager.initialize(),
-                writable : false,
-                enumerable : true,
-                configurable : false}
+                value: StateManager.initialize(),
+                writable: false,
+                enumerable: true,
+                configurable: false}
             );
 
             WebGMEHistory.initialize();
@@ -138,7 +138,7 @@ define(['js/logger',
                 panels.push({'panel': layoutPanels[i].panel,
                     'container': layoutPanels[i].container,
                     'control': layoutPanels[i].control,
-                    'params' : {'client': client}});
+                    'params': {'client': client}});
             }
 
             //load the panels
@@ -148,7 +148,7 @@ define(['js/logger',
             //TODO: might need to be changed
             WebGMEGlobal.KeyboardManager = KeyboardManager;
             WebGMEGlobal.KeyboardManager.setEnabled(true);
-            WebGMEGlobal.PanelManager = new PanelManager();
+            WebGMEGlobal.PanelManager = new PanelManager(client);
         });
 
         loadPanels = function (panels) {
@@ -233,7 +233,7 @@ define(['js/logger',
                                 } else {
                                     if (initialThingsToDo.branchToLoad) {
                                         loadBranch(initialThingsToDo.branchToLoad);
-                                    } else  if (initialThingsToDo.commitToLoad) {
+                                    } else if (initialThingsToDo.commitToLoad) {
                                         client.selectCommitAsync(initialThingsToDo.commitToLoad, function (err) {
                                             if (err) {
                                                 logger.error(err);
@@ -255,7 +255,7 @@ define(['js/logger',
         };
 
         openProjectLoadDialog = function(){
-            //if initial project openings failed we shhow the project opening dialog
+            //if initial project openings failed we show the project opening dialog
             client.connectToDatabaseAsync({},function(err){
                 if(err){
                     logger.error(err);
@@ -269,18 +269,37 @@ define(['js/logger',
         };
 
         selectObject = function () {
-            //if (initialThingsToDo.objectToLoad) {
-            //    if (initialThingsToDo.objectToLoad.toLowerCase() === 'root') {
-            //        initialThingsToDo.objectToLoad = CONSTANTS.PROJECT_ROOT_ID;
-            //    }
-            //    setTimeout(function () {
-            //        WebGMEGlobal.State.registerActiveObject(initialThingsToDo.objectToLoad);
-            //    }, 1000);
-            //}
+            var user = {},
+                userPattern = {},
+                userGuid,
+                nodePath = initialThingsToDo.objectToLoad === 'root' ?
+                    CONSTANTS.PROJECT_ROOT_ID : initialThingsToDo.objectToLoad;
 
-            setTimeout(function () {
-                WebGMEUrlManager.loadStateFromParsedUrl(initialThingsToDo);
-            }, 1000);
+            userPattern[nodePath] = {children: 0};
+            logger.debug('selectObject', initialThingsToDo.objectToLoad);
+            logger.debug('activeSelectionToLoad', initialThingsToDo.activeSelectionToLoad);
+            if (initialThingsToDo.activeSelectionToLoad && initialThingsToDo.activeSelectionToLoad.length > 0) {
+                userPattern[nodePath] = {children: 1};
+            } else {
+                userPattern[nodePath] = {children: 0};
+            }
+            function eventHandler(events) {
+                var node;
+                logger.debug('events from selectObject', events);
+                if (events[0].etype === 'complete') {
+                    node = client.getNode(nodePath);
+                    if (node) {
+                        logger.debug('active node', node.getAttribute('name'));
+                    } else {
+                        logger.error('active node could not be loaded', nodePath);
+                    }
+                    WebGMEUrlManager.loadStateFromParsedUrl(initialThingsToDo);
+                    client.removeUI(userGuid);
+                }
+            }
+
+            userGuid = client.addUI(user, eventHandler);
+            client.updateTerritory(userGuid, userPattern);
         };
 
 
@@ -298,6 +317,6 @@ define(['js/logger',
     };
 
     return {
-        start : _webGMEStart
+        start: _webGMEStart
     };
 });

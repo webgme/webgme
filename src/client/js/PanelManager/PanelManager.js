@@ -1,14 +1,13 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, _, WebGMEGlobal*/
 
 define(['js/logger'], function (Logger) {
 
-    "use strict";
+    'use strict';
 
     var PanelManager;
 
     PanelManager = function () {
         this._logger = Logger.create('gme:PanelManager:PanelManager', WebGMEGlobal.gmeConfig.client.log);
-
         this._activePanel = undefined;
     };
 
@@ -38,7 +37,6 @@ define(['js/logger'], function (Logger) {
     PanelManager.prototype.getActivePanel = function () {
         return this._activePanel;
     };
-
 
     return PanelManager;
 });
