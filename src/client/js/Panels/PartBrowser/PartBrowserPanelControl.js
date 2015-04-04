@@ -106,6 +106,8 @@ define(['js/logger',
             objDescriptor.id = nodeObj.getId();
             objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || DEFAULT_DECORATOR;
             objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+        } else {
+            this._logger.error('Node not loaded', nodeId);
         }
 
         return objDescriptor;
@@ -326,6 +328,7 @@ define(['js/logger',
         }
 
         if (decorators.length > 0) {
+            this._logger.debug('decorators for children of', this._containerNodeId, decorators);
             this._client.decoratorManager.download(decorators, WIDGET_NAME, function () {
                 self._refreshPartList();
             });
