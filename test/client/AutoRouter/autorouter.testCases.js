@@ -142,5 +142,21 @@ describe('AutoRouter Test Cases', function () {
     it('creating extra connection segments (2)', function () {
         bugPlayer.test('./testCases/custom_points2.js');
     });
+
+    it('issue/297_custom_points_port_selection', function () {
+        bugPlayer.test('./testCases/issue297.js');
+
+        // Check that both boxes are connected on their 
+        // left side (as it is closest to their next next
+        // point on the custom path)
+        var path = bugPlayer.autorouter.graph.paths[0],
+            startport = path.startport,
+            endport = path.endport,
+            startbox = startport.owner.getRootBox().rect,
+            endbox = endport.owner.getRootBox().rect;
+
+        assert(Math.abs(startbox.left-path.startpoint.x) < 2);
+        assert(Math.abs(endbox.left-path.endpoint.x) < 2);
+    });
 });
 
