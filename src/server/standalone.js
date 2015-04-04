@@ -29,12 +29,12 @@ var Path = require('path'),
     ASSERT = requireJS('common/util/assert'),
     GUID = requireJS('common/util/guid'),
     CANON = requireJS('common/util/cJson'),
-    BlobMetadata = requireJS('blob/BlobMetadata'),
 
-    BlobFSBackend = require('./middleware/blob/BlobFSBackend'),
-    BlobS3Backend = require('./middleware/blob/BlobS3Backend'),
+    // Middleware
     BlobServer = require('./middleware/blob/BlobServer'),
+    ExecutorServer = require('./middleware/executor/ExecutorServer'),
     RestServer = require('./middleware/rest/RestServer'),
+
     Storage = require('./storage/serverstorage'),
     getClientConfig = require('../../config/getclientconfig'),
     GMEAUTH = require('./middleware/auth/gmeauth'),
@@ -463,7 +463,7 @@ function StandAloneServer(gmeConfig) {
 
     //here starts the main part
     //variables
-    var logger = null,
+    var logger = logger = Logger.create('gme:server:standalone', gmeConfig.server.log),
         __storage = null,
         __storageOptions = {},
         __gmeAuth = null,
@@ -481,11 +481,11 @@ function StandAloneServer(gmeConfig) {
         __clientBaseDir = Path.resolve(gmeConfig.client.appDir),
         __requestCounter = 0,
         __reportedRequestCounter = 0,
-        __requestCheckInterval = 2500;
+        __requestCheckInterval = 2500,
+        middlewareOpts;
 
     //creating the logger
-    logger = Logger.create('gme:server:standalone', gmeConfig.server.log);
-    self.logger = logger;
+    self.logger = logger; //TODO: is this used?
 
     logger.debug("starting standalone server initialization");
     //initializing https extra infos
@@ -521,6 +521,14 @@ function StandAloneServer(gmeConfig) {
 
     logger.debug("initializing static server");
     __app = Express();
+
+    middlewareOpts = {  //TODO: Pass this to every middleware They must not modify the options!
+        gmeConfig: gmeConfig,
+        logger: logger,
+        ensureAuthenticated: ensureAuthenticated,
+        gmeAuth: __gmeAuth,
+        workerManager: __workerManager
+    };
 
     //__app.configure(function () {
     //counting of requests works only in debug mode
@@ -569,17 +577,9 @@ function StandAloneServer(gmeConfig) {
     __app.use(Passport.initialize());
     __app.use(Passport.session());
 
-    if (gmeConfig.executor.enable) {
-        var executorRest = require('./middleware/executor/Executor');
-        __app.use('/rest/executor', executorRest(gmeConfig));
-        logger.debug('Executor listening at rest/executor');
-    } else {
-        logger.debug('Executor not enabled. Add "enableExecutor: true" to config.js for activation.');
-    }
+    ExecutorServer.createExpressExecutor(__app, '/rest/executor', middlewareOpts);
 
     setupExternalRestModules();
-
-    //});
 
     logger.debug("creating login routing rules for the static server");
     __app.get('/', ensureAuthenticated, function (req, res) {
@@ -631,7 +631,7 @@ function StandAloneServer(gmeConfig) {
     });
 
     //TODO: only node_worker/index.html and common/util/common are using this
-    logger.debug("creating decorator specific routing rules");
+    //logger.debug("creating decorator specific routing rules");
     __app.get('/bin/getconfig.js', ensureAuthenticated, function (req, res) {
         res.status(200);
         res.setHeader('Content-type', 'application/javascript');
@@ -653,6 +653,7 @@ function StandAloneServer(gmeConfig) {
                 resolvedPath = Path.resolve(gmeConfig.visualization.decoratorPaths[index]);
                 resolvedPath = Path.join(resolvedPath, req.url.substring('/decorators/'.length));
                 res.sendFile(resolvedPath, function (err) {
+                    logger.debug('sending decorator', resolvedPath);
                     if (err && err.code !== 'ECONNRESET') {
                         tryNext(index + 1);
                     }
@@ -729,20 +730,7 @@ function StandAloneServer(gmeConfig) {
     });
 
 
-    logger.debug("creating blob related rules");
-
-    var blobBackend;
-
-    if (gmeConfig.blob.type === 'FS') {
-        blobBackend = new BlobFSBackend(gmeConfig);
-    } else if (gmeConfig.blob.type === 'S3') {
-        //var blobBackend = new BlobS3Backend(gmeConfig);
-        throw new Error('S3 blob not fully supported');
-    } else {
-        throw new Error('Only FS and S3 blobs valid blob types.');
-    }
-
-    BlobServer.createExpressBlob(__app, blobBackend, ensureAuthenticated, logger);
+    BlobServer.createExpressBlob(__app, '/rest/blob', middlewareOpts);
 
     //client contents - js/html/css
     //stuff that considered not protected
@@ -798,15 +786,7 @@ function StandAloneServer(gmeConfig) {
 
     //TODO: needs to refactor for the /rest/... format
     logger.debug('creating REST related routing rules');
-    RestServer.createExpressRest(
-        __app,
-        gmeConfig,
-        logger,
-        ensureAuthenticated,
-        __gmeAuth.tokenAuthorization,
-        __gmeAuth.tokenAuth,
-        __workerManager
-    );
+    RestServer.createExpressRest(__app, '/rest', middlewareOpts);
 
     logger.debug("creating server-worker related routing rules");
     __app.get('/worker/simpleResult/*', function (req, res) {

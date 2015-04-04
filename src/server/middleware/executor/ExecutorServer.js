@@ -20,8 +20,7 @@ var fs = require('fs'),
 
     JobInfo = requireJS('common/executor/JobInfo'),
     WorkerInfo = requireJS('common/executor/WorkerInfo'),
-
-    Logger = require('../../logger');
+    ASSERT = requireJS('common/util/assert');
 
 var jobListDBFile,
     workerListDBFile,
@@ -31,7 +30,6 @@ var jobListDBFile,
     workerRefreshInterval,
     labelJobs,
     labelJobsFilename,
-    Logger,
     logger;
 
 function ExecutorRESTCreate(req, res, next) {
@@ -400,10 +398,17 @@ function watchLabelJobs() {
     });
 }
 
-function setup(_gmeConfig) {
-    gmeConfig = _gmeConfig;
-    logger = Logger.createWithGmeConfig('gme:Executor', _gmeConfig);
+function createExpressExecutor(__app, baseUrl, options) {
+    var gmeConfig;
+    ASSERT(typeof baseUrl === 'string', 'baseUrl must be given');
+    ASSERT(typeof options.gmeConfig !== 'undefined', 'gmeConfig must be provided to ExecutorServer');
+    ASSERT(typeof options.logger !== 'undefined', 'logger must be provided to ExecutorServer');
 
+    gmeConfig = options.gmeConfig;
+    if (!gmeConfig.executor.enable) {
+        options.logger.debug('Executor not enabled. Add "executor.enable: true" to configuration to activate.');
+    }
+    logger = options.logger.fork('ExecutorServer');
     logger.debug('output directory', gmeConfig.executor.outputDir);
     mkdirp.sync(gmeConfig.executor.outputDir);
 
@@ -425,7 +430,7 @@ function setup(_gmeConfig) {
         }
     });
 
-    return ExecutorREST;
+    __app.use(baseUrl, ExecutorREST); //TODO: This can be nicer integrated (see BlobServer).
 }
 
-module.exports = setup;
+module.exports.createExpressExecutor = createExpressExecutor;

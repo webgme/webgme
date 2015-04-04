@@ -1,23 +1,35 @@
-/* globals module, require */
+/*globals module, require, requireJS*/
+/*jshint node: true*/
 /**
  * @author kecso / https://github.com/kecso
  */
 
-var REST = require('./rest');
-function createExpressRest(__app, gmeConfig, __logger, ensureAuthenticated, restAuthorization, tokenToUserId, workerManager) {
+var ASSERT = requireJS('common/util/assert'),
+    REST = require('./rest');
+
+function createExpressRest(__app, baseUrl, options) {
     'use strict';
+    ASSERT(typeof baseUrl === 'string', 'baseUrl must be given.');
+    ASSERT(typeof options.gmeConfig !== 'undefined', 'gmeConfig required');
+    ASSERT(typeof options.logger !== 'undefined', 'logger must be given.');
+    ASSERT(typeof options.gmeAuth !== 'undefined', 'gmeAuth must be given.');
+    ASSERT(typeof options.workerManager !== 'undefined', 'workerManager must be given.');
+    ASSERT(typeof options.ensureAuthenticated === 'function', 'ensureAuthenticated must be given.');
+    ASSERT(typeof options.gmeAuth.tokenAuthorization === 'function', 'restAuthorization must be given.');
+    ASSERT(typeof options.gmeAuth.tokenAuth === 'function', 'tokenToUserId must be given.');
 
     var __REST = new REST({
-            globConf: gmeConfig,
-            baseUrl: '',
-            authorization: restAuthorization,
-            workerManager: workerManager,
-            tokenToUserId: tokenToUserId
+            globConf: options.gmeConfig,
+            baseUrl: '', // FIXME: this should take the baseUrl = '/rest'
+            authorization: options.gmeAuth.tokenAuthorization, //TODO: why not keep the same name here?
+            tokenToUserId: options.gmeAuth.tokenAuth, //TODO: why not keep the same name here?
+            workerManager: options.workerManager
         }),
-        logger = __logger.fork('rest');
+        logger = options.logger.fork('rest'),
+        ensureAuthenticated = options.ensureAuthenticated;
 
-    __app.get('/rest/:command', ensureAuthenticated, function (req, res) {
-        __REST.setBaseUrl(gmeConfig.server.https.enable === true ? 'https://' : 'http://' + req.headers.host + '/rest');
+    __app.get(baseUrl + '/:command', ensureAuthenticated, function (req, res) {
+        __REST.setBaseUrl(options.gmeConfig.server.https.enable === true ? 'https://' : 'http://' + req.headers.host + baseUrl);
         __REST.initialize(function (err) {
             if (err) {
                 res.sendStatus(500);
