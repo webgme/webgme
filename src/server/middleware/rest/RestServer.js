@@ -28,7 +28,6 @@ function createExpressRest(__app, gmeConfig, __logger, ensureAuthenticated, rest
                     req.headers.webGMEToken,
                     req.query,
                     function (httpStatus, object) {
-                        console.log('backAgain',object);
                         res.header("Access-Control-Allow-Origin", "*");
                         res.header("Access-Control-Allow-Headers", "X-Requested-With");
                         if (req.params.command === __REST.command.etf) {

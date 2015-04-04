@@ -742,10 +742,10 @@ var seedProject = function (parameters, callback) {
                             return fail(err);
                         }
 
-                        var newCommit = result.project.makeCommit([result.commitHash], result.core.getHash(result.rootNode), 'seeding project[' + seedName + ']', function (err) {
+                        var newCommit = result.project.makeCommit([result.commitHash], result.core.getHash(result.rootNode), 'seeding project[' + parameters.seedName + ']', function (err) {
                             //TODO
                         });
-                        result.core.setBranchHash(parameters.branch, result.commitHash, newCommit, function (err) {
+                        result.project.setBranchHash(parameters.branch, result.commitHash, newCommit, function (err) {
                             if (err) {
                                 return fail(err);
                             }
