@@ -465,17 +465,11 @@ define(['js/logger',
         assert(this.paths[pathId] !== undefined, 
                'AutoRouter:getPath requested path does not match any current paths');
         var path = this.paths[pathId],
-            points = path.getPointList(),
-            i = -1,
-            res = [],
-            pt;
+            points = path.getPointList();
 
-        while(++i < points.length) {
-            pt = [points[i].x, points[i].y];
-            res.push(pt);
-        }
-
-        return res;
+        return points.map(function(point) {
+            return [point.x, point.y];
+        });
     };
 
     AutoRouter.prototype.setBoxRect = function(boxObject, size) {

@@ -130,7 +130,7 @@ define( ['js/logger',
             srcPorts = this.startports;
         }
 
-        //Preventing same start/this.endport
+        //Preventing same start/endport
         if (this.endport && srcPorts.length > 1){
             i = srcPorts.length;
             while (i--){
@@ -141,23 +141,25 @@ define( ['js/logger',
         }
 
 
-        //Getting target
-        var pt,
-            x = 0,
-            y = 0;
+        // Getting target
+        if (this.isAutoRouted()) {
+            var accumulatePortCenters = function(prev, current) {
+                var center = current.rect.getCenter();
+                prev.x += center.x;
+                prev.y += center.y;
+                return prev;
+            };
+            tgt = this.endports.reduce(accumulatePortCenters, new ArPoint(0,0));
 
-        i = this.endports.length;
-        while (i--){
-            pt = this.endports[i].rect.getCenter();
-            x += pt.x;
-            y += pt.y;
+            tgt.x /= this.endports.length;
+            tgt.y /= this.endports.length;
+        } else {
+            tgt = this.customPathData[0];
         }
-        tgt = new ArPoint(x/this.endports.length, y/this.endports.length);
-
-        //Get the optimal port to the target
+        // Get the optimal port to the target
         this.startport = Utils.getOptimalPorts(srcPorts, tgt);
 
-        //Create a this.startpoint at the port
+        // Create a this.startpoint at the port
         var startdir = this.getStartDir(),
             startportHasLimited = false,
             startportCanHave = true;
@@ -211,17 +213,22 @@ define( ['js/logger',
         }
 
         //Getting target
-        var pt,
-            x = 0,
-            y = 0;
+        if (this.isAutoRouted()) {
 
-        i = this.startports.length;
-        while (i--){
-            pt = this.startports[i].rect.getCenter();
-            x += pt.x;
-            y += pt.y;
+            var accumulatePortCenters = function(prev, current) {
+                var center = current.rect.getCenter();
+                prev.x += center.x;
+                prev.y += center.y;
+                return prev;
+            };
+            tgt = this.startports.reduce(accumulatePortCenters, new ArPoint(0,0));
+
+            tgt.x /= this.startports.length;
+            tgt.y /= this.startports.length;
+
+        } else {
+            tgt = this.customPathData[this.customPathData.length-1];
         }
-        tgt = new ArPoint(x/this.startports.length, y/this.startports.length);
 
         //Get the optimal port to the target
         this.endport = Utils.getOptimalPorts(dstPorts, tgt);
@@ -475,6 +482,16 @@ define( ['js/logger',
         this.setState(CONSTANTS.PathStateConnected);
     };
 
+    AutoRouterPath.prototype.createCustomPath = function() {
+        this.points.shift();
+        this.points.pop();
+
+        this.points.unshift(this.startpoint);
+        this.points.push(this.endpoint);
+
+        this.setState(CONSTANTS.PathStateConnected);
+    };
+
     AutoRouterPath.prototype.removePathCustomizations = function() {
         this.customPathData = [];
     };
@@ -508,15 +525,17 @@ define( ['js/logger',
             this.endports[i].assertValid();
         }
 
-        if (this.isConnected()) {
-            assert(this.points.length !== 0, 
+        if (this.isAutoRouted()) {
+            if (this.isConnected()) {
+                assert(this.points.length !== 0, 
                 'ARPath.assertValid: this.points.length !== 0 FAILED');
-            var points = this.getPointList();
-            points.assertValid();
+                var points = this.getPointList();
+                points.assertValid();
 
-        }else{
-            assert(this.points.length === 0, 
+            } else {
+                assert(this.points.length === 0, 
                 'ARPath.assertValid: this.points.length === 0 FAILED');
+            }
         }
 
         // If it has a startpoint, must also have a startport
@@ -526,6 +545,8 @@ define( ['js/logger',
         if (this.endpoint) {
             assert(this.endport, 'Path has a endpoint without a endport');
         }
+
+        assert(this.owner, 'Path does not have owner!');
     };
 
     AutoRouterPath.prototype.assertValidPoints = function() {

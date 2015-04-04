@@ -456,6 +456,7 @@ define(['js/logger',
         }
 
         if (!path.isAutoRouted()) {
+            path.createCustomPath();
             return this.horizontal.addPathEdges(path) && this.vertical.addPathEdges(path);
         } else if (this.box2bufferBox[startId] === this.box2bufferBox[endId] && 
             startdir === Utils.reverseDir(enddir) && startRoot !== endRoot) {
