@@ -29,7 +29,7 @@ describe('NodeWorker', function () {
                     return Q.nfcall(rimraf, './test-tmp/executor-tmp');
                 })
                 .then(function () {
-                    return Q.nfcall(rimraf, 'test-tmp/worker_config.json');
+                    return Q.nfcall(rimraf, './test-tmp/worker_config.json');
                 })
                 .then(function () {
                     var clientsParam = {};
@@ -69,13 +69,13 @@ describe('NodeWorker', function () {
                         stdout += str;
                         if (str.indexOf('Connected to') > -1) {
                             clearTimeout(timeoutId);
-                            deferred.resolve(true);
+                            deferred.resolve({connected: true, stdout: stdout, stderr: stderr});
                         } else if (str.indexOf('Server returned 403') > -1) {
                             clearTimeout(timeoutId);
-                            deferred.resolve(false);
+                            deferred.resolve({connected: false, stdout: stdout, stderr: stderr});
                         } else if (str.indexOf('Error connecting to') > -1) {
                             clearTimeout(timeoutId);
-                            deferred.resolve(false);
+                            deferred.resolve({connected: false, stdout: stdout, stderr: stderr});
                         }
                     });
                     return deferred.promise;
@@ -95,15 +95,16 @@ describe('NodeWorker', function () {
                 gmeConfig.executor.nonce = null;
                 gmeConfig.server.https.enable = false;
 
-                startServer(gmeConfig, null, function (err, connected) {
+                startServer(gmeConfig, null, function (err, result) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    if (connected) {
+                    if (result.connected) {
                         done();
                     } else {
-                        done(new Error('Worker did not attach.'));
+                        done(new Error('Worker did not attach, stdout: ' + result.stdout + ', stderr: ' +
+                            result.stderr));
                     }
                 });
             });
@@ -185,15 +186,16 @@ describe('NodeWorker', function () {
                 gmeConfig.executor.nonce = 'aReallyLongSecret';
                 gmeConfig.server.https.enable = false;
 
-                startServer(gmeConfig, 'aReallyLongSecret', function (err, connected) {
+                startServer(gmeConfig, 'aReallyLongSecret', function (err, result) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    if (connected) {
+                    if (result.connected) {
                         done();
                     } else {
-                        done(new Error('Worker did not attach.'));
+                        done(new Error('Worker did not attach, stdout: ' + result.stdout + ', stderr: ' +
+                        result.stderr));
                     }
                 });
             });
@@ -483,13 +485,14 @@ describe('NodeWorker', function () {
                 gmeConfig.executor.nonce = 'aReallyLongSecret';
                 gmeConfig.server.https.enable = false;
 
-                startServer(gmeConfig, 'notMatching', function (err, connected) {
+                startServer(gmeConfig, 'notMatching', function (err, result) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    if (connected) {
-                        done(new Error('Worker did attached when it should not have done so.'));
+                    if (result.connected) {
+                        done(new Error('Worker did attach when should not, stdout: ' + result.stdout + ', stderr: ' +
+                        result.stderr));
                     } else {
                         done();
                     }
@@ -517,15 +520,16 @@ describe('NodeWorker', function () {
                 gmeConfig.server.https.enable = true;
 
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-                startServer(gmeConfig, 'aReallyLongSecret', function (err, connected) {
+                startServer(gmeConfig, 'aReallyLongSecret', function (err, result) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    if (connected) {
+                    if (result.connected) {
                         done();
                     } else {
-                        done(new Error('Worker did not attach.'));
+                        done(new Error('Worker did not attach, stdout: ' + result.stdout + ', stderr: ' +
+                        result.stderr));
                     }
                 });
             });

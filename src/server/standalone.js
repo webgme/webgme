@@ -577,7 +577,11 @@ function StandAloneServer(gmeConfig) {
     __app.use(Passport.initialize());
     __app.use(Passport.session());
 
-    ExecutorServer.createExpressExecutor(__app, '/rest/executor', middlewareOpts);
+    if (gmeConfig.executor.enable) {
+        ExecutorServer.createExpressExecutor(__app, '/rest/executor', middlewareOpts);
+    } else {
+        logger.debug('Executor not enabled. Add "executor.enable: true" to configuration to activate.');
+    }
 
     setupExternalRestModules();
 
