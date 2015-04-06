@@ -519,7 +519,7 @@ var getAvailableSeedNames = function () {
 
     try {
         for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
-            names = FS.readdirSync(gmeConfig.plugin.basePaths[i]);
+            names = FS.readdirSync(gmeConfig.seedProjects.basePaths[i]);
             for (j = 0; j < names.length; j++) {
                 if (names[j].slice(-5) === '.json' && result.indexOf(names[j].slice(0, -5)) === -1) {
                     result.push(names[j].slice(0, -5));
@@ -529,6 +529,7 @@ var getAvailableSeedNames = function () {
     } catch (e) {
         return result;
     }
+
     return result;
 };
 
@@ -539,7 +540,6 @@ var getSeedInfo = function (userId, callback) {
         },
         createChecked = function () {
             getAllProjectsInfo(userId, function (err, fullProjectInfo) {
-                console.log(fullProjectInfo);
                 result.db = Object.keys(fullProjectInfo || {});
 
                 callback(null, result);
@@ -581,67 +581,6 @@ var getSeedFromFile = function (name) {
         return null;
     }
 };
-
-//var getSeedFromDb = function (name, branch, commit, callback) {
-//
-//    storage.getProjectNames(function (err, names) {
-//        if (err) {
-//            return callback(err);
-//        }
-//
-//        if (names.indexOf(name) === -1) {
-//            return callback('unknown seed project');
-//        }
-//
-//        //TODO check authorization
-//        storage.openProject(name, function (err, project) {
-//            if (err) {
-//                return callback(err);
-//            }
-//
-//            if (commit) {
-//                project.loadObject(commit, function (err, commitObject) {
-//                    if (err) {
-//                        return callback(err);
-//                    }
-//
-//                    var core = new Core(project, {globConf: gmeConfig});
-//                    core.loadRoot(commitObject.root, function (err, root) {
-//                        if (err) {
-//                            return callback(err);
-//                        }
-//
-//                        Serialization.export(core, root, callback);
-//                    });
-//                });
-//            } else {
-//                project.getBranchNames(function (err, branches) {
-//                    if (err) {
-//                        return callback(err);
-//                    }
-//
-//                    if (!branches[branch]) {
-//                        return callback('seed has no such branch');
-//                    }
-//                    project.loadObject(branches[branch], function (err, commitObject) {
-//                        if (err) {
-//                            return callback(err);
-//                        }
-//
-//                        var core = new Core(project, {globConf: gmeConfig});
-//                        core.loadRoot(commitObject.root, function (err, root) {
-//                            if (err) {
-//                                return callback(err);
-//                            }
-//
-//                            Serialization.export(core, root, callback);
-//                        });
-//                    });
-//                });
-//            }
-//        });
-//    });
-//};
 
 var getSeedFromDb = function (name, branch, commit, callback) {
     var contextParameters = {
@@ -725,7 +664,7 @@ var seedProject = function (parameters, callback) {
         createProjectfromSeed = function () {
             var contextParameters = {
                 projectName: parameters.projectName,
-                branchName: parameters.branch,
+                branchName: parameters.branch || 'master',
                 createProject: true,
                 overwriteProject: false
             };
@@ -745,7 +684,8 @@ var seedProject = function (parameters, callback) {
                         var newCommit = result.project.makeCommit([result.commitHash], result.core.getHash(result.rootNode), 'seeding project[' + parameters.seedName + ']', function (err) {
                             //TODO
                         });
-                        result.project.setBranchHash(parameters.branch, result.commitHash, newCommit, function (err) {
+
+                        result.project.setBranchHash(contextParameters.branchName, result.commitHash, newCommit, function (err) {
                             if (err) {
                                 return fail(err);
                             }
