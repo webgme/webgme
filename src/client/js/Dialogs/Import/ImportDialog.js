@@ -124,7 +124,7 @@ define(['js/Loader/LoaderCircles',
         if (file && file.length > 0) {
             file = file[0];
             if (file.size > MAX_FILE_SIZE) {
-                self._displayMessage(file.name + ':<br><br>FILE SITE IS TOO BIG...', true);
+                self._displayMessage(file.name + ':<br><br>FILE SIZE IS TOO BIG...', true);
             } else {
                 //try to json parse it's content
                 var reader = new FileReader();
