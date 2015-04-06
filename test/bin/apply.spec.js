@@ -10,6 +10,7 @@ describe('apply CLI tests', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
+        Storage = testFixture.WebGME.serverUserStorage,
         applyCLI = require('../../src/bin/apply'),
         importCLI = require('../../src/bin/import'),
         exportCLI = require('../../src/bin/export'),
@@ -68,7 +69,7 @@ describe('apply CLI tests', function () {
         });
 
         beforeEach(function (done) {
-            importCLI.import(mongoUri, applyCliTestProject, jsonBaseProject, 'base', true, done);
+            importCLI.import(Storage, gmeConfig, applyCliTestProject, jsonBaseProject, 'base', true, done);
         });
 
         it('project should remain the same after applying empty patch', function (done) {

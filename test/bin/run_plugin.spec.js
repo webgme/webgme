@@ -12,6 +12,7 @@ describe('Run plugin CLI', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         should = testFixture.should,
         spawn = testFixture.childProcess.spawn,
+        Storage = testFixture.WebGME.serverUserStorage,
         mongodb = require('mongodb'),
         mongoConn,
         importCLI = require('../../src/bin/import'),
@@ -44,13 +45,15 @@ describe('Run plugin CLI', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(gmeConfig.mongo.uri, projectName, jsonProject, 'master', true, function (err) {
-                    if (err) {
-                        done(err);
-                        return;
+                importCLI.import(Storage, gmeConfig, projectName, jsonProject, 'master', true,
+                    function (err) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        done();
                     }
-                    done();
-                });
+                );
             });
         });
     });

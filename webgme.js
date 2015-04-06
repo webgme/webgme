@@ -4,6 +4,7 @@
  * @author nabana / https://github.com/nabana
  */
 
+'use strict';
 //This is is the only which defines the baseUrl for requirejs and adds it to the global.requireJS
 var requirejs = require('requirejs'),
     path = require('path'),
@@ -105,6 +106,9 @@ function addToRequireJsPaths(gmeConfig) {
 module.exports = {
     serverStorage: require('./src/server/storage/serverstorage'),
     serverUserStorage: require('./src/server/storage/serveruserstorage'),
+    localStorage: function (options) {
+        return new requirejs('common/storage/commit')(requirejs('common/storage/local')(options || {}), options || {});
+    },
     standaloneServer: require('./src/server/standalone.js'),
     runPlugin: require('./src/server/runplugin'),
 

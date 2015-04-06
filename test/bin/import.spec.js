@@ -11,6 +11,7 @@ describe('import CLI tests', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
         WebGME = testFixture.WebGME,
+        Storage = WebGME.serverUserStorage,
         importCLI = require('../../src/bin/import'),
         openContext = testFixture.requirejs('common/util/opencontext'),
         projectName,
@@ -61,19 +62,23 @@ describe('import CLI tests', function () {
             branchName: 'master',
             nodePaths: [nodePath]
         };
-        importCLI.import(null, contextParam.projectName, jsonProject, null, true, function (err, commitHash) {
-            expect(err).to.equal(null);
-            expect(typeof commitHash).to.equal('string');
-            openContext(storage, gmeConfig, contextParam, function (err, context) {
+        importCLI.import(Storage, gmeConfig, contextParam.projectName, jsonProject, null, true,
+            function (err, data) {
                 expect(err).to.equal(null);
-                expect(context.commitHash).to.equal(commitHash);
-                expect(context.nodes).to.have.keys(nodePath);
-                expect(context.core.getAttribute(context.nodes[nodePath], 'name')).to.equal('state');
-                projectName = contextParam.projectName;
-                project = context.project;
-                done();
-            });
-        });
+
+                expect(typeof data).to.equal('object');
+                expect(typeof data.commitHash).to.equal('string');
+                openContext(storage, gmeConfig, contextParam, function (err, context) {
+                    expect(err).to.equal(null);
+                    expect(context.commitHash).to.equal(data.commitHash);
+                    expect(context.nodes).to.have.keys(nodePath);
+                    expect(context.core.getAttribute(context.nodes[nodePath], 'name')).to.equal('state');
+                    projectName = contextParam.projectName;
+                    project = context.project;
+                    done();
+                });
+            }
+        );
     });
 
     it('should import non-existing project with specified branch', function (done) {
@@ -83,19 +88,23 @@ describe('import CLI tests', function () {
             branchName: 'b1',
             nodePaths: [nodePath]
         };
-        importCLI.import(null, contextParam.projectName, jsonProject, contextParam.branchName, true, function (err, commitHash) {
-            expect(err).to.equal(null);
-            expect(typeof commitHash).to.equal('string');
-            openContext(storage, gmeConfig, contextParam, function (err, context) {
+        importCLI.import(Storage, gmeConfig, contextParam.projectName, jsonProject, contextParam.branchName, true,
+            function (err, data) {
                 expect(err).to.equal(null);
-                expect(context.commitHash).to.equal(commitHash);
-                expect(context.nodes).to.have.keys(nodePath);
-                expect(context.core.getAttribute(context.nodes[nodePath], 'name')).to.equal('state');
-                projectName = contextParam.projectName;
-                project = context.project;
-                done();
-            });
-        });
+
+                expect(typeof data).to.equal('object');
+                expect(typeof data.commitHash).to.equal('string');
+                openContext(storage, gmeConfig, contextParam, function (err, context) {
+                    expect(err).to.equal(null);
+                    expect(context.commitHash).to.equal(data.commitHash);
+                    expect(context.nodes).to.have.keys(nodePath);
+                    expect(context.core.getAttribute(context.nodes[nodePath], 'name')).to.equal('state');
+                    projectName = contextParam.projectName;
+                    project = context.project;
+                    done();
+                });
+            }
+        );
     });
 
     it('should import existing project with unspecified branch into master', function (done) {
@@ -107,42 +116,50 @@ describe('import CLI tests', function () {
             },
             tmpJsonProject = testFixture.loadJsonFile('./test/asset/sm_basic_basic.json');
 
-        importCLI.import(null, contextParam.projectName, tmpJsonProject, null, true, function (err, commitHash) {
-            expect(err).to.equal(null);
-            expect(typeof commitHash).to.equal('string');
-
-            openContext(storage, gmeConfig, contextParam, function (err, context) {
+        importCLI.import(Storage, gmeConfig, contextParam.projectName, tmpJsonProject, null, true,
+            function (err, data) {
                 expect(err).to.equal(null);
 
-                expect(context.commitHash).to.equal(commitHash);
-                expect(context.nodes).to.have.keys(nodePath);
-                expect(context.core.getAttribute(context.nodes[nodePath], 'name')).to.equal('2');
+                expect(typeof data).to.equal('object');
+                expect(typeof data.commitHash).to.equal('string');
 
-                project = context.project;
-                projectName = contextParam.projectName;
-
-                closeContext(function (err) {
+                openContext(storage, gmeConfig, contextParam, function (err, context) {
                     expect(err).to.equal(null);
 
-                    importCLI.import(null, contextParam.projectName, jsonProject, null, true, function (err, commitHash) {
+                    expect(context.commitHash).to.equal(data.commitHash);
+                    expect(context.nodes).to.have.keys(nodePath);
+                    expect(context.core.getAttribute(context.nodes[nodePath], 'name')).to.equal('2');
+
+                    project = context.project;
+                    projectName = contextParam.projectName;
+
+                    closeContext(function (err) {
                         expect(err).to.equal(null);
-                        expect(typeof commitHash).to.equal('string');
 
-                        nodePath = '/960660211/1365653822';
-                        contextParam.nodePaths = [nodePath];
+                        importCLI.import(Storage, gmeConfig, contextParam.projectName, jsonProject, null, true,
+                            function (err, data) {
+                                expect(err).to.equal(null);
 
-                        openContext(storage, gmeConfig, contextParam, function (err, context) {
-                            expect(err).to.equal(null);
-                            expect(context.commitHash).to.equal(commitHash);
-                            expect(context.nodes).to.have.keys(nodePath);
-                            expect(context.core.getAttribute(context.nodes[nodePath], 'name')).to.equal('state');
+                                expect(typeof data).to.equal('object');
+                                expect(typeof data.commitHash).to.equal('string');
 
-                            project = context.project;
-                            done();
-                        });
+                                nodePath = '/960660211/1365653822';
+                                contextParam.nodePaths = [nodePath];
+
+                                openContext(storage, gmeConfig, contextParam, function (err, context) {
+                                    expect(err).to.equal(null);
+                                    expect(context.commitHash).to.equal(data.commitHash);
+                                    expect(context.nodes).to.have.keys(nodePath);
+                                    expect(context.core.getAttribute(context.nodes[nodePath], 'name')).to.equal('state');
+
+                                    project = context.project;
+                                    done();
+                                });
+                            }
+                        );
                     });
                 });
-            });
-        });
+            }
+        );
     });
 });

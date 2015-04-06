@@ -9,6 +9,7 @@ var testFixture = require('../_globals');
 describe('diff CLI tests', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
+        Storage = testFixture.WebGME.serverUserStorage,
         diffCLI = require('../../src/bin/diff'),
         importCLI = require('../../src/bin/import'),
         mongodb = testFixture.mongodb,
@@ -56,12 +57,12 @@ describe('diff CLI tests', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(mongoUri, diffCliTest, jsonProject, 'source', true, function (err) {
+                importCLI.import(Storage, gmeConfig, diffCliTest, jsonProject, 'source', true, function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    importCLI.import(mongoUri, diffCliTest, jsonProject, 'target', false, done);
+                    importCLI.import(Storage, gmeConfig, diffCliTest, jsonProject, 'target', false, done);
                 });
             });
 
@@ -100,12 +101,12 @@ describe('diff CLI tests', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(mongoUri, diffCliTest, source, 'source', true, function (err) {
+                importCLI.import(Storage, gmeConfig, diffCliTest, source, 'source', true, function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    importCLI.import(mongoUri, diffCliTest, target, 'target', false, done);
+                    importCLI.import(Storage, gmeConfig, diffCliTest, target, 'target', false, done);
                 });
             });
 
@@ -151,12 +152,12 @@ describe('diff CLI tests', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(mongoUri, diffCliTest, source, 'source', true, function (err) {
+                importCLI.import(Storage, gmeConfig, diffCliTest, source, 'source', true, function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    importCLI.import(mongoUri, diffCliTest, target, 'target', false, done);
+                    importCLI.import(Storage, gmeConfig, diffCliTest, target, 'target', false, done);
                 });
             });
 
@@ -203,12 +204,12 @@ describe('diff CLI tests', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(mongoUri, diffCliTest, source, 'source', true, function (err) {
+                importCLI.import(Storage, gmeConfig, diffCliTest, source, 'source', true, function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    importCLI.import(mongoUri, diffCliTest, target, 'target', false, done);
+                    importCLI.import(Storage, gmeConfig, diffCliTest, target, 'target', false, done);
                 });
             });
 

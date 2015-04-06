@@ -18,7 +18,8 @@ webgme.addToRequireJsPaths(gmeConfig);
     var server = webgme.standaloneServer(gmeConfig),
         importProject = function (projectName, filePath) {
             importCli.import(
-                gmeConfig.mongo.uri,
+                webgme.serverUserStorage,
+                gmeConfig,
                 projectName,
                 JSON.parse(testFixture.fs.readFileSync(filePath, 'utf8')),
                 'master',

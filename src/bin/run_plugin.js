@@ -20,7 +20,7 @@ main = function (argv, callback) {
         pluginName,
         activeNode,
         activeSelection = [], // TODO: get this as a list of IDs from command line
-        pluginConfig = {};
+        managerConfig = {};
 
     callback = callback || function () {};
 
@@ -57,14 +57,13 @@ main = function (argv, callback) {
     }
 
     //setting plugin config
-    pluginConfig.projectName = projectName;
-    pluginConfig.branch = branch;
-    pluginConfig.pluginName = pluginName;
-    pluginConfig.activeNode = activeNode;
-    pluginConfig.activeSelection = activeSelection;
-    pluginConfig.pluginConfig = pluginConfigJson;
+    managerConfig.projectName = projectName;
+    managerConfig.branch = branch;
+    managerConfig.pluginName = pluginName;
+    managerConfig.activeNode = activeNode;
+    managerConfig.activeSelection = activeSelection;
 
-    webGme.runPlugin.main(gmeConfig, pluginConfig, function (err, result) {
+    webGme.runPlugin.main(null, gmeConfig, managerConfig, pluginConfigJson, function (err, result) {
         if (err) {
             console.log('execution stopped:', err, result);
             callback(err, result);
