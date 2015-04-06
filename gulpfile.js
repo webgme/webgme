@@ -1,4 +1,6 @@
 /*globals require, console*/
+/*jshint node: true*/
+'use strict';
 
 var gulp = require('gulp'),
     jshint = require('gulp-jshint'),
@@ -8,7 +10,6 @@ var gulp = require('gulp'),
     clientSrcPattern = 'src/client/js/**/*.js';
 
 gulp.task('lint', function () {
-    'use strict';
 
     gulp.src(clientSrcPattern)
         .pipe(jshint('.jshintrc'))
@@ -16,7 +17,6 @@ gulp.task('lint', function () {
 });
 
 gulp.task('lint-all', function () {
-    'use strict';
 
     gulp.src(srcPattern)
         .pipe(jshint('.jshintrc'))
@@ -24,20 +24,29 @@ gulp.task('lint-all', function () {
 });
 
 function changeNotification(event) {
-    'use strict';
 
     console.log('File', event.path, 'was', event.type, ', running tasks...');
 }
 
 function build() {
-    'use strict';
 
     var jsWatcher = gulp.watch(clientSrcPattern, [/*'js',*/ 'lint']);
 
     jsWatcher.on('change', changeNotification);
 }
 
-gulp.task('rjs-build', shell.task(['node ./node_modules/requirejs/bin/r.js -o ./utils/build/webgme.classes/cbuild.js']));
+gulp.task('rjs-build', function () {
+    var stream = shell(['node ./node_modules/requirejs/bin/r.js -o ./utils/build/webgme.classes/cbuild.js'])
+    .on('error', function (error) {
+        // Currently this isn't entered.
+        //
+        // https://github.com/joyent/node/issues/3584
+        // others have the same issue https://github.com/gruntjs/grunt/issues/792
+        console.error('build failed with err', error);
+        process.exit(1);
+    });
+    return gulp.src('', {read: false}).pipe(stream);
+});
 
 gulp.task('register-watchers', [], function (cb) {
     gulp.watch('src/**/*.js', ['rjs-build']);
