@@ -91,7 +91,7 @@ define(['js/logger',
                         settings[CONSTANTS.STATE_ACTIVE_OBJECT] = CONSTANTS.PROJECT_ROOT_ID;
                         WebGMEGlobal.State.set(settings);
                     }
-                }, 500);
+                }, 100);
             } else {
                 logger.debug('rootNode not avaliable at initialize');
                 setTimeout(initialize, 500);

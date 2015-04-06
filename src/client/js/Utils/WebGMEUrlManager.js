@@ -9,7 +9,9 @@ define ([
 
     'use strict';
 
-    var parseInitialThingsToDoFromUrl, serializeStateToUrl, loadStateFromParsedUrl;
+    var parseInitialThingsToDoFromUrl,
+        serializeStateToUrl,
+        loadStateFromParsedUrl;
 
     parseInitialThingsToDoFromUrl = function () {
         return {
@@ -92,7 +94,9 @@ define ([
         state[CONSTANTS.STATE_ACTIVE_SELECTION] = parsedUrl.activeSelectionToLoad;
         state[CONSTANTS.STATE_ACTIVE_VISUALIZER] = parsedUrl.visualizerToLoad;
 
-        WebGMEGlobal.State.set(state);
+        setTimeout(function () {
+            WebGMEGlobal.State.set(state);
+        }, 1000);
     };
 
     return {
