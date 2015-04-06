@@ -1,5 +1,5 @@
-/*globals define, document, console, window, eval, GME, docReady, setTimeout*/
-/*jshint browser:true*/
+/*globals define, document, console, window, GME, docReady, setTimeout*/
+/*jshint browser:true, evil:false*/
 
 define('webgme.classes',
     [
@@ -95,31 +95,45 @@ define('webgme.classes',
 
         // See if there is handler attached to body tag when ready
 
-        docReady(function() {
-            function evalOnGmeInit() {
-                if (document.body.getAttribute("on-gme-init")) {
-                    eval(document.body.getAttribute("on-gme-init"));
-                } else {
-                    console.warn('To use GME, define a javascript function and set the body ' +
-                    'element\'s on-gme-init property.');
+        var evalOnGmeInit = function() {
+            if (document.body.getAttribute('on-gme-init')) {
+                eval(document.body.getAttribute('on-gme-init'));
+            } else {
+                console.warn('To use GME, define a javascript function and set the body ' +
+                'element\'s on-gme-init property.');
+            }
+        };
+
+        // wait for document.readyState !== 'loading' and getGmeConfig
+        var stillLoading = 2;
+        var somethingFinishedLoading = function () {
+            if (--stillLoading === 0) {
+                evalOnGmeInit();
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            docReady(function () {
+                somethingFinishedLoading();
+            });
+        } else {
+            somethingFinishedLoading();
+        }
+
+
+        (function getGmeConfig() {
+            var http = new XMLHttpRequest(),
+                configUrl = window.location.origin + '/gmeConfig.json';
+            http.onreadystatechange = function () {
+                if (http.readyState === 4 && http.status === 200) {
+                    GME.gmeConfig = JSON.parse(http.responseText);
+                    somethingFinishedLoading();
+                } else if (http.readyState === 4 && http.status !== 200) {
+                    console.warn('Could not load gmeConfig at', configUrl);
+                    somethingFinishedLoading();
                 }
-            }
-
-            if ( document.readyState === "complete" ) {
-                var http = new XMLHttpRequest(),
-                    configUrl = window.location.origin + '/gmeConfig.json';
-                http.onreadystatechange = function () {
-                    if (http.readyState === 4 && http.status === 200) {
-                        GME.gmeConfig = JSON.parse(http.responseText);
-                        evalOnGmeInit();
-                    } else if (http.readyState === 4 && http.status !== 200) {
-                        console.warn('Could not load gmeConfig at', configUrl);
-                        evalOnGmeInit();
-                    }
-                };
-                http.open('GET', configUrl, true);
-                http.send();
-            }
-        });
-
-    });
+            };
+            http.open('GET', configUrl, true);
+            http.send();
+        })();
+});
