@@ -142,8 +142,9 @@ function validateConfig (configOrFileName) {
 
     //seedProjects
     expectedKeys.push('seedProjects');
-    assertBoolean('config.seedProjects.enable',config.seedProjects.enable);
-    assertArray('config.seedProjects.basePaths',config.seedProjects.basePaths);
+    assertBoolean('config.seedProjects.enable', config.seedProjects.enable);
+    assertString('config.seedProjects.defaultProject', config.seedProjects.defaultProject);
+    assertArray('config.seedProjects.basePaths', config.seedProjects.basePaths);
 
     // server configuration
     expectedKeys.push('server');

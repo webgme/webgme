@@ -4,7 +4,7 @@
  * @author lattmann / https://github.com/lattmann
  */
 
-define(['js/Loader/LoaderCircles', 'text!./templates/CreateFromSeed.html', 'css!./styles/CreateFromSeed.css'], function (LoaderCircles, createFromSeedDialogTemplate) {
+define(['js/Loader/LoaderCircles', 'text!./templates/CreateFromSeed.html'], function (LoaderCircles, createFromSeedDialogTemplate) {
 
     'use strict';
 
@@ -14,7 +14,7 @@ define(['js/Loader/LoaderCircles', 'text!./templates/CreateFromSeed.html', 'css!
         this._client = client;
         this._logger = logger;
 
-        this.seedProjectName = WebGMEGlobal.gmeConfig.seedProjects.default || 'base001';
+        this.seedProjectName = WebGMEGlobal.gmeConfig.seedProjects.defaultProject;
         this.seedProjectType = 'file';
         this.seedProjectBranch = 'master';
 

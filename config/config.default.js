@@ -78,6 +78,7 @@ var path = require('path'),
 
         seedProjects: {
             enable: true,
+            defaultProject: 'EmptyProject',
             basePaths: [path.join(__dirname, '../seeds')]
         },
 
