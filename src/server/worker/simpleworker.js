@@ -694,7 +694,7 @@ var seedProject = function (parameters, callback) {
                     AUTH.getAllUserAuthInfo(parameters.userId, function (err, authInfo) {
                         console.log('userInfo', authInfo);
                         if (err) {
-                            fail(err);
+                            return fail(err);
                         }
 
                         if (authInfo.create !== true) {

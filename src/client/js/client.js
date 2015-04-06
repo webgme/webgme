@@ -3062,7 +3062,7 @@ define([
         });
       }
 
-      function seedProjectAsync(parameters,callback){
+      function seedProjectAsync(parameters, callback) {
         parameters.command = 'seedProject';
         _database.simpleRequest(parameters, function (err, id) {
           if (err) {
