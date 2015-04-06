@@ -105,14 +105,14 @@ define(['js/util',
             switch (type) {
                 case 'integer':
                     result = parseInt(value, 10);
-                    if (result === 'NaN') {
-                        result = undefined;
+                    if (isNaN(result)) {
+                        result = 0;
                     }
                     break;
                 case 'float':
                     result = parseFloat(value, 10);
-                    if (result === 'NaN') {
-                        result = undefined;
+                    if (isNaN(result)) {
+                        result = 0;
                     }
                     break;
                 case 'boolean':
