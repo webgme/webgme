@@ -10,6 +10,7 @@ describe('openContext', function () {
 
     var expect = testFixture.expect,
         WebGME = testFixture.WebGME,
+        logger = testFixture.logger,
         openContext = testFixture.requirejs('common/util/opencontext');
 
     function importAndCloseProject(importParam, callback) {
@@ -325,10 +326,11 @@ describe('openContext', function () {
             };
             server = WebGME.standaloneServer(gmeConfig);
             server.start(function (err) {
-                expect(err).to.equal(undefined);
+                expect(err).to.not.exist;
                 storage = new WebGME.clientStorage({
                     globConf: gmeConfig,
                     type: 'node',
+                    log: logger.fork('storage'),
                     host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
                     webGMESessionId: 'testopencontext'
                 });

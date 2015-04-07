@@ -30,6 +30,8 @@ define([ "common/util/assert" ], function (ASSERT) {
 
 	var Database = function (database, options) {
         var gmeConfig = options.globConf;
+        var logger = options.log.fork('cache');
+        logger.debug('Initializing');
 		ASSERT(typeof database === "object" && typeof gmeConfig === "object");
 
 		var projects = {};
@@ -37,6 +39,8 @@ define([ "common/util/assert" ], function (ASSERT) {
 
 		function openProject (name, callback) {
 			ASSERT(typeof name === "string" && typeof callback === "function");
+
+            logger.debug('openProject', {metadata: {name: name}});
 
 			dlock.lock(function () {
 				if (typeof projects[name] !== "undefined") {
@@ -58,7 +62,9 @@ define([ "common/util/assert" ], function (ASSERT) {
 		}
 
 		function closeDatabase (callback) {
-			dlock.lock(function () {
+            logger.debug('closeDatabase');
+
+            dlock.lock(function () {
 				var n;
 				for (n in projects) {
 					projects[n].abortProject();
@@ -70,7 +76,9 @@ define([ "common/util/assert" ], function (ASSERT) {
 		}
 
 		function deleteProject (name, callback) {
-			if (typeof projects[name] !== "undefined") {
+            logger.debug('deleteProject', {metadata: {name: name}});
+
+            if (typeof projects[name] !== "undefined") {
 				projects[name].deleteProject();
 			}
 
@@ -86,7 +94,10 @@ define([ "common/util/assert" ], function (ASSERT) {
 			var cache = {};
 			var cacheSize = 0;
 
-			function tryFreeze(o) {
+            var wrapLogger = logger.fork('wrapProject:' + name);
+            wrapLogger.debug('Initializing');
+
+            function tryFreeze(o) {
 				try{
 					Object.freeze(o);
 				}
@@ -118,6 +129,7 @@ define([ "common/util/assert" ], function (ASSERT) {
 
 			function cacheInsert (key, obj) {
 				ASSERT(typeof cache[key] === "undefined" && obj[ID_NAME] === key);
+                wrapLogger.debug('cacheInsert', {metadata: key});
 
 				deepFreeze(obj);
 				cache[key] = obj;
@@ -132,6 +144,7 @@ define([ "common/util/assert" ], function (ASSERT) {
 			function loadObject (key, callback) {
 				ASSERT(typeof key === "string" && typeof callback === "function");
 				ASSERT(project !== null);
+                wrapLogger.debug('loadObject', {metadata: key});
 
 				var obj = cache[key];
 				if (typeof obj === "undefined") {
@@ -173,6 +186,7 @@ define([ "common/util/assert" ], function (ASSERT) {
 
 			function insertObject (obj, callback) {
 				ASSERT(typeof obj === "object" && obj !== null && typeof callback === "function");
+                wrapLogger.debug('insertObject');
 
 				var key = obj[ID_NAME];
 				ASSERT(typeof key === "string");
@@ -204,7 +218,9 @@ define([ "common/util/assert" ], function (ASSERT) {
 			}
 
 			function abortProject (callback) {
-				if (project !== null) {
+                wrapLogger.debug('abortProject');
+
+                if (project !== null) {
 					var p = project;
 					project = null;
 					delete projects[name];
@@ -216,18 +232,26 @@ define([ "common/util/assert" ], function (ASSERT) {
 			}
 
 			function closeProject (callback) {
-				ASSERT(refcount >= 1);
+                wrapLogger.debug('closeProject', {metadata: {refcount: refcount}});
 
-				if (--refcount === 0) {
-					abortProject(callback);
-				} else if (typeof callback === "function") {
-					callback(null);
-				}
+                if (refcount >= 1) {
+                    if (--refcount === 0) {
+                        abortProject(callback);
+                    } else if (typeof callback === "function") {
+                        callback(null);
+                    }
+                } else {
+                    wrapLogger.warn('closeProject was called more times than open project');
+                    // nothing to close
+                    callback(null);
+                }
 			}
 
 			function deleteProject () {
 				var key, callbacks, cb, err = new Error("cache closed");
-				for (key in missing) {
+                wrapLogger.debug('deleteProject');
+
+                for (key in missing) {
 					callbacks = missing[key];
 					while ((cb = callbacks.pop())) {
 						cb(err);
@@ -242,6 +266,7 @@ define([ "common/util/assert" ], function (ASSERT) {
 
 			function reopenProject (callback) {
 				ASSERT(project !== null && refcount >= 0 && typeof callback === "function");
+                wrapLogger.debug('reopenProject');
 
                 var cacheProject = {};
                 for (var key in project) {
@@ -266,6 +291,7 @@ define([ "common/util/assert" ], function (ASSERT) {
 			};
 		}
 
+        logger.debug('Ready');
 		return {
 			openDatabase: database.openDatabase,
 			closeDatabase: closeDatabase,

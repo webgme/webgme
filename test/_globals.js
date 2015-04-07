@@ -23,8 +23,36 @@ var WebGME = require('../webgme'),
         return JSON.parse(JSON.stringify(gmeConfig));
     },
 
-    Storage = requireJS('common/storage/localstorage'),
+    Commit = requireJS('common/storage/commit'),
+    Local = requireJS('common/storage/local'),
+    Cache = requireJS('common/storage/cache'),
     Logger = require('../src/server/logger'),
+    logger = Logger.create('gme:test', {
+        //patterns: ['gme:test:*cache'],
+        transports: [{
+            transportType: 'Console',
+            options: {
+                level: 'error',
+                colorize: true,
+                timestamp: true,
+                prettyPrint: true,
+                handleExceptions: true, // ignored by default when you create the logger, see the logger.create function
+                exitOnError: false,
+                depth: 2,
+                debugStdout: true
+            }
+        }]
+    }, false),
+    Storage = function (options) {
+        'use strict';
+        options.log = options.log || logger;
+        return new Commit(new Local(options || {}), options || {});
+    },
+    StorageWithCache = function (options) {
+        'use strict';
+        options.log = options.log || logger;
+        return new Commit(new Cache(new Local(options || {}), options || {}), options || {});
+    },
     generateKey = requireJS('common/util/key'),
 
     GMEAuth = require('../src/server/middleware/auth/gmeauth'),
@@ -67,7 +95,7 @@ function importProject(parameters, done) {
     /*
      parameters:
      storage - a storage object, where the project should be created (if not given and mongoUri is not defined we
-               create a new local one and use it
+     create a new local one and use it
      filePath - the filePath, where we can find the project
      jsonProject - already loaded project
      projectName - the name of the project
@@ -234,22 +262,10 @@ module.exports = {
 
     WebGME: WebGME,
     Storage: Storage,
+    StorageWithCache: StorageWithCache,
     Logger: Logger,
     // test logger instance, used by all tests and only tests
-    logger: Logger.create('gme:test', {
-        transports: [{
-            transportType: 'Console',
-            //patterns: [],
-            options: {
-                level: 'warn',
-                colorize: true,
-                timestamp: true,
-                prettyPrint: true,
-                handleExceptions: true, // ignored by default when you create the logger, see the logger.create function
-                depth: 2
-            }
-        }]
-    }, true),
+    logger: logger,
     generateKey: generateKey,
 
     GMEAuth: GMEAuth,

@@ -12,6 +12,7 @@
 var Path = require('path'),
     FS = require('fs'),
     OS = require('os'),
+    Q = require('q'),
     Express = require('express'),
     session = require('express-session'),
     compression = require('compression'),
@@ -141,6 +142,9 @@ function StandAloneServer(gmeConfig) {
 
     //public functions
     function start(callback) {
+        var serverDeferred = Q.defer(),
+            storageDeferred = Q.defer();
+
         if (typeof callback !== 'function') {
             callback = function () {
             };
@@ -158,18 +162,31 @@ function StandAloneServer(gmeConfig) {
             __httpServer = Https.createServer({
                 key: __secureSiteInfo.key,
                 cert: __secureSiteInfo.certificate
-            }, __app).listen(gmeConfig.server.port, callback);
+            }, __app).listen(gmeConfig.server.port, function (err) {
+                if (err) {
+                    serverDeferred.reject(err);
+                } else {
+                    serverDeferred.resolve();
+                }
+            });
         } else {
-            __httpServer = Http.createServer(__app).listen(gmeConfig.server.port, callback);
+            __httpServer = Http.createServer(__app).listen(gmeConfig.server.port, function (err) {
+                if (err) {
+                    serverDeferred.reject(err);
+                } else {
+                    serverDeferred.resolve();
+                }
+            });
         }
 
         __httpServer.on('connection', function (socket) {
             var socketId = socket.remoteAddress + ':' + socket.remotePort;
 
             sockets[socketId] = socket;
+            logger.debug('socket connected (added to list) ' + socketId);
 
             socket.on('close', function () {
-                logger.debug('remove socket from list ' + socketId);
+                logger.debug('socket closed (removed from list) ' + socketId);
                 delete sockets[socketId];
             });
         });
@@ -177,7 +194,7 @@ function StandAloneServer(gmeConfig) {
         //creating the proper storage for the standalone server
         __storageOptions = {
             combined: __httpServer,
-            logger: Logger.create('gme:server:standalone:socket.io', gmeConfig.server.log)
+            logger: logger.fork('socket-io')
         };
         if (true === gmeConfig.authentication.enable) {
             __storageOptions.sessioncheck = __sessionStore.check;
@@ -186,7 +203,7 @@ function StandAloneServer(gmeConfig) {
             __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
         }
 
-        __storageOptions.log = Logger.create('gme:server:standalone:storage', gmeConfig.server.log);
+        __storageOptions.log = logger.fork('storage');
         __storageOptions.getToken = __gmeAuth.getToken;
 
         __storageOptions.sessionToUser = __sessionStore.getSessionUser;
@@ -194,11 +211,19 @@ function StandAloneServer(gmeConfig) {
         __storageOptions.globConf = gmeConfig;
         __storage = Storage(__storageOptions); // FIXME: why do not we use the 'new' keyword here?
         //end of storage creation
-        __storage.open();
+        __storage.open(function (err) {
+            if (err) {
+                storageDeferred.reject(err);
+            } else {
+                storageDeferred.resolve();
+            }
+        });
 
-        self.isRunning = true;
-
-
+        Q.all([serverDeferred.promise, storageDeferred.promise])
+            .nodeify(function (err) {
+                self.isRunning = true;
+                callback(err);
+            });
     }
 
     function stop(callback) {
@@ -215,22 +240,26 @@ function StandAloneServer(gmeConfig) {
         try {
             // close storage first
             // FIXME: is this call synchronous?
-            __storage.close();
+            __storage.close(function (err1) {
+                var numDestroyedSockets = 0;
+                // request server close - do not accept any new connections.
+                // first we have to request the close then we can destroy the sockets.
+                __httpServer.close(function (err2) {
+                    logger.info('http server closed');
+                    callback(err1 || err2 || null);
+                });
 
-            // request server close - do not accept any new connections.
-            // first we have to request the close then we can destroy the sockets.
-            __httpServer.close(function (err) {
-                logger.info('http server closed');
-                callback(err);
-            });
-
-            // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
-            for (key in sockets) {
-                if (sockets.hasOwnProperty(key)) {
-                    sockets[key].destroy();
-                    logger.info('destroyed open socket ' + key);
+                // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
+                for (key in sockets) {
+                    if (sockets.hasOwnProperty(key)) {
+                        sockets[key].destroy();
+                        logger.debug('destroyed open socket ' + key);
+                        numDestroyedSockets += 1;
+                    }
                 }
-            }
+
+                logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
+            });
         } catch (e) {
             //ignore errors
             callback(e);
@@ -496,7 +525,7 @@ function StandAloneServer(gmeConfig) {
         __requestCheckInterval = 2500;
 
     //creating the logger
-    logger = Logger.create('gme:server:standalone', gmeConfig.server.log);
+    logger = mainLogger.fork('server:standalone');
     self.logger = logger;
 
     logger.debug("starting standalone server initialization");
@@ -546,13 +575,13 @@ function StandAloneServer(gmeConfig) {
         var infoguid = GUID(),
             infotxt = "request[" + infoguid + "]:" + req.headers.host + " - " + req.protocol.toUpperCase() + "(" + req.httpVersion + ") - " + req.method.toUpperCase() + " - " + req.originalUrl + " - " + req.ip + " - " + req.headers['user-agent'],
             infoshort = "incoming[" + infoguid + "]: " + req.originalUrl;
-        logger.debug(infoshort);
+        //logger.debug(infoshort); // FIXME: not useful at all use `DEBUG=express* npm start` instead
         var end = res.end;
         res.end = function (chunk, encoding) {
             res.end = end;
             res.end(chunk, encoding);
             infotxt += " -> " + res.statusCode;
-            logger.debug(infotxt);
+            //logger.debug(infotxt); // FIXME: not useful at all use `DEBUG=express* npm start` instead
         };
         next();
     });

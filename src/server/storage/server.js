@@ -177,8 +177,20 @@ var server = function (_database, options) {
         var index;
 
         index = _eventHistory.indexOf(latestGuid);
-        if (index === -1 || index === 0) {
-            //new user or already received the last event
+        if (index === -1) {
+            // last guid was not found this is a new user
+            if (_eventHistory.length > 0) {
+                // if we already have a history of event send the last one
+                // this way the user can catch up
+                callback(null, _eventHistory[0], _events[_eventHistory[0]]);
+            } else {
+                // acknowledge that we put the caller into the queue
+                // he will still ask with an empty guid, as soon as we have history he will get the first event
+                callback(null, '' /* empty guid */);
+                _waitingEventCallbacks.push(callback);
+            }
+        } else if (index === 0) {
+            //already received the last event, will receive new events
             _waitingEventCallbacks.push(callback);
         } else {
             //missed some events so we send the next right away
@@ -186,10 +198,10 @@ var server = function (_database, options) {
         }
     }
 
-    function open() {
+    function open(callback) {
         _socket = IO.listen(options.combined ? options.combined : gmeConfig.server.port, {
             'transports': gmeConfig.socketIO.transports
-        });
+        }); // FIXME: does this listen have a callback?
 
         _socket.use(function (socket, next) {
             var handshakeData = socket.handshake;
@@ -218,9 +230,13 @@ var server = function (_database, options) {
         // try to connect to mongodb immediately when the server starts (faster than waiting for a user connection)
         checkDatabase(function (err) {
             if (err) {
-                console.error("Error: could not connect to mongo: " + err);
-                options.logger.error("Error: could not connect to mongo: " + err);
+                // FIXME: add logger
+                console.error('Error: could not connect to mongo: ' + err);
+                options.logger.error('Error: could not connect to mongo: ' + err);
+                callback(err);
+                return;
             }
+            callback(null);
         });
 
         _socket.on('connection', function (socket) {
@@ -403,6 +419,10 @@ var server = function (_database, options) {
                         callback(err);
                     } else {
                         _database.getProjectNames(function (err, names) {
+                            if (err) {
+                                callback(err);
+                                return;
+                            }
                             if (names.indexOf(projectName) === -1) {
                                 //project creation
                                 createProject(getSessionID(socket.handshake), projectName, function (err, project) {
@@ -711,7 +731,7 @@ var server = function (_database, options) {
         });
     }
 
-    function close() {
+    function close(callback) {
 
         //disconnect clients
         if (_socket) {
@@ -730,6 +750,7 @@ var server = function (_database, options) {
             }
             //_references = {};
             _databaseOpened = false;
+            callback(null);
         };
         if (_databaseOpened || _databaseOpenCallbacks.length) {
             checkDatabase(function (err) {

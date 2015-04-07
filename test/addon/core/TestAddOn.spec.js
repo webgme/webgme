@@ -23,11 +23,12 @@ describe('TestAddOn', function () {
     before(function (done) {
         server = WebGME.standaloneServer(gmeConfig);
         server.start(function (err) {
-            expect(err).to.equal(undefined);
+            expect(err).to.not.exist;
             storage = new WebGME.clientStorage({
                 globConf: gmeConfig,
                 type: 'node',
                 host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
+                log: testLogger.fork(addOnName + ':storage'),
                 webGMESessionId: 'testopencontext'
             });
             storage = storage;
@@ -60,13 +61,13 @@ describe('TestAddOn', function () {
         testFixture.importProject(importParam, function (err, result) {
             var startParam,
                 logMessages = [],
-                logger = {
-                    log: function () {
-                        logMessages.push(arguments);
-                    }
-                },
+                logger = testLogger.fork(addOnName),
                 addOn;
             expect(err).equal(null);
+
+            logger.info = function () {
+                logMessages.push(arguments);
+            };
 
             project = result.project;
 
@@ -92,6 +93,7 @@ describe('TestAddOn', function () {
                         testLogger.debug(logMessages);
                         addOn.stop(function (err) {
                             expect(err).equal(null);
+                            testLogger.debug(logMessages);
                             expect(logMessages.length).to.equal(3);
                             expect(logMessages[0][2]).to.equal('start');
                             expect(logMessages[1][2]).to.equal('update');

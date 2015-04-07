@@ -221,6 +221,12 @@ define([ "common/util/assert", "common/util/guid" ], function (ASSERT, GUID) {
                         delete callbacks[guid];
                         callback(err);
                     }
+
+                    // FIXME: how to disconnect properly ???
+                    //if (socketConnected && Object.keys(references).length === 0) {
+                    //    socketConnected = false;
+                    //    socket.disconnect();
+                    //}
                 });
             } else {
                 callback(new Error(ERROR_DISCONNECTED));

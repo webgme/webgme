@@ -87,6 +87,11 @@ function validateConfig (configOrFileName) {
     assertString('config.authentication.logOutUrl', config.authentication.logOutUrl);
     assertNumber('config.authentication.salts', config.authentication.salts);
 
+    // bin scripts
+    expectedKeys.push('bin');
+    assertObject('config.bin', config.bin);
+    assertObject('config.bin.log', config.bin.log);
+
     // blob
     expectedKeys.push('blob');
     assertObject('config.blob', config.blob);

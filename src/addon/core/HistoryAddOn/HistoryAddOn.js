@@ -20,8 +20,9 @@ define(['addon/AddOnBase'], function (AddOnBase) {
         return 'HistoryAddOn';
     };
 
-    HistoryAddOn.prototype.update = function (root) {
+    HistoryAddOn.prototype.update = function (root, callback) {
         console.log('HistoryAddOn', new Date().getTime(), 'update', this.core.getGuid(root), this.core.getHash(root));
+        callback(null);
     };
 
     HistoryAddOn.prototype.query = function (parameters, callback) {
@@ -42,7 +43,7 @@ define(['addon/AddOnBase'], function (AddOnBase) {
     HistoryAddOn.prototype.stop = function (callback) {
         //there is no need for special stop sequence
         //TODO maybe we could close the project and the database, but right now it seems unnecessary
-        callback(null);
+        AddOnBase.prototype.stop.call(this, callback);
     };
 
     //special HistoryAddOn elements

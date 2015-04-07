@@ -123,7 +123,7 @@ describe('merge CLI test', function () {
                 });
 
                 nodeApplyPatch.on('close', function (code) {
-                    next(err || code ? new Error('error during patch application: '+ (err || code)) : null);
+                    next(code ? new Error('error during patch application: '+ (err || code)) : null);
                 });
             };
         database.openDatabase(function (err) {

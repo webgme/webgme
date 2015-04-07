@@ -3,96 +3,185 @@
  * example usage
  * create('moduleName', gmeConfig.server.log);
  *
+ * Log debug messages to the console
+ * Notes:
+ *  - it overwrites only the winston console transport log level to info
+ *  - debug patterns are not applied to any additional transports file or database
+ *  - logger.debug() logs to all transports except the console and uses the 'debug' library instead of console transport
+ *  - all other transports and log levels are logged according to the configuration
+ *
+ * *nix
+ * $ DEBUG=gme:*:worker* npm start
+ * Windows
+ * > set DEBUG=gme:*:worker* & npm start
+ *
  * @author pmeijer / https://github.com/pmeijer
  */
 
 'use strict';
 
-var winston = require('winston');
+var winston = require('winston'),
+    d = require('debug'),
 
-function createLogger(name, options, useHandleExceptions) {
-    var winstonOptions = {transports: []},
-        i,
-        transport,
-        transportOptions,
+    Logger,
 
-        j,
-        len,
-        patterns,
+    mainLogger,
+    logger,
+    loggers = {},
+
+    debugPatterns = process.env.DEBUG ? process.env.DEBUG.split(',') : null,
+    globalPatterns = ['*']; // log everything by default
+
+function generateName() {
+    return Math.random().toString(36).slice(2, 15);
+}
+
+function isEnabled(name, patterns) {
+    var len = patterns.length,
+        shouldSkip = false,
+        shouldInclude = false,
         pattern,
-        shouldSkip,
-        shouldInclude,
+        j;
 
-        logger;
-
-    if (!options) {
-        throw new Error('options is a mandatory parameter.');
+    for (j = 0; j < len; j += 1) {
+        if (patterns[j] === '') {
+            // ignore empty strings
+            continue;
+        }
+        pattern = patterns[j].replace(/\*/g, '.*?');
+        if (pattern[0] === '-') {
+            shouldSkip = shouldSkip || (new RegExp('^' + pattern.substr(1) + '$')).test(name);
+        } else {
+            shouldInclude = shouldInclude || (new RegExp('^' + pattern + '$')).test(name);
+        }
     }
 
-    if (!options.transports) {
-        throw new Error('options.transports is a mandatory parameter.');
-    }
+    return shouldInclude && shouldSkip === false;
+}
 
+function createLogger(name, options) {
+    var winstonOptions = {transports: []},
+        transport,
+        i,
 
-    if (winston.loggers.has(name)) {
-        logger = winston.loggers.get(name);
-        logger.warn('tried to create this logger with the same name again.');
-        return logger;
-    }
+        newLogger,
 
-    for (i = 0; i < options.transports.length; i += 1) {
+        debugPatterns;
 
-        patterns = options.transports[i].patterns || ['*']; // log everything by default
-        len = patterns.length;
-
-        shouldSkip = false;
-        shouldInclude = false;
-        for (j = 0; j < len; j += 1) {
-            if (patterns[j] === '') {
-                // ignore empty strings
-                continue;
-            }
-            pattern = patterns[j].replace(/\*/g, '.*?');
-            if (pattern[0] === '-') {
-                shouldSkip = shouldSkip || (new RegExp('^' + pattern.substr(1) + '$')).test(name);
-            } else {
-                shouldInclude = shouldInclude || (new RegExp('^' + pattern + '$')).test(name);
-            }
+    if (!mainLogger) {
+        if (!options) {
+            throw new Error('options is a mandatory parameter.');
         }
 
-        if (shouldInclude && shouldSkip === false) {
-            transportOptions = JSON.parse(JSON.stringify(options.transports[i].options));
-            // add the transport
-            transportOptions.label = name;
-            if (useHandleExceptions) {
-                // empty on purpose
-            } else {
-                transportOptions.handleExceptions = false;
-            }
+        if (!options.transports) {
+            throw new Error('options.transports is a mandatory parameter.');
+        }
 
-            //console.log(name, winston.loggers.get(name));
-            transport = new (winston.transports[options.transports[i].transportType])(transportOptions);
+        globalPatterns = options.patterns || globalPatterns;
+
+        // FIXME: transport specific patterns
+        for (i = 0; i < options.transports.length; i += 1) {
+            transport = new (winston.transports[options.transports[i].transportType])(options.transports[i].options);
+            if (debugPatterns && options.transports[i].transportType.toLocaleLowerCase() === 'console') {
+                transport.level = 'info';
+            }
             winstonOptions.transports.push(transport);
         }
+
+        // create a single logger if it does not exist
+        mainLogger = winston.loggers.add('gme', winstonOptions);
+        logger = createLogger('gme:logger');
     }
 
-    logger = winston.loggers.add(name, winstonOptions);
+    if (loggers.hasOwnProperty(name)) {
+        return loggers[name];
+    }
 
-    logger.fork = function (forkName, useForkName) {
-        forkName = useForkName ? forkName : name + ':' + forkName;
-        return createLogger(forkName, options);
-    };
+    newLogger = new Logger(name);
+    newLogger.enable(isEnabled(name, globalPatterns));
+    loggers[name] = newLogger;
 
-    logger.forkWithOptions = function (_name, _options, _useHandleExceptions) {
-        return createLogger(_name, _options, _useHandleExceptions);
-    };
+    if (logger) {
+        logger.debug('Created new logger ' + name);
+    }
 
-    return logger;
+    return newLogger;
 }
 
 function createWithGmeConfig(name, gmeConfig, useHandleExceptions) {
     return createLogger(name, gmeConfig.server.log, useHandleExceptions);
 }
+
+
+Logger = function (name) {
+    this.name = name || generateName();
+    this.enabled = true;
+
+    if (debugPatterns) {
+        this.d = d(this.name);
+    }
+};
+
+Logger.prototype.debug = function () {
+    var args;
+    if (this.enabled) {
+        args = this._addNameToLogMessage.apply(this, arguments);
+        mainLogger.debug.apply(this, args);
+    }
+
+    if (debugPatterns) {
+        this.d.apply(this, arguments);
+    }
+};
+
+Logger.prototype.info = function () {
+    var args;
+    if (this.enabled) {
+        args = this._addNameToLogMessage.apply(this, arguments);
+        mainLogger.info.apply(this, args);
+    }
+};
+
+Logger.prototype.log = function () {
+    throw new Error('Call debug, info, warn or error functions.');
+};
+
+Logger.prototype.warn = function () {
+    var args;
+    if (this.enabled) {
+        args = this._addNameToLogMessage.apply(this, arguments);
+        mainLogger.warn.apply(this, args);
+    }
+};
+
+Logger.prototype.error = function () {
+    var args;
+    if (this.enabled) {
+        args = this._addNameToLogMessage.apply(this, arguments);
+        mainLogger.error.apply(this, args);
+    }
+};
+
+Logger.prototype.enable = function (enable) {
+    this.enabled = enable === true;
+};
+
+Logger.prototype.fork = function (forkName, useForkName) {
+    forkName = useForkName ? forkName : this.name + ':' + forkName;
+    return createLogger(forkName);
+};
+
+// TODO: add close function
+
+Logger.prototype._addNameToLogMessage = function () {
+    if (arguments[0]) {
+        arguments[0] = '[' + this.name + '] ' + arguments[0];
+    } else {
+        arguments[0] = '[' + this.name + ']';
+    }
+    return arguments;
+};
+
 
 module.exports = {
     create: createLogger,
