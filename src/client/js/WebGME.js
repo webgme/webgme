@@ -133,22 +133,26 @@ define(['js/logger',
             });
 
             client.decoratorManager = new DecoratorManager();
+            client.decoratorManager.downloadAll(gmeConfig.client.usedDecorators, function (err) {
+                if (err) {
+                    logger.error(err);
+                }
+                for (i = 0; i < len; i += 1) {
+                    panels.push({'panel': layoutPanels[i].panel,
+                        'container': layoutPanels[i].container,
+                        'control': layoutPanels[i].control,
+                        'params': {'client': client}});
+                }
 
-            for (i = 0; i < len; i += 1) {
-                panels.push({'panel': layoutPanels[i].panel,
-                    'container': layoutPanels[i].container,
-                    'control': layoutPanels[i].control,
-                    'params': {'client': client}});
-            }
+                //load the panels
+                loadPanels(panels);
 
-            //load the panels
-            loadPanels(panels);
-
-            //as of now it's a global variable just to make access to it easier
-            //TODO: might need to be changed
-            WebGMEGlobal.KeyboardManager = KeyboardManager;
-            WebGMEGlobal.KeyboardManager.setEnabled(true);
-            WebGMEGlobal.PanelManager = new PanelManager(client);
+                //as of now it's a global variable just to make access to it easier
+                //TODO: might need to be changed
+                WebGMEGlobal.KeyboardManager = KeyboardManager;
+                WebGMEGlobal.KeyboardManager.setEnabled(true);
+                WebGMEGlobal.PanelManager = new PanelManager(client);
+            });
         });
 
         loadPanels = function (panels) {
