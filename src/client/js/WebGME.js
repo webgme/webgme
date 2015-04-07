@@ -15,6 +15,7 @@ define(['js/logger',
     'text!/package.json',
     'js/client',
     'js/Constants',
+    'js/Panels/MetaEditor/MetaEditorConstants',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts',
     'js/Utils/ExportManager',
@@ -34,6 +35,7 @@ define(['js/logger',
                                             packagejson,
                                             Client,
                                             CONSTANTS,
+                                            METACONSTANTS,
                                             GMEConcepts,
                                             GMEVisualConcepts,
                                             ExportManager,
@@ -275,7 +277,7 @@ define(['js/logger',
         selectObject = function () {
             var user = {},
                 userPattern = {},
-                userGuid,
+                userActiveNodeId,
                 nodePath = initialThingsToDo.objectToLoad === 'root' ?
                     CONSTANTS.PROJECT_ROOT_ID : initialThingsToDo.objectToLoad;
 
@@ -287,23 +289,39 @@ define(['js/logger',
             } else {
                 userPattern[nodePath] = {children: 0};
             }
+
+            userPattern[METACONSTANTS.META_ASPECT_CONTAINER_ID] = {children: 0};
+
             function eventHandler(events) {
-                var node;
+                var metaContainer,
+                    i,
+                    metaPaths,
+                    metaEventHandler,
+                    metaPattern = {},
+                    userMetaId;
                 logger.debug('events from selectObject', events);
                 if (events[0].etype === 'complete') {
-                    node = client.getNode(nodePath);
-                    if (node) {
-                        logger.debug('active node', node.getAttribute('name'));
-                    } else {
-                        logger.error('active node could not be loaded', nodePath);
+                    logger.debug('active node loaded');
+                    metaContainer = client.getNode(METACONSTANTS.META_ASPECT_CONTAINER_ID);
+                    metaPaths = metaContainer.getMemberIds(METACONSTANTS.META_ASPECT_SET_NAME);
+                    for (i = 0; i < metaPaths.length; i+= 1) {
+                        metaPattern[metaPaths[i]] = {children: 0};
                     }
-                    WebGMEUrlManager.loadStateFromParsedUrl(initialThingsToDo);
-                    client.removeUI(userGuid);
+                    metaEventHandler = function (metaEvents) {
+                        if (metaEvents[0].etype === 'complete') {
+                            logger.debug('meta nodes loaded');
+                            WebGMEUrlManager.loadStateFromParsedUrl(initialThingsToDo);
+                            client.removeUI(userActiveNodeId);
+                            client.removeUI(userMetaId);
+                        }
+                    };
+                    userMetaId = client.addUI(user, metaEventHandler);
+                    client.updateTerritory(userMetaId, metaPattern);
                 }
             }
 
-            userGuid = client.addUI(user, eventHandler);
-            client.updateTerritory(userGuid, userPattern);
+            userActiveNodeId = client.addUI(user, eventHandler);
+            client.updateTerritory(userActiveNodeId, userPattern);
         };
 
 
