@@ -1,28 +1,25 @@
+/*globals requireJS*/
 /*jshint node: true*/
 /**
  * @author kecso / https://github.com/kecso
  */
+
+'use strict';
 
 var webgme = require('../../webgme'),
     program = require('commander'),
     BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$'),
     FS = require('fs'),
     openContext,
-    Storage,
     Serialization,
     jsonProject,
-    path = require('path'),
-    gmeConfig = require(path.join(process.cwd(), 'config'));
-
-webgme.addToRequireJsPaths(gmeConfig);
+    path = require('path');
 
 
 openContext = webgme.openContext;
-Storage = webgme.serverUserStorage;
 Serialization = webgme.serializer;
 
-var importProject = function (mongoUri, projectId, jsonProject, branchName, overwrite, callback) {
-    'use strict';
+var importProject = function (Storage, gmeConfig, projectId, jsonProject, branchName, overwrite, callback) {
     var storage,
         project,
         contextParams,
@@ -46,7 +43,6 @@ var importProject = function (mongoUri, projectId, jsonProject, branchName, over
             }
         };
 
-    gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
     storage = new Storage({globConf: gmeConfig, log: silentLog});
     branchName = branchName || 'master';
 
@@ -83,7 +79,7 @@ var importProject = function (mongoUri, projectId, jsonProject, branchName, over
                                         branchName + '" could not be updated.', commitHash);
                                     return;
                                 }
-                                closeContext(null, commitHash);
+                                closeContext(null, {commitHash: commitHash, storage: storage});
                             });
                         });
                     }
@@ -97,6 +93,8 @@ var importProject = function (mongoUri, projectId, jsonProject, branchName, over
 module.exports.import = importProject;
 
 if (require.main === module) {
+    var gmeConfig = require(path.join(process.cwd(), 'config'));
+
     program
         .version('0.1.0')
         .usage('<project-file> [options]')
@@ -120,6 +118,7 @@ if (require.main === module) {
         console.warn('branch is not given, master will be used');
     }
 
+    gmeConfig.mongo.uri = program.mongoDatabaseUri || gmeConfig.mongo.uri;
     //loading the project file and seeing if it is a valid JSON object
     try {
         jsonProject = JSON.parse(FS.readFileSync(program.args[0], 'utf-8'));
@@ -127,16 +126,18 @@ if (require.main === module) {
         console.error('unable to load project file: ', err);
         process.exit(1);
     }
+
+    webgme.addToRequireJsPaths(gmeConfig);
     //calling the import function
-    importProject(program.mongoDatabaseUri, program.projectIdentifier, jsonProject, program.branch, program.overwrite,
-        function (err, commitHash) {
-            'use strict';
+    importProject(webgme.serverUserStorage, gmeConfig, program.projectIdentifier, jsonProject,
+        program.branch, program.overwrite,
+        function (err, data) {
             if (err) {
                 console.error('error during project import: ', err);
                 process.exit(0);
             } else {
                 console.warn('branch "' + program.branch + '" of project "' + program.projectIdentifier +
-                    '" have been successfully imported at commitHash: ' + commitHash + '.');
+                    '" have been successfully imported at commitHash: ' + data.commitHash + '.');
                 process.exit(0);
             }
         }

@@ -20,36 +20,35 @@ var ASSERT = requireJS('common/util/assert'),
     Logger = require('./logger');
 
 function RunPlugin() {
-    var main = function (gmeConfig, pluginConfig, callback) {
-        ASSERT(pluginConfig && pluginConfig.pluginName && callback);
+    var main = function (storage, gmeConfig, managerConfig, pluginConfig, callback) {
+        ASSERT(managerConfig && managerConfig.pluginName && callback);
 
         var Plugin,
-            pluginName = pluginConfig.pluginName,
+            pluginName = managerConfig.pluginName,
             logger = Logger.create('gme:server:runPlugin', gmeConfig.server.log),
-            storage,
             plugins = {},
             contextParams,
             errorResult = new PluginResult();
 
-        pluginConfig.activeSelection = pluginConfig.activeSelection || [];
+        managerConfig.activeSelection = managerConfig.activeSelection || [];
+
+        logger.info('Given plugin : ' + pluginName);
+        logger.info('managerConfig', {metadata: managerConfig});
+        logger.debug('basePaths', {metadata: gmeConfig.plugin.basePaths});
 
         Plugin = requireJS('plugin/' + pluginName + '/' + pluginName + '/' + pluginName);
 
-        logger.info('Given plugin : ' + pluginName);
-        logger.info('pluginConfig', {metadata: pluginConfig});
-        logger.debug('basePaths', {metadata: gmeConfig.plugin.basePaths});
-
-        storage = new Storage({
+        storage = storage || new Storage({
             globConf: gmeConfig,
             log: logger
         });
 
         plugins[pluginName] = Plugin;
-        pluginConfig.branch = pluginConfig.branch || 'master';
+        managerConfig.branch = managerConfig.branch || 'master';
 
         contextParams = {
-            projectName: pluginConfig.projectName,
-            branchName: pluginConfig.branch
+            projectName: managerConfig.projectName,
+            branchName: managerConfig.branch
         };
 
         openContext(storage, gmeConfig, contextParams, function (err, context) {
@@ -62,11 +61,11 @@ function RunPlugin() {
             var blobBackend = new BlobFSBackend(gmeConfig);
             //var blobBackend  = new BlobS3Backend();
 
-            pluginConfig.blobClient = new BlobRunPluginClient(blobBackend);
-            pluginConfig.commit = context.commitHash;
+            managerConfig.blobClient = new BlobRunPluginClient(blobBackend);
+            managerConfig.commit = context.commitHash;
 
-            // FIXME: pluginConfig supposed to be managerConfig!
-            pluginManager.executePlugin(pluginName, pluginConfig, function (err, result) {
+            managerConfig.pluginConfig = pluginConfig || {};
+            pluginManager.executePlugin(pluginName, managerConfig, function (err, result) {
                 logger.debug('result', {metadata: result});
                 context.project.closeProject(function () {
                     storage.closeDatabase(function () {

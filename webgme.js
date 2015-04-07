@@ -4,6 +4,7 @@
  * @author nabana / https://github.com/nabana
  */
 
+'use strict';
 //This is is the only which defines the baseUrl for requirejs and adds it to the global.requireJS
 var requirejs = require('requirejs'),
     path = require('path'),
@@ -111,6 +112,7 @@ module.exports = {
     requirejs: requirejs,
     addToRequireJsPaths: addToRequireJsPaths,
     clientStorage: requirejs('common/storage/clientstorage'),
+    localStorage: requirejs('common/storage/localstorage'),
     core: requirejs('common/core/core'),
     serializer: requirejs('common/core/users/serialization'),
     canon: requirejs('common/util/canon'),
