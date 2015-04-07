@@ -106,15 +106,13 @@ function addToRequireJsPaths(gmeConfig) {
 module.exports = {
     serverStorage: require('./src/server/storage/serverstorage'),
     serverUserStorage: require('./src/server/storage/serveruserstorage'),
-    localStorage: function (options) {
-        return new requirejs('common/storage/commit')(requirejs('common/storage/local')(options || {}), options || {});
-    },
     standaloneServer: require('./src/server/standalone.js'),
     runPlugin: require('./src/server/runplugin'),
 
     requirejs: requirejs,
     addToRequireJsPaths: addToRequireJsPaths,
     clientStorage: requirejs('common/storage/clientstorage'),
+    localStorage: requirejs('common/storage/localstorage'),
     core: requirejs('common/core/core'),
     serializer: requirejs('common/core/users/serialization'),
     canon: requirejs('common/util/canon'),

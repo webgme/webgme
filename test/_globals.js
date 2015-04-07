@@ -23,12 +23,7 @@ var WebGME = require('../webgme'),
         return JSON.parse(JSON.stringify(gmeConfig));
     },
 
-    Local = requireJS('common/storage/local'),
-    Commit = requireJS('common/storage/commit'),
-    Storage = function (options) {
-        'use strict';
-        return new Commit(new Local(options || {}), options || {});
-    },
+    Storage = requireJS('common/storage/localstorage'),
     Logger = require('../src/server/logger'),
     generateKey = requireJS('common/util/key'),
 

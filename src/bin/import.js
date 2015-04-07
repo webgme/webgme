@@ -118,6 +118,7 @@ if (require.main === module) {
         console.warn('branch is not given, master will be used');
     }
 
+    gmeConfig.mongo.uri = program.mongoDatabaseUri || gmeConfig.mongo.uri;
     //loading the project file and seeing if it is a valid JSON object
     try {
         jsonProject = JSON.parse(FS.readFileSync(program.args[0], 'utf-8'));
@@ -128,7 +129,7 @@ if (require.main === module) {
 
     webgme.addToRequireJsPaths(gmeConfig);
     //calling the import function
-    importProject(webgme.serverUserStorage, gmeConfig, program.mongoDatabaseUri, program.projectIdentifier, jsonProject,
+    importProject(webgme.serverUserStorage, gmeConfig, program.projectIdentifier, jsonProject,
         program.branch, program.overwrite,
         function (err, data) {
             if (err) {
