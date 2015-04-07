@@ -640,25 +640,29 @@ var seedProject = function (parameters, callback) {
                             return fail('user cannot create project');
                         }
 
-                        getSeedFromDb(parameters.seedName, parameters.seedBranch, parameters.seedCommit, function (err, result) {
-                            if (err || result === null) {
-                                return fail(err || 'unable to get seed project');
-                            }
-
-                            seed = result;
-                            createProjectfromSeed();
-                        });
+                        rightsChecked();
                     });
                 } else {
-                    getSeedFromDb(parameters.seedName, parameters.seedBranch, parameters.seedCommit, function (err, result) {
-                        if (err || result === null) {
-                            return fail(err || 'unable to get seed project');
-                        }
-
-                        seed = result;
-                        createProjectfromSeed();
-                    });
+                    rightsChecked();
                 }
+            });
+        },
+        rightsChecked = function(){
+            if (parameters.type === 'file') {
+                seed = getSeedFromFile(parameters.seedName);
+                if (seed === null) {
+                    return fail('unknown file seed');
+                }
+                return createProjectfromSeed();
+            }
+
+            getSeedFromDb(parameters.seedName, parameters.seedBranch, parameters.seedCommit, function (err, result) {
+                if (err || result === null) {
+                    return fail(err || 'unable to get seed project');
+                }
+
+                seed = result;
+                createProjectfromSeed();
             });
         },
         createProjectfromSeed = function () {
@@ -689,7 +693,24 @@ var seedProject = function (parameters, callback) {
                             if (err) {
                                 return fail(err);
                             }
-                            callback(null);
+                            //we should add the newly created project to the user so he can manipulate it
+                            if(AUTH){
+                                AUTH.authorizeByUserId(parameters.userId, contextParameters.projectName, 'create',
+                                    {
+                                        read: true,
+                                        write: true,
+                                        delete: true
+                                    },
+                                    function (err) {
+                                        if (err) {
+                                            return fail(err);
+                                        }
+                                        callback(null);
+                                    }
+                                );
+                            } else {
+                                callback(null);
+                            }
                         });
                     });
                 });
