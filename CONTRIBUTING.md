@@ -10,7 +10,34 @@
 5. Push to your fork and submit a pull request
 
 
-## Development guidelines
+# Development
+
+* `npm run` will print all available commands
+* `npm start` starts the webgme web server
+* `node node_modules\nodemon\bin\nodemon.js src\bin\start_server.js` restarts server on file changes
+
+For any commands the `DEBUG` environment variable can be set. Examples are given for `npm test` command.
+
+Platform specifics:
+- `*nix` `$ DEBUG=* npm test`
+- `Windows` `set DEBUG=* & npm test`
+
+Examples are given for Windows:
+- `set DEBUG=gme:* & npm test`
+- `set DEBUG=gme:*,-gme:*worker* & npm test`
+- `set DEBUG=gme:*storage*,superagent* & npm test`
+- `set DEBUG=gme:*storage*,socket-io* & npm test`
+- `set DEBUG=gme:standalone*,express* & npm test`
+- `set DEBUG=gme:*plugin* & npm test`
+
+To test and develop the API use the following commands
+
+* `node node_modules\aglio\bin\aglio.js --input src\server\api\Readme.md --server` live preview of the online documentation of the api blueprint
+* `node node_modules\api-mock\bin\api-mock src\server\api\Readme.md` serves the api according the blueprint
+
+Note: when you have finished verify that the api documentation is available if you run the webgme server at `http://localhost:8888/developer/api`
+
+### Development guidelines
 
 * Configure your editor to use [`.jshintrc`](.jshintrc) and [`.jscsrc`](.jscsrc)
 * Don't update the version in `package.json`, the webgme package maintainers will do it

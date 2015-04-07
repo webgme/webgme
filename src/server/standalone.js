@@ -35,6 +35,7 @@ var Path = require('path'),
     BlobServer = require('./middleware/blob/BlobServer'),
     ExecutorServer = require('./middleware/executor/ExecutorServer'),
     RestServer = require('./middleware/rest/RestServer'),
+    api = require('./api'),
 
     Storage = require('./storage/serverstorage'),
     getClientConfig = require('../../config/getclientconfig'),
@@ -341,6 +342,27 @@ function StandAloneServer(gmeConfig) {
     }
 
     function ensureAuthenticated(req, res, next) {
+        var authorization = req.get('Authorization'),
+            username,
+            password,
+            split;
+
+        if (authorization && authorization.indexOf('Basic ') === 0) {
+            logger.debug('Basic authentication request');
+            // FIXME: ':' should not be in username nor in password
+            split = new Buffer(authorization.substr('Basic '.length), 'base64').toString('utf8').split(':');
+            username = split[0];
+            password = split[1];
+            if (username && password) {
+                // no empty username no empty password
+                __gmeAuth.authenticateUserById(username, password, 'gme', req, res, next);
+                return;
+            } else {
+                res.status(401);
+                return next(new Error('Basic authentication failed'));
+            }
+        }
+
         if (true === gmeConfig.authentication.enable) {
             if (req.isAuthenticated() || (req.session && true === req.session.authenticated)) {
                 return next();
@@ -355,10 +377,10 @@ function StandAloneServer(gmeConfig) {
                                 res.cookie('webgme', req.session.udmId);
                                 return next();
                             } else {
-                                res.sendStatus(400); //TODO find proper error code
+                                res.sendStatus(401); //TODO find proper error code
                             }
                         } else {
-                            res.sendStatus(400); //TODO find proper error code
+                            res.sendStatus(401); //TODO find proper error code
                         }
                     });
                 }
@@ -371,7 +393,7 @@ function StandAloneServer(gmeConfig) {
                             res.cookie('webgme', req.session.udmId);
                             return next();
                         } else {
-                            res.sendStatus(400); //no use for redirecting in this case
+                            res.sendStatus(401); //no use for redirecting in this case
                         }
                     });
                 } else if (gmeConfig.authentication.allowGuests) {
@@ -380,9 +402,14 @@ function StandAloneServer(gmeConfig) {
                     req.session.userType = 'GME';
                     res.cookie('webgme', req.session.udmId);
                     return next();
+                } else if (res.getHeader('X-WebGME-Media-Type')) {
+                    // do not redirect with direct api access
+                    res.status(401);
+                    return next(new Error());
                 } else {
                     res.redirect('/login' + getRedirectUrlParameter(req));
                 }
+
             }
         } else {
             return next();
@@ -591,10 +618,10 @@ function StandAloneServer(gmeConfig) {
 
     __app.use(compression());
     __app.use(cookieParser());
+    __app.use(bodyParser.json());
     __app.use(bodyParser.urlencoded({
         extended: true
     }));
-    __app.use(bodyParser.json());
     __app.use(methodOverride());
     __app.use(multipart({defer: true})); // required to upload files. (body parser should not be used!)
     __app.use(session({
@@ -615,6 +642,8 @@ function StandAloneServer(gmeConfig) {
 
     setupExternalRestModules();
 
+    // Basic authentication
+
     logger.debug("creating login routing rules for the static server");
     __app.get('/', ensureAuthenticated, function (req, res) {
         expressFileSending(res, __clientBaseDir + '/index.html');
@@ -625,6 +654,7 @@ function StandAloneServer(gmeConfig) {
         req.logout();
         req.session.authenticated = false;
         req.session.userType = 'loggedout';
+        delete req.session.udmId;
         res.redirect(__logoutUrl);
     });
     __app.get('/login', function (req, res) {
@@ -822,6 +852,11 @@ function StandAloneServer(gmeConfig) {
     logger.debug('creating REST related routing rules');
     RestServer.createExpressRest(__app, '/rest', middlewareOpts);
 
+    logger.debug('creating API related routing rules');
+
+    api.createAPI(__app, '/api', middlewareOpts);
+
+
     logger.debug("creating server-worker related routing rules");
     __app.get('/worker/simpleResult/*', function (req, res) {
         var urlArray = req.url.split('/');
@@ -892,10 +927,25 @@ function StandAloneServer(gmeConfig) {
     });
 
 
-    logger.debug("creating all other request rule - error 404 -");
-    __app.get('*', function (req, res) {
+    // catches all next(new Error()) from previous rules, you can set res.status() before you call next(new Error())
+    __app.use(function (err, req, res, next) {
+        if (err) {
+            if (res.statusCode === 200) {
+                res.status(err.status || 500);
+            }
+            res.sendStatus(res.statusCode);
+            //res.send(err.stack ? err.stack : err); // FIXME: in dev mode
+        } else {
+            return next();
+        }
+    });
+
+    // everything else is 404
+    logger.debug('creating all other request rule - error 404 -');
+    __app.use('*', function (req, res) {
         res.sendStatus(404);
     });
+
 
     if (gmeConfig.debug === true) {
         logger.debug('gmeConfig of webgme server', {metadata: gmeConfig});
