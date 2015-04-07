@@ -12,6 +12,7 @@ define( [
   'js/Loader/LoaderCircles',
   'js/Utils/GMEConcepts',
   'js/Dialogs/Import/ImportDialog',
+  'js/Dialogs/CreateFromSeed/CreateFromSeedDialog',
   'text!./templates/ProjectsDialog.html',
 
   'isis-ui-components/simpleDialog/simpleDialog',
@@ -19,8 +20,8 @@ define( [
 
   'css!./styles/ProjectsDialog.css'
 
-], function ( ng, Logger, LoaderCircles, GMEConcepts, ImportDialog, projectsDialogTemplate, ConfirmDialog,
-              DeleteDialogTemplate ) {
+], function ( ng, Logger, LoaderCircles, GMEConcepts, ImportDialog, CreateFromSeedDialog,
+              projectsDialogTemplate, ConfirmDialog, DeleteDialogTemplate ) {
 
   "use strict";
 
@@ -82,12 +83,21 @@ define( [
       }
     };
 
-    var doCreateProject = function () {
+    var doCreateProject = function (client) {
       var val = self._txtNewProjectName.val();
 
       if ( val !== "" && self._projectNames.indexOf( val ) === -1 ) {
-        self._btnNewProjectCreate.disable( true );
-        self._createNewProject( val );
+        self._btnNewProjectImport.disable( true );
+        self._dialog.modal( 'hide' );
+        var d = new CreateFromSeedDialog(self._client, self._logger.fork('CreateFromSeedDialog'));
+        d.show( function ( seedType, seedName, seedBranchName ) {
+            if (seedType && seedName) {
+                self._createProjectFromSeed(val, seedType, seedName, seedBranchName);
+            } else {
+                self._dialog.modal('show');
+            }
+
+        } );
       }
     };
 
@@ -322,7 +332,7 @@ define( [
 
       if ( enterPressed && isValidProjectName( newProjectName ) ) {
         if ( createType === CREATE_TYPE_EMPTY ) {
-          doCreateProject();
+          doCreateProject(self._client);
         } else if ( createType === CREATE_TYPE_IMPORT ) {
           doCreateProjectFromFile();
         }
@@ -436,28 +446,6 @@ define( [
 
   };
 
-  ProjectsDialog.prototype._createNewProject = function ( projectName ) {
-    var _client = this._client,
-      _dialog = this._dialog,
-      _logger = this._logger;
-
-    //TODO it should send some meaningful INFO
-    _client.createProjectAsync( projectName, {}, function ( err ) {
-      if ( !err ) {
-        _client.selectProjectAsync( projectName, function ( err ) {
-          if ( !err ) {
-            GMEConcepts.createBasicProjectSeed();
-            _dialog.modal( 'hide' );
-          } else {
-            _logger.error( 'CAN NOT OPEN NEW PROJECT: ' + err.stack );
-          }
-        } );
-      } else {
-        _logger.error( 'CAN NOT CREATE NEW PROJECT: ' + err.stack );
-      }
-    } );
-  };
-
   var LI_BASE = $( '<li class="center pointer"><a class="btn-env"></a>' );
   var READ_ONLY_BASE = $( '<span class="ro">[READ-ONLY]</span>' );
   ProjectsDialog.prototype._updateProjectNameList = function () {
@@ -524,11 +512,45 @@ define( [
       if ( !err ) {
         _logger.debug( 'CREATE NEW PROJECT FROM FILE FINISHED SUCCESSFULLY' );
       } else {
-        _logger.error( 'CAN NOT CREATE NEW PROJECT FROM FILE: ' + err.message );
+        _logger.error( 'CANNOT CREATE NEW PROJECT FROM FILE: ' + err.message );
       }
       _loader.stop();
     } );
   };
+
+    ProjectsDialog.prototype._createProjectFromSeed = function ( projectName, type, seedName, branchName ) {
+        var _client = this._client,
+            _logger = this._logger,
+            parameters = {
+                type: type,
+                projectName: projectName,
+                seedName: seedName,
+                branchName: branchName
+            },
+            _loader = new LoaderCircles( {"containerElement": $( 'body' )} );
+
+
+        _logger.debug('Creating new project from seed: ', parameters);
+
+        // TODO: remove these two lines once the create seed API is implemented and functional
+        _loader.start();
+
+        _client.seedProjectAsync( parameters, function ( err ) {
+            if ( err ) {
+                _logger.error('Cannot create seed project', err);
+            } else {
+                _logger.debug('Created new project from seed');
+                _client.selectProjectAsync(projectName, function (err) {
+                    if (err) {
+                        _logger.error('Cannot select project', err);
+                    } else {
+                        _logger.debug('Selected project');
+                    }
+                });
+            }
+            _loader.stop();
+        } );
+    };
 
   return ProjectsDialog;
 } );

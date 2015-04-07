@@ -16,19 +16,20 @@ define(['common/util/assert', 'common/core/core'], function (ASSERT, Core) {
      * @param {object} parameters
      * @param {string} [parameters.projectName] - name of project to open -> result.project
      * @param {boolean} [parameters.createProject] - if not found will create a project
-     *                                              -> result.rootNode, result.commitHash, result.core
+     *                                              -> result.rootNode, result.commitHash
      * @param {boolean} [parameters.overwriteProject] - if found will overwrite the existing project
-     *                                              -> result.rootNode, result.commitHash, result.core
+     *                                              -> result.rootNode, result.commitHash
+     * @param {string} [parameters.branchName] - name of branch to load root from or name of branch to create when
+     *                                           creating a project. -> result.rootNode, result.commitHash
      *
      * The following group is only valid when not creating a new project:
-     * @param {string} [parameters.branchName] - name of branch to load root from. -> result.rootNode, result.commitHash
      * @param {string} [parameters.commitHash] - if branchName given commitHash will be loaded. -> result.rootNode
      * @param {string} [parameters.branchOrCommit] - REGEXPs will determine if branch or commit -> result.rootNode
      * @param {[string]} [parameters.nodePaths] -loads all specified node paths. -> result.nodes
      * @param {boolean} [parameters.meta] - loads all META-nodes. -> result.META
      *
      * @param {object} [parameters.core] - Used if branchName or commitHash is specified (a new Core will be created
-     *                                     if needed and not provided here). -> result.core
+     *                                     if needed and not provided). -> result.core
      * @param {function} callback
      */
     var openContext = function (storage, gmeConfig, parameters, callback) {

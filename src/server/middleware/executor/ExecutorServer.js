@@ -20,8 +20,7 @@ var fs = require('fs'),
 
     JobInfo = requireJS('common/executor/JobInfo'),
     WorkerInfo = requireJS('common/executor/WorkerInfo'),
-
-    Logger = require('../../logger');
+    ASSERT = requireJS('common/util/assert');
 
 var jobListDBFile,
     workerListDBFile,
@@ -31,7 +30,6 @@ var jobListDBFile,
     workerRefreshInterval,
     labelJobs,
     labelJobsFilename,
-    Logger,
     logger;
 
 function ExecutorRESTCreate(req, res, next) {
@@ -54,10 +52,12 @@ function ExecutorRESTCreate(req, res, next) {
     // TODO: check if hash ok
     jobList.find({hash: hash}, function (err, docs) {
         if (err) {
+            logger.error('err');
             res.sendStatus(500);
         } else if (docs.length === 0) {
             jobList.update({hash: hash}, jobInfo, {upsert: true}, function (err) {
                 if (err) {
+                    logger.error(err);
                     res.sendStatus(500);
                 } else {
                     delete jobInfo._id;
@@ -87,12 +87,14 @@ function ExecutorRESTUpdate(req, res, next) {
 
     if (hash) {
     } else {
+        logger.error('no hash given');
         res.sendStatus(500);
         return;
     }
 
     jobList.find({hash: hash}, function (err, docs) {
         if (err) {
+            logger.error(err);
             res.sendStatus(500);
         } else if (docs.length) {
             var jobInfo = new JobInfo(docs[0]);
@@ -107,6 +109,7 @@ function ExecutorRESTUpdate(req, res, next) {
             }
             jobList.update({hash: hash}, jobInfo, function (err, numReplaced) {
                 if (err) {
+                    logger.error(err);
                     res.sendStatus(500);
                 } else if (numReplaced !== 1) {
                     res.sendStatus(404);
@@ -182,6 +185,7 @@ function ExecutorRESTWorkerAPI(req, res, next) {
                 $not: {labels: {$nin: clientRequest.labels}}
             }).limit(clientRequest.availableProcesses).exec(function (err, docs) {
                 if (err) {
+                    logger.error(err);
                     res.sendStatus(500);
                     return; // FIXME need to return 2x
                 }
@@ -198,6 +202,7 @@ function ExecutorRESTWorkerAPI(req, res, next) {
                         }
                     }, function (err, numReplaced) {
                         if (err) {
+                            logger.error(err);
                             res.sendStatus(500);
                             return;
                         } else if (numReplaced) {
@@ -223,6 +228,7 @@ function ExecutorRESTCancel(req, res, next) {
     var url = req.url.split('/');
 
     if (url.length < 3 || !url[2]) {
+        logger.error('ExecutorRESTCancel wrong format of url', url);
         res.sendStatus(500);
         return;
     }
@@ -249,6 +255,7 @@ function ExecutorRESTInfo(req, res, next) {
     var url = req.url.split('/');
 
     if (url.length < 3 || !url[2]) {
+        logger.error('ExecutorRESTInfo wrong format of url', url);
         res.sendStatus(500);
         return;
     }
@@ -258,6 +265,7 @@ function ExecutorRESTInfo(req, res, next) {
     if (hash) {
         jobList.find({hash: hash}, function (err, docs) {
             if (err) {
+                logger.error(err);
                 res.sendStatus(500);
             } else if (docs.length) {
                 res.send(docs[0]);
@@ -266,6 +274,7 @@ function ExecutorRESTInfo(req, res, next) {
             }
         });
     } else {
+        logger.error('hash not given');
         res.sendStatus(500);
     }
 }
@@ -307,6 +316,7 @@ function ExecutorREST(req, res, next) {
         }
         jobList.find(query, function (err, docs) {
             if (err) {
+                logger.error(err);
                 res.sendStatus(500);
                 return;
             }
@@ -400,10 +410,14 @@ function watchLabelJobs() {
     });
 }
 
-function setup(_gmeConfig) {
-    gmeConfig = _gmeConfig;
-    logger = Logger.createWithGmeConfig('gme:Executor', _gmeConfig);
+function createExpressExecutor(__app, baseUrl, options) {
+    ASSERT(typeof baseUrl === 'string', 'baseUrl must be given');
+    ASSERT(typeof options.gmeConfig !== 'undefined', 'gmeConfig must be provided to ExecutorServer');
+    ASSERT(typeof options.logger !== 'undefined', 'logger must be provided to ExecutorServer');
 
+    gmeConfig = options.gmeConfig;
+
+    logger = options.logger.fork('ExecutorServer');
     logger.debug('output directory', gmeConfig.executor.outputDir);
     mkdirp.sync(gmeConfig.executor.outputDir);
 
@@ -425,7 +439,7 @@ function setup(_gmeConfig) {
         }
     });
 
-    return ExecutorREST;
+    __app.use(baseUrl, ExecutorREST); //TODO: This can be nicer integrated (see BlobServer).
 }
 
-module.exports = setup;
+module.exports.createExpressExecutor = createExpressExecutor;

@@ -9,10 +9,27 @@
 
 var mime = require('mime'),
     BlobMetadata = requireJS('blob/BlobMetadata'),
-    contentDisposition = require('content-disposition');
+    ASSERT = requireJS('common/util/assert'),
 
-function createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger) {
-    __app.get('/rest/blob/metadata', ensureAuthenticated, function (req, res) {
+    contentDisposition = require('content-disposition'),
+    BlobFSBackend = require('./BlobFSBackend');
+    //BlobFSBackend = require('./BlobS3Backend');
+
+function createExpressBlob(__app, baseUrl, options) {
+    var blobBackend,
+        ensureAuthenticated,
+        logger;
+    ASSERT(typeof baseUrl === 'string', 'baseUrl must be given.');
+    ASSERT(typeof options.gmeConfig !== 'undefined', 'gmeConfig required');
+    ASSERT(options.gmeConfig.blob.type === 'FS', 'Only FS blob backend is currently supported.');
+    ASSERT(typeof options.ensureAuthenticated === 'function', 'ensureAuthenticated must be given.');
+    ASSERT(typeof options.logger !== 'undefined', 'logger must be given.');
+
+    ensureAuthenticated = options.ensureAuthenticated;
+    logger = options.logger;
+    blobBackend = new BlobFSBackend(options.gmeConfig);
+
+    __app.get(baseUrl + '/metadata', ensureAuthenticated, function (req, res) {
         blobBackend.listAllMetadata(req.query.all, function (err, metadata) {
             if (err) {
                 // FIXME: make sure we set the status code correctly like 404 etc.
@@ -27,7 +44,7 @@ function createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger) {
         });
     });
 
-    __app.get('/rest/blob/metadata/:metadataHash', ensureAuthenticated, function (req, res) {
+    __app.get(baseUrl + '/metadata/:metadataHash', ensureAuthenticated, function (req, res) {
         blobBackend.getMetadata(req.params.metadataHash, function (err, hash, metadata) {
             if (err) {
                 // FIXME: make sure we set the status code correctly like 404 etc.
@@ -42,8 +59,8 @@ function createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger) {
         });
     });
 
-    __app.post('/rest/blob/createFile/:filename', ensureAuthenticated, function (req, res) {
-        __logger.info('file creation request: user[' + req.session.udmId + '], filename[' + req.params.filename + ']');
+    __app.post(baseUrl + '/createFile/:filename', ensureAuthenticated, function (req, res) {
+        logger.info('file creation request: user[' + req.session.udmId + '], filename[' + req.params.filename + ']');
         var filename = 'not_defined.txt';
 
         if (req.params.filename !== null && req.params.filename !== '') {
@@ -53,7 +70,7 @@ function createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger) {
         // regular file
         // TODO: add tags and isPublic flag
         blobBackend.putFile(filename, req, function (err, hash) {
-            __logger.info('file creation request finished: user[' + req.session.udmId + '], filename[' +
+            logger.info('file creation request finished: user[' + req.session.udmId + '], filename[' +
                 req.params.filename + '], error[' + err + '], hash:[' + hash + ']');
             if (err) {
                 // FIXME: make sure we set the status code correctly like 404 etc.
@@ -79,7 +96,7 @@ function createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger) {
 
     });
 
-    __app.post('/rest/blob/createMetadata', ensureAuthenticated, function (req, res) {
+    __app.post(baseUrl + '/createMetadata', ensureAuthenticated, function (req, res) {
 
         var data = '';
 

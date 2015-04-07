@@ -161,96 +161,6 @@ define(['jquery',
         return _canCreateChildren(parentId, [baseId]);
     };
 
-    var _createBasicProjectSeed = function () {
-        var it;
-        var metaRuleBase = {
-            "children": {},
-            "attributes": {},
-            "pointers": {}
-        };
-
-        _client.startTransaction();
-
-        //create extra registry entries for root - currently allowed interpreters
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.VALID_PLUGINS, '');
-
-        //create extra registry entries for root - currently used add-ons
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.USED_ADDONS, 'ConstraintAddOn');
-
-        //create extra registry entries for root - currently allowed interpreters
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.VALID_PANELS,
-            'ModelEditor METAAspect SetEditor Crosscut GraphViz');
-
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.VALID_DECORATORS,
-            'ModelDecorator SVGDecorator CircleDecorator DefaultDecorator');
-        //Currently avaliable: MetaDecorator ModelicaDecorator UMLStateMachineDecorator SVGDecorator
-
-        //create FCO, META, PROJECT_BASE
-        // now as we create FCO always on the same relid and with the same GUID project have a more interchangeable base...
-        var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID,
-            'guid': CONSTANTS.PROJECT_FCO_GUID,
-            'relid': CONSTANTS.PROJECT_FCO_RELID});
-
-        //set META rules accordingly
-
-        //ROOT's meta rules
-        var rootMeta = $.extend(true, {}, metaRuleBase);
-        rootMeta.children.items = [{'$ref': FCO_ID}];
-        rootMeta.children.minItems = [-1];
-        rootMeta.children.maxItems = [-1];
-        rootMeta.attributes.name = {'type': 'string'};
-        _client.setMeta(CONSTANTS.PROJECT_ROOT_ID, rootMeta);
-
-        //FCO's meta rules
-        var fcoMeta = $.extend(true, {}, metaRuleBase);
-        fcoMeta.attributes.name = {'type': 'string'};
-        _client.setMeta(FCO_ID, fcoMeta);
-
-        //META constraint check
-        _client.setConstraint(FCO_ID,'meta',{script:metaConstraint,info:"this constraint will check all the meta rules defined to an object",priority:10});
-
-        //set attributes for FCO
-        for (it in GMEConceptsFCO.FCO_ATTRIBUTES) {
-            if (GMEConceptsFCO.FCO_ATTRIBUTES.hasOwnProperty(it)) {
-                _client.setAttributes(FCO_ID, it, GMEConceptsFCO.FCO_ATTRIBUTES[it]);
-            }
-        }
-
-        //set name of the ROOT
-        _client.setAttributes(CONSTANTS.PROJECT_ROOT_ID,nodePropertyNames.Attributes.name,CONSTANTS.PROJECT_ROOT_NAME);
-
-        //set base registry for FCO
-        for (it in GMEConceptsFCO.FCO_REGISTRY) {
-            if (GMEConceptsFCO.FCO_REGISTRY.hasOwnProperty(it)) {
-                _client.setRegistry(FCO_ID, it, GMEConceptsFCO.FCO_REGISTRY[it]);
-            }
-        }
-
-        var projectRegistry = {};
-        projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.PROJECT_REGISTRY, projectRegistry);
-
-        //set META ASPECT to show FCO
-        _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME);
-        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME, REGISTRY_KEYS.POSITION, {'x': 100, 'y': 100} );
-
-        //create a default MetaSheet
-        var defaultMetaSheetID = MetaEditorConstants.META_ASPECT_SHEET_NAME_PREFIX + generateGuid();
-        _client.createSet(CONSTANTS.PROJECT_ROOT_ID, defaultMetaSheetID);
-
-        var defaultMetaSheetDesc = {'SetID': defaultMetaSheetID,
-            'order': 0,
-            'title': 'META'};
-
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.META_SHEETS, [defaultMetaSheetDesc]);
-
-        //add the FCO to the default META sheet
-        _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID);
-        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID, REGISTRY_KEYS.POSITION, {'x': 100, 'y': 100} );
-
-        _client.completeTransaction();
-    };
-
     var _isProjectRegistryValue = function (key, objID) {
         var rootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID),
             projectRegistry = rootNode.getRegistry(REGISTRY_KEYS.PROJECT_REGISTRY),
@@ -829,7 +739,6 @@ define(['jquery',
         /*isValidConnectionSource: _isValidConnectionSource,*/
         canCreateChild: _canCreateChild,
         isValidConnection: _isValidConnection,
-        createBasicProjectSeed: _createBasicProjectSeed,
         isProjectFCO: _isProjectFCO,
         canCreateChildren: _canCreateChildren,
         canDeleteNode: _canDeleteNode,

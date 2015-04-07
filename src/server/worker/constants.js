@@ -36,6 +36,8 @@ module.exports = {
             'connectedWorkerStop': 'connectedworkerStop',
             'getProjectInfo': 'getProjectInfo',
             'setProjectInfo': 'setProjectInfo',
-            'getAllInfoTags': 'getAllInfoTags'
+            'getAllInfoTags': 'getAllInfoTags',
+            'getSeedInfo': 'getSeedInfo',
+            'seedProject': 'seedProject'
         }
     };

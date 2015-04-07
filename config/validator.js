@@ -145,6 +145,12 @@ function validateConfig (configOrFileName) {
     assertBoolean('config.rest.secure', config.rest.secure);
     assertObject('config.rest.components', config.rest.components);
 
+    //seedProjects
+    expectedKeys.push('seedProjects');
+    assertBoolean('config.seedProjects.enable', config.seedProjects.enable);
+    assertString('config.seedProjects.defaultProject', config.seedProjects.defaultProject);
+    assertArray('config.seedProjects.basePaths', config.seedProjects.basePaths);
+
     // server configuration
     expectedKeys.push('server');
     assertObject('config.server', config.server);

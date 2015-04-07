@@ -3072,6 +3072,27 @@ define([
         });
       }
 
+      function getSeedInfoAsync(callback) {
+        _database.simpleRequest({command: 'getSeedInfo'}, function (err, id) {
+          if (err) {
+            return callback(err);
+          }
+
+          _database.simpleResult(id, callback);
+        });
+      }
+
+      function seedProjectAsync(parameters, callback) {
+        parameters.command = 'seedProject';
+        _database.simpleRequest(parameters, function (err, id) {
+          if (err) {
+            return callback(err);
+          }
+
+          _database.simpleResult(id, callback);
+        });
+      }
+
         //TODO these functions or some successors will be needed when the UI will handle merge tasks!!!
       //TODO probably it would be a good idea to put this functionality to server
       //function getBaseOfCommits(one,other,callback){
@@ -3551,6 +3572,10 @@ define([
         //undo - redo
         undo: _redoer.undo,
         redo: _redoer.redo,
+
+        //clone services
+        getSeedInfoAsync: getSeedInfoAsync,
+        seedProjectAsync: seedProjectAsync
 
         //merge
         //getBaseOfCommits: getBaseOfCommits,

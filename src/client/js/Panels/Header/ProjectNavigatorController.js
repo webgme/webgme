@@ -813,6 +813,8 @@ define([
                 self.logger.warn(projectId +
                                  ' does not exist yet in the navigation bar, requesting selection to be loaded.');
                 self.requestedSelection = data;
+                // let's update the project list, in case the server did not notify us.
+                this.updateProjectList();
                 return;
             }
 
