@@ -591,7 +591,7 @@ var getSeedFromDb = function (name, branch, commit, callback) {
     if (commit) {
         contextParameters.commitHash = commit;
     } else {
-        contextParameters.branchName = branch;
+        contextParameters.branchName = branch || 'master';
     }
     OpenContext(storage, gmeConfig, contextParameters, function (err, result) {
         if (err) {
