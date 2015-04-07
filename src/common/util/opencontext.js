@@ -58,7 +58,7 @@ define(['common/util/assert', 'common/core/core'], function (ASSERT, Core) {
             }
             if (parameters.projectName) {
                 storage.getProjectNames(function (err, projectNames) {
-                    var projectExists = projectNames.indexOf(parameters.projectName) > -1;
+                    var projectExists = (projectNames || []).indexOf(parameters.projectName) > -1;
                     if (err) {
                         closeOnError(err);
                         return;
