@@ -515,6 +515,7 @@ function StandAloneServer(gmeConfig) {
 
     //creating the logger
     logger = mainLogger.fork('server:standalone');
+    self.logger = logger;
 
     logger.debug("starting standalone server initialization");
     //initializing https extra infos

@@ -10,9 +10,10 @@ var webgme = require('../../webgme'),
     program = require('commander'),
     BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$'),
     FS = require('fs'),
+    path = require('path'),
     openContext,
     Serialization,
-    jsonProject,
+    jsonProject;
 
 
 openContext = webgme.openContext;
@@ -23,7 +24,7 @@ var importProject = function (Storage, gmeConfig, projectId, jsonProject, branch
     var storage,
         project,
         contextParams,
-        logger = webgme.Logger.create('gme:bin:apply', gmeConfig.bin.log, false),
+        logger = webgme.Logger.create('gme:bin:apply', gmeConfig.bin.log),
         closeContext = function (error, data) {
             try {
                 project.closeProject(function () {
