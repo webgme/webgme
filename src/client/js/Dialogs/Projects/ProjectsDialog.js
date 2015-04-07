@@ -446,28 +446,6 @@ define( [
 
   };
 
-  ProjectsDialog.prototype._createNewProject = function ( projectName ) {
-    var _client = this._client,
-      _dialog = this._dialog,
-      _logger = this._logger;
-
-    //TODO it should send some meaningful INFO
-    _client.createProjectAsync( projectName, {}, function ( err ) {
-      if ( !err ) {
-        _client.selectProjectAsync( projectName, function ( err ) {
-          if ( !err ) {
-            GMEConcepts.createBasicProjectSeed();
-            _dialog.modal( 'hide' );
-          } else {
-            _logger.error( 'CAN NOT OPEN NEW PROJECT: ' + err.stack );
-          }
-        } );
-      } else {
-        _logger.error( 'CAN NOT CREATE NEW PROJECT: ' + err.stack );
-      }
-    } );
-  };
-
   var LI_BASE = $( '<li class="center pointer"><a class="btn-env"></a>' );
   var READ_ONLY_BASE = $( '<span class="ro">[READ-ONLY]</span>' );
   ProjectsDialog.prototype._updateProjectNameList = function () {
