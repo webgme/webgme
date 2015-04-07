@@ -94,9 +94,9 @@ define ([
         state[CONSTANTS.STATE_ACTIVE_SELECTION] = parsedUrl.activeSelectionToLoad;
         state[CONSTANTS.STATE_ACTIVE_VISUALIZER] = parsedUrl.visualizerToLoad;
 
-        setTimeout(function () {
-            WebGMEGlobal.State.set(state);
-        }, 1000);
+        //setTimeout(function () {
+        WebGMEGlobal.State.set(state);
+        //}, 1000);
     };
 
     return {
