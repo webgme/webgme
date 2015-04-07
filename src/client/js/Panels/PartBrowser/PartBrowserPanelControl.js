@@ -221,7 +221,7 @@ define(['js/logger',
 
             //update the territory
             if (territoryChanged) {
-                this._doUpdateTerritory(true);
+                this._doUpdateTerritory(false);
             }
         }
     };
@@ -454,7 +454,7 @@ define(['js/logger',
         }
 
         if (territoryChanged) {
-            this._doUpdateTerritory(true);
+            this._doUpdateTerritory(false);
         }
     };
 
