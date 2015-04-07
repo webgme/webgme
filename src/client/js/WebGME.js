@@ -308,6 +308,7 @@ define(['js/logger',
                         metaPattern[metaPaths[i]] = {children: 0};
                     }
                     metaEventHandler = function (metaEvents) {
+                        logger.debug('events from meta-nodes load', metaEvents);
                         if (metaEvents[0].etype === 'complete') {
                             logger.debug('meta nodes loaded');
                             WebGMEUrlManager.loadStateFromParsedUrl(initialThingsToDo);

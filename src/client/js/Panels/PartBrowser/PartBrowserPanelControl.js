@@ -39,7 +39,7 @@ define(['js/logger',
 
         this._initDragDropFeatures();
 
-        this._logger = Logger.create("gme:Panels:PartBrowser:PartBrowserControl", WebGMEGlobal.gmeConfig.client.log);
+        this._logger = Logger.create("gme:Panels:PartBrowser:PartBrowserPanelControl", WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug("Created");
 
         METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
@@ -116,6 +116,9 @@ define(['js/logger',
     PartBrowserControl.prototype._eventCallback = function (events) {
         //TODO eventing should be refactored
         this._logger.debug('_eventCallback ' + events[0].etype);
+        if (events[0].etype !== 'complete') {
+            return;
+        }
         events.shift();
 
         var i = events ? events.length : 0,
