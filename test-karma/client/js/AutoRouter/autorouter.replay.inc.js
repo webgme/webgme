@@ -4,7 +4,7 @@
  * @author brollb / https://github.com/brollb
  */
 
-define(['js/Widgets/DiagramDesigner/ConnectionRouteManager3.ActionApplier', 'underscore'], function (ActionApplier, _) {
+define(['js/Widgets/DiagramDesigner/AutoRouter.ActionApplier', 'underscore'], function (ActionApplier, _) {
     'use strict';
     var verbose,
         HEADER = 'AUTOROUTER REPLAYER:\t';

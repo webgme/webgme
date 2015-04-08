@@ -1,9 +1,9 @@
-/*globals define*/
+/*globals console,document,window,Blob,define*/
 define(['./AutoRouter', 
         'common/util/assert'], function (AutoRouter,
                                  assert) {
 
-    "use strict";
+    'use strict';
 
     var AutoRouterActionApplier = function() {
     };
@@ -37,7 +37,7 @@ define(['./AutoRouter',
                         filename = 'console.json';
                     }
 
-                    if (typeof data === "object") {
+                    if (typeof data === 'object') {
                         data = JSON.stringify(data, undefined, 4);
                     }
 
@@ -69,7 +69,7 @@ define(['./AutoRouter',
      * @param indices
      * @return {undefined}
      */
-    AutoRouterActionApplier.prototype._lookupItem = function (dictionary, array, indices) {
+    AutoRouterActionApplier.prototype._lookupItem = function (dictionary, array, indices) {//jshint ignore:line
         var index,
             id;
 
@@ -135,7 +135,7 @@ define(['./AutoRouter',
 
     };
 
-    AutoRouterActionApplier.prototype._fixPortArgs = function(port1, port2) {
+    AutoRouterActionApplier.prototype._fixPortArgs = function(port1, port2) { // jshint ignore:line
         var portId,
             portIds,
             arPortId,
@@ -246,8 +246,6 @@ define(['./AutoRouter',
                 break;
 
             case 'updatePort':
-                var boxId = args[0];
-
                 id = args[1].id;
                 break;
         }
@@ -278,7 +276,7 @@ define(['./AutoRouter',
         var index = this.debugActionSequence.lastIndexOf(','),
             result = this.debugActionSequence.substring(0,index) + '];';
 
-        return 'module.exports = '+result;
+        return result;
     };
 
     return AutoRouterActionApplier;
