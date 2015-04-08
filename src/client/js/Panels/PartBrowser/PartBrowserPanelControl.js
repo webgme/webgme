@@ -61,6 +61,7 @@ define(['js/logger',
         var self = this;
 
         this._logger.debug("activeObject: '" + nodeId + "'");
+        this._suppressDecoratorUpdate = true;
 
         //remove current territory patterns
         if (this._territoryId) {
@@ -118,9 +119,6 @@ define(['js/logger',
     PartBrowserControl.prototype._eventCallback = function (events) {
         //TODO eventing should be refactored
         this._logger.debug('_eventCallback ' + events[0].etype);
-        if (events[0].etype !== 'complete') {
-            return;
-        }
         events.shift();
 
         var i = events ? events.length : 0,
@@ -148,10 +146,15 @@ define(['js/logger',
         }
 
         if(needsDecoratorUpdate){
-            this._updateValidChildrenTypeDecorators();
+            if (this._suppressDecoratorUpdate === true) {
+                this._logger.debug('_eventCallback: only containerNode in events - will not update decorators');
+            } else {
+                this._logger.debug('_eventCallback: will do _updateValidChildrenTypeDecorators');
+                this._updateValidChildrenTypeDecorators();
+            }
         }
 
-
+        this._suppressDecoratorUpdate = false;
         this._logger.debug("_eventCallback '" + events.length + "' items - DONE");
     };
 
@@ -224,6 +227,8 @@ define(['js/logger',
             //update the territory
             if (territoryChanged) {
                 this._doUpdateTerritory(false);
+            } else {
+                this._suppressDecoratorUpdate = false;
             }
         }
     };
