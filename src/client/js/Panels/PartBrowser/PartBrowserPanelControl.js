@@ -145,15 +145,19 @@ define(['js/logger',
             }
         }
 
-        if(needsDecoratorUpdate){
+        if (needsDecoratorUpdate) {
             if (this._suppressDecoratorUpdate === true) {
-                this._logger.debug('_eventCallback: only containerNode in events - will not update decorators');
+                this._logger.debug('_eventCallback: only containerNode in events - will not update decorators',
+                    events);
             } else {
                 this._logger.debug('_eventCallback: will do _updateValidChildrenTypeDecorators');
                 this._updateValidChildrenTypeDecorators();
             }
         }
 
+        if (this._suppressDecoratorUpdate) {
+            this._logger.debug('_suppressDecoratorUpdate will switch from false to true');
+        }
         this._suppressDecoratorUpdate = false;
         this._logger.debug("_eventCallback '" + events.length + "' items - DONE");
     };
@@ -187,6 +191,8 @@ define(['js/logger',
             diff,
             id,
             territoryChanged = false;
+
+        this._logger.debug('_processContainerNode processing container node', gmeID);
 
         if (node) {
             //get possible targets from MetaDescriptor
@@ -226,8 +232,10 @@ define(['js/logger',
 
             //update the territory
             if (territoryChanged) {
-                this._doUpdateTerritory(false);
+                this._logger.debug('_processContainerNode territory did change');
+                this._doUpdateTerritory(true);
             } else {
+                this._logger.debug('_processContainerNode territory did not change _suppressDecoratorUpdate=false');
                 this._suppressDecoratorUpdate = false;
             }
         }
@@ -243,7 +251,7 @@ define(['js/logger',
             setTimeout(function () {
                 logger.debug('Updating territory with rules: ' + JSON.stringify(patterns));
                 client.updateTerritory(territoryId, patterns);
-            }, 10);
+            }, 0);
         } else {
             logger.debug('Updating territory with rules: ' + JSON.stringify(patterns));
             client.updateTerritory(territoryId, patterns);
@@ -461,7 +469,7 @@ define(['js/logger',
         }
 
         if (territoryChanged) {
-            this._doUpdateTerritory(false);
+            this._doUpdateTerritory(true);
         }
     };
 
