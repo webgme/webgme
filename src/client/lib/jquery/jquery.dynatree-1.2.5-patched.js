@@ -324,18 +324,30 @@ DynaTreeNode.prototype = {
 		}
 		if(!nodeTitle){
 			var tooltip = data.tooltip ? ' title="' + data.tooltip.replace(/\"/g, '&quot;') + '"' : '',
-				href = data.href || "#";
+				href = data.href || "#",
+                title = data.title;
+            if (opts.noHTML) {
+                title= '<span>' + this.escapeHTML(title) + '</span>';
+                tooltip = this.escapeHTML(data.tooltip) ? ' title="' + this.escapeHTML(data.tooltip) + '"' : '';
+            }
+
 			if( opts.noLink || data.noLink ) {
-				nodeTitle = '<span style="display:inline-block;" class="' + opts.classNames.title + '"' + tooltip + '>' + data.title + '</span>';
+				nodeTitle = '<span style="display:inline-block;" class="' + opts.classNames.title + '"' + tooltip + '>' + title + '</span>';
 //              this.tree.logDebug("nodeTitle: " + nodeTitle);
 			} else {
-				nodeTitle = '<a href="' + href + '" class="' + opts.classNames.title + '"' + tooltip + '>' + data.title + '</a>';
+				nodeTitle = '<a href="' + href + '" class="' + opts.classNames.title + '"' + tooltip + '>' + title + '</a>';
 			}
 		}
 		res += nodeTitle;
 		return res;
 	},
 
+
+    escapeHTML: function (str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    },
 
 	_fixOrder: function() {
 		/**

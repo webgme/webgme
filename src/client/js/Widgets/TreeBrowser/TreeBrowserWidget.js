@@ -11,7 +11,7 @@ define(['js/logger',
     'js/Constants',
     './TreeBrowserWidget.Keyboard',
     'js/DragDrop/DragSource',
-    'lib/jquery/jquery.dynatree-1.2.5.min',
+    'lib/jquery/jquery.dynatree-1.2.5-patched',
     'lib/jquery/jquery.contextMenu',
     'css!./styles/TreeBrowserWidget.css'], function (Logger, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
 
@@ -88,6 +88,7 @@ define(['js/logger',
             keyboard: false,
             imagePath : "/",
             debugLevel: 0,
+            noHTML: true,
             onLazyRead : function (node) {
                 self._logger.debug("onLazyRead node:" + node.data.key);
                 self.onNodeOpen.call(self, node.data.key);
@@ -189,7 +190,7 @@ define(['js/logger',
      * @param objDescriptor
      */
     TreeBrowserWidget.prototype.createNode = function (parentNode, objDescriptor) {
-        objDescriptor.name = objDescriptor.name || "";
+        objDescriptor.name = objDescriptor.name || '';
         //check if the parentNode is null or not
         //when null, the new node belongs to the root
         if (parentNode === null) {
