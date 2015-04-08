@@ -88,7 +88,7 @@ define(['js/logger',
                     loadingRootTreeNode.expand(true);
                     if (activeObj || activeObj === CONSTANTS.PROJECT_ROOT_ID) {
                         logger.debug('Active object already set. In init phase:', WebGMEGlobal.State.getIsInitPhase());
-                    } else if (WebGMEGlobal.State.getIsInitPhase() === false) {
+                    } else if (!WebGMEGlobal.State.getIsInitPhase()) {
                         logger.debug('Not in init-phase will set root node to active object.');
                         settings[CONSTANTS.STATE_ACTIVE_OBJECT] = CONSTANTS.PROJECT_ROOT_ID;
                         WebGMEGlobal.State.set(settings);
