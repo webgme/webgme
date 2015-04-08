@@ -82,12 +82,24 @@ define(['jquery',
         this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
     };
 
-    PanelBase.prototype.afterAppend = function () {
+    PanelBase.prototype.afterAppend = function (currentLayout, containerSizeUpdateFn) {
         //get panel's offset
         this.offset = this.$el.offset();
-
         //get panel's size
         this._getSize();
+
+    };
+
+    PanelBase.prototype.setContainerUpdateFn = function (currentLayout, containerSizeUpdateFn) {
+        if (containerSizeUpdateFn) {
+            this.updateContainerSize = function () {
+                containerSizeUpdateFn.call(currentLayout);
+            };
+        } else {
+            this.updateContainerSize = function () {
+                this.logger.warn('updateContainerSize not implemented for container in current-layout');
+            };
+        }
     };
 
     return PanelBase;

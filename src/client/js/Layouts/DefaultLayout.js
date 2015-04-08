@@ -105,14 +105,17 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
             this._westPanel.append(panel.$pEl);
             this._westPanels.push(panel);
             this._onWestResize();
+            return this._onWestResize;
         } else if (container === 'east') {
             this._eastPanel.append(panel.$pEl);
             this._eastPanels.push(panel);
             this._onEastResize();
+            return this._onEastResize;
         } else if (container === 'center') {
             this._centerPanel.append(panel.$pEl);
             this._centerPanels.push(panel);
             this._onCenterResize();
+            return this._onCenterResize;
         }
     };
 
