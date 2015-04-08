@@ -212,8 +212,13 @@ define(['js/logger',
                                     });
                                 } else {
                                     //we create the project
-                                    //TODO probably some meaningful INFO is needed
-                                    client.createProjectAsync(initialThingsToDo.projectToLoad, null, function (err) {
+                                    var seedParameters = {
+                                        type: 'file', // FIXME: is the default project always file?
+                                        projectName: initialThingsToDo.projectToLoad,
+                                        seedName: WebGMEGlobal.gmeConfig.seedProjects.defaultProject,
+                                        branchName: 'master'
+                                    };
+                                    client.seedProjectAsync(seedParameters, function (err) {
                                         if (err) {
                                             logger.error(err);
                                             openProjectLoadDialog();
@@ -225,7 +230,6 @@ define(['js/logger',
                                                 openProjectLoadDialog();
                                                 return;
                                             }
-                                            GMEConcepts.createBasicProjectSeed();
                                             WebGMEGlobal.State.setIsInitPhase(false);
                                             logger.info('init-phase false');
                                             //otherwise we are pretty much done cause we ignore the other parameters
