@@ -94,6 +94,8 @@ define ([
         state[CONSTANTS.STATE_ACTIVE_SELECTION] = parsedUrl.activeSelectionToLoad;
         state[CONSTANTS.STATE_ACTIVE_VISUALIZER] = parsedUrl.visualizerToLoad;
 
+        state[CONSTANTS.STATE_IS_INIT_PHASE] = false;
+
         //setTimeout(function () {
         WebGMEGlobal.State.set(state);
         //}, 1000);

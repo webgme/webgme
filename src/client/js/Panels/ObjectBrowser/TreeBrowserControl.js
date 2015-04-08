@@ -82,14 +82,18 @@ define(['js/logger',
                 // expand root
                 // FIXME: how to detect, when the root is loaded for the first time
                 setTimeout(function () {
-                    var settings = {};
+                    var settings = {},
+                        activeObj = WebGMEGlobal.State.getActiveObject();
                     logger.debug('expanding root-tree');
                     loadingRootTreeNode.expand(true);
-                    if (WebGMEGlobal.State.getActiveObject()) {
-                        // no selection needed
-                    } else {
+                    if (activeObj || activeObj === CONSTANTS.PROJECT_ROOT_ID) {
+                        logger.debug('Active object already set. In init phase:', WebGMEGlobal.State.getIsInitPhase());
+                    } else if (WebGMEGlobal.State.getIsInitPhase() === false) {
+                        logger.debug('Not in init-phase will set root node to active object.');
                         settings[CONSTANTS.STATE_ACTIVE_OBJECT] = CONSTANTS.PROJECT_ROOT_ID;
                         WebGMEGlobal.State.set(settings);
+                    } else {
+                        logger.debug('In init-phase will not select an active object.');
                     }
                 }, 100);
             } else {

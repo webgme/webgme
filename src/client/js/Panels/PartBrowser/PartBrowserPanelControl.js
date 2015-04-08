@@ -88,7 +88,9 @@ define(['js/logger',
             }
 
             this._territoryId = this._client.addUI(this, function (events) {
-                self._eventCallback(events);
+                if (events[0].etype === 'complete') {
+                    self._eventCallback(events);
+                }
             });
             //update the territory
             this._logger.debug('UPDATING TERRITORY: selectedObjectChanged' + JSON.stringify(this._selfPatterns));
