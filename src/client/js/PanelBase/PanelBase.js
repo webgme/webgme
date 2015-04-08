@@ -82,7 +82,7 @@ define(['jquery',
         this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
     };
 
-    PanelBase.prototype.afterAppend = function (currentLayout, containerSizeUpdateFn) {
+    PanelBase.prototype.afterAppend = function () {
         //get panel's offset
         this.offset = this.$el.offset();
         //get panel's size
