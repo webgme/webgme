@@ -69,6 +69,7 @@ define(['underscore', '/common/Constants.js'], function (underscore, COMMON_CONS
         STATE_ACTIVE_COMMIT: 'activeCommit',
         STATE_ACTIVE_BRANCH_NAME: 'activeBranchName',
         STATE_ACTIVE_CROSSCUT: 'activeCrosscut',
+        STATE_IS_INIT_PHASE: 'isInitPhase',
 
         /* ASPECTs */
         ASPECT_ALL: 'All',

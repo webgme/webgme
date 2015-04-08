@@ -48,6 +48,12 @@ var path = require('path'),
                 level: 'debug' // To see log messages in the browser inspector set:
                                // localStorage.debug = '*' (or 'gme*', 'gme:core*')
             },
+            usedDecorators: ['ModelDecorator',
+                             'CircleDecorator',
+                             'MetaDecorator',
+                             'SVGDecorator',
+                             'UMLStateMachineDecorator',
+                             'DefaultDecorator'],
             // Used in client/WebGME.js to load initial project.
             defaultProject: {
                 name: null,

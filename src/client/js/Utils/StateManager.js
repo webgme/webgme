@@ -72,8 +72,15 @@ define(['jquery',
 
             getActiveCommit: function() {
                 return this.get(CONSTANTS.STATE_ACTIVE_COMMIT);
-            }
+            },
 
+            getIsInitPhase: function() {
+                return this.get(CONSTANTS.STATE_IS_INIT_PHASE);
+            },
+
+            setIsInitPhase: function(initPhase) {
+                return this.set(CONSTANTS.STATE_IS_INIT_PHASE, initPhase);
+            }
 
         }),
         _initialize = function () {

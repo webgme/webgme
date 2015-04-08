@@ -17,6 +17,28 @@ define(['js/logger'], function (Logger) {
         this._logger.debug("Created");
     };
 
+    DecoratorManager.prototype.downloadAll = function (decoratorNames, callback) {
+        var self = this,
+            total = decoratorNames.length,
+            cnt = total,
+            i;
+
+        function countCallback() {
+            cnt -= 1;
+            if (cnt === 0) {
+                if (Object.keys(self._decorators).length === total) {
+                    callback();
+                } else {
+                    callback('Failed to download all requested decorators ' + decoratorNames.toString() +
+                        ' only got ' + Object.keys(self._decorators).toString());
+                }
+            }
+        }
+        for (i = 0; i < total; i += 1) {
+            self._downloadOne(decoratorNames[i], countCallback);
+        }
+    };
+
     DecoratorManager.prototype.download = function (decorators, widget, fnCallBack) {
         var processDecorators,
             queue = decorators.slice(0),

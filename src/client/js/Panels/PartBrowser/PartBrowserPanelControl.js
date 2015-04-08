@@ -39,7 +39,7 @@ define(['js/logger',
 
         this._initDragDropFeatures();
 
-        this._logger = Logger.create("gme:Panels:PartBrowser:PartBrowserControl", WebGMEGlobal.gmeConfig.client.log);
+        this._logger = Logger.create("gme:Panels:PartBrowser:PartBrowserPanelControl", WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug("Created");
 
         METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
@@ -61,6 +61,7 @@ define(['js/logger',
         var self = this;
 
         this._logger.debug("activeObject: '" + nodeId + "'");
+        this._suppressDecoratorUpdate = true;
 
         //remove current territory patterns
         if (this._territoryId) {
@@ -88,7 +89,9 @@ define(['js/logger',
             }
 
             this._territoryId = this._client.addUI(this, function (events) {
-                self._eventCallback(events);
+                if (events[0].etype === 'complete') {
+                    self._eventCallback(events);
+                }
             });
             //update the territory
             this._logger.debug('UPDATING TERRITORY: selectedObjectChanged' + JSON.stringify(this._selfPatterns));
@@ -142,11 +145,20 @@ define(['js/logger',
             }
         }
 
-        if(needsDecoratorUpdate){
-            this._updateValidChildrenTypeDecorators();
+        if (needsDecoratorUpdate) {
+            if (this._suppressDecoratorUpdate === true) {
+                this._logger.debug('_eventCallback: only containerNode in events - will not update decorators',
+                    events);
+            } else {
+                this._logger.debug('_eventCallback: will do _updateValidChildrenTypeDecorators');
+                this._updateValidChildrenTypeDecorators();
+            }
         }
 
-
+        if (this._suppressDecoratorUpdate) {
+            this._logger.debug('_suppressDecoratorUpdate will switch from false to true');
+        }
+        this._suppressDecoratorUpdate = false;
         this._logger.debug("_eventCallback '" + events.length + "' items - DONE");
     };
 
@@ -179,6 +191,8 @@ define(['js/logger',
             diff,
             id,
             territoryChanged = false;
+
+        this._logger.debug('_processContainerNode processing container node', gmeID);
 
         if (node) {
             //get possible targets from MetaDescriptor
@@ -218,7 +232,11 @@ define(['js/logger',
 
             //update the territory
             if (territoryChanged) {
+                this._logger.debug('_processContainerNode territory did change');
                 this._doUpdateTerritory(true);
+            } else {
+                this._logger.debug('_processContainerNode territory did not change _suppressDecoratorUpdate=false');
+                this._suppressDecoratorUpdate = false;
             }
         }
     };
@@ -233,7 +251,7 @@ define(['js/logger',
             setTimeout(function () {
                 logger.debug('Updating territory with rules: ' + JSON.stringify(patterns));
                 client.updateTerritory(territoryId, patterns);
-            }, 10);
+            }, 0);
         } else {
             logger.debug('Updating territory with rules: ' + JSON.stringify(patterns));
             client.updateTerritory(territoryId, patterns);
