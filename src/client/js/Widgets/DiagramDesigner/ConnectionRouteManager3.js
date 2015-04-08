@@ -2,7 +2,7 @@
 
 define(['js/logger',
         './AutoRouter', 
-        './ConnectionRouteManager3.ActionApplier.js'], function (Logger,
+        './AutoRouter.ActionApplier'], function (Logger,
                                                                  AutoRouter, 
                                                                  ActionApplier) {
 
