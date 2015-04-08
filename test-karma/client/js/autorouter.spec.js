@@ -1,4 +1,4 @@
-/*globals require, describe*/
+/*globals WebGMEGlobal,requirejs, describe*/
 /*jshint node:true, mocha:true*/
 /**
  * @author brollb / https://github.com/brollb
@@ -435,13 +435,14 @@ describe('AutoRouter', function () {
         });
 
         it('should create boxes placed on graph', function () {
-            var ports = utils.addBox({ //FIXME: you are not using the ports in this function!
-                    x: 100,
-                    y: 100
-                }),
+            var boxCount;
 
-                boxCount = Object.keys(router.graph.boxes).length;
+            utils.addBox({
+                x: 100,
+                y: 100
+            });
 
+            boxCount = Object.keys(router.graph.boxes).length;
             assert(boxCount === 3, 'box count should be 3 but is ' + boxCount);
         });
 
@@ -649,7 +650,6 @@ describe('AutoRouter', function () {
         it('should be able to remove point', function () {
             var box1 = utils.addBox({x: 100, y: 100}),
                 box2 = utils.addBox({x: 900, y: 900}),
-                srcId = Object.keys(box1.ports)[0], // FIXME: not used
                 dstId = Object.keys(box2.ports)[0],
                 port,
                 path,
@@ -786,7 +786,7 @@ describe('AutoRouter', function () {
         });
 
         // Changed CR3
-        it.skip('bug report 2', function () {
+        it.skip('bug report 2', function (done) {
             requirejs(['text!aRtestCases/AR_bug_report_2.json'], function (actions) {
                 bugPlayer.test(JSON.parse(actions));
                 done();
