@@ -50,7 +50,11 @@ require.config({
 
         'superagent': './src/client/lib/superagent/superagent-1.1.0',
         'jszip': './src/client/lib/jszip/jszip',
-        'debug': './src/client/lib/debug/debug'
+        'debug': './src/client/lib/debug/debug',
+        'underscore': './src/client/lib/underscore/underscore',
+
+        'karmatest': './test-karma',
+        'aRtestCases': './test-karma/client/js/AutoRouter/testCases'
 
         // external libraries used by plugins
         //'ejs': './support/ejs/ejs.min',

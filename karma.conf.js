@@ -80,6 +80,8 @@ module.exports = function (config) {
         files: [
             {pattern: 'src/**/*.js', included: false},
             {pattern: 'test-karma/**/*.spec.js', included: false},
+            {pattern: 'test-karma/**/*.inc.js', included: false}, //test include scripts
+            {pattern: 'test-karma/**/*.json', included: false}, //test assets
             'test-main.js'
         ],
 
