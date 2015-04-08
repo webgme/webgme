@@ -20,7 +20,7 @@ function Rest(_parameters) {
     }; //TODO temporary removal of second authorization check
     var _storage = new Storage({
             'globConf': gmeConfig,
-            'log': Logger.create('gme:common:util:newrest:storage', gmeConfig.server.log)
+            'logger': Logger.create('gme:common:util:newrest:storage', gmeConfig.server.log)
         }),
         _baseUrl = _parameters.baseUrl,
         _initialized = false,

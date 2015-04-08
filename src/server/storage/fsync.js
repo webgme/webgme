@@ -5,7 +5,15 @@
  */
 'use strict';
 
-function Database(_database) {
+var ASSERT = requireJS('common/util/assert');
+
+function Database(_database, options) {
+    ASSERT(typeof _database === 'object');
+    ASSERT(typeof options === 'object');
+    ASSERT(typeof options.logger === 'object');
+
+    var logger = options.logger.fork('fsync');
+
     function fsyncDatabase(callback) {
         _database.fsyncDatabase(callback);
     }

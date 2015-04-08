@@ -54,7 +54,7 @@ var initialize = function (parameters) {
             AUTH = GMEAUTH({}, gmeConfig); //FIXME: Should session really be empty object??
         }
         storage = new Storage({
-            log: logger.fork('storage'),
+            logger: logger.fork('storage'),
             globConf: gmeConfig
         });
         storage.openDatabase(function (err) {
@@ -153,7 +153,7 @@ var getConnectedStorage = function (webGMESessionId, callback) {
         globConf: gmeConfig,
         type: 'node',
         host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
-        log: Logger.create('gme:server:worker:simpleworker:plugin:' + process.pid, gmeConfig.server.log),
+        logger: logger.fork('clientstorage' + process.pid, gmeConfig.server.log),
         webGMESessionId: webGMESessionId
     });
     connStorage.openDatabase(function (err) {
@@ -191,7 +191,7 @@ var executePlugin = function (userId, name, webGMESessionId, context, callback) 
                 project.setUser(userId);
                 var plugins = {};
                 plugins[name] = interpreter;
-                var manager = new PluginManagerBase(project, Core, Logger, plugins, gmeConfig);
+                var manager = new PluginManagerBase(project, Core, logger, plugins, gmeConfig);
                 context.managerConfig.blobClient = new BlobClient({
                     serverPort: gmeConfig.server.port,
                     httpsecure: gmeConfig.server.https.enable,

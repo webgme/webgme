@@ -11,7 +11,7 @@ describe('merge CLI test', function () {
         mergeCli = require('../../src/bin/merge'),
         storageParams = {
             globConf: gmeConfig,
-            log: testFixture.Logger.createWithGmeConfig('merge CLI test:storage', gmeConfig)
+            logger: testFixture.logger.fork('merge CLI test:storage')
         },
         database = new testFixture.WebGME.serverUserStorage(storageParams),
         projectName = 'mergeCliTest',

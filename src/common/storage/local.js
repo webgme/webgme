@@ -16,8 +16,11 @@ define(["common/util/assert"], function (ASSERT) {
   var PROJECT_INFO_ID = '*info*'; // MAGIC CONSTANT
 
   function Database(options) {
-      ASSERT(typeof options === "object");
-      var gmeConfig = options.globConf;
+      ASSERT(typeof options === 'object');
+      ASSERT(typeof options.logger !== 'undefined');
+      ASSERT(typeof options.globConf === 'object');
+      var gmeConfig = options.globConf,
+          logger = options.logger.fork('local');
 
     var storage = null,
       database = 'webgme',// FIXME: is this a constant all the time?

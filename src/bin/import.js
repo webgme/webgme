@@ -40,7 +40,7 @@ var importProject = function (Storage, gmeConfig, projectId, jsonProject, branch
         };
 
 
-    storage = new Storage({globConf: gmeConfig, log: logger.fork('storage')});
+    storage = new Storage({globConf: gmeConfig, logger: logger.fork('storage')});
     branchName = branchName || 'master';
 
     contextParams = {

@@ -17,13 +17,8 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
         'use strict';
         gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
 
-        var database = new Storage({
-                globConf: gmeConfig, log: {
-                    debug: function () {
-                    }, error: function () {
-                    }
-                }
-            }),
+        var logger = WebGME.Logger.create('gme:bin:merge', gmeConfig.bin.log),
+            database = new Storage({ globConf: gmeConfig, logger: logger.fork('storage') }),
             project,
             core,
             myCommitHash,

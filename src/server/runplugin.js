@@ -40,7 +40,7 @@ function RunPlugin() {
 
         storage = storage || new Storage({
             globConf: gmeConfig,
-            log: logger
+            logger: logger
         });
 
         plugins[pluginName] = Plugin;
@@ -57,7 +57,7 @@ function RunPlugin() {
                 callback(err, errorResult);
                 return;
             }
-            var pluginManager = new PluginManager(context.project, Core, Logger, plugins, gmeConfig);
+            var pluginManager = new PluginManager(context.project, Core, logger, plugins, gmeConfig);
             var blobBackend = new BlobFSBackend(gmeConfig);
             //var blobBackend  = new BlobS3Backend();
 

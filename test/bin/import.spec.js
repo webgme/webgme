@@ -37,7 +37,7 @@ describe('import CLI tests', function () {
         jsonProject = testFixture.loadJsonFile('./test/asset/sm_basic.json');
         storage = storage = new WebGME.serverUserStorage({
             globConf: gmeConfig,
-            log: testFixture.Logger.createWithGmeConfig('mport CLI tests:storage', gmeConfig)
+            logger: testFixture.logger.fork('import_CLI_tests:storage')
         });
     });
 

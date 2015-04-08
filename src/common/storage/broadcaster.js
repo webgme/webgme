@@ -2,8 +2,12 @@ define(["common/util/assert"], function (ASSERT) {
     "use strict";
 
     var Database = function (database, options) {
-        var gmeConfig = options.globConf;
-        ASSERT(typeof database === "object" && typeof gmeConfig === "object");
+        ASSERT(typeof database === 'object');
+        ASSERT(typeof options === 'object');
+        ASSERT(typeof options.logger !== 'undefined');
+        ASSERT(typeof options.globConf === 'object');
+        var gmeConfig = options.globConf,
+            logger = options.logger.fork('broadcaster');
 
         function openProject(name, callback) {
             var branches = {},

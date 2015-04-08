@@ -42,7 +42,7 @@ var exportProject = function (mongoUri, projectId, branchOrCommit, callback) {
         };
 
     gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
-    storage = new Storage({globConf: gmeConfig, log: logger.fork('storage')});
+    storage = new Storage({globConf: gmeConfig, logger: logger.fork('storage')});
 
     contextParams = {
         projectName: projectId,

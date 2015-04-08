@@ -27,9 +27,11 @@ var PROJECT_INFO_ID = '*info*';
 var ID_NAME = "_id";
 
 function Database(options) {
-    ASSERT(typeof options === "object");
-    var gmeConfig = options.globConf;
-    var mongo = null;
+    ASSERT(typeof options === 'object');
+    ASSERT(typeof options.logger === 'object');
+    var mongo,
+        gmeConfig = options.globConf,
+        logger = options.logger.fork('mongo');
 
     function openDatabase(callback) {
         //ASSERT(mongo === null && typeof callback === "function");
@@ -262,7 +264,7 @@ function Database(options) {
                 if (err || item === null) {
                     callback(err);
                 } else {
-                    console.log(item);
+                    logger.debug(item);
                 }
             });
         }

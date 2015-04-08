@@ -19,10 +19,9 @@ define(['./PluginBase',
     function (PluginBase, PluginContext) {
         'use strict';
 
-        var PluginManagerBase = function (storage, Core, Logger, plugins, gmeConfig) {
+        var PluginManagerBase = function (storage, Core, logger, plugins, gmeConfig) {
             this.gmeConfig = gmeConfig; // global configuration of webgme
-            this.LoggerClass = Logger;
-            this.logger = Logger.createWithGmeConfig('gme:plugin:PluginManagerBase', gmeConfig);
+            this.logger = logger.fork('PluginManager');
             this._Core = Core;       // webgme core class is used to operate on objects
             this._storage = storage; // webgme storage
             this._plugins = plugins; // key value pair of pluginName: pluginType - plugins are already loaded/downloaded
@@ -247,7 +246,7 @@ define(['./PluginBase',
 
             var plugin = new PluginClass();
 
-            var pluginLogger = this.LoggerClass.createWithGmeConfig('gme:plugin:' + name, this.gmeConfig);
+            var pluginLogger = this.logger.fork('gme:plugin:' + name, true);
 
             plugin.initialize(pluginLogger, managerConfiguration.blobClient, self.gmeConfig);
 

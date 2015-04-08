@@ -8,13 +8,15 @@ define([ "common/util/assert", "common/util/key", "common/util/canon" ], functio
 	"use strict";
 	var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
 
-	function Database (_database,_options) {
+	function Database (_database, _options) {
+        ASSERT(typeof _database === "object");
+        ASSERT(typeof _options === "object");
+        ASSERT(typeof _options.globConf === "object");
+        ASSERT(typeof _options.logger !== 'undefined');
+
         var gmeConfig = _options.globConf,
-            logger = _options.log.fork('commit');
+            logger = _options.logger.fork('commit');
         logger.debug('Initializing');
-		ASSERT(typeof _database === "object");
-		ASSERT(typeof _options === "object");
-		ASSERT(typeof gmeConfig.storage.keyType === "string");
 
 		function openProject (projectName, callback) {
 

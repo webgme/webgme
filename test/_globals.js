@@ -45,12 +45,12 @@ var WebGME = require('../webgme'),
     }, false),
     Storage = function (options) {
         'use strict';
-        options.log = options.log || logger;
+        options.logger = options.logger || logger.fork('storage');
         return new Commit(new Local(options || {}), options || {});
     },
     StorageWithCache = function (options) {
         'use strict';
-        options.log = options.log || logger;
+        options.logger = options.logger || logger.fork('storage');
         return new Commit(new Cache(new Local(options || {}), options || {}), options || {});
     },
     generateKey = requireJS('common/util/key'),

@@ -260,7 +260,7 @@ define([
 
         //FIXME remove TESTING
       function newDatabase() {
-        var storageOptions ={log: Logger.create('gme:client:storage', gmeConfig.client.log), host: _configuration.host},
+        var storageOptions ={logger: Logger.create('gme:client:storage', gmeConfig.client.log), host: _configuration.host},
             protocolStr;
         if(typeof TESTING !== 'undefined'){
           protocolStr = gmeConfig.server.https.enable ? 'https' : 'http';

@@ -21,7 +21,10 @@ var COOKIE = require('cookie-parser'),
 
 var server = function (_database, options) {
     ASSERT(typeof _database === 'object');
-    var gmeConfig = options.globConf;
+    ASSERT(typeof options === 'object');
+    ASSERT(typeof options.logger === 'object');
+    var gmeConfig = options.globConf,
+        logger = options.logger.fork('server');
 
     // Functions passed via options
     options.authorization = options.authorization || function (sessionID, projectName, type, callback) {
@@ -36,14 +39,6 @@ var server = function (_database, options) {
         callback(null, {'read': true, 'write': true, 'delete': true});
     };
 
-    options.log = options.log || {
-        debug: function (msg) {
-            console.log("DEBUG - " + msg);
-        },
-        error: function (msg) {
-            console.log("ERROR - " + msg);
-        }
-    };
     var _socket = null,
         _objects = {},
         _projects = {},
@@ -90,8 +85,7 @@ var server = function (_database, options) {
                     if (err) {
                         _databaseOpened = false;
                         //this error has to be put to console as well
-                        console.log('Error in mongoDB connection initiation!!! - ', err);
-                        options.log.error(err);
+                        logger.error('Error in mongoDB connection initiation!!! - ', err);
                         while (_databaseOpenCallbacks.length) {
                             _databaseOpenCallbacks.pop()(err);
                         }
@@ -222,16 +216,13 @@ var server = function (_database, options) {
 
         //TODO check if this really helps
         _socket.on('error', function (err) {
-            console.log("Error have been raised on global socket.io level!!! - ", err);
-            options.logger.error('error raised by socket server: ' + err);
+            logger.error('error raised by socket server: ' + err);
         });
 
         // try to connect to mongodb immediately when the server starts (faster than waiting for a user connection)
         checkDatabase(function (err) {
             if (err) {
-                // FIXME: add logger
-                console.error('Error: could not connect to mongo: ' + err);
-                options.logger.error('Error: could not connect to mongo: ' + err);
+                logger.error('Error: could not connect to mongo: ' + err);
                 callback(err);
                 return;
             }
@@ -242,8 +233,7 @@ var server = function (_database, options) {
             //first we connect our socket id to the session
 
             socket.on('error', function (err) {
-                console.log("Error have been raised on socket.io level!!! - ", err);
-                options.logger.error('error raised by socket: ' + err);
+                logger.error('error raised by socket: ' + err);
             });
 
             if (process.env['LOG_WEBGME_TIMING']) {
@@ -268,7 +258,7 @@ var server = function (_database, options) {
                         if (msg === 'getBranchHash') {
                             logmsg = logmsg + ' ' + args[1] + ': ' + args[2];
                         }
-                        console.log(logmsg + " recvd");
+                        logger.debug(logmsg + " recvd");
                         var time1 = process.hrtime();
                         var callback2 = args[args.length - 1];
                         args[args.length - 1] = function (err) {
@@ -276,7 +266,7 @@ var server = function (_database, options) {
                             if (msg === 'getBranchHash') {
                                 logmsg = logmsg + ' ' + arguments[1] + (arguments[2] ? ' ERROR: forked ' + arguments[2] : '');
                             }
-                            console.log(logmsg + " " + ((time2[0] * 1000) + (time2[1] / 1000 / 1000 | 0)) + " " + err);
+                            logger.debug(logmsg + " " + ((time2[0] * 1000) + (time2[1] / 1000 / 1000 | 0)) + " " + err);
                             callback2.apply(this, arguments);
                         };
                         cb.apply(this, args);
@@ -788,7 +778,7 @@ var server = function (_database, options) {
             var stop = function (worker) {
                 options.workerManager.result(_connectedWorkers[socketId][i], function (err) {
                     if (err) {
-                        options.log.error("unable to stop connected worker [" + worker + "] of socket " + socketId);
+                        logger.error("unable to stop connected worker [" + worker + "] of socket " + socketId);
                     }
                 });
             };
