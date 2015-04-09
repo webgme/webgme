@@ -174,14 +174,24 @@ define(['js/logger',
             dy = point.y - this.getCenter().y,
             pathAngle = Math.atan2(-dy, dx),
             k = 0,
-            maxX = this.rect.right - 1,             // This is done to guarantee that the x,y will never round up to the corner of
-            maxY = this.rect.floor - 1,             // the port. If it does, the next assert will fail.
+            maxX = this.rect.right,             // This is done to guarantee that the x,y will never round up to the corner of
+            maxY = this.rect.floor,             // the port. If it does, the next assert will fail.
             minX = this.rect.left,
             minY = this.rect.ceil,
             resultPoint,
             smallerPt = new ArPoint(minX, minY),  // The this.points that the resultPoint is centered between
             largerPt = new ArPoint(maxX, maxY);
 
+        // Find the smaller and larger points
+        // As the points cannot be on the corner of an edge (ambiguous direction), 
+        // we will shift the min, max in one pixel
+        if (Utils.isHorizontal(dir)) {  // shift x coordinates
+            minX++;
+            maxX--;
+        } else { // shift y coordinates
+            minY++;
+            maxY--;
+        }
 
         // Adjust angle based on part of port to which it is connecting
         switch(dir) {
@@ -261,7 +271,7 @@ define(['js/logger',
             assert(Utils.isRightAngle (dir2), 
                 'AutoRouterPort.createStartEndPointTo: Utils.isRightAngle(dir2) FAILED');
 
-            if (dir2 === CONSTANTS.DirLeft || dir2 === CONSTANTS.DirTop) { //Then resultPoint must be moved up
+            if (dir2 === CONSTANTS.DirLeft || dir2 === CONSTANTS.DirTop) { // Then resultPoint must be moved up
                 largerPt = this.availableArea[closestArea][1];
             } else { // Then resultPoint must be moved down
                 smallerPt = this.availableArea[closestArea][0];
