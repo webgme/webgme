@@ -47,7 +47,7 @@ var exportProject = function (mongoUri, projectId, branchOrCommit, callback) {
         branchOrCommit: branchOrCommit
     };
 
-    openContext(storage, gmeConfig, contextParams, function (err, context) {
+    openContext(storage, gmeConfig, logger, contextParams, function (err, context) {
         if (err) {
             callback(err);
             return;

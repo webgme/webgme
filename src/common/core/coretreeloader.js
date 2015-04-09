@@ -6,13 +6,17 @@ define([ "common/util/assert", "common/core/core", "common/core/tasync" ], funct
 
   // ----------------- CoreTreeLoader -----------------
 
-  var MetaCore = function (innerCore) {
+  var MetaCore = function (innerCore, options) {
+      ASSERT(typeof options === 'object');
+      ASSERT(typeof options.globConf === 'object');
+      ASSERT(typeof options.logger !== 'undefined');
     var core = {},
-      key;
+      key,
+        logger = options.logger.fork('coretreeloader');
     for ( key in innerCore) {
       core[key] = innerCore[key];
     }
-
+      logger.debug('initialized');
     //adding load functions
     core.loadSubTree = function(root){
       var loadSubTrees = function(nodes){

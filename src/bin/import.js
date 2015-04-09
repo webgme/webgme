@@ -49,7 +49,7 @@ var importProject = function (Storage, _gmeConfig, projectId, jsonProject, branc
         branchName: branchName
     };
 
-    openContext(storage, _gmeConfig, contextParams, function (err, context) {
+    openContext(storage, _gmeConfig, logger, contextParams, function (err, context) {
         if (err) {
             callback(err);
             return;

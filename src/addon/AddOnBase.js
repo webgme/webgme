@@ -112,7 +112,7 @@ define([],
                 return;
             }
             this.project = parameters.project;
-            this.core = new this._Core(this.project, {globConf: this.gmeConfig});
+            this.core = new this._Core(this.project, {globConf: this.gmeConfig, logger: this.logger.fork('core')});
             this.projectName = parameters.projectName;
             this.branchName = parameters.branchName;
 

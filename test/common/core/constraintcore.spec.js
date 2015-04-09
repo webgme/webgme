@@ -30,7 +30,11 @@ describe('constraint core', function () {
                     return;
                 }
                 project = p;
-                core = new testFixture.WebGME.core(project,{usertype:'tasync', globConf: gmeConfig});
+                core = new testFixture.WebGME.core(project, {
+                    usertype:'tasync',
+                    globConf: gmeConfig,
+                    logger: testFixture.logger.fork('constraint_core:core')
+                });
                 root = core.createNode();
                 base = core.createNode({parent: root});
                 core.setAttribute(base, 'name', 'base');

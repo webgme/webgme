@@ -46,10 +46,10 @@ define([
     }
 
 
-    function getNewCore(project, gmeConfig) {
+    function getNewCore(project, gmeConfig, logger) {
       //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
         // FIXME: why usertype is nodejs when it is running from the browser?
-      var options = {usertype: 'nodejs', globConf: gmeConfig};
+      var options = {usertype: 'nodejs', globConf: gmeConfig, logger: logger.fork('core')};
       return Core(project, options);
     }
 
@@ -951,7 +951,7 @@ define([
                   _inTransaction = false;
                   _nodes = {};
                   _metaNodes = {};
-                  _core = getNewCore(_project, gmeConfig);
+                  _core = getNewCore(_project, gmeConfig, logger.fork('project' + name));
                   META.initialize(_core, _metaNodes, saveRoot);
                   if (_commitCache) {
                     _commitCache.clearCache();
@@ -1071,7 +1071,7 @@ define([
       }
 
       function createEmptyProject(project, callback) {
-        var core = getNewCore(project, gmeConfig),
+        var core = getNewCore(project, gmeConfig, logger.fork('createEmptyProject')),
           root = core.createNode(),
           rootHash = '',
           commitHash = '';

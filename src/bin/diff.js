@@ -72,7 +72,7 @@ var generateDiff = function (mongoUri, projectId, sourceBranchOrCommit, targetBr
         branchOrCommit: sourceBranchOrCommit
     };
 
-    openContext(storage, gmeConfig, contextParams, function (err, context) {
+    openContext(storage, gmeConfig, logger, contextParams, function (err, context) {
         var srcRoot,
             targetRoot;
         if (err) {

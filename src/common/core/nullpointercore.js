@@ -4,19 +4,23 @@
  * Author: Tamas Kecskes
  */
 
-define([], function () {
+define(['common/util/assert'], function (ASSERT) {
     "use strict";
 
     var NULLPTR_NAME = "_null_pointer";
     var NULLPTR_RELID = "_nullptr";
 
 
-    function nullPointerCore (_innerCore) {
-        var _core = {};
+    function nullPointerCore (_innerCore, options) {
+        ASSERT(typeof options === 'object');
+        ASSERT(typeof options.globConf === 'object');
+        ASSERT(typeof options.logger !== 'undefined');
+        var _core = {},
+            logger = options.logger.fork('nullpointercore');
         for(var i in _innerCore){
             _core[i] = _innerCore[i];
         }
-
+        logger.debug('initialized');
         
         //extra functions
         _core.setPointer = function(node,name, target){

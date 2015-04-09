@@ -145,7 +145,10 @@ define(['./PluginBase',
 
             pluginContext.project = this._storage;
             pluginContext.projectName = managerConfiguration.project;
-            pluginContext.core = new self._Core(pluginContext.project, {globConf: self.gmeConfig});
+            pluginContext.core = new self._Core(pluginContext.project, {
+                globConf: self.gmeConfig,
+                logger: self.logger.fork('core') //TODO: This logger should probably fork from the plugin logger
+            });
             pluginContext.commitHash = managerConfiguration.commit;
             pluginContext.activeNode = null;    // active object
             pluginContext.activeSelection = []; // selected objects

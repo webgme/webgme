@@ -35,8 +35,15 @@ define([ "common/util/assert", "common/core/coretree", "common/core/tasync", "co
 
 	// ----------------- Core -----------------
 
-	function CoreRel(coretree) {
-		ASSERT(typeof coretree == "object");
+	function CoreRel(coretree, options) {
+        ASSERT(typeof options === 'object');
+        ASSERT(typeof options.globConf === 'object');
+        ASSERT(typeof options.logger !== 'undefined');
+        ASSERT(typeof coretree === 'object');
+
+        var logger = options.logger.fork('corerel');
+
+        logger.debug('initialized');
 
 		function isValidNode(node) {
 			try {

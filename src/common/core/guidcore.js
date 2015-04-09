@@ -13,8 +13,11 @@ define(['common/util/assert',
 
     var OWN_GUID = '_relguid';
 
-    function guidCore(_innerCore) {
-
+    function guidCore(_innerCore, options) {
+        ASSERT(typeof options === 'object');
+        ASSERT(typeof options.globConf === 'object');
+        ASSERT(typeof options.logger !== 'undefined');
+        var logger = options.logger.fork('guidCore');
         //helper functions
         function toInternalGuid(myGuid) {
             return myGuid.replace(/-/g, '');
@@ -82,7 +85,7 @@ define(['common/util/assert',
         for (var i in _innerCore) {
             _core[i] = _innerCore[i];
         }
-
+        logger.debug('initialized');
         //new functions
         _core.getMiddleGuid = function (node) {
             var outGuid = _core.getAttribute(node, OWN_GUID);

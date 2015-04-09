@@ -51,7 +51,7 @@ function RunPlugin() {
             branchName: managerConfig.branch
         };
 
-        openContext(storage, gmeConfig, contextParams, function (err, context) {
+        openContext(storage, gmeConfig, logger, contextParams, function (err, context) {
             if (err) {
                 logger.error(err);
                 callback(err, errorResult);

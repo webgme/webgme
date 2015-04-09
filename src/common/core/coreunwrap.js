@@ -9,8 +9,11 @@ define([ "common/util/assert", "common/core/tasync" ], function(ASSERT, TASYNC) 
 
 	// ----------------- CoreUnwrap -----------------
 
-	var CoreUnwrap = function(oldcore) {
-
+	var CoreUnwrap = function(oldcore, options) {
+        ASSERT(typeof options === 'object');
+        ASSERT(typeof options.globConf === 'object');
+        ASSERT(typeof options.logger !== 'undefined');
+        var logger = options.logger.fork('coreunwrap');
 		function checkNode(node) {
 			if (node === null || oldcore.isValidNode(node)) {
 				return node;
@@ -37,7 +40,7 @@ define([ "common/util/assert", "common/core/tasync" ], function(ASSERT, TASYNC) 
 		for ( var key in oldcore) {
 			core[key] = oldcore[key];
 		}
-
+        logger.debug('initialized');
 		core.loadRoot = TASYNC.unwrap(oldcore.loadRoot);
 		core.persist = TASYNC.unwrap(oldcore.persist);
 

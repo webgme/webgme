@@ -10,8 +10,12 @@ define([ "common/util/assert"], function (ASSERT) {
     var SETS_ID = '_sets';
     var REL_ID = 'member';
 
-    function SetCore(innerCore){
+    function SetCore(innerCore, options){
+        ASSERT(typeof options === 'object');
+        ASSERT(typeof options.globConf === 'object');
+        ASSERT(typeof options.logger !== 'undefined');
 
+        var logger = options.logger.fork('setcore');
         //help functions
         var setModified = function(node){
             innerCore.setRegistry(node,'_sets_',(innerCore.getRegistry(node,'_sets_') || 0)+1);
@@ -105,7 +109,7 @@ define([ "common/util/assert"], function (ASSERT) {
         for(var i in innerCore){
             setcore[i] = innerCore[i];
         }
-
+        logger.debug('initialized');
         //adding new functions
         setcore.getSetNumbers = function(node){
             return this.getSetNames(node).length;

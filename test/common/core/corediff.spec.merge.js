@@ -69,7 +69,10 @@ describe('corediff-merge', function () {
                         return;
                     }
 
-                    core = new WebGME.core(project, {globConf: gmeConfig});
+                    core = new WebGME.core(project, {
+                        globConf: gmeConfig,
+                        logger: testFixture.logger.fork('corediff merge:core')
+                    });
                     root = core.createNode();
 
                     WebGME.serializer.import(core, root, jsonProject, function (err/*log*/) {

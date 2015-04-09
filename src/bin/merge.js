@@ -243,7 +243,7 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
                     return;
                 }
                 project = p;
-                core = new Core(project, {globConf: gmeConfig});
+                core = new Core(project, {globConf: gmeConfig, logger: logger.fork('core')});
 
                 needed = 2;
                 getCommitHash(true, sourceBranchOrCommit, commitSearched);

@@ -147,7 +147,7 @@ function importProject(parameters, done) {
         branchName: result.BranchName
     };
 
-    openContext(result.storage, parameters.gmeConfig, contextParam, function (err, context) {
+    openContext(result.storage, parameters.gmeConfig, logger, contextParam, function (err, context) {
         if (err) {
             done(err);
             return;

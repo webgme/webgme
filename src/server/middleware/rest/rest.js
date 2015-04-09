@@ -179,7 +179,7 @@ function Rest(_parameters) {
             if (err) {
                 callback(_HTTPError.internalServerError, err);
             } else {
-                var core = new Core(project, {globConf: gmeConfig});
+                var core = new Core(project, {globConf: gmeConfig, logger: logger.fork('core')});
                 core.loadRoot(rootHash, function (err, root) {
                     if (err) {
                         callback(_HTTPError.internalServerError, err);
@@ -208,7 +208,7 @@ function Rest(_parameters) {
             if (err) {
                 callback(_HTTPError.internalServerError, err);
             } else {
-                var core = new Core(project, {globConf: gmeConfig});
+                var core = new Core(project, {globConf: gmeConfig, logger: logger.fork('core')});
                 core.loadRoot(rootHash, function (err, root) {
                     if (err) {
                         callback(_HTTPError.internalServerError, err);
@@ -279,7 +279,7 @@ function Rest(_parameters) {
                 }
 
                 project = pr;
-                core = new Core(project, {globConf: gmeConfig});
+                core = new Core(project, {globConf: gmeConfig, logger: logger.fork('core')});
 
                 if (rootHash) {
                     initialized();

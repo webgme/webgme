@@ -32,7 +32,7 @@ describe('corerel', function () {
                 return;
             }
                 project = p;
-                core = new Core(project, {globConf: gmeConfig});
+                core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('corerel:core')});
                 root = core.createNode();
                 child = core.createNode({parent: root});
                 core.setAttribute(child, 'name', 'child');

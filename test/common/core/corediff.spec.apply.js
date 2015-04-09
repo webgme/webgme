@@ -19,7 +19,7 @@ describe('corediff apply', function () {
 
     var database = new testFixture.WebGME.serverUserStorage({
         globConf: gmeConfig,
-        logger:  testFixture.logger.fork('corediff apply:storage')
+        logger: testFixture.logger.fork('corediff apply:storage')
     });
 
     before(function (done) {
@@ -34,7 +34,10 @@ describe('corediff apply', function () {
                     return;
                 }
                 project = p;
-                core = new testFixture.WebGME.core(project, {globConf: gmeConfig});
+                core = new testFixture.WebGME.core(project, {
+                    globConf: gmeConfig,
+                    logger: testFixture.logger.fork('corediff apply:core')
+                });
                 root = core.createNode();
                 testFixture.WebGME.serializer.import(core, root, jsonProject, function (err, log) {
                     if (err) {
@@ -95,7 +98,10 @@ describe('corediff apply', function () {
                         return;
                     }
                     project = p;
-                    core = new testFixture.WebGME.core(project, {globConf: gmeConfig});
+                    core = new testFixture.WebGME.core(project, {
+                        globConf: gmeConfig,
+                        logger: testFixture.logger.fork('corediff apply:core')
+                    });
                     project.getBranchNames(function (err, names) {
                         if (err) {
                             done(err);

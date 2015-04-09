@@ -148,7 +148,8 @@ describe('merge CLI test', function () {
                         return;
                     }
 
-                    var core = new testFixture.WebGME.core(project,{globConf:gmeConfig}),
+                    var core = new testFixture.WebGME.core(project, {globConf: gmeConfig,
+                            logger: testFixture.logger.fork('core')}),
                         root = core.createNode(),
                         jsonProject = JSON.parse(testFixture.fs.readFileSync('./test/bin/merge/base.json')),
                         commitHash;

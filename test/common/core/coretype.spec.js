@@ -33,7 +33,7 @@ describe('coretype', function () {
                     return;
                 }
                 project = p;
-                core = new Core(project, {globConf: gmeConfig});
+                core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('coretype:core')});
                 root = core.createNode();
                 base = core.createNode({parent: root});
                 core.setAttribute(base, 'name', 'base');

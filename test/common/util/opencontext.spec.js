@@ -78,7 +78,7 @@ describe('openContext', function () {
             var parameters = {
                 projectName: 'doesExist'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project');
                 project = result.project;
@@ -90,7 +90,7 @@ describe('openContext', function () {
             var parameters = {
                 projectName: 'doesNotExist'
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('"doesNotExist" does not exists among: ');
                 project = null;
                 done();
@@ -102,7 +102,7 @@ describe('openContext', function () {
                 projectName: 'willBeCreated',
                 createProject: true
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
                 project = result.project;
@@ -115,7 +115,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 createProject: true
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('"doesExist" already exists:');
                 project = null;
                 done();
@@ -137,7 +137,7 @@ describe('openContext', function () {
                 };
             importAndCloseProject(importParam, function (err/*, commitHash*/) {
                 expect(err).equal(null);
-                openContext(storage, gmeConfig, parameters, function (err, result) {
+                openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                     expect(err).equal(null);
                     expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
                     project = result.project;
@@ -151,7 +151,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchName: 'master'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
                 project = result.project;
@@ -164,7 +164,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchName: 'b1_lancer'
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
                 project = null;
                 done();
@@ -176,7 +176,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 commitHash: commitHash
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
                 project = result.project;
@@ -189,7 +189,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 commitHash: commitHash.substring(0, commitHash.length - 1)
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('No such commitHash "');
                 project = null;
                 done();
@@ -201,7 +201,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchOrCommit: commitHash
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
                 project = result.project;
@@ -214,7 +214,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchOrCommit: 'master'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'branchName');
                 project = result.project;
@@ -227,7 +227,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchOrCommit: 'b1_lancer'
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
                 project = null;
                 done();
@@ -239,7 +239,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchOrCommit: commitHash.substring(0, commitHash.length - 1)
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('No such commitHash "');
                 project = null;
                 done();
@@ -252,7 +252,7 @@ describe('openContext', function () {
                 branchName: 'master',
                 meta: true
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'META');
                 expect(result.META).to.have.keys('FCO', 'language', 'state', 'transition');
@@ -268,7 +268,7 @@ describe('openContext', function () {
                 meta: true,
                 nodePaths: ['/960660211/1365653822', '/1']
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'META', 'nodes');
                 expect(result.META).to.have.keys('FCO', 'language', 'state', 'transition');
@@ -284,7 +284,7 @@ describe('openContext', function () {
                 branchName: 'master',
                 nodePaths: ['/960660211/1365653822', '/1']
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'nodes');
                 expect(result.nodes).to.have.keys('/960660211/1365653822', '/1');
@@ -300,7 +300,7 @@ describe('openContext', function () {
         //        branchName: 'master',
         //        nodeIds: ['/960660211/1365653822/144', '/12']
         //    };
-        //    openContext(storage, gmeConfig, parameters, function (err, result) {
+        //    openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
         //        expect(err).equal(null);
         //        project = null;
         //        done();
@@ -371,7 +371,7 @@ describe('openContext', function () {
             var parameters = {
                 projectName: 'doesExist'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project');
                 project = result.project;
@@ -383,7 +383,7 @@ describe('openContext', function () {
             var parameters = {
                 projectName: 'doesNotExist'
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('"doesNotExist" does not exists among: ');
                 project = null;
                 done();
@@ -395,7 +395,7 @@ describe('openContext', function () {
                 projectName: 'willBeCreated',
                 createProject: true
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
                 project = result.project;
@@ -408,7 +408,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 createProject: true
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('"doesExist" already exists:');
                 project = null;
                 done();
@@ -430,7 +430,7 @@ describe('openContext', function () {
                 };
             importAndCloseProject(importParam, function (err/*, commitHash*/) {
                 expect(err).equal(null);
-                openContext(storage, gmeConfig, parameters, function (err, result) {
+                openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                     expect(err).equal(null);
                     expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
                     project = result.project;
@@ -444,7 +444,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchName: 'master'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
                 project = result.project;
@@ -457,7 +457,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchName: 'b1_lancer'
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
                 project = null;
                 done();
@@ -469,7 +469,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 commitHash: commitHash
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
                 project = result.project;
@@ -482,7 +482,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 commitHash: commitHash.substring(0, commitHash.length - 1)
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('No such commitHash "');
                 project = null;
                 done();
@@ -494,7 +494,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchOrCommit: commitHash
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
                 project = result.project;
@@ -507,7 +507,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchOrCommit: 'master'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'branchName');
                 project = result.project;
@@ -520,7 +520,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchOrCommit: 'b1_lancer'
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
                 project = null;
                 done();
@@ -532,7 +532,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchOrCommit: commitHash.substring(0, commitHash.length - 1)
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('No such commitHash "');
                 project = null;
                 done();
@@ -545,7 +545,7 @@ describe('openContext', function () {
                 branchName: 'master',
                 meta: true
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'META');
                 expect(result.META).to.have.keys('FCO', 'language', 'state', 'transition');
@@ -561,7 +561,7 @@ describe('openContext', function () {
                 meta: true,
                 nodePaths: ['/960660211/1365653822', '/1']
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'META', 'nodes');
                 expect(result.META).to.have.keys('FCO', 'language', 'state', 'transition');
@@ -577,7 +577,7 @@ describe('openContext', function () {
                 branchName: 'master',
                 nodePaths: ['/960660211/1365653822', '/1']
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'nodes');
                 expect(result.nodes).to.have.keys('/960660211/1365653822', '/1');
@@ -593,7 +593,7 @@ describe('openContext', function () {
         //        branchName: 'master',
         //        nodeIds: ['/960660211/1365653822/144', '/12']
         //    };
-        //    openContext(storage, gmeConfig, parameters, function (err, result) {
+        //    openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
         //        expect(err).equal(null);
         //        project = null;
         //        done();
@@ -654,7 +654,7 @@ describe('openContext', function () {
             var parameters = {
                 projectName: 'doesExist'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project');
                 project = result.project;
@@ -666,7 +666,7 @@ describe('openContext', function () {
             var parameters = {
                 projectName: 'doesNotExist'
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('"doesNotExist" does not exists among: ');
                 project = null;
                 done();
@@ -678,7 +678,7 @@ describe('openContext', function () {
                 projectName: 'willBeCreated',
                 createProject: true
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
                 project = result.project;
@@ -691,7 +691,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 createProject: true
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('"doesExist" already exists:');
                 project = null;
                 done();
@@ -713,7 +713,7 @@ describe('openContext', function () {
                 };
             importAndCloseProject(importParam, function (err/*, commitHash*/) {
                 expect(err).equal(null);
-                openContext(storage, gmeConfig, parameters, function (err, result) {
+                openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                     expect(err).equal(null);
                     expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
                     project = result.project;
@@ -727,7 +727,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchName: 'master'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
                 project = result.project;
@@ -740,7 +740,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchName: 'b1_lancer'
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
                 project = null;
                 done();
@@ -752,7 +752,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 commitHash: commitHash
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
                 project = result.project;
@@ -765,7 +765,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 commitHash: commitHash.substring(0, commitHash.length - 1)
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('No such commitHash "');
                 project = null;
                 done();
@@ -777,7 +777,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchOrCommit: commitHash
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
                 project = result.project;
@@ -790,7 +790,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchOrCommit: 'master'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'branchName');
                 project = result.project;
@@ -803,7 +803,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchOrCommit: 'b1_lancer'
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
                 project = null;
                 done();
@@ -815,7 +815,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchOrCommit: commitHash.substring(0, commitHash.length - 1)
             };
-            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('No such commitHash "');
                 project = null;
                 done();
@@ -828,7 +828,7 @@ describe('openContext', function () {
                 branchName: 'master',
                 meta: true
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'META');
                 expect(result.META).to.have.keys('FCO', 'language', 'state', 'transition');
@@ -844,7 +844,7 @@ describe('openContext', function () {
                 meta: true,
                 nodePaths: ['/960660211/1365653822', '/1']
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'META', 'nodes');
                 expect(result.META).to.have.keys('FCO', 'language', 'state', 'transition');
@@ -860,7 +860,7 @@ describe('openContext', function () {
                 branchName: 'master',
                 nodePaths: ['/960660211/1365653822', '/1']
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'nodes');
                 expect(result.nodes).to.have.keys('/960660211/1365653822', '/1');
@@ -876,7 +876,7 @@ describe('openContext', function () {
         //        branchName: 'master',
         //        nodeIds: ['/960660211/1365653822/144', '/12']
         //    };
-        //    openContext(storage, gmeConfig, parameters, function (err, result) {
+        //    openContext(storage, gmeConfig, testFixture.logger, parameters, function (err, result) {
         //        expect(err).equal(null);
         //        project = null;
         //        done();

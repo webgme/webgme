@@ -46,7 +46,7 @@ var applyPatch = function (mongoUri, projectId, branchOrCommit, patch, noUpdate,
         branchOrCommit: branchOrCommit
     };
 
-    openContext(storage, gmeConfig, contextParams, function (err, context) {
+    openContext(storage, gmeConfig, logger, contextParams, function (err, context) {
         if (err) {
             callback(err);
             return;

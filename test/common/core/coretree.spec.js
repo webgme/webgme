@@ -34,7 +34,10 @@ describe('CoreTree', function () {
                     return;
                 }
 
-                coreTree = new CoreTree(project, {globConf: gmeConfig});
+                coreTree = new CoreTree(project, {
+                    globConf: gmeConfig,
+                    logger: testFixture.logger.fork('CoreTree:core')
+                });
                 done();
             });
         });
