@@ -12,7 +12,10 @@ describe('corediff-merge', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         FS = testFixture.fs,
         WebGME = testFixture.WebGME,
-        storage = testFixture.Storage({globConf: gmeConfig});
+        storage = testFixture.Storage({
+            globConf: gmeConfig,
+            logger: testFixture.logger.fork('corediff-merge:storage')
+        });
 
     describe('merge', function () {
         var project, core, root, commit, baseCommitHash, baseRootHash,

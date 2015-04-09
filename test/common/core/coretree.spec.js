@@ -17,7 +17,7 @@ describe('CoreTree', function () {
 
     // TODO: replace with in memory storage
 
-        storage = new testFixture.Storage({globConf: gmeConfig}),
+        storage = new testFixture.Storage({globConf: gmeConfig, logger: testFixture.logger.fork('CoreTree:storage')}),
 
         coreTree;
 

@@ -8,7 +8,10 @@ var testFixture = require('../../_globals.js');
 describe('constraint core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = new testFixture.Storage({globConf: gmeConfig}),
+        storage = new testFixture.Storage({
+            globConf: gmeConfig,
+            logger: testFixture.logger.fork('constraint_core:storage')
+        }),
         TASYNC = testFixture.requirejs('common/core/tasync'),
         project,
         core,

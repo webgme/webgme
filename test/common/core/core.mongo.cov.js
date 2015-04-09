@@ -9,7 +9,7 @@ describe('Core Mongo Coverage', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         storage = new testFixture.WebGME.serverUserStorage({ //FIXME: Is this necessary??
             globConf: gmeConfig,
-            log: testFixture.Logger.createWithGmeConfig('Core Mongo Coverage:storage', gmeConfig)
+            logger: testFixture.logger.fork('Core Mongo Coverage:storage')
         });
 
     it('fails to connect to database', function (done) {
@@ -18,7 +18,7 @@ describe('Core Mongo Coverage', function () {
         gmeConfigAltered.mongo.uri = 'mongodb://127.0.0.1:65535/multi';
         storage = new testFixture.WebGME.serverUserStorage({
             globConf: gmeConfigAltered,
-            log: testFixture.Logger.createWithGmeConfig('Core Mongo Coverage:fails to connect to database:storage',
+            logger: testFixture.Logger.createWithGmeConfig('Core Mongo Coverage:fails to connect to database:storage',
                 gmeConfig)
         });
         storage.openDatabase(function (err) {
@@ -32,7 +32,7 @@ describe('Core Mongo Coverage', function () {
     it('try double database closing', function (done) {
         storage = new testFixture.WebGME.serverUserStorage({
             globConf: gmeConfig,
-            log: testFixture.Logger.createWithGmeConfig('Core Mongo Coverage:try double database closing:storage',
+            logger: testFixture.Logger.createWithGmeConfig('Core Mongo Coverage:try double database closing:storage',
                 gmeConfig)
         });
         storage.openDatabase(function (err) {

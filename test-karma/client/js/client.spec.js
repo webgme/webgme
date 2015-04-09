@@ -940,7 +940,7 @@ describe('GME client', function () {
             });
         });
 
-        it('should create a new branch for the given project (not necessarily the opened)', function (done) {
+        it.only('should create a new branch for the given project (not necessarily the opened)', function (done) {
             var actualProject,
                 genericProjectName = 'createGenericBranch';
 

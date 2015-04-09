@@ -330,7 +330,7 @@ describe('openContext', function () {
                 storage = new WebGME.clientStorage({
                     globConf: gmeConfig,
                     type: 'node',
-                    log: logger.fork('storage'),
+                    logger: logger.fork('open-context:client-storage'),
                     host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
                     webGMESessionId: 'testopencontext'
                 });
@@ -606,8 +606,7 @@ describe('openContext', function () {
         var storage,
             project,
             commitHash,
-            gmeConfig = testFixture.getGmeConfig(),
-            logger = testFixture.Logger.createWithGmeConfig('opencontext:using server-user-storage:storage', gmeConfig);
+            gmeConfig = testFixture.getGmeConfig();
 
 
         before(function (done) {
@@ -620,7 +619,7 @@ describe('openContext', function () {
             };
             storage = new WebGME.serverUserStorage({
                 globConf: gmeConfig,
-                log: logger
+                logger: logger.fork('opencontext:server-user-storage')
             });
             importParam.storage = storage;
             importAndCloseProject(importParam, function (err, _commitHash) {

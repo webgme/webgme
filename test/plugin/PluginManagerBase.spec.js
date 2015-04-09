@@ -13,7 +13,7 @@ describe('Plugin Manager Base', function () {
         PluginGenerator = testFixture.requirejs('plugin/PluginGenerator/PluginGenerator/PluginGenerator'),
         MinimalWorkingExample = testFixture.requirejs('plugin/MinimalWorkingExample/MinimalWorkingExample/MinimalWorkingExample'),
         Storage = testFixture.Storage,
-        Logger = testFixture.Logger;
+        logger = testFixture.logger;
 
     describe('plugin manager API', function () {
 
@@ -26,7 +26,7 @@ describe('Plugin Manager Base', function () {
                     PluginGenerator: PluginGenerator
                 };
 
-            pluginManagerBase = new PluginManagerBase(null, null, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(null, null, logger, pluginManagerConfig, gmeConfig);
 
             should.exist(pluginManagerBase);
             pluginManagerBase.should.have.property('logger');
@@ -45,7 +45,7 @@ describe('Plugin Manager Base', function () {
             var pluginManagerBase,
                 pluginManagerConfig = {};
 
-            pluginManagerBase = new PluginManagerBase(null, null, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(null, null, logger, pluginManagerConfig, gmeConfig);
 
             (function () {
                 pluginManagerBase.initialize(null, null, null);
@@ -58,7 +58,7 @@ describe('Plugin Manager Base', function () {
                     PluginGenerator: PluginGenerator
                 };
 
-            pluginManagerBase = new PluginManagerBase(null, null, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(null, null, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
             pluginManagerBase.getPluginByName('PluginGenerator').should.equal(PluginGenerator);
@@ -143,7 +143,7 @@ describe('Plugin Manager Base', function () {
                     blobClient: blobClient
                 };
 
-            pluginManagerBase = new PluginManagerBase(project, WebGME.core, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
             pluginManagerBase.executePlugin('MinimalWorkingExample', managerConfiguration, function (err, result) {
@@ -169,7 +169,7 @@ describe('Plugin Manager Base', function () {
                     blobClient: blobClient
                 };
 
-            pluginManagerBase = new PluginManagerBase(project, WebGME.core, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
             pluginManagerBase.executePlugin('MinimalWorkingExample', managerConfiguration, function (err, result) {
@@ -194,7 +194,7 @@ describe('Plugin Manager Base', function () {
                     blobClient: blobClient
                 };
 
-            pluginManagerBase = new PluginManagerBase(project, WebGME.core, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
             pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
@@ -219,7 +219,7 @@ describe('Plugin Manager Base', function () {
                     blobClient: blobClient
                 };
 
-            pluginManagerBase = new PluginManagerBase(project, WebGME.core, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
             pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
@@ -244,7 +244,7 @@ describe('Plugin Manager Base', function () {
                     blobClient: blobClient
                 };
 
-            pluginManagerBase = new PluginManagerBase(project, WebGME.core, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
             pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
@@ -269,7 +269,7 @@ describe('Plugin Manager Base', function () {
                     blobClient: blobClient
                 };
 
-            pluginManagerBase = new PluginManagerBase(project, WebGME.core, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
             pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
@@ -296,7 +296,7 @@ describe('Plugin Manager Base', function () {
                     blobClient: blobClient
                 };
 
-            pluginManagerBase = new PluginManagerBase(project, WebGME.core, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
             pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
@@ -323,7 +323,7 @@ describe('Plugin Manager Base', function () {
                     blobClient: blobClient
                 };
 
-            pluginManagerBase = new PluginManagerBase(project, WebGME.core, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
             pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
@@ -349,7 +349,7 @@ describe('Plugin Manager Base', function () {
                     blobClient: blobClient
                 };
 
-            pluginManagerBase = new PluginManagerBase(project, WebGME.core, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
             pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
@@ -375,7 +375,7 @@ describe('Plugin Manager Base', function () {
                     blobClient: blobClient
                 };
 
-            pluginManagerBase = new PluginManagerBase(project, WebGME.core, Logger, pluginManagerConfig, gmeConfig);
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
             (function () {

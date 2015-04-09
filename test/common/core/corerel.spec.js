@@ -8,7 +8,7 @@ var testFixture = require('../../_globals.js');
 describe('corerel', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = new testFixture.Storage({globConf: gmeConfig}),
+        storage = new testFixture.Storage({globConf: gmeConfig, logger: testFixture.logger.fork('corerel:storage')}),
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),
         TASYNC = testFixture.requirejs('common/core/tasync'),

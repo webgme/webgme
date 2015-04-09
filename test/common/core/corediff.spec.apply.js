@@ -19,7 +19,7 @@ describe('corediff apply', function () {
 
     var database = new testFixture.WebGME.serverUserStorage({
         globConf: gmeConfig,
-        log:  testFixture.Logger.createWithGmeConfig('corediff apply:storage', gmeConfig)
+        logger:  testFixture.logger.fork('corediff apply:storage')
     });
 
     before(function (done) {

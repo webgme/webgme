@@ -9,7 +9,7 @@ var testFixture = require('../../_globals.js');
 describe('meta core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = testFixture.Storage({globConf: gmeConfig}),
+        storage = testFixture.Storage({globConf: gmeConfig, logger: testFixture.logger.fork('meta core:storage')}),
         project,
         core,
         root,
