@@ -525,8 +525,8 @@ define( [
                 type: type,
                 projectName: projectName,
                 seedName: seedName,
-                branchName: branchName,
-                commitHash: commitHash
+                seedBranch: branchName,
+                seedCommit: commitHash
             },
             _loader = new LoaderCircles( {"containerElement": $( 'body' )} );
 
@@ -539,6 +539,7 @@ define( [
         _client.seedProjectAsync( parameters, function ( err ) {
             if ( err ) {
                 _logger.error('Cannot create seed project', err);
+                _loader.stop();
             } else {
                 _logger.debug('Created new project from seed');
                 _client.selectProjectAsync(projectName, function (err) {
@@ -547,9 +548,9 @@ define( [
                     } else {
                         _logger.debug('Selected project');
                     }
+                    _loader.stop();
                 });
             }
-            _loader.stop();
         } );
     };
 
