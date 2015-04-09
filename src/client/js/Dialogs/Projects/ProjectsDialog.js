@@ -90,9 +90,9 @@ define( [
         self._btnNewProjectImport.disable( true );
         self._dialog.modal( 'hide' );
         var d = new CreateFromSeedDialog(self._client, self._logger.fork('CreateFromSeedDialog'));
-        d.show( function ( seedType, seedName, seedBranchName ) {
+        d.show( function ( seedType, seedName, seedBranchName, seedCommitHash ) {
             if (seedType && seedName) {
-                self._createProjectFromSeed(val, seedType, seedName, seedBranchName);
+                self._createProjectFromSeed(val, seedType, seedName, seedBranchName, seedCommitHash);
             } else {
                 self._dialog.modal('show');
             }
@@ -518,14 +518,15 @@ define( [
     } );
   };
 
-    ProjectsDialog.prototype._createProjectFromSeed = function ( projectName, type, seedName, branchName ) {
+    ProjectsDialog.prototype._createProjectFromSeed = function ( projectName, type, seedName, branchName, commitHash ) {
         var _client = this._client,
             _logger = this._logger,
             parameters = {
                 type: type,
                 projectName: projectName,
                 seedName: seedName,
-                branchName: branchName
+                branchName: branchName,
+                commitHash: commitHash
             },
             _loader = new LoaderCircles( {"containerElement": $( 'body' )} );
 

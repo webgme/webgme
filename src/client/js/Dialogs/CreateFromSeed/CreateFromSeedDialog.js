@@ -17,6 +17,7 @@ define(['js/Loader/LoaderCircles', 'text!./templates/CreateFromSeed.html'], func
         this.seedProjectName = WebGMEGlobal.gmeConfig.seedProjects.defaultProject;
         this.seedProjectType = 'file';
         this.seedProjectBranch = 'master';
+        this.seedCommitHash = null;
 
         this._logger.debug('Create form seed ctor');
     };
@@ -49,8 +50,12 @@ define(['js/Loader/LoaderCircles', 'text!./templates/CreateFromSeed.html'], func
         this._optGroupFile = this._dialog.find('optgroup.file');
         this._optGroupDb = this._dialog.find('optgroup.db');
 
+        this._option.children().remove();
+
         this._optGroupFile.children().remove();
+        this._option.append(this._optGroupFile);
         this._optGroupDb.children().remove();
+        this._option.append(this._optGroupDb);
 
         this._loader = new LoaderCircles({containerElement: this._dialog});
 
@@ -63,10 +68,15 @@ define(['js/Loader/LoaderCircles', 'text!./templates/CreateFromSeed.html'], func
 
             if (self._fnCallback) {
                 self._logger.debug(self._option.val());
-                self.seedProjectType = self._option.val().substr(0, self._option.val().indexOf(':'));
-                self.seedProjectName = self._option.val().substr(self._option.val().indexOf(':') + 1);
+                self.seedProjectType = self._option.val().slice(0, self._option.val().indexOf(':'));
+                self.seedProjectName = self._option.val().slice(self._option.val().indexOf(':') + 1);
 
-                self._fnCallback(self.seedProjectType, self.seedProjectName, self.seedProjectBranch);
+                if (self.seedProjectType === 'db') {
+                    self.seedProjectName = self._option.val().slice(self._option.val().indexOf(':') + 1, self._option.val().indexOf('#'));
+                    self.seedCommitHash = self._option.val().slice(self._option.val().indexOf('#'));
+                }
+
+                self._fnCallback(self.seedProjectType, self.seedProjectName, self.seedProjectBranch, self.seedCommitHash);
             }
         });
 
@@ -92,16 +102,69 @@ define(['js/Loader/LoaderCircles', 'text!./templates/CreateFromSeed.html'], func
                     }
                 }
 
-                for (i = 0; i < data.db.length; i += 1) {
-                    self._optGroupDb.append($('<option>', {text: data.db[i] + ' (master)', value: 'db:' + data.db[i]}));
-                    if (self.seedProjectName === data.db[i]) {
-                        defaultOption =  'db:' + data.db[i];
-                    }
-                }
+                self._client.getFullProjectsInfoAsync(function (err, projectList) {
+                    var projectId,
+                        branchId,
+                        proojectGroup;
 
-                if (defaultOption) {
-                    self._option.val(defaultOption);
-                }
+                    if (err) {
+                        self.logger.error(err);
+                        return;
+                    }
+
+                    for (i = 0; i < data.db.length; i += 1) {
+                        projectId = data.db[i];
+                        if (projectList.hasOwnProperty(projectId)) {
+                            if (Object.keys(projectList[projectId].branches).length === 0) {
+
+                            } else if (Object.keys(projectList[projectId].branches).length === 1) {
+                                branchId = Object.keys(projectList[projectId].branches)[0];
+                                self._optGroupDb.append($('<option>', {
+                                        text: data.db[i] + ' (' + branchId + ' ' + projectList[projectId].branches[branchId].slice(0, 8) + ')',
+                                        value: 'db:' + data.db[i] + projectList[projectId].branches[branchId]
+                                    }
+                                ));
+                                if (self.seedProjectName === data.db[i]) {
+                                    defaultOption = 'db:' + data.db[i] + projectList[projectId].branches[branchId];
+                                }
+                            } else {
+                                // more than one branches
+                                proojectGroup = $('<optgroup>', {
+                                        label: data.db[i]
+                                    }
+                                );
+                                self._option.append(proojectGroup);
+
+                                for (branchId in projectList[projectId].branches) {
+                                    if ( projectList[projectId].branches.hasOwnProperty(branchId)) {
+                                        proojectGroup.append($('<option>', {
+                                                text: data.db[i] + ' (' + branchId + ' ' +
+                                                       projectList[projectId].branches[branchId].slice(0, 8) + ')',
+                                                value: 'db:' + data.db[i] + projectList[projectId].branches[branchId]
+                                            }
+                                        ));
+                                    }
+                                }
+
+                                if (projectList[projectId].branches.hasOwnProperty('master')) {
+                                    branchId = 'master';
+                                } else {
+                                    branchId = Object.keys(projectList[projectId].branches)[0];
+                                }
+
+                                if (self.seedProjectName === data.db[i]) {
+                                    defaultOption = 'db:' + data.db[i] + branchId;
+                                }
+                            }
+                        } else {
+                            self._logger.error('Project does not exist: ' + projectId);
+                        }
+                    }
+
+                    if (defaultOption) {
+                        self._option.val(defaultOption);
+                    }
+                });
             }
             self._loader.stop();
         });
