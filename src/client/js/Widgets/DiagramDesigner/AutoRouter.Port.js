@@ -174,8 +174,8 @@ define(['js/logger',
             dy = point.y - this.getCenter().y,
             pathAngle = Math.atan2(-dy, dx),
             k = 0,
-            maxX = this.rect.right,             // This is done to guarantee that the x,y will never round up to the corner of
-            maxY = this.rect.floor,             // the port. If it does, the next assert will fail.
+            maxX = this.rect.right,
+            maxY = this.rect.floor,
             minX = this.rect.left,
             minY = this.rect.ceil,
             resultPoint,
