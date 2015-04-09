@@ -9,8 +9,9 @@ main = function (argv, callback) {
     'use strict';
     var path = require('path'),
         gmeConfig = require(path.join(process.cwd(), 'config')),
-        webGme = require('../../webgme'),
+        webgme = require('../../webgme'),
         Command = require('commander').Command,
+        logger = webgme.Logger.create('gme:bin:import', gmeConfig.bin.log),
         program = new Command(),
         pluginConfigFilename,
         resolvedPluginConfigFilename,
@@ -24,7 +25,7 @@ main = function (argv, callback) {
 
     callback = callback || function () {};
 
-    webGme.addToRequireJsPaths(gmeConfig);
+    webgme.addToRequireJsPaths(gmeConfig);
 
     program.option('-p, --project <name><mandatory>', 'Name of the project.');
     program.option('-b, --branch <name>', 'Name of the branch.', 'master');
@@ -37,7 +38,7 @@ main = function (argv, callback) {
 
     if (!(program.pluginName && program.project)) {
         program.help();
-        console.log('A project and pluginName must be specified.');
+        logger.error('A project and pluginName must be specified.');
     }
 
     //getting program options
@@ -47,7 +48,7 @@ main = function (argv, callback) {
     activeNode = program.selectedObjID;
     pluginConfigFilename = program.pluginConfigPath;
 
-    console.log('Executing ' + pluginName + ' plugin');
+    logger.info('Executing ' + pluginName + ' plugin');
 
     if (pluginConfigFilename) {
         resolvedPluginConfigFilename = path.resolve(pluginConfigFilename);
@@ -63,13 +64,13 @@ main = function (argv, callback) {
     managerConfig.activeNode = activeNode;
     managerConfig.activeSelection = activeSelection;
 
-    webGme.runPlugin.main(null, gmeConfig, managerConfig, pluginConfigJson, function (err, result) {
+    webgme.runPlugin.main(null, gmeConfig, managerConfig, pluginConfigJson, function (err, result) {
         if (err) {
-            console.log('execution stopped:', err, result);
+            logger.error('execution stopped:', err, result);
             callback(err, result);
             process.exit(1);
         } else {
-            console.log('execution was successful:', err, result);
+            logger.info('execution was successful:', err, result);
             callback(err, result);
             process.exit(0);
         }

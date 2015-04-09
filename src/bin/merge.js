@@ -3,22 +3,22 @@
  * @author kecso / https://github.com/kecso
  */
 
-var HASH_REGEXP = new RegExp('^#[0-9a-zA-Z_]*$'),
-    BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$'),
-    Q = require('q'),
-    WebGME = require('../../webgme'),
+var Q = require('q'),
+    webgme = require('../../webgme'),
     FS = require('fs'),
     path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
-    Core = WebGME.core,
-    Storage = WebGME.serverUserStorage;
+    Core = webgme.core,
+    logger = webgme.Logger.create('gme:bin:merge', gmeConfig.bin.log),
+    Storage = webgme.serverUserStorage,
+    REGEXP = webgme.REGEXP;
+
 
 var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrCommit, autoMerge, callback) {
         'use strict';
         gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
 
-        var logger = WebGME.Logger.create('gme:bin:merge', gmeConfig.bin.log),
-            database = new Storage({ globConf: gmeConfig, logger: logger.fork('storage') }),
+        var database = new Storage({ globConf: gmeConfig, logger: logger.fork('storage') }),
             project,
             core,
             myCommitHash,
@@ -167,7 +167,7 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
                                             }
                                             result.finalCommitHash = newCommitHash;
 
-                                            if (BRANCH_REGEXP.test(targetBranchOrCommit)) {
+                                            if (REGEXP.BRANCH.test(targetBranchOrCommit)) {
                                                 //we updates the branch as well
                                                 project.setBranchHash(targetBranchOrCommit, theirCommitHash, newCommitHash, function (err) {
                                                     if (err) {
@@ -210,14 +210,14 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
                         }
                     },
                     getCommitHash = function (isMine, inputIdentifier, next) {
-                        if (HASH_REGEXP.test(inputIdentifier)) {
+                        if (REGEXP.HASH.test(inputIdentifier)) {
                             if (isMine) {
                                 myCommitHash = inputIdentifier;
                             } else {
                                 theirCommitHash = inputIdentifier;
                             }
                             next();
-                        } else if (BRANCH_REGEXP.test(inputIdentifier)) {
+                        } else if (REGEXP.BRANCH.test(inputIdentifier)) {
                             project.getBranchNames(function (err, names) {
                                 if (err) {
                                     next(err);
@@ -257,7 +257,7 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
             program = new Command(),
             mainDeferred = Q.defer();
 
-        console.log(argv);
+        logger.debug(argv);
         program
             .version('0.1.0')
             .option('-m, --mongo-database-uri [uri]', 'URI to connect to mongoDB where the project is stored')
@@ -270,7 +270,7 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
 
         //check necessary arguments
         if (!program.mongoDatabaseUri && !gmeConfig.mongo.uri) {
-            console.log('there is no preconfigured mongoDb commection so the mongo-database-uri parameter is mandatory');
+            logger.error('there is no preconfigured mongoDb commection so the mongo-database-uri parameter is mandatory');
             program.outputHelp();
             mainDeferred.reject(new SyntaxError('invalid mongo database connection parameter'));
             return;
@@ -284,7 +284,7 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
             program.outputHelp();
             mainDeferred.reject(new SyntaxError('my branch/commit parameter is mandatory!'));
             return mainDeferred.promise;
-        } else if (!(HASH_REGEXP.test(program.mine) || BRANCH_REGEXP.test(program.mine))) {
+        } else if (!(REGEXP.HASH.test(program.mine) || REGEXP.BRANCH.test(program.mine))) {
             program.outputHelp();
             mainDeferred.reject(new SyntaxError('invalid \'mine\' parameter!'));
             return mainDeferred.promise;
@@ -293,48 +293,57 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
             program.outputHelp();
             mainDeferred.reject(new SyntaxError('their branch/commit parameter is mandatory!'));
             return mainDeferred.promise;
-        } else if (!(HASH_REGEXP.test(program.theirs) || BRANCH_REGEXP.test(program.theirs))) {
+        } else if (!(REGEXP.HASH.test(program.theirs) || REGEXP.BRANCH.test(program.theirs))) {
             program.outputHelp();
             mainDeferred.reject(new SyntaxError('invalid \'theirs\' parameter!'));
             return mainDeferred.promise;
         }
 
-        merge(program.mongoDatabaseUri, program.projectIdentifier, program.mine, program.theirs, program.autoMerge, function (err, result) {
-            if (err) {
-                console.warn('merging failed: ', err);
-            }
-            //it is possible that we have enough stuff to still print some results to the screen or to some file
-            if (result.updatedBranch) {
-                console.log('branch [' + result.updatedBranch + '] was successfully updated with the merged result');
-            } else if (result.finalCommitHash) {
-                console.log('merge was successfully saved to commit [' + result.finalCommitHash + ']');
-            } else if (result.baseCommitHash && result.diff.mine && result.diff.theirs) {
-                console.log('to finish merge you have to apply your changes to commit[' + result.baseCommitHash + ']');
-            }
+        merge(program.mongoDatabaseUri, program.projectIdentifier, program.mine, program.theirs, program.autoMerge,
+            function (err, result) {
+                if (err) {
+                    logger.warn('merging failed: ', err);
+                }
+                //it is possible that we have enough stuff to still print some results to the screen or to some file
+                if (result.updatedBranch) {
+                    logger.info('branch [' + result.updatedBranch +
+                    '] was successfully updated with the merged result');
+                } else if (result.finalCommitHash) {
+                    logger.info('merge was successfully saved to commit [' +
+                    result.finalCommitHash + ']');
+                } else if (result.baseCommitHash && result.diff.mine && result.diff.theirs) {
+                    logger.info('to finish merge you have to apply your changes to commit[' +
+                    result.baseCommitHash + ']');
+                }
 
-            if (program.pathPrefix) {
-                if (result.diff.mine && result.diff.theirs) {
-                    FS.writeFileSync(program.pathPrefix + '.mine', JSON.stringify(result.diff.mine, null, 2));
-                    FS.writeFileSync(program.pathPrefix + '.theirs', JSON.stringify(result.diff.theirs, null, 2));
-                    if (result.conflict) {
-                        FS.writeFileSync(program.pathPrefix + '.conflict', JSON.stringify(result.conflict, null, 2));
+                if (program.pathPrefix) {
+                    if (result.diff.mine && result.diff.theirs) {
+                        FS.writeFileSync(program.pathPrefix + '.mine',
+                            JSON.stringify(result.diff.mine, null, 2));
+                        FS.writeFileSync(program.pathPrefix + '.theirs',
+                            JSON.stringify(result.diff.theirs, null, 2));
+                        if (result.conflict) {
+                            FS.writeFileSync(program.pathPrefix + '.conflict',
+                                JSON.stringify(result.conflict, null, 2));
+                        }
+                    }
+                } else if (!result.updatedBranch && !result.finalCommitHash) {
+                    // If there were no prefix given we put anything to console only if the merge failed
+                    // at some point or was not even tried.
+                    if (result.diff.mine && result.diff.theirs) {
+                        logger.debug('diff base->mine:');
+                        logger.debug(JSON.stringify(result.diff.mine, null, 2));
+                        logger.debug('diff base->theirs:');
+                        logger.debug(JSON.stringify(result.diff.theirs, null, 2));
+                        if (result.conflict) {
+                            logger.warn('conflict object:');
+                            logger.warn(JSON.stringify(result.conflict, null, 2));
+                        }
                     }
                 }
-            } else if (!result.updatedBranch && !result.finalCommitHash) {
-                //if there were no prefix given we put anything to console only if the merge failed at some point or was not even tried
-                if (result.diff.mine && result.diff.theirs) {
-                    console.log('diff base->mine:');
-                    console.log(JSON.stringify(result.diff.mine, null, 2));
-                    console.log('diff base->theirs:');
-                    console.log(JSON.stringify(result.diff.theirs, null, 2));
-                    if (result.conflict) {
-                        console.log('conflict object:');
-                        console.log(JSON.stringify(result.conflict, null, 2));
-                    }
-                }
+                mainDeferred.resolve();
             }
-            mainDeferred.resolve();
-        });
+        );
         return mainDeferred.promise;
     };
 
@@ -346,10 +355,10 @@ if (require.main === module) {
     main(process.argv)
         .then(function () {
             'use strict';
-            console.log('Done');
+            logger.info('Done');
         })
         .catch(function (err) {
             'use strict';
-            console.error('ERROR : ' + err);
+            logger.error('ERROR : ' + err);
         });
 }

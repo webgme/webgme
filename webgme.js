@@ -23,7 +23,6 @@ requirejs.config({
 });
 
 function addToRequireJsPaths(gmeConfig) {
-    'use strict';
 
     var isGoodExtraAsset = function (name, filePath) {
             try {
@@ -117,5 +116,6 @@ module.exports = {
     serializer: requirejs('common/core/users/serialization'),
     canon: requirejs('common/util/canon'),
     openContext: requirejs('common/util/opencontext'),
-    Logger: require('./src/server/logger')
+    Logger: require('./src/server/logger'),
+    REGEXP: requirejs('common/regexp')
 };

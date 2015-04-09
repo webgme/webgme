@@ -8,23 +8,22 @@
 
 var webgme = require('../../webgme'),
     program = require('commander'),
-    BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$'),
     FS = require('fs'),
     path = require('path'),
     openContext,
     Serialization,
-    jsonProject;
+    jsonProject,
+    gmeConfig = require(path.join(process.cwd(), 'config')),
+    logger = webgme.Logger.create('gme:bin:import', gmeConfig.bin.log),
+    REGEXP = webgme.REGEXP,
+    openContext = webgme.openContext,
+    Serialization = webgme.serializer;
 
 
-openContext = webgme.openContext;
-Serialization = webgme.serializer;
-
-
-var importProject = function (Storage, gmeConfig, projectId, jsonProject, branchName, overwrite, callback) {
+var importProject = function (Storage, _gmeConfig, projectId, jsonProject, branchName, overwrite, callback) {
     var storage,
         project,
         contextParams,
-        logger = webgme.Logger.create('gme:bin:apply', gmeConfig.bin.log),
         closeContext = function (error, data) {
             try {
                 project.closeProject(function () {
@@ -40,7 +39,7 @@ var importProject = function (Storage, gmeConfig, projectId, jsonProject, branch
         };
 
 
-    storage = new Storage({globConf: gmeConfig, logger: logger.fork('storage')});
+    storage = new Storage({globConf: _gmeConfig, logger: logger.fork('storage')});
     branchName = branchName || 'master';
 
     contextParams = {
@@ -50,7 +49,7 @@ var importProject = function (Storage, gmeConfig, projectId, jsonProject, branch
         branchName: branchName
     };
 
-    openContext(storage, gmeConfig, contextParams, function (err, context) {
+    openContext(storage, _gmeConfig, contextParams, function (err, context) {
         if (err) {
             callback(err);
             return;
@@ -90,8 +89,6 @@ var importProject = function (Storage, gmeConfig, projectId, jsonProject, branch
 module.exports.import = importProject;
 
 if (require.main === module) {
-    var gmeConfig = require(path.join(process.cwd(), 'config'));
-
     program
         .version('0.1.0')
         .usage('<project-file> [options]')
@@ -103,16 +100,16 @@ if (require.main === module) {
 //check necessary arguments
 
     if (!program.projectIdentifier) {
-        console.error('project identifier is a mandatory parameter!');
+        logger.error('project identifier is a mandatory parameter!');
         program.help();
     }
-    if (program.branch && !BRANCH_REGEXP.test(program.branch)) {
-        console.error(program.branch + ' is not a valid branch name!');
+    if (program.branch && !REGEXP.BRANCH.test(program.branch)) {
+        logger.error(program.branch + ' is not a valid branch name!');
         program.help();
     }
 
     if (!program.branch) {
-        console.warn('branch is not given, master will be used');
+        logger.warn('branch is not given, master will be used');
     }
 
     gmeConfig.mongo.uri = program.mongoDatabaseUri || gmeConfig.mongo.uri;
@@ -120,7 +117,7 @@ if (require.main === module) {
     try {
         jsonProject = JSON.parse(FS.readFileSync(program.args[0], 'utf-8'));
     } catch (err) {
-        console.error('unable to load project file: ', err);
+        logger.error('unable to load project file: ', err);
         process.exit(1);
     }
 
@@ -131,10 +128,10 @@ if (require.main === module) {
         program.branch, program.overwrite,
         function (err, data) {
             if (err) {
-                console.error('error during project import: ', err);
+                logger.error('error during project import: ', err);
                 process.exit(0);
             } else {
-                console.warn('branch "' + program.branch + '" of project "' + program.projectIdentifier +
+                logger.info('branch "' + program.branch + '" of project "' + program.projectIdentifier +
                     '" have been successfully imported at commitHash: ' + data.commitHash + '.');
                 process.exit(0);
             }

@@ -5,20 +5,19 @@
 
 var webgme = require('../../webgme'),
     program = require('commander'),
-    HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$"),
-    BRANCH_REGEXP = new RegExp("^[0-9a-zA-Z_]*$"),
     FS = require('fs'),
     openContext,
     Storage,
     path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
-    logger = webgme.Logger.create('gme:bin:apply', gmeConfig.bin.log, false);
+    logger = webgme.Logger.create('gme:bin:diff', gmeConfig.bin.log, false),
+    REGEXP = webgme.REGEXP,
+    openContext = webgme.openContext,
+    Storage = webgme.serverUserStorage;
 
 
 webgme.addToRequireJsPaths(gmeConfig);
 
-openContext = webgme.openContext;
-Storage = webgme.serverUserStorage;
 
 var generateDiff = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrCommit, callback) {
     'use strict';
@@ -49,9 +48,9 @@ var generateDiff = function (mongoUri, projectId, sourceBranchOrCommit, targetBr
                     core.loadRoot(cObj.root, next);
                 });
             };
-            if (HASH_REGEXP.test(branchOrCommit)) {
+            if (REGEXP.HASH.test(branchOrCommit)) {
                 getFromCommitHash(branchOrCommit);
-            } else if (BRANCH_REGEXP.test(branchOrCommit)) {
+            } else if (REGEXP.BRANCH.test(branchOrCommit)) {
                 project.getBranchHash(branchOrCommit, '#hack', function (err, commitHash) {
                     if (err) {
                         next(err);

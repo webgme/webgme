@@ -5,22 +5,20 @@
 
 var webgme = require('../../webgme'),
     program = require('commander'),
-    BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$'),
-    HASH_REGEXP = new RegExp('^#[0-9a-zA-Z_]*$'),
     FS = require('fs'),
     openContext,
     Storage,
     Serialization,
     path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
-    logger = webgme.Logger.create('gme:bin:apply', gmeConfig.bin.log, false);
+    logger = webgme.Logger.create('gme:bin:export', gmeConfig.bin.log, false),
+    REGEXP = webgme.REGEXP,
+    openContext = webgme.openContext,
+    Storage = webgme.serverUserStorage,
+    Serialization = webgme.serializer;
 
 
 webgme.addToRequireJsPaths(gmeConfig);
-
-openContext = webgme.openContext;
-Storage = webgme.serverUserStorage;
-Serialization = webgme.serializer;
 
 var exportProject = function (mongoUri, projectId, branchOrCommit, callback) {
     'use strict';
@@ -80,7 +78,7 @@ if (require.main === module) {
         console.warn('source is a mandatory parameter!');
         program.help();
     }
-    if (!BRANCH_REGEXP.test(program.source) && !HASH_REGEXP.test(program.source)) {
+    if (!REGEXP.BRANCH.test(program.source) && !REGEXP.HASH.test(program.source)) {
         console.warn('source format is invalid!');
         program.help();
     }
