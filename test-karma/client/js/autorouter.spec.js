@@ -46,6 +46,37 @@ describe('AutoRouter', function () {
 
     describe('basic tests', function () {
 
+        it('issue/306 custom path points should not be rounded', function () {
+            var box1 = utils.addBox({x: 100, y: 100}),
+                box2 = utils.addBox({x: 900, y: 900}),
+                srcId = Object.keys(box1.ports)[0],
+                dstId = Object.keys(box2.ports)[0],
+                path;
+
+            router.addPath({src: box1.ports[srcId], dst: box2.ports[dstId]});
+            path = router.graph.paths[0].id;
+
+            // Set some points!
+            var points = [[894.5, 305.5]];
+            router.setPathCustomPoints({
+                path: path,
+                points: points
+            });
+
+            router.routeSync();
+
+            // Check the points
+            var finalPoints = router.getPathPoints(path);
+            assert(finalPoints.length === points.length + 2, 'Path missing points: ' + finalPoints);
+            for (var i = 1; i < finalPoints.length - 1; i++) {
+                for (var j = 0; j < 2; j++) {
+                    assert(points[i - 1][j] === finalPoints[i][j],
+                        'Points do not match. Expected ' + points[i - 1][j] +
+                        ' but found ' + finalPoints[i][j]);
+                }
+            }
+        });
+
         it('should create custom paths', function () {
             var box1 = utils.addBox({x: 100, y: 100}),
                 box2 = utils.addBox({x: 900, y: 900}),

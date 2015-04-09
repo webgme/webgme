@@ -17,8 +17,8 @@ define(['./AutoRouter.Size'], function (ArSize) {
             x = x.x;
         }
 
-        this.x = Math.round(x);
-        this.y = Math.round(y);
+        this.x = x;
+        this.y = y;
     };
 
     /**
@@ -46,9 +46,6 @@ define(['./AutoRouter.Size'], function (ArSize) {
             this.x += otherObject.x;
             this.y += otherObject.y;
         }
-
-        this.x = Math.round(this.x);
-        this.y = Math.round(this.y);
     };
 
     ArPoint.prototype.subtract = function (otherObject){ //equivalent to +=
