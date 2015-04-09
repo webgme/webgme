@@ -26,7 +26,7 @@ function createExpressBlob(__app, baseUrl, options) {
     ASSERT(typeof options.logger !== 'undefined', 'logger must be given.');
 
     ensureAuthenticated = options.ensureAuthenticated;
-    logger = options.logger;
+    logger = options.logger.fork('middleware:BlobServer');
     blobBackend = new BlobFSBackend(options.gmeConfig);
 
     __app.get(baseUrl + '/metadata', ensureAuthenticated, function (req, res) {
@@ -60,7 +60,7 @@ function createExpressBlob(__app, baseUrl, options) {
     });
 
     __app.post(baseUrl + '/createFile/:filename', ensureAuthenticated, function (req, res) {
-        logger.info('file creation request: user[' + req.session.udmId + '], filename[' + req.params.filename + ']');
+        logger.debug('file creation request: user[' + req.session.udmId + '], filename[' + req.params.filename + ']');
         var filename = 'not_defined.txt';
 
         if (req.params.filename !== null && req.params.filename !== '') {
@@ -70,7 +70,7 @@ function createExpressBlob(__app, baseUrl, options) {
         // regular file
         // TODO: add tags and isPublic flag
         blobBackend.putFile(filename, req, function (err, hash) {
-            logger.info('file creation request finished: user[' + req.session.udmId + '], filename[' +
+            logger.debug('file creation request finished: user[' + req.session.udmId + '], filename[' +
                 req.params.filename + '], error[' + err + '], hash:[' + hash + ']');
             if (err) {
                 // FIXME: make sure we set the status code correctly like 404 etc.

@@ -1,26 +1,28 @@
 /*globals requireJS*/
 /*jshint node:true*/
 
+'use strict';
+
 var Core = requireJS('common/core/core'),
     ToJson = requireJS('common/core/users/tojson'),
     Dump = requireJS('common/core/users/dump'),
     URL = requireJS('common/util/url'),
     Serialization = requireJS('common/core/users/serialization'),
 
-    Storage = require('../../storage/serveruserstorage'),
-    Logger = require('../../logger');
+    Storage = require('../../storage/serveruserstorage');
 
 function Rest(_parameters) {
     var gmeConfig = _parameters.globConf,
         workerManager = _parameters.workerManager,
-        tokenToUserId = _parameters.tokenToUserId;
+        tokenToUserId = _parameters.tokenToUserId,
+        logger = _parameters.logger.fork('middleware:rest');
     _parameters.baseUrl = _parameters.baseUrl || "http://localhost/rest"; // FIXME: This should come from config
     _parameters.authorization = /*_parameters.authorization || */function (token, projectname, callback) {
         callback(null, true);
     }; //TODO temporary removal of second authorization check
     var _storage = new Storage({
-            'globConf': gmeConfig,
-            'logger': Logger.create('gme:common:util:newrest:storage', gmeConfig.server.log)
+            globConf: gmeConfig,
+            logger: logger.fork('storage')
         }),
         _baseUrl = _parameters.baseUrl,
         _initialized = false,

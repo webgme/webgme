@@ -23,9 +23,10 @@ function createExpressRest(__app, baseUrl, options) {
             baseUrl: '', // FIXME: this should take the baseUrl = '/rest'
             authorization: options.gmeAuth.tokenAuthorization, //TODO: why not keep the same name here?
             tokenToUserId: options.gmeAuth.tokenAuth, //TODO: why not keep the same name here?
-            workerManager: options.workerManager
+            workerManager: options.workerManager,
+            logger: options.logger
         }),
-        logger = options.logger.fork('rest'),
+        logger = options.logger.fork('middleware:RestServer'),
         ensureAuthenticated = options.ensureAuthenticated;
 
     __app.get(baseUrl + '/:command', ensureAuthenticated, function (req, res) {

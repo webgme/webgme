@@ -473,7 +473,7 @@ function StandAloneServer(gmeConfig) {
             if (restComponent) {
                 logger.debug('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
                 ' - /rest/external/' + keys[i]);
-                __app.use('/rest/external/' + keys[i], restComponent(gmeConfig, ensureAuthenticated));
+                __app.use('/rest/external/' + keys[i], restComponent(gmeConfig, ensureAuthenticated, logger));
             } else {
                 throw new Error('Loading ' + gmeConfig.rest.components[keys[i]] + ' failed.');
             }
