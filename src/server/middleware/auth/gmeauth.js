@@ -13,7 +13,7 @@ var Mongodb = require('mongodb'),
 
     Logger = require('../../logger');
 
-function GMEAuth(session, gmeConfig) {
+function GMEAuth(session, gmeConfig, callback) {
     // TODO: make sure that gmeConfig passes all config
     var logger = Logger.create('gme:server:auth:gmeauth', gmeConfig.server.log),
         _collectionName = '_users',
@@ -125,7 +125,8 @@ function GMEAuth(session, gmeConfig) {
             .catch(function (err) {
                 logger.error(err);
                 collectionDeferred.reject(err);
-            });
+            })
+            .nodeify(callback);
     })();
 
     function unload(callback) {
@@ -147,7 +148,8 @@ function GMEAuth(session, gmeConfig) {
     }
 
     function authenticateUserById(userId, password, type, req, res, next) {
-        var query = {};
+        var query = {},
+            returnUrl = req.__gmeAuthFailUrl__ || '/';
         if (userId.indexOf('@') > 0) {
             query.email = userId;
         } else {
@@ -164,17 +166,21 @@ function GMEAuth(session, gmeConfig) {
                     req.session.userType = 'GME';
                     next(null);
                 } else {
-                    return Q.ninvoke(bcrypt, 'compare', password, userData.passwordHash)
-                        .then(function (hash_res) {
-                            if (!hash_res) {
-                                return Q.reject('incorrect password');
-                            } else {
-                                req.session.udmId = userData._id;
-                                req.session.authenticated = true;
-                                req.session.userType = 'GME';
-                                next(null);
-                            }
-                        });
+                    if (!password) {
+                        return Q.reject('no password given');
+                    } else {
+                        return Q.ninvoke(bcrypt, 'compare', password, userData.passwordHash)
+                            .then(function (hash_res) {
+                                if (!hash_res) {
+                                    return Q.reject('incorrect password');
+                                } else {
+                                    req.session.udmId = userData._id;
+                                    req.session.authenticated = true;
+                                    req.session.userType = 'GME';
+                                    next(null);
+                                }
+                            });
+                    }
                 }
             })
             .catch(function (err) {

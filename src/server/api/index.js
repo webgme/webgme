@@ -44,7 +44,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         }
 
         htmlDoc = html;
-        logger.info('html doc is ready: ' + apiDocumentationMountPoint);
+        logger.debug('html doc is ready: ' + apiDocumentationMountPoint);
     });
 
     // attach api documentation to the specified path. N.B: this is NOT on the router, it is on the app.

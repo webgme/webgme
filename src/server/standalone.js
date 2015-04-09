@@ -101,6 +101,8 @@ function StandAloneServer(gmeConfig) {
 
         sockets = [];
 
+    self.id = Math.random().toString(36).slice(2, 11);
+
     if (mainLogger) {
 
     } else {
@@ -144,7 +146,7 @@ function StandAloneServer(gmeConfig) {
     }
 
     //public functions
-    function start(callback) {
+    function start (callback) {
         var serverDeferred = Q.defer(),
             storageDeferred = Q.defer();
 
@@ -189,8 +191,10 @@ function StandAloneServer(gmeConfig) {
             logger.debug('socket connected (added to list) ' + socketId);
 
             socket.on('close', function () {
-                logger.debug('socket closed (removed from list) ' + socketId);
-                delete sockets[socketId];
+                if (sockets.hasOwnProperty(socketId)) {
+                    logger.debug('socket closed (removed from list) ' + socketId);
+                    delete sockets[socketId];
+                }
             });
         });
 
@@ -224,7 +228,8 @@ function StandAloneServer(gmeConfig) {
             }
         });
 
-        Q.all([serverDeferred.promise, storageDeferred.promise])
+        // FIXME: we need to connect with gmeAUTH again!
+        Q.all([serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise])
             .nodeify(function (err) {
                 self.isRunning = true;
                 callback(err);
@@ -246,27 +251,33 @@ function StandAloneServer(gmeConfig) {
             // close storage first
             // FIXME: is this call synchronous?
 
-            __storage.close(function (err1) {
+            __storage.close(function (err) {
                 var numDestroyedSockets = 0;
                 //kill all remaining workers
                 __workerManager.stop();
-                // request server close - do not accept any new connections.
-                // first we have to request the close then we can destroy the sockets.
-                __httpServer.close(function (err2) {
-                    logger.info('http server closed');
-                    callback(err1 || err2 || null);
-                });
 
-                // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
-                for (key in sockets) {
-                    if (sockets.hasOwnProperty(key)) {
-                        sockets[key].destroy();
-                        logger.debug('destroyed open socket ' + key);
-                        numDestroyedSockets += 1;
+                __gmeAuth.unload(function (err1) {
+                    logger.debug('gmeAuth unloaded');
+                    // request server close - do not accept any new connections.
+                    // first we have to request the close then we can destroy the sockets.
+                    __httpServer.close(function (err2) {
+                        logger.info('http server closed');
+                        logger.debug('http server closed');
+                        callback(err || err1 || err2 || null);
+                    });
+
+                    // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
+                    for (key in sockets) {
+                        if (sockets.hasOwnProperty(key)) {
+                            sockets[key].destroy();
+                            delete sockets[key];
+                            logger.debug('destroyed open socket ' + key);
+                            numDestroyedSockets += 1;
+                        }
                     }
-                }
 
-                logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
+                    logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
+                });
             });
         } catch (e) {
             //ignore errors
@@ -523,6 +534,7 @@ function StandAloneServer(gmeConfig) {
         __storage = null,
         __storageOptions = {},
         __gmeAuth = null,
+        gmeAuthDeferred = Q.defer(),
         __secureSiteInfo = {},
         __app = null,
         __sessionStore,
@@ -562,7 +574,16 @@ function StandAloneServer(gmeConfig) {
 
     logger.debug("initializing authentication modules");
     //TODO: do we need to create this even though authentication is disabled?
-    __gmeAuth = new GMEAUTH(__sessionStore, gmeConfig);
+    // FIXME: we need to connect with gmeAUTH again! start/stop/start/stop
+    __gmeAuth = new GMEAUTH(__sessionStore, gmeConfig, function (err) {
+        if (err) {
+            logger.error(err);
+            gmeAuthDeferred.reject(err);
+        } else {
+            logger.debug('gmeAuth is ready');
+            gmeAuthDeferred.resolve();
+        }
+    });
 
     logger.debug("initializing passport module for user management");
     //TODO in the long run this also should move to some database
