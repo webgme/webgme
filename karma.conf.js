@@ -16,13 +16,13 @@ webgme.addToRequireJsPaths(gmeConfig);
 (function initializeServer() {
     'use strict';
     var server = webgme.standaloneServer(gmeConfig),
-        importProject = function (projectName, filePath) {
+        importProject = function (projectName, filePath, branch) {
             importCli.import(
                 webgme.serverUserStorage,
                 gmeConfig,
                 projectName,
                 JSON.parse(testFixture.fs.readFileSync(filePath, 'utf8')),
-                'master',
+                branch || 'master',
                 true,
                 function (err) {
                     error = error || err;
@@ -39,7 +39,15 @@ webgme.addToRequireJsPaths(gmeConfig);
             {name: 'nodeManipulationProject', path: './test-karma/client/js/client/clientNodeTestProject.json'},
             {name: 'RESTLikeTests', path: './test-karma/client/js/client/clientNodeTestProject.json'},
             {name: 'undoRedoTests', path: './test-karma/client/js/client/clientNodeTestProject.json'},
-            {name: 'territoryProject', path: './test-karma/client/js/client/clientNodeTestProject.json'}
+            {name: 'territoryProject', path: './test-karma/client/js/client/clientNodeTestProject.json'},
+            {name: 'projectSeedSingleMaster', path: './test-karma/client/js/client/clientNodeTestProject.json'},
+            {
+                name: 'projectSeedSingleNonMaster',
+                path: './test-karma/client/js/client/clientNodeTestProject.json',
+                branch: 'other'
+            },
+            {name: 'projectSeedMultiple', path: './test-karma/client/js/client/clientNodeTestProject.json'},
+            {name: 'projectSeedMultiple', path: './test-karma/client/js/client/metaTestProject.json', branch: 'other'},
         ],
         needed = projectsToImport.length,
         i,
@@ -56,7 +64,7 @@ webgme.addToRequireJsPaths(gmeConfig);
         };
 
     for (i = 0; i < projectsToImport.length; i++) {
-        importProject(projectsToImport[i].name, projectsToImport[i].path);
+        importProject(projectsToImport[i].name, projectsToImport[i].path, projectsToImport[i].branch);
     }
 
 }());
@@ -79,6 +87,7 @@ module.exports = function (config) {
         // list of files / patterns to load in the browser
         files: [
             {pattern: 'src/**/*.js', included: false},
+            {pattern: 'seeds/*.json', included: false}, //seeds
             {pattern: 'test-karma/**/*.spec.js', included: false},
             {pattern: 'test-karma/**/*.inc.js', included: false}, //test include scripts
             {pattern: 'test-karma/**/*.json', included: false}, //test assets
