@@ -43,6 +43,36 @@ describe('Browser BlobClient', function () {
         });
     });
 
+    it('should create huge json', function (done) {
+        var bc = new BlobClient(),
+            jsonObject = {},
+            i,j;
+
+        for(i=0;i<100;i++){
+            jsonObject['element_'+i] = [];
+            for(j=0;j<1000;j++){
+                jsonObject['element_'+i].push(j);
+            }
+        }
+        bc.putFile("huge.json", str2ab(JSON.stringify(jsonObject)), function(err, hash) {
+            if (err)
+                done(err);
+            bc.getMetadata(hash, function(err, metadata) {
+                if (err)
+                    done(err);
+                expect(metadata.mime).to.equal('application/json');
+                bc.getObject(hash, function(err, res) {
+                    if (err)
+                        done(err);
+                    expect(typeof res).to.equal('object');
+                    expect(typeof res.prototype).to.equal('undefined');
+                    expect(res).to.deep.equal(jsonObject);
+                    done();
+                });
+            });
+        });
+    });
+
     function createZip(data, done) {
         var bc = new BlobClient();
         bc.putFile("testzip.zip", data, function(err, hash) {

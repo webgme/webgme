@@ -258,7 +258,12 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
                     var response = req.xhr.response; // response is an arraybuffer
                     if (contentType === 'application/json') {
                         var utf8ArrayToString = function (uintArray) {
-                            return decodeURIComponent(escape(String.fromCharCode.apply(null, uintArray)));
+                            var inputString = '',
+                                i;
+                            for (i = 0; i < uintArray.byteLength; i++) {
+                                inputString += String.fromCharCode(uintArray[i]);
+                            }
+                            return decodeURIComponent(escape(inputString));
                         };
                         response = JSON.parse(utf8ArrayToString(new Uint8Array(response)));
                     }
