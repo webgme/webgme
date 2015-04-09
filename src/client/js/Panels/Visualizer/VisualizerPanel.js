@@ -214,6 +214,7 @@ function (Logger,
             }
         });
 
+        this.updateContainerSize();
         if (self._validVisualizers) {
             setTimeout(function () {
                 self._setActiveVisualizer(self._validVisualizers[0], ul);

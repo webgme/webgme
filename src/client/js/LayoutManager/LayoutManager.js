@@ -65,6 +65,7 @@ define(['js/logger',
             panel = params.panel,
             container = params.container,
             rPath = PANEL_PATH + panel,
+            containerSizeUpdateFn,
             fn;
 
         this._logger.debug('LayoutManager loadPanel with name: "' + name + '", container: "' + container + '"');
@@ -84,8 +85,9 @@ define(['js/logger',
                         self._logger.debug("Panel '" + panel + "' has been downloaded...");
                         self._panels[panel] = new Panel(self, params.params);
 
-                        self._currentLayout.addToContainer(self._panels[panel], container);
+                        containerSizeUpdateFn = self._currentLayout.addToContainer(self._panels[panel], container);
                         self._panels[panel].afterAppend();
+                        self._panels[panel].setContainerUpdateFn(self._currentLayout, containerSizeUpdateFn);
                     } else {
                         self._logger.error("Panel '" + panel + "' has been downloaded...BUT UNDEFINED!!!");
                     }
