@@ -18,8 +18,10 @@ function createAPI(app, mountPath, middlewareOpts) {
     var express = require('express'),
         router = express.Router(),
 
+        Q = require('q'),
         aglio = require('aglio'),// used to generate API docs from blue print Readme.md
         htmlDoc,
+        htmlDocDeferred = Q.defer(),
         fs = require('fs'),
         blueprint = fs.readFileSync(__dirname + '/Readme.md', {encoding: 'utf8'}),
         template = 'default',
@@ -33,19 +35,26 @@ function createAPI(app, mountPath, middlewareOpts) {
         versionedAPIPath = mountPath + '/v1',
         latestAPIPath = mountPath;
 
-    // generate api documentation based on blueprint when server starts
-    aglio.render(blueprint, template, function (err, html, warnings) {
-        if (err) {
-            logger.error(err);
-            return;
-        }
-        if (warnings && warnings.length) {
-            logger.warn('aglio', {metadata: warnings});
-        }
+    if (global.TESTING) {
+        htmlDocDeferred.resolve();
+    } else {
+        // FIXME: this does not work with tests well.
+        // generate api documentation based on blueprint when server starts
+        aglio.render(blueprint, template, function (err, html, warnings) {
+            if (err) {
+                logger.error(err);
+                htmlDocDeferred.reject(err);
+                return;
+            }
+            if (warnings && warnings.length) {
+                logger.warn('aglio', {metadata: warnings});
+            }
 
-        htmlDoc = html;
-        logger.debug('html doc is ready: ' + apiDocumentationMountPoint);
-    });
+            htmlDoc = html;
+            logger.debug('html doc is ready: ' + apiDocumentationMountPoint);
+            htmlDocDeferred.resolve();
+        });
+    }
 
     // attach api documentation to the specified path. N.B: this is NOT on the router, it is on the app.
     app.get(apiDocumentationMountPoint, function (req, res) {
@@ -524,6 +533,8 @@ function createAPI(app, mountPath, middlewareOpts) {
     logger.debug('Latest api path: ' + latestAPIPath);
     app.use(latestAPIPath, router);
 
+
+    return Q.all([htmlDocDeferred.promise]);
 }
 
 

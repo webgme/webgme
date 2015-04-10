@@ -237,7 +237,7 @@ function StandAloneServer(gmeConfig) {
             }
         });
 
-        Q.all([serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise])
+        Q.all([serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise, apiReady])
             .nodeify(function (err) {
                 self.isRunning = true;
                 callback(err);
@@ -547,6 +547,7 @@ function StandAloneServer(gmeConfig) {
         __storageOptions = {},
         __gmeAuth = null,
         gmeAuthDeferred = Q.defer(),
+        apiReady,
         __secureSiteInfo = {},
         __app = null,
         __sessionStore,
@@ -879,7 +880,7 @@ function StandAloneServer(gmeConfig) {
 
     logger.debug('creating API related routing rules');
 
-    api.createAPI(__app, '/api', middlewareOpts);
+    apiReady = api.createAPI(__app, '/api', middlewareOpts);
 
 
     logger.debug("creating server-worker related routing rules");

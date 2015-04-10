@@ -47,26 +47,29 @@ function ServerWorkerManager(_parameters) {
 
     function freeWorker(workerPid) {
         if (_myWorkers[workerPid]) {
-            _myWorkers[workerPid].worker.kill();
-            delete _myWorkers[workerPid];
-            _workerCount--;
-            if (_waitingRequests.length > 0) {
-                //there are waiting requests, so we have to reserveWorker for them
-                reserveWorker();
-            }
+            // FIXME: this should send SIGINT and listen on close
+            _myWorkers[workerPid].worker.on('close', function (code, signal) {
+                delete _myWorkers[workerPid];
+                _workerCount--;
+                if (_waitingRequests.length > 0) {
+                    //there are waiting requests, so we have to reserveWorker for them
+                    reserveWorker();
+                }
+            });
+            _myWorkers[workerPid].worker.kill('SIGINT');
         }
     }
 
     function freeAllWorkers(callback) {
         var len = Object.keys(_myWorkers).length;
         Object.keys(_myWorkers).forEach(function (workerPid) {
-            // FIXME: we need to send to the worker
             _myWorkers[workerPid].worker.on('close', function (code, signal) {
                 len -= 1;
                 if (len === 0) {
                     callback(null);
                 }
                 logger.debug('workerPid closed: ' + workerPid);
+                delete _myWorkers[workerPid];
             });
             _myWorkers[workerPid].worker.kill('SIGINT');
             logger.debug('request closing workerPid: ' + workerPid);
