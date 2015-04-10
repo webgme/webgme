@@ -11,10 +11,12 @@ describe('User manager command line interface (CLI)', function () {
 
     var gmeConfig = testFixture.getGmeConfig(),
         should = testFixture.should,
+        expect = testFixture.expect,
         spawn = testFixture.childProcess.spawn,
         mongodb = testFixture.mongodb,
         Q = testFixture.Q,
         userManager = require('../../src/bin/usermanager'),
+        GMEAuth = testFixture.GMEAuth,
         filename = require('path').normalize('src/bin/usermanager.js'),
         mongoUri = gmeConfig.mongo.uri,
         uri = require('mongo-uri').parse(mongoUri);
@@ -60,6 +62,8 @@ describe('User manager command line interface (CLI)', function () {
             dbConn,
             db,
 
+            auth,
+
             i,
             helpForCommands = [
                 'useradd',
@@ -97,6 +101,16 @@ describe('User manager command line interface (CLI)', function () {
             };
 
         before(function (done) {
+            var gmeauthDeferred = Q.defer();
+
+            auth = new GMEAuth(null, gmeConfig);
+            auth.connect(function (err) {
+                if (err) {
+                    gmeauthDeferred.reject(err);
+                } else {
+                    gmeauthDeferred.resolve(auth);
+                }
+            });
 
             dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', mongoUri, gmeConfig.mongo.options)
                 .then(function (db_) {
@@ -132,18 +146,17 @@ describe('User manager command line interface (CLI)', function () {
                     ]);
                 });
 
-            dbConn.nodeify(done);
+            Q.all([dbConn, gmeauthDeferred.promise])
+                .nodeify(done);
         });
 
         after(function (done) {
             // just to be safe
             restoreLogAndExit();
             db.close(true, function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                done();
+                auth.unload(function (err1) {
+                    done(err || err1 || null);
+                });
             });
         });
 
@@ -211,8 +224,16 @@ describe('User manager command line interface (CLI)', function () {
 
             userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
                 .then(function () {
-                    restoreLogAndExit();
-                    done();
+                    auth.getUser('user', function (err, data) {
+                        restoreLogAndExit();
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        expect(data._id).equal('user');
+
+                        done();
+                    });
                 })
                 .catch(function (err) {
                     restoreLogAndExit();
@@ -226,8 +247,25 @@ describe('User manager command line interface (CLI)', function () {
 
             userManager.main(['node', filename, 'useradd', 'user', 'user@example.com', 'plaintext'])
                 .then(function () {
-                    restoreLogAndExit();
-                    done();
+                    auth.getUser('user', function (err, data) {
+                        restoreLogAndExit();
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        expect(data._id).equal('user');
+                        expect(data.email).equal('user@example.com');
+                        expect(data.password).not.exist;
+                        expect(data.passwordHash).not.exist;
+
+                        expect(data.projects).deep.equal({});
+                        expect(data.orgs).deep.equal([]);
+
+                        expect(data.canCreate).equal(false);
+                        expect(data.siteAdmin).equal(false);
+
+                        done();
+                    });
                 })
                 .catch(function (err) {
                     restoreLogAndExit();
@@ -235,6 +273,47 @@ describe('User manager command line interface (CLI)', function () {
                 });
         });
 
+        it('should add user with siteAdmin access', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, 'useradd', 'user_site_admin', 'user@example.com', 'plaintext', '--siteAdmin'])
+                .then(function () {
+                    auth.getUser('user_site_admin', function (err, data) {
+                        restoreLogAndExit();
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        expect(data.siteAdmin).equal(true);
+                        done();
+                    });
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
+
+        it('should add user with canCreate option', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, 'useradd', 'user_can_create', 'user@example.com', 'plaintext', '--canCreate'])
+                .then(function () {
+                    auth.getUser('user_can_create', function (err, data) {
+                        restoreLogAndExit();
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        expect(data.canCreate).equal(true);
+                        done();
+                    });
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
 
         it('should add user if db port and name are not defined', function (done) {
             suppressLogAndExit();
@@ -292,8 +371,14 @@ describe('User manager command line interface (CLI)', function () {
                     return userManager.main(['node', filename, '--db', mongoUri, 'userdel', 'user_to_delete']);
                 })
                 .then(function () {
-                    restoreLogAndExit();
-                    done();
+                    auth.getUser('user_to_delete', function (err, data) {
+                        restoreLogAndExit();
+                        if (err && err.indexOf('no such user') > -1 && !data) {
+                            done();
+                            return;
+                        }
+                        done(err);
+                    });
                 })
                 .catch(function (err) {
                     restoreLogAndExit();
@@ -322,7 +407,6 @@ describe('User manager command line interface (CLI)', function () {
             userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org2'])
                 .then(function () {
                     return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org2']);
-
                 })
                 .then(function () {
                     restoreLogAndExit();
