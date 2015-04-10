@@ -3338,7 +3338,7 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
  * @author ksmyth / https://github.com/ksmyth
  */
 
-define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, BlobMetadata, superagent) {
+define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, BlobMetadata, superagent) {
     
 
     var BlobClient = function (parameters) {
@@ -3349,6 +3349,12 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
             this.serverPort = parameters.serverPort || this.serverPort;
             this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
             this.webgmeclientsession = parameters.webgmeclientsession;
+            this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || {
+                maxSockets: 100,
+                maxFreeSockets: 10,
+                timeout: 60000,
+                keepAliveTimeout: 30000 // free socket keep alive for 30 seconds
+            };
         }
         this.blobUrl = '';
         if (this.httpsecure !== undefined && this.server && this.serverPort) {
@@ -3357,6 +3363,17 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
 
         // TODO: TOKEN???
         this.blobUrl = this.blobUrl + '/rest/blob/'; // TODO: any ways to ask for this or get it from the configuration?
+
+        this.isNodeOrNodeWebKit = typeof process !== 'undefined';
+        if (this.isNodeOrNodeWebKit) {
+            // node or node-webkit
+            if (this.httpsecure) {
+                this.Agent = require('agentkeepalive').HttpsAgent;
+            } else {
+                this.Agent = require('agentkeepalive');
+            }
+            this.keepaliveAgent = new this.Agent(this.keepaliveAgentOptions);
+        }
     };
 
     BlobClient.prototype.getMetadataURL = function (hash) {
@@ -3415,6 +3432,11 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
         }
         contentLength = data.hasOwnProperty('length') ? data.length : data.byteLength;
         req = superagent.post(this.getCreateURL(name));
+
+        if (typeof window === 'undefined') {
+            req.agent(this.keepaliveAgent);
+        }
+
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
@@ -3451,6 +3473,11 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
+
+        if (typeof window === 'undefined') {
+            req.agent(this.keepaliveAgent);
+        }
+
         req.set('Content-Type', 'application/octet-stream')
             .set('Content-Length', contentLength)
             .send(blob)
@@ -3516,6 +3543,11 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
+
+        if (typeof window === 'undefined') {
+            req.agent(this.keepaliveAgent);
+        }
+
         if (req.pipe) {
             // running on node
             var Writable = require('stream').Writable;
@@ -3559,7 +3591,12 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
                     var response = req.xhr.response; // response is an arraybuffer
                     if (contentType === 'application/json') {
                         var utf8ArrayToString = function (uintArray) {
-                            return decodeURIComponent(escape(String.fromCharCode.apply(null, uintArray)));
+                            var inputString = '',
+                                i;
+                            for (i = 0; i < uintArray.byteLength; i++) {
+                                inputString += String.fromCharCode(uintArray[i]);
+                            }
+                            return decodeURIComponent(escape(inputString));
                         };
                         response = JSON.parse(utf8ArrayToString(new Uint8Array(response)));
                     }
@@ -3575,6 +3612,11 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
+
+        if (typeof window === 'undefined') {
+            req.agent(this.keepaliveAgent);
+        }
+
         req.end(function (err, res) {
             if (err || res.status > 399) {
                 callback(err || res.status);
@@ -3650,7 +3692,7 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
  */
 
 
-define('common/executor/ExecutorClient',['superagent'], function (superagent) {
+define('executor/ExecutorClient',['superagent'], function (superagent) {
     
 
     var ExecutorClient = function (parameters) {
@@ -3811,7 +3853,7 @@ define('common/executor/ExecutorClient',['superagent'], function (superagent) {
     return ExecutorClient;
 });
 
-define('common/executor/WorkerInfo',[], function () {
+define('executor/WorkerInfo',[], function () {
     var ClientRequest = function(parameters) {
         this.clientId = parameters.clientId || undefined;
         this.availableProcesses = parameters.availableProcesses || 0;
@@ -3828,7 +3870,7 @@ define('common/executor/WorkerInfo',[], function () {
 });
 
 
-define('common/executor/JobInfo',[], function() {
+define('executor/JobInfo',[], function() {
     var JobInfo = function (parameters) {
         this.hash = parameters.hash;
         this.resultHashes = parameters.resultHashes || [];
@@ -3864,7 +3906,7 @@ define('common/executor/JobInfo',[], function() {
 // eb.executorClient.createJob('1092dd2b135af5d164b9d157b5360391246064db', function (err, res) { console.log(require('util').inspect(res)); })
 // eb.executorClient.getInfoByStatus('CREATED', function(err, res) { console.log("xxx " + require('util').inspect(res)); })
 
-define('ExecutorWorker',['blob/BlobClient',
+define('executor/ExecutorWorker',['blob/BlobClient',
         'blob/BlobMetadata',
         'fs',
         'util',
@@ -3872,9 +3914,9 @@ define('ExecutorWorker',['blob/BlobClient',
         'path',
         'child_process',
         'minimatch',
-        'common/executor/ExecutorClient',
-        'common/executor/WorkerInfo',
-        'common/executor/JobInfo',
+        'executor/ExecutorClient',
+        'executor/WorkerInfo',
+        'executor/JobInfo',
         'superagent',
         'rimraf'
     ],
@@ -4097,7 +4139,9 @@ define('ExecutorWorker',['blob/BlobClient',
                 jointArtifact.addFileAsSoftLink(filename, data, function (err, hash) {
                     var j;
                     if (err) {
-                        console.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' + filePath + '", err: ' + err);
+                        console.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' +
+                        filePath + '", err: ' + err);
+                        console.error(err);
                         callback('FAILED_TO_ARCHIVE_FILE');
                     } else {
                         // Add the file-hash to the results artifacts containing the filename.
@@ -4339,7 +4383,7 @@ define('ExecutorWorker',['blob/BlobClient',
  * Created by kevin on 7/14/2014.
  */
 
-define('ExecutorWorkerController',[], function () {
+define('executor/ExecutorWorkerController',[], function () {
     var ExecutorWorkerController = function ($scope, worker) {
         this.$scope = $scope;
         this.$scope.jobs = { };
@@ -4399,9 +4443,9 @@ if (typeof define !== 'undefined') {
     define('node_worker', [
         'common/eventDispatcher',
         'blob/BlobClient',
-        './ExecutorWorker',
-        'common/executor/JobInfo',
-        './ExecutorWorkerController',
+        'executor/ExecutorWorker',
+        'executor/JobInfo',
+        'executor/ExecutorWorkerController',
         'url'
     ], function (eventDispatcher, BlobClient, ExecutorWorker, JobInfo, ExecutorWorkerController, url) {
         return function (webGMEUrl, tempPath, parameters) {

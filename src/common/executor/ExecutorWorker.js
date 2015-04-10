@@ -15,9 +15,9 @@ define(['blob/BlobClient',
         'path',
         'child_process',
         'minimatch',
-        'common/executor/ExecutorClient',
-        'common/executor/WorkerInfo',
-        'common/executor/JobInfo',
+        'executor/ExecutorClient',
+        'executor/WorkerInfo',
+        'executor/JobInfo',
         'superagent',
         'rimraf'
     ],
@@ -240,7 +240,9 @@ define(['blob/BlobClient',
                 jointArtifact.addFileAsSoftLink(filename, data, function (err, hash) {
                     var j;
                     if (err) {
-                        console.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' + filePath + '", err: ' + err);
+                        console.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' +
+                        filePath + '", err: ' + err);
+                        console.error(err);
                         callback('FAILED_TO_ARCHIVE_FILE');
                     } else {
                         // Add the file-hash to the results artifacts containing the filename.
