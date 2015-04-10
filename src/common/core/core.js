@@ -22,10 +22,8 @@ define([
     function (CoreRel, Set, Guid, NullPtr, UnWrap, Type, Constraint, CoreTree, MetaCore, TreeLoader, CoreDiff) {
     'use strict';
 
-    function core(storage, options) {
-        options.usertype = options.usertype || 'nodejs'; // FIXME: why this is nodejs???
-        // = new TreeLoader(new CoreDiff(new MetaCore(new Constraint(new Guid(new Set(new NullPtr(new Type(new NullPtr(new CoreRel(new CoreTree(storage, options)))))))))));
-        var coreCon,
+    function Core(storage, options) {
+        var core,
             coreLayers = [];
         coreLayers.push(CoreRel);
         coreLayers.push(NullPtr);
@@ -37,17 +35,16 @@ define([
         coreLayers.push(MetaCore);
         coreLayers.push(CoreDiff);
         coreLayers.push(TreeLoader);
+        if (options.usertype !== 'tasync') {
+            coreLayers.push(UnWrap);
+        }
 
-        coreCon = coreLayers.reduce(function (inner, Class) {
+        core = coreLayers.reduce(function (inner, Class) {
             return new Class(inner, options);
         }, new CoreTree(storage, options));
 
-        if (options.usertype === 'tasync') {
-            return coreCon;
-        } else {
-            return new UnWrap(coreCon, options);
-        }
+        return core;
     }
 
-    return core;
+    return Core;
 });

@@ -139,7 +139,7 @@ function Database(options) {
 
         mongo.dropCollection(name, function (err) {
             if (err) {
-                logger.error('Error in dropCollection (not handled)', err);
+                logger.debug('Error in dropCollection (not handled)', err);
             }
             callback(null);
         });
