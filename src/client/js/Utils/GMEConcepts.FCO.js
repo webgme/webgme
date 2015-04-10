@@ -22,7 +22,7 @@ define(['js/Constants',
     FCO_REGISTRY[REGISTRY_KEYS.SVG_ICON] = "";
     FCO_REGISTRY[REGISTRY_KEYS.PORT_SVG_ICON] = "";
     FCO_REGISTRY[REGISTRY_KEYS.DISPLAY_FORMAT] = CONSTANTS.DISPLAY_FORMAT_ATTRIBUTE_MARKER + nodePropertyNames.Attributes.name;
-    FCO_REGISTRY[REGISTRY_KEYS.VALID_PANELS] = 'ModelEditor SetEditor Crosscut GraphViz';
+    FCO_REGISTRY[REGISTRY_KEYS.VALID_VISUALIZERS] = 'ModelEditor SetEditor Crosscut GraphViz';
 
     //return utility functions
     return {

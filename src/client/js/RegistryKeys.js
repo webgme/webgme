@@ -25,7 +25,7 @@ define([], function () {
 
         VALID_PLUGINS: 'validPlugins', //space separated list of valid plugins for the project TODO maybe we should harmonize with project registry
         USED_ADDONS: 'usedAddOns', //space separated list of used addons in the given project
-        VALID_PANELS: 'validPanels', //space separated list of valid panels for the project
+        VALID_VISUALIZERS: 'validVisualizers', //space separated list of valid visualizers for the node
         VALID_DECORATORS: 'validDecorators', //space separated list of valid decorators for the project
         /*
          *  MISC

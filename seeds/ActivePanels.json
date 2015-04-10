@@ -92,7 +92,7 @@
           "x": 91,
           "y": 219
         },
-        "validPanels": "ModelEditor Crosscut GraphViz"
+        "validVisualizers": "ModelEditor Crosscut GraphViz"
       },
       "sets": {},
       "constraints": {}
@@ -198,7 +198,7 @@
           "x": 222,
           "y": 381
         },
-        "validPanels": "ModelEditor Crosscut GraphViz"
+        "validVisualizers": "ModelEditor Crosscut GraphViz"
       },
       "sets": {},
       "constraints": {}
@@ -266,7 +266,7 @@
         },
         "usedAddOns": "ConstraintAddOn",
         "validDecorators": "ModelDecorator",
-        "validPanels": "ModelEditor METAAspect",
+        "validVisualizers": "ModelEditor METAAspect",
         "validPlugins": ""
       },
       "sets": {
@@ -478,7 +478,7 @@
           "x": 373,
           "y": 226
         },
-        "validPanels": "GraphViz ModelEditor"
+        "validVisualizers": "GraphViz ModelEditor"
       },
       "sets": {},
       "constraints": {}
@@ -563,7 +563,7 @@
           "x": 91,
           "y": 123
         },
-        "validPanels": "ModelEditor SetEditor Crosscut GraphViz"
+        "validVisualizers": "ModelEditor SetEditor Crosscut GraphViz"
       },
       "sets": {},
       "constraints": {
@@ -629,7 +629,7 @@
           "x": 86,
           "y": 191
         },
-        "validPanels": "METAAspect ModelEditor"
+        "validVisualizers": "METAAspect ModelEditor"
       },
       "sets": {},
       "constraints": {}
@@ -692,7 +692,7 @@
           "x": 212,
           "y": 91
         },
-        "validPanels": "SetEditor ModelEditor"
+        "validVisualizers": "SetEditor ModelEditor"
       },
       "sets": {
         "setPtr": []
