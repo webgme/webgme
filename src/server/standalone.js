@@ -177,6 +177,7 @@ function StandAloneServer(gmeConfig) {
                 cert: __secureSiteInfo.certificate
             }, __app).listen(gmeConfig.server.port, function (err) {
                 if (err) {
+                    logger.error('Failed to start server', {metadata: {port: gmeConfig.server.port, error: err}});
                     serverDeferred.reject(err);
                 } else {
                     serverDeferred.resolve();
@@ -185,6 +186,7 @@ function StandAloneServer(gmeConfig) {
         } else {
             __httpServer = Http.createServer(__app).listen(gmeConfig.server.port, function (err) {
                 if (err) {
+                    logger.error('Failed to start server', {metadata: {port: gmeConfig.server.port, error: err}});
                     serverDeferred.reject(err);
                 } else {
                     serverDeferred.resolve();

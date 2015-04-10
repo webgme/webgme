@@ -59,6 +59,7 @@ function ServerWorkerManager(_parameters) {
 
     function freeAllWorkers() {
         Object.keys(_myWorkers).forEach(function (workerPid) {
+            // FIXME: we need to send to the worker
             _myWorkers[workerPid].worker.kill();
             logger.debug('workerPid killed: ' + workerPid);
         });

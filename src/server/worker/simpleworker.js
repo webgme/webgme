@@ -760,17 +760,27 @@ var connectedWorkerQuery = function (parameters, callback) {
 };
 
 var connectedworkerStop = function (callback) {
-    if (_addOn) {
-        _addOn.stop(function (err) {
-            if (err) {
-                return callback(err);
-            }
-            _addOn = null;
-            callback(null);
-        });
-    } else {
-        callback(null);
-    }
+    var closeStorage = function (cb) {
+        if (storage) {
+            storage.closeDatabase(cb);
+        } else {
+            cb(null);
+        }
+    };
+
+    closeStorage(function (err) {
+        if (_addOn) {
+            _addOn.stop(function (err1) {
+                if (err) {
+                    return callback(err || err1);
+                }
+                _addOn = null;
+                callback(err);
+            });
+        } else {
+            callback(err);
+        }
+    });
 };
 
 var safeSend = function (msg) {
