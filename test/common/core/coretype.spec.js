@@ -5,10 +5,10 @@
  */
 var testFixture = require('../../_globals.js');
 
-describe('corerel', function () {
+describe('coretype', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = new testFixture.Storage({globConf: gmeConfig}),
+        storage = new testFixture.Storage({globConf: gmeConfig, logger: testFixture.logger.fork('coretype:storage')}),
         Type = testFixture.requirejs('common/core/coretype'),
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),
@@ -33,7 +33,7 @@ describe('corerel', function () {
                     return;
                 }
                 project = p;
-                core = new Core(project, {globConf: gmeConfig});
+                core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('coretype:core')});
                 root = core.createNode();
                 base = core.createNode({parent: root});
                 core.setAttribute(base, 'name', 'base');

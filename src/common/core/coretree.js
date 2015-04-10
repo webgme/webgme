@@ -43,8 +43,13 @@ define([ "common/util/assert", "common/util/key", "common/core/future", "common/
 	var rootCounter = 0;
 
 	return function (storage, options) {
+        ASSERT(typeof options === 'object');
+        ASSERT(typeof options.globConf === 'object');
+        ASSERT(typeof options.logger !== 'undefined');
+
         var gmeConfig = options.globConf;
-		ASSERT(gmeConfig && typeof gmeConfig === "object");
+        var logger = options.logger.fork('coretree');
+
 		var MAX_AGE = 3; // MAGIC NUMBER
 		var MAX_TICKS = 2000; // MAGIC NUMBER
 		var MAX_MUTATE = 30000; // MAGIC NUMBER

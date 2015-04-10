@@ -37,7 +37,7 @@ describe('import CLI tests', function () {
         jsonProject = testFixture.loadJsonFile('./test/asset/sm_basic.json');
         storage = storage = new WebGME.serverUserStorage({
             globConf: gmeConfig,
-            log: testFixture.Logger.createWithGmeConfig('mport CLI tests:storage', gmeConfig)
+            logger: testFixture.logger.fork('import_CLI_tests:storage')
         });
     });
 
@@ -68,7 +68,7 @@ describe('import CLI tests', function () {
 
                 expect(typeof data).to.equal('object');
                 expect(typeof data.commitHash).to.equal('string');
-                openContext(storage, gmeConfig, contextParam, function (err, context) {
+                openContext(storage, gmeConfig, testFixture.logger, contextParam, function (err, context) {
                     expect(err).to.equal(null);
                     expect(context.commitHash).to.equal(data.commitHash);
                     expect(context.nodes).to.have.keys(nodePath);
@@ -94,7 +94,7 @@ describe('import CLI tests', function () {
 
                 expect(typeof data).to.equal('object');
                 expect(typeof data.commitHash).to.equal('string');
-                openContext(storage, gmeConfig, contextParam, function (err, context) {
+                openContext(storage, gmeConfig, testFixture.logger, contextParam, function (err, context) {
                     expect(err).to.equal(null);
                     expect(context.commitHash).to.equal(data.commitHash);
                     expect(context.nodes).to.have.keys(nodePath);
@@ -123,7 +123,7 @@ describe('import CLI tests', function () {
                 expect(typeof data).to.equal('object');
                 expect(typeof data.commitHash).to.equal('string');
 
-                openContext(storage, gmeConfig, contextParam, function (err, context) {
+                openContext(storage, gmeConfig, testFixture.logger, contextParam, function (err, context) {
                     expect(err).to.equal(null);
 
                     expect(context.commitHash).to.equal(data.commitHash);
@@ -146,15 +146,18 @@ describe('import CLI tests', function () {
                                 nodePath = '/960660211/1365653822';
                                 contextParam.nodePaths = [nodePath];
 
-                                openContext(storage, gmeConfig, contextParam, function (err, context) {
-                                    expect(err).to.equal(null);
-                                    expect(context.commitHash).to.equal(data.commitHash);
-                                    expect(context.nodes).to.have.keys(nodePath);
-                                    expect(context.core.getAttribute(context.nodes[nodePath], 'name')).to.equal('state');
+                                openContext(storage, gmeConfig, testFixture.logger, contextParam,
+                                    function (err, context) {
+                                        expect(err).to.equal(null);
+                                        expect(context.commitHash).to.equal(data.commitHash);
+                                        expect(context.nodes).to.have.keys(nodePath);
+                                        expect(context.core.getAttribute(context.nodes[nodePath], 'name'))
+                                            .to.equal('state');
 
-                                    project = context.project;
-                                    done();
-                                });
+                                        project = context.project;
+                                        done();
+                                    }
+                                );
                             }
                         );
                     });

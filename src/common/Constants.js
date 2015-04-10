@@ -1,20 +1,21 @@
-"use strict";
+/*globals define*/
+
 /*
  * STRING CONSTANT DEFINITIONS USED IN BOTH CLIENT AND SERVER JAVASCRIPT
  */
 
 define([], function () {
-
+    'use strict';
     //return string constants
     return {
         /*
          * TERRITORY EVENTS
          */
-        TERRITORY_EVENT_LOAD : 'load',
-        TERRITORY_EVENT_UPDATE : 'update',
-        TERRITORY_EVENT_UNLOAD : 'unload',
-        TERRITORY_EVENT_COMPLETE : 'complete',
-        TERRITORY_EVENT_INCOMPLETE : 'incomplete',
+        TERRITORY_EVENT_LOAD: 'load',
+        TERRITORY_EVENT_UPDATE: 'update',
+        TERRITORY_EVENT_UNLOAD: 'unload',
+        TERRITORY_EVENT_COMPLETE: 'complete',
+        TERRITORY_EVENT_INCOMPLETE: 'incomplete',
 
         /*
          * GME_ID: wherever a GME object ID needs to be present
@@ -38,13 +39,13 @@ define([], function () {
         /*
          * Dedicated POINTER names
          */
-         POINTER_SOURCE : 'src',     //dedicated connection source pointer name
-         POINTER_TARGET : 'dst',     //dedicated connection target pointer name
-         POINTER_BASE   : 'base',  //dedicated inheritance pointer name
+        POINTER_SOURCE: 'src',     //dedicated connection source pointer name
+        POINTER_TARGET: 'dst',     //dedicated connection target pointer name
+        POINTER_BASE: 'base',  //dedicated inheritance pointer name
         /*
          * Dedicated RELATION names
          */
-        RELATION_CONTAINMENT : 'containment'
+        RELATION_CONTAINMENT: 'containment'
 
     };
 });

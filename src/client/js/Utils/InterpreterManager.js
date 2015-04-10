@@ -56,7 +56,7 @@ define(['common/core/core',
                 var plugins = {},
                     runWithConfiguration;
                 plugins[name] = plugin;
-                var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, Logger, plugins,
+                var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, self.logger, plugins,
                     self.gmeConfig);
                 pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
                     //#1: display config to user

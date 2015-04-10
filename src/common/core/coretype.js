@@ -13,13 +13,17 @@ define([ "common/util/assert", "common/core/core", "common/core/tasync" ], funct
     var OVERLAYS = "ovr";
     var COLLSUFFIX = "-inv";
 
-    var CoreType = function(oldcore) {
+    var CoreType = function(oldcore, options) {
 		// copy all operations
-		var core = {};
+        ASSERT(typeof options === 'object');
+        ASSERT(typeof options.globConf === 'object');
+        ASSERT(typeof options.logger !== 'undefined');
+		var core = {},
+            logger = options.logger.fork('coretype');
 		for ( var key in oldcore) {
 			core[key] = oldcore[key];
 		}
-
+        logger.debug('initialized');
 		// ----- validity
 
 		function __test(text, cond) {

@@ -11,7 +11,7 @@ describe('merge CLI test', function () {
         mergeCli = require('../../src/bin/merge'),
         storageParams = {
             globConf: gmeConfig,
-            log: testFixture.Logger.createWithGmeConfig('merge CLI test:storage', gmeConfig)
+            logger: testFixture.logger.fork('merge CLI test:storage')
         },
         database = new testFixture.WebGME.serverUserStorage(storageParams),
         projectName = 'mergeCliTest',
@@ -148,7 +148,8 @@ describe('merge CLI test', function () {
                         return;
                     }
 
-                    var core = new testFixture.WebGME.core(project,{globConf:gmeConfig}),
+                    var core = new testFixture.WebGME.core(project, {globConf: gmeConfig,
+                            logger: testFixture.logger.fork('core')}),
                         root = core.createNode(),
                         jsonProject = JSON.parse(testFixture.fs.readFileSync('./test/bin/merge/base.json')),
                         commitHash;

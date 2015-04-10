@@ -39,14 +39,14 @@ var applyPatch = function (mongoUri, projectId, branchOrCommit, patch, noUpdate,
 
     gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
 
-    storage = new Storage({globConf: gmeConfig, log: logger.fork('storage')});
+    storage = new Storage({globConf: gmeConfig, logger: logger.fork('storage')});
 
     contextParams = {
         projectName: projectId,
         branchOrCommit: branchOrCommit
     };
 
-    openContext(storage, gmeConfig, contextParams, function (err, context) {
+    openContext(storage, gmeConfig, logger, contextParams, function (err, context) {
         if (err) {
             callback(err);
             return;
@@ -101,11 +101,11 @@ if (require.main === module) {
 //check necessary arguments
 
     if (!program.projectIdentifier) {
-        console.warn('project identifier is a mandatory parameter!');
+        logger.error('project identifier is a mandatory parameter!');
         program.help();
     }
     if (!program.target) {
-        console.warn('target is a mandatory parameter!');
+        logger.error('target is a mandatory parameter!');
         program.help();
     }
 
@@ -113,7 +113,7 @@ if (require.main === module) {
     try {
         patchJson = JSON.parse(FS.readFileSync(program.args[0], 'utf-8'));
     } catch (err) {
-        console.warn('unable to load patch file: ', err);
+        logger.error('unable to load patch file: ', err);
         process.exit(1);
     }
 
@@ -121,9 +121,9 @@ if (require.main === module) {
         function (err) {
             'use strict';
             if (err) {
-                console.warn('there was an error during the application of the patch: ', err);
+                logger.error('there was an error during the application of the patch: ', err);
             } else {
-                console.log('patch applied successfully to project \'' + program.projectIdentifier + '\'');
+                logger.info('patch applied successfully to project \'' + program.projectIdentifier + '\'');
             }
             process.exit(0);
         }

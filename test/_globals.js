@@ -45,12 +45,12 @@ var WebGME = require('../webgme'),
     }, false),
     Storage = function (options) {
         'use strict';
-        options.log = options.log || logger;
+        options.logger = options.logger || logger.fork('storage');
         return new Commit(new Local(options || {}), options || {});
     },
     StorageWithCache = function (options) {
         'use strict';
-        options.log = options.log || logger;
+        options.logger = options.logger || logger.fork('storage');
         return new Commit(new Cache(new Local(options || {}), options || {}), options || {});
     },
     generateKey = requireJS('common/util/key'),
@@ -132,7 +132,10 @@ function importProject(parameters, done) {
         result.storage = parameters.storage;
     } else {
         if (!parameters.mongoUri) {
-            result.storage = new Storage({globConf: parameters.gmeConfig});
+            result.storage = new Storage({
+                globConf: parameters.gmeConfig,
+                logger: logger.fork('storage')
+            });
         } else {
             throw new Error('mongoUri option is not implemented yet.');
         }
@@ -144,7 +147,7 @@ function importProject(parameters, done) {
         branchName: result.BranchName
     };
 
-    openContext(result.storage, parameters.gmeConfig, contextParam, function (err, context) {
+    openContext(result.storage, parameters.gmeConfig, logger, contextParam, function (err, context) {
         if (err) {
             done(err);
             return;

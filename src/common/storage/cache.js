@@ -29,8 +29,11 @@ define([ "common/util/assert" ], function (ASSERT) {
 	};
 
 	var Database = function (database, options) {
-        var gmeConfig = options.globConf;
-        var logger = options.log.fork('cache');
+        ASSERT(typeof options === 'object');
+        ASSERT(typeof options.logger !== 'undefined');
+        ASSERT(typeof options.globConf === 'object');
+        var gmeConfig = options.globConf,
+            logger = options.logger.fork('cache');
         logger.debug('Initializing');
 		ASSERT(typeof database === "object" && typeof gmeConfig === "object");
 

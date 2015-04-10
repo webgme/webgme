@@ -8,7 +8,10 @@ var testFixture = require('../../_globals.js');
 describe('constraint core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = new testFixture.Storage({globConf: gmeConfig}),
+        storage = new testFixture.Storage({
+            globConf: gmeConfig,
+            logger: testFixture.logger.fork('constraint_core:storage')
+        }),
         TASYNC = testFixture.requirejs('common/core/tasync'),
         project,
         core,
@@ -27,7 +30,11 @@ describe('constraint core', function () {
                     return;
                 }
                 project = p;
-                core = new testFixture.WebGME.core(project,{usertype:'tasync', globConf: gmeConfig});
+                core = new testFixture.WebGME.core(project, {
+                    usertype:'tasync',
+                    globConf: gmeConfig,
+                    logger: testFixture.logger.fork('constraint_core:core')
+                });
                 root = core.createNode();
                 base = core.createNode({parent: root});
                 core.setAttribute(base, 'name', 'base');

@@ -21,12 +21,16 @@ define([ "common/util/assert" ], function (ASSERT) {
     "use strict";
     var CONSTRAINTS_RELID = "_constraints";
     var C_DEF_PRIORITY = 1;
-    function constraintCore (_innerCore) {
-        var _core = {};
+    function constraintCore (_innerCore, options) {
+        ASSERT(typeof options === 'object');
+        ASSERT(typeof options.globConf === 'object');
+        ASSERT(typeof options.logger !== 'undefined');
+        var _core = {},
+            logger = options.logger.fork('constraintcore');
         for(var i in _innerCore){
             _core[i] = _innerCore[i];
         }
-
+        logger.debug('initialized');
         var createNewConstraintRelId = function(constraintsNode){
             var max = Math.pow(2, 31);
             var existingRelIds = _innerCore.getChildrenRelids(constraintsNode);

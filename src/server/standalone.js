@@ -196,7 +196,7 @@ function StandAloneServer(gmeConfig) {
         //creating the proper storage for the standalone server
         __storageOptions = {
             combined: __httpServer,
-            logger: logger.fork('socket-io')
+            logger: logger.fork('storage')
         };
         if (true === gmeConfig.authentication.enable) {
             __storageOptions.sessioncheck = __sessionStore.check;
@@ -205,7 +205,7 @@ function StandAloneServer(gmeConfig) {
             __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
         }
 
-        __storageOptions.log = logger.fork('storage');
+
         __storageOptions.getToken = __gmeAuth.getToken;
 
         __storageOptions.sessionToUser = __sessionStore.getSessionUser;
@@ -473,7 +473,7 @@ function StandAloneServer(gmeConfig) {
             if (restComponent) {
                 logger.debug('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
                 ' - /rest/external/' + keys[i]);
-                __app.use('/rest/external/' + keys[i], restComponent(gmeConfig, ensureAuthenticated));
+                __app.use('/rest/external/' + keys[i], restComponent(gmeConfig, ensureAuthenticated, logger));
             } else {
                 throw new Error('Loading ' + gmeConfig.rest.components[keys[i]] + ' failed.');
             }

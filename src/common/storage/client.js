@@ -8,8 +8,11 @@ define([ "common/util/assert", "common/util/guid" ], function (ASSERT, GUID) {
     "use strict";
 
     function Database (options) {
-        var gmeConfig = options.globConf;
-        ASSERT(typeof options === "object");
+        ASSERT(typeof options === 'object');
+        ASSERT(typeof options.logger !== 'undefined');
+        ASSERT(typeof options.globConf === 'object');
+        var gmeConfig = options.globConf,
+            logger = options.logger.fork('client');
 
         options.type = options.type || "browser";
 

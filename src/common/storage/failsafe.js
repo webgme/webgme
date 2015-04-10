@@ -15,8 +15,12 @@ define(["common/util/assert", "common/util/guid"], function (ASSERT, GUID) {
   };
 
   function Database(_database, options) {
-    ASSERT(typeof options === "object" && typeof _database === "object");
-    var gmeConfig = options.globConf;
+    ASSERT(typeof _database === 'object');
+    ASSERT(typeof options === 'object');
+    ASSERT(typeof options.logger !== 'undefined');
+    ASSERT(typeof options.globConf === 'object');
+    var gmeConfig = options.globConf,
+        logger = options.logger.fork('failsafe');
 
     var exceptionErrors = [],
         fsId = "FS", // MAGIC CONSTANT

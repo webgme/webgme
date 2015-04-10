@@ -54,7 +54,7 @@ var initialize = function (parameters) {
             AUTH = GMEAUTH({}, gmeConfig); //FIXME: Should session really be empty object??
         }
         storage = new Storage({
-            log: logger.fork('storage'),
+            logger: logger.fork('storage'),
             globConf: gmeConfig
         });
         storage.openDatabase(function (err) {
@@ -83,7 +83,7 @@ var exportLibrary = function (name, hash, libraryRootPath, callback) {
         if (err) {
             return callback(err);
         }
-        var core = new Core(project, {globConf: gmeConfig});
+        var core = new Core(project, {globConf: gmeConfig, logger: logger.fork('exportLibrary:core')});
         core.loadRoot(hash, function (err, root) {
             if (err) {
                 return callback(err);
@@ -108,7 +108,7 @@ var dumpMoreNodes = function (name, hash, nodePaths, callback) {
                 if (err) {
                     callback(err);
                 } else {
-                    var core = new Core(project, {globConf: gmeConfig});
+                    var core = new Core(project, {globConf: gmeConfig, logger: logger.fork('dumpMoreNodes:core')});
                     core.loadRoot(hash, function (err, root) {
                         if (err) {
                             callback(err);
@@ -153,7 +153,7 @@ var getConnectedStorage = function (webGMESessionId, callback) {
         globConf: gmeConfig,
         type: 'node',
         host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
-        log: Logger.create('gme:server:worker:simpleworker:plugin:' + process.pid, gmeConfig.server.log),
+        logger: logger.fork('clientstorage' + process.pid, gmeConfig.server.log),
         webGMESessionId: webGMESessionId
     });
     connStorage.openDatabase(function (err) {
@@ -191,7 +191,7 @@ var executePlugin = function (userId, name, webGMESessionId, context, callback) 
                 project.setUser(userId);
                 var plugins = {};
                 plugins[name] = interpreter;
-                var manager = new PluginManagerBase(project, Core, Logger, plugins, gmeConfig);
+                var manager = new PluginManagerBase(project, Core, logger, plugins, gmeConfig);
                 context.managerConfig.blobClient = new BlobClient({
                     serverPort: gmeConfig.server.port,
                     httpsecure: gmeConfig.server.https.enable,
@@ -236,7 +236,7 @@ var createProject = function (webGMESessionId, name, jsonProject, callback) {
                 return callback("" + err);
             }
 
-            var core = new Core(project, {globConf: gmeConfig}),
+            var core = new Core(project, {globConf: gmeConfig, logger: logger.fork('createProject:core')}),
                 root = core.createNode({parent: null, base: null});
             Serialization.import(core, root, jsonProject, function (err) {
                 if (err) {
@@ -594,7 +594,7 @@ var getSeedFromDb = function (name, branch, commit, callback) {
     } else {
         contextParameters.branchName = branch || 'master';
     }
-    OpenContext(storage, gmeConfig, contextParameters, function (err, result) {
+    OpenContext(storage, gmeConfig, logger, contextParameters, function (err, result) {
         if (err) {
             return callback(err);
         }
@@ -673,7 +673,7 @@ var seedProject = function (parameters, callback) {
                 createProject: true,
                 overwriteProject: false
             };
-            OpenContext(storage, gmeConfig, contextParameters, function (err, result) {
+            OpenContext(storage, gmeConfig, logger, contextParameters, function (err, result) {
                 if (err) {
                     return fail(err);
                 }

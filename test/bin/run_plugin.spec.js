@@ -65,27 +65,27 @@ describe('Run plugin CLI', function () {
 
     describe('as a child process', function () {
         it('should run the Minimal Working Example plugin', function (done) {
-            var nodeUserManager = spawn('node', [filename, '-p', projectName, '-n', 'MinimalWorkingExample']),
-                stdoutData,
-                err;
+            var runpluginProcess = spawn('node', [filename, '-p', projectName, '-n', 'MinimalWorkingExample']),
+                stdout,
+                stderr;
 
-            nodeUserManager.stdout.on('data', function (data) {
-                stdoutData = stdoutData || '';
-                stdoutData += data.toString();
+            runpluginProcess.stdout.on('data', function (data) {
+                stdout = stdout || '';
+                stdout += data.toString();
                 //console.log(data.toString());
             });
 
-            nodeUserManager.stderr.on('data', function (data) {
-                err = err || '';
-                err += data.toString();
+            runpluginProcess.stderr.on('data', function (data) {
+                stderr = stderr || '';
+                stderr += data.toString();
                 //console.log(data.toString());
             });
 
-            nodeUserManager.on('close', function (code) {
+            runpluginProcess.on('close', function (code) {
                 //console.log(stdoutData);
                 //console.log(err);
-                stdoutData.should.contain('execution was successful');
-                err.should.contain('MinimalWorkingExample');
+                stdout.should.contain('execution was successful');
+                stderr.should.contain('This is an error message');
                 should.equal(code, 0);
                 done();
             });

@@ -3,13 +3,17 @@ define([ "common/util/assert", "common/core/core", "common/core/tasync", "common
 
     // ----------------- CoreType -----------------
 
-    var MetaCore = function(oldcore) {
+    var MetaCore = function(oldcore, options) {
+        ASSERT(typeof options === 'object');
+        ASSERT(typeof options.globConf === 'object');
+        ASSERT(typeof options.logger !== 'undefined');
         // copy all operations
-        var core = {};
+        var core = {},
+            logger = options.logger.fork('metacore');
         for ( var key in oldcore) {
             core[key] = oldcore[key];
         }
-
+        logger.debug('initialized');
         var sameNode = function(nodeA,nodeB){
             if(core.getPath(nodeA) === core.getPath(nodeB)){
                 return true;

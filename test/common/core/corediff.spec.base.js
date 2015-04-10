@@ -9,7 +9,10 @@ var testFixture = require('../../_globals.js');
 describe('corediff-base', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = new testFixture.Storage({globConf: gmeConfig});
+        storage = new testFixture.Storage({
+            globConf: gmeConfig,
+            logger: testFixture.logger.fork('corediff-base:storage')
+        });
 
     describe('commitAncestor', function () {
         describe('straight line', function () {

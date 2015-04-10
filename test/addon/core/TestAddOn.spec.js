@@ -28,7 +28,7 @@ describe('TestAddOn', function () {
                 globConf: gmeConfig,
                 type: 'node',
                 host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
-                log: testLogger.fork(addOnName + ':storage'),
+                logger: testLogger.fork(addOnName + ':storage'),
                 webGMESessionId: 'testopencontext'
             });
             storage = storage;

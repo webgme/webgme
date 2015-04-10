@@ -4,10 +4,9 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['common/util/assert', 'common/core/core'], function (ASSERT, Core) {
+define(['common/util/assert', 'common/core/core', 'common/regexp'], function (ASSERT, Core, REGEXP) {
     'use strict';
-    var HASH_REGEXP = new RegExp('^#[0-9a-zA-Z_]*$'),
-        BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$');
+    var logger;
     /**
      * Opens the context specified by the parameters and returns a result object.
      * If no error is returned the database and the project are kept open, otherwise they are closed.
@@ -32,7 +31,7 @@ define(['common/util/assert', 'common/core/core'], function (ASSERT, Core) {
      *                                     if needed and not provided). -> result.core
      * @param {function} callback
      */
-    var openContext = function (storage, gmeConfig, parameters, callback) {
+    var openContext = function (storage, gmeConfig, _logger, parameters, callback) {
         var result = {},
             closeOnError = function (err) {
                 if (result.project) {
@@ -50,6 +49,8 @@ define(['common/util/assert', 'common/core/core'], function (ASSERT, Core) {
 
         ASSERT(typeof storage !== 'undefined' && storage.hasOwnProperty('openDatabase'), 'storage must be given');
         ASSERT(typeof callback === 'function', 'a callback must be given');
+        ASSERT(typeof _logger !== 'undefined', 'a logger must be given');
+        logger = _logger;
 
         storage.openDatabase(function (err) {
             if (err) {
@@ -144,10 +145,10 @@ define(['common/util/assert', 'common/core/core'], function (ASSERT, Core) {
             commitHash = parameters.commitHash;
 
         if (parameters.branchOrCommit) {
-            if (BRANCH_REGEXP.test(parameters.branchOrCommit)) {
+            if (REGEXP.BRANCH.test(parameters.branchOrCommit)) {
                 branchName = parameters.branchOrCommit;
                 result.branchName = branchName;
-            } else if (HASH_REGEXP.test(parameters.branchOrCommit)) {
+            } else if (REGEXP.HASH.test(parameters.branchOrCommit)) {
                 commitHash = parameters.branchOrCommit;
             } else {
                 callback('branchOrCommit: "' +  parameters.branchOrCommit + '" does no match any regular expression.');
@@ -185,7 +186,7 @@ define(['common/util/assert', 'common/core/core'], function (ASSERT, Core) {
                 }
                 return;
             }
-            core = parameters.core || new Core(result.project, {globConf: gmeConfig});
+            core = parameters.core || new Core(result.project, {globConf: gmeConfig, logger: logger.fork('core')});
             core.loadRoot(commitObj.root, function (err, rootNode) {
                 if (err) {
                     callback(err);
@@ -295,7 +296,7 @@ define(['common/util/assert', 'common/core/core'], function (ASSERT, Core) {
     }
 
     function _persistEmptyProject(parameters, result, gmeConfig, callback) {
-        var core = parameters.core || new Core(result.project, {globConf: gmeConfig});
+        var core = parameters.core || new Core(result.project, {globConf: gmeConfig, logger: logger.fork('core')});
 
         result.core = core;
         result.rootNode = result.core.createNode();

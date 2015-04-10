@@ -7,8 +7,12 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
   "use strict";
 
 
-  function diffCore(_innerCore) {
+  function diffCore(_innerCore, options) {
+    ASSERT(typeof options === 'object');
+    ASSERT(typeof options.globConf === 'object');
+    ASSERT(typeof options.logger !== 'undefined');
     var _core = {},
+      logger = options.logger.fork('corediff'),
       _yetToCompute = {},
       _DIFF = {},
       _needChecking = true,
@@ -31,6 +35,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
       _concat_moves,
       _resolve_moves;
 
+    logger.debug('initialized');
     for (var i in _innerCore) {
       _core[i] = _innerCore[i];
     }

@@ -9,15 +9,8 @@ define([ "common/util/assert" ], function (ASSERT) {
 
 	function Database (_database, options) {
 		ASSERT(typeof options === "object" && typeof _database === "object");
-		options.log = options.log || {
-			debug: function (msg) {
-				console.log("DEBUG - " + msg);
-			},
-			error: function (msg) {
-				console.log("ERROR - " + msg);
-			}
-		};
-		var logger = options.log;
+        ASSERT(typeof options.logger !== 'undefined');
+		var logger = options.logger.fork('log');
 
 		function openDatabase (callback) {
 			logger.debug('openDatabase()');

@@ -375,7 +375,7 @@ function workerTimeout() {
     workerList.find(query, function (err, docs) {
         for (var i = 0; i < docs.length; i += 1) {
             // reset unfinished jobs assigned to worker to CREATED, so they'll be executed by someone else
-            logger.info('worker "' + docs[i].clientId + '" is gone');
+            logger.debug('worker "' + docs[i].clientId + '" is gone');
             workerList.remove({_id: docs[i]._id});
             // FIXME: race after assigning finishTime between this and uploading to blob
             jobList.update({worker: docs[i].clientId, finishTime: null}, {
@@ -392,7 +392,7 @@ function workerTimeout() {
 
 function updateLabelJobs() {
     fs.readFile(labelJobsFilename, {encoding: 'utf-8'}, function (err, data) {
-        logger.info('Reading ' + labelJobsFilename);
+        logger.debug('Reading ' + labelJobsFilename);
         labelJobs = JSON.parse(data);
     });
 }
@@ -417,7 +417,7 @@ function createExpressExecutor(__app, baseUrl, options) {
 
     gmeConfig = options.gmeConfig;
 
-    logger = options.logger.fork('ExecutorServer');
+    logger = options.logger.fork('middleware:ExecutorServer');
     logger.debug('output directory', gmeConfig.executor.outputDir);
     mkdirp.sync(gmeConfig.executor.outputDir);
 
