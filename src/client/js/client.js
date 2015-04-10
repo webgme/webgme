@@ -607,6 +607,7 @@ define([
                     canRedo = true;
                   }
                 }
+
                 _self.dispatchEvent(_self.events.UNDO_AVAILABLE, canUndo);
                 _self.dispatchEvent(_self.events.REDO_AVAILABLE, canRedo);
 
@@ -732,7 +733,7 @@ define([
           }
         }
       }
-      
+
       function networkWatcher() {
         _networkStatus = "";
         //FIXME: Are these gme options or not??
@@ -743,52 +744,54 @@ define([
               running = false;
             },
             checking = false,
-            reconneting = function(finished){
+            reconneting = function (finished) {
               var connecting = false,
                   counter = 0,
                   frequency = _configuration.reconndelay || 10,
-                  timerId = setInterval(function(){
-                    if(!connecting){
-                      _database.openDatabase(function(err){
+                  timerId = setInterval(function () {
+                    if (!connecting) {
+                      _database.openDatabase(function (err) {
                         connecting = false;
-                        if(!err){
-                         //we are back!
+                        if (!err) {
+                          //we are back!
                           clearInterval(timerId);
                           return finished(null);
                         }
-                        if(++counter === _configuration.reconnamount){
+                        if (++counter === _configuration.reconnamount) {
                           //we failed, stop trying
                           clearInterval(timerId);
                           return finished(err);
                         }
                       });
                     }
-                  },frequency);
+                  }, frequency);
             },
-            checkId = setInterval(function(){
-              if(!checking){
+            checkId = setInterval(function () {
+              if (!checking) {
                 checking = true;
-                _database.getDatabaseStatus(_networkStatus,function(err,newStatus){
-                  if(running){
-                    _networkStatus = newStatus;
-                    if (_networkStatus === _self.networkStates.DISCONNECTED && _configuration.autoreconnect) {
-                      reconnecting(function(err){
+                _database.getDatabaseStatus(_networkStatus, function (err, newStatus) {
+                  if (running) {
+                    if (_networkStatus !== newStatus) {
+                      _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, _networkStatus);
+                      _networkStatus = newStatus;
+                      if (_networkStatus === _self.networkStates.DISCONNECTED && _configuration.autoreconnect) {
+                        reconnecting(function (err) {
+                          checking = false;
+                          if (err) {
+                            logger.error('permanent network failure:', err);
+                            clearInterval(checkId);
+                          }
+                        });
+                      } else {
                         checking = false;
-                        if(err){
-                          logger.error('permanent network failure:',err);
-                          clearInterval(checkId);
-                        }
-                      });
-                    } else {
-                      checking = false;
+                      }
                     }
-                    _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, _networkStatus);
                   } else {
                     clearInterval(checkId);
                   }
                 });
               }
-            },frequency);
+            }, frequency);
 
         return {
           stop: stop
