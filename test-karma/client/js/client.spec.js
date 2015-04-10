@@ -762,10 +762,10 @@ describe('GME client', function () {
         });
 
         it('should return the current network state', function (done) {
-            setTimeout(function(){
+            setTimeout(function () {
                 expect(client.getActualNetworkStatus()).to.equal('connected');
                 done();
-            },100);
+            }, 100);
         });
 
         it('should return the current branch state', function (done) {
@@ -3250,6 +3250,7 @@ describe('GME client', function () {
         });
 
         it('should return a url where the given library (sub-tree) is available', function (done) {
+            this.timeout(5000);
             client.getExportLibraryUrlAsync('', 'output', function (err, url) {
                 expect(err).to.equal(null);
                 expect(url).to.contain('output');
@@ -3535,6 +3536,187 @@ describe('GME client', function () {
 //    deleteMetaAspect: META.deleteMetaAspect,
 //    getAspectTerritoryPattern: META.getAspectTerritoryPattern,
 
+    });
+
+    describe('projectSeed', function () {
+        var Client,
+            gmeConfig,
+            client,
+            refNodeProj,
+            refMetaProj,
+            refSFSProj;
+
+        before(function (done) {
+            this.timeout(10000);
+            requirejs([
+                    'js/client',
+                    'text!gmeConfig.json',
+                    'text!karmatest/client/js/client/clientNodeTestProject.json',
+                    'text!karmatest/client/js/client/metaTestProject.json',
+                    'text!seeds/SignalFlowSystem.json'],
+                function (Client_, gmeConfigJSON, nodeProjectJSON, metaProjectJSON, SFSProjectJSON) {
+                    Client = Client_;
+                    gmeConfig = JSON.parse(gmeConfigJSON);
+                    refNodeProj = JSON.parse(nodeProjectJSON);
+                    refMetaProj = JSON.parse(metaProjectJSON);
+                    refSFSProj = JSON.parse(SFSProjectJSON);
+                    client = new Client(gmeConfig);
+
+                    client.connectToDatabaseAsync({}, function (err) {
+                        expect(err).to.equal(null);
+                        done();
+                    });
+                }
+            );
+        });
+        after(function (done) {
+            //remove all create projects
+            done();
+        });
+
+        it('should seed a project from an existing one', function (done) {
+            var projectName = 'seedTestBasicMaster',
+                seedConfig = {
+                    seedName: 'projectSeedSingleMaster',
+                    projectName: projectName
+                },
+                url;
+            client.deleteProjectAsync(projectName, function (err) {
+                expect(err).to.equal(null);
+
+                client.seedProjectAsync(seedConfig, function (err) {
+                    expect(err).to.equal(null);
+
+                    url = client.getDumpURL({
+                        project: projectName,
+                        branch: 'master',
+                        output: 'seedTestOutput'
+                    });
+
+                    superagent.get(url, function (err, result) {
+                        expect(err).to.equal(null);
+                        expect(result.body).to.deep.equal(refNodeProj);
+
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('should seed a project from a seed file', function (done) {
+            this.timeout(5000);
+            var projectName = 'seedTestBasicFile',
+                seedConfig = {
+                    type: 'file',
+                    seedName: 'SignalFlowSystem',
+                    projectName: projectName
+                },
+                url;
+            client.deleteProjectAsync(projectName, function (err) {
+                expect(err).to.equal(null);
+
+                client.seedProjectAsync(seedConfig, function (err) {
+                    expect(err).to.equal(null);
+
+                    url = client.getDumpURL({
+                        project: projectName,
+                        branch: 'master',
+                        output: 'seedTestOutput'
+                    });
+
+                    superagent.get(url, function (err, result) {
+                        expect(err).to.equal(null);
+                        expect(result.body).to.deep.equal(refSFSProj);
+
+                        done();
+                    });
+                });
+            });
+        });
+
+        //FIXME what is with the superagent stuff???
+        it('should seed a project from an existing one\'s given branch', function (done) {
+            var projectName = 'seedTestBasicOther',
+                seedConfig = {
+                    seedName: 'projectSeedSingleNonMaster',
+                    projectName: projectName,
+                    seedBranch: 'other'
+                },
+                url;
+            client.deleteProjectAsync(projectName, function (err) {
+                expect(err).to.equal(null);
+
+                client.seedProjectAsync(seedConfig, function (err) {
+                    expect(err).to.equal(null);
+
+                    url = client.getDumpURL({
+                        project: projectName,
+                        branch: 'other',
+                        output: 'seedTestOutput'
+                    });
+
+                    console.warn(url);
+                    done();
+                    //superagent.get(url, function (err, result) {
+                    //    console.warn('whaaat');
+                    //    expect(err).to.equal(null);
+                    //    //expect(result.body).to.deep.equal(refNodeProj);
+                    //
+                    //    done();
+                    //});
+                });
+            });
+        });
+
+        it('should not allow to overwrite projects with seed', function (done) {
+            var projectName = 'projectSeedSingleMaster',
+                seedConfig = {
+                    seedName: 'projectSeedSingleMaster',
+                    projectName: projectName
+                };
+
+            client.seedProjectAsync(seedConfig, function (err) {
+                expect(err).not.to.equal(null);
+
+                expect(err).to.contain('overwrite');
+
+                done();
+            });
+        });
+
+        it('should fail to seed form an unknown branch', function (done) {
+            var projectName = 'noBranchSeedProject',
+                seedConfig = {
+                    seedName: 'projectSeedSingleMaster',
+                    projectName: projectName,
+                    seedBranch: 'unknownBranch'
+                };
+
+            client.seedProjectAsync(seedConfig, function (err) {
+                expect(err).not.to.equal(null);
+
+                expect(err).to.contain('unknownBranch');
+
+                done();
+            });
+        });
+
+        it('should fail to seed from an unknown seed file', function (done) {
+            var projectName = 'noSeedFileProject',
+                seedConfig = {
+                    type: 'file',
+                    seedName: 'UnknownSeedFile',
+                    projectName: projectName
+                };
+
+            client.seedProjectAsync(seedConfig, function (err) {
+                expect(err).not.to.equal(null);
+
+                expect(err).to.contain('unknown file seed');
+
+                done();
+            });
+        });
     });
 })
 ;

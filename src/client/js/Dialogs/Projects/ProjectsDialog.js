@@ -90,9 +90,9 @@ define( [
         self._btnNewProjectImport.disable( true );
         self._dialog.modal( 'hide' );
         var d = new CreateFromSeedDialog(self._client, self._logger.fork('CreateFromSeedDialog'));
-        d.show( function ( seedType, seedName, seedBranchName ) {
+        d.show( function ( seedType, seedName, seedBranchName, seedCommitHash ) {
             if (seedType && seedName) {
-                self._createProjectFromSeed(val, seedType, seedName, seedBranchName);
+                self._createProjectFromSeed(val, seedType, seedName, seedBranchName, seedCommitHash);
             } else {
                 self._dialog.modal('show');
             }
@@ -518,14 +518,15 @@ define( [
     } );
   };
 
-    ProjectsDialog.prototype._createProjectFromSeed = function ( projectName, type, seedName, branchName ) {
+    ProjectsDialog.prototype._createProjectFromSeed = function ( projectName, type, seedName, branchName, commitHash ) {
         var _client = this._client,
             _logger = this._logger,
             parameters = {
                 type: type,
                 projectName: projectName,
                 seedName: seedName,
-                branchName: branchName
+                seedBranch: branchName,
+                seedCommit: commitHash
             },
             _loader = new LoaderCircles( {"containerElement": $( 'body' )} );
 
@@ -538,6 +539,7 @@ define( [
         _client.seedProjectAsync( parameters, function ( err ) {
             if ( err ) {
                 _logger.error('Cannot create seed project', err);
+                _loader.stop();
             } else {
                 _logger.debug('Created new project from seed');
                 _client.selectProjectAsync(projectName, function (err) {
@@ -546,9 +548,9 @@ define( [
                     } else {
                         _logger.debug('Selected project');
                     }
+                    _loader.stop();
                 });
             }
-            _loader.stop();
         } );
     };
 
