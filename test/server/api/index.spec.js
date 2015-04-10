@@ -263,7 +263,7 @@ describe('API', function () {
                 });
         });
 
-        it('should fail to update user without siteADmin role PATCH /api/v1/users/user_to_modify', function (done) {
+        it('should fail to update user without siteAdmin role PATCH /api/v1/users/user_to_modify', function (done) {
             agent.patch(server.getUrl() + '/api/v1/users/user_to_modify')
                 .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
                 .end(function (err, res) {
@@ -307,6 +307,30 @@ describe('API', function () {
                             // we have changed only these fields
                             expect(res2.body.email).equal(updates.email);
                             expect(res2.body.canCreate).equal(updates.canCreate);
+                            done();
+                        });
+                });
+        });
+
+        it('should give site admin access to user with valid data PATCH /api/v1/users/user_to_modify', function (done) {
+            var updates = {
+                siteAdmin: true
+            };
+
+            agent.get(server.getUrl() + '/api/v1/users/user_to_modify')
+                .end(function (err, res) {
+                    expect(res.status).equal(200, err);
+                    expect(res.body.siteAdmin).not.equal(updates.siteAdmin);
+
+                    agent.patch(server.getUrl() + '/api/v1/users/user_to_modify')
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .send(updates)
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(200, err);
+                            // have not changed anything that we did not requested to change
+                            expect(res2.body._id).equal(res.body._id);
+                            expect(res2.body.siteAdmin).equal(true);
+
                             done();
                         });
                 });
@@ -357,6 +381,58 @@ describe('API', function () {
                             // we have changed only these fields
                             expect(res2.body.email).equal(updates.email);
                             expect(res2.body.canCreate).equal(updates.canCreate);
+                            done();
+                        });
+                });
+        });
+
+        it('should fail to grant site admin access with no site admin roles PATCH /api/v1/user', function (done) {
+            var updates = {
+                email: 'new_email_address',
+                canCreate: false,
+                siteAdmin: true
+            };
+
+            agent.get(server.getUrl() + '/api/v1/user')
+                .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                .end(function (err, res) {
+                    expect(res.status).equal(200, err);
+                    expect(res.body.email).not.equal(updates.email);
+                    expect(res.body.canCreate).not.equal(updates.canCreate);
+                    expect(res.body.siteAdmin).not.equal(true);
+
+                    agent.patch(server.getUrl() + '/api/v1/user')
+                        .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                        .send(updates)
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(403, err);
+
+                            done();
+                        });
+                });
+        });
+
+        it('should fail to grant site admin access with no site admin roles PATCH /api/v1/users/guest', function (done) {
+            var updates = {
+                email: 'new_email_address',
+                canCreate: false,
+                siteAdmin: true
+            };
+
+            agent.get(server.getUrl() + '/api/v1/user')
+                .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                .end(function (err, res) {
+                    expect(res.status).equal(200, err);
+                    expect(res.body.email).not.equal(updates.email);
+                    expect(res.body.canCreate).not.equal(updates.canCreate);
+                    expect(res.body.siteAdmin).not.equal(true);
+
+                    agent.patch(server.getUrl() + '/api/v1/users/guest')
+                        .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                        .send(updates)
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(403, err);
+
                             done();
                         });
                 });
