@@ -15,7 +15,7 @@
 * `npm run` will print all available commands
 * `npm start` starts the webgme web server
 * `node node_modules\nodemon\bin\nodemon.js src\bin\start_server.js` restarts server on file changes
-* `node node_modules/plato/bin/plato -r -d report -l .jshintrc -t "WebGME" -x "src/client/(lib|bower_components)/.*" src` static code analysis
+* `node node_modules/plato/bin/plato -r -d report -l .jshintrc -t "WebGME" -x "(src\\client\\(lib|bower_components)\\.*|src\\server\\middleware\\executor\\worker\\node_modules\\.*|src\\client\\js\\Merge\\angular.min.js|.*classes.build.js|.*jszip.js|.*sax.js|.*jjv.js|.*sha1.js|.*canon.js|.*ejs.js|.*decoratorSVG.js)" src` static code analysis
 
 For any commands the `DEBUG` environment variable can be set. Examples are given for `npm test` command.
 
