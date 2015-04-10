@@ -112,10 +112,6 @@ function StandAloneServer(gmeConfig) {
     this.serverUrl = '';
     this.isRunning = false;
 
-    this.start = start;
-    this.stop = stop;
-
-
     servers.push(this);
 
     /**
@@ -148,7 +144,8 @@ function StandAloneServer(gmeConfig) {
     //public functions
     function start (callback) {
         var serverDeferred = Q.defer(),
-            storageDeferred = Q.defer();
+            storageDeferred = Q.defer(),
+            gmeAuthDeferred = Q.defer();
 
         if (typeof callback !== 'function') {
             callback = function () {
@@ -162,6 +159,17 @@ function StandAloneServer(gmeConfig) {
         }
 
         sockets = {};
+
+
+        __gmeAuth.connect(function (err) {
+            if (err) {
+                logger.error(err);
+                gmeAuthDeferred.reject(err);
+            } else {
+                logger.debug('gmeAuth is ready');
+                gmeAuthDeferred.resolve();
+            }
+        });
 
         if (gmeConfig.server.https.enable) {
             __httpServer = Https.createServer({
@@ -228,7 +236,6 @@ function StandAloneServer(gmeConfig) {
             }
         });
 
-        // FIXME: we need to connect with gmeAUTH again!
         Q.all([serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise])
             .nodeify(function (err) {
                 self.isRunning = true;
@@ -236,7 +243,7 @@ function StandAloneServer(gmeConfig) {
             });
     }
 
-    function stop(callback) {
+    function stop (callback) {
         var key;
 
         if (self.isRunning === false) {
@@ -283,8 +290,11 @@ function StandAloneServer(gmeConfig) {
             //ignore errors
             callback(e);
         }
-
     }
+
+    this.start = start;
+    this.stop = stop;
+
 
     //internal functions
     function globalAuthorization(sessionId, projectName, type, callback) {
@@ -575,15 +585,7 @@ function StandAloneServer(gmeConfig) {
     logger.debug("initializing authentication modules");
     //TODO: do we need to create this even though authentication is disabled?
     // FIXME: we need to connect with gmeAUTH again! start/stop/start/stop
-    __gmeAuth = new GMEAUTH(__sessionStore, gmeConfig, function (err) {
-        if (err) {
-            logger.error(err);
-            gmeAuthDeferred.reject(err);
-        } else {
-            logger.debug('gmeAuth is ready');
-            gmeAuthDeferred.resolve();
-        }
-    });
+    __gmeAuth = new GMEAUTH(__sessionStore, gmeConfig);
 
     logger.debug("initializing passport module for user management");
     //TODO in the long run this also should move to some database

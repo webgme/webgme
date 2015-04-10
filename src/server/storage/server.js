@@ -736,26 +736,33 @@ var server = function (_database, options) {
             _socket = null;
         }
 
-        var cleanup = function () {
+        var cleanup = function (err) {
             _objects = {};
             _projects = {};
             //_references = {};
             _databaseOpened = false;
-            callback(null);
+            callback(err);
         };
         if (_databaseOpened || _databaseOpenCallbacks.length) {
             checkDatabase(function (err) {
+                if (err) {
+                    cleanup(err);
+                    return;
+                }
+
                 //close projects
                 for (var i in _projects) {
                     _projects[i].closeProject(null);
                 }
 
                 //close database
-                _database.closeDatabase(null);
-                cleanup();
+                _database.closeDatabase(function (err) {
+                    cleanup(err);
+                });
+
             });
         } else {
-            cleanup();
+            cleanup(null);
         }
     }
 

@@ -13,7 +13,7 @@ var Mongodb = require('mongodb'),
 
     Logger = require('../../logger');
 
-function GMEAuth(session, gmeConfig, callback) {
+function GMEAuth(session, gmeConfig) {
     // TODO: make sure that gmeConfig passes all config
     var logger = Logger.create('gme:server:auth:gmeauth', gmeConfig.server.log),
         _collectionName = '_users',
@@ -96,7 +96,7 @@ function GMEAuth(session, gmeConfig, callback) {
     addMongoOpsToPromize(organizationCollection);
     addMongoOpsToPromize(projectCollection);
 
-    (function connect() {
+    function connect(callback) {
         Q.ninvoke(Mongodb.MongoClient, 'connect', gmeConfig.mongo.uri,
             gmeConfig.mongo.options
         ).then(function (db_) {
@@ -127,7 +127,7 @@ function GMEAuth(session, gmeConfig, callback) {
                 collectionDeferred.reject(err);
             })
             .nodeify(callback);
-    })();
+    }
 
     function unload(callback) {
         return collection
@@ -671,6 +671,7 @@ function GMEAuth(session, gmeConfig, callback) {
         removeUserByUserId: removeUserByUserId,
         getAuthorizationInfoByUserId: getAuthorizationInfoByUserId,
         unload: unload,
+        connect: connect,
         _getProjectNames: _getProjectNames,
 
         // user managerment functions
