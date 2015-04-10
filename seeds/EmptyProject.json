@@ -52,7 +52,9 @@
           "FCO_ID": "/1"
         },
         "usedAddOns": "ConstraintAddOn",
-        "validPlugins": ""
+        "validPlugins": "",
+        "validDecorators": "ModelDecorator CircleDecorator MetaDecorator SVGDecorator UMLStateMachineDecorator DefaultDecorator",
+        "validVisualizers": "ModelEditor METAAspect"
       },
       "sets": {
         "MetaAspectSet": [
@@ -113,7 +115,8 @@
         "position": {
           "x": 100,
           "y": 100
-        }
+        },
+        "validVisualizers": "ModelEditor METAAspect SetEditor Crosscut GraphViz"
       },
       "sets": {}
     }

@@ -172,14 +172,14 @@ function (Logger,
 
     VisualizerPanel.prototype._updateValidVisualizers = function (currentNodeId) {
         var node,
-            validPanels;
+            validVisuals;
         // Update the validVisualizers
         if (currentNodeId || currentNodeId === CONSTANTS.PROJECT_ROOT_ID) {
             node = this._client.getNode(currentNodeId);
             if (node) {
-                validPanels = node.getRegistry(REGISTRY_KEYS.VALID_PANELS);
-                if (validPanels) {
-                    this._validVisualizers = validPanels.split(' ');
+                validVisuals = node.getRegistry(REGISTRY_KEYS.VALID_VISUALIZERS);
+                if (validVisuals) {
+                    this._validVisualizers = validVisuals.split(' ');
                     return;
                 }
             } else {
