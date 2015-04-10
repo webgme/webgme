@@ -25,7 +25,7 @@ var ID_NAME = '_id';
 function Database(options) {
     ASSERT(typeof options === 'object');
     ASSERT(typeof options.logger === 'object');
-    var mongo,
+    var mongo = null,
         gmeConfig = options.globConf,
         logger = options.logger.fork('mongo');
 
