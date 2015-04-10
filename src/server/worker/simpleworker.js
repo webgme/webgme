@@ -3,6 +3,27 @@
 
 'use strict';
 
+//gracefull edning of the child process
+process.on('SIGINT', function () {
+    if(logger){
+        logger.debug('stopping child process');
+        if (storage) {
+            storage.closeDatabase(function (err) {
+                if (err) {
+                    logger.error(err);
+                    process.exit(1);
+                } else {
+                    logger.debug('child process finished');
+                    process.exit(0);
+                }
+            });
+        }
+    } else {
+        console.error('child was killed without initialization');
+        process.exit(1);
+    }
+});
+
 var WEBGME = require(__dirname + '/../../../webgme'),
 
     Core = requireJS('common/core/core'),
@@ -647,7 +668,7 @@ var seedProject = function (parameters, callback) {
                 }
             });
         },
-        rightsChecked = function(){
+        rightsChecked = function () {
             if (parameters.type === 'file') {
                 seed = getSeedFromFile(parameters.seedName);
                 if (seed === null) {
@@ -694,7 +715,7 @@ var seedProject = function (parameters, callback) {
                                 return fail(err);
                             }
                             //we should add the newly created project to the user so he can manipulate it
-                            if(AUTH){
+                            if (AUTH) {
                                 AUTH.authorizeByUserId(parameters.userId, contextParameters.projectName, 'create',
                                     {
                                         read: true,
@@ -744,7 +765,12 @@ var initConnectedWorker = function (name, webGMESessionId, projectName, branchNa
                 if (err) {
                     return callback(err);
                 }
-                _addOn.start({projectName: projectName, branchName: branchName, project: project, logger: logger.fork(name)}, callback);
+                _addOn.start({
+                    projectName: projectName,
+                    branchName: branchName,
+                    project: project,
+                    logger: logger.fork(name)
+                }, callback);
             });
         } else {
             callback('unable to connect user\'s storage: ' + err);
@@ -760,27 +786,17 @@ var connectedWorkerQuery = function (parameters, callback) {
 };
 
 var connectedworkerStop = function (callback) {
-    var closeStorage = function (cb) {
-        if (storage) {
-            storage.closeDatabase(cb);
-        } else {
-            cb(null);
-        }
-    };
-
-    closeStorage(function (err) {
-        if (_addOn) {
-            _addOn.stop(function (err1) {
-                if (err) {
-                    return callback(err || err1);
-                }
-                _addOn = null;
-                callback(err);
-            });
-        } else {
-            callback(err);
-        }
-    });
+    if (_addOn) {
+        _addOn.stop(function (err) {
+            if (err) {
+                return callback(err);
+            }
+            _addOn = null;
+            callback(null);
+        });
+    } else {
+        callback(null);
+    }
 };
 
 var safeSend = function (msg) {
