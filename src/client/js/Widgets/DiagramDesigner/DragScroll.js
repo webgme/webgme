@@ -1,15 +1,15 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['jquery',
-        'logManager'], function (__jquery,
-                                 logManager) {
+        'js/logger'], function (__jquery,
+                                 Logger) {
 
     "use strict";
 
     var DragScroll;
 
     DragScroll = function (containerNode) {
-        this._logger = logManager.create("DragScroll");
+        this._logger = Logger.create('gme:Widgets:DiagramDesigner:DragScroll', WebGMEGlobal.gmeConfig.client.log);
 
         this._containerNode = containerNode;
     };

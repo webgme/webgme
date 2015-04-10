@@ -1,13 +1,13 @@
-/*globals define, _*/
-
-/**
- * @author rkereskenyi / https://github.com/rkereskenyi
+/*globals define,_*/
+/*
+ * @author rkereskenyi / https://github/rkereskenyi
  */
-
 define(['js/Decorators/DecoratorBase',
+    './BlockEditor/SVGDecorator.BlockEditorWidget',
     './DiagramDesigner/SVGDecorator.DiagramDesignerWidget',
     './PartBrowser/SVGDecorator.PartBrowserWidget'], function (
                                                            DecoratorBase,
+                                                           SVGDecoratorBlockEditorWidget,
                                                            SVGDecoratorDiagramDesignerWidget,
                                                            SVGDecoratorPartBrowserWidget) {
 
@@ -30,9 +30,12 @@ define(['js/Decorators/DecoratorBase',
     /*********************** OVERRIDE DecoratorBase MEMBERS **************************/
 
     SVGDecorator.prototype.initializeSupportedWidgetMap = function () {
+
         this.supportedWidgetMap = {
             'DiagramDesigner': SVGDecoratorDiagramDesignerWidget,
-            'PartBrowser': SVGDecoratorPartBrowserWidget};
+            'PartBrowser': SVGDecoratorPartBrowserWidget,
+            'BlockEditor': SVGDecoratorBlockEditorWidget};
+
     };
 
     return SVGDecorator;

@@ -4,8 +4,8 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['logManager',
-    'clientUtil',
+define(['js/logger',
+    'js/util',
     'js/Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',
@@ -13,16 +13,16 @@ define(['logManager',
     'js/Utils/ExportManager',
     'js/Utils/ImportManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-    'js/DragDrop/DragHelper'], function (logManager,
-                                                        util,
-                                                        CONSTANTS,
-                                                        nodePropertyNames,
-                                                        REGISTRY_KEYS,
-                                                        GMEConcepts,
-                                                        ExportManager,
-                                                        ImportManager,
-                                                        DiagramDesignerWidgetConstants,
-                                                        DragHelper) {
+    'js/DragDrop/DragHelper'], function (Logger,
+                                        util,
+                                        CONSTANTS,
+                                        nodePropertyNames,
+                                        REGISTRY_KEYS,
+                                        GMEConcepts,
+                                        ExportManager,
+                                        ImportManager,
+                                        DiagramDesignerWidgetConstants,
+                                        DragHelper) {
 
     "use strict";
 
@@ -302,7 +302,7 @@ define(['logManager',
             if (GMEConcepts.canDeleteNode(objID)) {
                 objIdList.pushUnique(objID);
             } else {
-                this.logger.warning('Can not delete item with ID: ' + objID + '. Possibly it is the ROOT or FCO');
+                this.logger.warn('Can not delete item with ID: ' + objID + '. Possibly it is the ROOT or FCO');
             }
         }
 
@@ -417,8 +417,8 @@ define(['logManager',
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         //check to see if dragParams.parentID and this.parentID are the same
                         //if so, it's not a real move, it is a reposition
-                        if ((dragParams && dragParams.parentID === parentID) ||
-                            GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
+                        if (((dragParams && dragParams.parentID === parentID) ||
+                            GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) && GMEConcepts.canMoveNodeHere(parentID,items)) {
                             dragAction = {'dragEffect': dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
@@ -1047,9 +1047,9 @@ define(['logManager',
                             this._client.startTransaction();
                             this._client.copyMoreNodes(params);
                             this._client.completeTransaction();
-                            this.logger.warning('Pasted ' + childrenIDs.length + ' items successfully into node (' + parentID + ')');
+                            this.logger.warn('Pasted ' + childrenIDs.length + ' items successfully into node (' + parentID + ')');
                         } else {
-                            this.logger.warning('Can not paste items because not all the items on the clipboard can be created as a child of the currently opened node (' + parentID + ')');
+                            this.logger.warn('Can not paste items because not all the items on the clipboard can be created as a child of the currently opened node (' + parentID + ')');
                         }
                     }
                 }
@@ -1089,6 +1089,7 @@ define(['logManager',
             MENU_EXINTCONF = 'exintconf',
             MENU_EXPLIB = 'exportlib',
             MENU_UPDLIB = 'updatelib',
+            MENU_CON_NODE = 'connode',
             self = this;
 
         /*menuItems[MENU_EXINTCONF] = {
@@ -1104,8 +1105,14 @@ define(['logManager',
                 "name": 'Update library...',
                 "icon": 'glyphicon glyphicon-refresh'
             };
-        }
+            if(self._client.getRunningAddOnNames().indexOf("ConstraintAddOn") !== -1){
+                menuItems[MENU_CON_NODE] = {
+                    "name": 'Check Node Constraints...',
+                    "icon": 'glyphicon glyphicon-fire'
+                };
+            }
 
+        }
 
         this.designerCanvas.createMenu(menuItems, function (key) {
                 if (key === MENU_EXINTCONF){
@@ -1114,6 +1121,8 @@ define(['logManager',
                     self._expLib(selectedIds);
                 } else if(key === MENU_UPDLIB){
                     self._updLib(selectedIds);
+                } else if(key === MENU_CON_NODE){
+                    self._nodeConCheck(selectedIds);
                 }
             },
             this.designerCanvas.posToPageXY(mousePos.mX,
@@ -1156,6 +1165,22 @@ define(['logManager',
         id = gmeIDs[0] || null;
 
         ImportManager.importLibrary(id);
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._nodeConCheck = function (selectedIds) {
+        var i = selectedIds.length,
+            gmeIDs = [],
+            id;
+
+        while(i--) {
+            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
+        }
+
+        id = gmeIDs[0] || null;
+
+        if(id){
+            this._client.validateNodeAsync(id);
+        }
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {

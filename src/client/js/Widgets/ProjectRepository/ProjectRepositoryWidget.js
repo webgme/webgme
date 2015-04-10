@@ -5,15 +5,15 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['logManager',
-    'clientUtil',
-    'loaderCircles',
+define(['js/logger',
+    'js/util',
+    'js/Loader/LoaderCircles',
     './ProjectRepositoryWidgetControl',
     'moment',
     'raphaeljs',
     'css!./styles/ProjectRepositoryWidget.css'],
         function (
-            logManager,
+            Logger,
             util,
             LoaderCircles,
             ProjectRepositoryWidgetControl,
@@ -30,7 +30,7 @@ define(['logManager',
         COMMIT_DATA = 'commitData',
         COMMIT_CLASS = 'commit',
         ACTUAL_COMMIT_CLASS = 'actual',
-        X_DELTA = 20,
+        X_DELTA = 15,
         Y_DELTA = 25,   //Widgets/ProjectRepository/ProjectRepositoryWidget.scss - $table-row-height
         CONTENT_WIDTH = 1,
         CONTENT_HEIGHT = 1,
@@ -59,7 +59,8 @@ define(['logManager',
         //attach its controller
         new ProjectRepositoryWidgetControl(client, this);
 
-        this._logger = logManager.create("ProjectRepositoryWidget");
+        this._logger = Logger.create("gme:Widgets:ProjectRepository:ProjectRepositoryWidget",
+            WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug("Created");
     };
 
@@ -143,22 +144,24 @@ define(['logManager',
     /******************* PUBLIC API TO BE OVERRIDDEN IN THE CONTROLLER **********************/
 
     ProjectRepositoryWidget.prototype.onLoadMoreCommits = function (num) {
-        this._logger.warning("onLoadMoreCommits is not overridden in Controller...num: '" + num + "'");
+        this._logger.warn("onLoadMoreCommits is not overridden in Controller...num: '" + num + "'");
     };
 
     ProjectRepositoryWidget.prototype.onLoadCommit = function (params) {
-        this._logger.warning("onLoadCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
+        this._logger.warn("onLoadCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
     };
 
     ProjectRepositoryWidget.prototype.onDeleteBranchClick = function (branch) {
-        this._logger.warning("onDeleteBranchClick is not overridden in Controller...branch: '" + branch + "'");
+        this._logger.warn("onDeleteBranchClick is not overridden in Controller...branch: '" + branch + "'");
     };
 
     ProjectRepositoryWidget.prototype.onCreateBranchFromCommit = function (params) {
-        this._logger.warning("onCreateBranchFromCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
+        this._logger.warn("onCreateBranchFromCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
     };
 
     /******************* PRIVATE API *****************************/
+
+    ProjectRepositoryWidget.cMessageStyleStr = 'div.' + MESSAGE_DIV_CLASS + ' { max-width: __MW__px; }';
 
     ProjectRepositoryWidget.prototype._initializeUI = function () {
         var self = this;
@@ -167,8 +170,13 @@ define(['logManager',
 
         this._el.addClass(REPOSITORY_LOG_VIEW_CLASS);
 
+        //initialize all containers
+        this._cMessageStyle = $('<style/>', {"type": "text/css"});
+        this._cMessageStyle.html(ProjectRepositoryWidget.cMessageStyleStr.replace('__MW__', '400'));
+        this._el.append(this._cMessageStyle);
+
         /*table layout*/
-        this._table = $('<table/>', {"class": "table table-hover user-select-on"});
+        this._table = $('<table/>', {"class": "table table-hover user-select-on commit-list"});
         this._tHead = $('<thead/>');
         this._tHead.append($('<tr><th>Graph</th><th>Actions</th><th>Commit</th><th>Message</th><th>User</th><th>Time</th></tr>'));
         this._tBody = $('<tbody/>');
@@ -463,9 +471,9 @@ define(['logManager',
     };
 
     ProjectRepositoryWidget.prototype._trDOMBase = $(
-        '<tr><td></td><td></td><td></td><td><div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
+        '<tr><td></td><td class="actions"></td><td class="commit-hash"></td><td class="message-column"><div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
     );
-    ProjectRepositoryWidget.prototype._createBranhcBtnDOMBase = $(
+    ProjectRepositoryWidget.prototype._createBranchBtnDOMBase = $(
         '<button class="btn btn-default btn-xs btnCreateBranchFromCommit" href="#" title="Create new branch from here"><i class="glyphicon glyphglyphicon glyphicon-edit"></i></button>'
     );
     ProjectRepositoryWidget.prototype._loadCommitBtnDOMBase = $('' +
@@ -524,7 +532,7 @@ define(['logManager',
         );
 
         //generate 'Create branch from here' button
-        btn = this._createBranhcBtnDOMBase.clone();
+        btn = this._createBranchBtnDOMBase.clone();
         btn.data(COMMIT_IT, params.id);
         tr[0].cells[this._tableCellActionsIndex].appendChild(btn[0]);
 
@@ -661,6 +669,12 @@ define(['logManager',
         //set the correct with for the 'Graph' column in the table to fit the drawn graph
         this._graphPlaceHolder.css("width", contentWidth);
 
+        //make it almost "full screen"
+        wW = wW - 2 * WINDOW_PADDING;
+        wH = wH - 2 * WINDOW_PADDING - DIALOG_HEADER_HEIGHT - DIALOG_FOOTER_HEIGHT;
+
+        this._cMessageStyle.html(ProjectRepositoryWidget.cMessageStyleStr.replace('__MW__', wW * 0.66));
+
         tWidth = this._table.width();
         this._showMoreContainer.css("width", tWidth);
     };
@@ -711,8 +725,8 @@ define(['logManager',
 
     ProjectRepositoryWidget.prototype._onCreateBranchFromCommitButtonClick = function (btn) {
         var td = btn.parent(),
-            createBranchHTML = $('<div class="input-append control-group"></div>'),
-            txtInput = $('<input class="span2 input-mini" type="text">'),
+            createBranchHTML = $('<div class="input-group form-group"></div>'),
+            txtInput = $('<input class="form-control span2 input-mini" type="text">'),
             btnSave = $('<button class="btn btn-default btn-xs" type="button" title="Create branch"><i class="glyphicon glyphicon-ok"></i></button>'),
             btnCancel = $('<button class="btn btn-default btn-xs" type="button" title="Cancel"><i class="glyphicon glyphicon-remove"></i></button>'),
             self = this;
@@ -744,10 +758,10 @@ define(['logManager',
             var textVal = txtInput.val();
 
             if (textVal === "" || self._branchNames.indexOf(textVal) !== -1 || !BRANCH_REGEXP.test(textVal)) {
-                createBranchHTML.addClass("error");
+                createBranchHTML.addClass("has-error");
                 btnSave.disable(true);
             } else {
-                createBranchHTML.removeClass("error");
+                createBranchHTML.removeClass("has-error");
                 btnSave.disable(false);
             }
 

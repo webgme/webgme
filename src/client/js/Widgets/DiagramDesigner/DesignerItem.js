@@ -1,8 +1,8 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-define(['logManager',
+define(['js/logger',
     './DiagramDesignerWidget.Constants',
-    './ErrorDecorator'], function (logManager,
+    './ErrorDecorator'], function (Logger,
                                  DiagramDesignerWidgetConstants,
                                  ErrorDecorator) {
 
@@ -18,8 +18,8 @@ define(['logManager',
         this.canvas = canvas;
 
         this.__initialize();
-
-        this.logger = logManager.create("DesignerItem_" + this.id);
+        this.logger = Logger.create('gme:Widgets:DiagramDesigner:DesignerItem_' + this.id,
+            WebGMEGlobal.gmeConfig.client.log);
         this.logger.debug("Created");
     };
 
@@ -305,7 +305,7 @@ define(['logManager',
             if (_.isFunction(this._decoratorInstance[fnName])) {
                 result = this._decoratorInstance[fnName].apply(this._decoratorInstance, args);
             } else {
-                this.logger.warning("DecoratorInstance '" + $.type(this._decoratorInstance) + "' does not have a method with name '" + fnName + "'...");
+                this.logger.warn("DecoratorInstance '" + $.type(this._decoratorInstance) + "' does not have a method with name '" + fnName + "'...");
             }
         } else {
             this.logger.error("DecoratorInstance does not exist...");

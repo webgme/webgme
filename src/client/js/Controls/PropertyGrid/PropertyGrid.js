@@ -1,7 +1,7 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-define(['logManager',
-    'js/Controls/PropertyGrid/PropertyGridPart'], function (logManager,
+define(['js/logger',
+    'js/Controls/PropertyGrid/PropertyGridPart'], function (Logger,
                                                    PropertyGridPart) {
 
     "use strict";
@@ -11,7 +11,7 @@ define(['logManager',
     PropertyGrid = function () {
         var self = this;
 
-        this._logger = logManager.create("PropertyGrid");
+        this._logger = Logger.create('gme:Controls:PropertyGrid:PropertyGrid', WebGMEGlobal.gmeConfig.client.log);
 
         this.$el = $('<div/>', { "class" : "property-list" });
 

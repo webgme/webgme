@@ -19,14 +19,14 @@
   top: 50%;
   left: 50%;
   margin: -43px 0 0 -43px;
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0);
   opacity: 1; }
   .loader-container .circle-o {
-    background-color: transparent;
+    background-color: rgba(0, 0, 0, 0);
     border: 5px solid rgba(82, 168, 236, 0.9);
     opacity: 0.9;
-    border-right: 5px solid transparent;
-    border-left: 5px solid transparent;
+    border-right: 5px solid rgba(0, 0, 0, 0);
+    border-left: 5px solid rgba(0, 0, 0, 0);
     border-radius: 50px;
     box-shadow: 0 0 36px #52a8ec;
     width: 50px;
@@ -37,18 +37,18 @@
     -o-animation: spinPulse 1s infinite linear;
     animation: spinPulse 1s infinite linear; }
   .loader-container .circle-i {
-    background-color: transparent;
+    background-color: rgba(0, 0, 0, 0);
     border: 5px solid rgba(82, 168, 236, 0.9);
     opacity: 0.9;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
+    border-left: 5px solid rgba(0, 0, 0, 0);
+    border-right: 5px solid rgba(0, 0, 0, 0);
     border-radius: 30px;
     box-shadow: 0 0 15px #52a8ec;
     width: 30px;
     height: 30px;
     margin: 0 auto;
     position: relative;
-    top: -62px;
+    top: -52px;
     -moz-animation: spinoffPulse 1s infinite linear;
     -webkit-animation: spinoffPulse 1s infinite linear;
     -o-animation: spinoffPulse 1s infinite linear;
@@ -73,12 +73,14 @@
   100% {
     transform: rotate(-320deg);
     opacity: 0; } }
+
 @keyframes spinoffPulse {
   0% {
     transform: rotate(0deg); }
 
   100% {
     transform: rotate(360deg); } }
+
 @-moz-keyframes spinPulse {
   0% {
     -moz-transform: rotate(160deg);
@@ -92,12 +94,14 @@
   100% {
     -moz-transform: rotate(-320deg);
     opacity: 0; } }
+
 @-moz-keyframes spinoffPulse {
   0% {
     -moz-transform: rotate(0deg); }
 
   100% {
     -moz-transform: rotate(360deg); } }
+
 @-webkit-keyframes spinPulse {
   0% {
     -webkit-transform: rotate(160deg);
@@ -111,12 +115,14 @@
   100% {
     -webkit-transform: rotate(-320deg);
     opacity: 0; } }
+
 @-webkit-keyframes spinoffPulse {
   0% {
     -webkit-transform: rotate(0deg); }
 
   100% {
     -webkit-transform: rotate(360deg); } }
+
 @-o-keyframes spinPulse {
   0% {
     -o-transform: rotate(160deg);
@@ -130,6 +136,7 @@
   100% {
     -o-transform: rotate(-320deg);
     opacity: 0; } }
+
 @-o-keyframes spinoffPulse {
   0% {
     -o-transform: rotate(0deg); }

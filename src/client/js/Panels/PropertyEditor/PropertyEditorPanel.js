@@ -7,6 +7,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
                                                                      PropertyEditorPanelController) {
     "use strict";
 
+    "use strict";
+
     var PropertyEditorPanel,
         __parent__ = PanelBaseWithHeader;
 

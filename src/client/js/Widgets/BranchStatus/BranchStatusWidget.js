@@ -1,8 +1,8 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['logManager',
+define(['js/logger',
     'js/Controls/DropDownMenu',
-    'js/Controls/PopoverBox'], function (logManager,
+    'js/Controls/PopoverBox'], function (Logger,
                                            DropDownMenu,
                                            PopoverBox) {
 
@@ -11,7 +11,7 @@ define(['logManager',
     var BranchStatusWidget;
 
     BranchStatusWidget = function (containerEl, client) {
-        this._logger = logManager.create("BranchStatusWidget");
+        this._logger = Logger.create('gme:Widgets:BranchStatusWidget', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
         this._el = containerEl;

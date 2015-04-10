@@ -2,8 +2,10 @@
 
 define(['./ButtonBase',
         'js/Controls/iCheckBox',
+        'js/logger',
         './ToolbarItemBase'], function (buttonBase,
                                             iCheckBox,
+                                            Logger,
                                             ToolbarItemBase) {
 
     "use strict";
@@ -19,7 +21,8 @@ define(['./ButtonBase',
 
     ToolbarDropDownButton = function (params) {
         this.el = EL_BASE.clone();
-
+        this._logger = Logger.create('gme:ToolBar:ToolBarButtonDropDown:' + (new Date()).toISOString(),
+            WebGMEGlobal.gmeConfig.client.log);
         var oClickFn;
         if (params.clickFn) {
             oClickFn = params.clickFn;
@@ -46,6 +49,7 @@ define(['./ButtonBase',
         this._dropDownBtn.attr('data-toggle', "dropdown");
 
         this.el.append(this._dropDownBtn).append(this._ulMenu);
+        this._logger.debug('ctor');
     };
 
     _.extend(ToolbarDropDownButton.prototype, ToolbarItemBase.prototype);
@@ -55,6 +59,10 @@ define(['./ButtonBase',
     };
 
     ToolbarDropDownButton.prototype.enabled = function (enabled) {
+        if ( !this.el ) {
+            this._logger.error('trying to enable', enabled);
+            return;
+        }
         if (enabled === true) {
             this.el.find('.btn').disable(false);
         } else {
@@ -133,6 +141,7 @@ define(['./ButtonBase',
         this.el.remove();
         this.el.empty();
         this.el = undefined;
+        this._logger.debug('destroyed');
     };
 
     return ToolbarDropDownButton;

@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['clientUtil',
+define(['js/util',
         'js/Constants',
         'text!./templates/MetaEditorPointerNamesDialog.html',
         'css!./styles/MetaEditorPointerNamesDialog.css'], function ( util,

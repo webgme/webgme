@@ -41,7 +41,7 @@ define([
                 _isAsset = _type === 'asset',
                 widget;
 
-            if (_readOnly) {
+            if (_readOnly && _type !== 'boolean') {
                 widget = new LabelWidget(propDesc);
             } else if (_specificWidget) {
                 switch (_specificWidget) {
@@ -69,6 +69,8 @@ define([
                     widget = new StringWidget(propDesc);
                 }
             }
+
+            widget.setReadOnly(_readOnly);
 
             return widget;
         };

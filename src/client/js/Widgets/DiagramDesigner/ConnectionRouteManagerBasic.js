@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-define(['logManager'], function (logManager) {
+define(['js/logger'], function (Logger) {
 
     "use strict";
 
@@ -8,7 +8,8 @@ define(['logManager'], function (logManager) {
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = "_x_";
 
     ConnectionRouteManagerBasic = function (options) {
-        this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "ConnectionRouteManagerBasic"));
+        var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:ConnectionRouteManagerBasic';
+        this.logger = (options && options.logger) || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this.diagramDesigner = options ? options.diagramDesigner : null;
 

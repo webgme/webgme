@@ -17,7 +17,7 @@ setConstraint(node,constraintObj)
 getConstraintNames(node)
 delConstraint(node,name)
  */
-define([ "util/assert" ], function (ASSERT) {
+define([ "common/util/assert" ], function (ASSERT) {
     "use strict";
     var CONSTRAINTS_RELID = "_constraints";
     var C_DEF_PRIORITY = 1;
@@ -61,7 +61,7 @@ define([ "util/assert" ], function (ASSERT) {
                 return {
                     "script":_innerCore.getAttribute(constraintNode,"script"),
                     "priority":_innerCore.getAttribute(constraintNode,"priority"),
-                    "message":_innerCore.getAttribute(constraintNode,"message")
+                    "info":_innerCore.getAttribute(constraintNode,"info")
                 };
             } else {
                 return null;
@@ -81,11 +81,11 @@ define([ "util/assert" ], function (ASSERT) {
             var constraintNode = _innerCore.getChild(constraintsNode,constRelId);
             constraintObj.priority = constraintObj.priority || C_DEF_PRIORITY;
             constraintObj.script = constraintObj.script || "console.log(\"empty constraint\");";
-            constraintObj.message = constraintObj.message || "";
+            constraintObj.info = constraintObj.info || "";
             _innerCore.setAttribute(constraintNode,"name",name);
             _innerCore.setAttribute(constraintNode,"script",constraintObj.script);
             _innerCore.setAttribute(constraintNode,"priority",constraintObj.priority);
-            _innerCore.setAttribute(constraintNode,"message",constraintObj.message);
+            _innerCore.setAttribute(constraintNode,"info",constraintObj.info);
             _innerCore.setRegistry(node,getRegConstName(name),(_innerCore.getRegistry(node,getRegConstName(name)) || 0)+1);
         };
 
@@ -95,7 +95,7 @@ define([ "util/assert" ], function (ASSERT) {
             var constRelId = getConstraintRelId(constraintsNode,name);
             if(constRelId){
                 var constraintNode = _innerCore.getChild(constraintsNode,constRelId);
-                _innerCore.deleteNode(constraintNode);
+                _innerCore.deleteNode(constraintNode,true);
             }
             _innerCore.delRegistry(node,getRegConstName(name));
         };
@@ -108,6 +108,27 @@ define([ "util/assert" ], function (ASSERT) {
             for(var i=0;i<relIds.length;i++){
                 names.push(_innerCore.getAttribute(_innerCore.getChild(constraintsNode,relIds[i]),"name"));
             }
+            return names;
+        };
+
+        //TODO this means we always have to have this layer above type/inheritance layer
+        _core.getOwnConstraintNames = function(node){
+            ASSERT(_innerCore.isValidNode(node));
+            var names = _core.getConstraintNames(node),
+                base = _core.getBase(node),
+                baseNames = [], i,index;
+
+            if(base){
+                baseNames = _core.getConstraintNames(base);
+            }
+
+            for(i=0;i<baseNames.length;i++){
+                index = names.indexOf(baseNames[i]);
+                if(index !== -1){
+                    names.splice(index,1);
+                }
+            }
+
             return names;
         };
 

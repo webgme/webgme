@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert" ], function (ASSERT) {
+define([ "common/util/assert" ], function (ASSERT) {
 	"use strict";
 
 	function Database (_database, options) {
@@ -69,6 +69,8 @@ define([ "util/assert" ], function (ASSERT) {
 						fsyncDatabase: fsyncDatabase,
 						closeProject: closeProject,
 						loadObject: loadObject,
+						getInfo: getInfo,
+						setInfo: setInfo,
 						insertObject: insertObject,
 						findHash: findHash,
 						dumpObjects: dumpObjects,
@@ -76,6 +78,7 @@ define([ "util/assert" ], function (ASSERT) {
 						getBranchHash: getBranchHash,
 						setBranchHash: setBranchHash,
 						getCommits: getCommits,
+            getCommonAncestorCommit: getCommonAncestorCommit,
 						makeCommit: makeCommit,
                         setUser: project.setUser,
 						ID_NAME: project.ID_NAME
@@ -103,6 +106,16 @@ define([ "util/assert" ], function (ASSERT) {
 			function loadObject (hash, callback) {
 				logger.debug(projectName + '.loadObject(' + hash + ")");
 				project.loadObject(hash, callback);
+			}
+
+			function getInfo (callback){
+				logger.debug(projectName + '.getInfo()');
+				project.getInfo(callback);
+			}
+
+			function setInfo (info,callback){
+				logger.debug(projectName + '.setInfo('+JSON.stringify(info)+')');
+				project.setInfo(info,callback);
 			}
 
 			function findHash (beginning, callback) {
@@ -145,6 +158,14 @@ define([ "util/assert" ], function (ASSERT) {
 				logger.debug(projectName + '.makeCommit(' + parents + ',' + roothash + ',' + msg + ')');
 				return project.makeCommit(parents, roothash, msg, callback);
 			}
+
+      function getCommonAncestorCommit(commitA, commitB, callback) {
+        logger.debug(projectName + '.getCommonAncestorCommit(' + commitA + ',' + commitB + ')');
+        project.getCommonAncestorCommit(commitA, commitB, function (err, commit) {
+          logger.debug(projectName + '.getCommonAncestorCommit(' + commitA + ',' + commitB + ') ->(' + JSON.stringify(err) + ',' + commit + ')');
+          callback(err, commit);
+        });
+		}
 		}
 
         function simpleRequest (parameters,callback){
@@ -153,6 +174,10 @@ define([ "util/assert" ], function (ASSERT) {
         }
         function simpleResult(resultId,callback){
             logger.debug('simpleResult('+resultId+')');
+            _database.simpleResult(resultId,callback);
+        }
+        function simpleQuery(workerId,parameters,callback){
+            logger.debug('simpleQuery('+workerId+','+parameters+')');
             _database.simpleResult(resultId,callback);
         }
         function getToken(callback){
@@ -175,6 +200,7 @@ define([ "util/assert" ], function (ASSERT) {
 			deleteProject: deleteProject,
             simpleRequest: simpleRequest,
             simpleResult: simpleResult,
+            simpleQuery: simpleQuery,
             getNextServerEvent: getNextServerEvent,
             getToken: getToken
 		};

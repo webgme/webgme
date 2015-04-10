@@ -1,5 +1,5 @@
-/*globals require, $, console, angular*/
-
+/*globals require, $, angular*/
+/*jshint browser:true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
@@ -9,15 +9,18 @@
 var DEBUG = false,
     _jqueryVersion = '2.1.0',
     _jqueryUIVersion = '1.10.4',
-    _bootsrapVersion = '3.1.1';
+    _bootstrapVersion = '3.1.1',
+    _angularVersion = '1.3.15',
+    _superagentVersion = '1.1.0',
+    WebGMEGlobal = WebGMEGlobal || {};
 
 
 // configure require path and modules
 require.config({
-    baseUrl: '/',
+    baseUrl: './',
 
     map: {
-         '*': {
+        '*': {
             'css': 'lib/require/require-css/css',
             'text': 'lib/require/require-text/text'
         }
@@ -26,26 +29,24 @@ require.config({
 
     paths: {
 
-        'domReady':	'lib/require/require-domready/domReady',
+        'domReady': 'lib/require/require-domready/domReady',
 
         //jQuery and stuff
         'jquery': 'lib/jquery/jquery-' + _jqueryVersion + ( DEBUG ? '.min' : '' ),
         'jquery-ui': 'lib/jquery/jquery-ui-' + _jqueryUIVersion + ( DEBUG ? '.min' : '' ),
         'jquery-ui-iPad': 'lib/jquery/jquery.ui.ipad',
-        'jquery-WebGME': 'js/jquery.WebGME',
         'jquery-dataTables': 'lib/jquery/jquery.dataTables.min',
         'jquery-dataTables-bootstrapped': 'lib/jquery/jquery.dataTables.bootstrapped',
         'jquery-spectrum': 'lib/jquery/jquery.spectrum',
 
         //Bootsrap stuff
-        'bootstrap': 'lib/bootstrap/' + _bootsrapVersion + '/js/bootstrap' + ( DEBUG ? '.min' : '' ),
+        'bootstrap': 'lib/bootstrap/' + _bootstrapVersion + '/js/bootstrap' + ( DEBUG ? '.min' : '' ),
 
         //Other modules
         'underscore': 'lib/underscore/underscore-min',
         'backbone': 'lib/backbone/backbone.min',
         'd3': 'lib/d3/d3.v3.min',
         'jscolor': 'lib/jscolor/jscolor',
-        'superagent': 'lib/superagent/superagent',
 
         //RaphaelJS family
         'eve': 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
@@ -55,60 +56,60 @@ require.config({
         'raphael_vml': 'lib/raphael/raphael.vml',
 
         //WebGME custom modules
-        'logManager': 'common/LogManager',
-        'eventDispatcher': 'common/EventDispatcher',
+        'common': '/common',
+        'blob': '/common/blob',
+        'plugin': '/plugin',
+        'panels': '/panels',
 
-        'util': 'common/util',
-        'core': 'common/core',
-        'coreclient': 'common/core/users',
-        'storage': 'common/storage',
-        'blob': 'middleware/blob',
+        //node_modules
+        'jszip': 'lib/jszip/jszip',
+        'superagent': 'lib/superagent/superagent-' + _superagentVersion,
+        'debug': 'lib/debug/debug',
 
-        'notificationManager': 'js/NotificationManager',
-        'clientUtil': 'js/util',
-        'loaderCircles': 'js/Loader/LoaderCircles',
-        'loaderProgressBar': 'js/Loader/LoaderProgressBar',
 
         'codemirror': 'lib/codemirror/codemirror.amd',
         'jquery-csszoom': 'lib/jquery/jquery.csszoom',
 
-        'jszip': 'lib/jszip/jszip',
 
         'moment': 'lib/moment/moment.min',
 
         // Angular and modules
-        'angular': 'lib/angular/angular-1.2.19/angular' + ( DEBUG ? '.min' : '' ),
-        'angular-route': 'lib/angular/angular-1.2.19/angular-route' + ( DEBUG ? '.min' : '' ),
+        'angular': 'lib/angular/angular-' + _angularVersion + '/angular' + ( DEBUG ? '.min' : '' ),
+        'angular-route': 'lib/angular/angular-' + _angularVersion + '/angular-route' + ( DEBUG ? '.min' : '' ),
         'angular-route-styles': 'lib/angular/angular-route-styles/route-styles',
         'angular-ui-bootstrap': 'lib/angular/ui-bootstrap/ui-bootstrap-tpls-0.11.0.min'
     },
 
     shim: {
-        
+
         'angular-route': ['angular'],
         'angular-route-styles': ['angular'],
         'angular-ui-bootstrap': ['angular'],
-        
+
+        'bower_components/isis-ui-components/dist/isis-ui-components': ['angular'],
+        'bower_components/isis-ui-components/dist/isis-ui-components-templates': ['angular'],
+
         'jquery-ui': ['jquery'],
-        'jquery-ui-iPad': ['jquery','jquery-ui'],
+        'jquery-ui-iPad': ['jquery', 'jquery-ui'],
 
         'bootstrap': [
             'jquery',
-            'css!lib/bootstrap/' + _bootsrapVersion + '/css/bootstrap.min.css',
-            'css!lib/bootstrap/' + _bootsrapVersion + '/css/bootstrap-theme.min.css'
+            'css!lib/bootstrap/' + _bootstrapVersion + '/css/bootstrap.min.css',
+            'css!lib/bootstrap/' + _bootstrapVersion + '/css/bootstrap-theme.min.css'
         ],
 
         'backbone': ['underscore'],
-        'clientUtil': ['jquery'],
-        'jquery-WebGME': ['bootstrap'],
+        'js/util': ['jquery'],
+        'js/jquery.WebGME': ['bootstrap'],
         'jquery-dataTables': ['jquery'],
         'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
         'js/WebGME': [
-            'jquery-WebGME',
-            'css!/css/main.css',
-            'css!/css/themes/dawn.css',
-            //'css!/fonts/font-awesome/css/font-awesome.min.css',
-            'css!/fonts/webgme-icons/style.css'
+            'js/jquery.WebGME',
+
+            'css!' + document.location.pathname + 'css/main.css',
+            'css!' + document.location.pathname + 'css/themes/dawn.css',
+            'css!fonts/font-awesome/css/font-awesome.min.css',
+            'css!fonts/webgme-icons/style.css'
         ],
         'jquery-csszoom': ['jquery-ui'],
         'jquery-spectrum': ['jquery'],
@@ -123,55 +124,64 @@ require(
         'jquery',
         'jquery-ui',
         'jquery-ui-iPad',
-        'jquery-WebGME',
+        'js/jquery.WebGME',
         'jquery-dataTables-bootstrapped',
         'bootstrap',
         'underscore',
         'backbone',
         'js/WebGME',
-        'clientUtil',
-        'bin/getconfig',
+        'js/util',
+        'text!/gmeConfig.json',
+        'js/logger',
 
         'angular',
-        'angular-route',
-        'angular-route-styles',
-        'angular-ui-bootstrap'
+        //'angular-route',
+        //'angular-route-styles',
+        'angular-ui-bootstrap',
+
+        'bower_components/isis-ui-components/dist/isis-ui-components',
+        'bower_components/isis-ui-components/dist/isis-ui-components-templates',
+        'css!bower_components/isis-ui-components/dist/isis-ui-components'
 
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
-              backbone, webGME, util, CONFIG) {
+              backbone, webGME, util, gmeConfigJson, Logger) {
 
         'use strict';
-
+        var gmeConfig = JSON.parse(gmeConfigJson);
+        WebGMEGlobal.gmeConfig = gmeConfig;
         domReady(function () {
 
-            if (CONFIG.hasOwnProperty('debug')) {
-                DEBUG = CONFIG.debug;
+            if (gmeConfig.debug) {
+                DEBUG = gmeConfig.debug;
             }
 
+            var log = Logger.create('gme:main', gmeConfig.client.log);
+            log.debug('domReady, got gmeConfig');
+
+
+            //#2 check URL
             var d = util.getURLParameterByName('debug').toLowerCase();
             if (d === 'true') {
                 DEBUG = true;
+            } else if (d === 'false') {
+                DEBUG = false;
             }
 
-            if (CONFIG.paths) {
+            // attach external libraries to extlib/*
 
-                // attach external libraries to extlib/*
-
-                var keys = Object.keys(CONFIG.paths);
-                for (var i = 0; i < keys.length; i += 1) {
-
-                    // assume this is a relative path from the current working directory
-                    CONFIG.paths[keys[i]] = 'extlib/' + CONFIG.paths[keys[i]];
-                }
-
-                // update client config to route the external lib requests
-
-                require.config({
-                    paths: CONFIG.paths
-                });
-
+            var keys = Object.keys(gmeConfig.requirejsPaths);
+            for (var i = 0; i < keys.length; i += 1) {
+                // assume this is a relative path from the current working directory
+                gmeConfig.requirejsPaths[keys[i]] = '/extlib/' + gmeConfig.requirejsPaths[keys[i]];
+                log.debug('Requirejs path resolved: ', keys[i], gmeConfig.requirejsPaths[keys[i]]);
             }
+
+            // update client config to route the external lib requests
+
+            require.config({
+                paths: gmeConfig.requirejsPaths
+            });
 
 
             // Extended disable function
@@ -180,9 +190,9 @@ require(
                     return this.each(function() {
                         var $this = $(this);
                         if($this.is('input, button')) {
-                          this.disabled = state;
+                            this.disabled = state;
                         } else {
-                          $this.toggleClass('disabled', state);
+                            $this.toggleClass('disabled', state);
                         }
                     });
                 }
@@ -192,12 +202,18 @@ require(
             // has to be initialized as early as possible
             var gmeApp = angular.module(
                 'gmeApp', [
-                    'ngRoute',
-                    'routeStyles',
+                    //'ngRoute',
+                    //'routeStyles',
                     'ui.bootstrap',
+                    'isis.ui.components',
                     'gme.ui.projectsDialog',
                     'gme.ui.headerPanel'
-                ]);
+                ]).config(function($locationProvider) {
+                    $locationProvider.html5Mode({
+                        enabled: true,
+                        requireBase: false // https://github.com/angular/angular.js/issues/8934
+                    });
+                });
 
             webGME.start( function(client) {
 

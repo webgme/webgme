@@ -1,72 +1,85 @@
-var webGme = require('../../webgme'),
-    program = require('commander'),
-    PATH = require('path'),
-    configFilename,
-    resolvedFilename,
-    commandLineConfig,
-    CONFIG = webGMEGlobal.getConfig(),
-    projectName,
-    branch,
-    pluginName,
-    selectedID,
-    activeSelection = [], // TODO: get this as a list of IDs from command line
-    pluginConfig = {};
+/*jshint node: true*/
+/**
+ * @author lattmann / https://github.com/lattmann
+ */
 
-program.option('-c, --config <name>', 'Configuration file');
-program.option('-p, --project <name>', 'Name of the project.', 'uj');
-program.option('-b, --branch <name>', 'Name of the branch.', 'master');
-program.option('-j, --pluginConfigPath <name>', 'Path to json file with plugin options that should be overwritten.', '');
-program.option('-n, --pluginName <name><mandatory>', 'Path to given plugin.');
-program.option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '');
-program.parse(process.argv);
+var main;
 
-if(program.pluginName === undefined){
-    program.help();
-} else {
+main = function (argv, callback) {
+    'use strict';
+    var path = require('path'),
+        gmeConfig = require(path.join(process.cwd(), 'config')),
+        webGme = require('../../webgme'),
+        Command = require('commander').Command,
+        program = new Command(),
+        pluginConfigFilename,
+        resolvedPluginConfigFilename,
+        pluginConfigJson,
+        projectName,
+        branch,
+        pluginName,
+        activeNode,
+        activeSelection = [], // TODO: get this as a list of IDs from command line
+        managerConfig = {};
+
+    callback = callback || function () {};
+
+    webGme.addToRequireJsPaths(gmeConfig);
+
+    program.option('-p, --project <name><mandatory>', 'Name of the project.');
+    program.option('-b, --branch <name>', 'Name of the branch.', 'master');
+    program.option('-j, --pluginConfigPath <name>',
+        'Path to json file with plugin options that should be overwritten.',
+        '');
+    program.option('-n, --pluginName <name><mandatory>', 'Path to given plugin.');
+    program.option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '');
+    program.parse(argv);
+
+    if (!(program.pluginName && program.project)) {
+        program.help();
+        console.log('A project and pluginName must be specified.');
+    }
+
     //getting program options
     projectName = program.project;
     branch = program.branch;
     pluginName = program.pluginName;
     activeNode = program.selectedObjID;
-    configFilename = program.config;
     pluginConfigFilename = program.pluginConfigPath;
-}
 
-console.log('executing '+pluginName+' plugin');
+    console.log('Executing ' + pluginName + ' plugin');
 
-if (pluginConfigFilename) {
-    resolvedPluginConfigFilename = PATH.resolve(pluginConfigFilename);
-    pluginConfigJson = require(resolvedPluginConfigFilename);
-} else {
-    pluginConfigJson = {};
-}
-
-if (configFilename) {
-    // TODO: check if file exists and it is json
-    resolvedFilename = PATH.resolve(configFilename);
-    commandLineConfig = require(resolvedFilename);
-
-    webGMEGlobal.setConfig(commandLineConfig);
-    // TODO: check if command line config valid or not
-    // TODO: probably we should not overwrite the dictionary and array options
-    for (var key in commandLineConfig) {
-        CONFIG[key] = commandLineConfig[key];
-    }
-}
-
-
-//setting plugin config
-pluginConfig.projectName = projectName;
-pluginConfig.branch = branch;
-pluginConfig.pluginName = pluginName;
-pluginConfig.activeNode = activeNode;
-pluginConfig.activeSelection = activeSelection;
-pluginConfig.pluginConfig = pluginConfigJson;
-
-webGme.runPlugin.main(CONFIG,pluginConfig,function(err,result){
-    if (err) {
-        console.log('execution stopped:', err, result);
+    if (pluginConfigFilename) {
+        resolvedPluginConfigFilename = path.resolve(pluginConfigFilename);
+        pluginConfigJson = require(resolvedPluginConfigFilename);
     } else {
-        console.log('execution was successful:', err, result);
+        pluginConfigJson = {};
     }
-});
+
+    //setting plugin config
+    managerConfig.projectName = projectName;
+    managerConfig.branch = branch;
+    managerConfig.pluginName = pluginName;
+    managerConfig.activeNode = activeNode;
+    managerConfig.activeSelection = activeSelection;
+
+    webGme.runPlugin.main(null, gmeConfig, managerConfig, pluginConfigJson, function (err, result) {
+        if (err) {
+            console.log('execution stopped:', err, result);
+            callback(err, result);
+            process.exit(1);
+        } else {
+            console.log('execution was successful:', err, result);
+            callback(err, result);
+            process.exit(0);
+        }
+    });
+};
+
+module.exports = {
+    main: main
+};
+
+if (require.main === module) {
+    main(process.argv);
+}

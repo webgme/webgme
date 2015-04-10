@@ -1,44 +1,41 @@
 /*globals define*/
 /*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
  * @author brollb / https://github/brollb
  */
 
-define(['logManager',
-        './AutoRouter.Size'], function (logManager,
-                                            ArSize) {
+define(['./AutoRouter.Size'], function (ArSize) {
 
-    "use strict";
+    'use strict';
 
     var ArPoint = function (x, y){
-        //Multiple Constructors
-        if(x === undefined){ //No arguments were passed to constructor
+        // Multiple Constructors
+        if(x === undefined){
             x = 0;
             y = 0;
-        }else if(y === undefined){ //One argument passed to constructor
+        }else if(y === undefined){
             y = x.y;
             x = x.x;
         }
 
-        this.x = Math.round(x);
-        this.y = Math.round(y);
+        this.x = x;
+        this.y = y;
     };
 
+    /**
+     * Check if the points have the same coordinates.
+     *
+     * @param {ArPoint} otherPoint
+     * @return {Boolean}
+     */
     ArPoint.prototype.equals = function (otherPoint){
-        if( this.x === otherPoint.x && this.y === otherPoint.y){
-            return true;
-        }
-
-        return false;
+        return this.x === otherPoint.x && this.y === otherPoint.y;
     };
 
-    ArPoint.prototype.offset = function (x, y){
-        if(y !== undefined){ //two arguments are sent to function
-            x = new ArSize(x, y);
-        }
+    ArPoint.prototype.shift = function (otherObject){ //equivalent to +=
+        this.x += otherObject.dx;
+        this.y += otherObject.dy;
 
-        this.add(x);
+        return this;
     };
 
     ArPoint.prototype.add = function (otherObject){ //equivalent to +=
@@ -49,9 +46,6 @@ define(['logManager',
             this.x += otherObject.x;
             this.y += otherObject.y;
         }
-
-        this.x = Math.round(this.x);
-        this.y = Math.round(this.y);
     };
 
     ArPoint.prototype.subtract = function (otherObject){ //equivalent to +=
@@ -67,41 +61,30 @@ define(['logManager',
     ArPoint.prototype.plus = function (otherObject){ //equivalent to +
         var objectCopy = null;
 
-        if(otherObject instanceof ArSize){
+        if (otherObject instanceof ArSize) {
             objectCopy = new ArPoint(this);
             objectCopy.add(otherObject);
 
-        }else if(otherObject instanceof ArPoint){
+        } else if(otherObject instanceof ArPoint) {
             objectCopy = new ArPoint(otherObject);
             objectCopy.x += this.x;
             objectCopy.y += this.y;
-
-        }//else if(otherObject instanceof ArRect){
-            //objectCopy = new ArRect(otherObject);
-            //objectCopy.add(this);
-        //}
-
+        }
         return objectCopy || undefined;
     };
 
     ArPoint.prototype.minus = function (otherObject){
-        var objectCopy;
+        var objectCopy = new ArPoint(otherObject);
 
-        if(otherObject instanceof ArSize){
-            objectCopy = new ArPoint(otherObject);
+        if(otherObject.cx || otherObject.cy){
             objectCopy.subtract(this);
 
-        }else if(otherObject instanceof ArPoint){
+        }else if(otherObject.x || otherObject.y){
             objectCopy = new ArSize();
             objectCopy.cx = this.x - otherObject.x;
             objectCopy.cy = this.y - otherObject.y;
 
-        }//else if(otherObject instanceof ArRect){
-          //  objectCopy = new ArRect(otherObject);
-           // objectCopy.subtract(this);
-
-        //}
-
+        }
         return objectCopy;
     };
 
@@ -110,6 +93,10 @@ define(['logManager',
         this.y = otherPoint.y;
 
         return this;
+    };
+
+    ArPoint.prototype.toString = function (){
+        return '('+this.x+', '+this.y+')';
     };
 
     return ArPoint;

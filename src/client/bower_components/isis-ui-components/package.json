@@ -1,0 +1,53 @@
+{
+  "devDependencies": {
+    "angular-markdown-directive": "^0.3.0",
+    "angular-sanitize": "0.0.1",
+    "browserify": "^5.10.1",
+    "browserify-shim": "^3.7.0",
+    "code-mirror": "~3.22.0",
+    "concat-stream": "^1.4.6",
+    "codemirror": "^4.6.0",
+    "connect-livereload": "^0.4.0",
+    "cssify": "~0.6.0",
+    "express": "^4.8.6",
+    "gulp": "^3.8.7",
+    "gulp-angular-templatecache": "^1.3.0",
+    "gulp-browserify": "^0.5.0",
+    "gulp-clean": "^0.3.1",
+    "gulp-concat": "^2.3.4",
+    "gulp-js-prettify": "^0.1.0",
+    "gulp-jshint": "^1.8.4",
+    "gulp-livereload": "^2.1.1",
+    "gulp-rename": "^1.2.0",
+    "gulp-sass": "^0.7.3",
+    "gulp-util": "^3.0.1",
+    "moment": "^2.8.2",
+    "ng-sortable": "0.0.3",
+    "parents": "^1.0.0",
+    "node-sass": "^0.9.5-rc1",
+    "path": "^0.4.9",
+    "process": "^0.7.0",
+    "run-sequence": "^0.3.6",
+    "stream-combiner": "^0.2.1",
+    "syntax-error": "^1.1.1",
+    "tiny-lr": "^0.1.1",
+    "vinyl-source-stream": "^1.0.0",
+    "yargs": "^1.3.1"
+  },
+  "browserify": {
+    "transform": [
+      "browserify-shim",
+      "cssify"
+    ]
+  },
+  "browser": {
+    "showdown": "./vendor/showdown_for_browserify.js",
+    "ngDragDrop": "./bower_components/angular-native-dragdrop/draganddrop.js",
+    "angular-ui-sortable": "./bower_components/angular-ui-sortable/sortable.min.js",
+    "codemirror-css": "./bower_components/codemirror/lib/codemirror.css",
+    "angular-ui-codemirror": "./bower_components/angular-ui-codemirror/ui-codemirror.js"
+  },
+  "browserify-shim": {
+    "showdown": "Showdown"
+  }
+}

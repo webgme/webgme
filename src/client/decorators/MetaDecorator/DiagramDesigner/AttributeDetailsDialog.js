@@ -6,7 +6,7 @@
 
 
 
-define(['clientUtil',
+define(['js/util',
     'text!./templates/AttributeDetailsDialog.html',
     'css!./styles/AttributeDetailsDialog.css'], function ( util,
                                                 attributeDetailsDialogTemplate) {
@@ -105,14 +105,14 @@ define(['clientUtil',
             switch (type) {
                 case 'integer':
                     result = parseInt(value, 10);
-                    if (result === 'NaN') {
-                        result = undefined;
+                    if (isNaN(result)) {
+                        result = 0;
                     }
                     break;
                 case 'float':
                     result = parseFloat(value, 10);
-                    if (result === 'NaN') {
-                        result = undefined;
+                    if (isNaN(result)) {
+                        result = 0;
                     }
                     break;
                 case 'boolean':

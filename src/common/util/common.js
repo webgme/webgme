@@ -3,9 +3,10 @@
  * 
  * Author: Miklos Maroti
  */
-
-define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "util/sax", "fs", "bin/getconfig", "storage/client", "core/core" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, SAX, FS, CONFIG, Client, Core) {
-	function getParameters (option) {
+//TODO this is an outdated file, will be updated and maintained in the future.
+define([ "common/util/assert", "common/storage/mongo", "common/storage/cache", "common/storage/commit", "common/core/tasync", "common/util/sax", "fs", "bin/getconfig", "common/storage/client", "common/core/core" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, SAX, FS, CONFIG, Client, Core) {
+	throw new Error('TODO this is an outdated file, will be updated and maintained in the future.');
+    function getParameters (option) {
 		ASSERT(option === null || typeof option === "string" && option.charAt(0) !== "-");
 
 		var i, j, argv = process.argv.slice(2);

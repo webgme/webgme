@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "core/tasync" ], function(ASSERT, TASYNC) {
+define([ "common/util/assert", "common/core/tasync" ], function(ASSERT, TASYNC) {
 	"use strict";
 
 	// ----------------- CoreUnwrap -----------------
@@ -58,6 +58,22 @@ define([ "util/assert", "core/tasync" ], function(ASSERT, TASYNC) {
 
 		core.loadPointer = TASYNC.unwrap(oldcore.loadPointer);
 		core.loadCollection = TASYNC.unwrap(oldcore.loadCollection);
+
+		core.loadSubTree = TASYNC.unwrap(oldcore.loadSubTree);
+		core.loadTree = TASYNC.unwrap(oldcore.loadTree);
+
+		//core diff async functions
+		if(typeof oldcore.generateTreeDiff === 'function'){
+			core.generateTreeDiff = TASYNC.unwrap(oldcore.generateTreeDiff);
+		}
+
+		if(typeof  oldcore.generateLightTreeDiff === 'function'){
+		  core.generateLightTreeDiff = TASYNC.unwrap(oldcore.generateLightTreeDiff);
+		}
+
+		if(typeof oldcore.applyTreeDiff === 'function'){
+		  core.applyTreeDiff = TASYNC.unwrap(oldcore.applyTreeDiff);
+		}
 
 		return core;
 	};

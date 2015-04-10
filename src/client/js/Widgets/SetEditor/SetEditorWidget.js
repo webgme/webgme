@@ -6,11 +6,12 @@ define(['js/DragDrop/DragHelper',
 
     "use strict";
 
-    var SetEditorWidget;
+    var SetEditorWidget,
+        BACKGROUND_TEXT_COLOR = '#FFCCFF';
 
     SetEditorWidget = function (container, params) {
         params = params || {};
-        params.loggerName = "SetEditorWidget";
+        params.loggerName = 'gme:Widgets:SetEditor:SetEditorWidget';
 
         params.tabsEnabled = true;
         params.addTabs = false;
@@ -49,6 +50,13 @@ define(['js/DragDrop/DragHelper',
         helperEl.html('');
 
         return helperEl;
+    };
+
+    /* OVERWRITE DiagramDesignerWidget.prototype.setBackgroundText */
+    SetEditorWidget.prototype.setBackgroundText = function (text, params) {
+        params = params || {};
+        params.color = params.color || BACKGROUND_TEXT_COLOR;
+        DiagramDesignerWidget.prototype.setBackgroundText.apply(this, [text, params]);
     };
 
     return SetEditorWidget;

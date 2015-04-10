@@ -58,7 +58,7 @@
     .webgme-toolbar-ext .toolbar-colorpicker input {
       margin: 0;
       width: 20px;
-      color: transparent !important; }
+      color: rgba(0, 0, 0, 0) !important; }
     .webgme-toolbar .toolbar-colorpicker.input-append, .webgme-toolbar .toolbar-colorpicker.input-prepend,
     .webgme-toolbar-ext .toolbar-colorpicker.input-append,
     .webgme-toolbar-ext .toolbar-colorpicker.input-prepend {

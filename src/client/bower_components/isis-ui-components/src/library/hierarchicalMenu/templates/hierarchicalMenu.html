@@ -1,0 +1,53 @@
+<div class="hierarchical-menu">
+    <script type="text/ng-template" id="menu-items">
+
+        <div data-ng-repeat-start="menuItemGroup in menu" data-ng-if="false"></div>
+
+            <li data-ng-if="!$first && menuItemGroup.items && menuItemGroup.items.length > 0"
+                class="divider"></li>
+
+            <li data-ng-if="menuItemGroup.label && menuItemGroup.items && menuItemGroup.items.length > 0"
+                class="label">{{menuItemGroup.label}}
+            </li>
+
+            <li
+                ng-init="itemIsDisabled=item.disabled || parentItem.disabled"
+                data-ng-repeat="item in menuItemGroup.items | limitTo:menuItemGroup.totalItems || 100"
+                data-ng-class="{ 'dropdown-submenu':item.menu, 'selected': item.isSelected, 'disabled': itemIsDisabled }">
+                <a data-ng-class="'action-' + item.id"
+                   data-ng-click="!itemIsDisabled && item.action(item.actionData, $event)">
+                    <i data-ng-if="item.iconClass && !item.iconPullRight" data-ng-class="item.iconClass" class="item-icon"></i>
+                    {{item.label}}
+                    <i data-ng-if="item.iconClass && item.iconPullRight" data-ng-class="item.iconClass"></i>
+                </a>
+                <ul class="dropdown-menu"
+                    role="menu"
+                    aria-labelledby="dropdownMenu"
+                    data-ng-if="item.menu"
+                    ng-include="'menu-items'"
+                    data-ng-init="menu=item.menu; parentItem=item;">
+                </ul>
+            </li>
+
+            <!--<li class="dot-dot-dot" data-ng-if="menuItemGroup.showAllItems">...</li>-->
+            <li class="show-all-items"
+                data-ng-if="menuItemGroup.showAllItems &&
+                menuItemGroup.items &&
+                menuItemGroup.items.length > 0 &&
+                menuItemGroup.items.length >  ( menuItemGroup.totalItems || 100 )">
+                <a data-ng-click="menuItemGroup.showAllItems()">
+                   Show all...
+                </a>
+            </li>
+
+        <div data-ng-repeat-end data-ng-if="false"></div>
+
+    </script>
+
+    <ul class="menu-contents"
+        role="menu"
+        data-ng-if="menu"
+        ng-include="'menu-items'">
+    </ul>
+
+</div>

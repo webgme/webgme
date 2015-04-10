@@ -5,9 +5,9 @@
  * @author brollb / https://github/brollb
  */
 
-define(['logManager'], function (logManager) {
+define([], function () {
                                             
-    "use strict"; 
+    'use strict'; 
 
     var ArSize = function (x, y){
         //Multiple Constructors
@@ -40,16 +40,6 @@ define(['logManager'], function (logManager) {
             this.cx += otherSize.x;
             this.cy += otherSize.y;
         }
-    };
-
-    ArSize.prototype.subtract = function(otherSize){
-        this.cx -= otherSize.cx;
-        this.cy -= otherSize.cy;
-    };
-
-    ArSize.prototype.assign = function(otherSize){
-        this.cx = otherSize.cx;
-        this.cy = otherSize.cy;
     };
 
     ArSize.prototype.getArray = function(){

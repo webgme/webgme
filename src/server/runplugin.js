@@ -1,101 +1,86 @@
-define([
-    'util/assert',
-    'plugin/PluginManagerBase',
-    'blob/BlobRunPluginClient',
-    'plugin/PluginResult',
-    'core/coreforplugins',
-    'storage/serveruserstorage',
-    'fs',
-    'path',
-    'logManager',
-    'blob/BlobFSBackend',
-    'blob/BlobS3Backend'
-], function (ASSERT, PluginManager, BlobRunPluginClient, PluginResult, Core, Storage, FS, PATH, logManager, BlobFSBackend, BlobS3Backend) {
+/*globals requireJS*/
+/*jshint node: true*/
 
-    function RunPlugin() {
+/**
+ * @author kecso / https://github.com/kecso
+ * @author pmeijer / https://github.com/pmeijer
+ */
+'use strict';
 
-        var main = function (CONFIG, pluginConfig, callback) {
-            ASSERT(pluginConfig && pluginConfig.pluginName);
+var ASSERT = requireJS('common/util/assert'),
+    openContext = requireJS('common/util/opencontext'),
+    Core = requireJS('common/core/core'),
 
-            var config,
-                projectName = pluginConfig.projectName,
-                branch = pluginConfig.branch || 'master',
-                pluginName = pluginConfig.pluginName,
-                activeNode = pluginConfig.activeNode,
-                activeSelection = pluginConfig.activeSelection || [],
-                Plugin,
-                logger = logManager.create('runPlugin'),
-                storage,
-                plugins = {},
-                errorResult = new PluginResult();
+    PluginManager = requireJS('plugin/PluginManagerBase'),
+    PluginResult = requireJS('plugin/PluginResult'),
 
-            config = {
-                "host": CONFIG.mongoip,
-                "port": CONFIG.mongoport,
-                "database": CONFIG.mongodatabase,
-                "project": projectName,
-                "token": "",
-                "activeNode": activeNode,
-                "activeSelection": activeSelection,
-                "commit": null,
-                "branchName": branch,
-                "pluginConfig": pluginConfig.pluginConfig
-            };
+    BlobFSBackend = require('./middleware/blob/BlobFSBackend'),
+    BlobRunPluginClient = require('./middleware/blob/BlobRunPluginClient'),
+    Storage = require('./storage/serveruserstorage'),
+    Logger = require('./logger');
 
-            // TODO: set WebGMEGlobalConfig if required
+function RunPlugin() {
+    var main = function (storage, gmeConfig, managerConfig, pluginConfig, callback) {
+        ASSERT(managerConfig && managerConfig.pluginName && callback);
 
-            Plugin = requirejs('plugin/' + pluginName + '/' + pluginName + '/' + pluginName);
+        var Plugin,
+            pluginName = managerConfig.pluginName,
+            logger = Logger.create('gme:server:runPlugin', gmeConfig.server.log),
+            plugins = {},
+            contextParams,
+            errorResult = new PluginResult();
 
-            logManager.setLogLevel(5);
-            logger.info('Given plugin : ' + pluginName);
-            logger.info(JSON.stringify(config, null, 2));
-            logger.info(JSON.stringify(CONFIG.pluginBasePaths, null, 2));
+        managerConfig.activeSelection = managerConfig.activeSelection || [];
 
-            storage = new Storage({'host': config.host, 'port': config.port, 'database': config.database});
+        logger.info('Given plugin : ' + pluginName);
+        logger.info('managerConfig', {metadata: managerConfig});
+        logger.debug('basePaths', {metadata: gmeConfig.plugin.basePaths});
 
-            plugins[pluginName] = Plugin;
+        Plugin = requireJS('plugin/' + pluginName + '/' + pluginName + '/' + pluginName);
 
-            storage.openDatabase(function (err) {
-                if (!err) {
-                    storage.openProject(config.project, function (err, project) {
-                        if (!err) {
+        storage = storage || new Storage({
+            globConf: gmeConfig,
+            log: logger
+        });
 
-                            var pluginManager = new PluginManager(project, Core, plugins);
-                            var blobBackend = new BlobFSBackend();
-                            //var blobBackend  = new BlobS3Backend();
+        plugins[pluginName] = Plugin;
+        managerConfig.branch = managerConfig.branch || 'master';
 
-                            config.blobClient = new BlobRunPluginClient(blobBackend);
-
-                            pluginManager.executePlugin(pluginName, config, function (err, result) {
-                                logger.debug(JSON.stringify(result, null, 2));
-
-                                project.closeProject();
-                                storage.closeDatabase();
-                                if (callback) {
-                                    callback(err, result);
-                                }
-                            });
-                        } else {
-                            logger.error(err);
-                            if (callback) {
-                                callback(err, errorResult);
-                            }
-                        }
-                    });
-                } else {
-                    logger.error(err);
-                    if (callback) {
-                        callback(err, errorResult);
-                    }
-                }
-            });
-
+        contextParams = {
+            projectName: managerConfig.projectName,
+            branchName: managerConfig.branch
         };
 
-        return {
-            main: main
-        }
-    }
+        openContext(storage, gmeConfig, contextParams, function (err, context) {
+            if (err) {
+                logger.error(err);
+                callback(err, errorResult);
+                return;
+            }
+            var pluginManager = new PluginManager(context.project, Core, Logger, plugins, gmeConfig);
+            var blobBackend = new BlobFSBackend(gmeConfig);
+            //var blobBackend  = new BlobS3Backend();
 
-    return RunPlugin();
-});
+            managerConfig.blobClient = new BlobRunPluginClient(blobBackend);
+            managerConfig.commit = context.commitHash;
+
+            managerConfig.pluginConfig = pluginConfig || {};
+            pluginManager.executePlugin(pluginName, managerConfig, function (err, result) {
+                logger.debug('result', {metadata: result});
+                context.project.closeProject(function () {
+                    storage.closeDatabase(function () {
+                        callback(err, result);
+                    });
+                });
+            });
+        });
+    };
+
+    return {
+        main: main
+    };
+}
+
+module.exports = RunPlugin();
+
+

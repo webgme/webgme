@@ -135,7 +135,7 @@ define([], function () {
             var node = _nodes[path] || null;
             if(node){
                 var metaNode = _core.getChild(node,"_meta");
-                _core.deleteNode(metaNode);
+                _core.deleteNode(metaNode,true);
                 metaNode = _core.getChild(node,"_meta");
                 if(meta.children){
                     var childrenNode = _core.getChild(metaNode,"children");
@@ -161,7 +161,7 @@ define([], function () {
                         }
 
                     } else {
-                        _core.deleteNode(childrenNode);
+                        _core.deleteNode(childrenNode,true);
                     }
                 }
 

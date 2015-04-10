@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="22.389137"
+   version="1.1"
+   width="99.918503"
+   style="overflow:hidden"
+   id="svg2"
+   inkscape:version="0.48.5 r10040"
+   sodipodi:docname="getLength.svg">
+  <metadata
+     id="metadata22">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs20" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1918"
+     inkscape:window-height="1173"
+     id="namedview18"
+     showgrid="false"
+     inkscape:zoom="5.6568546"
+     inkscape:cx="14.867419"
+     inkscape:cy="47.54583"
+     inkscape:window-x="3840"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <!--
+  <g
+     id="colors"
+     style="fill:#74e868;stroke:#74e868;"
+     data-secondary="fill:#54b868;stroke:#54b868;">
+
+-->
+  <g
+     id="colors"
+     style="fill:#74e868;stroke:#74e868;"
+     data-secondary="fill:#54b868;stroke:#54b868;">
+  <rect
+     inkscape:label="#nameRect-7"
+     data-stretch="y-collection y-name x-name"
+     style="stroke-width:5.30862522;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;overflow:hidden"
+     width="51.595375"
+     height="17.080511"
+     ry="5.3455315"
+     rx="3.2050281"
+     x="2.6543126"
+     y="2.6543126"
+     id="nameRect" />
+  <rect
+     inkscape:label="#nameRect"
+     data-shift="x-nameRect"
+     data-stretch="y-collection y-name x-collection"
+     style="stroke-width:5.30862522;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     width="51.595375"
+     height="17.080511"
+     ry="5.3455315"
+     rx="3.2050281"
+     x="45.668812"
+     y="2.6543131"
+     id="collectionRect" />
+  <rect
+     y="4.7405581"
+     x="75.739922"
+     rx="5"
+     ry="5"
+     height="12.51503"
+     width="16.673277"
+     id="RinputField"
+     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
+     text-stretch-only="true"
+     data-align-center="y-nameRect"
+     data-shift="x-nameRect"
+     data-stretch="y-collection" />
+</g>
+  <!-- NAME AND CONNECTION INFO -->
+  <text
+     data-align-center="y-nameRect"
+     x="7.4896951"
+     y="15.279704"
+     style="font-size:14px">length of</text>
+  <!-- connection areas -->
+  <line
+     class="connection-area"
+     data-ptr="cond first second"
+     data-align-center="y-nameRect"
+     data-role="in"
+     x1="5.5145006"
+     y1="10.991979"
+     x2="1.0145001"
+     y2="10.991979"
+     id="conn-area-in" />
+  <line
+     class="connection-area"
+     data-ptr="collection"
+     data-role="out"
+     data-shift="x-nameRect"
+     data-align-center="y-nameRect"
+     x1="73"
+     y1="10"
+     x2="73"
+     y2="10"
+     id="collection-out" />
+  <!-- initial measures -->
+  <rect
+     style="opacity:0"
+     data-ptr="collection"
+     class="initial-measure"
+     width="23"
+     height="18"
+     x="12.889501"
+     y="4.1794782"
+     inkscape:label="#rect3000"
+     id="rect27" />
+  <rect
+     style="opacity:0"
+     data-ptr="name"
+     class="initial-measure"
+     width="25"
+     height="15"
+     x="12.889501"
+     y="4.1794782"
+     inkscape:label="#rect3000"
+     id="rect14" />
+</svg>

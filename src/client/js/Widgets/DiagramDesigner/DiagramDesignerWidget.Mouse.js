@@ -30,7 +30,7 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
             if (self.onItemMouseDown) {
                 self.onItemMouseDown.call(self, itemId, eventDetails);
             } else {
-                logger.warning('onItemMouseDown(itemId, eventDetails) is undefined, ItemID: ' + itemId + ' eventDetails: ' + JSON.stringify(eventDetails));
+                logger.warn('onItemMouseDown(itemId, eventDetails) is undefined, ItemID: ' + itemId + ' eventDetails: ' + JSON.stringify(eventDetails));
             }
         });
 
@@ -44,7 +44,7 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
             if (self.onConnectionMouseDown) {
                 self.onConnectionMouseDown.call(self, connId, eventDetails);
             } else {
-                logger.warning('onConnectionMouseDown(connId, eventDetails) is undefined, connId: ' + connId + ' eventDetails: ' + JSON.stringify(eventDetails));
+                logger.warn('onConnectionMouseDown(connId, eventDetails) is undefined, connId: ' + connId + ' eventDetails: ' + JSON.stringify(eventDetails));
             }
         });
 
@@ -57,7 +57,7 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
             if (self.onBackgroundMouseDown) {
                 self.onBackgroundMouseDown.call(self, eventDetails);
             } else {
-                logger.warning('onBackgroundMouseDown(eventDetails) is undefined, eventDetails: ' + JSON.stringify(eventDetails));
+                logger.warn('onBackgroundMouseDown(eventDetails) is undefined, eventDetails: ' + JSON.stringify(eventDetails));
             }
         });
 
@@ -68,10 +68,10 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
             if (self.onBackgroundDblClick) {
                 self.onBackgroundDblClick.call(self, eventDetails);
             } else {
-                logger.warning('onBackgroundDblClick(eventDetails) is undefined, eventDetails: ' + JSON.stringify(eventDetails));
+                logger.warn('onBackgroundDblClick(eventDetails) is undefined, eventDetails: ' + JSON.stringify(eventDetails));
             }
 
-            logger.warning('dblclick.background, eventDetails: ' + JSON.stringify(eventDetails));
+            logger.warn('dblclick.background, eventDetails: ' + JSON.stringify(eventDetails));
         });
 
         //disable context-menu on right-click

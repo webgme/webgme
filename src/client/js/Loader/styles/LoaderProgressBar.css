@@ -38,6 +38,7 @@ div.loader-progressbar {
 
   100% {
     background-position: 12px 3px, 12px 3px,  -4px 3px, -4px 3px,  -4px 3px, -4px 3px,  -4px 2px, -4px 2px,  -4px 0px, -4px 0px,  -4px 0px, -4px 0px; } }
+
 @-webkit-keyframes wait {
   12% {
     background-position: -4px 3px,-4px 3px,   -4px 3px, -4px 3px,  -4px 3px,-4px 3px,  -4px 2px,-4px 2px,  -4px 0px, -4px 0px,  0px 0px, 0px 0px; }

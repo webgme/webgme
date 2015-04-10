@@ -1,6 +1,5 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-
 define(['js/Constants',
     'js/Utils/GMEConcepts'], function (CONSTANTS,
                                  GMEConcepts) {

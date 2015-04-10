@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="27.021999"
+   version="1.1"
+   width="84.858749"
+   style="overflow:hidden"
+   id="svg2"
+   inkscape:version="0.48.5 r10040"
+   sodipodi:docname="command.svg">
+  <metadata
+     id="metadata15">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs13" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1918"
+     inkscape:window-height="1053"
+     id="namedview11"
+     showgrid="false"
+     inkscape:zoom="11.507389"
+     inkscape:cx="23.959012"
+     inkscape:cy="2.7932755"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <rect
+     style="opacity:0.54863808;fill:#ffffff;fill-opacity:0;stroke:#000000;stroke-width:2.03220844;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
+     id="name-bounding-box"
+     width="40.448757"
+     height="8.3728704"
+     x="6.4315801"
+     y="8.0343323"
+     inkscape:label="#rect2992" />
+  <!--
+  <filter
+     id="secondary"
+     color-interpolation-filters="sRGB">
+    <feColorMatrix
+       in="SourceGraphic"
+       type="hueRotate"
+       values="10"
+       id="feColorMatrix8" />
+  </filter>-->
+  <g
+     id="colors"
+     style="fill:#556fd7;stroke:#556fd7"
+     transform="translate(-0.01249999,-0.09525007)"
+     data-secondary="fill:#858fd7;stroke:#858fd7">
+    <path
+       d="M 0.62683135,4.7909186 A 3.5336527,3.8448907 0 0 1 4.160484,0.94602796 l 7.067305,0 3.533653,3.84489064 9.423074,0 3.533653,-3.7167276 0,3.7167276"
+       style="stroke-width:1.22866261"
+       id="path8"
+       inkscape:connector-curvature="0" />
+    <path
+       style="stroke-width:1.17999995"
+       d="m 58.15625,0.6875 0,3.53125 26.125,0 A 3.54,3.54 0 0 0 80.71875,0.6875 l -22.5625,0 z"
+       id="path3009"
+       class="x-shift-name"
+       inkscape:connector-curvature="0" />
+    <rect
+       class="x-name y-name"
+       x="28.686499"
+       y="0.68525004"
+       width="29.866077"
+       height="22.125"
+       style="stroke-width:1.17999995"
+       id="rect11" />
+    <rect
+       class="x-name y-name"
+       x="0.60249996"
+       y="4.7332501"
+       width="83.639534"
+       height="14.796"
+       r="0"
+       rx="0"
+       ry="0"
+       style="stroke-width:1.17999995"
+       id="rect10" />
+    <path
+       d="m 0.6025,19.44725 a 3.54,3.54 0 0 0 3.54,3.54 l 7.08,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658"
+       style="stroke-width:1.17999995"
+       id="path12"
+       class="y-shift-name"
+       inkscape:connector-curvature="0" />
+    <path
+       style="stroke-width:1.17999995"
+       d="m 57.0625,19.28125 0,3.53125 23.65625,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.21875,0 z"
+       id="path15"
+       class="x-shift-name"
+       inkscape:connector-curvature="0" />
+  </g>
+  <text
+     id="name"
+     x="5.9000001"
+     y="17"
+     style="font-size:12px">DEFAULT NAME</text>
+  <line
+     class="connection-area"
+     data-ptr="next true_next false_next"
+     data-role="in"
+     x1="14.9875"
+     y1="4.2219992"
+     x2="23.987499"
+     y2="4.2219992"
+     id="next-in" />
+  <line
+     class="connection-area"
+     data-ptr="next"
+     data-role="out"
+     x1="14.9875"
+     y1="26.904751"
+     x2="23.987499"
+     y2="26.904751"
+     id="next-out" />
+  <!-- custom highlighting areas are now supported - must be a line, however -->
+  <line
+     class="connection-highlight x-name"
+     style="opacity:0;stroke:#444444;stroke-width:10.10658169"
+     data-ptr="next"
+     data-role="out"
+     x1="4.4899535"
+     y1="26.904751"
+     x2="79.28933"
+     y2="26.904751"
+     id="next-out" />
+  <!-- initial measurement of name -->
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="name"
+     width="69"
+     height="19"
+     x="0"
+     y="0"/>
+</svg>

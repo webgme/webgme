@@ -1,0 +1,76 @@
+.item-list .filter-stats {
+  font-size: 80%;
+  padding-right: 1ex;
+  padding-top: .5ex;
+  color: #999;
+  text-align: right; }
+.item-list .no-items-to-show-message {
+  font-style: italic;
+  text-align: center;
+  color: #999; }
+.item-list ul.list-group li.item-list-item {
+  background-color: #fff;
+  transition: background-color .25s; }
+  .item-list ul.list-group li.item-list-item .description {
+    margin: 1.5ex 0;
+    color: #666; }
+  .item-list ul.list-group li.item-list-item .last-updated-time {
+    font-size: 80%;
+    color: #999; }
+  .item-list ul.list-group li.item-list-item .stats {
+    position: absolute;
+    bottom: 0;
+    right: 1em;
+    font-size: 95%; }
+    .item-list ul.list-group li.item-list-item .stats li.list-group-item {
+      border: none;
+      background-color: transparent;
+      opacity: .62;
+      padding: 1ex; }
+    .item-list ul.list-group li.item-list-item .stats .count {
+      margin-left: 0.5ex; }
+  .item-list ul.list-group li.item-list-item .item-menu {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border-color: #ddd;
+    border-top: 0;
+    border-right: 0;
+    border-left: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    padding: .5ex 1.25ex;
+    border-bottom-left-radius: 4px;
+    background-color: white;
+    display: none;
+    cursor: pointer; }
+    .item-list ul.list-group li.item-list-item .item-menu .icon-arrow-down:after {
+      display: inline-block;
+      content: " ";
+      width: 0;
+      height: 0;
+      border-color: transparent;
+      border-style: solid;
+      border-width: .75ex .75ex 0 .75ex;
+      border-top-color: #ccc; }
+  .item-list ul.list-group li.item-list-item .item-menu:hover {
+    background-color: white; }
+    .item-list ul.list-group li.item-list-item .item-menu:hover .icon-arrow-down:after {
+      border-top-color: #f90; }
+  .item-list ul.list-group li.item-list-item:hover .item-menu {
+    display: block; }
+.item-list ul.list-group.ui-sortable > li:hover {
+  background-color: #f2f9fc;
+  cursor: move; }
+.item-list .item-details {
+  margin-bottom: 1em; }
+  .item-list .item-details .item-details-header {
+    cursor: pointer;
+    font-weight: bold;
+    color: #aaa;
+    border-bottom: 1px solid #ccc;
+    font-size: 90%;
+    padding: .25ex 0 0 0; }
+  .item-list .item-details .item-details-header:hover {
+    color: #428bca; }
+  .item-list .item-details .item-details-contents {
+    margin-top: 1ex; }

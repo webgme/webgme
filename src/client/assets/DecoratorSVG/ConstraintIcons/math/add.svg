@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="22.401995"
+   version="1.1"
+   width="86.981117"
+   style="overflow:hidden"
+   id="svg2"
+   inkscape:version="0.48.5 r10040"
+   sodipodi:docname="lessThan.svg">
+  <metadata
+     id="metadata22">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs20" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1918"
+     inkscape:window-height="1173"
+     id="namedview18"
+     showgrid="false"
+     inkscape:zoom="16.000001"
+     inkscape:cx="46.97776"
+     inkscape:cy="17.345694"
+     inkscape:window-x="3840"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" />
+  <!--
+  <filter id="secondary">
+    <feColorMatrix in="SourceGraphic"
+      type="hueRotate"
+      values="25" />
+  </filter>
+  <g
+     id="colors"
+     style="fill:#74e868;stroke:#74e868;"
+     data-secondary="fill:#54b868;stroke:#54b868;">
+
+-->
+  <g
+     id="colors"
+     style="fill:#74e868;stroke:#74e868;"
+     data-secondary="fill:#54b868;stroke:#54b868;">
+    <rect
+       data-stretch="x-name y-first y-second y-name"
+       data-shift="x-LRect"
+       inkscape:label="#rect3009"
+       y="1.6086967"
+       x="35.218163"
+       height="19.187786"
+       width="16.702784"
+       id="nameRect"
+       style="stroke-width:3.2013495;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    <rect
+       data-stretch="x-second y-first y-second y-name"
+       data-shift="x-nameRect"
+       id="RRect"
+       style="stroke-width:0.586559;overflow:hidden"
+       rx="0"
+       r="0"
+       height="13.626877"
+       width="33.71624"
+       y="4.0446453"
+       x="52.958683" />
+    <path
+       data-shift="x-RTRect"
+       style="stroke-width:1.17999995;overflow:hidden"
+       d="m 82.790488,0.62299493 0,3.53124987 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124987 l -0.0312,0 z"
+       id="TRCorner"
+       inkscape:connector-curvature="0"/>
+    <path
+       data-shift="y-RRect x-BRRect"
+       style="stroke-width:1.17999995;overflow:hidden"
+       d="m 82.779588,21.786089 0,-3.53125 3.59375,0 a 3.54,3.54 0 0 1 -3.5625,3.53125 l -0.0312,0 z"
+       id="BRCorner"
+       inkscape:connector-curvature="0" />
+    <rect
+       data-stretch="x-first y-name y-first y-second"
+       id="LRect"
+       style="stroke-width:0.58395565"
+       rx="0"
+       r="0"
+       height="13.62948"
+       width="33.411209"
+       y="4.4688673"
+       x="0.29197782" />
+    <path
+       style="stroke-width:1.17999995;overflow:hidden"
+       d="m 4.1906288,0.61869211 0,3.53124999 -3.59374999,0 A 3.54,3.54 0 0 1 4.1593788,0.61869211 l 0.0312,0 z"
+       id="path9-6"
+       inkscape:connector-curvature="0" />
+    <path
+       style="stroke-width:1.17999995;overflow:hidden"
+       d="m 4.2015296,21.781786 0,-3.53125 -3.59374989,0 a 3.54,3.54 0 0 0 3.56249989,3.53125 l 0.0312,0 z"
+       id="path9-6-5"
+       data-shift="y-LRect"
+       inkscape:connector-curvature="0" />
+    <rect
+       data-stretch="x-first"
+       style="stroke-width:0.84396863"
+       id="LTRect"
+       width="29.096031"
+       height="3.9187722"
+       x="4.472322"
+       y="0.42198431" />
+    <rect
+       data-stretch="x-first"
+       data-shift="y-LRect"
+       style="stroke-width:0.85052216"
+       id="LBRect"
+       width="29.137478"
+       height="3.9790976"
+       x="4.4198451"
+       y="17.997637" />
+    <rect
+       data-stretch="x-second"
+       data-shift="x-nameRect"
+       style="stroke-width:0.84345406;overflow:hidden"
+       id="RTRect"
+       width="29.096546"
+       height="3.9139254"
+       x="53.191414"
+       y="0.47698987" />
+    <rect
+       data-stretch="x-second"
+       data-shift="x-nameRect y-RRect"
+       style="stroke-width:0.84345406;overflow:hidden"
+       id="BRRect"
+       width="29.096546"
+       height="3.9139254"
+       x="52.749081"
+       y="18.038546"
+       inkscape:label="#RTRect-4" />
+  </g>
+  <!-- NAME AND CONNECTION INFO -->
+  <!-- connection areas -->
+  <line
+     class="connection-area"
+     data-ptr="cond first second"
+     data-role="in"
+     data-align-center="y-nameRect"
+     x1="0"
+     y1="11"
+     x2="0"
+     y2="11"
+     id="conn-area-in" />
+  <line
+     class="connection-area"
+     data-ptr="second"
+     data-role="out"
+     data-shift="x-nameRect"
+     data-align-center="y-LRect"
+     x1="60"
+     y1="11"
+     x2="55.5"
+     y2="11"
+     id="second-out" />
+  <line
+     class="connection-area"
+     data-ptr="first"
+     data-role="out"
+     data-align-center="y-LRect"
+     x1="10.5"
+     y1="11"
+     x2="8"
+     y2="11"
+     id="first-out" />
+  <!-- initial measures -->
+  <rect
+     style="opacity:0"
+     data-ptr="second"
+     data-type="text"
+     class="initial-measure"
+     width="14"
+     height="20"
+     x="0"
+     y="0"
+     inkscape:label="#rect3000"
+     id="rect27" />
+  <rect
+     style="opacity:0"
+     data-ptr="first"
+     data-type="text"
+     class="initial-measure"
+     width="10"
+     height="255"
+     x="0"
+     y="0"
+     inkscape:label="#rect3000"
+     id="rect29" />
+  <rect
+     style="opacity:0"
+     data-ptr="first"
+     data-type="svg"
+     class="initial-measure"
+     width="25"
+     height="14"
+     x="0"
+     y="0"
+     inkscape:label="#rect3000"
+     id="rect23" />
+  <rect
+     style="opacity:0"
+     data-ptr="second"
+     data-type="svg"
+     class="initial-measure"
+     width="25"
+     height="14"
+     x="0"
+     y="0"
+     inkscape:label="#rect3000"
+     id="rect25" />
+  <!-- Input Fields -->
+  <rect
+     class="edit-second"
+     data-stretch="x-second"
+     data-shift="x-nameRect"
+     data-align-center="y-nameRect"
+     text-stretch-only="true"
+     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
+     id="RInputField"
+     width="16.673277"
+     height="12.51503"
+     rx="3"
+     x="57.725422"
+     y="4.7485795" />
+  <rect
+     class="edit-first"
+     data-stretch="x-first"
+     data-align-center="y-nameRect"
+     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
+     text-stretch-only="true"
+     id="LInputField"
+     width="16.673277"
+     height="12.51503"
+     rx="3"
+     x="13.434318"
+     y="4.8144441" />
+  <text
+     id="first"
+     data-shift="y-LInputField"
+     x="17.375652"
+     y="15.179907"
+     style="font-size:12px" />
+  <text
+     data-shift="x-LRect"
+     data-align-center="y-nameRect"
+     x="37.039799"
+     y="17.297422"
+     style="font-size:19.54102707px"
+     transform="scale(0.95747132,1.0444177)">+</text>
+  <text
+     data-shift="x-nameRect"
+     data-align-center="y-nameRect"
+     id="second"
+     x="61.375652"
+     y="15.179907"
+     style="font-size:12px" />
+</svg>

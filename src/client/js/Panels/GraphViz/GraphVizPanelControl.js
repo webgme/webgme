@@ -6,11 +6,11 @@
  */
 
 
-define(['logManager',
-    'clientUtil',
+define(['js/logger',
+    'js/util',
     'js/Constants',
     'js/Utils/GMEConcepts',
-    'js/NodePropertyNames'], function (logManager,
+    'js/NodePropertyNames'], function (Logger,
                                        util,
                                        CONSTANTS,
                                        GMEConcepts,
@@ -24,7 +24,7 @@ define(['logManager',
     GraphVizControl = function (options) {
         var self = this;
 
-        this._logger = logManager.create("GraphVizControl");
+        this._logger = Logger.create('gme:Panels:GraphViz:GraphVizControl', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
 

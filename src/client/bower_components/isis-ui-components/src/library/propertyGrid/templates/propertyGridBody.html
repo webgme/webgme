@@ -1,0 +1,12 @@
+<div class="property-grid-body">
+    <div class="property-group-container"
+         data-ng-repeat="propertyGroup in propertyGroups"
+         is-open="propertyGroup.expanded">
+        <div class="propertygroup-header" ng-click="propertyGroup.collapsed = !propertyGroup.collapsed">
+            {{propertyGroup.label}}
+            <i class="pull-right glyphicon"
+               ng-class="{'glyphicon-chevron-down': !propertyGroup.collapsed, 'glyphicon-chevron-right': propertyGroup.collapsed}"></i>
+        </div>
+        <property-group collapse="propertyGroup.collapsed" items="propertyGroup.items" config="config"></property-group>
+    </div>
+</div>

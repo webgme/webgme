@@ -1,7 +1,7 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
 
-define(['logManager',
-        'loaderCircles'], function (logManager,
+define(['js/logger',
+        'js/Loader/LoaderCircles'], function (Logger,
                                     LoaderCircles) {
 
     "use strict";
@@ -13,7 +13,7 @@ define(['logManager',
     LayoutManager = function () {
         this._currentLayout = undefined;
         this._currentLayoutName = undefined;
-        this._logger = logManager.create('LayoutManager');
+        this._logger = Logger.create('gme:LayoutManager:LayoutManager', WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug('LayoutManager created.');
         this._startProgressBar();
         this._panels = {};
@@ -65,6 +65,7 @@ define(['logManager',
             panel = params.panel,
             container = params.container,
             rPath = PANEL_PATH + panel,
+            containerSizeUpdateFn,
             fn;
 
         this._logger.debug('LayoutManager loadPanel with name: "' + name + '", container: "' + container + '"');
@@ -84,8 +85,9 @@ define(['logManager',
                         self._logger.debug("Panel '" + panel + "' has been downloaded...");
                         self._panels[panel] = new Panel(self, params.params);
 
-                        self._currentLayout.addToContainer(self._panels[panel], container);
+                        containerSizeUpdateFn = self._currentLayout.addToContainer(self._panels[panel], container);
                         self._panels[panel].afterAppend();
+                        self._panels[panel].setContainerUpdateFn(self._currentLayout, containerSizeUpdateFn);
                     } else {
                         self._logger.error("Panel '" + panel + "' has been downloaded...BUT UNDEFINED!!!");
                     }

@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, WebGMEGlobal*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -6,10 +6,10 @@
  */
 
 define([
-    'logManager',
+    'js/logger',
     'text!./templates/CommitDialog.html',
     'css!./styles/CommitDialog.css'
-], function (logManager,
+], function (Logger,
         commitDialogTemplate) {
 
     "use strict";
@@ -18,7 +18,7 @@ define([
     var CommitDialog;
 
     CommitDialog = function (client) {
-        this._logger = logManager.create("CommitDialog");
+        this._logger = Logger.create('gme:Dialogs:Commit:CommitDialog', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
 
@@ -66,13 +66,16 @@ define([
             this._branchAlertLabel.text(actualBranchName);
         }
 
-        this._txtMessage.on('keydown', function () {
+        self._controlGroupMessage.addClass('has-error');
+        self._btnCommit.disable(true);
+
+        this._txtMessage.on('keyup', function () {
             var val = self._txtMessage.val();
-            if (val === "") {
-                self._controlGroupMessage.addClass("error");
+            if (val === '') {
+                self._controlGroupMessage.addClass('has-error');
                 self._btnCommit.disable(true);
             } else {
-                self._controlGroupMessage.removeClass("error");
+                self._controlGroupMessage.removeClass('has-error');
                 self._btnCommit.disable(false);
             }
         });

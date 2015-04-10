@@ -1,0 +1,121 @@
+.hierarchical-menu .menu-contents {
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  min-width: 160px;
+  padding: 1ex 0;
+  margin: 0;
+  list-style: none;
+  font-size: 14px;
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+  background-clip: padding-box;
+  position: relative;
+  *width: 180px;
+  margin-top: -1px;
+  overflow: visible;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none; }
+  .hierarchical-menu .menu-contents > li > a {
+    display: block;
+    padding: 3px 20px;
+    clear: both;
+    font-weight: 400;
+    line-height: 1.42857143;
+    color: #333;
+    white-space: nowrap; }
+  .hierarchical-menu .menu-contents > li > a:hover,
+  .hierarchical-menu .menu-contents .dropdown-menu > li > a:focus {
+    background-image: -webkit-linear-gradient(top, whitesmoke 0, #e8e8e8 100%);
+    background-image: linear-gradient(to bottom, whitesmoke 0, #e8e8e8 100%);
+    background-repeat: repeat-x;
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff5f5f5', endColorstr='#ffe8e8e8', GradientType=0);
+    background-color: #e8e8e8;
+    text-decoration: none; }
+  .hierarchical-menu .menu-contents a {
+    cursor: pointer; }
+  .hierarchical-menu .menu-contents .disabled {
+    opacity: .65; }
+    .hierarchical-menu .menu-contents .disabled a {
+      cursor: not-allowed; }
+      .hierarchical-menu .menu-contents .disabled a:hover {
+        background-color: transparent; }
+  .hierarchical-menu .menu-contents li.divider {
+    border-bottom: 1px dotted #ccc;
+    margin: 1ex 0 0; }
+  .hierarchical-menu .menu-contents li.label {
+    color: #bbb;
+    text-transform: uppercase; }
+  .hierarchical-menu .menu-contents li.dot-dot-dot {
+    color: #777;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1ex;
+    padding-bottom: 1ex;
+    letter-spacing: .3ex; }
+  .hierarchical-menu .menu-contents li .item-icon {
+    margin-right: .3ex;
+    font-size: 90%; }
+  .hierarchical-menu .menu-contents .dropdown-submenu {
+    position: relative; }
+  .hierarchical-menu .menu-contents .dropdown-submenu > .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-left: -2px;
+    margin-top: -6px;
+    -webkit-border-radius: 0 3px 3px 3px;
+    -moz-border-radius: 0 3px 3px 3px;
+    border-radius: 0 6px 3px 3px;
+    overflow: visible; }
+  .hierarchical-menu .menu-contents .dropdown-submenu:hover > .dropdown-menu {
+    display: block; }
+  .hierarchical-menu .menu-contents .dropdown-submenu > a {
+    padding-right: 2ex; }
+  .hierarchical-menu .menu-contents .dropdown-submenu > a:after {
+    display: block;
+    content: " ";
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: .75ex 0 .75ex .75ex;
+    border-left-color: #ccc;
+    position: absolute;
+    top: 9px;
+    right: 5px; }
+  .hierarchical-menu .menu-contents .dropdown-submenu > a:hover:after {
+    border-left-color: #f90; }
+  .hierarchical-menu .menu-contents .disabled.dropdown-submenu > a:hover:after {
+    border-left-color: #999; }
+.hierarchical-menu.drop-left .menu-contents .dropdown-submenu > .dropdown-menu {
+  min-width: 100%;
+  margin-left: -100%;
+  margin-right: 0;
+  left: 2px;
+  -webkit-border-radius: 3px 0 3px 3px;
+  -moz-border-radius: 3px 0 3px 3px;
+  border-radius: 3px 0 3px 3px; }
+.hierarchical-menu.drop-left .menu-contents .dropdown-submenu > a {
+  padding-left: 2ex;
+  padding-right: 0; }
+.hierarchical-menu.drop-left .menu-contents .dropdown-submenu > a:after {
+  display: none; }
+.hierarchical-menu.drop-left .menu-contents .dropdown-submenu > a:before {
+  display: block;
+  content: " ";
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: .75ex .75ex .75ex 0;
+  border-right-color: #ccc;
+  position: absolute;
+  top: 9px;
+  left: 5px; }
+.hierarchical-menu.drop-left .menu-contents .dropdown-submenu > a:hover:before {
+  border-right-color: #f90; }
+.hierarchical-menu.drop-left .menu-contents .disabled.dropdown-submenu > a:hover:before {
+  border-right-color: #999; }

@@ -7,13 +7,13 @@
 /*
  * WIDGET TreeBrowserWidget based on DynaTree
  */
-define(['logManager',
+define(['js/logger',
     'js/Constants',
     './TreeBrowserWidget.Keyboard',
     'js/DragDrop/DragSource',
-    'lib/jquery/jquery.dynatree-1.2.5.min',
+    'lib/jquery/jquery.dynatree-1.2.5-patched',
     'lib/jquery/jquery.contextMenu',
-    'css!./styles/TreeBrowserWidget.css'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
+    'css!./styles/TreeBrowserWidget.css'], function (Logger, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
 
     "use strict";
 
@@ -22,7 +22,7 @@ define(['logManager',
 
     var TreeBrowserWidget = function (container/*, params*/) {
         //get this._logger instance for this component
-        this._logger = logManager.create("TreeBrowserWidget");
+        this._logger = Logger.create('gme:Widgets:TreeBrowser:TreeBrowserWidget', WebGMEGlobal.gmeConfig.client.log);
 
         //save parent control
         this._el =  container;
@@ -88,6 +88,7 @@ define(['logManager',
             keyboard: false,
             imagePath : "/",
             debugLevel: 0,
+            noHTML: true,
             onLazyRead : function (node) {
                 self._logger.debug("onLazyRead node:" + node.data.key);
                 self.onNodeOpen.call(self, node.data.key);
@@ -189,7 +190,7 @@ define(['logManager',
      * @param objDescriptor
      */
     TreeBrowserWidget.prototype.createNode = function (parentNode, objDescriptor) {
-        objDescriptor.name = objDescriptor.name || "";
+        objDescriptor.name = objDescriptor.name || '';
         //check if the parentNode is null or not
         //when null, the new node belongs to the root
         if (parentNode === null) {
@@ -344,7 +345,7 @@ define(['logManager',
      * @param nodeId
      */
     TreeBrowserWidget.prototype.onNodeOpen = function (nodeId) {
-        this._logger.warning("Default onNodeOpen for node " + nodeId + " called, doing nothing. Please override onNodeOpen(nodeId)");
+        this._logger.warn("Default onNodeOpen for node " + nodeId + " called, doing nothing. Please override onNodeOpen(nodeId)");
     };
 
     /**
@@ -354,7 +355,7 @@ define(['logManager',
      * @param nodeId
      */
     TreeBrowserWidget.prototype.onNodeClose = function (nodeId) {
-        this._logger.warning("Default onNodeClose for node " + nodeId + " called, doing nothing. Please override onNodeClose(nodeId)");
+        this._logger.warn("Default onNodeClose for node " + nodeId + " called, doing nothing. Please override onNodeClose(nodeId)");
     };
 
     /*
@@ -362,7 +363,7 @@ define(['logManager',
      * PLEASE OVERIDDE TO HANDLE TITLE CHANGE FOR YOURSELF
      */
     TreeBrowserWidget.prototype.onNodeTitleChanged = function (nodeId, oldText, newText) {
-        this._logger.warning("Default onNodeTitleChanged for node " + nodeId + " called, doing nothing. Please override onNodeTitleChanged(nodeId, oldText, newText)");
+        this._logger.warn("Default onNodeTitleChanged for node " + nodeId + " called, doing nothing. Please override onNodeTitleChanged(nodeId, oldText, newText)");
         return true;
     };
 
@@ -489,12 +490,12 @@ define(['logManager',
     };
 
     TreeBrowserWidget.prototype.getDragItems = function (el) {
-        this._logger.warning("TreeBrowserWidget.getDragItems is not overridden in the controller!!!");
+        this._logger.warn("TreeBrowserWidget.getDragItems is not overridden in the controller!!!");
         return [];
     };
 
     TreeBrowserWidget.prototype.getDragEffects = function (el) {
-        this._logger.warning("TreeBrowserWidget.getDragEffects is not overridden in the controller!!!");
+        this._logger.warn("TreeBrowserWidget.getDragEffects is not overridden in the controller!!!");
         return [];
     };
 
@@ -594,6 +595,7 @@ define(['logManager',
         for (i = 0; i < selNodes.length; i += 1) {
             selNodes[i].select(false);
         }
+        this._dropSelectionStateWithShift();
     };
 
 

@@ -1,13 +1,13 @@
-/*globals define*/
+/*globals define, WebGMEGlobal*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-define(['logManager',
+define(['js/logger',
     'text!./templates/ProjectRepositoryDialog.html',
-    'js/Widgets/ProjectRepository/ProjectRepositoryWidget'], function (logManager,
+    'js/Widgets/ProjectRepository/ProjectRepositoryWidget'], function (Logger,
                                                  projectRepositoryDialogTemplate,
                                                  ProjectRepositoryWidget) {
 
@@ -16,7 +16,8 @@ define(['logManager',
     var ProjectRepositoryDialog;
 
     ProjectRepositoryDialog = function (client) {
-        this._logger = logManager.create("ProjectRepositoryDialog");
+        this._logger = Logger.create('gme:Dialogs:ProjectRepository:ProjectRepositoryDialog',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
 

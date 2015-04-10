@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal, alert*/
 
-define(['logManager'], function (logManager) {
+define(['js/logger'], function (Logger) {
     "use strict";
 
     var specialKeys = {
@@ -18,10 +18,11 @@ define(['logManager'], function (logManager) {
         UPDATE_BROWSER_MESSAGE = 'Your browser seems to be out of date :(. Please update your browser to the latest and greatest version!',
         _txtArea,
         _enabled = false,
-        _logger = logManager.create('KeyboardManager'),
+        _logger,
         _listener = null;
 
     var _captureFocus = function () {
+        _logger = _logger || Logger.create('gme:KeyboardManager:KeyboardManager', WebGMEGlobal.gmeConfig.client.log);
         if (WebGMEGlobal.SUPPORTS_TOUCH === true) {
             return;
         }
@@ -34,15 +35,16 @@ define(['logManager'], function (logManager) {
     };
 
     var _setListener = function (l) {
+        _logger = _logger || Logger.create('gme:KeyboardManager:KeyboardManager', WebGMEGlobal.gmeConfig.client.log);
         if (_listener !== l) {
             _listener = l;
 
             if (_listener) {
                 if (!_.isFunction(_listener.onKeyDown)) {
-                    _logger.warning('Listener is missing "onKeyDown"...');
+                    _logger.warn('Listener is missing "onKeyDown"...');
                 }
                 if (!_.isFunction(_listener.onKeyUp)) {
-                    _logger.warning('Listener is missing "onKeyUp"...');
+                    _logger.warn('Listener is missing "onKeyUp"...');
                 }
             }
         }
@@ -65,6 +67,7 @@ define(['logManager'], function (logManager) {
     };
 
     var _setEnabled = function (enabled) {
+        _logger = _logger || Logger.create('gme:KeyboardManager:KeyboardManager', WebGMEGlobal.gmeConfig.client.log);
         if (WebGMEGlobal.SUPPORTS_TOUCH === true) {
             return;
         }

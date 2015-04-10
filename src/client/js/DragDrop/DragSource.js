@@ -15,7 +15,7 @@ define(['./DragEffects',
         el.draggable({
             zIndex: DEFAULT_Z_INDEX,
             appendTo: DEFAULT_APPEND_TO,
-            cursorAt: DEFAULT_CURSOR_AT,
+            cursorAt: params.cursorAt || DEFAULT_CURSOR_AT,
             helper: function (event) {
                 var helperEl,
                     dragInfo = _createDragInfo(el, params, event);
@@ -36,12 +36,12 @@ define(['./DragEffects',
             },
             start: function( event, ui ) {
                 if (params && _.isFunction(params.start)) {
-                    return params.start.call(el, event);
+                    return params.start.call(el, event, ui);
                 }
             },
             drag: function( event, ui ) {
                 if (params && _.isFunction(params.drag)) {
-                    return params.drag.call(el, event);
+                    return params.drag.call(el, event, ui);
                 }
             },
             stop: function( event, ui ) {

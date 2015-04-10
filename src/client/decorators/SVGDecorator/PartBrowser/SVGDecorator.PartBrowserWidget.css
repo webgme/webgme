@@ -16,8 +16,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     height: 16px;
-    line-height: 16px;
-    background-color: #fff; }
+    line-height: 16px; }
   .part .svg-decorator.abstract .name {
     font-style: italic;
     color: #aaaaaa; }

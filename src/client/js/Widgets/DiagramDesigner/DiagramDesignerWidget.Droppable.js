@@ -111,13 +111,13 @@ define(['js/DragDrop/DropTarget',
 
 
     DiagramDesignerWidgetDroppable.prototype.onBackgroundDroppableAccept = function (event, dragInfo) {
-        this.logger.warning("DiagramDesignerWidget.prototype.onBackgroundDroppableAccept(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo));
+        this.logger.warn("DiagramDesignerWidget.prototype.onBackgroundDroppableAccept(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo));
         return false;
     };
 
 
     DiagramDesignerWidgetDroppable.prototype.onBackgroundDrop = function (event, dragInfo, position) {
-        this.logger.warning("DiagramDesignerWidget.prototype.onBackgroundDrop(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo) + " , position: '" + JSON.stringify(position) + "'");
+        this.logger.warn("DiagramDesignerWidget.prototype.onBackgroundDrop(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo) + " , position: '" + JSON.stringify(position) + "'");
     };
 
 

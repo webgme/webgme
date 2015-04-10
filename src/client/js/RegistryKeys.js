@@ -23,7 +23,10 @@ define([], function () {
         LINE_END_ARROW: 'lineEndArrow',     //start arrow of a line
         LINE_CUSTOM_POINTS: 'lineCustomPoints',  //custom routing points of a line
 
-        VALID_PLUGINS:'validPlugins', //space separated list of valid plugins for the project TODO maybe we should harmonize with project registry
+        VALID_PLUGINS: 'validPlugins', //space separated list of valid plugins for the project TODO maybe we should harmonize with project registry
+        USED_ADDONS: 'usedAddOns', //space separated list of used addons in the given project
+        VALID_PANELS: 'validPanels', //space separated list of valid panels for the project
+        VALID_DECORATORS: 'validDecorators', //space separated list of valid decorators for the project
         /*
          *  MISC
          */

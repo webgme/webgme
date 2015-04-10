@@ -1,9 +1,9 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['logManager',
-    'clientUtil',
+define(['js/logger',
+    'js/util',
     'js/Constants',
-    'js/Panels/Grid/GridPanelContainmentControl.DataGridWidgetEventHandlers'], function (logManager,
+    'js/Panels/Grid/GridPanelContainmentControl.DataGridWidgetEventHandlers'], function (Logger,
                                     util,
                                     CONSTANTS,
                                     GridPanelContainmentControlDataGridWidgetEventHandlers) {
@@ -22,7 +22,7 @@ define(['logManager',
 
         this._currentNodeId = null;
 
-        this._logger = logManager.create("GridPanelContainmentControl");
+        this._logger = Logger.create('gme:Panels:Grid:GridPanelContainmentControl', WebGMEGlobal.gmeConfig.client.log);
 
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDataGridWidgetEventHandlers();

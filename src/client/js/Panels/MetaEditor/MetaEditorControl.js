@@ -1,7 +1,7 @@
 /*globals define, _, $, console, angular, WebGMEGlobal*/
 
-define(['logManager',
-    'clientUtil',
+define(['js/logger',
+    'js/util',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
@@ -10,7 +10,7 @@ define(['logManager',
     './MetaEditorControl.DiagramDesignerWidgetEventHandlers',
     './MetaRelations',
     './MetaEditorConstants',
-    'js/Utils/PreferencesHelper'], function (logManager,
+    'js/Utils/PreferencesHelper'], function (Logger,
                                                         util,
                                                         CONSTANTS,
                                                         GMEConcepts,
@@ -33,7 +33,8 @@ define(['logManager',
     MetaEditorControl = function (options) {
         var self = this;
 
-        this.logger = options.logger || logManager.create(options.loggerName || "MetaEditorControl");
+        this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:MetaEditor:MetaEditorControl',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
 
@@ -198,45 +199,7 @@ define(['logManager',
     /*                CUSTOM BUTTON EVENT HANDLERS            */
     /**********************************************************/
     MetaEditorControl.prototype._printNodeData = function () {
-        var idList = this.diagramDesigner.selectionManager.getSelectedElements(),
-            len = idList.length,
-            node,
-            nodeID,
-            gmeID,
-            nodeName,
-            i;
-
-        while (len--) {
-            nodeID = idList[len];
-            gmeID = this._ComponentID2GMEID[nodeID];
-            node = this._client.getNode(gmeID);
-
-            if (node) {
-                nodeName = node.getAttribute(nodePropertyNames.Attributes.name);
-
-                var containmentMetaDescriptor = node.getChildrenMetaDescriptor();
-                this.logger.warning(nodeName + ' (' + gmeID + ')\'s containmentMetaDescriptor: ' + JSON.stringify(containmentMetaDescriptor));
-
-                var pointerNames = node.getPointerNames();
-                i = pointerNames.length;
-                this.logger.warning(nodeName + ' (' + gmeID + ')\'s pointerMetaDescriptors num: ' + i);
-                while (i--) {
-                    var pointerMetaDescriptor = node.getPointerDescriptor(pointerNames[i]);
-                    this.logger.warning(nodeName + ' (' + gmeID + ')\'s pointerMetaDescriptor "' + pointerNames[i] + '": ' + JSON.stringify(pointerMetaDescriptor));
-                }
-
-                this.logger.warning(nodeName + ' (' + gmeID + ')\'s metaInheritance: ' + node.getBaseId());
-
-                var attributeNames = node.getAttributeNames();
-                i = attributeNames.length;
-                this.logger.warning(nodeName + ' (' + gmeID + ')\'s attributeMetaDescriptors num: ' + i);
-
-                while (i--) {
-                    var attrMetaDescriptor = node.getAttributeDescriptor(attributeNames[i]);
-                    this.logger.warning(nodeName + ' (' + gmeID + ')\'s attributeMetaDescriptor "' + attributeNames[i] + '": ' + JSON.stringify(attrMetaDescriptor));
-                }
-            }
-        }
+        //TODO could be filled with meaningful info
     };
     /**********************************************************/
     /*       END OF --- CUSTOM BUTTON EVENT HANDLERS          */
@@ -1225,7 +1188,7 @@ define(['logManager',
                 /*this.logger.debug('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '"');
                 this._client.delBase(objectID);*/
                 //TEMPORARILY DO NOT ALLOW DELETING INHERITANCE RELATIONSHIP
-                this.logger.warning('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '" is not allowed...');
+                this.logger.warn('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '" is not allowed...');
             }
         }
     };
@@ -1549,12 +1512,13 @@ define(['logManager',
 
 
         /************** PRINT NODE DATA *****************/
-        this._btnPrintNodeMetaData = toolBar.addButton({ "title": "Print node META data",
-            "icon": "glyphicon glyphicon-share",
-            "clickFn": function (/*data*/){
-                self._printNodeData();
-            }});
-        this._toolbarItems.push(this._btnPrintNodeMetaData);
+        // TODO removed, but could be reimplemented if needed such function
+        //this._btnPrintNodeMetaData = toolBar.addButton({ "title": "Print node META data",
+        //    "icon": "glyphicon glyphicon-share",
+        //    "clickFn": function (/*data*/){
+        //        self._printNodeData();
+        //    }});
+        //this._toolbarItems.push(this._btnPrintNodeMetaData);
         /************** END OF - PRINT NODE DATA *****************/
 
 

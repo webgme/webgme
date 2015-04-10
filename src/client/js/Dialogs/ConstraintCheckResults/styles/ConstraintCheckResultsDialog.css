@@ -1,0 +1,31 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+.constraint-check-results-dialog .modal-body div.constraint-check-result {
+  padding: 3px;
+  margin-bottom: 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd; }
+  .constraint-check-results-dialog .modal-body div.constraint-check-result.unread {
+    color: #3a87ad;
+    background-color: #d9edf7;
+    border-color: #bce8f1; }
+  .constraint-check-results-dialog .modal-body div.constraint-check-result .alert {
+    margin-bottom: 0px; }
+  .constraint-check-results-dialog .modal-body div.constraint-check-result .title {
+    margin-left: 5px; }
+  .constraint-check-results-dialog .modal-body div.constraint-check-result .time {
+    margin-left: 5px;
+    color: #999999;
+    font-size: 9px; }
+  .constraint-check-results-dialog .modal-body div.constraint-check-result .messages .msg {
+    margin-bottom: 5px;
+    padding-bottom: 15px; }
+    .constraint-check-results-dialog .modal-body div.constraint-check-result .messages .msg .msg-title {
+      margin-top: 5px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #999999;
+      border-bottom: 1px solid #999999; }

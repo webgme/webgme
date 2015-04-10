@@ -1,17 +1,18 @@
 bin
 !src/bin
+!test/bin
 
 */.settings
 */.idea
 *.class
 
-
-/node_modules
+node_modules
 
 *.log
 .idea
 .sass-cache
 .DS_Store
+tmp
 
 .project
 .settings
@@ -23,7 +24,16 @@ src/bin/stdout.log
 src/bin/decorators.js
 src/bin/*.xme
 
+/src-cov
+/coverage
 # ignore file system blob storage files
 blob-local-storage
 
+config/config.dev*.js
+
 *.swp
+
+webgme-*.tgz
+
+jobList.nedb
+workerList.nedb

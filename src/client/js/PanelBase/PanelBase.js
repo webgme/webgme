@@ -1,8 +1,8 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['jquery',
-        'logManager'], function ( _jquery,
-                                  logManager) {
+        'js/logger'], function ( _jquery,
+                                  Logger) {
 
     "use strict";
 
@@ -10,13 +10,13 @@ define(['jquery',
 
     PanelBase = function (options, layoutManager) {
         //this.logger --- logger instance for the Panel
-        var loggerName = "PanelBase";
+        var loggerName = "gme:PanelBase:PanelBase";
 
         if (options && options[PanelBase.OPTIONS.LOGGER_INSTANCE_NAME]) {
-            loggerName = options[PanelBase.OPTIONS.LOGGER_INSTANCE_NAME];
+            loggerName = 'gme:' + options[PanelBase.OPTIONS.LOGGER_INSTANCE_NAME];
         }
 
-        this.logger = logManager.create(loggerName);
+        this.logger = Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this.$pEl = this.$el = $('<div/>');
 
@@ -85,9 +85,21 @@ define(['jquery',
     PanelBase.prototype.afterAppend = function () {
         //get panel's offset
         this.offset = this.$el.offset();
-
         //get panel's size
         this._getSize();
+
+    };
+
+    PanelBase.prototype.setContainerUpdateFn = function (currentLayout, containerSizeUpdateFn) {
+        if (containerSizeUpdateFn) {
+            this.updateContainerSize = function () {
+                containerSizeUpdateFn.call(currentLayout);
+            };
+        } else {
+            this.updateContainerSize = function () {
+                this.logger.warn('updateContainerSize not implemented for container in current-layout');
+            };
+        }
     };
 
     return PanelBase;

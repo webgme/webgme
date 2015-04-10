@@ -4,10 +4,10 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['logManager',
+define(['js/logger',
         'js/Widgets/GraphViz/GraphVizWidget.Zoom',
         'd3',
-        'css!./styles/GraphVizWidget.css'], function (logManager,
+        'css!./styles/GraphVizWidget.css'], function (Logger,
                                                                GraphVizWidgetZoom) {
     "use strict";
 
@@ -25,7 +25,7 @@ define(['logManager',
         TREE_LEVEL_DISTANCE = 180;
 
     GraphVizWidget = function (container, params) {
-        this._logger = logManager.create("GraphVizWidget");
+        this._logger = Logger.create('gme:Widgets:GraphViz:GraphVizWidget', WebGMEGlobal.gmeConfig.client.log);
 
         this._el = container;
 

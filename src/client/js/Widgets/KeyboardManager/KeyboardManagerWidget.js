@@ -1,7 +1,7 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['logManager',
-    'js/Controls/iCheckBox'], function (logManager,
+define(['js/logger',
+    'js/Controls/iCheckBox'], function (Logger,
                                         iCheckBox) {
 
     "use strict";
@@ -9,7 +9,8 @@ define(['logManager',
     var KeyboardManagerWidget;
 
     KeyboardManagerWidget = function (containerEl) {
-        this._logger = logManager.create("KeyboardManagerWidget");
+        this._logger = Logger.create('gme:Widgets:KeyboardManager:KeyboardManagerWidget',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._el = containerEl;
 

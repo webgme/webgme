@@ -23,6 +23,7 @@ define(['jquery-spectrum',
             showPalette: true,
             showSelectionPalette: false,
             showInput: true,
+            showInitial: true,
             preferredFormat: "hex",
             allowEmpty:true,
             palette: [

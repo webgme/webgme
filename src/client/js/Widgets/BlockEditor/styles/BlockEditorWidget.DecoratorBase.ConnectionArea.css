@@ -1,0 +1,15 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+.linkable-item .conn-area {
+  position: absolute;
+  top: 0;
+  left: 0; }
+.linkable-item path.conn-area-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0.5;
+  stroke: #555555; }

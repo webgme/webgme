@@ -10,13 +10,31 @@ $show-more-panel-border: 1px solid #3a87ad;
 
 $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWidget.js Y_DELTA!!!
 
+.repository-dialog {
+  .modal-header {
+    > h3 {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+  }
+}
+
 .project-repository-widget {
+
+  table.table.commit-list {
+    width: auto;
+  }
+
+  .message-column {
+    width: 100%;
+  }
+
   .commits {
     position: absolute;
     width: 1px;
     height: 1px;
-    top: 15 /*modal dialog padding*/ + $table-row-height + ($table-row-height - $commit-size)/2; //TO MATCH PERFECT POSITIONING ABOVE TABLE LAYOUT'S FIRST COLUMN
-    left: 15px;
+    top: 20 /*modal dialog padding*/ + $table-row-height + ($table-row-height - $commit-size)/2; //TO MATCH PERFECT POSITIONING ABOVE TABLE LAYOUT'S FIRST COLUMN
+    //left: 30px;
 
 
     /*DISABLE OUTER BORDER WHEN FOCUSED*/
@@ -40,7 +58,7 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
       }
     }
   }
-
+  
   .show-more {
     height: $show-more-panel-height;
     line-height: $show-more-panel-height;
@@ -60,49 +78,68 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
   table {
     tr {
       height: $table-row-height;
-    }
 
-    th,
-    td {
-      padding: 0px;
-      padding-right: 5px;
-      line-height: 12px;
-      font-size: 12px;
-      white-space: nowrap;
-      vertical-align: middle;
+      th,
+      td {
+        padding: 0 5px;
+        white-space: nowrap;
+        vertical-align: middle;
+        text-align: center; // everything should be in center
 
-      div.commit-message {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: inline-block;
-        max-width: 600px;
-      }
+        &.actions {
+          text-align: left;
 
-      .branch-label {
-        margin-right: 2px;
+          > div.input-group {
+            margin-bottom: 0;
+            display: inline-flex;
+            display: -webkit-inline-flex;
+            > input {
+              height: 100%;
+              width: 150px;
+              padding: 3px 5px;
+            }
+          }
+        }
 
-        [class*="icon-"] {
+        &.commit-hash {
+          font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+
+        div.commit-message {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          text-align: left;
+          //display: inline-block;
+          min-width: 200px;
+        }
+
+
+        .branch-label {
+          margin-right: 2px;
+
+          [class*="icon-"] {
+            margin-left: 2px;
+          }
+
+          [class*="icon-white"]:hover {
+            cursor: pointer;
+          }
+
+          &.label {
+            font-size: 11px;
+            font-weight: normal;
+            height: 15px;
+          }
+        }
+
+        > .btn {
           margin-left: 2px;
+          margin-right: 2px;
         }
 
-        [class*="icon-white"]:hover {
-          cursor: pointer;
+        .control-group {
+          margin-bottom: 0;
         }
-
-        &.label {
-          font-size: 11px;
-          font-weight: normal;
-          height: 15px;
-        }
-      }
-
-      > .btn {
-        margin-left: 2px;
-        margin-right: 2px;
-      }
-
-      .control-group {
-        margin-bottom: 0px;
       }
     }
 
@@ -112,7 +149,7 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
 
     &.table-hover tbody tr:hover > td,
     &.table-hover tbody tr:hover > th {
-      background-color: rgba(245, 245, 245, 0.5);
+      background-color: rgba(236, 236, 236, 0.50);
     }
   }
 }

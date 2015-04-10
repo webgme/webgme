@@ -1,24 +1,28 @@
-/*globals define, _, WebGMEGlobal, DEBUG*/
+/*globals define, _, $, WebGMEGlobal, DEBUG*/
+/*jshint browser:true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-define(['logManager',
-    'loaderProgressBar',
+define(['js/logger',
+    'js/Loader/LoaderProgressBar',
     'js/Constants',
+    'js/RegistryKeys',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
     '/listAllVisualizerDescriptors',
-    'css!./styles/VisualizerPanel.css'], function (logManager,
-                                    LoaderProgressBar,
-                                    CONSTANTS,
-                                    PanelBaseWithHeader,
-                                    SplitPanel,
-                                    VisualizersJSON) {
+    'css!./styles/VisualizerPanel.css'],
+function (Logger,
+          LoaderProgressBar,
+          CONSTANTS,
+          REGISTRY_KEYS,
+          PanelBaseWithHeader,
+          SplitPanel,
+          VisualizersJSON) {
 
-    "use strict";
+    'use strict';
 
     var VisualizerPanel,
         DEFAULT_VISUALIZER = 'ModelEditor';
@@ -26,7 +30,7 @@ define(['logManager',
     VisualizerPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "Visualizer";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'Visualizer';
         options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = false;
 
         //call parent's constructor
@@ -42,10 +46,11 @@ define(['logManager',
         this._activeVisualizer = {};
         this._currentNodeID = null;
         this._visualizers = {};
+        this._validVisualizers = null;
 
         this._loadVisualizers();
 
-        this.logger.debug("VisualizerPanel ctor finished");
+        this.logger.debug('VisualizerPanel ctor finished');
     };
 
     //inherit from PanelBaseWithHeader
@@ -57,7 +62,7 @@ define(['logManager',
             btnIconBase = $('<i/>');
 
         //set Widget title
-        this.setTitle("Visualizer");
+        this.setTitle('Visualizer');
 
         this.$el.addClass('visualizer-panel');
 
@@ -65,22 +70,22 @@ define(['logManager',
         toolbar.addSeparator();
 
         toolbar.addToggleButton({
-            "title": "Split view ON/OFF",
-            "icon": btnIconBase.clone().addClass('gme icon-gme_split-panels'),
-            "clickFn": function (data, toggled) {
+            title: 'Split view ON/OFF',
+            icon: btnIconBase.clone().addClass('gme icon-gme_split-panels'),
+            clickFn: function (data, toggled) {
                 self._p2Editor(toggled);
             }});
 
         this._panel1VisContainer = $('<div/>');
         this._ul1 = $('<ul class="nav nav-pills nav-stacked">');
-        this._ul1.attr("data-id", 'p1');
+        this._ul1.attr('data-id', 'p1');
         this._panel1VisContainer.append($('<div class="pp">Panel 1:</div>'));
         this._panel1VisContainer.append(this._ul1);
 
         this.$el.append(this._panel1VisContainer);
 
         this.$el.on('click', 'ul > li:not(.active)', function (event) {
-            var vis = $(this).attr("data-id"),
+            var vis = $(this).attr('data-id'),
                 ul = $(this).parent();
             self._setActiveVisualizer(vis, ul);
             event.stopPropagation();
@@ -93,14 +98,17 @@ define(['logManager',
 
         this._client.addEventListener(this._client.events.PROJECT_CLOSED, function (__project, nodeId) {
             self._p2Editor(false);
+            self._validVisualizers = null;
         });
 
         this._client.addEventListener(this._client.events.PROJECT_OPENED, function (__project, nodeId) {
             self._p2Editor(false);
+            self._validVisualizers = null;
         });
 
         this._client.addEventListener(this._client.events.BRANCH_CHANGED, function (__project, nodeId) {
             self._p2Editor(false);
+            self._validVisualizers = null;
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
@@ -124,7 +132,6 @@ define(['logManager',
 
     VisualizerPanel.prototype._setActiveVisualizer = function (visualizer, ul) {
         var PanelClass,
-            ControlClass,
             panel = ul.attr('data-id');
 
         this._settingVisualizer = true;
@@ -149,7 +156,9 @@ define(['logManager',
                 }
 
                 if (this._currentNodeID || this._currentNodeID === CONSTANTS.PROJECT_ROOT_ID) {
-                    if (this._activePanel[panel] && this._activePanel[panel].control && _.isFunction(this._activePanel[panel].control.selectedObjectChanged)) {
+                    if (this._activePanel[panel] && this._activePanel[panel].control &&
+                        _.isFunction(this._activePanel[panel].control.selectedObjectChanged)) {
+
                         this._activePanel[panel].control.selectedObjectChanged(this._currentNodeID);
                     }
                 }
@@ -161,12 +170,60 @@ define(['logManager',
         this._settingVisualizer = false;
     };
 
+    VisualizerPanel.prototype._updateValidVisualizers = function (currentNodeId) {
+        var node,
+            validPanels;
+        // Update the validVisualizers
+        if (currentNodeId || currentNodeId === CONSTANTS.PROJECT_ROOT_ID) {
+            node = this._client.getNode(currentNodeId);
+            if (node) {
+                validPanels = node.getRegistry(REGISTRY_KEYS.VALID_PANELS);
+                if (validPanels) {
+                    this._validVisualizers = validPanels.split(' ');
+                    return;
+                }
+            } else {
+                this.logger.error('could not load node in _updateValidVisualizers', currentNodeId);
+            }
+        } else {
+            this.logger.debug('nodePath not given');
+        }
+        this._validVisualizers = null;
+    };
+
+    VisualizerPanel.prototype._getActivePanelElem = function () {
+        var panelListName = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel.p1 ? 'p1' : 'p2';
+        return panelListName === 'p1' ? this._ul1 : this._ul2;
+    };
+
+    VisualizerPanel.prototype._updateListedVisualizers = function () {
+        var self = this,
+            ul = this._getActivePanelElem();
+        // For the active panel hide/show listed visualizers
+        ul.children('li').each(function (index, _li) {
+            var li = $(_li);
+            if (self._validVisualizers === null) {
+                // By default fall back on showing all loaded visualizers.
+                li.show();
+            } else {
+                if (self._validVisualizers.indexOf(li.attr('data-id')) > -1) {
+                    li.show();
+                } else {
+                    li.hide();
+                }
+            }
+        });
+
+        this.updateContainerSize();
+        if (self._validVisualizers) {
+            setTimeout(function () {
+                self._setActiveVisualizer(self._validVisualizers[0], ul);
+            }, 0);
+        }
+    };
 
     VisualizerPanel.prototype.setActiveVisualizer = function (visualizer) {
-        var panel = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel.p1 ? 'p1' : 'p2',
-            ul = panel === 'p1' ? this._ul1 : this._ul2;
-
-        this._setActiveVisualizer(visualizer, ul);
+        this._setActiveVisualizer(visualizer, this._getActivePanelElem());
     };
 
     VisualizerPanel.prototype._removeLoader = function (li, loaderDiv) {
@@ -203,7 +260,7 @@ define(['logManager',
         }
 
         if (this._visualizers[menuDesc.id]) {
-            this.logger.warning("A visualizer with the ID '" + menuDesc.id + "' already exists...");
+            this.logger.warn("A visualizer with the ID '" + menuDesc.id + "' already exists...");
             doCallBack();
         } else {
             li.attr("data-id", menuDesc.id);
@@ -222,7 +279,7 @@ define(['logManager',
                 require([menuDesc.panel],
                     function (panelClass) {
                         self.logger.debug("downloaded: " + menuDesc.panel);
-                        self._visualizers[menuDesc.id] = {"panel": panelClass};
+                        self._visualizers[menuDesc.id] = {panel: panelClass};
                         self._removeLoader(li, loaderDiv);
                         doCallBack();
                     },
@@ -237,7 +294,7 @@ define(['logManager',
             } else {
                 a.append(' <i class="glyphicon glyphicon-warning-sign"></i>');
 
-                this.logger.warning("The visualizer with the ID '" + menuDesc.id + "' is missing 'panel' or 'control'");
+                this.logger.warn("The visualizer with the ID '" + menuDesc.id + "' is missing 'panel' or 'control'");
 
                 doCallBack();
             }
@@ -267,6 +324,8 @@ define(['logManager',
 
     VisualizerPanel.prototype.selectedObjectChanged = function (currentNodeId) {
         this._currentNodeID = currentNodeId;
+        this._updateValidVisualizers(currentNodeId);
+        this._updateListedVisualizers();
     };
 
     VisualizerPanel.prototype._p2Editor = function (enabled) {
@@ -274,12 +333,12 @@ define(['logManager',
             //show 2 panels
             this._panel2VisContainer = this._panel1VisContainer.clone();
             this._ul2 = this._panel2VisContainer.find('ul');
-            this._ul2.attr("data-id", 'p2');
+            this._ul2.attr('data-id', 'p2');
             this._panel2VisContainer.find('.pp').text('Panel 2:');
             this.$el.append(this._panel2VisContainer);
             //find the selected on
             var activeLi = this._panel2VisContainer.find('ul > li.active'),
-                vis = activeLi.attr("data-id"),
+                vis = activeLi.attr('data-id'),
                 ul = activeLi.parent();
             this._setActiveVisualizer(vis, ul);
         } else {

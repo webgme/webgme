@@ -11,9 +11,9 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/UserProfile/UserProfileWidget',
     'js/Toolbar/Toolbar',
     './DefaultToolbar',
-    'isis-ui-components/dropdownNavigator/dropdownNavigator',
-    './ProjectNavigatorController'
-], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar, DropDownNavigator, ProjectNavigatorController) {
+    './ProjectNavigatorController',
+    'js/Utils/WebGMEUrlManager'
+], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar, ProjectNavigatorController, WebGMEUrlManager) {
 
     "use strict";
 
@@ -24,9 +24,28 @@ define(['js/PanelBase/PanelBase',
         'gme.ui.headerPanel', [
           'isis.ui.dropdownNavigator',
           'gme.ui.ProjectNavigator'
-        ]).run(function() {
+        ]).run(function ($rootScope, $location) {
+            // FIXME: this might not be the best place to put it...
+            if (WebGMEGlobal && WebGMEGlobal.State) {
+                WebGMEGlobal.State.on('change', function () {
+                    var searchQuery = WebGMEUrlManager.serializeStateToUrl();
 
-    });
+                    // set the state that gets pushed into the history
+                    $location.state(WebGMEGlobal.State.toJSON());
+
+                    // setting the search query based on the state
+                    $location.search(searchQuery);
+
+                    // forcing the update
+                    if (!$rootScope.$$phase) {
+                        $rootScope.$apply();
+                    }
+                });
+            } else {
+                // FIXME: this should be a hard error, we do not have a logger here.
+                console.error('WebGMEGlobal.State does not exist, cannot update url based on state changes.');
+            }
+        });
 
     HeaderPanel = function (layoutManager, params) {
         var options = {};

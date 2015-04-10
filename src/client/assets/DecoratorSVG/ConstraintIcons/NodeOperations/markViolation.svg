@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="71.020126"
+   version="1.1"
+   width="104.90901"
+   style="overflow:hidden"
+   id="svg2"
+   inkscape:version="0.48.5 r10040"
+   sodipodi:docname="markViolation.svg">
+  <metadata
+     id="metadata15">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs13" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1918"
+     inkscape:window-height="1173"
+     id="namedview11"
+     showgrid="false"
+     inkscape:zoom="8.1369528"
+     inkscape:cx="84.203313"
+     inkscape:cy="25.806684"
+     inkscape:window-x="3840"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <!--
+  <filter
+     id="secondary"
+     color-interpolation-filters="sRGB">
+    <feColorMatrix
+       in="SourceGraphic"
+       type="hueRotate"
+       values="10"
+       id="feColorMatrix8" />
+  </filter>  
+  <g
+     id="colors"
+     style="fill:#F16745;stroke:#F16745"
+     transform="translate(-0.01249999,-0.09525007)"
+     data-secondary="fill:#F36a48;stroke:#F36a48">
+-->
+  <path
+     inkscape:connector-curvature="0"
+     id="in-dent"
+     style="fill:#f36d69;stroke:#f36d69;stroke-width:1.22866261"
+     d="m 0.6651565,4.693491 a 3.5336527,3.8448907 0 0 1 3.53366,-3.84489145 l 7.0673005,0 3.53366,3.84489145 9.42307,0 3.53365,-3.71672845 0,3.71672845" />
+  <path
+     inkscape:connector-curvature="0"
+     id="TRCorner"
+     data-shift="x-verticalRect"
+     d="m 78.194,0.59007155 0,3.53124995 26.125,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124995 l -22.5625,0 z"
+     style="fill:#f36d69;stroke:#f36d69;stroke-width:1.17999995" />
+  <rect
+     id="verticalRect"
+     style="fill:#f36d69;stroke:#f36d69;stroke-width:2.95695806"
+     height="64.34304"
+     width="64.489044"
+     y="1.4836068"
+     x="29.61331"
+     data-stretch="x-message x-node" />
+  <rect
+     style="fill:#f36d69;stroke:#f36d69;stroke-width:1.00427842"
+     id="conflictRect"
+     ry="0"
+     rx="0"
+     r="0"
+     height="34.232315"
+     width="103.83572"
+     y="4.1376719"
+     x="0.50213921"
+     data-stretch="x-message x-node y-node" />
+  <rect
+     style="fill:#f36d69;stroke:#f36d69;stroke-width:0.82999617"
+     id="messageRect"
+     ry="0"
+     rx="2.2"
+     r="0"
+     height="31"
+     width="103.89097"
+     y="35.760117"
+     x="0.52472442"
+     data-stretch="x-node x-message y-message"
+     data-shift="y-conflictRect" />
+  <path
+     inkscape:connector-curvature="0"
+     data-shift="y-messageRect"
+     id="out-dent"
+     style="fill:#f36d69;stroke:#f36d69;stroke-width:1.17999995"
+     d="m 0.6408265,63.350118 a 3.54,3.54 0 0 0 3.54,3.540008 l 7.0800005,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658008" />
+  <path
+     inkscape:connector-curvature="0"
+     data-shift="y-messageRect x-verticalRect"
+     id="BRCorner"
+     d="m 77.100002,63.183807 0,3.531246 23.656478,0 a 3.5400319,3.5399954 0 0 0 3.56253,-3.531246 l -27.219008,0 z"
+     style="fill:#f36d69;stroke:#f36d69;stroke-width:1.18000448" />
+  <rect
+     rx="2.260397"
+     y="30.908358"
+     x="64.979141"
+     height="9.5861387"
+     width="20"
+     data-align-center="y-conflictRect"
+     id="conflictBox"
+     style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:4.10586119px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+  <rect
+     inkscape:label="#rect3011-1"
+     rx="2.2"
+     y="48.200008"
+     x="60.954437"
+     height="8.3551264"
+     width="36.769127"
+     class="edit-message"
+     id="msgBox"
+     data-align-center="y-messageRect"
+     data-shift="y-conflictRect"
+     text-stretch-only="true"
+     data-stretch="x-message"
+     style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:5.33687353px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden" />
+  <!-- EXTRA SVG INFO -->
+  <text
+     x="5.963325"
+     y="19.112179"
+     style="font-size:12px"
+     id="text16">Mark Violation</text>
+  <text
+     id="conflict-tag"
+     x="5.9692149"
+     y="38.777676"
+     data-align-center="y-conflictRect"
+     style="font-size:10px;overflow:hidden">Conflict:</text>
+  <text
+     id="message-tag"
+     data-shift="y-conflictRect"
+     x="5.374702"
+     y="56.027687"
+     style="font-size:10px;overflow:hidden">message:</text>
+  <text
+     id="message"
+     data-shift="y-conflictRect"
+     x="63.374702"
+     y="56.027687"
+     style="font-size:10px;overflow:hidden">msg</text>
+  <!-- Connection Area Definitions -->
+  <line
+     class="connection-area"
+     data-ptr="next true_next false_next"
+     data-role="in"
+     x1="15.050835"
+     y1="4.8711634"
+     x2="24.050835"
+     y2="4.8711634"
+     id="next-in" />
+  <line
+     class="connection-area"
+     data-ptr="next"
+     data-role="out"
+     data-shift="y-out-dent"
+     x1="15.050835"
+     y1="70.454124"
+     x2="24.050835"
+     y2="70.454124"
+     id="next-out" />
+  <line
+     class="connection-area"
+     data-ptr="node"
+     data-role="out"
+     data-shift="y-conflictBox"
+     x1="59.979141"
+     y1="35.112183"
+     x2="65.979141"
+     y2="35.112183"
+     id="node-out" />
+  <line
+     style="overflow:hidden"
+     class="connection-area"
+     data-ptr="message"
+     data-role="out"
+     data-shift="y-msgBox"
+     x1="54.34"
+     y1="52.526127"
+     x2="60.340004"
+     y2="52.526127"
+     id="message-out"
+     inkscape:label="#line23-1" />
+  <!-- custom highlighting areas are now supported - must be a line, however -->
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="node"
+     data-role="out"
+     x1="64"
+     y1="35"
+     x2="84"
+     y2="35"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="message"
+     data-role="out"
+     x1="60"
+     y1="52"
+     x2="96"
+     y2="52"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="next"
+     data-role="in"
+     x1="5"
+     y1="4"
+     x2="80"
+     y2="4"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0;stroke:#444444;stroke-width:10.10658169"
+     data-ptr="next"
+     data-role="out"
+     x1="5.0532908"
+     y1="70.904751"
+     x2="79.852669"
+     y2="70.904751"
+     id="line17" />
+  <!-- Initial Measurements -->
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="name"
+     width="69"
+     height="19"
+     x="2.0633311"
+     y="6.6491623"
+     id="rect18" />
+  <rect
+     style="opacity:0"
+     id="conflict-initial-measure"
+     class="initial-measure"
+     data-ptr="node"
+     width="30.800045"
+     height="14.032192"
+     x="42.223625"
+     y="29.198833" />
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="message"
+     data-type="text"
+     id="message-initial-measure"
+     width="15.800045"
+     height="14.032192"
+     x="44.492043"
+     y="54.940437" />
+</svg>

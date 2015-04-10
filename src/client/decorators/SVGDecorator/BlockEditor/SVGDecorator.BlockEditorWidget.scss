@@ -1,0 +1,55 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+
+//imports
+@import "../Core/_SVGDecorator";
+@import "../../../js/Widgets/DiagramDesigner/styles/Connector";
+@import "../../../js/Widgets/DiagramDesigner/styles/DiagramDesignerWidget";
+
+//include SVGDecoratorCore style
+@include svg_decorator_core;
+
+//overwrite / extend with local modifications
+.designer-item {
+  .svg-decorator {
+    .svg-content {
+      svg {
+        border: $border;
+
+        .connector {
+          fill: $connector-background-color;
+          stroke: $connection-border-color;
+          stroke-width: $connector-border-width;
+
+          &:hover {
+            stroke: $connector-hover-border-color;
+          }
+        }
+      }
+    }
+
+    .connector {
+      @include connector_basics;
+
+      margin-left: $connector-size / -2;
+      margin-top: $connector-size / -2;
+    }
+  }
+
+  &.selected {
+    .svg-decorator {
+      .svg-content {
+        svg {
+          border: $selected-border;
+          background-color: $selected-background-color;
+          -webkit-box-shadow: inset 0 1px 1px $diagram-designer-selection-outline-shadow-start 0 0 4px $diagram-designer-selection-outline-shadow-end;
+          -moz-box-shadow: inset 0 1px 1px $diagram-designer-selection-outline-shadow-start, 0 0 4px $diagram-designer-selection-outline-shadow-end;
+          box-shadow: inset 0 1px 1px $diagram-designer-selection-outline-shadow-start, 0 0 4px $diagram-designer-selection-outline-shadow-end;
+        }
+      }
+    }
+  }
+}

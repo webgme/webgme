@@ -1,7 +1,7 @@
 /*globals define, _, requirejs, WebGMEGlobal, alert*/
 
 define(['js/Dialogs/Import/ImportDialog',
-        'loaderCircles'], function (ImportDialog,
+        'js/Loader/LoaderCircles'], function (ImportDialog,
                                     LoaderCircles) {
 
     "use strict";

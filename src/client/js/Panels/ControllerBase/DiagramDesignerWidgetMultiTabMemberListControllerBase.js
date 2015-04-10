@@ -1,14 +1,14 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
 
-define(['logManager',
-        'util/guid',
+define(['js/logger',
+        'common/util/guid',
         'js/Constants',
         'js/NodePropertyNames',
         'js/RegistryKeys',
         'js/Utils/GMEConcepts',
         'js/Utils/GMEVisualConcepts',
         'js/DragDrop/DragHelper',
-        'js/Utils/PreferencesHelper'], function (logManager,
+        'js/Utils/PreferencesHelper'], function (Logger,
                                    generateGuid,
                                    CONSTANTS,
                                    nodePropertyNames,
@@ -29,7 +29,9 @@ define(['logManager',
         MEMBER_POSITION_REGISTRY_KEY = REGISTRY_KEYS.POSITION;
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase = function (options) {
-        this.logger = logManager.create(options.loggerName || "DiagramDesignerWidgetMultiTabMemberListControllerBase");
+        var loggerName = options.loggerName || 'gme:Panels:ControllerBase:' +
+            'DiagramDesignerWidgetMultiTabMemberListControllerBase';
+        this.logger = Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
 
@@ -398,13 +400,13 @@ define(['logManager',
          };
         */
 
-        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getOrderedMemberListInfo(memberListContainerObject) is not overridden for object "' + memberListContainerObject + '", returning default...');
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getOrderedMemberListInfo(memberListContainerObject) is not overridden for object "' + memberListContainerObject + '", returning default...');
 
         return undefined;
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistryKey = function () {
-        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistryKey is not overridden, returning default value...');
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistryKey is not overridden, returning default value...');
         return undefined;
     };
 
@@ -782,11 +784,12 @@ define(['logManager',
         while (i--) {
             e = events[i];
 
-            if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD) {
+            if(e.etype !== CONSTANTS.TERRITORY_EVENT_COMPLETE && e.etype !== CONSTANTS.TERRITORY_EVENT_INCOMPLETE){
+              if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD) {
                 unloadEvents.push(e);
-            } else if (e.desc.isConnection === false) {
+              } else if (e.desc.isConnection === false) {
                 orderedItemEvents.push(e);
-            } else if (e.desc.isConnection === true) {
+              } else if (e.desc.isConnection === true) {
                 var srcGMEID  = e.desc.srcID;
                 var dstGMEID = e.desc.dstID;
 
@@ -796,16 +799,16 @@ define(['logManager',
                 var dstConnIdx = -1;
                 j = orderedConnectionEvents.length;
                 while (j--) {
-                    ce = orderedConnectionEvents[j];
-                    if (ce.id === srcGMEID) {
-                        srcConnIdx = j;
-                    } else if (ce.id === dstGMEID) {
-                        dstConnIdx = j;
-                    }
+                  ce = orderedConnectionEvents[j];
+                  if (ce.id === srcGMEID) {
+                    srcConnIdx = j;
+                  } else if (ce.id === dstGMEID) {
+                    dstConnIdx = j;
+                  }
 
-                    if (srcConnIdx !== -1 && dstConnIdx !== -1) {
-                        break;
-                    }
+                  if (srcConnIdx !== -1 && dstConnIdx !== -1) {
+                    break;
+                  }
                 }
 
                 var insertIdxAfter = Math.max(srcConnIdx, dstConnIdx);
@@ -817,33 +820,34 @@ define(['logManager',
                 var depDstConnIdx = MAX_VAL;
                 j = orderedConnectionEvents.length;
                 while (j--) {
-                    ce = orderedConnectionEvents[j];
-                    if (e.eid === ce.desc.srcID) {
-                        depSrcConnIdx = j;
-                    } else if (e.eid === ce.desc.dstID) {
-                        depDstConnIdx = j;
-                    }
+                  ce = orderedConnectionEvents[j];
+                  if (e.eid === ce.desc.srcID) {
+                    depSrcConnIdx = j;
+                  } else if (e.eid === ce.desc.dstID) {
+                    depDstConnIdx = j;
+                  }
 
-                    if (depSrcConnIdx !== MAX_VAL && depDstConnIdx !== MAX_VAL) {
-                        break;
-                    }
+                  if (depSrcConnIdx !== MAX_VAL && depDstConnIdx !== MAX_VAL) {
+                    break;
+                  }
                 }
 
                 var insertIdxBefore = Math.min(depSrcConnIdx, depDstConnIdx);
                 if (insertIdxAfter === -1 && insertIdxBefore === MAX_VAL) {
-                    orderedConnectionEvents.push(e);
+                  orderedConnectionEvents.push(e);
                 } else {
-                    if (insertIdxAfter !== -1 &&
-                        insertIdxBefore === MAX_VAL) {
-                        orderedConnectionEvents.splice(insertIdxAfter + 1,0,e);
-                    } else if (insertIdxAfter === -1 &&
-                        insertIdxBefore !== MAX_VAL) {
-                        orderedConnectionEvents.splice(insertIdxBefore,0,e);
-                    } else if (insertIdxAfter !== -1 &&
-                        insertIdxBefore !== MAX_VAL) {
-                        orderedConnectionEvents.splice(insertIdxBefore,0,e);
-                    }
+                  if (insertIdxAfter !== -1 &&
+                    insertIdxBefore === MAX_VAL) {
+                    orderedConnectionEvents.splice(insertIdxAfter + 1,0,e);
+                  } else if (insertIdxAfter === -1 &&
+                    insertIdxBefore !== MAX_VAL) {
+                    orderedConnectionEvents.splice(insertIdxBefore,0,e);
+                  } else if (insertIdxAfter !== -1 &&
+                    insertIdxBefore !== MAX_VAL) {
+                    orderedConnectionEvents.splice(insertIdxBefore,0,e);
+                  }
                 }
+              }
             }
         }
 
@@ -852,7 +856,7 @@ define(['logManager',
         var itemIDList = [];
         for (i = 0; i < orderedItemEvents.length; i += 1) {
             j = orderedItemEvents[i];
-            //this.logger.warning("ID: " + j.eid);
+            //this.logger.warn("ID: " + j.eid);
             itemIDList.push(j.eid);
         }
 
@@ -860,7 +864,7 @@ define(['logManager',
         for (i = 0; i < orderedConnectionEvents.length; i += 1) {
             j = orderedConnectionEvents[i];
             var connconn = itemIDList.indexOf(j.desc.srcID) === -1 && itemIDList.indexOf(j.desc.dstID) === -1;
-            //this.logger.warning("ID: " + x.eid + ", SRC: " + x.desc.srcID + ", DST: " + x.desc.dstID + (connconn ? " *****" : ""));
+            //this.logger.warn("ID: " + x.eid + ", SRC: " + x.desc.srcID + ", DST: " + x.desc.dstID + (connconn ? " *****" : ""));
         }*/
         /** END OF --- LOG ORDERED CONNECTION LIST ********************/
 
@@ -1180,7 +1184,7 @@ define(['logManager',
 
                             len -= 1;
                         } else {
-                            this.logger.warning('Updating connections...Existing connections are less than the needed src-dst combo...');
+                            this.logger.warn('Updating connections...Existing connections are less than the needed src-dst combo...');
                             //let's create a connection
                             var uiComponent = this._widget.createConnection(objDesc);
                             this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + gmeID);
@@ -1539,7 +1543,7 @@ define(['logManager',
         var result = {'SetID': 'SET_',
                       'Title': 'Tab '};
 
-        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getNewSetNamePrefixDesc is not overridden, returning default value: ' + JSON.stringify(result));
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getNewSetNamePrefixDesc is not overridden, returning default value: ' + JSON.stringify(result));
         return result;
     };
 

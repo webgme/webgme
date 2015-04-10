@@ -1,0 +1,164 @@
+$block-editor-selection-outline-background-color: rgba(255, 255, 0, 0.05);
+$block-editor-selection-outline-border: rgba(0,0,0,0.5) dashed 1px;
+$block-editor-selection-outline-shadow-start: rgba(0, 0, 0, 0.075);
+$block-editor-selection-outline-shadow-end: rgba(0, 0, 0, 0.3);
+$block-editor-selection-outline-s-btn-background-color: #FFFFFF;
+$block-editor-selection-outline-s-btn-shadow-start: rgba(0, 0, 0, 0.075);
+$block-editor-selection-outline-s-btn-shadow-end: rgba(0, 0, 0, 0.3);
+
+/*error decorator properties*/
+$error-decorator-background-color: #F2DEDE;
+
+$accept-droppable-background-color: rgba(0, 255, 0, 0.1);
+$reject-droppable-background-color: rgba(255, 0, 0, 0.1);
+
+$path-edit-segment-color: rgba(0,0,0,0);
+$new-segment-point-marker-background-color: #FFFF00;
+$new-segment-point-marker-border-color: #FF0000;
+$segment-point-marker-background-color: #FFFF00;
+$segment-point-marker-border-color: #000000;
+$segment-point-marker-hover-background-color: #FF7800;
+$segment-point-move-path-color: #FF7800;
+$segment-point-bezier-control-marker-background-color: #FFFFFF;
+$segment-point-bezier-control-marker-border-color: #000000;
+
+.block-editor {
+  outline: none;
+
+  .items {
+    position: absolute;
+
+    .linkable-item{
+      cursor: pointer;
+    }
+
+    .selection-outline {
+      background: $block-editor-selection-outline-background-color;
+      border: $block-editor-selection-outline-border;
+      position: absolute;
+      pointer-events: none;
+      z-index: 100;
+      -webkit-box-shadow: inset 0 1px 1px $block-editor-selection-outline-shadow-start 0 0 4px $block-editor-selection-outline-shadow-end;
+      -moz-box-shadow: inset 0 1px 1px $block-editor-selection-outline-shadow-start, 0 0 4px $block-editor-selection-outline-shadow-end;
+      box-shadow: inset 0 1px 1px $block-editor-selection-outline-shadow-start, 0 0 4px $block-editor-selection-outline-shadow-end;
+
+      .s-btn {
+        position: absolute;
+        background-color: $block-editor-selection-outline-s-btn-background-color;
+        border: none;
+        line-height: 14px;
+        padding: 3px 4px;
+        border-radius: 4px;
+        pointer-events: all;
+        cursor: pointer;
+        -webkit-box-shadow: inset 0 1px 1px $block-editor-selection-outline-s-btn-shadow-start 0 0 4px $block-editor-selection-outline-s-btn-shadow-end;
+        -moz-box-shadow: inset 0 1px 1px $block-editor-selection-outline-s-btn-shadow-start, 0 0 4px $block-editor-selection-outline-s-btn-shadow-end;
+        box-shadow: inset 0 1px 1px $block-editor-selection-outline-s-btn-shadow-start, 0 0 4px $block-editor-selection-outline-s-btn-shadow-end;
+        background-color: #000;
+        color: #fff;
+
+        &.delete {
+          top: -13px;
+          right: -13px;
+        }
+
+        &.rotate {
+          &.bottom {
+            left: 50%;
+            margin-left: -13px;
+            bottom: -13px;
+          }
+        }
+
+        &.contextmenu {
+          bottom: -13px;
+          right: -13px;
+        }
+
+        &.move {
+          top: -13px;
+          left: 50%;
+          margin-left: -13px;
+        }
+
+        &:hover {
+          background-color: #428bca;
+        }
+      }
+
+    }
+
+    .error-decorator {
+      background-color: $error-decorator-background-color;
+      padding: 3px;
+      text-align: center;
+      border: 2px solid #000000;
+    }
+
+    div.c-t {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+
+      div.c-text {
+        position: absolute;
+        font-size: 10px;
+        white-space: nowrap;
+
+        .c-name {
+          position: relative;
+          left: -50%;
+          cursor: default;
+
+          &.v {
+            left: 1px;
+          }
+        }
+
+        input {
+          height: 20px !important;
+          min-width: 50px;
+        }
+      }
+    }
+
+    &.highlight-mode {
+      .linkable-item,
+      .linkable-item.highlighted
+      {
+          opacity: 0.1;
+          cursor: pointer;
+      }
+    }
+
+  }
+
+  .drop-region {
+    width: 0;
+    height: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    &.accept-droppable {
+      background-color: $accept-droppable-background-color;
+    }
+
+    &.reject-droppable {
+      background-color: $reject-droppable-background-color;
+    }
+  }
+}
+
+div.css-zoom.block-editor-zoom {
+  position: absolute;
+  top: 30px;
+  left: 10px;
+}
+
+div.block-editor-drag-outline {
+  white-space: nowrap;
+}
+

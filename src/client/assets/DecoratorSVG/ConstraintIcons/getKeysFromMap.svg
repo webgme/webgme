@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="31.958042"
+   version="1.1"
+   width="132.422"
+   style="overflow:hidden"
+   id="svg2"
+   inkscape:version="0.48.5 r10040"
+   sodipodi:docname="getAllKeys.svg">
+  <metadata
+     id="metadata15">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs13" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1918"
+     inkscape:window-height="1173"
+     id="namedview11"
+     showgrid="false"
+     inkscape:zoom="8.1369528"
+     inkscape:cx="80.353465"
+     inkscape:cy="11.589674"
+     inkscape:window-x="3840"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <!--
+  <g
+     id="colors"
+     style="fill:#4a79a5;stroke:#4a79a5;"
+     data-secondary="fill:#54b868;stroke:#54b868;">
+  -->
+  <g
+     id="colors"
+     style="fill:#4a79a5;stroke:#4a79a5;"
+     data-secondary="fill:#54b868;stroke:#54b868;">
+    <path
+       style="stroke-width:1.17999995"
+       d="m 105.707,0.59224993 0,3.53124997 26.125,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124997 l -22.5625,0 z"
+       id="path3009"
+       data-shift="x-vertical-body"
+       inkscape:connector-curvature="0" />
+    <rect
+       data-stretch="x-map y-map"
+       x="9.6982555"
+       y="1.0512555"
+       width="98.943489"
+       height="21.202488"
+       style="stroke-width:2.10251093"
+       id="vertical-body" />
+    <rect
+       data-stretch="x-map y-map"
+       x="1.2929344"
+       y="4.777597"
+       width="130.36081"
+       height="14.516808"
+       r="0"
+       rx="0"
+       ry="0"
+       style="stroke-width:1.45919418"
+       id="horizontal-body" />
+    <path
+       style="stroke-width:1.17999995"
+       d="m 104.613,19.186 0,3.53125 23.65625,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.21875,0 z"
+       id="BRCorner"
+       data-shift="x-vertical-body y-vertical-body"
+       inkscape:connector-curvature="0" />
+    <rect
+       inkscape:label="#rect3797-2"
+       data-align-center="y-vertical-body"
+       rx="5"
+       y="4.500833"
+       x="101.95723"
+       height="14.300145"
+       width="23.394461"
+       id="map_box"
+       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.58804238px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"/>
+    <path
+       data-shift="y-vertical-body"
+       style="stroke-width:1.17999995;overflow:hidden"
+       d="m 28.37175,19.242895 0,3.53125 -23.65625,0 A 3.54,3.54 0 0 1 1.153,19.242895 l 27.21875,0 z"
+       id="path15-1"
+       inkscape:connector-curvature="0" />
+    <path
+       style="stroke-width:1.17999995;overflow:hidden"
+       d="m 28.37175,4.1740422 0,-3.53125027 -23.65625,0 A 3.54,3.54 0 0 0 1.153,4.1740422 l 27.21875,0 z"
+       id="path15-1-9"
+       inkscape:connector-curvature="0" />
+  </g>
+  <!-- Extra SVG info for WebGME -->
+  <!-- Text -->
+  <text
+     data-align-center="y-vertical-body"
+     x="6.4633374"
+     y="17"
+     style="font-size:12px">all entries from</text>
+  <!-- Connection Areas -->
+  <line
+     class="connection-area"
+     data-ptr="first second cond"
+     data-role="in"
+     data-align-center="y-vertical-body"
+     x1="0"
+     y1="12"
+     x2="0"
+     y2="12"
+     id="next-in" />
+  <line
+     class="connection-area"
+     data-align-center="y-vertical-body"
+     data-ptr="map"
+     data-role="out"
+     id="map-out"
+     x1="100"
+     y1="12"
+     x2="102"
+     y2="12" />
+  <!-- custom highlighting areas are now supported - must be a line, however -->
+  <line
+     class="connection-highlight"
+     style="opacity:0;stroke:#444444;stroke-width:10.10658169"
+     data-align-center="y-vertical-body"
+     data-ptr="map"
+     data-role="out"
+     x1="105"
+     y1="12"
+     x2="125"
+     y2="12"
+     id="line17" />
+  <!-- initial measurements -->
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="map"
+     width="24"
+     height="15"
+     x="0.56333733"
+     y="0"
+     id="rect25" />
+</svg>

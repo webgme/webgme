@@ -6,7 +6,7 @@
  */
 
 
-define(['clientUtil',
+define(['js/util',
     'blob/BlobClient',
     'text!./templates/PluginResultsDialog.html',
     'css!./styles/PluginResultsDialog.css'], function (clientUtil,
@@ -29,7 +29,7 @@ define(['clientUtil',
         MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>'),
         MESSAGE_ENTRY_NODE_BTN_BASE = $('<span class="btn btn-micro btn-node pull-right">Show node</span>'),
         RESULT_ARTIFACTS_BASE = $('<div class="artifacts collapse"><div class="artifacts-title">Generated artifacts</div><div class="artifacts-body"><ul></ul></div></div>'),
-        ARTIFACT_ENTRY_BASE = $('<li><a href="#">Loading...</a></li>'),
+        ARTIFACT_ENTRY_BASE = $('<li><a href="#" target="_blank">Loading...</a></li>'),
         MESSAGE_PREFIX = 'Message #';
 
     PluginResultsDialog = function () {

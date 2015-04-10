@@ -3,6 +3,10 @@
  * 
  * Author: Miklos Maroti
  */
+//TODO this is an outdated file, will be updated and maintained in the future.
+
+console.error('ERROR: Outdated source file have to be updated');
+process.exit(1);
 
 if (typeof define !== "function") {
 	var requirejs = require("requirejs");
@@ -12,7 +16,7 @@ if (typeof define !== "function") {
 		baseUrl: __dirname + "/.."
 	});
 
-	requirejs([ "util/common", "util/assert", "core/tasync", "bin/parse_xme" ], function (COMMON, ASSERT, TASYNC, parser) {
+	requirejs([ "common/util/common", "common/util/assert", "common/core/tasync", "bin/parse_xme" ], function (COMMON, ASSERT, TASYNC, parser) {
 		"use strict";
 
         console.log('we are in',typeof define);
@@ -72,7 +76,7 @@ if (typeof define !== "function") {
 		}
 	});
 } else {
-    define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC, COMMON) {
+    define([ "common/util/assert", "common/core/tasync", "common/util/common" ], function (ASSERT, TASYNC, COMMON) {
         function parser (xmlfile, core) {
             var root = core.createNode(), stack = [], objects = 1;
             var global = {

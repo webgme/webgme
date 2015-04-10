@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['logManager',
+define(['js/logger',
     'js/Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',
@@ -8,7 +8,7 @@ define(['logManager',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts',
-    'js/Utils/PreferencesHelper'], function (logManager,
+    'js/Utils/PreferencesHelper'], function (Logger,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         REGISTRY_KEYS,
@@ -32,7 +32,8 @@ define(['logManager',
     ModelEditorControl = function (options) {
         var self = this;
 
-        this.logger = options.logger || logManager.create(options.loggerName || "ModelEditorControl");
+        this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:ModelEditor:' +
+            'ModelEditorControl', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
 
@@ -115,7 +116,7 @@ define(['logManager',
                 //make sure that the selectedAspect exist in the node, otherwise fallback to All
                 var aspectNames = this._client.getMetaAspectNames(nodeId) || [];
                 if (aspectNames.indexOf(this._selectedAspect) === -1) {
-                    this.logger.warning('The currently selected aspect "' + this._selectedAspect + '" does not exist in the object "' + desc.name + ' (' + nodeId + ')", falling back to "All"');
+                    this.logger.warn('The currently selected aspect "' + this._selectedAspect + '" does not exist in the object "' + desc.name + ' (' + nodeId + ')", falling back to "All"');
                     this._selectedAspect = CONSTANTS.ASPECT_ALL;
                     WebGMEGlobal.State.registerActiveAspect(CONSTANTS.ASPECT_ALL);
                 }
@@ -285,6 +286,9 @@ define(['logManager',
             territoryChanged = false,
             self = this;
 
+        this.logger.debug("_dispatchEvents "+ events[0].etype);
+        events.shift();
+
         this.logger.debug("_dispatchEvents '" + i + "' items");
 
         /********** ORDER EVENTS BASED ON DEPENDENCY ************/
@@ -294,7 +298,7 @@ define(['logManager',
         var orderedConnectionEvents = [];
 
         if (this._delayedConnections && this._delayedConnections.length > 0) {
-            /*this.logger.warning('_delayedConnections: ' + this._delayedConnections.length );*/
+            /*this.logger.warn('_delayedConnections: ' + this._delayedConnections.length );*/
             for (i = 0; i < this._delayedConnections.length; i += 1) {
                 orderedConnectionEvents.push({'etype': CONSTANTS.TERRITORY_EVENT_LOAD,
                                               'eid': this._delayedConnections[i],
@@ -321,9 +325,10 @@ define(['logManager',
                     var dstGMEID = e.desc.target;
                     var srcConnIdx = -1;
                     var dstConnIdx = -1;
-                    var j = orderedConnectionEvents.length;
+                    var j = orderedConnectionEvents.length,
+                        ce;
                     while (j--) {
-                        var ce = orderedConnectionEvents[j];
+                        ce = orderedConnectionEvents[j];
                         if (ce.id === srcGMEID) {
                             srcConnIdx = j;
                         } else if (ce.id === dstGMEID) {
@@ -538,7 +543,7 @@ define(['logManager',
         //we are interested in the load of sub_components of the opened component
         if (this.currentNodeInfo.id !== gmeID) {
             if (objD) {
-                if (objD.parentId == this.currentNodeInfo.id) {
+                if (objD.parentId === this.currentNodeInfo.id) {
                     objDesc = _.extend({}, objD);
                     this._GmeID2ComponentID[gmeID] = [];
 
@@ -688,7 +693,7 @@ define(['logManager',
 
                                     len -= 1;
                                 } else {
-                                    this.logger.warning('Updating connections...Existing connections are less than the needed src-dst combo...');
+                                    this.logger.warn('Updating connections...Existing connections are less than the needed src-dst combo...');
                                     //let's create a connection
                                     _.extend(objDesc, this.getConnectionDescriptor(gmeID));
                                     var uiComponent = this.designerCanvas.createConnection(objDesc);
@@ -920,13 +925,6 @@ define(['logManager',
         }
     };
 
-    ModelEditorControl.prototype._constraintCheck = function () {
-        //Cconstraint Checking goes here...
-        if (this.currentNodeInfo.id) {
-            WebGMEGlobal.ConstraintManager.validate(this.currentNodeInfo.id);
-        }
-    };
-
     ModelEditorControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
         this.selectedObjectChanged(activeObjectId);
     };
@@ -1008,16 +1006,6 @@ define(['logManager',
         this._toolbarItems.push(this.$btnModelHierarchyUp);
 
         this.$btnModelHierarchyUp.hide();
-
-
-        /************************ CONTSTRAINT VALIDATION ******************/
-        this.$btnConstraintValidate = toolBar.addButton({ "title": "Constraint check...",
-            "icon": "glyphicon glyphicon-fire",
-            "clickFn": function (/*data*/) {
-                self._constraintCheck();
-            }
-        });
-        this._toolbarItems.push(this.$btnConstraintValidate);
 
         /************** REMOVE CONNECTION SEGMENTPOINTS BUTTON ****************/
         this.$btnConnectionRemoveSegmentPoints = toolBar.addButton(
@@ -1119,11 +1107,10 @@ define(['logManager',
                     aspectRulesChanged = (_.difference(newAspectRules.items, this._selfPatterns[nodeId].items)).length > 0;
                 }
             } else {
-                if (!this._selfPatterns[nodeId].items && !newAspectRules.items) {
-                    //none of them has items, no change
-                } else {
+                if (this._selfPatterns[nodeId].items || newAspectRules.items) {
+                    //at least one has an item
                     aspectRulesChanged = true;
-                }
+                } 
             }
 
             if (aspectRulesChanged) {

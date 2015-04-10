@@ -1,11 +1,12 @@
-/*globals define*/
+/*globals define, $, WebGMEGlobal*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-define(['logManager',
+define(['js/logger',
     './ToolbarButton',
     './ToolbarSeparator',
     './ToolbarRadioButtonGroup',
@@ -15,7 +16,7 @@ define(['logManager',
     './ToolbarCheckBox',
     './ToolbarDropDownButton',
     './ToolbarColorPicker',
-    'css!./styles/Toolbar.css'], function (logManager,
+    'css!./styles/Toolbar.css'], function (Logger,
                                            ToolbarButton,
                                            ToolbarSeparator,
                                            ToolbarRadioButtonGroup,
@@ -63,7 +64,7 @@ define(['logManager',
             event.preventDefault();
         });
 
-        this._logger = logManager.create("Toolbar");
+        this._logger = Logger.create('gme:Toolbar:Toolbar', WebGMEGlobal.gmeConfig.client.log);
 
         el.append(this._el).append(this._toolbarExt);
     };

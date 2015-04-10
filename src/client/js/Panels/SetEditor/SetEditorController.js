@@ -20,7 +20,7 @@ define(['js/Utils/GMEConcepts',
 
     SetEditorController = function (options) {
         options = options || {};
-        options.loggerName = "SetEditorController";
+        options.loggerName = 'gme:Panels:SetEditor:SetEditorController';
 
         DiagramDesignerWidgetMultiTabMemberListControllerBase.call(this, options);
 

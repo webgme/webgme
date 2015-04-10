@@ -4,15 +4,13 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon' ], function (ASSERT, ZSSHA1, FUTURE, TASYNC, CANON) {
+define([ "common/util/assert", "common/util/key", "common/core/future", "common/core/tasync", 'common/util/canon' ], function (ASSERT, GENKEY, FUTURE, TASYNC, CANON) {
 	"use strict";
 
 	var HASH_REGEXP = new RegExp("#[0-9a-f]{40}");
 	var isValidHash = function (key) {
 		return typeof key === "string" && key.length === 41 && HASH_REGEXP.test(key);
 	};
-
-	var SHA = new ZSSHA1();
 
 	var MAX_RELID = Math.pow(2, 31);
 	var createRelid = function (data) {
@@ -45,10 +43,11 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 	var rootCounter = 0;
 
 	return function (storage, options) {
-		var MAX_AGE = (options && options.maxage) || 3;
-		var MAX_TICKS = (options && options.maxticks) || 2000;
-		var MAX_MUTATE = (options && options.maxmutate) || 30000;
-		var autopersist = (options && options.autopersist) || false;
+        var gmeConfig = options.globConf;
+		ASSERT(gmeConfig && typeof gmeConfig === "object");
+		var MAX_AGE = 3; // MAGIC NUMBER
+		var MAX_TICKS = 2000; // MAGIC NUMBER
+		var MAX_MUTATE = 30000; // MAGIC NUMBER
 
 		var ID_NAME = storage.ID_NAME;
 		var EMPTY_DATA = {};
@@ -442,7 +441,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 		};
 
 		var __areEquivalent = function (data1, data2) {
-			return data1 === data2 || (typeof data1 === "string" && data1 === __getChildData(data2, ID_NAME)) || (__isEmptyData(data1) && __isEmptyData(data2));
+            return data1 === data2 || (typeof data1 === "string" && data1 === __getChildData(data2, ID_NAME)) || (__isEmptyData(data1) && __isEmptyData(data2));
 		};
 
 		var mutateCount = 0;
@@ -459,7 +458,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 			}
 
 			// TODO: infinite cycle if MAX_MUTATE is smaller than depth!
-			if (autopersist && ++mutateCount > MAX_MUTATE) {
+			if (gmeConfig.storage.autoPersist && ++mutateCount > MAX_MUTATE) {
 				mutateCount = 0;
 
 				for (var i = 0; i < roots.length; ++i) {
@@ -489,7 +488,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 			}
 
 			if (node.parent !== null) {
-				ASSERT(__areEquivalent(__getChildData(node.parent.data, node.relid), node.data));
+                ASSERT(__areEquivalent(__getChildData(node.parent.data, node.relid), node.data));
 				node.parent.data[node.relid] = copy;
 			}
 
@@ -643,6 +642,26 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 			return keys;
 		};
 
+        var getRawKeys = function(object,predicate){
+            ASSERT(typeof predicate === "undefined" || typeof predicate === "function");
+            predicate = predicate || noUnderscore;
+
+            var keys = Object.keys(object);
+
+            var i = keys.length;
+            while (--i >= 0 && !predicate(keys[i])) {
+                keys.pop();
+            }
+
+            while (--i >= 0) {
+                if (!predicate(keys[i])) {
+                    keys[i] = keys.pop();
+                }
+            }
+
+            return keys;
+        }
+
 		// ------- persistence
 
 		var getHash = function (node) {
@@ -665,13 +684,15 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 			return typeof node.data === "object" && node.data !== null && typeof node.data[ID_NAME] === "string";
 		};
 
-		var setHashed = function (node, hashed) {
+		var setHashed = function (node, hashed, noMutate) {
 			ASSERT(typeof hashed === "boolean");
 
 			node = normalize(node);
-			if (!mutate(node)) {
-				throw new Error("incorrect node data");
-			}
+            if(!noMutate){
+                if (!mutate(node)) {
+                    throw new Error("incorrect node data");
+                }
+            }
 
 			if (hashed) {
 				node.data[ID_NAME] = "";
@@ -710,7 +731,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 				ASSERT(hash === "" || typeof hash === "undefined");
 
 				if (hash === "") {
-					hash = "#" + SHA.getHash(CANON.stringify(data));
+					hash = "#" + GENKEY(data, gmeConfig);
 					data[ID_NAME] = hash;
 
 					done = FUTURE.join(done, storage.insertObject(data));
@@ -766,6 +787,22 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 			}
 		};
 
+		var getChildHash = function(node,relid){
+			ASSERT(isValidNode(node));
+
+			node = getChild(node, relid);
+
+			if (isValidHash(node.data)) {
+				// TODO: this is a hack, we should avoid loading it multiple
+				// times
+				return node.data;
+			} else {
+				return typeof node.data === "object" && node.data !== null ? getHash(node) : null;
+			}
+		};
+
+
+
 		var __loadChild2 = function (node, newdata) {
 			node = normalize(node);
 
@@ -777,7 +814,10 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 				__reloadChildrenData(node);
 			} else {
 				// TODO: if this bites you, use the Cache
-				ASSERT(node.data === newdata);
+                /*if(node.data !== newdata){
+                    console.log("kecso",node);
+                }
+				ASSERT(node.data === newdata);*/
 			}
 
 			return node;
@@ -910,6 +950,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 			setProperty: setProperty,
 			deleteProperty: deleteProperty,
 			getKeys: getKeys,
+            getRawKeys: getRawKeys,
 
 			isHashed: isHashed,
 			setHashed: setHashed,
@@ -919,7 +960,9 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 			loadChild: loadChild,
 			loadByPath: loadByPath,
 
-			isValidNode: isValidNode
+			isValidNode: isValidNode,
+
+			getChildHash: getChildHash
 		};
 	};
 });

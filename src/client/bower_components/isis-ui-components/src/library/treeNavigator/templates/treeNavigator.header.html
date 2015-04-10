@@ -1,0 +1,18 @@
+<header>
+    <div class="scope-selector"
+         data-ng-if="::ctrl.config.scopeMenu">
+        <a  class="item-label"
+           isis-contextmenu
+           contextmenu-data="::ctrl.config.scopeMenu"
+           contextmenu-config="::ctrl.scopeMenuConfig"
+                >{{ ctrl.config.selectedScope.label }} <i class="fa fa-angle-down"></i></a>
+    </div>
+    <div class="preferences-menu"
+         data-ng-if="::ctrl.config.preferencesMenu">
+        <a  class="item-label"
+           isis-contextmenu
+           contextmenu-data="::ctrl.config.preferencesMenu"
+           contextmenu-config="::ctrl.preferencesMenuConfig"
+                ><i class="glyphicon glyphicon-cog"></i></a>
+    </div>
+</header>

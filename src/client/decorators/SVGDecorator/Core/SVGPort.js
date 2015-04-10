@@ -1,10 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+/*globals define*/
 
-"use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/Constants',
         'js/Utils/DisplayFormat',
@@ -13,6 +11,8 @@ define(['js/Constants',
                                       displayFormat,
                                       RegistryKeys,
                                       DiagramDesignerWidgetConstants) {
+
+    "use strict";
 
     var SVGPort,
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,

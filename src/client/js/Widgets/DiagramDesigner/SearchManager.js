@@ -1,7 +1,7 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-define(['logManager',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (logManager,
+define(['js/logger',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (Logger,
                                                                              DiagramDesignerWidgetConstants) {
 
     "use strict";
@@ -9,7 +9,8 @@ define(['logManager',
     var SearchManager;
 
     SearchManager = function (options) {
-        this.logger = logManager.create(((options && options.loggerName) || "SearchManager"));
+        var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:SearchManager';
+        this.logger = (options && options.logger) || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this._diagramDesigner = options ? options.diagramDesigner : null;
 

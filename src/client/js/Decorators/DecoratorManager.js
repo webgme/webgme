@@ -1,7 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-
-define(['logManager'], function (logManager) {
+define(['js/logger'], function (Logger) {
 
     "use strict";
 
@@ -10,12 +9,34 @@ define(['logManager'], function (logManager) {
         NOT_FOUND = "___N/A___";
 
     DecoratorManager = function () {
-        this._logger = logManager.create("DecoratorManager");
+        this._logger = Logger.create('gme:Decorators:DecoratorManager', WebGMEGlobal.gmeConfig.client.log);
 
         this._decorators = {};
         this._widgetDecoratorCache = {};
 
         this._logger.debug("Created");
+    };
+
+    DecoratorManager.prototype.downloadAll = function (decoratorNames, callback) {
+        var self = this,
+            total = decoratorNames.length,
+            cnt = total,
+            i;
+
+        function countCallback() {
+            cnt -= 1;
+            if (cnt === 0) {
+                if (Object.keys(self._decorators).length === total) {
+                    callback();
+                } else {
+                    callback('Failed to download all requested decorators ' + decoratorNames.toString() +
+                        ' only got ' + Object.keys(self._decorators).toString());
+                }
+            }
+        }
+        for (i = 0; i < total; i += 1) {
+            self._downloadOne(decoratorNames[i], countCallback);
+        }
     };
 
     DecoratorManager.prototype.download = function (decorators, widget, fnCallBack) {

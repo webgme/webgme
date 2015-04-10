@@ -1,0 +1,15 @@
+{
+  "name": "executor_worker",
+  "main": "index.html",
+  "dependencies": {
+    "agentkeepalive": "=2.0.0",
+    "mime": ">=1.2.11",
+    "minimatch": ">=0.3.0",
+    "pkginfo": ">=0.3.0",
+    "requirejs": "^2.1.15",
+    "rimraf": "^2.2.8",
+    "ssl-root-cas": "^1.1.7",
+    "superagent": "^0.21.0",
+    "unzip": ">=0.1.9"
+  }
+}

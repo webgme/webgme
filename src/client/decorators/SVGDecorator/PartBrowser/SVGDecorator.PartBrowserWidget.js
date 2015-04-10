@@ -1,17 +1,18 @@
-"use strict";
-
+/*globals define,_*/
 define(['js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/PartBrowser/PartBrowserWidget.DecoratorBase',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!../Core/SVGDecorator.html',
-    '../Core/SVGDecorator.Core',
-    'css!./SVGDecorator.PartBrowserWidget.css'], function (CONSTANTS,
+    './SVGDecorator.Core',
+    'css!./SVGDecorator.PartBrowserWidget'], function (CONSTANTS,
                                                        nodePropertyNames,
                                                        PartBrowserWidgetDecoratorBase,
                                                        DiagramDesignerWidgetConstants,
                                                        SVGDecoratorTemplate,
                                                        SVGDecoratorCore) {
+
+    "use strict";
 
     var SVGDecoratorPartBrowserWidget,
         DECORATOR_ID = "SVGDecoratorPartBrowserWidget";

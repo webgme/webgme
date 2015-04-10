@@ -1,0 +1,18 @@
+<nav class="dropdown-navigator-container">
+    <ul class="dropdown-navigator">
+        <script type="text/ng-template" id="navigator-item-template">
+            <div class="label-container" data-ng-click="!item.disabled && item.action(item.actionData, $event)">
+                <span class="item-label">{{item.label}}</span>
+            </div>
+            <hierarchical-menu menu="item.menu"></hierarchical-menu>
+        </script>
+        <li data-ng-repeat-start="item in navigator.items track by $index"
+            data-ng-class=" item.itemClass || '' "
+            ng-include=" item.itemTemplate || 'navigator-item-template' "
+            role="button">
+        </li>
+        <li data-ng-repeat-end data-ng-if="navigator.separator && !$last" class="separator">
+            <i class="glyphicon glyphicon-chevron-right"></i>
+        </li>
+    </ul>
+</nav>

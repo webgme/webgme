@@ -4,18 +4,24 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT, SHA1, CANON) {
+define([ "common/util/assert", "common/util/key", "common/util/canon" ], function (ASSERT, GENKEY, CANON) {
 	"use strict";
 	var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
-    var zsSHA = new SHA1();
 
 	function Database (_database,_options) {
-        _options = _options || {};
+        var gmeConfig = _options.globConf,
+            logger = _options.log.fork('commit');
+        logger.debug('Initializing');
 		ASSERT(typeof _database === "object");
+		ASSERT(typeof _options === "object");
+		ASSERT(typeof gmeConfig.storage.keyType === "string");
 
 		function openProject (projectName, callback) {
 
-			var _project = null;
+			var _project = null,
+                projectLogger = logger.fork('project:' + projectName);
+            projectLogger.debug('Initializing');
+
 			_database.openProject(projectName, function (err, proj) {
 				if (!err && proj) {
 					_project = proj;
@@ -24,12 +30,15 @@ define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT, SHA1, C
 						closeProject: _project.closeProject,
 						loadObject: _project.loadObject,
 						insertObject: _project.insertObject,
+						getInfo: _project.getInfo,
+						setInfo: _project.setInfo,
 						findHash: _project.findHash,
 						dumpObjects: _project.dumpObjects,
 						getBranchNames: _project.getBranchNames,
 						getBranchHash: _project.getBranchHash,
 						setBranchHash: _project.setBranchHash,
 						getCommits: _project.getCommits,
+            getCommonAncestorCommit: _project.getCommonAncestorCommit,
 						makeCommit: makeCommit,
                         setUser: setUser,
 						ID_NAME: _project.ID_NAME
@@ -40,6 +49,7 @@ define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT, SHA1, C
 			});
 
 			function makeCommit (parents, roothash, msg, callback) {
+                projectLogger.debug('makeCommit', {metadata: arguments});
 				ASSERT(HASH_REGEXP.test(roothash));
 				ASSERT(typeof callback === 'function');
 
@@ -55,7 +65,7 @@ define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT, SHA1, C
 					type: "commit"
 				};
 
-				var id = '#' + zsSHA.getHash(CANON.stringify(commitObj));
+				var id = '#' + GENKEY(commitObj, gmeConfig);
 				commitObj[_project.ID_NAME] = id;
 
 				_project.insertObject(commitObj, function (err) {
@@ -70,13 +80,19 @@ define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT, SHA1, C
 			}
 
             function setUser (userId){
+                projectLogger.debug('setUser', {metadata: arguments});
+
                 if(typeof userId === 'string'){
                     _options.user = userId;
                 };
             }
-		}
 
-		return {
+            projectLogger.debug('Ready');
+        }
+
+        logger.debug('Ready');
+
+        return {
 			openDatabase: _database.openDatabase,
 			closeDatabase: _database.closeDatabase,
 			fsyncDatabase: _database.fsyncDatabase,
@@ -88,6 +104,7 @@ define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT, SHA1, C
 			deleteProject: _database.deleteProject,
             simpleRequest: _database.simpleRequest,
             simpleResult: _database.simpleResult,
+            simpleQuery: _database.simpleQuery,
             getNextServerEvent: _database.getNextServerEvent,
             getToken: _database.getToken
 		};

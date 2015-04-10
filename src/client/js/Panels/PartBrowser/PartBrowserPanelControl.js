@@ -1,12 +1,12 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['logManager',
+define(['js/logger',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Utils/METAAspectHelper',
-    'js/Utils/PreferencesHelper'], function (logManager,
+    'js/Utils/PreferencesHelper'], function (Logger,
                              CONSTANTS,
                              GMEConcepts,
                              nodePropertyNames,
@@ -39,7 +39,7 @@ define(['logManager',
 
         this._initDragDropFeatures();
 
-        this._logger = logManager.create("PartBrowserControl");
+        this._logger = Logger.create("gme:Panels:PartBrowser:PartBrowserPanelControl", WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug("Created");
 
         METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
@@ -51,7 +51,9 @@ define(['logManager',
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_ASPECT, function (model, activeAspect) {
+          if(activeAspect !== undefined){
             self.selectedAspectChanged(activeAspect);
+          }
         });
     };
 
@@ -59,6 +61,7 @@ define(['logManager',
         var self = this;
 
         this._logger.debug("activeObject: '" + nodeId + "'");
+        this._suppressDecoratorUpdate = true;
 
         //remove current territory patterns
         if (this._territoryId) {
@@ -80,13 +83,15 @@ define(['logManager',
                 //make sure that the _aspect exist in the node, otherwise fallback to All
                 var aspectNames = this._client.getMetaAspectNames(nodeId) || [];
                 if (aspectNames.indexOf(this._aspect) === -1) {
-                    this._logger.warning('The currently selected aspect "' + this._aspect + '" does not exist in the object "' + nodeId + '", falling back to "All"');
+                    this._logger.warn('The currently selected aspect "' + this._aspect + '" does not exist in the object "' + nodeId + '", falling back to "All"');
                     this._aspect = CONSTANTS.ASPECT_ALL;
                 }
             }
 
             this._territoryId = this._client.addUI(this, function (events) {
-                self._eventCallback(events);
+                if (events[0].etype === 'complete') {
+                    self._eventCallback(events);
+                }
             });
             //update the territory
             this._logger.debug('UPDATING TERRITORY: selectedObjectChanged' + JSON.stringify(this._selfPatterns));
@@ -104,14 +109,22 @@ define(['logManager',
             objDescriptor.id = nodeObj.getId();
             objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || DEFAULT_DECORATOR;
             objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+        } else {
+            this._logger.error('Node not loaded', nodeId);
         }
 
         return objDescriptor;
     };
 
     PartBrowserControl.prototype._eventCallback = function (events) {
+        //TODO eventing should be refactored
+        this._logger.debug('_eventCallback ' + events[0].etype);
+        events.shift();
+
         var i = events ? events.length : 0,
-            e;
+            e,
+            needsDecoratorUpdate = false;
+
 
         this._logger.debug("_eventCallback '" + i + "' items, events: " + JSON.stringify(events));
 
@@ -119,9 +132,11 @@ define(['logManager',
             e = events[i];
             switch (e.etype) {
                 case CONSTANTS.TERRITORY_EVENT_LOAD:
+                    needsDecoratorUpdate = true;
                     this._onLoad(e.eid);
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UPDATE:
+                    needsDecoratorUpdate = true;
                     this._onUpdate(e.eid);
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
@@ -130,8 +145,20 @@ define(['logManager',
             }
         }
 
-        this._updateValidChildrenTypeDecorators();
+        if (needsDecoratorUpdate) {
+            if (this._suppressDecoratorUpdate === true) {
+                this._logger.debug('_eventCallback: only containerNode in events - will not update decorators',
+                    events);
+            } else {
+                this._logger.debug('_eventCallback: will do _updateValidChildrenTypeDecorators');
+                this._updateValidChildrenTypeDecorators();
+            }
+        }
 
+        if (this._suppressDecoratorUpdate) {
+            this._logger.debug('_suppressDecoratorUpdate will switch from false to true');
+        }
+        this._suppressDecoratorUpdate = false;
         this._logger.debug("_eventCallback '" + events.length + "' items - DONE");
     };
 
@@ -150,7 +177,7 @@ define(['logManager',
 
     PartBrowserControl.prototype._onUnload = function (gmeID) {
         if (this._containerNodeId === gmeID) {
-            this._logger.warning('Container node got unloaded...');
+            this._logger.warn('Container node got unloaded...');
             this._validChildrenTypeIDs = [];
             this._partBrowserView.clear();
         }
@@ -164,6 +191,8 @@ define(['logManager',
             diff,
             id,
             territoryChanged = false;
+
+        this._logger.debug('_processContainerNode processing container node', gmeID);
 
         if (node) {
             //get possible targets from MetaDescriptor
@@ -203,7 +232,11 @@ define(['logManager',
 
             //update the territory
             if (territoryChanged) {
+                this._logger.debug('_processContainerNode territory did change');
                 this._doUpdateTerritory(true);
+            } else {
+                this._logger.debug('_processContainerNode territory did not change _suppressDecoratorUpdate=false');
+                this._suppressDecoratorUpdate = false;
             }
         }
     };
@@ -218,7 +251,7 @@ define(['logManager',
             setTimeout(function () {
                 logger.debug('Updating territory with rules: ' + JSON.stringify(patterns));
                 client.updateTerritory(territoryId, patterns);
-            }, 10);
+            }, 0);
         } else {
             logger.debug('Updating territory with rules: ' + JSON.stringify(patterns));
             client.updateTerritory(territoryId, patterns);
@@ -313,6 +346,7 @@ define(['logManager',
         }
 
         if (decorators.length > 0) {
+            this._logger.debug('decorators for children of', this._containerNodeId, decorators);
             this._client.decoratorManager.download(decorators, WIDGET_NAME, function () {
                 self._refreshPartList();
             });

@@ -108,6 +108,16 @@ define([], function () {
             return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
         },
 
+        getObjectFromUrlQuery: function (queryString) {
+            //http://stevenbenner.com/2010/03/javascript-regex-trick-parse-a-query-string-into-an-object/
+            var queryObj = {};
+            queryString.replace(
+                new RegExp('([^?=&]+)(=([^&]*))?', 'g'),
+                function($0, $1, $2, $3) { queryObj[$1] = $3; }
+            );
+            return queryObj;
+        },
+
         toSafeString: function (string) {
             return _span.text(string).html();
         },
@@ -118,6 +128,12 @@ define([], function () {
             } else {
                 return 1;
             }
+        },
+
+        escapeHTML: function (str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
         }
     };
 });

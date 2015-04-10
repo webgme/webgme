@@ -6,7 +6,7 @@
 
 define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANTS) {
 
-    "use strict";
+    'use strict';
 
     //define client-only string constants
     var clientContants = {};
@@ -69,9 +69,16 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
         STATE_ACTIVE_COMMIT: 'activeCommit',
         STATE_ACTIVE_BRANCH_NAME: 'activeBranchName',
         STATE_ACTIVE_CROSSCUT: 'activeCrosscut',
+        STATE_IS_INIT_PHASE: 'isInitPhase',
 
         /* ASPECTs */
-        ASPECT_ALL: 'All'
+        ASPECT_ALL: 'All',
+
+        /* Property groups */
+        PROPERTY_GROUP_META: 'META',
+        PROPERTY_GROUP_PREFERENCES: 'Preferences',
+        PROPERTY_GROUP_ATTRIBUTES: 'Attributes',
+        PROPERTY_GROUP_POINTERS: 'Pointers'
     });
 
 

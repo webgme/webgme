@@ -1,4 +1,4 @@
-define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSERT, Core, TASYNC, JsonValidator) {
+define([ "common/util/assert", "common/core/core", "common/core/tasync", "common/util/jjv", "common/util/canon" ], function(ASSERT, Core, TASYNC, JsonValidator, CANON) {
     "use strict";
 
     // ----------------- CoreType -----------------
@@ -95,11 +95,11 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             var validNames = core.getPointerNames(MetaNode(node)) || [],
                 i,
                 validPointerNames = [],
-                metaPointerNode;
-
+                metaPointerNode, max;
             for(i=0;i<validNames.length;i++){
                 metaPointerNode = MetaPointerNode(node,validNames[i]);
-                if(metaPointerNode.max === 1){ //TODO specify what makes something a pointer and what a set??? - can you extend a pointer to a set????
+                max = core.getAttribute(metaPointerNode,'max');
+                if(max === 1){ //TODO specify what makes something a pointer and what a set??? - can you extend a pointer to a set????
                     validPointerNames.push(validNames[i]);
                 }
             }
@@ -111,11 +111,12 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             var validNames = core.getPointerNames(MetaNode(node)) || [],
                 i,
                 validSetNames = [],
-                metaPointerNode;
+                metaPointerNode, max;
 
             for(i=0;i<validNames.length;i++){
                 metaPointerNode = MetaPointerNode(node,validNames[i]);
-                if(metaPointerNode.max === undefined || metaPointerNode.max === -1 || metaPointerNode > 1){ //TODO specify what makes something a pointer and what a set??? - can you extend a pointer to a set????
+                max = core.getAttribute(metaPointerNode,'max');
+                if(max === undefined || max === -1 || max > 1){ //TODO specify what makes something a pointer and what a set??? - can you extend a pointer to a set????
                     validSetNames.push(validNames[i]);
                 }
             }
@@ -191,7 +192,7 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
 
         //additional meta functions for getting meta definitions
         core.getJsonMeta = function(node){
-            var meta = {children:{},attributes:{},pointers:{},aspects:{}},
+            var meta = {children:{},attributes:{},pointers:{},aspects:{},constraints:{}},
                 tempNode,
                 names,
                 pointer,
@@ -245,53 +246,114 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
                 meta.aspects[names[i]] = core.getMemberPaths(tempNode,'items') || [];
             }
 
+            //constraints
+            names = core.getConstraintNames(node);
+            for(i=0;i<names.length;i++){
+                meta.constraints[names[i]] = core.getConstraint(node,names[i]);
+            }
+
             return meta;
         };
 
-        var isEmptyObject = function(object){
-            if(Object.keys(object).length === 0){
-                return true;
-            }
-            return false;
-        };
-        var getObjectDiff = function(bigger,smaller){
-            var diff = {},
-                names, i,temp;
-            if(smaller === null || smaller === undefined || isEmptyObject(smaller)){
-                if(bigger === null || bigger === undefined){
-                    return {};
-                }
-                return bigger;
-            }
+        var getMetaObjectDiff = function(bigger,smaller){
+            //TODO this is a specific diff calculation for META rule JSONs
+            var diff = {},names, i,
+              itemedElementDiff = function(bigItem,smallItem){
+                  var diff, diffItems = {}, i,index,names;
+                  for(i=0;i<bigItem.items.length;i++){
+                      if(smallItem.items.indexOf(bigItem.items[i]) === -1){
+                          diffItems[bigItem.items[i]] = true;
+                      }
+                  }
+                  names = Object.keys(diffItems);
+                  for(i=0;i<names.length;i++){
+                      diff = diff || {items:[],minItems:[],maxItems:[]};
+                      index = bigItem.items.indexOf(names[i]);
+                      diff.items.push(bigItem.items[index]);
+                      diff.minItems.push(bigItem.minItems[index]);
+                      diff.maxItems.push(bigItem.maxItems[index]);
 
-            names = Object.keys(bigger);
-            for(i=0;i<names.length;i++){
-                if(smaller[names[i]] === undefined){
-                    //extra attribute of the bigger object
-                    if(bigger[names[i]] !== undefined){
-                        diff[names[i]] = bigger[names[i]];
-                    } //if both are undefined, then they are equal :)
-                } else {
-                    //they share the attribute
-                    if(typeof smaller[names[i]] === 'object'){
-                        if(typeof bigger[names[i]] === 'object'){
-                            temp = getObjectDiff(bigger[names[i]],smaller[names[i]]);
-                            if(!isEmptyObject(temp)){
-                                diff[names[i]] = temp;
-                            }
-                        } else {
-                            diff[names[i]] = bigger[names[i]];
+                  }
+                  if(bigItem.min && ((smallItem.min && bigItem.min !== smallItem.min) || !smallItem.min)){
+                      diff = diff || {};
+                      diff.min = bigItem.min;
+                  }
+                  if(bigItem.max && ((smallItem.max && bigItem.max !== smallItem.max) || !smallItem.max)){
+                      diff = diff || {};
+                      diff.max = bigItem.max;
+                  }
+                  return diff || {};
+              };
+            //attributes
+            if(smaller.attributes){
+                names = Object.keys(bigger.attributes);
+                for(i=0;i<names.length;i++){
+                    if(smaller.attributes[names[i]]){
+                        //they both have the attribute - if it differs we keep the whole of the bigger
+                        if(CANON.stringify(smaller.attributes[names[i]] !== CANON.stringify(bigger.attributes[names[i]]))){
+                            diff.attributes = diff.attributes || {};
+                            diff.attributes[names[i]] = bigger.attributes[names[i]];
                         }
                     } else {
-                        if(JSON.stringify(smaller[names[i]]) !== JSON.stringify(bigger[names[i]])){
-                            diff[names[i]] = bigger[names[i]];
-                        }
+                        diff.attributes = diff.attributes || {};
+                        diff.attributes[names[i]] = bigger.attributes[names[i]];
                     }
                 }
+            } else if(bigger.attributes){
+                diff.attributes = bigger.attributes;
+            }
+            //children
+            if(smaller.children){
+                diff.children = itemedElementDiff(bigger.children,smaller.children);
+                if(Object.keys(diff.children).length < 1){
+                    delete diff.children;
+                }
+            } else if(bigger.children){
+                diff.children = bigger.children;
+            }
+            //pointers
+            if(smaller.pointers){
+                diff.pointers = {};
+                names = Object.keys(bigger.pointers);
+                for(i=0;i<names.length;i++){
+                    if(smaller.pointers[names[i]]){
+                        diff.pointers[names[i]] = itemedElementDiff(bigger.pointers[names[i]],smaller.pointers[names[i]]);
+                        if(Object.keys(diff.pointers[names[i]]).length < 1){
+                            delete diff.pointers[names[i]];
+                        }
+                    } else {
+                        diff.pointers[names[i]] = bigger.pointers[names[i]];
+                    }
+                }
+            } else if(bigger.pointers){
+                diff.pointers = bigger.pointers;
+            }
+            if(Object.keys(diff.pointers).length < 1){
+                delete diff.pointers;
+            }
+            //aspects
+            if(smaller.aspects){
+                diff.aspects = {};
+                names = Object.keys(bigger.aspects);
+                for(i=0;i<names.length;i++){
+                    if(smaller.aspects[names[i]]){
+                        smaller.aspects[names[i]] = smaller.aspects[names[i]].sort();
+                        bigger.aspects[names[i]] = bigger.aspects[names[i]].sort();
+                        if(bigger.aspects[names[i]].length > smaller.aspects[names[i]].length){
+                            diff.aspects[names[i]] = bigger.aspects[names[i]].slice(smaller.aspects[names[i]].length);
+                        }
+                    } else {
+                        diff.aspects[names[i]] = bigger.aspects[names[i]];
+                    }
+                }
+            } else if(bigger.aspects){
+                diff.aspects = bigger.aspects;
             }
 
+            if(Object.keys(diff.aspects).length < 1){
+                delete diff.aspects;
+            }
             return diff;
-
         };
 
         core.getOwnJsonMeta = function(node){
@@ -299,11 +361,11 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
                 baseMeta = base ? core.getJsonMeta(base) : {},
                 meta = core.getJsonMeta(node);
 
-            return getObjectDiff(meta,baseMeta);
+            return getMetaObjectDiff(meta,baseMeta);
         };
 
         core.clearMetaRules = function(node){
-            core.deleteNode(MetaNode(node));
+            core.deleteNode(MetaNode(node),true);
         };
 
         core.setAttributeMeta = function(node,name,value){
@@ -318,6 +380,9 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             return core.getAttribute(MetaNode(node),name);
         };
 
+        core.getValidChildrenPaths = function(node){
+            return core.getMemberPaths(MetaChildrenNode(node),'items');
+        };
         core.setChildMeta = function(node,child,min,max){
             core.addMember(MetaChildrenNode(node),'items',child);
             min = min || -1;
@@ -359,8 +424,8 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             }
         };
         core.delPointerMeta = function(node,name){
+            core.deleteNode(_MetaPointerNode(node,name),true);
             core.deletePointer(MetaNode(node),name);
-            core.deleteNode(_MetaPointerNode(node,name));
         };
 
         core.setAspectMetaTarget = function(node,name,target){
@@ -373,8 +438,41 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             }
         };
         core.delAspectMeta = function(node,name){
+            core.deleteNode(_MetaAspectNode(node,name),true);
             core.deletePointer(MetaAspectsNode(node),name);
-            core.deleteNode(_MetaAspectNode(node,name));
+        };
+
+        //type related extra query functions
+        var isOnMetaSheet = function(node){
+            //MetaAspectSet
+            var sets = core.isMemberOf(node);
+
+            if(sets && sets[""] && sets[""].indexOf("MetaAspectSet") !== -1){ //TODO this is all should be global constant values
+                return true;
+            }
+            return false;
+        };
+        core.getBaseType = function(node){
+            //TODO this functions now uses the fact that we think of META as the MetaSetContainer of the ROOT
+            while(node){
+                if(isOnMetaSheet(node)){
+                    return node;
+                }
+                node = core.getBase(node);
+            }
+            return null;
+        };
+        core.isInstanceOf = function(node,name){
+            //TODO this is name based query - doesn't check the node's own name
+            node = core.getBase(node);
+            while(node){
+                if(core.getAttribute(node,'name') === name){
+                    return true;
+                }
+                node = core.getBase(node);
+            }
+
+            return false;
         };
 
         return core;

@@ -1,5 +1,6 @@
-define(['util/assert'],function(ASSERT){
+define(['common/util/assert'],function(ASSERT){
 
+    "use strict";
     var _nodes = {},
         _core = null,
         _pathToGuidMap = {},
@@ -30,7 +31,6 @@ define(['util/assert'],function(ASSERT){
 
         //loading all library element
         gatherNodesSlowly(libraryRoot,function(err){
-
             if(err){
                 return callback(err);
             }
@@ -50,10 +50,124 @@ define(['util/assert'],function(ASSERT){
             _export.relids = getRelIdInfo();
             _export.containment = {}; fillContainmentTree(libraryRoot,_export.containment);
             _export.nodes = getNodesData();
+            _export.metaSheets = core.getParent(libraryRoot) ? getMetaSheetInfo(_core.getRoot(libraryRoot)) : {}; //we export MetaSheet info only if not the whole project is exported!!!
 
             callback(null,_export);
 
         });
+    }
+    function getMetaSheetInfo(root){
+        var getMemberRegistry = function(setname,memberpath){
+                var names = _core.getMemberRegistryNames(root,setname,memberpath),
+                    i,
+                    registry = {};
+                for(i=0;i<names.length;i++){
+                    registry[names[i]] = _core.getMemberRegistry(root,setname,memberpath,names[i]);
+                }
+                return registry;
+            },
+            getMemberAttributes = function(setname,memberpath){
+                var names = _core.getMemberAttributeNames(root,setname,memberpath),
+                    i,
+                    attributes = {};
+                for(i=0;i<names.length;i++){
+                    attributes[names[i]] = _core.getMemberAttribute(root,setname,memberpath,names[i]);
+                }
+                return attributes;
+            },
+            getRegistryEntry = function(setname){
+                var index = registry.length;
+
+                while(--index >= 0){
+                    if(registry[index].SetID === setname){
+                        return registry[index];
+                    }
+                }
+                return {};
+            },
+            sheets = {},
+            registry = _core.getRegistry(root,"MetaSheets"),
+            keys = _core.getSetNames(root),
+            elements,guid,
+            i,j;
+        for(i=0;i<keys.length;i++){
+            if(keys[i].indexOf("MetaAspectSet") === 0){
+                elements = _core.getMemberPaths(root,keys[i]);
+                for(j=0;j<elements.length;j++){
+                    guid = _pathToGuidMap[elements[j]] || _extraBasePaths[elements[j]];
+                    if(guid){
+                        sheets[keys[i]] = sheets[keys[i]] || {};
+                        sheets[keys[i]][guid] = {registry:getMemberRegistry(keys[i],elements[j]),attributes:getMemberAttributes(keys[i],elements[j])};
+                    }
+                }
+
+                if(sheets[keys[i]] && keys[i] !== "MetaAspectSet"){
+                    //we add the global registry values as well
+                    sheets[keys[i]].global = getRegistryEntry(keys[i]);
+                }
+            }
+        }
+        console.log('sheets',sheets);
+        return sheets;
+    }
+    function importMetaSheetInfo(root){
+        var setMemberAttributesAndRegistry = function(setname,memberguid){
+                var attributes = oldSheets[setname][memberguid].attributes || {},
+                    registry = oldSheets[setname][memberguid].registry || {},
+                    keys,i;
+                keys = Object.keys(attributes);
+                for(i=0;i<keys.length;i++) {
+                    _core.setMemberAttribute(root,setname,_core.getPath(_nodes[memberguid]),keys[i],attributes[keys[i]]);
+                }
+                keys = Object.keys(registry);
+                for(i=0;i<keys.length;i++) {
+                    _core.setMemberRegistry(root,setname,_core.getPath(_nodes[memberguid]),keys[i],registry[keys[i]]);
+                }
+            },
+            updateSheet = function(name){
+                //the removed object should be already removed...
+                //if some element is extra in the place of import, then it stays untouched
+                var oldMemberGuids = Object.keys(oldSheets[name]),
+                    i;
+                oldMemberGuids.splice(oldMemberGuids.indexOf("global"),1);
+                for(i=0;i<oldMemberGuids.length;i++) {
+                    _core.addMember(root,name,_nodes[oldMemberGuids[i]]);
+                    setMemberAttributesAndRegistry(name,oldMemberGuids[i]);
+                }
+            },
+            addSheet = function(name) {
+                var registry = JSON.parse(JSON.stringify(_core.getRegistry(root,"MetaSheets")) || {}),
+                    i,
+                    memberpath,
+                    memberguids = Object.keys(oldSheets[name]);
+
+                memberguids.splice(memberguids.indexOf('global'),1);
+
+                if(name !== 'MetaAspectSet'){
+                  registry.push(oldSheets[name].global);
+                  _core.setRegistry(root,"MetaSheets",registry);
+                }
+
+                _core.createSet(root,name);
+                for(i=0;i<memberguids.length;i++) {
+                    memberpath = _core.getPath(_nodes[memberguids[i]]);
+                    _core.addMember(root,name,_nodes[memberguids[i]]);
+                    setMemberAttributesAndRegistry(name,memberguids[i]);
+                }
+            },
+            oldSheets = _import.metaSheets || {},
+            newSheets = _export.metaSheets || {},
+            oldSheetNames = Object.keys(oldSheets),
+            newSheetNames = Object.keys(newSheets),
+            i;
+
+        for(i=0;i<oldSheetNames.length;i++) {
+            if(newSheetNames.indexOf(oldSheetNames[i]) !== -1){
+                updateSheet(oldSheetNames[i]);
+            } else {
+                addSheet(oldSheetNames[i]);
+            }
+        }
     }
     function getLibraryRootInfo(node){
         return {
@@ -62,33 +176,19 @@ define(['util/assert'],function(ASSERT){
         };
     }
     function gatherNodesSlowly(node,callback){
-        //this function collects all the containment sub-tree of the given node
-        var children,
-            guid = _core.getGuid(node),
-            loadNextChildsubTree = function(index){
-                if(index<children.length){
-                    gatherNodesSlowly(children[index],function(err){
-                        if(err){
-                            return callback(err);
-                        }
-
-                        loadNextChildsubTree(index+1);
-                    });
-                } else {
-                    callback(null);
+        _core.loadSubTree(node,function(err,nodes){
+            var guid,i;
+            if(!err && nodes){
+                for(i=0;i<nodes.length;i++){
+                    guid = _core.getGuid(nodes[i]);
+                    _nodes[guid] = nodes[i];
+                    _guidKeys.push(guid);
+                    _pathToGuidMap[_core.getPath(nodes[i])] = guid;
                 }
-            };
-
-        _nodes[guid] = node;
-        _guidKeys.push(guid);
-        _pathToGuidMap[_core.getPath(node)] = guid;
-        _core.loadChildren(node,function(err,c){
-            if(err){
-                return callback(err);
+                callback(null);
+            } else {
+                callback(err);
             }
-
-            children = c;
-            loadNextChildsubTree(0);
         });
     }
     function gatherAncestors(){
@@ -163,11 +263,12 @@ define(['util/assert'],function(ASSERT){
         return {
             attributes:getAttributesOfNode(node),
             base: _core.getBase(node) ? _core.getGuid(_core.getBase(node)) : null,
-            meta:pathsToGuids(_core.getOwnJsonMeta(node)),
+            meta:pathsToGuids(JSON.parse(JSON.stringify(_core.getOwnJsonMeta(node)) || {})),
             parent:_core.getParent(node) ? _core.getGuid(_core.getParent(node)) : null,
             pointers:getPointersOfNode(node),
             registry:getRegistryOfNode(node),
-            sets:getSetsOfNode(node)
+            sets:getSetsOfNode(node),
+            constraints: getConstraintsOfNode(node)
         };
     }
     function baseGuid(path){
@@ -181,11 +282,33 @@ define(['util/assert'],function(ASSERT){
         return null;*/
         return _extraBasePaths[path];
     }
+
+    var sortMultipleArrays = function () {
+        var index = getSortedIndex(arguments[0]);
+        for (var j = 0; j < arguments.length; j++) {
+            var _arr = arguments[j].slice();
+            for(var i = 0; i < _arr.length; i++) {
+                arguments[j][i] = _arr[index[i]];
+            }
+        }
+    };
+
+    var getSortedIndex = function (arr) {
+        var index = [];
+        for (var i = 0; i < arr.length; i++) {
+            index.push(i);
+        }
+        index = index.sort((function(arr){
+            return function (a, b) {return ((arr[a] > arr[b]) ? 1 : ((arr[a] < arr[b]) ? -1 : 0));
+            };
+        })(arr));
+        return index;
+    };
+
     function pathsToGuids(jsonObject){
         if(jsonObject && typeof jsonObject === 'object'){
             var keys = Object.keys(jsonObject),
                 i, j, k,toDelete,tArray;
-
 
             for(i=0;i<keys.length;i++){
                 if(keys[i] === 'items') {
@@ -210,19 +333,20 @@ define(['util/assert'],function(ASSERT){
                             jsonObject.maxItems.splice(toDelete[j], 1);
                         }
                     }
+                    sortMultipleArrays(jsonObject.items, jsonObject.minItems, jsonObject.maxItems);
                 } else if(keys[i] === 'aspects'){
                     //aspects are a bunch of named path list, so we have to handle them separately
                     tArray = Object.keys(jsonObject[keys[i]]);
                     for(j=0;j<tArray.length;j++){
                         //here comes the transformation itself
                         toDelete = [];
-                        for(k=0;k<jsonObject[keys[i]][tArray[j]].length;k++) {
-                            if (_pathToGuidMap[jsonObject[keys[i]][tArray[j]][k]]) {
-                                jsonObject[keys[i]][tArray[j]][k] = _pathToGuidMap[jsonObject[keys[i]][tArray[j]][k]];
-                            } else if (baseGuid(jsonObject[keys[i]][tArray[j]][k])) {
-                                jsonObject[keys[i]][tArray[j]][k] = baseGuid(jsonObject[keys[i]][tArray[j]][k]);
+                        for(k=0;k<jsonObject.aspects[tArray[j]].length;k++) {
+                            if (_pathToGuidMap[jsonObject.aspects[tArray[j]][k]]) {
+                                jsonObject.aspects[tArray[j]][k] = _pathToGuidMap[jsonObject.aspects[tArray[j]][k]];
+                            } else if (baseGuid(jsonObject.aspects[tArray[j]][k])) {
+                                jsonObject.aspects[tArray[j]][k] = baseGuid(jsonObject.aspects[tArray[j]][k]);
                             } else {
-                                toDelete.push(j);
+                                toDelete.push(k);
                             }
                         }
 
@@ -230,14 +354,16 @@ define(['util/assert'],function(ASSERT){
                             toDelete = toDelete.sort();
                             toDelete = toDelete.reverse();
                             for (k = 0; k < toDelete.length; k++) {
-                                jsonObject.items.splice(jsonObject[keys[i]][tArray[j]][k], 1);
+                                jsonObject.aspects[tArray[j]].splice(toDelete[k], 1);
                             }
                         }
+
+                        jsonObject.aspects[tArray[j]] = jsonObject.aspects[tArray[j]].sort();
 
                     }
                 } else {
                     if(typeof jsonObject[keys[i]] === 'object'){
-                         jsonObject[keys[i]] = pathsToGuids(jsonObject[keys[i]]);
+                        jsonObject[keys[i]] = pathsToGuids(jsonObject[keys[i]]);
                     }
                 }
             }
@@ -260,6 +386,15 @@ define(['util/assert'],function(ASSERT){
             result = {};
         for(i=0;i<names.length;i++){
             result[names[i]] = _core.getRegistry(node,names[i]);
+        }
+        return result;
+    }
+    function getConstraintsOfNode(node){
+        var names = _core.getOwnConstraintNames(node).sort(),
+            i,
+            result = {};
+        for(i=0;i<names.length;i++){
+            result[names[i]] = _core.getConstraint(node,names[i]);
         }
         return result;
     }
@@ -443,15 +578,18 @@ define(['util/assert'],function(ASSERT){
                 //we should go among containment hierarchy
                 updateNodes(_import.root.guid,null,_import.containment);
 
-                //now we can add or modify the relations of the nodes - we go along the hierarchy chain
-                updateRelations(_import.root.guid,_import.containment);
-
                 //now update inheritance chain
                 //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
                 updateInheritance();
 
+                //now we can add or modify the relations of the nodes - we go along the hierarchy chain
+                updateRelations();
+
                 //finally we need to update the meta rules of each node - again along the containment hierarchy
                 updateMetaRules(_import.root.guid,_import.containment);
+
+                //after everything is done we try to synchronize the metaSheet info
+                importMetaSheetInfo(_core.getRoot(originLibraryRoot));
 
                 callback(null,_log);
             });
@@ -514,6 +652,20 @@ define(['util/assert'],function(ASSERT){
             _core.setAttribute(node,keys[i],jsonNode.attributes[keys[i]]);
         }
     }
+    function updateConstraints(guid){
+        var keys, i,
+            node = _nodes[guid],
+            jsonNode = _import.nodes[guid];
+        keys = _core.getOwnConstraintNames(node);
+        for(i=0;i<keys.length;i++){
+            _core.delConstraint(node,keys[i]);
+        }
+
+        keys = Object.keys(jsonNode.constraints || {});
+        for(i=0;i<keys.length;i++){
+            _core.setConstraint(node,keys[i],jsonNode.constraints[keys[i]]);
+        }
+    }
     //this function does not cover relations - it means only attributes and registry have been updated here
     function updateNode(guid,parent){
         //first we check if the node have to be moved
@@ -526,6 +678,7 @@ define(['util/assert'],function(ASSERT){
 
         updateAttributes(guid);
         updateRegistry(guid);
+        updateConstraints(guid);
     }
 
     //this function doesn't not cover relations - so only attributes and registry have been taken care of here
@@ -533,16 +686,34 @@ define(['util/assert'],function(ASSERT){
         //at this point we assume that an empty vessel has been already created and part of the _nodes
         updateAttributes(guid);
         updateRegistry(guid);
+        updateConstraints(guid);
     }
 
-    function updateRelations(guid,containmentTreeObject){
-        var keys,i;
-        updateNodeRelations(guid);
-        keys = Object.keys(containmentTreeObject);
-        for(i=0;i<keys.length;i++){
-            updateRelations(keys[i],containmentTreeObject[keys[i]]);
+    function getInheritanceBasedGuidOrder(){
+        var inheritanceOrdered = Object.keys(_import.nodes).sort(),i= 0,baseGuid,baseIndex;
+        while(i<inheritanceOrdered.length){
+            baseGuid = _import.nodes[inheritanceOrdered[i]].base;
+            if(baseGuid){
+                baseIndex = inheritanceOrdered.indexOf(baseGuid);
+                if(baseIndex > i){
+                    inheritanceOrdered.splice(baseIndex,1);
+                    inheritanceOrdered.splice(i,0,baseGuid);
+                } else {
+                    ++i;
+                }
+            } else {
+                ++i;
+            }
+        }
+        return inheritanceOrdered;
+    }
+    function updateRelations(){
+        var guids = getInheritanceBasedGuidOrder(),i;
+        for(i=0;i<guids.length;i++){
+            updateNodeRelations(guids[i]);
         }
     }
+
     function updateNodeRelations(guid){
         //although it is possible that we set the base pointer at this point we should go through inheritance just to be sure
         var node = _nodes[guid],
@@ -622,6 +793,7 @@ define(['util/assert'],function(ASSERT){
         updateChildrenMeta(guid);
         updatePointerMeta(guid);
         updateAspectMeta(guid);
+        updateConstraintMeta(guid);
     }
 
     function updateAttributeMeta(guid){
@@ -634,7 +806,6 @@ define(['util/assert'],function(ASSERT){
             _core.setAttributeMeta(node,keys[i],jsonMeta[keys[i]]);
         }
     }
-
     function updateChildrenMeta(guid){
         var jsonMeta = _import.nodes[guid].meta.children || {items:[],minItems:[],maxItems:[]},
             i;
@@ -645,7 +816,6 @@ define(['util/assert'],function(ASSERT){
             _core.setChildMeta(_nodes[guid],_nodes[jsonMeta.items[i]],jsonMeta.minItems[i],jsonMeta.maxItems[i]);
         }
     }
-
     function updatePointerMeta(guid){
         var jsonMeta = _import.nodes[guid].meta.pointers || {},
             keys = Object.keys(jsonMeta),
@@ -668,6 +838,15 @@ define(['util/assert'],function(ASSERT){
             for(j=0;j<jsonMeta[keys[i]].length;j++){
                 _core.setAspectMetaTarget(_nodes[guid],keys[i],_nodes[jsonMeta[keys[i]][j]]);
             }
+        }
+    }
+    function updateConstraintMeta(guid){
+        var jsonMeta = _import.nodes[guid].meta.constraints || {},
+            keys = Object.keys(jsonMeta),
+            i;
+
+        for(i=0;i<keys.length;i++){
+            _core.setConstraint(_nodes[guid],keys[i],jsonMeta[keys[i]]);
         }
     }
 

@@ -1,7 +1,7 @@
 define([
-    'coreclient/meta',
-    'coreclient/tojson',
-    'util/url'
+    'common/core/users/meta',
+    'common/core/users/tojson',
+    'common/util/url'
 ],function(
     BaseMeta,
     ToJson,

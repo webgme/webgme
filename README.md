@@ -1,59 +1,64 @@
-# Installation
+[![Build Status](https://travis-ci.org/webgme/webgme.svg?branch=master)](https://travis-ci.org/webgme/webgme)
+[![Version](https://badge.fury.io/js/webgme.svg)](https://www.npmjs.com/package/webgme)
+[![Downloads](http://img.shields.io/npm/dm/webgme.svg?style=flat)](http://img.shields.io/npm/dm/webgme.svg?style=flat)
 
-* Fetch the latest version from git directly and start using it (check the package.json for node package dependencies)
-* Install it with npm (`npm install webgme`), and you are ready to go
+# Getting started
 
-# Program usage
+Options to deploy and run WebGME:
 
-All runnable javascript programs are stored in the bin directory, you should start them with node, e.g. `node bin/start_server.js`.
-Each script supports the `-help` command line parameter which will list all possible parameters.
-
-* start_server: it start a webserver which open a data connection towards the configured mongoDb and functions as a webgme server as well.
-* getconfig: creates a `config.js` local configuration file which can be used to overwrite the default configuration values in the `getconfig.js` (all command uses these configurations)  
-* parse_xme: parses a gme classic xme file and inports it into a webgme database.
-* database_info: prints out the projects and branches stored on the given database.
-* serialize_to_xml: creates a classic gme xme file from the given webgme project
-* update_project: updates the given branch of a project to the latest version of webGME. this ensures that all new functions will be available without negatively affecting already made data.
-* project_clean_registry: cleans the visual only settings of a project creating an up-to-date version
-* run_plugin: executes a plugin via a direct mongoDB connection
-
-# Library usage
-
-You can get all core functionality (not related to the GUI) by using node import `require('webgme')`, or get specific part of the library 
-using requirejs (see the scripts in the bin directory). 
-
-```
-    //this example shows how you able to connect directly from code to your own mongoDB instance
-	var webGME = require('webgme');
-	var storage = new webGME.clientStorage({'type':'node'}); //other parameters of config can be override here as well, but this must be set
-	storage.openDatabase(function(err){
-		if(!err) {
-		    storage.openProject(function(err,project){
-		        if(!err){
-		            var core = webGME.core(project); //for additional options check the code
-		        }
-		    }
-		}
+1. Fetch the latest version from git directly and start using it
+ * install packages with npm `npm install`
+ * launch mongod locally
+ * start the server `npm start`
+2. Use WebGME as a library
+ * install webgme `npm install webgme`
+ * create an `app.js` file and a `config.js`
+	```javascript
+	// app.js
+	var gmeConfig = require('./config'),
+	    webgme = require('webgme'),
+	    myServer;
+	
+	webgme.addToRequireJsPaths(gmeConfig);
+	
+	myServer = new webgme.standaloneServer(gmeConfig);
+	myServer.start(function () {
+	    //console.log('server up');
 	});
-```
-```
-    //this is an example how you can use webserver as a whole application
-    var webGME = require('webgme');
-    var server = webGME.standaloneServer(CONFIG); //you should gather all relevant configuration for the server like mongoip and port of the server
-    server.start()
-```
+	```
+	```javascript
+	// config.js
+	var config = require('webgme/config/config.default'),
+	    validateConfig = require('webgme/config/validator');
+	    
+	// Overwrite options as needed
+	config.server.port = 9091;
+	config.mongo.uri = 'mongodb://127.0.0.1:27017/webgme_my_app';
+	
+	validateConfig(config);
+	module.exports = config;
+	```
+ * launch mongod locally
+ * start the server `node app.js`
+3. For more complex usages see [webgme-boilerplate](https://github.com/webgme/webgme-boilerplate)
+4. If you have Docker installed: `docker run -p <port>:80 -d webgme/compact`, where <port> is the public host port to be used (e.g.: 80)
 
-# Developer guidelines
+After the webgme server is up and there are no error messages in the console. Open a valid webgme address in the browser. The default is `http://127.0.0.1:8888/`, you should see all valid addresses in the console where you started webgme.
 
-## Coding style
+# Command line interface
 
-Please use JSHint. Consult .jshintrc for details.
+All runnable javascript programs are stored in the `src/bin` directory, you should start them with node from the root directory of the repository, e.g. `node src/bin/start_server.js` starts the web server.
+Each script supports the `--help` or `-h` command line parameter, which will list all possible parameters.
 
-Always declare your globals at the top of the source.
+* `start_server.js`: it starts a web server, which opens a connection to the configured MongoDB.
+* `run_plugin.js`: executes a plugin via a direct MongoDB connection.
+* `merge.js`: merges two branches if there are no conflicts.
+* `usermanager.js`: manages users, organizations, and project authorization (read, write, delete).
+* `export.js`: exports a (snapshot of a) branch into a json file.
+* `import.js`: imports a (snapshot of a) branch into a webgme project.
+* `parse_xme.js` __outdated__: parses a desktop GME xme file and imports it into a webgme database.
+* `serialize_to_xml.js` __outdated__: creates a desktop GME xme file from a given webgme project.
 
-Use [JDDoc](http://en.wikipedia.org/wiki/JSDoc) syntax to annotate source code with documentation, eg. specify authors as:
-```
-/**
- * @author brollb / https://github.com/brollb
- */
-```
+# License
+
+See the [LICENSE](LICENSE) file.

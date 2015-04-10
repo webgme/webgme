@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['css!/js/Loader/styles/LoaderProgressBar.css'], function () {
+define(['css!js/Loader/styles/LoaderProgressBar.css'], function () {
 
     "use strict";
 

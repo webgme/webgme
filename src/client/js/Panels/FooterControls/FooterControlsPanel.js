@@ -2,7 +2,6 @@
 
 define([
         'js/PanelBase/PanelBase',
-        'js/Widgets/LogLevelManager/LogLevelManagerWidget',
         'js/Widgets/NetworkStatus/NetworkStatusWidget',
         'js/Widgets/BranchStatus/BranchStatusWidget',
         'js/Widgets/BranchSelector/BranchSelectorWidget',
@@ -11,7 +10,6 @@ define([
     ],
     function (
         PanelBase,
-        LogLevelManagerWidget,
         NetworkStatusWidget,
         BranchStatusWidget,
         BranchSelectorWidget,
@@ -54,13 +52,26 @@ define([
 
         //add ISIS link
         var pullLeft = $('<div class="pull-left inline"></div>');
-        pullLeft.append($('<div class="navbar-text"><div class="webgme-copyright">© 2014 <a href="http://www.isis.vanderbilt.edu/" title="Vanderbilt University" target="_blank">Vanderbilt University</a></div></div>'));
+        pullLeft.append($('<div class="navbar-text"><div class="webgme-copyright">© 2015 <a href="http://www.isis.vanderbilt.edu/" title="Vanderbilt University" target="_blank">Vanderbilt University</a></div></div>'));
         navBarInner.append(pullLeft);
 
         //add version UI piece
         pullLeft = $('<div class="pull-left inline"></div>');
-        pullLeft.append($('<div class="navbar-text"><div class="webgme-version">version: ' + WebGMEGlobal.version + '</div></div>'));
+        var version;
+        if (WebGMEGlobal.NpmVersion) {
+            version = 'version: <a href="https://github.com/webgme/webgme/releases/tag/v' + WebGMEGlobal.version + '">' + WebGMEGlobal.version + '</a>';
+        } else {
+            version = 'version: ' + WebGMEGlobal.version + '</a>';
+        }
+        pullLeft.append($('<div class="navbar-text"><div class="webgme-version">' + version + '</div></div>'));
+
         navBarInner.append(pullLeft);
+
+        if (WebGMEGlobal.GitHubVersion) {
+            pullLeft = $('<div class="pull-left inline"></div>');
+            pullLeft.append($('<div class="navbar-text"><div class="webgme-version">SHA1 or branch - <a href="https://github.com/webgme/webgme/commits/' + WebGMEGlobal.GitHubVersion + '">' + WebGMEGlobal.GitHubVersion + '</a></div></div>'));
+            navBarInner.append(pullLeft);
+        }
 
         //padding from screen right edge
         navBarInner.append(separator.clone());
@@ -71,10 +82,6 @@ define([
             var k = new KeyboardManagerWidget(keyBoardManagerEl);
             navBarInner.append(keyBoardManagerEl).append(separator.clone());
         }
-
-        var logLevelManagerEl = widgetPlaceHolder.clone();
-        var l = new LogLevelManagerWidget(logLevelManagerEl);
-        navBarInner.append(logLevelManagerEl).append(separator.clone());
 
         var networkStatusEl = widgetPlaceHolder.clone();
         var n = new NetworkStatusWidget(networkStatusEl, this._client);
