@@ -126,18 +126,45 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.patch('/user', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUser(userId, req.body, function (err, userData) {
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
+        if (userId) {
+            gmeAuth.getUser(userId, function (err, data) {
+                var receivedData;
+                if (err) {
+                    res.status(404);
+                    res.json({
+                        message: 'Requested resource was not found',
+                        error: err
+                    });
+                    return;
+                }
 
-            res.json(userData);
-        });
+                receivedData = req.body;
+
+                if (receivedData.hasOwnProperty('siteAdmin') && !data.siteAdmin) {
+                    res.status(403);
+                    return next(new Error('setting siteAdmin property requires site admin role'));
+                }
+
+                gmeAuth.updateUser(userId, receivedData, function (err, userData) {
+                    if (err) {
+                        res.status(404);
+                        res.json({
+                            message: 'Requested resource was not found',
+                            error: err
+                        });
+                        return;
+                    }
+
+                    res.json(userData);
+                });
+            });
+        } else {
+            res.status(401);
+            res.json({
+                message: 'Authentication required',
+                error: ''
+            });
+        }
     });
 
     router.delete('/user', function (req, res, next) {
@@ -284,6 +311,12 @@ function createAPI(app, mountPath, middlewareOpts) {
                 // we may need to check if this user can create other ones.
 
                 if (data.siteAdmin || data._id === req.params.username) {
+
+                    if (receivedData.hasOwnProperty('siteAdmin') && !data.siteAdmin) {
+                        res.status(403);
+                        return next(new Error('setting siteAdmin property requires site admin role'));
+                    }
+
                     gmeAuth.updateUser(req.params.username, receivedData, function (err, updated) {
                         if (err) {
                             res.status(400);
