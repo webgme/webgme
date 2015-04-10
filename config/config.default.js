@@ -82,7 +82,7 @@ var path = require('path'),
                 server: {
                     auto_reconnect: true,
                     socketOptions: {keepAlive: 1},
-                    poolSize: 2
+                    poolSize: 20
                 }
             }
         },
