@@ -3250,6 +3250,7 @@ describe('GME client', function () {
         });
 
         it('should return a url where the given library (sub-tree) is available', function (done) {
+            this.timeout(5000);
             client.getExportLibraryUrlAsync('', 'output', function (err, url) {
                 expect(err).to.equal(null);
                 expect(url).to.contain('output');
@@ -3603,6 +3604,7 @@ describe('GME client', function () {
         });
 
         it('should seed a project from a seed file', function (done) {
+            this.timeout(5000);
             var projectName = 'seedTestBasicFile',
                 seedConfig = {
                     type: 'file',
@@ -3677,6 +3679,40 @@ describe('GME client', function () {
                 expect(err).not.to.equal(null);
 
                 expect(err).to.contain('overwrite');
+
+                done();
+            });
+        });
+
+        it('should fail to seed form an unknown branch', function (done) {
+            var projectName = 'noBranchSeedProject',
+                seedConfig = {
+                    seedName: 'projectSeedSingleMaster',
+                    projectName: projectName,
+                    seedBranch: 'unknownBranch'
+                };
+
+            client.seedProjectAsync(seedConfig, function (err) {
+                expect(err).not.to.equal(null);
+
+                expect(err).to.contain('unknownBranch');
+
+                done();
+            });
+        });
+
+        it('should fail to seed from an unknown seed file', function (done) {
+            var projectName = 'noSeedFileProject',
+                seedConfig = {
+                    type: 'file',
+                    seedName: 'UnknownSeedFile',
+                    projectName: projectName
+                };
+
+            client.seedProjectAsync(seedConfig, function (err) {
+                expect(err).not.to.equal(null);
+
+                expect(err).to.contain('unknown file seed');
 
                 done();
             });

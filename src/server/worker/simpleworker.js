@@ -577,6 +577,7 @@ var getSeedFromFile = function (name) {
                 return JSON.parse(FS.readFileSync(gmeConfig.seedProjects.basePaths[i] + '/' + name + '.json', 'utf8'));
             }
         }
+        return null;
     } catch (e) {
         return null;
     }
