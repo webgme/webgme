@@ -5,7 +5,8 @@
 
 //gracefull edning of the child process
 process.on('SIGINT', function () {
-    if(logger){
+    //FIXME: AUTH.unload
+    if (logger) {
         logger.debug('stopping child process');
         if (storage) {
             storage.closeDatabase(function (err) {
@@ -71,9 +72,7 @@ var initialize = function (parameters) {
         gmeConfig = parameters.gmeConfig;
         WEBGME.addToRequireJsPaths(gmeConfig);
         logger = Logger.create('gme:server:worker:simpleworker:pid_' + process.pid, gmeConfig.server.log, true);
-        if (gmeConfig.authentication.enable === true) {
-            AUTH = GMEAUTH({}, gmeConfig); //FIXME: Should session really be empty object??
-        }
+
         storage = new Storage({
             logger: logger.fork('storage'),
             globConf: gmeConfig
@@ -87,7 +86,23 @@ var initialize = function (parameters) {
                     info: 'worker initialization failed, try again'
                 });
             } else {
-                safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
+                if (gmeConfig.authentication.enable === true) {
+                    AUTH = GMEAUTH({}, gmeConfig); //FIXME: Should session really be empty object??
+                    AUTH.connect(function (err) {
+                        if (err) {
+                            initialized = false;
+                            safeSend({
+                                pid: process.pid,
+                                type: CONSTANT.msgTypes.info,
+                                info: 'worker initialization failed, try again'
+                            });
+                            return;
+                        }
+                        safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
+                    });
+                } else {
+                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
+                }
             }
         });
     }
@@ -653,7 +668,7 @@ var seedProject = function (parameters, callback) {
 
                 if (AUTH) {
                     AUTH.getAllUserAuthInfo(parameters.userId, function (err, authInfo) {
-                        console.log('userInfo', authInfo);
+                        logger.debug('userInfo', authInfo);
                         if (err) {
                             return fail(err);
                         }
