@@ -52,34 +52,34 @@ function GMEAuth(session, gmeConfig) {
      * _id: username
      * projects: map from project name to object {read:, write:, delete: }
      */
-    function addMongoOpsToPromize(collection) {
-        collection.findOne = function () {
+    function addMongoOpsToPromize(collection_) {
+        collection_.findOne = function () {
             var args = arguments;
-            return collection.then(function (c) {
+            return collection_.then(function (c) {
                 return Q.npost(c, 'findOne', args);
             });
         };
-        collection.find = function (query, projection) {
+        collection_.find = function (query, projection) {
             var args = arguments;
-            return collection.then(function (c) {
+            return collection_.then(function (c) {
                 return Q.npost(c, 'find', args);
             });
         };
-        collection.update = function (query, update, options) {
+        collection_.update = function (query, update, options) {
             var args = arguments;
-            return collection.then(function (c) {
+            return collection_.then(function (c) {
                 return Q.npost(c, 'update', args);
             });
         };
-        collection.insert = function (data, options) {
+        collection_.insert = function (data, options) {
             var args = arguments;
-            return collection.then(function (c) {
+            return collection_.then(function (c) {
                 return Q.npost(c, 'insert', args);
             });
         };
-        collection.remove = function (query, options) {
+        collection_.remove = function (query, options) {
             var args = arguments;
-            return collection.then(function (c) {
+            return collection_.then(function (c) {
                 return Q.npost(c, 'remove', args)
                     .then(function (num) {
                         // depending on mongodb hasWriteCommands, remove calls back with (num) or (num, backWardsCompatibiltyResults)
@@ -147,9 +147,9 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-    function authenticateUserById(userId, password, type, returnUrl, req, res, next) {
+    function authenticateUserById(userId, password, type, returnUrlFailedLogin, req, res, next) {
         var query = {};
-        returnUrl = returnUrl || '/';
+        returnUrlFailedLogin = returnUrlFailedLogin || '/';
         if (userId.indexOf('@') > 0) {
             query.email = userId;
         } else {
@@ -164,7 +164,7 @@ function GMEAuth(session, gmeConfig) {
                     req.session.udmId = userData._id;
                     req.session.authenticated = true;
                     req.session.userType = 'GME';
-                    next(null);
+                    next();
                 } else {
                     if (!password) {
                         return Q.reject('no password given');
@@ -177,7 +177,7 @@ function GMEAuth(session, gmeConfig) {
                                     req.session.udmId = userData._id;
                                     req.session.authenticated = true;
                                     req.session.userType = 'GME';
-                                    next(null);
+                                    next();
                                 }
                             });
                     }
@@ -189,7 +189,7 @@ function GMEAuth(session, gmeConfig) {
                     res.status(401);
                     return next(new Error(err));
                 } else {
-                    res.redirect(returnUrl);
+                    res.redirect(returnUrlFailedLogin);
                 }
             });
     }

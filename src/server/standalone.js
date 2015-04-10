@@ -161,16 +161,6 @@ function StandAloneServer(gmeConfig) {
         sockets = {};
 
 
-        __gmeAuth.connect(function (err) {
-            if (err) {
-                logger.error(err);
-                gmeAuthDeferred.reject(err);
-            } else {
-                logger.debug('gmeAuth is ready');
-                gmeAuthDeferred.resolve();
-            }
-        });
-
         if (gmeConfig.server.https.enable) {
             __httpServer = Https.createServer({
                 key: __secureSiteInfo.key,
@@ -193,7 +183,6 @@ function StandAloneServer(gmeConfig) {
                 }
             });
         }
-
         __httpServer.on('connection', function (socket) {
             var socketId = socket.remoteAddress + ':' + socket.remotePort;
 
@@ -238,6 +227,16 @@ function StandAloneServer(gmeConfig) {
             }
         });
 
+        __gmeAuth.connect(function (err) {
+            if (err) {
+                logger.error(err);
+                gmeAuthDeferred.reject(err);
+            } else {
+                logger.debug('gmeAuth is ready');
+                gmeAuthDeferred.resolve();
+            }
+        });
+
         Q.all([serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise])
             .nodeify(function (err) {
                 self.isRunning = true;
@@ -263,29 +262,30 @@ function StandAloneServer(gmeConfig) {
             __storage.close(function (err) {
                 var numDestroyedSockets = 0;
                 //kill all remaining workers
-                __workerManager.stop();
+                __workerManager.stop(function (err1) {
 
-                __gmeAuth.unload(function (err1) {
-                    logger.debug('gmeAuth unloaded');
-                    // request server close - do not accept any new connections.
-                    // first we have to request the close then we can destroy the sockets.
-                    __httpServer.close(function (err2) {
-                        logger.info('http server closed');
-                        logger.debug('http server closed');
-                        callback(err || err1 || err2 || null);
-                    });
+                    __gmeAuth.unload(function (err2) {
+                        logger.debug('gmeAuth unloaded');
+                        // request server close - do not accept any new connections.
+                        // first we have to request the close then we can destroy the sockets.
+                        __httpServer.close(function (err3) {
+                            logger.info('http server closed');
+                            logger.debug('http server closed');
+                            callback(err || err1 || err2 || err3 || null);
+                        });
 
-                    // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
-                    for (key in sockets) {
-                        if (sockets.hasOwnProperty(key)) {
-                            sockets[key].destroy();
-                            delete sockets[key];
-                            logger.debug('destroyed open socket ' + key);
-                            numDestroyedSockets += 1;
+                        // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
+                        for (key in sockets) {
+                            if (sockets.hasOwnProperty(key)) {
+                                sockets[key].destroy();
+                                delete sockets[key];
+                                logger.debug('destroyed open socket ' + key);
+                                numDestroyedSockets += 1;
+                            }
                         }
-                    }
 
-                    logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
+                        logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
+                    });
                 });
             });
         } catch (e) {
@@ -378,7 +378,7 @@ function StandAloneServer(gmeConfig) {
             password = split[1];
             if (username && password) {
                 // no empty username no empty password
-                __gmeAuth.authenticateUserById(username, password, 'gme', req, res, next);
+                __gmeAuth.authenticateUserById(username, password, 'gme', '/', req, res, next);
                 return;
             } else {
                 res.status(401);

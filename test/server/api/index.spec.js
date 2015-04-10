@@ -73,7 +73,7 @@ describe('API', function () {
                 ]);
             });
 
-        dbConn
+        Q.all([dbConn, gmeauthDeferred.promise])
             .then(function () {
                 return Q.all([
                     auth.addUser('guest', 'guest@example.com', 'guest', true, {overwrite: true}),
@@ -99,9 +99,7 @@ describe('API', function () {
                         delete: false
                     })
                 ]);
-            });
-
-        Q.all([dbConn, gmeauthDeferred.promise])
+            })
             .nodeify(done);
     });
 

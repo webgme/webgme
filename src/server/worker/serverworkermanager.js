@@ -57,16 +57,28 @@ function ServerWorkerManager(_parameters) {
         }
     }
 
-    function freeAllWorkers() {
+    function freeAllWorkers(callback) {
+        var len = Object.keys(_myWorkers).length;
         Object.keys(_myWorkers).forEach(function (workerPid) {
             // FIXME: we need to send to the worker
-            _myWorkers[workerPid].worker.kill();
-            logger.debug('workerPid killed: ' + workerPid);
+            _myWorkers[workerPid].worker.on('close', function (code, signal) {
+                len -= 1;
+                if (len === 0) {
+                    callback(null);
+                }
+                logger.debug('workerPid closed: ' + workerPid);
+            });
+            _myWorkers[workerPid].worker.kill('SIGINT');
+            logger.debug('request closing workerPid: ' + workerPid);
         });
+
+        if (len === 0) {
+            callback(null);
+        }
     }
 
-    function stop() {
-        freeAllWorkers();
+    function stop(callback) {
+        freeAllWorkers(callback);
     }
 
     function assignRequest(workerPid) {
