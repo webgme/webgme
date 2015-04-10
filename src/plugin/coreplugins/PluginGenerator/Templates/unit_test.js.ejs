@@ -3,53 +3,53 @@
 */
 
 'use strict';
-if (typeof window === 'undefined') {
-    // server-side setup
-    var requirejs = require('requirejs');
-    require('../../../../../test-conf.js');
-
-    var chai = require('chai'),
-        should = chai.should(),
-        assert = chai.assert,
-        expect = chai.expect;
-}
-
-// TODO: Update this with a more to-the-point regular expression
-var semanticVersionPattern = /^\d+\.\d+\.\d+$/;
+var testFixture = require('../../../globals');
 
 describe('<%= pluginID %>', function () {
-    var plugin;
+    var gmeConfig = testFixture.getGmeConfig(),
+        runPlugin = testFixture.runPlugin,
+        openContext = testFixture.WebGME.openContext,
+        expect = testFixture.expect,
+        pluginName = '<%= pluginID %>';
 
-    before(function (done) {
-        requirejs(['plugin/<%= pluginID %>/<%= pluginID %>/<%= pluginID %>'], function (<%= pluginID %>) {
-            plugin = new <%= pluginID %>();
-            // TODO: Add option for generating createMETATypesTests and including core etc.
-            //core = new Core();
-            //meta = createMETATypesTests(core);
-            //rootNode = core.getRootNode();
-            //modelsNode = core.createNode({base: meta.ModelElement, parent: rootNode});
-            //core.setAttribute(modelsNode, 'name', 'Models');
-        done();
+    it('should run using local-storage with default config', function (done) {
+        var managerConfig = {
+                pluginName: pluginName,
+                projectName: 'testProject',
+                branchName: 'master',
+                activeNode: '/1',
+            },
+            pluginConfig = {},
+            options = {
+                localStorage: true,
+                importProject: './test/assets/sm_basic.json'
+            };
+        runPlugin(gmeConfig, managerConfig, pluginConfig, options, function (err, result/*, storage*/) {
+            expect(err).to.equal(null);
+
+            expect(result.success).to.equal(true);
+            done();
         });
     });
 
-    it('getVersion', function () {
-        expect(semanticVersionPattern.test(plugin.getVersion())).to.equal(true);
-    });
+    it('should run using serveruser-storage with default config', function (done) {
+        var managerConfig = {
+                pluginName: pluginName,
+                projectName: 'testProject',
+                branchName: 'master',
+                activeNode: '/1',
+            },
+            pluginConfig = {},
+            options = {
+                localStorage: false, // This requires that the database is connected
+                overwrite: true,
+                importProject: './test/assets/sm_basic.json'
+            };
+        runPlugin(gmeConfig, managerConfig, pluginConfig, options, function (err, result/*, storage*/) {
+            expect(err).to.equal(null);
 
-    it('getDescription', function () {
-        var description = plugin.getDescription();
-        expect(typeof description === 'string' || description instanceof String).to.equal(true);
+            expect(result.success).to.equal(true);
+            done();
+        });
     });
-
-    it('getName', function () {
-        var name = plugin.getName();
-        expect(typeof name === 'string' || name instanceof String).to.equal(true);
-    });
-
-    it('main should be implemented', function () {
-        var proto = Object.getPrototypeOf(plugin);
-        expect(proto.hasOwnProperty('main')).to.equal(true);
-    });
-
 });

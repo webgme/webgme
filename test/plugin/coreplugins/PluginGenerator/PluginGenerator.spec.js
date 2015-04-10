@@ -147,7 +147,9 @@ describe('PluginGenerator', function () {
             should.equal(keys.length, 3);
             for (i = 0; i < keys.length; i += 1) {
                 //console.log(files[keys[i]]);
-                if (keys[i] === 'src/plugins/null/I have a space/meta.js') {
+                if (keys[i] === 'src/plugins/null/I have a space/meta.js' ||
+                    keys[i] === 'test/plugins/null/I have a space/I have a space.spec.js') {
+
                     should.equal(isValidJs(files[keys[i]], true), null);
                 } else {
                     should.not.equal(isValidJs(files[keys[i]]), null);
