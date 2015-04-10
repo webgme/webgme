@@ -237,6 +237,8 @@ function StandAloneServer(gmeConfig) {
             }
         });
 
+        __workerManager.start();
+
         Q.all([serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise, apiReady])
             .nodeify(function (err) {
                 self.isRunning = true;

@@ -238,13 +238,16 @@ function ServerWorkerManager(_parameters) {
         }
     }
 
-    reserveWorker();
+    function start () {
+        reserveWorker();
+    }
 
     return {
         request: request,
         result: result,
         query: query,
-        stop: stop
+        stop: stop,
+        start: start
     };
 }
 
