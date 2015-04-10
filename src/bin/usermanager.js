@@ -83,9 +83,8 @@ main = function (argv) {
         .description('lists all users or the specified user')
         .action(function (username, options) {
             setupGMEAuth(options.parent.db, function (err) {
-
                 if (username) {
-                    auth.getAllUserAuthInfo(username)
+                    auth.getUser(username)
                         .then(function (userObject) {
                             // TODO: pretty print users
                             console.log(userObject);
@@ -94,7 +93,14 @@ main = function (argv) {
                         .catch(mainDeferred.reject)
                         .finally(auth.unload);
                 } else {
-                    mainDeferred.reject(new SyntaxError('username parameter is required'));
+                    auth.listUsers(null)
+                        .then(function (userObject) {
+                            // TODO: pretty print users
+                            console.log(userObject);
+                            mainDeferred.resolve();
+                        })
+                        .catch(mainDeferred.reject)
+                        .finally(auth.unload);
                 }
             });
         })
