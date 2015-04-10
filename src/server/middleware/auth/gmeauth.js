@@ -2,9 +2,7 @@
 /*jshint node:true*/
 
 /**
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Tamas Kecskes
+ * @author ksmyth / https://github.com/ksmyth
  */
 
 var Mongodb = require('mongodb'),
@@ -20,6 +18,7 @@ function GMEAuth(session, gmeConfig) {
     var logger = Logger.create('gme:server:auth:gmeauth', gmeConfig.server.log),
         _collectionName = '_users',
         _organizationCollectionName = '_organizations',
+        _projectCollectionName = '_projects',
         _session = session,
         _userField = 'username',
         _passwordField = 'password',
@@ -28,7 +27,14 @@ function GMEAuth(session, gmeConfig) {
         collectionDeferred = Q.defer(),
         collection = collectionDeferred.promise,
         organizationCollectionDeferred = Q.defer(),
-        organizationCollection = organizationCollectionDeferred.promise;
+        organizationCollection = organizationCollectionDeferred.promise,
+        projectCollectionDeferred = Q.defer(),
+        projectCollection = projectCollectionDeferred.promise,
+        blacklistUserAndOrgName = [
+            'api',
+            'blob',
+            'executor'
+        ];
 
     /**
      * 'users' collection has these fields:
@@ -46,34 +52,34 @@ function GMEAuth(session, gmeConfig) {
      * _id: username
      * projects: map from project name to object {read:, write:, delete: }
      */
-    function addMongoOpsToPromize(collection) {
-        collection.findOne = function () {
+    function addMongoOpsToPromize(collection_) {
+        collection_.findOne = function () {
             var args = arguments;
-            return collection.then(function (c) {
+            return collection_.then(function (c) {
                 return Q.npost(c, 'findOne', args);
             });
         };
-        collection.find = function (query, projection) {
+        collection_.find = function (query, projection) {
             var args = arguments;
-            return collection.then(function (c) {
+            return collection_.then(function (c) {
                 return Q.npost(c, 'find', args);
             });
         };
-        collection.update = function (query, update, options) {
+        collection_.update = function (query, update, options) {
             var args = arguments;
-            return collection.then(function (c) {
+            return collection_.then(function (c) {
                 return Q.npost(c, 'update', args);
             });
         };
-        collection.insert = function (data, options) {
+        collection_.insert = function (data, options) {
             var args = arguments;
-            return collection.then(function (c) {
+            return collection_.then(function (c) {
                 return Q.npost(c, 'insert', args);
             });
         };
-        collection.remove = function (query, options) {
+        collection_.remove = function (query, options) {
             var args = arguments;
-            return collection.then(function (c) {
+            return collection_.then(function (c) {
                 return Q.npost(c, 'remove', args)
                     .then(function (num) {
                         // depending on mongodb hasWriteCommands, remove calls back with (num) or (num, backWardsCompatibiltyResults)
@@ -88,8 +94,9 @@ function GMEAuth(session, gmeConfig) {
 
     addMongoOpsToPromize(collection);
     addMongoOpsToPromize(organizationCollection);
+    addMongoOpsToPromize(projectCollection);
 
-    (function connect() {
+    function connect(callback) {
         Q.ninvoke(Mongodb.MongoClient, 'connect', gmeConfig.mongo.uri,
             gmeConfig.mongo.options
         ).then(function (db_) {
@@ -111,12 +118,16 @@ function GMEAuth(session, gmeConfig) {
                 return Q.ninvoke(db, 'collection', _organizationCollectionName);
             }).then(function (organizationCollection_) {
                 organizationCollectionDeferred.resolve(organizationCollection_);
+                return Q.ninvoke(db, 'collection', _projectCollectionName);
+            }).then(function (projectCollection_) {
+                projectCollectionDeferred.resolve(projectCollection_);
             })
             .catch(function (err) {
                 logger.error(err);
                 collectionDeferred.reject(err);
-            });
-    })();
+            })
+            .nodeify(callback);
+    }
 
     function unload(callback) {
         return collection
@@ -136,11 +147,59 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    function authenticateUserById(userId, password, type, returnUrlFailedLogin, req, res, next) {
+        var query = {};
+        returnUrlFailedLogin = returnUrlFailedLogin || '/';
+        if (userId.indexOf('@') > 0) {
+            query.email = userId;
+        } else {
+            query._id = userId;
+        }
+        collection.findOne(query)
+            .then(function (userData) {
+                if (!userData) {
+                    return Q.reject('no such user');
+                }
+                if (type === 'gmail') {
+                    req.session.udmId = userData._id;
+                    req.session.authenticated = true;
+                    req.session.userType = 'GME';
+                    next();
+                } else {
+                    if (!password) {
+                        return Q.reject('no password given');
+                    } else {
+                        return Q.ninvoke(bcrypt, 'compare', password, userData.passwordHash)
+                            .then(function (hash_res) {
+                                if (!hash_res) {
+                                    return Q.reject('incorrect password');
+                                } else {
+                                    req.session.udmId = userData._id;
+                                    req.session.authenticated = true;
+                                    req.session.userType = 'GME';
+                                    next();
+                                }
+                            });
+                    }
+                }
+            })
+            .catch(function (err) {
+                if (res.getHeader('X-WebGME-Media-Type')) {
+                    // do not redirect for api requests
+                    res.status(401);
+                    return next(new Error(err));
+                } else {
+                    res.redirect(returnUrlFailedLogin);
+                }
+            });
+    }
+
     function authenticate(req, res, next) {
         var userId = req.body[_userField],
             password = req.body[_passwordField],
             gmail = false,
-            returnUrl = req.__gmeAuthFailUrl__ || '/';
+            returnUrl = req.__gmeAuthFailUrl__ || '/',
+            type;
         delete req.__gmeAuthFailUrl__;
         //gmail based authentication - no authentication just user search
         if (userId === null || userId === undefined) {
@@ -153,39 +212,9 @@ function GMEAuth(session, gmeConfig) {
             }
         }
 
-        var query = {};
-        if (userId.indexOf('@') > 0) {
-            query.email = userId;
-        } else {
-            query._id = userId;
-        }
-        collection.findOne(query)
-            .then(function (userData) {
-                if (!userData) {
-                    return Q.reject('no such user');
-                }
-                if (gmail) {
-                    req.session.udmId = userData._id;
-                    req.session.authenticated = true;
-                    req.session.userType = 'GME';
-                    next(null);
-                } else {
-                    return Q.ninvoke(bcrypt, 'compare', password, userData.passwordHash)
-                        .then(function (hash_res) {
-                            if (!hash_res) {
-                                return Q.reject('incorrect password');
-                            } else {
-                                req.session.udmId = userData._id;
-                                req.session.authenticated = true;
-                                req.session.userType = 'GME';
-                                next(null);
-                            }
-                        });
-                }
-            })
-            .catch(function (err) {
-                res.redirect(returnUrl);
-            });
+        type = gmail ? 'gmail' : 'gme';
+
+        authenticateUserById(userId, password, type, returnUrl, req, res, next);
     }
 
     // type: 'create' 'delete'
@@ -357,13 +386,71 @@ function GMEAuth(session, gmeConfig) {
     }
 
     function getAllUserAuthInfo(userId, callback) {
+        logger.warn('getAllUserAuthInfo is deprecated use getUser');
+        return getUser(userId, callback);
+    }
+
+    function getUser(userId, callback) {
         return collection.findOne({_id: userId})
             .then(function (userData) {
                 if (!userData) {
-                    return Q.reject('no such user');
+                    return Q.reject('no such user ' + userId);
                 }
                 delete userData.passwordHash;
                 return userData;
+            })
+            .nodeify(callback);
+    }
+
+    function deleteUser(userId, callback) {
+        return collection.remove({_id: userId})
+            .nodeify(callback);
+    }
+
+    function updateUser(userId, data, callback) {
+        return collection.findOne({_id: userId})
+            .then(function (userData) {
+                if (!userData) {
+                    return Q.reject('no such user ' + userId);
+                }
+
+                userData.email = data.email || userData.email;
+
+                if (data.hasOwnProperty('canCreate')) {
+                    userData.canCreate = data.canCreate === 'true' || data.canCreate === true;
+                }
+                if (data.hasOwnProperty('siteAdmin')) {
+                    userData.siteAdmin = data.siteAdmin === 'true' || data.siteAdmin === true;
+                }
+
+                if (data.password) {
+                    return Q.ninvoke(bcrypt, 'hash', data.password, gmeConfig.authentication.salts)
+                        .then(function (hash) {
+                            userData.passwordHash = hash;
+                            return collection.update({_id: userId}, userData, {upsert: true});
+                        });
+                } else {
+                    return collection.update({_id: userId}, userData, {upsert: true});
+                }
+            })
+            .then(function () {
+                return getUser(userId);
+            })
+            .nodeify(callback);
+    }
+
+    function listUsers(query, callback) {
+        // FIXME: query can paginate, or filter users
+        return collection.find({})
+            .then(function (users) {
+                return Q.ninvoke(users, 'toArray');
+            })
+            .then(function (userDataArray) {
+                var i;
+                for (i = 0; i < userDataArray.length; i += 1) {
+                    delete userDataArray[i].passwordHash;
+                }
+                return userDataArray;
             })
             .nodeify(callback);
     }
@@ -392,13 +479,24 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    // TODO: remove deprecated API
     function removeUserByUserId(userId, callback) {
-        return collection.remove({_id: userId})
-            .nodeify(callback);
+        logger.warn('removeUserByUserId is deprecated use deleteUser');
+        return deleteUser(userId, callback);
     }
 
     function addUser(userId, email, password, canCreate, options, callback) {
-        var data = {_id: userId, email: email, canCreate: canCreate, projects: {}, orgs: []};
+        // TODO: check user/orgId collision
+        // FIXME: this will not update the users correctly
+        var data = {
+            _id: userId,
+            email: email,
+            canCreate: canCreate,
+            projects: {},
+            orgs: [],
+            siteAdmin: options.siteAdmin
+        };
+
         return Q.ninvoke(bcrypt, 'hash', password, gmeConfig.authentication.salts)
             .then(function (hash) {
                 data.passwordHash = hash;
@@ -415,7 +513,23 @@ function GMEAuth(session, gmeConfig) {
         return Q.ninvoke(db, 'collectionNames').nodeify(callback);
     }
 
+    function addProject(orgOrUserId, projectName, info, callback) {
+        var data = {
+            owner: orgOrUserId,
+            name: projectName,
+            full_name: orgOrUserId + '/' + projectName,
+            info: info || {}
+        };
+        return projectCollection.update({_id: orgOrUserId + '.' + projectName}, data, {upsert: true})
+            .nodeify(callback);
+    }
+
+    function transferProject(orgOrUserId, projectName, newOrgOrUserId, callback) {
+        callback(new Error('Not implemented yet.'));
+    }
+
     function addOrganization(orgId, callback) {
+        // TODO: check user/orgId collision
         return organizationCollection.insert({_id: orgId, projects: {}})
             .nodeify(callback);
     }
@@ -436,6 +550,18 @@ function GMEAuth(session, gmeConfig) {
                     return user._id;
                 });
                 return org;
+            })
+            .nodeify(callback);
+    }
+
+    function listOrganizations(query, callback) {
+        return organizationCollection.find({})
+            .then(function (orgs) {
+                return Q.ninvoke(orgs, 'toArray');
+            })
+            .then(function (organizationArray) {
+                // FIXME: any data manipulations here??
+                return organizationArray;
             })
             .nodeify(callback);
     }
@@ -527,6 +653,7 @@ function GMEAuth(session, gmeConfig) {
 
     return {
         authenticate: authenticate,
+        authenticateUserById: authenticateUserById,
         authorize: authorizeBySession,
         deleteProject: deleteProject,
         getProjectAuthorizationBySession: getProjectAuthorizationBySession,
@@ -543,12 +670,21 @@ function GMEAuth(session, gmeConfig) {
         authorizeByUserId: authorizeByUserId,
         removeUserByUserId: removeUserByUserId,
         getAuthorizationInfoByUserId: getAuthorizationInfoByUserId,
-        addUser: addUser,
         unload: unload,
+        connect: connect,
         _getProjectNames: _getProjectNames,
+
+        // user managerment functions
+        addUser: addUser,
+        updateUser: updateUser,
+        deleteUser: deleteUser,
+        getUser: getUser,
+        listUsers: listUsers,
 
         addOrganization: addOrganization,
         getOrganization: getOrganization,
+        listOrganizations: listOrganizations,
+
         removeOrganizationByOrgId: removeOrganizationByOrgId,
         addUserToOrganization: addUserToOrganization,
         removeUserFromOrganization: removeUserFromOrganization,

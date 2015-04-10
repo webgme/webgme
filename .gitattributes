@@ -1,1 +1,4 @@
 dist/webgme.classes.build.js text eol=lf
+
+# api-mock does not like CR-s
+src/server/api/Readme.md text eol=lf

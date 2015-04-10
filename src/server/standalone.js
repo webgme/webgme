@@ -35,6 +35,7 @@ var Path = require('path'),
     BlobServer = require('./middleware/blob/BlobServer'),
     ExecutorServer = require('./middleware/executor/ExecutorServer'),
     RestServer = require('./middleware/rest/RestServer'),
+    api = require('./api'),
 
     Storage = require('./storage/serverstorage'),
     getClientConfig = require('../../config/getclientconfig'),
@@ -100,6 +101,8 @@ function StandAloneServer(gmeConfig) {
 
         sockets = [];
 
+    self.id = Math.random().toString(36).slice(2, 11);
+
     if (mainLogger) {
 
     } else {
@@ -108,10 +111,6 @@ function StandAloneServer(gmeConfig) {
 
     this.serverUrl = '';
     this.isRunning = false;
-
-    this.start = start;
-    this.stop = stop;
-
 
     servers.push(this);
 
@@ -143,9 +142,10 @@ function StandAloneServer(gmeConfig) {
     }
 
     //public functions
-    function start(callback) {
+    function start (callback) {
         var serverDeferred = Q.defer(),
-            storageDeferred = Q.defer();
+            storageDeferred = Q.defer(),
+            gmeAuthDeferred = Q.defer();
 
         if (typeof callback !== 'function') {
             callback = function () {
@@ -160,12 +160,14 @@ function StandAloneServer(gmeConfig) {
 
         sockets = {};
 
+
         if (gmeConfig.server.https.enable) {
             __httpServer = Https.createServer({
                 key: __secureSiteInfo.key,
                 cert: __secureSiteInfo.certificate
             }, __app).listen(gmeConfig.server.port, function (err) {
                 if (err) {
+                    logger.error('Failed to start server', {metadata: {port: gmeConfig.server.port, error: err}});
                     serverDeferred.reject(err);
                 } else {
                     serverDeferred.resolve();
@@ -174,13 +176,13 @@ function StandAloneServer(gmeConfig) {
         } else {
             __httpServer = Http.createServer(__app).listen(gmeConfig.server.port, function (err) {
                 if (err) {
+                    logger.error('Failed to start server', {metadata: {port: gmeConfig.server.port, error: err}});
                     serverDeferred.reject(err);
                 } else {
                     serverDeferred.resolve();
                 }
             });
         }
-
         __httpServer.on('connection', function (socket) {
             var socketId = socket.remoteAddress + ':' + socket.remotePort;
 
@@ -188,8 +190,10 @@ function StandAloneServer(gmeConfig) {
             logger.debug('socket connected (added to list) ' + socketId);
 
             socket.on('close', function () {
-                logger.debug('socket closed (removed from list) ' + socketId);
-                delete sockets[socketId];
+                if (sockets.hasOwnProperty(socketId)) {
+                    logger.debug('socket closed (removed from list) ' + socketId);
+                    delete sockets[socketId];
+                }
             });
         });
 
@@ -223,14 +227,24 @@ function StandAloneServer(gmeConfig) {
             }
         });
 
-        Q.all([serverDeferred.promise, storageDeferred.promise])
+        __gmeAuth.connect(function (err) {
+            if (err) {
+                logger.error(err);
+                gmeAuthDeferred.reject(err);
+            } else {
+                logger.debug('gmeAuth is ready');
+                gmeAuthDeferred.resolve();
+            }
+        });
+
+        Q.all([serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise, apiReady])
             .nodeify(function (err) {
                 self.isRunning = true;
                 callback(err);
             });
     }
 
-    function stop(callback) {
+    function stop (callback) {
         var key;
 
         if (self.isRunning === false) {
@@ -245,34 +259,44 @@ function StandAloneServer(gmeConfig) {
             // close storage first
             // FIXME: is this call synchronous?
 
-            __storage.close(function (err1) {
+            __storage.close(function (err) {
                 var numDestroyedSockets = 0;
                 //kill all remaining workers
-                __workerManager.stop();
-                // request server close - do not accept any new connections.
-                // first we have to request the close then we can destroy the sockets.
-                __httpServer.close(function (err2) {
-                    logger.info('http server closed');
-                    callback(err1 || err2 || null);
+                __workerManager.stop(function (err1) {
+
+                    __gmeAuth.unload(function (err2) {
+                        logger.debug('gmeAuth unloaded');
+                        // request server close - do not accept any new connections.
+                        // first we have to request the close then we can destroy the sockets.
+                        __httpServer.close(function (err3) {
+                            logger.info('http server closed');
+                            logger.debug('http server closed');
+                            callback(err || err1 || err2 || err3 || null);
+                        });
+
+                        // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
+                        for (key in sockets) {
+                            if (sockets.hasOwnProperty(key)) {
+                                sockets[key].destroy();
+                                delete sockets[key];
+                                logger.debug('destroyed open socket ' + key);
+                                numDestroyedSockets += 1;
+                            }
+                        }
+
+                        logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
+                    });
                 });
-
-                // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
-                for (key in sockets) {
-                    if (sockets.hasOwnProperty(key)) {
-                        sockets[key].destroy();
-                        logger.debug('destroyed open socket ' + key);
-                        numDestroyedSockets += 1;
-                    }
-                }
-
-                logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
             });
         } catch (e) {
             //ignore errors
             callback(e);
         }
-
     }
+
+    this.start = start;
+    this.stop = stop;
+
 
     //internal functions
     function globalAuthorization(sessionId, projectName, type, callback) {
@@ -341,6 +365,27 @@ function StandAloneServer(gmeConfig) {
     }
 
     function ensureAuthenticated(req, res, next) {
+        var authorization = req.get('Authorization'),
+            username,
+            password,
+            split;
+
+        if (authorization && authorization.indexOf('Basic ') === 0) {
+            logger.debug('Basic authentication request');
+            // FIXME: ':' should not be in username nor in password
+            split = new Buffer(authorization.substr('Basic '.length), 'base64').toString('utf8').split(':');
+            username = split[0];
+            password = split[1];
+            if (username && password) {
+                // no empty username no empty password
+                __gmeAuth.authenticateUserById(username, password, 'gme', '/', req, res, next);
+                return;
+            } else {
+                res.status(401);
+                return next(new Error('Basic authentication failed'));
+            }
+        }
+
         if (true === gmeConfig.authentication.enable) {
             if (req.isAuthenticated() || (req.session && true === req.session.authenticated)) {
                 return next();
@@ -355,10 +400,10 @@ function StandAloneServer(gmeConfig) {
                                 res.cookie('webgme', req.session.udmId);
                                 return next();
                             } else {
-                                res.sendStatus(400); //TODO find proper error code
+                                res.sendStatus(401); //TODO find proper error code
                             }
                         } else {
-                            res.sendStatus(400); //TODO find proper error code
+                            res.sendStatus(401); //TODO find proper error code
                         }
                     });
                 }
@@ -371,7 +416,7 @@ function StandAloneServer(gmeConfig) {
                             res.cookie('webgme', req.session.udmId);
                             return next();
                         } else {
-                            res.sendStatus(400); //no use for redirecting in this case
+                            res.sendStatus(401); //no use for redirecting in this case
                         }
                     });
                 } else if (gmeConfig.authentication.allowGuests) {
@@ -380,9 +425,14 @@ function StandAloneServer(gmeConfig) {
                     req.session.userType = 'GME';
                     res.cookie('webgme', req.session.udmId);
                     return next();
+                } else if (res.getHeader('X-WebGME-Media-Type')) {
+                    // do not redirect with direct api access
+                    res.status(401);
+                    return next(new Error());
                 } else {
                     res.redirect('/login' + getRedirectUrlParameter(req));
                 }
+
             }
         } else {
             return next();
@@ -496,6 +546,8 @@ function StandAloneServer(gmeConfig) {
         __storage = null,
         __storageOptions = {},
         __gmeAuth = null,
+        gmeAuthDeferred = Q.defer(),
+        apiReady,
         __secureSiteInfo = {},
         __app = null,
         __sessionStore,
@@ -535,6 +587,7 @@ function StandAloneServer(gmeConfig) {
 
     logger.debug("initializing authentication modules");
     //TODO: do we need to create this even though authentication is disabled?
+    // FIXME: we need to connect with gmeAUTH again! start/stop/start/stop
     __gmeAuth = new GMEAUTH(__sessionStore, gmeConfig);
 
     logger.debug("initializing passport module for user management");
@@ -591,10 +644,10 @@ function StandAloneServer(gmeConfig) {
 
     __app.use(compression());
     __app.use(cookieParser());
+    __app.use(bodyParser.json());
     __app.use(bodyParser.urlencoded({
         extended: true
     }));
-    __app.use(bodyParser.json());
     __app.use(methodOverride());
     __app.use(multipart({defer: true})); // required to upload files. (body parser should not be used!)
     __app.use(session({
@@ -615,6 +668,8 @@ function StandAloneServer(gmeConfig) {
 
     setupExternalRestModules();
 
+    // Basic authentication
+
     logger.debug("creating login routing rules for the static server");
     __app.get('/', ensureAuthenticated, function (req, res) {
         expressFileSending(res, __clientBaseDir + '/index.html');
@@ -625,6 +680,7 @@ function StandAloneServer(gmeConfig) {
         req.logout();
         req.session.authenticated = false;
         req.session.userType = 'loggedout';
+        delete req.session.udmId;
         res.redirect(__logoutUrl);
     });
     __app.get('/login', function (req, res) {
@@ -822,6 +878,11 @@ function StandAloneServer(gmeConfig) {
     logger.debug('creating REST related routing rules');
     RestServer.createExpressRest(__app, '/rest', middlewareOpts);
 
+    logger.debug('creating API related routing rules');
+
+    apiReady = api.createAPI(__app, '/api', middlewareOpts);
+
+
     logger.debug("creating server-worker related routing rules");
     __app.get('/worker/simpleResult/*', function (req, res) {
         var urlArray = req.url.split('/');
@@ -892,10 +953,25 @@ function StandAloneServer(gmeConfig) {
     });
 
 
-    logger.debug("creating all other request rule - error 404 -");
-    __app.get('*', function (req, res) {
+    // catches all next(new Error()) from previous rules, you can set res.status() before you call next(new Error())
+    __app.use(function (err, req, res, next) {
+        if (err) {
+            if (res.statusCode === 200) {
+                res.status(err.status || 500);
+            }
+            res.sendStatus(res.statusCode);
+            //res.send(err.stack ? err.stack : err); // FIXME: in dev mode
+        } else {
+            return next();
+        }
+    });
+
+    // everything else is 404
+    logger.debug('creating all other request rule - error 404 -');
+    __app.use('*', function (req, res) {
         res.sendStatus(404);
     });
+
 
     if (gmeConfig.debug === true) {
         logger.debug('gmeConfig of webgme server', {metadata: gmeConfig});

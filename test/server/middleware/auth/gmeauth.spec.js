@@ -21,7 +21,16 @@ describe('GME authentication', function () {
         db;
 
     before(function (done) {
+        var gmeauthDeferred = Q.defer();
+
         auth = new GMEAuth(null, gmeConfig);
+        auth.connect(function (err) {
+            if (err) {
+                gmeauthDeferred.reject(err);
+            } else {
+                gmeauthDeferred.resolve(auth);
+            }
+        });
 
         dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
             .then(function (db_) {
@@ -74,7 +83,9 @@ describe('GME authentication', function () {
                     write: false,
                     delete: false
                 });
-            })
+            });
+
+        Q.all([dbConn, gmeauthDeferred.promise])
             .nodeify(done);
     });
 

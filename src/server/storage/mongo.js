@@ -30,17 +30,23 @@ function Database(options) {
         logger = options.logger.fork('mongo');
 
     function openDatabase(callback) {
-        //ASSERT(mongo === null && typeof callback === 'function');
+        ASSERT(typeof callback === 'function');
 
-        MONGODB.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
-            if (!err && db) {
-                mongo = db;
-                callback(null);
-            } else {
-                mongo = null;
-                callback(err);
-            }
-        });
+        if (mongo === null) {
+            // connect to mongo
+            MONGODB.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
+                if (!err && db) {
+                    mongo = db;
+                    callback(null);
+                } else {
+                    mongo = null;
+                    callback(err);
+                }
+            });
+        } else {
+            // we are already connected
+            callback(null);
+        }
     }
 
     function closeDatabase(callback) {

@@ -192,6 +192,7 @@ describe('standalone server', function () {
                 var dbConn,
                     gmeauthDeferred,
                     userReady,
+                    auth,
                     serverReady = Q.defer(),
                     gmeConfig = testFixture.getGmeConfig();
 
@@ -238,7 +239,16 @@ describe('standalone server', function () {
                     });
 
                 gmeauthDeferred = Q.defer();
-                gmeauthDeferred.resolve(gmeauth(null /* session */, gmeConfig));
+                auth = gmeauth(null /* session */, gmeConfig);
+                auth.connect(function (err) {
+                    if (err) {
+                        logger.error(err);
+                        gmeauthDeferred.reject(err);
+                    } else {
+                        logger.debug('gmeAuth is ready');
+                        gmeauthDeferred.resolve(auth);
+                    }
+                });
 
                 userReady = gmeauthDeferred.promise.then(function (gmeauth_) {
                     gmeauth = gmeauth_;
@@ -383,6 +393,7 @@ describe('standalone server', function () {
             // we have to set the config here
             var dbConn,
                 gmeauthDeferred,
+                auth,
                 userReady,
                 serverReady = Q.defer(),
                 gmeConfig = testFixture.getGmeConfig();
@@ -425,7 +436,16 @@ describe('standalone server', function () {
                 });
 
             gmeauthDeferred = Q.defer();
-            gmeauthDeferred.resolve(gmeauth(null /* session */, gmeConfig));
+            auth = gmeauth(null /* session */, gmeConfig);
+            auth.connect(function (err) {
+                if (err) {
+                    logger.error(err);
+                    gmeauthDeferred.reject(err);
+                } else {
+                    logger.debug('gmeAuth is ready');
+                    gmeauthDeferred.resolve(auth);
+                }
+            });
 
             userReady = gmeauthDeferred.promise.then(function (gmeauth_) {
                 gmeauth = gmeauth_;
