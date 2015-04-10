@@ -147,9 +147,9 @@ function GMEAuth(session, gmeConfig, callback) {
             .nodeify(callback);
     }
 
-    function authenticateUserById(userId, password, type, req, res, next) {
-        var query = {},
-            returnUrl = req.__gmeAuthFailUrl__ || '/';
+    function authenticateUserById(userId, password, type, returnUrl, req, res, next) {
+        var query = {};
+        returnUrl = returnUrl || '/';
         if (userId.indexOf('@') > 0) {
             query.email = userId;
         } else {
@@ -214,7 +214,7 @@ function GMEAuth(session, gmeConfig, callback) {
 
         type = gmail ? 'gmail' : 'gme';
 
-        authenticateUserById(userId, password, type, req, res, next);
+        authenticateUserById(userId, password, type, returnUrl, req, res, next);
     }
 
     // type: 'create' 'delete'
