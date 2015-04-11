@@ -9,6 +9,7 @@ var config = require('./config.default');
 config.server.port = 9001;
 
 config.mongo.uri = 'mongodb://127.0.0.1:27017/webgme_tests';
+config.mongo.options.server.poolSize = 5; // this is the default
 
 config.blob.fsDir = './test-tmp/blob-storage';
 
