@@ -3,7 +3,7 @@
 
 'use strict';
 
-//gracefull edning of the child process
+// graceful ending of the child process
 process.on('SIGINT', function () {
     //FIXME: AUTH.unload
     if (logger) {
@@ -72,11 +72,13 @@ var initialize = function (parameters) {
         gmeConfig = parameters.gmeConfig;
         WEBGME.addToRequireJsPaths(gmeConfig);
         logger = Logger.create('gme:server:worker:simpleworker:pid_' + process.pid, gmeConfig.server.log, true);
+        logger.debug('initializing');
 
         storage = new Storage({
             logger: logger.fork('storage'),
             globConf: gmeConfig
         });
+        logger.debug('created storage');
         storage.openDatabase(function (err) {
             if (err) {
                 initialized = false;
@@ -86,7 +88,9 @@ var initialize = function (parameters) {
                     info: 'worker initialization failed, try again'
                 });
             } else {
+                logger.debug('opened database for storage');
                 if (gmeConfig.authentication.enable === true) {
+                    logger.debug('adding GME auth');
                     AUTH = GMEAUTH({}, gmeConfig); //FIXME: Should session really be empty object??
                     AUTH.connect(function (err) {
                         if (err) {
@@ -781,6 +785,7 @@ var initConnectedWorker = function (name, webGMESessionId, projectName, branchNa
                 if (err) {
                     return callback(err);
                 }
+                logger.debug('starting addon', {metadata: name});
                 _addOn.start({
                     projectName: projectName,
                     branchName: branchName,
@@ -803,6 +808,7 @@ var connectedWorkerQuery = function (parameters, callback) {
 
 var connectedworkerStop = function (callback) {
     if (_addOn) {
+        logger.debug('stopping addon', {metadata: _addOn.getName()});
         _addOn.stop(function (err) {
             if (err) {
                 return callback(err);
@@ -816,9 +822,19 @@ var connectedworkerStop = function (callback) {
 };
 
 var safeSend = function (msg) {
+    if (initialized) {
+        logger.debug('sending message', {metadata: msg});
+    } else {
+        console.log('sending message', {metadata: msg});
+    }
     try {
         process.send(msg);
     } catch (e) {
+        if (initialized) {
+            logger.error('sending message failed', {metadata: msg, e: e});
+        } else {
+            console.error('sending message failed', {metadata: msg, e: e});
+        }
         //TODO check if we should separate some case
         process.exit(0);
     }

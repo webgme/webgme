@@ -33,6 +33,7 @@ function Database(options) {
         ASSERT(typeof callback === 'function');
 
         if (mongo === null) {
+            logger.debug('connecting to mongo');
             // connect to mongo
             MONGODB.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
                 if (!err && db) {
@@ -44,16 +45,21 @@ function Database(options) {
                 }
             });
         } else {
+            logger.debug('reusing mongo connection');
             // we are already connected
             callback(null);
         }
     }
 
     function closeDatabase(callback) {
+        logger.debug('closeDatabase');
         if (mongo !== null) {
+            logger.debug('closing mongo calling fsyncDatabase');
             fsyncDatabase(function () {
+                logger.debug('closing mongo calling close');
                 mongo.close(function () {
                     mongo = null;
+                    logger.debug('closed');
                     if (typeof callback === 'function') {
                         callback(null);
                     }
@@ -67,15 +73,25 @@ function Database(options) {
     function fsyncDatabase(callback) {
         ASSERT(typeof callback === 'function');
 
+        logger.debug('fsyncDatabase');
+
         var error = null;
         var synced = 0;
 
-        function fsyncConnection(conn) {
+        function fsyncConnection(conn, i) {
+            logger.debug('fsyncConnection ' + conn.id);
+
             mongo.command({getLastError: 1, fsync: true}, {connection: conn},
                 function (err /*, result*/) {
                     //TODO we ignore the result right now
                     error = error || err;
+                    logger.debug('fsyncConnection done for ' + i);
+
                     if (++synced === conns.length) {
+                        logger.debug('fsyncConnection done');
+                        if (error) {
+                            logger.error(error);
+                        }
                         callback(error);
                     }
                 });
@@ -83,8 +99,9 @@ function Database(options) {
 
         var conns = mongo.serverConfig.allRawConnections();
         if (conns instanceof Array && conns.length >= 1) {
+            logger.debug('fsyncConnection for connections: ' + conns.length);
             for (var i = 0; i < conns.length; ++i) {
-                fsyncConnection(conns[i]);
+                fsyncConnection(conns[i], i);
             }
         } else {
             callback('not connected');

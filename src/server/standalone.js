@@ -258,14 +258,14 @@ function StandAloneServer(gmeConfig) {
         self.isRunning = false;
 
         try {
-            // close storage first
             // FIXME: is this call synchronous?
 
-            __storage.close(function (err) {
+            //kill all remaining workers
+            __workerManager.stop(function (err) {
                 var numDestroyedSockets = 0;
-                //kill all remaining workers
-                __workerManager.stop(function (err1) {
 
+                // close storage
+                __storage.close(function (err1) {
                     __gmeAuth.unload(function (err2) {
                         logger.debug('gmeAuth unloaded');
                         // request server close - do not accept any new connections.
