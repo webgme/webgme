@@ -587,12 +587,12 @@ var getSeedInfo = function (userId, callback) {
         };
 
     if (AUTH) {
-        AUTH.getUserAuthInfo(userId, function (err, userData) {
+        AUTH.getAllUserAuthInfo(userId, function (err, userData) {
             if (err) {
                 return callback(err);
             }
 
-            if (!userData.create) {
+            if (!userData.canCreate) {
                 callback(null, result);
             }
 
@@ -652,14 +652,6 @@ var seedProject = function (parameters, callback) {
                 return fail('no database connection');
             }
 
-            if (parameters.type === 'file') {
-                seed = getSeedFromFile(parameters.seedName);
-                if (seed === null) {
-                    return fail('unknown file seed');
-                }
-                return createProjectfromSeed();
-            }
-
             //db
             storage.getProjectNames(function (err, names) {
                 if (err) {
@@ -677,7 +669,7 @@ var seedProject = function (parameters, callback) {
                             return fail(err);
                         }
 
-                        if (authInfo.create !== true) {
+                        if (authInfo.canCreate !== true) {
                             return fail('user cannot create project');
                         }
 
@@ -845,97 +837,134 @@ var safeSend = function (msg) {
 process.on('message', function (parameters) {
     parameters = parameters || {};
     parameters.command = parameters.command || CONSTANT.workerCommands.getResult; //default command
-
-    switch (parameters.command) {
-        case CONSTANT.workerCommands.initialize:
-            initialize(parameters);
-            break;
-        case CONSTANT.workerCommands.dumpMoreNodes:
-            if (typeof parameters.name === 'string' && typeof parameters.hash === 'string' && parameters.nodes && parameters.nodes.length) {
-                resultId = GUID();
-                safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-                dumpMoreNodes(parameters.name, parameters.hash, parameters.nodes, function (err, r) {
-                    if (resultRequested === true) {
-                        initResult();
-                        safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
-                    } else {
-                        resultReady = true;
-                        error = err;
-                        result = r;
-                    }
-                });
-            } else {
-                initResult();
-                safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
-            }
-            break;
-        case CONSTANT.workerCommands.generateJsonURL:
-            resultId = GUID();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            if (resultRequested === true) {
-                initResult();
-                safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: parameters.object});
-            } else {
-                resultReady = true;
-                error = null;
-                result = parameters.object;
-            }
-            break;
-        case CONSTANT.workerCommands.getResult:
-            if (resultReady === true) {
-                var e = error,
-                    r = result;
-
-                initResult();
-                safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: e, result: r});
-            } else {
-                resultRequested = true;
-            }
-            break;
-        case CONSTANT.workerCommands.executePlugin:
-            if (gmeConfig.plugin.allowServerExecution) {
-                if (typeof parameters.name === 'string' && typeof parameters.context === 'object') {
-                    executePlugin(parameters.userId,
-                        parameters.name,
-                        parameters.webGMESessionId,
-                        parameters.context,
-                        function (err, result) {
-                            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: result});
-                        });
+    function readyToHandleMessage() {
+        switch (parameters.command) {
+            case CONSTANT.workerCommands.initialize:
+                initialize(parameters);
+                break;
+            case CONSTANT.workerCommands.dumpMoreNodes:
+                if (typeof parameters.name === 'string' && typeof parameters.hash === 'string' && parameters.nodes && parameters.nodes.length) {
+                    resultId = GUID();
+                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+                    dumpMoreNodes(parameters.name, parameters.hash, parameters.nodes, function (err, r) {
+                        if (resultRequested === true) {
+                            initResult();
+                            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
+                        } else {
+                            resultReady = true;
+                            error = err;
+                            result = r;
+                        }
+                    });
                 } else {
                     initResult();
+                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
+                }
+                break;
+            case CONSTANT.workerCommands.generateJsonURL:
+                resultId = GUID();
+                safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+                if (resultRequested === true) {
+                    initResult();
+                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: parameters.object});
+                } else {
+                    resultReady = true;
+                    error = null;
+                    result = parameters.object;
+                }
+                break;
+            case CONSTANT.workerCommands.getResult:
+                if (resultReady === true) {
+                    var e = error,
+                        r = result;
+
+                    initResult();
+                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: e, result: r});
+                } else {
+                    resultRequested = true;
+                }
+                break;
+            case CONSTANT.workerCommands.executePlugin:
+                if (gmeConfig.plugin.allowServerExecution) {
+                    if (typeof parameters.name === 'string' && typeof parameters.context === 'object') {
+                        executePlugin(parameters.userId,
+                            parameters.name,
+                            parameters.webGMESessionId,
+                            parameters.context,
+                            function (err, result) {
+                                safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: result});
+                            });
+                    } else {
+                        initResult();
+                        safeSend({
+                            pid: process.pid,
+                            type: CONSTANT.msgTypes.result,
+                            error: 'invalid parameters',
+                            result: {}
+                        });
+                    }
+                } else {
+                    initResult();
+                    var pluginResult = new PluginResult(),
+                        pluginMessage = new PluginMessage();
+                    pluginMessage.severity = 'error';
+                    pluginMessage.message = 'plugin execution on server side is disabled';
+                    pluginResult.setSuccess(false);
+                    pluginResult.pluginName = parameters.name;
+                    pluginResult.addMessage(pluginMessage);
+                    pluginResult.setStartTime((new Date()).toISOString());
+                    pluginResult.setFinishTime((new Date()).toISOString());
+                    pluginResult.setError(pluginMessage.message);
                     safeSend({
                         pid: process.pid,
                         type: CONSTANT.msgTypes.result,
-                        error: 'invalid parameters',
-                        result: {}
+                        error: null,
+                        result: pluginResult.serialize()
                     });
                 }
-            } else {
-                initResult();
-                var pluginResult = new PluginResult(),
-                    pluginMessage = new PluginMessage();
-                pluginMessage.severity = 'error';
-                pluginMessage.message = 'plugin execution on server side is disabled';
-                pluginResult.setSuccess(false);
-                pluginResult.pluginName = parameters.name;
-                pluginResult.addMessage(pluginMessage);
-                pluginResult.setStartTime((new Date()).toISOString());
-                pluginResult.setFinishTime((new Date()).toISOString());
-                pluginResult.setError(pluginMessage.message);
-                safeSend({
-                    pid: process.pid,
-                    type: CONSTANT.msgTypes.result,
-                    error: null,
-                    result: pluginResult.serialize()
-                });
-            }
-            break;
-        case CONSTANT.workerCommands.exportLibrary:
-            if (typeof parameters.name === 'string' && typeof parameters.hash === 'string' && typeof parameters.path === 'string') {
+                break;
+            case CONSTANT.workerCommands.exportLibrary:
+                if (typeof parameters.name === 'string' && typeof parameters.hash === 'string' && typeof parameters.path === 'string') {
+                    resultId = GUID();
+                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+                    exportLibrary(parameters.name, parameters.hash, parameters.path, function (err, r) {
+                        if (resultRequested === true) {
+                            initResult();
+                            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
+                        } else {
+                            resultReady = true;
+                            error = err;
+                            result = r;
+                        }
+                    });
+                } else {
+                    initResult();
+                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
+                }
+                break;
+            case CONSTANT.workerCommands.createProjectFromFile:
+                if (typeof parameters.name === 'string' && typeof parameters.json === 'object') {
+                    resultId = GUID();
+                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+                    createProject(parameters.webGMESessionId, parameters.name, parameters.json, function (err) {
+                        if (resultRequested === true) {
+                            initResult();
+                            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
+                        } else {
+                            resultReady = true;
+                            error = err;
+                            result = null;
+                        }
+                    });
+                } else {
+                    initResult();
+                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
+                }
+                break;
+            case CONSTANT.workerCommands.getAllProjectsInfo:
                 resultId = GUID();
                 safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-                exportLibrary(parameters.name, parameters.hash, parameters.path, function (err, r) {
+                getAllProjectsInfo(parameters.userId, function (err, r) {
                     if (resultRequested === true) {
                         initResult();
                         safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
@@ -945,183 +974,159 @@ process.on('message', function (parameters) {
                         result = r;
                     }
                 });
-            } else {
-                initResult();
-                safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
-            }
-            break;
-        case CONSTANT.workerCommands.createProjectFromFile:
-            if (typeof parameters.name === 'string' && typeof parameters.json === 'object') {
+                break;
+            case CONSTANT.workerCommands.setProjectInfo:
                 resultId = GUID();
                 safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-                createProject(parameters.webGMESessionId, parameters.name, parameters.json, function (err) {
+                setProjectInfo(parameters.webGMESessionId, parameters.projectId, parameters.info || {}, function (err) {
                     if (resultRequested === true) {
                         initResult();
                         safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
                     } else {
                         resultReady = true;
                         error = err;
-                        result = null;
+                        result = r;
                     }
                 });
-            } else {
-                initResult();
-                safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
-            }
-            break;
-        case CONSTANT.workerCommands.getAllProjectsInfo:
-            resultId = GUID();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            getAllProjectsInfo(parameters.userId, function (err, r) {
-                if (resultRequested === true) {
-                    initResult();
-                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
-                } else {
-                    resultReady = true;
-                    error = err;
-                    result = r;
-                }
-            });
-            break;
-        case CONSTANT.workerCommands.setProjectInfo:
-            resultId = GUID();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            setProjectInfo(parameters.webGMESessionId, parameters.projectId, parameters.info || {}, function (err) {
-                if (resultRequested === true) {
-                    initResult();
-                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
-                } else {
-                    resultReady = true;
-                    error = err;
-                    result = r;
-                }
-            });
-            break;
-        case CONSTANT.workerCommands.getProjectInfo:
-            resultId = GUID();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            getProjectInfo(parameters.webGMESessionId, parameters.projectId, function (err, res) {
-                if (resultRequested === true) {
-                    initResult();
-                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: res});
-                } else {
-                    resultReady = true;
-                    error = err;
-                    result = res;
-                }
-            });
-            break;
-        case CONSTANT.workerCommands.getAllInfoTags:
-            resultId = GUID();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            getAllInfoTags(parameters.webGMESessionId, function (err, res) {
-                if (resultRequested === true) {
-                    initResult();
-                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: res});
-                } else {
-                    resultReady = true;
-                    error = err;
-                    result = res;
-                }
-            });
-            break;
-        case CONSTANT.workerCommands.setBranch:
-            resultId = GUID();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            setBranch(parameters.webGMESessionId, parameters.project, parameters.branch, parameters.old, parameters.new, function (err, r) {
-                if (resultRequested === true) {
-                    initResult();
-                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
-                } else {
-                    resultReady = true;
-                    error = err;
-                    result = r;
-                }
-            });
-            break;
-        case CONSTANT.workerCommands.getSeedInfo:
-            resultId = GUID();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            getSeedInfo(parameters.userId, function (err, r) {
-                if (resultRequested === true) {
-                    initResult();
-                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
-                } else {
-                    resultReady = true;
-                    error = err;
-                    result = r;
-                }
-            });
-            break;
-        case CONSTANT.workerCommands.seedProject:
-            resultId = GUID();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            seedProject(parameters, function (err, r) {
-                if (resultRequested === true) {
-                    initResult();
-                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
-                } else {
-                    resultReady = true;
-                    error = err;
-                    result = r;
-                }
-            });
-            break;
-        case CONSTANT.workerCommands.connectedWorkerStart:
-            if (gmeConfig.addOn.enable === true) {
-                initConnectedWorker(parameters.workerName, parameters.webGMESessionId, parameters.project, parameters.branch, function (err) {
-                    if (err) {
-                        safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: err, resid: null});
+                break;
+            case CONSTANT.workerCommands.getProjectInfo:
+                resultId = GUID();
+                safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+                getProjectInfo(parameters.webGMESessionId, parameters.projectId, function (err, res) {
+                    if (resultRequested === true) {
+                        initResult();
+                        safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: res});
                     } else {
-                        safeSend({
-                            pid: process.pid,
-                            type: CONSTANT.msgTypes.request,
-                            error: null,
-                            resid: process.pid
-                        });
+                        resultReady = true;
+                        error = err;
+                        result = res;
                     }
                 });
-            } else {
-                safeSend({
-                    pid: process.pid,
-                    type: CONSTANT.msgTypes.request,
-                    error: "addOn functionality not enabled",
-                    resid: null
-                });
-            }
-            break;
-        case CONSTANT.workerCommands.connectedWorkerQuery:
-            if (gmeConfig.addOn.enable === true) {
-                connectedWorkerQuery(parameters, function (err, result) {
-                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.query, error: err, result: result});
+                break;
+            case CONSTANT.workerCommands.getAllInfoTags:
+                resultId = GUID();
+                safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+                getAllInfoTags(parameters.webGMESessionId, function (err, res) {
+                    if (resultRequested === true) {
+                        initResult();
+                        safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: res});
+                    } else {
+                        resultReady = true;
+                        error = err;
+                        result = res;
+                    }
                 });
                 break;
-            } else {
-                safeSend({
-                    pid: process.pid,
-                    type: CONSTANT.msgTypes.request,
-                    error: "addOn functionality not enabled",
-                    resid: null
-                });
-            }
-            break;
-        case CONSTANT.workerCommands.connectedWorkerStop:
-            if (gmeConfig.addOn.enable === true) {
-                connectedworkerStop(function (err) {
-                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
+            case CONSTANT.workerCommands.setBranch:
+                resultId = GUID();
+                safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+                setBranch(parameters.webGMESessionId, parameters.project, parameters.branch, parameters.old, parameters.new, function (err, r) {
+                    if (resultRequested === true) {
+                        initResult();
+                        safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
+                    } else {
+                        resultReady = true;
+                        error = err;
+                        result = r;
+                    }
                 });
                 break;
-            } else {
-                safeSend({
-                    pid: process.pid,
-                    type: CONSTANT.msgTypes.request,
-                    error: "addOn functionality not enabled",
-                    resid: null
+            case CONSTANT.workerCommands.getSeedInfo:
+                resultId = GUID();
+                safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+                getSeedInfo(parameters.userId, function (err, r) {
+                    if (resultRequested === true) {
+                        initResult();
+                        safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
+                    } else {
+                        resultReady = true;
+                        error = err;
+                        result = r;
+                    }
                 });
+                break;
+            case CONSTANT.workerCommands.seedProject:
+                resultId = GUID();
+                safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+                seedProject(parameters, function (err, r) {
+                    if (resultRequested === true) {
+                        initResult();
+                        safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
+                    } else {
+                        resultReady = true;
+                        error = err;
+                        result = r;
+                    }
+                });
+                break;
+            case CONSTANT.workerCommands.connectedWorkerStart:
+                if (gmeConfig.addOn.enable === true) {
+                    initConnectedWorker(parameters.workerName, parameters.webGMESessionId, parameters.project, parameters.branch, function (err) {
+                        if (err) {
+                            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: err, resid: null});
+                        } else {
+                            safeSend({
+                                pid: process.pid,
+                                type: CONSTANT.msgTypes.request,
+                                error: null,
+                                resid: process.pid
+                            });
+                        }
+                    });
+                } else {
+                    safeSend({
+                        pid: process.pid,
+                        type: CONSTANT.msgTypes.request,
+                        error: "addOn functionality not enabled",
+                        resid: null
+                    });
+                }
+                break;
+            case CONSTANT.workerCommands.connectedWorkerQuery:
+                if (gmeConfig.addOn.enable === true) {
+                    connectedWorkerQuery(parameters, function (err, result) {
+                        safeSend({pid: process.pid, type: CONSTANT.msgTypes.query, error: err, result: result});
+                    });
+                    break;
+                } else {
+                    safeSend({
+                        pid: process.pid,
+                        type: CONSTANT.msgTypes.request,
+                        error: "addOn functionality not enabled",
+                        resid: null
+                    });
+                }
+                break;
+            case CONSTANT.workerCommands.connectedWorkerStop:
+                if (gmeConfig.addOn.enable === true) {
+                    connectedworkerStop(function (err) {
+                        safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
+                    });
+                    break;
+                } else {
+                    safeSend({
+                        pid: process.pid,
+                        type: CONSTANT.msgTypes.request,
+                        error: "addOn functionality not enabled",
+                        resid: null
+                    });
+                }
+                break;
+            default:
+                safeSend({error: 'unknown command'});
+        }
+    }
+
+    if (initialized) {
+        storage.openDatabase(function (err) {
+            if (!err) {
+                readyToHandleMessage();
+            } else {
+                safeSend({error: 'unable to initiate database connection'});
             }
-            break;
-        default:
-            safeSend({error: 'unknown command'});
+        });
+    } else {
+        readyToHandleMessage();
     }
 });
 
