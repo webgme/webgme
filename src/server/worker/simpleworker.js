@@ -587,12 +587,12 @@ var getSeedInfo = function (userId, callback) {
         };
 
     if (AUTH) {
-        AUTH.getUserAuthInfo(userId, function (err, userData) {
+        AUTH.getAllUserAuthInfo(userId, function (err, userData) {
             if (err) {
                 return callback(err);
             }
 
-            if (!userData.create) {
+            if (!userData.canCreate) {
                 callback(null, result);
             }
 
@@ -652,14 +652,6 @@ var seedProject = function (parameters, callback) {
                 return fail('no database connection');
             }
 
-            if (parameters.type === 'file') {
-                seed = getSeedFromFile(parameters.seedName);
-                if (seed === null) {
-                    return fail('unknown file seed');
-                }
-                return createProjectfromSeed();
-            }
-
             //db
             storage.getProjectNames(function (err, names) {
                 if (err) {
@@ -677,7 +669,7 @@ var seedProject = function (parameters, callback) {
                             return fail(err);
                         }
 
-                        if (authInfo.create !== true) {
+                        if (authInfo.canCreate !== true) {
                             return fail('user cannot create project');
                         }
 

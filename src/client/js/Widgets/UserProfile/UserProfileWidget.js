@@ -10,7 +10,7 @@ define(['js/logger',
     "use strict";
 
     var UserProfileWidget,
-        USER_PROFILE_WIDGET_TEMPLATE_LOGGEDIN = '<i class="glyphicon glyphicon-user icon-white" title="Logged in as"></i> <a href="#" class="navbar-link">__USERNAME__</a> <a href="/logout" class="navbar-link"><i class="glyphicon glyphicon-eject icon-white" title="Log out"></i></a>',
+        USER_PROFILE_WIDGET_TEMPLATE_LOGGEDIN = '<i class="glyphicon glyphicon-user icon-white" title="Logged in as"></i> <a href="#" class="navbar-link">__USERNAME__</a> <a href="/logout" target="_top" class="navbar-link"><i class="glyphicon glyphicon-eject icon-white" title="Log out"></i></a>',
         USER_PROFILE_WIDGET_TEMPLATE_NOTLOGGEDIN = '<i class="glyphicon glyphicon-user" title="Not logged in"></i>';
 
     UserProfileWidget = function (containerEl, client) {
