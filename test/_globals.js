@@ -36,8 +36,8 @@ var WebGME = require('../webgme'),
                 colorize: true,
                 timestamp: true,
                 prettyPrint: true,
-                handleExceptions: true, // ignored by default when you create the logger, see the logger.create function
-                exitOnError: false,
+                //handleExceptions: true, // ignored by default when you create the logger, see the logger.create function
+                //exitOnError: false,
                 depth: 2,
                 debugStdout: true
             }
