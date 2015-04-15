@@ -56,9 +56,10 @@ define([
     };
 
     ProjectNavigatorController.prototype.update = function () {
-        if (!this.$scope.$$phase) {
-            this.$scope.$apply();
-        }
+        // force ui update
+        this.$timeout(function() {
+            
+        });
     };
 
     ProjectNavigatorController.prototype.initialize = function () {
@@ -484,6 +485,11 @@ define([
             undoLastCommitItem,
             redoLastUndoItem,
             mergeBranchItem;
+
+        if (self.projects.hasOwnProperty(projectId) === false) {
+            self.logger.warn('project is not in the list yet: ', projectId);
+            return;
+        }
 
         if (self.projects[projectId].disabled) {
             // do not show any branches if the project is disabled
@@ -917,11 +923,19 @@ define([
     };
 
     ProjectNavigatorController.prototype.updateBranch = function (projectId, branchId, branchInfo) {
-        this.projects[projectId].branches[branchId].properties = {
-            hashTag: branchInfo || '#1234567890',
-            lastCommiter: 'petike',
-            lastCommitTime: new Date()
-        };
+        if (this.projects.hasOwnProperty(projectId) &&
+            this.projects[projectId].branches.hasOwnProperty(branchId)) {
+
+            this.projects[projectId].branches[branchId].properties = {
+                hashTag: branchInfo || '#1234567890',
+                lastCommiter: 'petike',
+                lastCommitTime: new Date()
+            };
+
+            this.update();
+        } else {
+            this.logger.warn('project or branch is not in the list yet: ', projectId, branchId, branchInfo);
+        }
     };
 
     ProjectNavigatorController.prototype.mergeBranch = function (projectId, whatBranchId, whereBranchId) {
