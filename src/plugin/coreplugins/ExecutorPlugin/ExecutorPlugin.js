@@ -12,7 +12,7 @@
 
 define(['plugin/PluginConfig',
         'plugin/PluginBase',
-        'middleware/executor/ExecutorClient',
+        'executor/ExecutorClient',
         'common/util/ejs',
         'plugin/ExecutorPlugin/ExecutorPlugin/Templates/Templates'],
     function (PluginConfig, PluginBase, ExecutorClient, ejs, TEMPLATES) {

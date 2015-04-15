@@ -100,7 +100,7 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
         contentLength = data.hasOwnProperty('length') ? data.length : data.byteLength;
         req = superagent.post(this.getCreateURL(name));
 
-        if (this.isNodeOrNodeWebKit) {
+        if (typeof window === 'undefined') {
             req.agent(this.keepaliveAgent);
         }
 
@@ -141,7 +141,7 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
 
-        if (this.isNodeOrNodeWebKit) {
+        if (typeof window === 'undefined') {
             req.agent(this.keepaliveAgent);
         }
 
@@ -211,7 +211,7 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
 
-        if (this.isNodeOrNodeWebKit) {
+        if (typeof window === 'undefined') {
             req.agent(this.keepaliveAgent);
         }
 
@@ -280,7 +280,7 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
 
-        if (this.isNodeOrNodeWebKit) {
+        if (typeof window === 'undefined') {
             req.agent(this.keepaliveAgent);
         }
 

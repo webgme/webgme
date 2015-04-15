@@ -9,7 +9,7 @@
     "requirejs": "^2.1.15",
     "rimraf": "^2.2.8",
     "ssl-root-cas": "^1.1.7",
-    "superagent": "^0.21.0",
+    "superagent": "=1.1.0",
     "unzip": ">=0.1.9"
   }
 }

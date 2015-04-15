@@ -6,9 +6,9 @@ if (typeof define !== 'undefined') {
     define('node_worker', [
         'common/eventDispatcher',
         'blob/BlobClient',
-        './ExecutorWorker',
-        'common/executor/JobInfo',
-        './ExecutorWorkerController',
+        'executor/ExecutorWorker',
+        'executor/JobInfo',
+        'executor/ExecutorWorkerController',
         'url'
     ], function (eventDispatcher, BlobClient, ExecutorWorker, JobInfo, ExecutorWorkerController, url) {
         return function (webGMEUrl, tempPath, parameters) {

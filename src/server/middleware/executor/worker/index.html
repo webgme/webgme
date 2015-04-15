@@ -73,21 +73,20 @@
                             "clientUtil": 'js/util',
                             "loaderCircles": "js/Loader/LoaderCircles",
                             "loaderProgressBar": "js/Loader/LoaderProgressBar",
-                            "superagent": "lib/superagent/superagent",
+                            "superagent": "lib/superagent/superagent-1.1.0",
                             "core": "common/core",
 
                             "codemirror": 'lib/codemirror/codemirror.amd',
                             "jquery-csszoom": 'lib/jquery/jquery.csszoom',
 
-                            "blob": "middleware/blob",
-
+                            "blob": "common/blob",
+                            "executor": "common/executor"
                             // "jszip": 'lib/jszip/jszip',
-                            "executor": 'middleware/executor'
                         },
                         nodeRequire: nodeRequire
                     });
                     // FIXME ugly hack for node-webkit
-                    var node_modules = ['fs', 'stream', 'path', 'child_process', 'minimatch', 'crypto', 'util', 'mime', 'http', 'https', 'events', 'rimraf'];
+                    var node_modules = ['fs', 'stream', 'path', 'child_process', 'minimatch', 'crypto', 'util', 'mime', 'http', 'https', 'events', 'rimraf' /*, 'superagent'*/];
                     node_modules.forEach(function (module_name) {
                         requirejs.s.contexts._.defined[module_name] = nodeRequire(module_name);
                     });
