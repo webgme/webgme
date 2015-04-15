@@ -44,8 +44,8 @@ define(['js/logger',
     PropertyEditorController = function (client, propertyGrid) {
         this._client = client;
         this._propertyGrid = propertyGrid;
-
-
+        this._logger = Logger.create('gme:Panels:PropertyEditor:PropertyEditorController',
+            WebGMEGlobal.gmeConfig.client.log);
         //it should be sorted alphabetically
         this._propertyGrid.setOrdered(true);
 
@@ -54,8 +54,6 @@ define(['js/logger',
 
         this._initEventHandlers();
 
-        this._logger = Logger.create('gme:Panels:PropertyEditor:PropertyEditorController',
-            WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug('Created');
     };
 
@@ -63,10 +61,22 @@ define(['js/logger',
         var self = this;
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, function (model, activeSelection) {
+            self._logger.debug('activeSelection changed', activeSelection);
+            var activeNodeId = WebGMEGlobal.State.getActiveObject();
             if (activeSelection && activeSelection.length > 0) {
-                self._selectedObjectsChanged(activeSelection);
+                if (activeSelection.length === 1) {
+                    //https://github.com/webgme/webgme/issues/326
+                    if (self.startsWith(activeSelection[0], activeNodeId)) {
+                        self._selectedObjectsChanged(activeSelection);
+                    } else {
+                        self._logger.debug('Selected node is not a child or the activeNode', activeNodeId,
+                            activeSelection[0]);
+                    }
+                } else {
+                    self._selectedObjectsChanged(activeSelection);
+                }
             } else {
-                self._selectObjectsUsingActiveObject(WebGMEGlobal.State.getActiveObject());
+                self._selectObjectsUsingActiveObject(activeNodeId);
             }
         });
 
@@ -683,6 +693,13 @@ define(['js/logger',
             }
         }
         this._client.completeTransaction();
+    };
+
+    PropertyEditorController.prototype.startsWith = function ( str, start ) {
+        if ( start === '' ) {
+            return true;
+        }
+        return start.length > 0 && str.substring( 0, start.length ) === start;
     };
 
     return PropertyEditorController;
