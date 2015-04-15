@@ -61,7 +61,7 @@ Each script supports the `--help` or `-h` command line parameter, which will lis
 
 # Extensions
 * [Plugins](./src/plugin/README.md) - Model interpretation for e.g. code generation.
-* [AddOns](./src/addons/README.md) - Continuous model interpretation for e.g. constraint evaluation.
+* [AddOns](./src/addon/README.md) - Continuous model interpretation for e.g. constraint evaluation.
 * [Executor](./src/server/middleware/executor/Readme.md) - Code execution framework.
 
 # License
