@@ -1,9 +1,9 @@
 ## Plugins ##
 
-### TODO ###
-
-- call one plugin from another one
-
+### Generate Plugin ###
+* Make sure `./src/plugin/coreplugins` is in `config.plugin.basePaths` (by default it is).
+* In an open project, select the root-node and add `PluginGenerator` to `validPlugins` under `META` in the `Property Editor`.
+* Run `PluginGenerator` (using the play-button in top left corner), download the files and follow the instructions in the `Plugin Results Dialog`.
 
 ### Requirements ###
 
