@@ -15,6 +15,8 @@ See also `ExecutorClient.js`. See `JobInfo.js` for the list of fields.
 
 See [`worker/README.txt`](./worker/README.txt) and [`worker/README.md`](./worker/README.md)
 
+For example of usage see `./src/plugin/coreplugins/ExecutorPlugin`
+
 ### Labels ###
 
 See [`worker/README.txt`](./worker/README.txt)

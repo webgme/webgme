@@ -59,6 +59,11 @@ Each script supports the `--help` or `-h` command line parameter, which will lis
 * `parse_xme.js` __outdated__: parses a desktop GME xme file and imports it into a webgme database.
 * `serialize_to_xml.js` __outdated__: creates a desktop GME xme file from a given webgme project.
 
+# Extensions
+* [Plugins](./src/plugin/README.md) - Model interpretation for e.g. code generation.
+* [AddOns](./src/addons/README.md) - Continuous model interpretation for e.g. constraint evaluation.
+* [Executor](./src/server/middleware/executor/Readme.md) - Code execution framework.
+
 # License
 
 See the [LICENSE](LICENSE) file.
