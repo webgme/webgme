@@ -108,6 +108,13 @@ var path = require('path'),
         server: {
             port: 8888,
             maxWorkers: 10,
+            sessionStore: {
+                type: 'Memory', // Memory, Redis, Mongo, options will be passed to the specified storage
+                // see specific session store documentations for options connect-mongo and connect-redis
+                options: {
+                    //url: 'mongodb://127.0.0.1:27017/multi'
+                }
+            },
             sessionCookieId: 'webgmeSid',
             sessionCookieSecret: 'meWebGMEez',
             log: {

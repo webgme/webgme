@@ -156,6 +156,11 @@ function validateConfig (configOrFileName) {
     assertObject('config.server', config.server);
     assertNumber('config.server.port', config.server.port);
     assertNumber('config.server.maxWorkers', config.server.maxWorkers);
+    // server session store
+    assertObject('config.server.sessionStore', config.server.sessionStore);
+    assertString('config.server.sessionStore.type', config.server.sessionStore.type);
+    assertObject('config.server.sessionStore.options', config.server.sessionStore.options);
+
     assertString('config.server.sessionCookieId', config.server.sessionCookieId);
     assertString('config.server.sessionCookieSecret', config.server.sessionCookieSecret);
         // server log

@@ -579,7 +579,7 @@ function StandAloneServer(gmeConfig) {
     }
 
     logger.debug("initializing session storage");
-    __sessionStore = new SSTORE();
+    __sessionStore = new SSTORE(logger, gmeConfig);
 
     logger.debug('initializing server worker manager');
     __workerManager = new ServerWorkerManager({
@@ -661,6 +661,36 @@ function StandAloneServer(gmeConfig) {
     }));
     __app.use(Passport.initialize());
     __app.use(Passport.session());
+
+    // FIXME: do we need this code to make sure that we serve requests only if the session is available?
+    // Examples: can we lose the connection to mongo or redis, if they are used for storing the sessions?
+    //__app.use(function (req, res, next) {
+    //    var tries = 3;
+    //
+    //    if (req.session !== undefined) {
+    //        return next();
+    //    }
+    //
+    //    function lookupSession(error) {
+    //        if (error) {
+    //            return next(error);
+    //        }
+    //
+    //        tries -= 1;
+    //
+    //        if (req.session !== undefined) {
+    //            return next();
+    //        }
+    //
+    //        if (tries < 0) {
+    //            return next(new Error('oh no session is not available'));
+    //        }
+    //
+    //        __sessionStore(req, res, lookupSession);
+    //    }
+    //
+    //    lookupSession();
+    //});
 
     if (gmeConfig.executor.enable) {
         ExecutorServer.createExpressExecutor(__app, '/rest/executor', middlewareOpts);
