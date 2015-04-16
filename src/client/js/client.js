@@ -743,12 +743,13 @@ define([
               running = false;
             },
             checking = false,
-            reconneting = function (finished) {
+            reconnecting = function (finished) {
               var connecting = false,
                   counter = 0,
                   frequency = _configuration.reconndelay || 10,
                   timerId = setInterval(function () {
                     if (!connecting) {
+                      connecting = true;
                       _database.openDatabase(function (err) {
                         connecting = false;
                         if (!err) {
@@ -771,8 +772,8 @@ define([
                 _database.getDatabaseStatus(_networkStatus, function (err, newStatus) {
                   if (running) {
                     if (_networkStatus !== newStatus) {
-                      _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, _networkStatus);
                       _networkStatus = newStatus;
+                      _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, _networkStatus);
                       if (_networkStatus === _self.networkStates.DISCONNECTED && _configuration.autoreconnect) {
                         reconnecting(function (err) {
                           checking = false;
@@ -784,6 +785,8 @@ define([
                       } else {
                         checking = false;
                       }
+                    } else {
+                      checking = false;
                     }
                   } else {
                     clearInterval(checkId);
