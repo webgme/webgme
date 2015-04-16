@@ -8,8 +8,10 @@ define('webgme.classes',
         'executor/ExecutorClient',
         'js/Utils/InterpreterManager',
         'common/core/core',
-        'common/storage/clientstorage'
-    ], function (Client, BlobClient, ExecutorClient, InterpreterManager, Core, Storage) {
+        'common/storage/clientstorage',
+        'js/logger',
+        'lib/superagent/superagent-1.1.0'
+    ], function (Client, BlobClient, ExecutorClient, InterpreterManager, Core, Storage, Logger, superagent) {
 
         'use strict';
         // Setting global classes
@@ -20,6 +22,10 @@ define('webgme.classes',
         GME.classes.InterpreterManager = InterpreterManager;
         GME.classes.Core = Core;
         GME.classes.Storage = Storage;
+        GME.classes.Logger = Logger;
+
+        // Exposing built in libraries
+        GME.utils.superagent = superagent;
 
         // Pure JavaScript equivalent to jQuery's $.ready() from https://github.com/jfriend00/docReady
 

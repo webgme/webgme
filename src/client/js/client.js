@@ -173,8 +173,7 @@ define([
         AllPlugins, AllDecorators;
 
 
-        //FIXME remove TESTING and leave only require here
-      if(typeof TESTING === 'undefined') {
+      if(typeof WebGMEGlobal !== 'undefined') {
           if (window) {
               _configuration.host = window.location.protocol + '//' + window.location.host;
           } else {
@@ -186,7 +185,7 @@ define([
         });
       } else {
         _configuration.host = ' ';
-        console.warn('TESTING is defined - we are not getting plugins and decorators.');
+        logger.warn('WebGMEGlobal is not defined - we are not getting plugins and decorators.');
       }
 
 
