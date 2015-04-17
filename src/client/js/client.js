@@ -1,4 +1,4 @@
-/*globals define, _, requirejs, WebGMEGlobal, GME*/
+/*globals define, _, requirejs, GME*/
 
 define([
     'common/util/assert',
@@ -557,9 +557,10 @@ define([
         refreshToken();
 
         //TODO check if this is okay to set it here
-        if(typeof WebGMEGlobal !== 'undefined') {
-           WebGMEGlobal.getToken = getToken;
-        }
+        //ANS: It is not and now it is removed - p
+        //if(typeof WebGMEGlobal !== 'undefined') {
+        //   WebGMEGlobal.getToken = getToken;
+        //}
         return {
           getToken: getToken
         };
