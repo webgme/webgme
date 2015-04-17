@@ -178,6 +178,7 @@ define([
         if (window) {
             _configuration.host = window.location.protocol + '//' + window.location.host;
         } else {
+            //TODO: Is this ever applicable?
             _configuration.host = '';
         }
         // FIXME: These are asynchronous
@@ -187,6 +188,7 @@ define([
                logger.error('/listAllPlugins failed', err);
              } else {
                AllPlugins = res.body.allPlugins;
+               logger.debug('/listAllPlugins', AllPlugins);
              }
           });
         superagent.get('/listAllDecorators')
@@ -195,6 +197,7 @@ define([
               logger.error('/listAllDecorators failed', err);
             } else {
                AllDecorators = res.body.allDecorators;
+               logger.debug('/listAllDecorators', AllDecorators);
             }
           });
         //TODO remove it
@@ -3011,6 +3014,10 @@ define([
       }
 
       function getAvailableInterpreterNames() {
+          if (!AllPlugins) {
+              logger.error('AllPlugins were never uploaded!');
+              return [];
+          }
         var names = [];
         var valids = _nodes[ROOT_PATH] ? _core.getRegistry(_nodes[ROOT_PATH].node, 'validPlugins') || "" : "";
         valids = valids.split(" ");
@@ -3027,6 +3034,10 @@ define([
       }
 
       function getAvailableDecoratorNames() {
+          if (!AllDecorators) {
+              logger.error('AllDecorators were never uploaded!');
+              return [];
+          }
         return AllDecorators;
       }
 
