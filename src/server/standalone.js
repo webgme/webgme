@@ -956,10 +956,10 @@ function StandAloneServer(gmeConfig) {
             }
         }
         res.status(200);
-        res.setHeader('Content-type', 'application/javascript');
-        //res.end("define([],function(){ return "+JSON.stringify(names)+";});");
-        res.end("(function(){ WebGMEGlobal.allDecorators = " + JSON.stringify(names) + ";}());");
+        res.setHeader('Content-type', 'application/json');
+        res.end(JSON.stringify({allDecorators: names}));
     });
+
     __app.get('/listAllPlugins', ensureAuthenticated, function (req, res) {
         var names = []; //we add only the "*.js" files from the directories
         for (var i = 0; i < gmeConfig.plugin.basePaths.length; i++) {
@@ -973,9 +973,8 @@ function StandAloneServer(gmeConfig) {
             }
         }
         res.status(200);
-        res.setHeader('Content-type', 'application/javascript');
-        //res.end("define([],function(){ return "+JSON.stringify(names)+";});");
-        res.end("(function(){ WebGMEGlobal.allPlugins = " + JSON.stringify(names) + ";}());");
+        res.setHeader('Content-type', 'application/json');
+        res.end(JSON.stringify({allPlugins: names}));
     });
     __app.get('/listAllVisualizerDescriptors', ensureAuthenticated, function (req, res) {
         var allVisualizerDescriptors = getVisualizersDescriptor();

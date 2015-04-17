@@ -15,7 +15,8 @@ define([
     'common/core/users/import',
     'common/core/users/copyimport',
     'common/core/users/serialization',
-    'common/core/tasync'
+    'common/core/tasync',
+    'superagent'
   ],
   function (
     ASSERT,
@@ -32,7 +33,8 @@ define([
     MergeImport,
     Import,
     Serialization,
-    TASYNC) {
+    TASYNC,
+    superagent) {
 
     "use strict";
 
@@ -170,27 +172,31 @@ define([
         _redoer = null,
         _selfCommits = {},
         _configuration = {},
+        req,
         AllPlugins, AllDecorators;
 
-
-      if(typeof WebGMEGlobal !== 'undefined') {
-          if (window) {
-              _configuration.host = window.location.protocol + '//' + window.location.host;
-          } else {
-              _configuration.host = '';
-          }
-        require([_configuration.host + '/listAllDecorators', _configuration.host + '/listAllPlugins'], function (d, p) {
-          AllDecorators = WebGMEGlobal.allDecorators;
-          AllPlugins = WebGMEGlobal.allPlugins;
-        });
-      } else {
-        _configuration.host = ' ';
-        logger.warn('WebGMEGlobal is not defined - we are not getting plugins and decorators.');
-      }
-
-
-
-
+        if (window) {
+            _configuration.host = window.location.protocol + '//' + window.location.host;
+        } else {
+            _configuration.host = '';
+        }
+        // FIXME: These are asynchronous
+        superagent.get('/listAllPlugins')
+          .end(function (err, res) {
+             if (res.status !== 200) {
+               logger.error('/listAllPlugins failed', err);
+             } else {
+               AllPlugins = res.body.allPlugins;
+             }
+          });
+        superagent.get('/listAllDecorators')
+          .end(function (err, res) {
+            if (res.status !== 200) {
+              logger.error('/listAllDecorators failed', err);
+            } else {
+               AllDecorators = res.body.allDecorators;
+            }
+          });
         //TODO remove it
       //function print_nodes(pretext) {
       //  if (pretext) {
