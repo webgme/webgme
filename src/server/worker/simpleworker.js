@@ -1113,7 +1113,12 @@ process.on('message', function (parameters) {
                 }
                 break;
             default:
-                safeSend({error: 'unknown command'});
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANT.msgTypes.request,
+                    error: 'unknown command',
+                    resid: null
+                });
         }
     }
 
@@ -1122,7 +1127,12 @@ process.on('message', function (parameters) {
             if (!err) {
                 readyToHandleMessage();
             } else {
-                safeSend({error: 'unable to initiate database connection'});
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANT.msgTypes.request,
+                    error: 'unable to initiate database connection',
+                    resid: null
+                });
             }
         });
     } else {
