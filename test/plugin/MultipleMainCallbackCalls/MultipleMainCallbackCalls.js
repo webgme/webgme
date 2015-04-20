@@ -73,7 +73,6 @@ if (typeof define === 'undefined') {
             callback(null, self.result);
             callback(null, self.result);
             callback(null, self.result);
-            callback(null, self.result);
         };
 
         return MultipleMainCallbackCalls;

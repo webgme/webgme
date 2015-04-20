@@ -25,7 +25,7 @@ function RunPlugin() {
 
         var Plugin,
             pluginName = managerConfig.pluginName,
-            logger = Logger.create('gme:server:runPlugin', gmeConfig.server.log),
+            logger = Logger.create('gme:server:runPlugin', gmeConfig.bin.log),
             plugins = {},
             contextParams,
             errorResult = new PluginResult();
