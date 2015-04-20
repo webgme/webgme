@@ -243,7 +243,9 @@ define(['./PluginBase',
             // TODO: check if name is a string
             // TODO: check if managerConfiguration is an instance of PluginManagerConfiguration
             // TODO: check if callback is a function
-            var self = this;
+            var self = this,
+                mainCallbackCalls = 0,
+                multiCallbackHandled = false;
 
             var PluginClass = this.getPluginByName(name);
 
@@ -274,14 +276,31 @@ define(['./PluginBase',
                 var startTime = (new Date()).toISOString();
 
                 plugin.main(function (err, result) {
+                    var stackTrace;
+                    mainCallbackCalls += 1;
                     // set common information (meta info) about the plugin and measured execution times
                     result.setFinishTime((new Date()).toISOString());
                     result.setStartTime(startTime);
 
                     result.setPluginName(plugin.getName());
-                    result.setError(err);
 
-                    callback(err, result);
+                    if (mainCallbackCalls > 1) {
+                        stackTrace = new Error().stack;
+                        self.logger.error('The main callback is being called more than once!', {metadata: stackTrace});
+                        result.setError('The main callback is being called more than once!');
+                        if (multiCallbackHandled === true) {
+                            plugin.createMessage(null, stackTrace);
+                            return;
+                        }
+                        multiCallbackHandled = true;
+                        result.setSuccess(false);
+                        plugin.createMessage(null, 'The main callback is being called more than once.');
+                        plugin.createMessage(null, stackTrace);
+                        callback('The main callback is being called more than once!', result);
+                    } else {
+                        result.setError(err);
+                        callback(err, result);
+                    }
                 });
 
             });
