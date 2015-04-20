@@ -81,14 +81,14 @@ define(['js/PanelBase/PanelBase',
 
         //project title
         var projectTitleEl = $(
-            '<div data-ng-controller="ProjectNavigatorController"><dropdown-navigator navigator="navigator"></dropdown-navigator></div>', {'class': "inline"}
+            '<div style="display: inline;" data-ng-controller="ProjectNavigatorController"><dropdown-navigator style="display: inline-block;" navigator="navigator"></dropdown-navigator></div>', {'class': "inline"}
         );
         //new ProjectTitleWidget(projectTitleEl, this._client);
         navBarInner.append(projectTitleEl);
 
         //user info
         navBarInner.append($('<div class="spacer pull-right"></div>'));
-        var userProfileEl = $('<div/>', {'class': "inline pull-right"});
+        var userProfileEl = $('<div/>', {'class': "inline pull-right", style: 'padding: 6px 0px;'});
         var u = new UserProfileWidget(userProfileEl, this._client);
         navBarInner.append(userProfileEl);
 
