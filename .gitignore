@@ -35,5 +35,6 @@ config/config.dev*.js
 
 webgme-*.tgz
 
+executor-temp/
 jobList.nedb
 workerList.nedb
