@@ -56,8 +56,9 @@ define([
     };
 
     ProjectNavigatorController.prototype.update = function () {
+        this.logger.debug('update');
         // force ui update
-        this.$timeout(function() {
+        this.$timeout(function () {
             
         });
     };
@@ -292,10 +293,10 @@ define([
 
             for (projectId in projectList) {
                 if (projectList.hasOwnProperty(projectId)) {
-                    self.addProject(projectId, projectList[projectId].rights);
+                    self.addProject(projectId, projectList[projectId].rights, true);
                     for (branchId in projectList[projectId].branches) {
                         if (projectList[projectId].branches.hasOwnProperty(branchId)) {
-                            self.addBranch(projectId, branchId, projectList[projectId].branches[branchId]);
+                            self.addBranch(projectId, branchId, projectList[projectId].branches[branchId], true);
                         }
                     }
                 }
@@ -304,11 +305,13 @@ define([
             if (self.requestedSelection) {
                 self.selectBranch(self.requestedSelection);
                 self.requestedSelection = null;
+            } else {
+                self.update();
             }
         });
     };
 
-    ProjectNavigatorController.prototype.addProject = function (projectId, rights) {
+    ProjectNavigatorController.prototype.addProject = function (projectId, rights, noUpdate) {
         var self = this,
             i,
             showHistory,
@@ -448,8 +451,10 @@ define([
                     id: 'branches',
                     label: 'Recent branches',
                     totalItems: 20,
-                    items: []
-//                    showAllItems: showAllBranches
+                    items: [],
+                    showAllItems: function () {
+                        showHistory({projectId: projectId});
+                    }
                 }
             ]
         };
@@ -469,10 +474,14 @@ define([
             }
         }
 
-        self.update();
+        if (noUpdate === true) {
+
+        } else {
+            self.update();
+        }
     };
 
-    ProjectNavigatorController.prototype.addBranch = function (projectId, branchId, branchInfo) {
+    ProjectNavigatorController.prototype.addBranch = function (projectId, branchId, branchInfo, noUpdate) {
         var self = this,
             i,
             selectBranch,
@@ -738,7 +747,11 @@ define([
             }
         }
 
-        self.update();
+        if (noUpdate === true) {
+
+        } else {
+            self.update();
+        }
     };
 
     ProjectNavigatorController.prototype.removeProject = function (projectId, callback) {
