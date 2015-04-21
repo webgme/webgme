@@ -16,12 +16,7 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             this.serverPort = parameters.serverPort || this.serverPort;
             this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
             this.webgmeclientsession = parameters.webgmeclientsession;
-            this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || {
-                maxSockets: 100,
-                maxFreeSockets: 10,
-                timeout: 60000,
-                keepAliveTimeout: 30000 // free socket keep alive for 30 seconds
-            };
+            this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || { /* use defaults */ };
         }
         this.blobUrl = '';
         if (this.httpsecure !== undefined && this.server && this.serverPort) {
