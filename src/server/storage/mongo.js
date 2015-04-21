@@ -253,6 +253,7 @@ function Database(options) {
 
         function setInfo(info, callback) {
             ASSERT(typeof info === 'object' && typeof callback === 'function');
+            info['_id'] = PROJECT_INFO_ID;
             collection.update({_id: PROJECT_INFO_ID}, info, {upsert: true}, callback);
         }
 
