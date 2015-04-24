@@ -14,6 +14,7 @@ var Mongodb = require('mongodb'),
     Logger = require('../../logger');
 
 function GMEAuth(session, gmeConfig) {
+    'use strict';
     // TODO: make sure that gmeConfig passes all config
     var logger = Logger.create('gme:server:auth:gmeauth', gmeConfig.server.log),
         _collectionName = '_users',
@@ -29,12 +30,13 @@ function GMEAuth(session, gmeConfig) {
         organizationCollectionDeferred = Q.defer(),
         organizationCollection = organizationCollectionDeferred.promise,
         projectCollectionDeferred = Q.defer(),
-        projectCollection = projectCollectionDeferred.promise,
-        blacklistUserAndOrgName = [
-            'api',
-            'blob',
-            'executor'
-        ];
+        projectCollection = projectCollectionDeferred.promise;
+        //FIXME should be taken into use or remove it
+        //blacklistUserAndOrgName = [
+        //    'api',
+        //    'blob',
+        //    'executor'
+        //];
 
     /**
      * 'users' collection has these fields:
@@ -59,30 +61,31 @@ function GMEAuth(session, gmeConfig) {
                 return Q.npost(c, 'findOne', args);
             });
         };
-        collection_.find = function (query, projection) {
+        collection_.find = function (/*query, projection*/) {
             var args = arguments;
             return collection_.then(function (c) {
                 return Q.npost(c, 'find', args);
             });
         };
-        collection_.update = function (query, update, options) {
+        collection_.update = function (/*query, update, options*/) {
             var args = arguments;
             return collection_.then(function (c) {
                 return Q.npost(c, 'update', args);
             });
         };
-        collection_.insert = function (data, options) {
+        collection_.insert = function (/*data, options*/) {
             var args = arguments;
             return collection_.then(function (c) {
                 return Q.npost(c, 'insert', args);
             });
         };
-        collection_.remove = function (query, options) {
+        collection_.remove = function (/*query, options*/) {
             var args = arguments;
             return collection_.then(function (c) {
                 return Q.npost(c, 'remove', args)
                     .then(function (num) {
-                        // depending on mongodb hasWriteCommands, remove calls back with (num) or (num, backWardsCompatibiltyResults)
+                        // depending on mongodb hasWriteCommands,
+                        // remove calls back with (num) or (num, backWardsCompatibiltyResults)
                         if (Array.isArray(num)) {
                             return num[0];
                         }
@@ -137,16 +140,6 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-
-    // TODO: unused function ???
-    function getUserProject(id, projectName, callback) {
-        return collection.findOne({_id: id})
-            .then(function (userData) {
-                return userData.projects[projectName];
-            })
-            .nodeify(callback);
-    }
-
     function authenticateUserById(userId, password, type, returnUrlFailedLogin, req, res, next) {
         var query = {};
         returnUrlFailedLogin = returnUrlFailedLogin || '/';
@@ -170,8 +163,8 @@ function GMEAuth(session, gmeConfig) {
                         return Q.reject('no password given');
                     } else {
                         return Q.ninvoke(bcrypt, 'compare', password, userData.passwordHash)
-                            .then(function (hash_res) {
-                                if (!hash_res) {
+                            .then(function (hashRes) {
+                                if (!hashRes) {
                                     return Q.reject('incorrect password');
                                 } else {
                                     req.session.udmId = userData._id;
@@ -220,17 +213,18 @@ function GMEAuth(session, gmeConfig) {
     // type: 'create' 'delete'
     // rights: {read: true, write: true, delete: true}
     function authorizeByUserId(userId, projectName, type, rights, callback) {
+        var update;
         if (type === 'create' || type === 'set') {
-            var update = {$set: {}};
-            update['$set']['projects.' + projectName] = rights;
+            update = {$set: {}};
+            update.$set['projects.' + projectName] = rights;
             return collection.update({_id: userId}, update)
                 .spread(function (numUpdated) {
                     return numUpdated === 1;
                 })
                 .nodeify(callback);
         } else if (type === 'delete') {
-            var update = {$unset: {}};
-            update['$unset']['projects.' + projectName] = '';
+            update = {$unset: {}};
+            update.$unset['projects.' + projectName] = '';
             return collection.update({_id: userId}, update)
                 .spread(function (numUpdated) {
                     // FIXME this is always true. Try findAndUpdate instead
@@ -312,7 +306,7 @@ function GMEAuth(session, gmeConfig) {
         query['projects.' + projectName + '.read'] = true;
         return collection.findOne(query)
             .then(function (userData) {
-                return Q(userData ? userData.projects[projectName].read : false);
+                return new Q(userData ? userData.projects[projectName].read : false);
             })
             .nodeify(callback);
     }
@@ -338,7 +332,7 @@ function GMEAuth(session, gmeConfig) {
         return Q.ninvoke(_session, 'getSessionUser', sessionId)
             .then(function (userId) {
                 if (!userId) {
-                    return Q(null);
+                    return new Q(null);
                 }
                 return collection.findOne({_id: userId})
                     .then(function (userData) {
@@ -468,7 +462,7 @@ function GMEAuth(session, gmeConfig) {
 
     function deleteProject(projectName, callback) {
         var update = {$unset: {}};
-        update['$unset']['projects.' + projectName] = '';
+        update.$unset['projects.' + projectName] = '';
         return collection.update({}, update, {multi: true})
             .then(function () {
                 return organizationCollection.update({}, update, {multi: true});
@@ -477,12 +471,6 @@ function GMEAuth(session, gmeConfig) {
                 return true;
             })
             .nodeify(callback);
-    }
-
-    // TODO: remove deprecated API
-    function removeUserByUserId(userId, callback) {
-        logger.warn('removeUserByUserId is deprecated use deleteUser');
-        return deleteUser(userId, callback);
     }
 
     function addUser(userId, email, password, canCreate, options, callback) {
@@ -611,9 +599,10 @@ function GMEAuth(session, gmeConfig) {
     // type: 'create' 'delete' or 'read'
     // rights: {read: true, write: true, delete: true}
     function authorizeOrganization(orgId, projectName, type, rights, callback) {
+        var update;
         if (type === 'create' || type === 'set') {
-            var update = {$set: {}};
-            update['$set']['projects.' + projectName] = rights;
+            update = {$set: {}};
+            update.$set['projects.' + projectName] = rights;
             return organizationCollection.update({_id: orgId}, update)
                 .spread(function (numUpdated) {
                     if (numUpdated !== 1) {
@@ -623,8 +612,8 @@ function GMEAuth(session, gmeConfig) {
                 })
                 .nodeify(callback);
         } else if (type === 'delete') {
-            var update = {$unset: {}};
-            update['$unset']['projects.' + projectName] = '';
+            update = {$unset: {}};
+            update.$unset['projects.' + projectName] = '';
             return organizationCollection.update({_id: orgId}, update)
                 .spread(function (numUpdated) {
                     // FIXME this is always true. Try findAndUpdate instead
@@ -668,7 +657,6 @@ function GMEAuth(session, gmeConfig) {
         getAllUserAuthInfo: getAllUserAuthInfo,
         getAllUserAuthInfoBySession: getAllUserAuthInfoBySession,
         authorizeByUserId: authorizeByUserId,
-        removeUserByUserId: removeUserByUserId,
         getAuthorizationInfoByUserId: getAuthorizationInfoByUserId,
         unload: unload,
         connect: connect,
@@ -689,7 +677,10 @@ function GMEAuth(session, gmeConfig) {
         addUserToOrganization: addUserToOrganization,
         removeUserFromOrganization: removeUserFromOrganization,
         authorizeOrganization: authorizeOrganization,
-        getAuthorizationInfoByOrgId: getAuthorizationInfoByOrgId
+        getAuthorizationInfoByOrgId: getAuthorizationInfoByOrgId,
+
+        addProject: addProject,
+        transferProject: transferProject
     };
 }
 

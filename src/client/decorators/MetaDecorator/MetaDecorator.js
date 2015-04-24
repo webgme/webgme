@@ -1,21 +1,27 @@
-"use strict";
+/*globals define, _*/
+/*jshint browser: true, camelcase: false*/
 
-define(['js/Decorators/DecoratorBase',
-    './DiagramDesigner/MetaDecorator.DiagramDesignerWidget'], function (
-                                                           DecoratorBase,
-                                                           MetaDecoratorDiagramDesignerWidget) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
+define([
+    'js/Decorators/DecoratorBase',
+    './DiagramDesigner/MetaDecorator.DiagramDesignerWidget'
+], function (DecoratorBase, MetaDecoratorDiagramDesignerWidget) {
+
+    'use strict';
     var MetaDecorator,
         __parent__ = DecoratorBase,
         __parent_proto__ = DecoratorBase.prototype,
-        DECORATOR_ID = "MetaDecorator";
+        DECORATOR_ID = 'MetaDecorator';
 
     MetaDecorator = function (params) {
-        var opts = _.extend( {"loggerName": this.DECORATORID}, params);
+        var opts = _.extend({loggerName: this.DECORATORID}, params);
 
         __parent__.apply(this, [opts]);
 
-        this.logger.debug("MetaDecorator ctor");
+        this.logger.debug('MetaDecorator ctor');
     };
 
     _.extend(MetaDecorator.prototype, __parent_proto__);
@@ -24,8 +30,10 @@ define(['js/Decorators/DecoratorBase',
     /*********************** OVERRIDE DecoratorBase MEMBERS **************************/
 
     MetaDecorator.prototype.initializeSupportedWidgetMap = function () {
-        this.supportedWidgetMap = {'DiagramDesigner': MetaDecoratorDiagramDesignerWidget/*,
-            'PartBrowser': MetaDecoratorDiagramDesignerWidget*/};
+        this.supportedWidgetMap = {
+            DiagramDesigner: MetaDecoratorDiagramDesignerWidget/*,
+             PartBrowser: MetaDecoratorDiagramDesignerWidget*/
+        };
     };
 
     return MetaDecorator;

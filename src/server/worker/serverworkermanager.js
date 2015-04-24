@@ -1,10 +1,11 @@
 /*globals requireJS*/
 /*jshint node: true*/
-
+/**
+ * @author kecso / https://github.com/kecso
+ */
 'use strict';
 
-var path = require('path'),
-    Child = require('child_process'),
+var Child = require('child_process'),
     process = require('process'),
     CONSTANTS = require('./constants'),
 
@@ -19,7 +20,6 @@ function ServerWorkerManager(_parameters) {
         _idToPid = {},
         _waitingRequests = [],
         gmeConfig = _parameters.globConf,
-    //Logger = require(require('path').join(requirejs.s.contexts._.config.baseUrl, 'server/logger')),
         logger = Logger.create('gme:server:worker:serverworkermanager', gmeConfig.server.log);
 
     //helping functions
@@ -33,7 +33,7 @@ function ServerWorkerManager(_parameters) {
             var worker = Child.fork(getBaseDir() + '/server/worker/simpleworker.js', [],
                 {
                     execArgv: process.execArgv.filter(function (arg) {
-                        return arg.indexOf('--debug-brk') !== 0
+                        return arg.indexOf('--debug-brk') !== 0;
                     })
                 });
             _workers[worker.pid] = {worker: worker, state: CONSTANTS.workerStates.initializing, type: null, cb: null};
@@ -43,10 +43,11 @@ function ServerWorkerManager(_parameters) {
     }
 
     function freeWorker(workerPid) {
+        //FIXME it would be better if we would have a global function that listens to all close events of the children
+        //because that way we could be able to get child-freeze and reuse the slot
         if (_workers[workerPid]) {
-            // FIXME: this should send SIGINT and listen on close
-            _workers[workerPid].worker.on('close', function (code, signal) {
-                logger.debug('worker have been freed: '+workerPid);
+            _workers[workerPid].worker.on('close', function (/*code, signal*/) {
+                logger.debug('worker have been freed: ' + workerPid);
                 delete _workers[workerPid];
             });
             _workers[workerPid].worker.kill('SIGINT');
@@ -55,10 +56,10 @@ function ServerWorkerManager(_parameters) {
 
     function freeAllWorkers(callback) {
         logger.debug('closing all workers');
-        var len = Object.keys(_workers ).length;
-        logger.debug('there are '+len+' worker to close');
+        var len = Object.keys(_workers).length;
+        logger.debug('there are ' + len + ' worker to close');
         Object.keys(_workers).forEach(function (workerPid) {
-            _workers[workerPid].worker.on('close', function (code, signal) {
+            _workers[workerPid].worker.on('close', function (/*code, signal*/) {
                 logger.debug('workerPid closed: ' + workerPid);
                 delete _workers[workerPid];
                 len -= 1;
@@ -173,7 +174,8 @@ function ServerWorkerManager(_parameters) {
     function request(parameters, callback) {
         _waitingRequests.push({request: parameters, cb: callback});
         var workerIds = Object.keys(_workers || {}),
-            i, initializingWorkers = 0, freeWorkers = 0;
+            i, initializingWorkers = 0,
+            freeWorkers = 0;
 
         for (i = 0; i < workerIds.length; i++) {
             if (_workers[workerIds[i]].state === CONSTANTS.workerStates.initializing) {
@@ -229,13 +231,14 @@ function ServerWorkerManager(_parameters) {
     }
 
     function queueManager() {
-        var i, workerPids, initializingWorkers = 0, firstIdleWorker = undefined;
+        var i, workerPids, initializingWorkers = 0,
+            firstIdleWorker;
         if (_waitingRequests.length > 0) {
 
             workerPids = Object.keys(_workers);
             i = 0;
             while (i < workerPids.length && _workers[workerPids[i]].state !== CONSTANTS.workerStates.free) {
-                if (_workers[workerPids[i]].state === CONSTANTS.workerStates.initializing){
+                if (_workers[workerPids[i]].state === CONSTANTS.workerStates.initializing) {
                     initializingWorkers += 1;
                 }
                 i += 1;
@@ -244,7 +247,7 @@ function ServerWorkerManager(_parameters) {
             if (i < workerPids.length) {
                 assignRequest(workerPids[i]);
             } else if (_waitingRequests.length > initializingWorkers &&
-                Object.keys(_workers || {}).length<gmeConfig.server.maxWorkers) {
+                Object.keys(_workers || {}).length < gmeConfig.server.maxWorkers) {
                 reserveWorker();
             }
         } else {
@@ -260,7 +263,7 @@ function ServerWorkerManager(_parameters) {
         }
     }
 
-    function start () {
+    function start() {
         if (_managerId === null) {
             _managerId = setInterval(queueManager, 10);
         }

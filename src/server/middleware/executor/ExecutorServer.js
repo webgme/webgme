@@ -1,13 +1,15 @@
-/*globals requireJS*/
-/*jshint node:true*/
+/*globals requireJS, executorBackend*/
+/*jshint node: true, expr: true*/
 
 /**
  * @author lattmann / https://github.com/lattmann
  * @author ksmyth / https://github.com/ksmyth
  *
  curl http://localhost:8855/rest/executor/info/77704f10a36aa4214f5b0095ba8099e729a10f46
- curl -X POST -H "Content-Type: application/json" -d {} http://localhost:8855/rest/executor/create/77704f10a36aa4214f5b0095ba8099e729a10f46
- curl -X POST -H "Content-Type: application/json" -d {\"status\":\"CREATED\"} http://localhost:8855/rest/executor/update/77704f10a36aa4214f5b0095ba8099e729a10f46
+ curl -X POST -H "Content-Type: application/json"
+    -d {} http://localhost:8855/rest/executor/create/77704f10a36aa4214f5b0095ba8099e729a10f46
+ curl -X POST -H "Content-Type: application/json"
+    -d {\"status\":\"CREATED\"} http://localhost:8855/rest/executor/update/77704f10a36aa4214f5b0095ba8099e729a10f46
  */
 
 'use strict';
@@ -32,7 +34,7 @@ var jobListDBFile,
     labelJobsFilename,
     logger;
 
-function ExecutorRESTCreate(req, res, next) {
+function executorRESTCreate(req, res/*, next*/) {
     if (req.method !== 'POST') {
         res.sendStatus(405);
     }
@@ -73,7 +75,7 @@ function ExecutorRESTCreate(req, res, next) {
     // TODO: get job description
 }
 
-function ExecutorRESTUpdate(req, res, next) {
+function executorRESTUpdate(req, res/*, next*/) {
     if (req.method !== 'POST') {
         res.sendStatus(405);
     }
@@ -124,7 +126,7 @@ function ExecutorRESTUpdate(req, res, next) {
 
 }
 
-function ExecutorRESTWorkerGET(req, res, next) {
+function executorRESTWorkerGET(req, res/*, next*/) {
     var response = {};
     workerList.find({}, function (err, workers) {
         var jobQuery = function (i) {
@@ -152,13 +154,13 @@ function ExecutorRESTWorkerGET(req, res, next) {
     });
 }
 
-function ExecutorRESTWorkerAPI(req, res, next) {
+function executorRESTWorkerAPI(req, res, next) {
     if (req.method !== 'POST' && req.method !== 'GET') {
         res.sendStatus(405);
         return;
     }
     if (req.method === 'GET') {
-        return ExecutorRESTWorkerGET(req, res, next);
+        return executorRESTWorkerGET(req, res, next);
     }
 
     var url = require('url').parse(req.url);
@@ -219,7 +221,7 @@ function ExecutorRESTWorkerAPI(req, res, next) {
     });
 }
 
-function ExecutorRESTCancel(req, res, next) {
+function executorRESTCancel(req, res/*, next*/) {
     if (req.method !== 'POST') {
         res.sendStatus(405);
         return;
@@ -246,7 +248,7 @@ function ExecutorRESTCancel(req, res, next) {
 
 }
 
-function ExecutorRESTInfo(req, res, next) {
+function executorRESTInfo(req, res/*, next*/) {
     if (req.method !== 'GET') {
         res.sendStatus(405);
         return;
@@ -279,7 +281,7 @@ function ExecutorRESTInfo(req, res, next) {
     }
 }
 
-function ExecutorREST(req, res, next) {
+function executorREST(req, res, next) {
 
     var authenticate = function () {
         var isAuth = true,
@@ -341,19 +343,19 @@ function ExecutorREST(req, res, next) {
 
         switch (pathParts[1]) {
             case 'create':
-                authenticate() && ExecutorRESTCreate(req, res, next);
+                authenticate() && executorRESTCreate(req, res, next);
                 break;
             case 'worker':
-                (req.method !== 'POST' || authenticate()) && ExecutorRESTWorkerAPI(req, res, next);
+                (req.method !== 'POST' || authenticate()) && executorRESTWorkerAPI(req, res, next);
                 break;
             case 'cancel':
-                authenticate() && ExecutorRESTCancel(req, res, next);
+                authenticate() && executorRESTCancel(req, res, next);
                 break;
             case 'info':
-                ExecutorRESTInfo(req, res, next);
+                executorRESTInfo(req, res, next);
                 break;
             case 'update':
-                authenticate() && ExecutorRESTUpdate(req, res, next);
+                authenticate() && executorRESTUpdate(req, res, next);
                 break;
             default:
                 res.sendStatus(404);
@@ -439,7 +441,7 @@ function createExpressExecutor(__app, baseUrl, options) {
         }
     });
 
-    __app.use(baseUrl, ExecutorREST); //TODO: This can be nicer integrated (see BlobServer).
+    __app.use(baseUrl, executorREST); //TODO: This can be nicer integrated (see BlobServer).
 }
 
 module.exports.createExpressExecutor = createExpressExecutor;

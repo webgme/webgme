@@ -1,10 +1,15 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, WebGMEGlobal, $*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger',
-    'js/Controls/PropertyGrid/PropertyGridPart'], function (Logger,
-                                                   PropertyGridPart) {
+    'js/Controls/PropertyGrid/PropertyGridPart'
+], function (Logger,
+             PropertyGridPart) {
 
-    "use strict";
+    'use strict';
 
     var PropertyGrid;
 
@@ -13,7 +18,7 @@ define(['js/logger',
 
         this._logger = Logger.create('gme:Controls:PropertyGrid:PropertyGrid', WebGMEGlobal.gmeConfig.client.log);
 
-        this.$el = $('<div/>', { "class" : "property-list" });
+        this.$el = $('<div/>', {class: 'property-list'});
 
         this._propertyList = {};
 
@@ -28,33 +33,33 @@ define(['js/logger',
         this.__onFinishChange = null;
         this.__onReset = null;
 
-        this._gui = new PropertyGridPart({"el": this.$el});
+        this._gui = new PropertyGridPart({el: this.$el});
         this._gui.onChange(function (args) {
-            self._logger.debug("onChange: " + JSON.stringify(args));
+            self._logger.debug('onChange: ' + JSON.stringify(args));
             if (self.__onChange) {
                 self.__onChange.call(self, args);
             }
         });
 
         this._gui.onFinishChange(function (args) {
-            self._logger.debug("onFinishChange: " + JSON.stringify(args));
+            self._logger.debug('onFinishChange: ' + JSON.stringify(args));
             if (self.__onFinishChange) {
                 self.__onFinishChange.call(self, args);
             }
         });
 
         this._gui.onReset(function (propertyName) {
-            self._logger.debug("onReset: " + propertyName);
+            self._logger.debug('onReset: ' + propertyName);
             if (self.__onReset) {
                 self.__onReset.call(self, propertyName);
             }
         });
 
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     PropertyGrid.prototype._initDefaultWidgets = function () {
-        //this._widgetList["default"] = new TextWidget();
+        //this._widgetList['default'] = new TextWidget();
     };
 
     PropertyGrid.prototype.registerWidgetForType = function (type, widget) {
@@ -81,13 +86,16 @@ define(['js/logger',
             orderedPropNames.sort();
 
             for (i = 0; i < orderedPropNames.length; i += 1) {
-                this._addPropertyItem(orderedPropNames[i].split("."), "", this._propertyList[orderedPropNames[i]], this._gui);
+                this._addPropertyItem(orderedPropNames[i].split('.'),
+                    '',
+                    this._propertyList[orderedPropNames[i]],
+                    this._gui);
             }
         } else {
             for (i in this._propertyList) {
                 if (this._propertyList.hasOwnProperty(i)) {
                     this._propertyList[i].id = i;
-                    this._addPropertyItem(i.split("."), "", this._propertyList[i], this._gui);
+                    this._addPropertyItem(i.split('.'), '', this._propertyList[i], this._gui);
                 }
             }
         }
@@ -99,10 +107,10 @@ define(['js/logger',
 
         if (attrID.length > 1) {
             parentFolderName = attrID[0];
-            parentFolderKey = prefix !== "" ? prefix + parentFolderName : parentFolderName;
+            parentFolderKey = prefix === '' ? parentFolderName : prefix + parentFolderName;
             this._folders[parentFolderKey] = this._folders[parentFolderKey] || guiObj.addFolder(parentFolderName);
             attrID.splice(0, 1);
-            this._addPropertyItem(attrID, parentFolderKey + ".", propDesc, this._folders[parentFolderKey]);
+            this._addPropertyItem(attrID, parentFolderKey + '.', propDesc, this._folders[parentFolderKey]);
         } else {
             if (propDesc.value === undefined || propDesc.value === null) {
                 this._folders[propDesc.name] = guiObj.addFolder(propDesc.name, propDesc.text);

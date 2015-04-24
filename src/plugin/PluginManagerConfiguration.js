@@ -1,12 +1,13 @@
-/*
- * Copyright (C) 2014 Vanderbilt University, All rights reserved.
- *
- * Author: Zsolt Lattmann
+/*globals define*/
+/*jshint browser: true, node:true*/
+
+/**
+ * @author lattmann / https://github.com/lattmann
  */
 
-'use strict';
-define([], function () {
 
+define([], function () {
+    'use strict';
     /**
      * Initializes a new instance of plugin manager configuration.
      *
@@ -25,10 +26,10 @@ define([], function () {
         }
     };
 
-// TODO: something like this
+//  TODO: something like this
 //        config = {
-//            "host": CONFIG.mongoip,
-//            "port": CONFIG.mongoport,
+//           "host": CONFIG.mongoip,
+//           "port": CONFIG.mongoport,
 //            "database": "multi",
 //            "project": "CyPhyLight",
 //            "token": "",
@@ -42,7 +43,7 @@ define([], function () {
      *
      * @returns {{}}
      */
-    PluginManagerConfiguration.prototype.serialize = function() {
+    PluginManagerConfiguration.prototype.serialize = function () {
         var keys = Object.keys(this);
         var result = {};
 

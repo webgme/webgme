@@ -1,11 +1,18 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, _, $, WebGMEGlobal*/
+/*jshint browser: true*/
 
-define(['js/logger',
-        'js/Widgets/DiagramDesigner/DragScroll',
-        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (Logger,
-                                                    DragScroll,
-                                                    DiagramDesignerWidgetConstants) {
-    "use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define([
+    'js/logger',
+    'js/Widgets/DiagramDesigner/DragScroll',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'
+], function (Logger,
+             DragScroll,
+             DiagramDesignerWidgetConstants) {
+    'use strict';
 
     var DragManager,
         MOVE_CURSOR = 'move',
@@ -23,15 +30,15 @@ define(['js/logger',
         this._diagramDesigner = options ? options.diagramDesigner : null;
 
         if (this._diagramDesigner === undefined || this._diagramDesigner === null) {
-            this.logger.error("Trying to initialize a DragManager without a canvas...");
-            throw ("DragManager can not be created");
+            this.logger.error('Trying to initialize a DragManager without a canvas...');
+            throw ('DragManager can not be created');
         }
 
-        this.logger.debug("DragManager ctor finished");
+        this.logger.debug('DragManager ctor finished');
     };
 
-    DragManager.prototype.DRAGMODE_COPY = "copy";
-    DragManager.prototype.DRAGMODE_MOVE = "move";
+    DragManager.prototype.DRAGMODE_COPY = 'copy';
+    DragManager.prototype.DRAGMODE_MOVE = 'move';
 
     DragManager.prototype.initialize = function (el) {
         var self = this;
@@ -43,15 +50,19 @@ define(['js/logger',
         this._dragModes[this.DRAGMODE_COPY] = true;
         this._dragModes[this.DRAGMODE_MOVE] = true;
 
-        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ITEM_POSITION_CHANGED, function (_canvas, event) {
-            self._canvasItemPositionChanged(event);
-        });
+        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ITEM_POSITION_CHANGED,
+            function (_canvas, event) {
+                self._canvasItemPositionChanged(event);
+            }
+        );
 
         this._dragScroll = new DragScroll(this.$el.parent());
 
-        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_COMPONENT_DELETE, function (_canvas, componentId) {
-            self._onComponentDelete(componentId);
-        });
+        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_COMPONENT_DELETE,
+            function (_canvas, componentId) {
+                self._onComponentDelete(componentId);
+            }
+        );
     };
 
     DragManager.prototype.activate = function () {
@@ -65,7 +76,7 @@ define(['js/logger',
     DragManager.prototype._activateMouseListeners = function () {
         var self = this;
 
-        this.$el.on(MOUSE_DOWN, 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
+        this.$el.on(MOUSE_DOWN, 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS, function (event) {
             self._onItemMouseDown(event);
         });
     };
@@ -88,7 +99,7 @@ define(['js/logger',
             dragEnabled = !this._diagramDesigner.getIsReadOnlyMode();
 
         if (dragEnabled && leftButton) {
-            this.logger.debug("DragManager._onItemMouseDown at: " + JSON.stringify(mousePos));
+            this.logger.debug('DragManager._onItemMouseDown at: ' + JSON.stringify(mousePos));
 
             if (this._diagramDesigner.mode === this._diagramDesigner.OPERATING_MODES.DESIGN) {
 
@@ -117,13 +128,15 @@ define(['js/logger',
 
         if (dragEnabled && this._diagramDesigner.mode === this._diagramDesigner.OPERATING_MODES.DESIGN) {
             //initialize drag descriptor
-            this._dragDesc = { "startX": mX,
-                "startY": mY,
-                "dX": 0,
-                "dY": 0,
-                "params": undefined,
-                "mode": undefined,
-                "dragging": false};
+            this._dragDesc = {
+                startX: mX,
+                startY: mY,
+                dX: 0,
+                dY: 0,
+                params: undefined,
+                mode: undefined,
+                dragging: false
+            };
         }
     };
 
@@ -163,7 +176,7 @@ define(['js/logger',
         delete this._onBackgroundMouseMoveCallBack;
         delete this._onBackgroundMouseUpCallBack;
 
-        this.logger.debug("DragManager._onBackgroundMouseUp" );
+        this.logger.debug('DragManager._onBackgroundMouseUp');
 
         //if dragging at all
         if (this._dragDesc.dragging === true) {
@@ -200,11 +213,12 @@ define(['js/logger',
         //when we have the selected drag-mode, initialize the parameters
         this._dragDesc.mode = currentDragMode;
 
-        this._dragDesc.params = { "draggedItemIDs": [],
-            "draggedConnectionIDs" : [],
-            "minStartCoordinates": { "x": undefined, "y": undefined },
-            "originalPositions" : [],
-            "modeSpecificData": undefined
+        this._dragDesc.params = {
+            draggedItemIDs: [],
+            draggedConnectionIDs: [],
+            minStartCoordinates: {x: undefined, y: undefined},
+            originalPositions: [],
+            modeSpecificData: undefined
         };
 
         if (this._dragDesc.mode === this.DRAGMODE_MOVE) {
@@ -230,7 +244,7 @@ define(['js/logger',
             id,
             item;
 
-        while(i--) {
+        while (i--) {
             id = selectedItemIDs[i];
             item = items[id];
 
@@ -240,14 +254,16 @@ define(['js/logger',
                 if (this._diagramDesigner.onDragStartDesignerItemDraggable(id) === true) {
                     //store we are dragging this guy
                     this._dragDesc.params.draggedItemIDs.push(id);
-                    this._dragDesc.params.originalPositions.push({ "x": item.positionX,
-                        "y": item.positionY});
+                    this._dragDesc.params.originalPositions.push({
+                        x: item.positionX,
+                        y: item.positionY
+                    });
                 }
             }
         }
 
         //set cursor
-        this.$el.css("cursor", MOVE_CURSOR);
+        this.$el.css('cursor', MOVE_CURSOR);
     };
 
     //initialize the drag descriptor for 'COPY' operation
@@ -269,7 +285,7 @@ define(['js/logger',
         this._diagramDesigner.beginUpdate();
 
         //first copy the DesignerItems
-        while(i--) {
+        while (i--) {
             id = selectedItemIDs[i];
 
             if (itemIDs.indexOf(id) !== -1) {
@@ -277,7 +293,7 @@ define(['js/logger',
                 if (this._diagramDesigner.onDragStartDesignerItemCopyable(id) === true) {
                     objDesc = {};
                     srcItem = items[id];
-                    objDesc.position = { "x": srcItem.positionX, "y": srcItem.positionY};
+                    objDesc.position = {x: srcItem.positionX, y: srcItem.positionY};
 
                     objDesc.decoratorClass = srcItem._decoratorClass;
                     objDesc.control = srcItem._decoratorInstance.getControl();
@@ -290,10 +306,12 @@ define(['js/logger',
 
                     //store we are dragging this guy
                     this._dragDesc.params.draggedItemIDs.push(copiedItem.id);
-                    this._dragDesc.params.originalPositions.push({ "x": copiedItem.positionX,
-                        "y": copiedItem.positionY});
+                    this._dragDesc.params.originalPositions.push({
+                        x: copiedItem.positionX,
+                        y: copiedItem.positionY
+                    });
 
-                    copyData[id] = {"copiedItemId": copiedItem.id};
+                    copyData[id] = {copiedItemId: copiedItem.id};
 
                     newSelectionIDs.push(copiedItem.id);
                 }
@@ -302,7 +320,7 @@ define(['js/logger',
 
         i = selectedItemIDs.length;
         //then duplicate the connections that are selected
-        while(i--) {
+        while (i--) {
             id = selectedItemIDs[i];
 
             if (connectionIDs.indexOf(id) !== -1) {
@@ -331,7 +349,7 @@ define(['js/logger',
                     var copiedConnection = this._diagramDesigner.createConnection(objDesc);
 
                     this._dragDesc.params.draggedConnectionIDs.push(copiedConnection.id);
-                    copyData[id] = {"copiedConnectionId": copiedConnection.id };
+                    copyData[id] = {copiedConnectionId: copiedConnection.id};
 
                     newSelectionIDs.push(copiedConnection.id);
                 }
@@ -344,7 +362,7 @@ define(['js/logger',
         this._diagramDesigner.selectionManager.setSelection(newSelectionIDs, false);
 
         //set cursor
-        this.$el.css("cursor", COPY_CURSOR);
+        this.$el.css('cursor', COPY_CURSOR);
     };
 
     /********* END OF --- START DRAGGING *******************************/
@@ -382,7 +400,7 @@ define(['js/logger',
 
         this._diagramDesigner.onDesignerItemDragStop(undefined, dItems);
 
-        this.$el.css("cursor", "");
+        this.$el.css('cursor', '');
     };
 
     DragManager.prototype._endDragModeMove = function () {
@@ -400,7 +418,7 @@ define(['js/logger',
                     id = draggedItemIDs[i];
                     item = items[id];
 
-                    newPositions[id] = { "x": item.positionX, "y": item.positionY };
+                    newPositions[id] = {x: item.positionX, y: item.positionY};
                 }
 
                 //clear drag descriptor object
@@ -415,8 +433,10 @@ define(['js/logger',
         var draggedItemIDs = this._dragDesc.params.draggedItemIDs,
             copyData = this._dragDesc.params.modeSpecificData,
             i,
-            copyDesc = { "items": {},
-                "connections": {}},
+            copyDesc = {
+                items: {},
+                connections: {}
+            },
             desc;
 
         //if drag&drop ended because of no more item being dragged
@@ -425,14 +445,16 @@ define(['js/logger',
             for (i in copyData) {
                 if (copyData.hasOwnProperty(i)) {
                     desc = copyData[i];
-                    if (desc.hasOwnProperty("copiedItemId")) {
+                    if (desc.hasOwnProperty('copiedItemId')) {
                         //description of a box-copy
-                        copyDesc.items[desc.copiedItemId] = {"oItemId": i,
-                            "posX": this._diagramDesigner.items[desc.copiedItemId].positionX,
-                            "posY": this._diagramDesigner.items[desc.copiedItemId].positionY};
-                    } else if (desc.hasOwnProperty("copiedConnectionId")) {
+                        copyDesc.items[desc.copiedItemId] = {
+                            oItemId: i,
+                            posX: this._diagramDesigner.items[desc.copiedItemId].positionX,
+                            posY: this._diagramDesigner.items[desc.copiedItemId].positionY
+                        };
+                    } else if (desc.hasOwnProperty('copiedConnectionId')) {
                         //description of a connection copy
-                        copyDesc.connections[desc.copiedConnectionId] = {"oConnectionId": i};
+                        copyDesc.connections[desc.copiedConnectionId] = {oConnectionId: i};
                     }
                 }
             }
@@ -455,15 +477,15 @@ define(['js/logger',
             this._dragDesc.dX = dX;
             this._dragDesc.dY = dY;
 
-            this.logger.debug("DragManager._updateDraggedItemPositions [dx,dy]: " + dX + "," + dY );
+            this.logger.debug('DragManager._updateDraggedItemPositions [dx,dy]: ' + dX + ',' + dY);
 
             if (this._dragDesc.params.minStartCoordinates.x + dX < gridSize) {
-                this.logger.debug("dX cleared out otherwise item's position would be negative");
+                this.logger.debug('dX cleared out otherwise item\'s position would be negative');
                 dX = gridSize - this._dragDesc.params.minStartCoordinates.x;
             }
 
             if (this._dragDesc.params.minStartCoordinates.y + dY < gridSize) {
-                this.logger.debug("dY cleared out otherwise item's position would be negative");
+                this.logger.debug('dY cleared out otherwise item\'s position would be negative');
                 dY = gridSize - this._dragDesc.params.minStartCoordinates.y;
             }
 
@@ -483,7 +505,7 @@ define(['js/logger',
         this._movingDraggedComponents = true;
 
         //move all the dragged items
-        while(i--) {
+        while (i--) {
             id = this._dragDesc.params.draggedItemIDs[i];
 
             posX = this._dragDesc.params.originalPositions[i].x + dX;
@@ -504,8 +526,10 @@ define(['js/logger',
             dX = dx - dx % gridSize,
             dY = dy - dy % gridSize;
 
-        return {"dX": dX,
-            "dY": dY };
+        return {
+            dX: dX,
+            dY: dY
+        };
     };
 
     DragManager.prototype._calculateMinStartCoordinates = function () {
@@ -520,13 +544,15 @@ define(['js/logger',
             //figure out minimum coordinates from originalPositions
             while (i--) {
                 if (this._dragDesc.params.minStartCoordinates.x) {
-                    this._dragDesc.params.minStartCoordinates.x = Math.min(this._dragDesc.params.minStartCoordinates.x, this._dragDesc.params.originalPositions[i].x);
+                    this._dragDesc.params.minStartCoordinates.x = Math.min(this._dragDesc.params.minStartCoordinates.x,
+                        this._dragDesc.params.originalPositions[i].x);
                 } else {
                     this._dragDesc.params.minStartCoordinates.x = this._dragDesc.params.originalPositions[i].x;
                 }
 
                 if (this._dragDesc.params.minStartCoordinates.y) {
-                    this._dragDesc.params.minStartCoordinates.y = Math.min(this._dragDesc.params.minStartCoordinates.y, this._dragDesc.params.originalPositions[i].y);
+                    this._dragDesc.params.minStartCoordinates.y = Math.min(this._dragDesc.params.minStartCoordinates.y,
+                        this._dragDesc.params.originalPositions[i].y);
                 } else {
                     this._dragDesc.params.minStartCoordinates.y = this._dragDesc.params.originalPositions[i].y;
                 }
@@ -547,7 +573,7 @@ define(['js/logger',
             modeSpecificData = this._dragDesc.params.modeSpecificData;
 
             //handle COPY / MOVE mode
-            switch(this._dragDesc.mode) {
+            switch (this._dragDesc.mode) {
                 case this.DRAGMODE_MOVE:
                     idx = this._dragDesc.params.draggedItemIDs.indexOf(componentId);
                     if (idx !== -1) {
@@ -567,7 +593,7 @@ define(['js/logger',
                         this.logger.debug('One of the currently copied items is being deleted: ' + componentId);
 
                         copiedComponentId = modeSpecificData[componentId].copiedItemId ||
-                            modeSpecificData[componentId].copiedConnectionId;
+                        modeSpecificData[componentId].copiedConnectionId;
 
                         //clean up
                         delete modeSpecificData[componentId];
@@ -601,7 +627,7 @@ define(['js/logger',
             if (this._dragDesc && this._dragDesc.params && this._dragDesc.params.draggedItemIDs.length === 0) {
                 this._cancelDrag();
             }
-            
+
         }
     };
 

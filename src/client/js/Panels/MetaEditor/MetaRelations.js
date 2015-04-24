@@ -1,111 +1,121 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, $, Raphael */
+/*jshint browser: true */
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/Constants',
-        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (CONSTANTS,
-                                                                                 DiagramDesignerWidgetConstants) {
- 
-    "use strict";
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'
+], function (CONSTANTS,
+             DiagramDesignerWidgetConstants) {
 
-    var CONTAINMENT_TYPE_LINE_END = "diamond2-xxwide-xxlong",
-        POINTER_TYPE_LINE_END = "open-xwide-xlong",
-        INHERITANCE_TYPE_LINE_END = "inheritance-xxwide-xxlong",
-        SET_TYPE_LINE_END = "classic-xwide-xlong",
-        SET_TYPE_LINE_START = "oval-wide-long",
-        NO_END = "none";
+    'use strict';
 
-    var _meta_relations = {
-            CONTAINMENT : "containment",
-            POINTER : "pointer",
-            INHERITANCE : "inheritance",
-            SET : "set"
-    };
+    var CONTAINMENT_TYPE_LINE_END = 'diamond2-xxwide-xxlong',
+        POINTER_TYPE_LINE_END = 'open-xwide-xlong',
+        INHERITANCE_TYPE_LINE_END = 'inheritance-xxwide-xxlong',
+        SET_TYPE_LINE_END = 'classic-xwide-xlong',
+        SET_TYPE_LINE_START = 'oval-wide-long',
+        NO_END = 'none',
 
-    var _connection_meta_info = {
-        TYPE: "type"
-    };
+        metaRelations = {
+            CONTAINMENT: 'containment',
+            POINTER: 'pointer',
+            INHERITANCE: 'inheritance',
+            SET: 'set'
+        },
 
-    var _getLineVisualDescriptor = function (sName) {
+        connectionMetaInfo = {
+            TYPE: 'type'
+        };
+
+    function getLineVisualDescriptor(sName) {
         var params = {};
 
         params[DiagramDesignerWidgetConstants.LINE_WIDTH] = 1;
         params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = NO_END;
         params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
-        params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#AAAAAA";
+        params[DiagramDesignerWidgetConstants.LINE_COLOR] = '#AAAAAA';
         params[DiagramDesignerWidgetConstants.LINE_PATTERN] = DiagramDesignerWidgetConstants.LINE_PATTERNS.SOLID;
 
         switch (sName) {
-            case _meta_relations.CONTAINMENT:
+            case metaRelations.CONTAINMENT:
                 params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = CONTAINMENT_TYPE_LINE_END;
                 params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
-                params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#000000";
+                params[DiagramDesignerWidgetConstants.LINE_COLOR] = '#000000';
                 break;
-            case _meta_relations.POINTER:
+            case metaRelations.POINTER:
                 params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = NO_END;
                 params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = POINTER_TYPE_LINE_END;
-                params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#0000FF";
+                params[DiagramDesignerWidgetConstants.LINE_COLOR] = '#0000FF';
                 break;
-            case _meta_relations.INHERITANCE:
+            case metaRelations.INHERITANCE:
                 params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = INHERITANCE_TYPE_LINE_END;
                 params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
-                params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#FF0000";
+                params[DiagramDesignerWidgetConstants.LINE_COLOR] = '#FF0000';
                 break;
-            case _meta_relations.SET:
+            case metaRelations.SET:
                 params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = SET_TYPE_LINE_START;
                 params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = SET_TYPE_LINE_END;
-                params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#FF00FF";
+                params[DiagramDesignerWidgetConstants.LINE_COLOR] = '#FF00FF';
                 break;
             default:
                 break;
         }
 
         return params;
-    };
+    }
 
-    var _convertToButtonLineEndStyle = function (lineEndStyle) {
+    function convertToButtonLineEndStyle(lineEndStyle) {
         if (lineEndStyle === INHERITANCE_TYPE_LINE_END) {
-            return lineEndStyle.replace("xwide", "wide").replace("xlong", "long");
+            return lineEndStyle.replace('xwide', 'wide').replace('xlong', 'long');
         }
 
         return lineEndStyle;
-    };
+    }
 
-    var _createButtonIcon = function (btnSize, connType) {
+    function createButtonIcon(btnSize, connType) {
         var el = $('<div/>'),
             path,
             paper = Raphael(el[0], btnSize, btnSize),
-            pathParams = _getLineVisualDescriptor(connType);
+            pathParams = getLineVisualDescriptor(connType),
+            temp;
 
-        if (connType === _meta_relations.CONTAINMENT ||
-            connType === _meta_relations.INHERITANCE) {
-            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW]);
-            pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW]);
+        if (connType === metaRelations.CONTAINMENT ||
+            connType === metaRelations.INHERITANCE) {
+
+            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW]);
+            pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW]);
         } else {
             //for pointer and pointer list we have to flip the line end visual styles
-            var temp = pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW];
+            temp = pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW];
             pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW];
             pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = temp;
         }
 
-        el.attr({"style": "height: " + btnSize + "px; margin-top: 2px; margin-bottom: 2px;"});
+        el.attr({style: 'height: ' + btnSize + 'px; margin-top: 2px; margin-bottom: 2px;'});
 
-        path = paper.path("M" + (Math.round(btnSize / 2) + 0.5) + ",0, L" + (Math.round(btnSize / 2) + 0.5) + "," + btnSize);
+        path = paper.path('M' + (Math.round(btnSize / 2) + 0.5) + ',0, L' + (Math.round(btnSize / 2) + 0.5) + ',' +
+                          btnSize);
 
-        path.attr({ "arrow-start": pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW],
-            "arrow-end": pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW],
-            "stroke":  pathParams[DiagramDesignerWidgetConstants.LINE_COLOR],
-            "stroke-width": pathParams[DiagramDesignerWidgetConstants.LINE_WIDTH],
-            "stroke-dasharray": pathParams[DiagramDesignerWidgetConstants.LINE_PATTERN]});
+        path.attr({
+            'arrow-start': pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW],
+            'arrow-end': pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW],
+            'stroke': pathParams[DiagramDesignerWidgetConstants.LINE_COLOR],
+            'stroke-width': pathParams[DiagramDesignerWidgetConstants.LINE_WIDTH],
+            'stroke-dasharray': pathParams[DiagramDesignerWidgetConstants.LINE_PATTERN]
+        });
 
         return el;
-    };
+    }
 
     return {
-        META_RELATIONS: _meta_relations,
+        META_RELATIONS: metaRelations,
 
-        getLineVisualDescriptor : _getLineVisualDescriptor,
+        getLineVisualDescriptor: getLineVisualDescriptor,
 
-        createButtonIcon : _createButtonIcon,
+        createButtonIcon: createButtonIcon,
 
-        CONNECTION_META_INFO: _connection_meta_info
+        CONNECTION_META_INFO: connectionMetaInfo
     };
 });

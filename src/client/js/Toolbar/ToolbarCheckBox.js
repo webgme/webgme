@@ -1,9 +1,13 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _ */
+/*jshint browser: true*/
 
-define(['js/Controls/iCheckBox',
-        './ToolbarItemBase'], function (iCheckBox,
-                                        ToolbarItemBase) {
-    "use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define(['js/Controls/iCheckBox', './ToolbarItemBase'], function (iCheckBox, ToolbarItemBase) {
+
+    'use strict';
 
     var ToolbarCheckBox;
 
@@ -11,7 +15,7 @@ define(['js/Controls/iCheckBox',
 
         iCheckBox.apply(this, [params]);
 
-        this.el.addClass("toolbar-checkbox");
+        this.el.addClass('toolbar-checkbox');
     };
 
     _.extend(ToolbarCheckBox.prototype, iCheckBox.prototype);

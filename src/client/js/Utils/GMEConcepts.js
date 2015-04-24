@@ -1,47 +1,51 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _ */
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['jquery',
-        'common/util/guid',
-        'js/Constants',
-        'js/NodePropertyNames',
-        'js/RegistryKeys',
-        './GMEConcepts.FCO',
-        './METAAspectHelper',
-        'js/Panels/MetaEditor/MetaEditorConstants',
-        'js/util',
-        'text!./metaConstraint._js'
-    ], function (
-    _jquery,
-    generateGuid,
-    CONSTANTS,
-    nodePropertyNames,
-    REGISTRY_KEYS,
-    GMEConceptsFCO,
-    METAAspectHelper,
-    MetaEditorConstants,
-    clientUtil,
-    metaConstraint) {
+    'common/util/guid',
+    'js/Constants',
+    'js/NodePropertyNames',
+    'js/RegistryKeys',
+    './GMEConcepts.FCO',
+    './METAAspectHelper',
+    'js/Panels/MetaEditor/MetaEditorConstants',
+    'js/util'
+], function (_jquery,
+             generateGuid,
+             CONSTANTS,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             GMEConceptsFCO,
+             METAAspectHelper,
+             MetaEditorConstants,
+             clientUtil) {
 
-    "use strict";
+    'use strict';
 
-    var _client,
+    var client,
         EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
 
-    var _initialize = function (client) {
-        if (!_client) {
-            _client = client;
+    function initialize(c) {
+        if (!client) {
+            client = c;
         }
-    };
+    }
 
     /*
-     * a connection is an object that has CONSTANTS.POINTER_SOURCE and CONSTANTS.POINTER_TARGET pointers and those values are set
+     * a connection is an object that has CONSTANTS.POINTER_SOURCE and CONSTANTS.POINTER_TARGET
+     * pointers and those values are set
      */
-    var _isConnection = function (objID) {
+    function isConnection(objID) {
         var validConnection = false,
-            obj = _client.getNode(objID);
+            obj = client.getNode(objID),
+            ptrNames;
 
         if (obj) {
-            var ptrNames = obj.getPointerNames();
+            ptrNames = obj.getPointerNames();
             if (ptrNames.indexOf(CONSTANTS.POINTER_SOURCE) !== -1 &&
                 ptrNames.indexOf(CONSTANTS.POINTER_TARGET) !== -1 &&
                 obj.getPointer(CONSTANTS.POINTER_SOURCE).to &&
@@ -51,17 +55,18 @@ define(['jquery',
         }
 
         return validConnection;
-    };
+    }
 
     /*
-     * a connectiontype is an object that has CONSTANTS.POINTER_SOURCE and CONSTANTS.POINTER_TARGET pointers
+     * a connection type is an object that has CONSTANTS.POINTER_SOURCE and CONSTANTS.POINTER_TARGET pointers
      */
-    var _isConnectionType = function (objID) {
+    function isConnectionType(objID) {
         var valid = false,
-            obj = _client.getNode(objID);
+            obj = client.getNode(objID),
+            ptrNames;
 
         if (obj) {
-            var ptrNames = obj.getPointerNames();
+            ptrNames = obj.getPointerNames();
             if (ptrNames.indexOf(CONSTANTS.POINTER_SOURCE) !== -1 &&
                 ptrNames.indexOf(CONSTANTS.POINTER_TARGET) !== -1) {
                 valid = true;
@@ -69,114 +74,115 @@ define(['jquery',
         }
 
         return valid;
-    };
+    }
 
     /*
      * Determines if the given object in the given container can be a valid connection source
      *
-     * The given parent has a valid children type that has CONSTANTS.POINTER_SOURCE and CONSTANTS.POINTER_TARGET pointers
+     * The given parent has a valid children type that has
+     *      CONSTANTS.POINTER_SOURCE and CONSTANTS.POINTER_TARGET pointers
      * and the given object can be a valid target for CONSTANTS.POINTER_SOURCE
      */
     /*var _isValidConnectionSource = function (objID, parentID) {
-        var valid = false,
-            validChildrenTypes,
-            len,
-            childID;
+     var valid = false,
+     validChildrenTypes,
+     len,
+     childID;
 
-        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
-        len = validChildrenTypes.length;
-        while (len--) {
-            childID = validChildrenTypes[len];
-            if (_client.getPointerMeta(childID, CONSTANTS.POINTER_SOURCE) &&
-                _client.getPointerMeta(childID, CONSTANTS.POINTER_TARGET) &&
-                _client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, objID)) {
-                valid = true;
-                break;
-            }
-        }
+     validChildrenTypes = getMETAAspectMergedValidChildrenTypes(parentID) || [];
+     len = validChildrenTypes.length;
+     while (len--) {
+     childID = validChildrenTypes[len];
+     if (client.getPointerMeta(childID, CONSTANTS.POINTER_SOURCE) &&
+     client.getPointerMeta(childID, CONSTANTS.POINTER_TARGET) &&
+     client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, objID)) {
+     valid = true;
+     break;
+     }
+     }
 
-        return valid;
-    };*/
+     return valid;
+     };*/
 
     /*
      * Determines if a GME Connection can be created between source and target in parent
      */
-    var _getValidConnectionTypes = function (sourceID, targetID, parentID) {
+    function getValidConnectionTypes(sourceID, targetID, parentID) {
         var validTypes = [],
-			validChildrenTypes = _getValidConnectionTypesFromSource(sourceID, parentID),
-			len = validChildrenTypes.length;
-        
+            validChildrenTypes = getValidConnectionTypesFromSource(sourceID, parentID),
+            len = validChildrenTypes.length;
+
         while (len--) {
-            if (_client.isValidTarget(validChildrenTypes[len], CONSTANTS.POINTER_TARGET, targetID)) {
+            if (client.isValidTarget(validChildrenTypes[len], CONSTANTS.POINTER_TARGET, targetID)) {
                 validTypes.push(validChildrenTypes[len]);
             }
         }
 
         return validTypes;
-    };
+    }
 
     /*
      * Determines the GME Connection can be created from a source in a parent
      */
-    var _getValidConnectionTypesFromSource = function (sourceID, parentID) {
+    function getValidConnectionTypesFromSource(sourceID, parentID) {
         var validTypes = [],
             validChildrenTypes,
             len,
             childID;
 
-        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
+        validChildrenTypes = getMETAAspectMergedValidChildrenTypes(parentID) || [];
 
         len = validChildrenTypes.length;
         while (len--) {
             childID = validChildrenTypes[len];
-            if (_isConnectionType(childID) &&
-                _client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID)) {
+            if (isConnectionType(childID) &&
+                client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID)) {
                 validTypes.push(childID);
             }
         }
 
         return validTypes;
-    };
+    }
 
     /*
      * Determines if a GME Connection is valid by META between source and destination
      */
-    var _isValidConnection = function (sourceID, targetID, connectionID) {
+    function isValidConnection(sourceID, targetID, connectionID) {
         var valid = false;
 
         if (sourceID !== undefined && targetID !== undefined && connectionID !== undefined) {
-            if (_client.isValidTarget(connectionID, CONSTANTS.POINTER_SOURCE, sourceID) &&
-                _client.isValidTarget(connectionID, CONSTANTS.POINTER_TARGET, targetID)) {
+            if (client.isValidTarget(connectionID, CONSTANTS.POINTER_SOURCE, sourceID) &&
+                client.isValidTarget(connectionID, CONSTANTS.POINTER_TARGET, targetID)) {
                 valid = true;
             }
         }
 
         return valid;
-    };
+    }
 
     /*
      * Returns true if a new child with the given baseId (instance of base) can be created in parent
      */
-    var _canCreateChild = function (parentId, baseId) {
-        return _canCreateChildren(parentId, [baseId]);
-    };
+    function canCreateChild(parentId, baseId) {
+        return canCreateChildren(parentId, [baseId]);
+    }
 
-    var _isProjectRegistryValue = function (key, objID) {
-        var rootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID),
+    function isProjectRegistryValue(key, objID) {
+        var rootNode = client.getNode(CONSTANTS.PROJECT_ROOT_ID),
             projectRegistry = rootNode.getRegistry(REGISTRY_KEYS.PROJECT_REGISTRY),
-            value = projectRegistry ?  projectRegistry[key] : null;
+            value = projectRegistry ? projectRegistry[key] : null;
 
         return objID === value;
-    };
+    }
 
-    var _isProjectFCO = function (objID) {
-        return _isProjectRegistryValue(CONSTANTS.PROJECT_FCO_ID, objID);
-    };
+    function isProjectFCO(objID) {
+        return isProjectRegistryValue(CONSTANTS.PROJECT_FCO_ID, objID);
+    }
 
     /*
      * Returns true if a new child with the given baseId (instance of base) can be created in parent
      */
-    var _canCreateChildren = function (parentId, baseIdList) {
+    function canCreateChildren(parentId, baseIdList) {
         var result = false,
             validChildrenItems,
             len,
@@ -187,16 +193,18 @@ define(['jquery',
             childrenMeta,
             baseId,
             j,
-            node;
+            node,
+            validChildrenTypes,
+            validChildrenTypeMap;
 
         //TODO: implement real logic based on META and CONSTRAINTS...
-        if(typeof parentId === 'string' && baseIdList && baseIdList.length > 0){
-           result = true;
+        if (typeof parentId === 'string' && baseIdList && baseIdList.length > 0) {
+            result = true;
 
             //make sure that no basIDList is not derived from parentId
             len = baseIdList.length;
             while (len-- && result === true) {
-                if (_client.isTypeOf(baseIdList[len], parentId)) {
+                if (client.isTypeOf(baseIdList[len], parentId)) {
                     result = false;
                 }
             }
@@ -207,7 +215,7 @@ define(['jquery',
                 //TODO: why just filter out, why not return false in the first place
                 len = baseIdList.length;
                 while (len--) {
-                    node = _client.getNode(baseIdList[len]);
+                    node = client.getNode(baseIdList[len]);
                     if (node) {
                         if (node.getRegistry(REGISTRY_KEYS.IS_ABSTRACT) === true) {
                             baseIdList.splice(len, 1);
@@ -222,9 +230,9 @@ define(['jquery',
 
             //Check #1: Global children number multiplicity
             if (result === true) {
-                parentNode = _client.getNode(parentId);
+                parentNode = client.getNode(parentId);
                 childrenIDs = parentNode.getChildrenIds();
-                childrenMeta = _client.getChildrenMeta(parentId);
+                childrenMeta = client.getChildrenMeta(parentId);
                 if (childrenMeta.max !== undefined &&
                     childrenMeta.max > -1 &&
                     childrenIDs.length + baseIdList.length > childrenMeta.max) {
@@ -233,18 +241,18 @@ define(['jquery',
             }
 
             //Check #2: is each single baseId a valid child of parentId
-            var validChildrenTypes = _client.getValidChildrenTypes(parentId);
+            validChildrenTypes = client.getValidChildrenTypes(parentId);
             i = validChildrenTypes.length;
 
-            var validChildrenTypeMap = {};
+            validChildrenTypeMap = {};
             while (i--) {
                 validChildrenTypeMap[validChildrenTypes[i]] = 0;
             }
             if (result === true) {
                 i = baseIdList.length;
-                while(i--) {
+                while (i--) {
                     baseId = baseIdList[i];
-                    if (!_client.isValidChild(parentId, baseId)) {
+                    if (!client.isValidChild(parentId, baseId)) {
                         result = false;
                         break;
                     } else {
@@ -252,7 +260,7 @@ define(['jquery',
                         //adjust accounting
                         j = validChildrenTypes.length;
                         while (j--) {
-                            if (_client.isTypeOf(baseId, validChildrenTypes[j])) {
+                            if (client.isTypeOf(baseId, validChildrenTypes[j])) {
                                 validChildrenTypeMap[validChildrenTypes[j]] += 1;
                             }
                         }
@@ -263,19 +271,19 @@ define(['jquery',
             //Check #3: exact child type multiplicity
             //map is already there of the children-to-be because of check #2
             if (result === true) {
-                parentNode = _client.getNode(parentId);
+                parentNode = client.getNode(parentId);
 
                 childrenIDs = parentNode.getChildrenIds();
 
-                validChildrenItems = _client.getValidChildrenItems(parentId);
+                validChildrenItems = client.getValidChildrenItems(parentId);
                 len = validChildrenItems.length;
                 while (len--) {
-                    if (_client.isTypeOf(baseId, validChildrenItems[len].id)) {
+                    if (client.isTypeOf(baseId, validChildrenItems[len].id)) {
 
                         counter = 0;
 
                         for (i = 0; i < childrenIDs.length; i += 1) {
-                            if (_client.isTypeOf(childrenIDs[i], validChildrenItems[len].id)) {
+                            if (client.isTypeOf(childrenIDs[i], validChildrenItems[len].id)) {
                                 counter += 1;
                             }
                         }
@@ -292,45 +300,45 @@ define(['jquery',
         }
 
         return result;
-    };
+    }
 
-    var _canDeleteNode = function (objID) {
+    function canDeleteNode(objID) {
         var result = false;
 
         //do not let delete project root and FCO
-        if (objID !== CONSTANTS.PROJECT_ROOT_ID &&
-            !_isProjectFCO(objID)) {
+        if (objID !== CONSTANTS.PROJECT_ROOT_ID && !isProjectFCO(objID)) {
             result = true;
         }
 
         return result;
-    };
+    }
 
-    var _getMETAAspectMergedValidChildrenTypes = function (objID) {
+    function getMETAAspectMergedValidChildrenTypes(objID) {
         var metaAspectMembers = METAAspectHelper.getMetaAspectMembers(),
-            validChildrenTypes = _client.getValidChildrenTypes(objID),
+            validChildrenTypes = client.getValidChildrenTypes(objID),
             len = metaAspectMembers.length,
             id;
 
-        while(len--) {
+        while (len--) {
             id = metaAspectMembers[len];
             if (validChildrenTypes.indexOf(id) === -1) {
-                if (_client.isValidChild(objID, id)) {
+                if (client.isValidChild(objID, id)) {
                     validChildrenTypes.push(id);
                 }
             }
         }
 
         return validChildrenTypes;
-    };
+    }
 
-    var _canAddToSet = function (objID, setName, itemIDList) {
-        var obj = _client.getNode(objID),
-            setMeta = _client.getPointerMeta(objID, setName),
+    function canAddToSet(objID, setName, itemIDList) {
+        var obj = client.getNode(objID),
+            setMeta = client.getPointerMeta(objID, setName),
             members = obj.getMemberIds(setName) || [],
             result = true,
             i,
-            baseId;
+            baseId,
+            maxPerType;
 
         //check #1: global multiplicity
         if (setMeta.max !== undefined &&
@@ -342,7 +350,7 @@ define(['jquery',
         //check #2: is every item a valid target of the pointer list
         if (result === true) {
             for (i = 0; i < itemIDList.length; i += 1) {
-                if (!_client.isValidTarget(objID, setName, itemIDList[i])) {
+                if (!client.isValidTarget(objID, setName, itemIDList[i])) {
                     result = false;
                     break;
                 }
@@ -351,7 +359,7 @@ define(['jquery',
 
         //check #3: multiplicity check for each type
         if (result === true) {
-            var maxPerType = {};
+            maxPerType = {};
             for (i = 0; i < setMeta.items.length; i += 1) {
                 if (setMeta.items[i].max !== undefined &&
                     setMeta.items[i].max > -1) {
@@ -363,14 +371,14 @@ define(['jquery',
                 if (maxPerType.hasOwnProperty(baseId)) {
                     //check all the members if it's this type
                     for (i = 0; i < members.length; i += 1) {
-                        if (_client.isTypeOf(members[i], baseId)) {
+                        if (client.isTypeOf(members[i], baseId)) {
                             maxPerType[baseId] -= 1;
                         }
                     }
 
                     //check all the itemIDList if it's this type
                     for (i = 0; i < itemIDList.length; i += 1) {
-                        if (_client.isTypeOf(itemIDList[i], baseId)) {
+                        if (client.isTypeOf(itemIDList[i], baseId)) {
                             maxPerType[baseId] -= 1;
                         }
                     }
@@ -384,32 +392,32 @@ define(['jquery',
         }
 
         return result;
-    };
+    }
 
-    var _isAbstract = function (objID) {
-        var isAbstract = false,
-            obj = _client.getNode(objID);
-
-        if (obj) {
-            isAbstract = obj.getRegistry(REGISTRY_KEYS.IS_ABSTRACT);
-        }
-
-        return isAbstract === true;
-    };
-
-    var _isPort = function (objID) {
-        var isPort = false,
-            obj = _client.getNode(objID);
+    function isAbstract(objID) {
+        var _isAbstract = false,
+            obj = client.getNode(objID);
 
         if (obj) {
-            isPort = obj.getRegistry(REGISTRY_KEYS.IS_PORT);
+            _isAbstract = obj.getRegistry(REGISTRY_KEYS.IS_ABSTRACT);
         }
 
-        return isPort === true;
-    };
+        return _isAbstract === true;
+    }
 
-    var _getValidPointerTypes = function (parentId, targetId) {
-        var validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentId),
+    function isPort(objID) {
+        var _isPort = false,
+            obj = client.getNode(objID);
+
+        if (obj) {
+            _isPort = obj.getRegistry(REGISTRY_KEYS.IS_PORT);
+        }
+
+        return _isPort === true;
+    }
+
+    function getValidPointerTypes(parentId, targetId) {
+        var validChildrenTypes = getMETAAspectMergedValidChildrenTypes(parentId),
             i,
             childObj,
             ptrNames,
@@ -418,15 +426,17 @@ define(['jquery',
 
         i = validChildrenTypes.length;
         while (i--) {
-            if (_canCreateChild(parentId, validChildrenTypes[i])) {
-                childObj = _client.getNode(validChildrenTypes[i]);
+            if (canCreateChild(parentId, validChildrenTypes[i])) {
+                childObj = client.getNode(validChildrenTypes[i]);
                 if (childObj) {
                     ptrNames = _.difference(childObj.getPointerNames().slice(0), EXCLUDED_POINTERS);
                     j = ptrNames.length;
                     while (j--) {
-                        if (_client.isValidTarget(validChildrenTypes[i], ptrNames[j], targetId)) {
-                            validPointerTypes.push({'baseId': validChildrenTypes[i],
-                                                     'pointer': ptrNames[j]});
+                        if (client.isValidTarget(validChildrenTypes[i], ptrNames[j], targetId)) {
+                            validPointerTypes.push({
+                                baseId: validChildrenTypes[i],
+                                pointer: ptrNames[j]
+                            });
                         }
                     }
                 }
@@ -434,30 +444,32 @@ define(['jquery',
         }
 
         return validPointerTypes;
-    };
+    }
 
 
-    var _canCreateChildrenInAspect = function (parentId, baseIdList, aspectName) {
+    function canCreateChildrenInAspect(parentId, baseIdList, aspectName) {
         var canCreateInAspect = true,
             i,
-            j;
+            j,
+            metaAspectDesc,
+            aspectTypes;
 
         if (aspectName) {
             if (aspectName !== CONSTANTS.ASPECT_ALL) {
                 //need to check in aspect
-                var metaAspectDesc = _client.getMetaAspect(parentId, aspectName);
+                metaAspectDesc = client.getMetaAspect(parentId, aspectName);
                 if (metaAspectDesc) {
                     //metaAspectDesc.items contains the children types the user specified to participate in this aspect
-                    var aspectTypes =  metaAspectDesc.items || [];
+                    aspectTypes = metaAspectDesc.items || [];
 
                     if (aspectTypes.length > 0) {
                         //each item in baseIdList has to be a descendant of any item in aspectTypes
                         i = baseIdList.length;
                         while (i-- && canCreateInAspect) {
-                            j  = aspectTypes.length;
+                            j = aspectTypes.length;
                             canCreateInAspect = false;
                             while (j--) {
-                                if (_client.isTypeOf(baseIdList[i], aspectTypes[j])) {
+                                if (client.isTypeOf(baseIdList[i], aspectTypes[j])) {
                                     canCreateInAspect = true;
                                     break;
                                 }
@@ -478,38 +490,40 @@ define(['jquery',
         }
 
         if (canCreateInAspect) {
-            canCreateInAspect = _canCreateChildren(parentId, baseIdList);
+            canCreateInAspect = canCreateChildren(parentId, baseIdList);
         }
 
         return canCreateInAspect;
-    };
+    }
 
     /*
      * Determines the GME Connection can be created from a source in a parent in an aspect
      */
-    var _getValidConnectionTypesFromSourceInAspect = function (sourceID, parentID, aspectName) {
+    function getValidConnectionTypesFromSourceInAspect(sourceID, parentID, aspectName) {
         var validTypes = [],
             i,
             j,
-            canCreateInAspect;
+            canCreateInAspect,
+            metaAspectDesc,
+            aspectTypes;
 
         if (aspectName) {
             if (aspectName !== CONSTANTS.ASPECT_ALL) {
                 //need to check in aspect
-                var metaAspectDesc = _client.getMetaAspect(parentID, aspectName);
+                metaAspectDesc = client.getMetaAspect(parentID, aspectName);
                 if (metaAspectDesc) {
                     //metaAspectDesc.items contains the children types the user specified to participate in this aspect
-                    var aspectTypes =  metaAspectDesc.items || [];
+                    aspectTypes = metaAspectDesc.items || [];
 
                     if (aspectTypes.length > 0) {
-                        validTypes = _getValidConnectionTypesFromSource(sourceID, parentID);
+                        validTypes = getValidConnectionTypesFromSource(sourceID, parentID);
                         //each item in validTypes has to be a descendant of any item in aspectTypes
                         i = validTypes.length;
                         while (i--) {
-                            j  = aspectTypes.length;
+                            j = aspectTypes.length;
                             canCreateInAspect = false;
                             while (j--) {
-                                if (_client.isTypeOf(validTypes[i], aspectTypes[j])) {
+                                if (client.isTypeOf(validTypes[i], aspectTypes[j])) {
                                     canCreateInAspect = true;
                                     break;
                                 }
@@ -522,39 +536,41 @@ define(['jquery',
                     }
                 }
             } else {
-                validTypes = _getValidConnectionTypesFromSource(sourceID, parentID);
+                validTypes = getValidConnectionTypesFromSource(sourceID, parentID);
             }
         }
 
         return validTypes;
-    };
+    }
 
     /*
      * Determines if a GME Connection can be created between source and target in parent in an aspect
      */
-    var _getValidConnectionTypesInAspect = function (sourceID, targetID, parentID, aspectName) {
+    function getValidConnectionTypesInAspect(sourceID, targetID, parentID, aspectName) {
         var validTypes = [],
             canCreateInAspect,
             i,
-            j;
+            j,
+            metaAspectDesc,
+            aspectTypes;
 
         if (aspectName) {
             if (aspectName !== CONSTANTS.ASPECT_ALL) {
                 //need to check in aspect
-                var metaAspectDesc = _client.getMetaAspect(parentID, aspectName);
+                metaAspectDesc = client.getMetaAspect(parentID, aspectName);
                 if (metaAspectDesc) {
                     //metaAspectDesc.items contains the children types the user specified to participate in this aspect
-                    var aspectTypes =  metaAspectDesc.items || [];
+                    aspectTypes = metaAspectDesc.items || [];
 
                     if (aspectTypes.length > 0) {
-                        validTypes = _getValidConnectionTypes(sourceID, targetID, parentID);
+                        validTypes = getValidConnectionTypes(sourceID, targetID, parentID);
                         //each item in validTypes has to be a descendant of any item in aspectTypes
                         i = validTypes.length;
                         while (i--) {
-                            j  = aspectTypes.length;
+                            j = aspectTypes.length;
                             canCreateInAspect = false;
                             while (j--) {
-                                if (_client.isTypeOf(validTypes[i], aspectTypes[j])) {
+                                if (client.isTypeOf(validTypes[i], aspectTypes[j])) {
                                     canCreateInAspect = true;
                                     break;
                                 }
@@ -567,23 +583,23 @@ define(['jquery',
                     }
                 }
             } else {
-                validTypes = _getValidConnectionTypes(sourceID, targetID, parentID);
+                validTypes = getValidConnectionTypes(sourceID, targetID, parentID);
             }
         }
 
         return validTypes;
-    };
+    }
 
-    var _isValidTypeInAspect = function (objID, aspectContainerID, aspectName) {
+    function isValidTypeInAspect(objID, aspectContainerID, aspectName) {
         var result = false,
-            aspectTerritoryPattern = _client.getAspectTerritoryPattern(aspectContainerID, aspectName),
+            aspectTerritoryPattern = client.getAspectTerritoryPattern(aspectContainerID, aspectName),
             aspectItems = aspectTerritoryPattern.items,
             len;
 
         if (aspectItems) {
             len = aspectItems.length;
             while (len--) {
-                if (_client.isTypeOf(objID, aspectItems[len])) {
+                if (client.isTypeOf(objID, aspectItems[len])) {
                     result = true;
                     break;
                 }
@@ -591,12 +607,12 @@ define(['jquery',
         }
 
         return result;
-    };
+    }
 
     /*
      *
      */
-    var _isValidChildrenTypeInCrossCut = function (parentId, baseIdList) {
+    function isValidChildrenTypeInCrossCut(parentId, baseIdList) {
         //Check if each single baseId is a valid children type of parentId
         var i,
             result = true,
@@ -605,27 +621,28 @@ define(['jquery',
         i = baseIdList.length;
         while (i--) {
             baseId = baseIdList[i];
-            if (!_client.isValidChild(parentId, baseId)) {
+            if (!client.isValidChild(parentId, baseId)) {
                 result = false;
                 break;
             }
         }
 
         return result;
-    } ;
+    }
 
-    var _getValidPointerTargetTypesFromSource = function (objID, isSet) {
+    function getValidPointerTargetTypesFromSource(objID, isSet) {
         var result = [],
             EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE],
             EXCLUDED_SETS = [],
-            nodeObj = _client.getNode(objID),
-            pointerNames = isSet ? _.difference(nodeObj.getSetNames(), EXCLUDED_SETS) : _.difference(nodeObj.getPointerNames(), EXCLUDED_POINTERS),
+            nodeObj = client.getNode(objID),
+            pointerNames = isSet ? _.difference(nodeObj.getSetNames(),
+                EXCLUDED_SETS) : _.difference(nodeObj.getPointerNames(), EXCLUDED_POINTERS),
             len = pointerNames.length,
             pointerMetaDescriptor,
             i;
 
         while (len--) {
-            pointerMetaDescriptor = _client.getValidTargetItems(objID,pointerNames[len]);
+            pointerMetaDescriptor = client.getValidTargetItems(objID, pointerNames[len]);
             if (pointerMetaDescriptor && pointerMetaDescriptor.length > 0) {
                 i = pointerMetaDescriptor.length;
                 while (i--) {
@@ -637,18 +654,18 @@ define(['jquery',
         }
 
         return result;
-    };
+    }
 
 
-    var _getValidPointerTypesFromSourceToTarget = function (sourceId, targetId) {
+    function getValidPointerTypesFromSourceToTarget(sourceId, targetId) {
         var result = [],
             EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE],
-            nodeObj = _client.getNode(sourceId),
+            nodeObj = client.getNode(sourceId),
             pointerNames = _.difference(nodeObj.getPointerNames(), EXCLUDED_POINTERS),
             len = pointerNames.length;
 
         while (len--) {
-            if (_client.isValidTarget(sourceId,pointerNames[len],targetId)) {
+            if (client.isValidTarget(sourceId, pointerNames[len], targetId)) {
                 result.push(pointerNames[len]);
             }
         }
@@ -656,18 +673,18 @@ define(['jquery',
         result.sort(clientUtil.caseInsensitiveSort);
 
         return result;
-    };
+    }
 
 
-    var _getValidSetTypesFromContainerToMember = function (containerId, objId) {
+    function getValidSetTypesFromContainerToMember(containerId, objId) {
         var result = [],
             EXCLUDED_SETS = [],
-            nodeObj = _client.getNode(containerId),
+            nodeObj = client.getNode(containerId),
             setNames = _.difference(nodeObj.getSetNames(), EXCLUDED_SETS),
             len = setNames.length;
 
         while (len--) {
-            if (_canAddToSet(containerId, setNames[len], [objId])) {
+            if (canAddToSet(containerId, setNames[len], [objId])) {
                 result.push(setNames[len]);
             }
         }
@@ -675,10 +692,10 @@ define(['jquery',
         result.sort(clientUtil.caseInsensitiveSort);
 
         return result;
-    };
+    }
 
-    var _getCrosscuts = function (objID) {
-        var obj = _client.getNode(objID),
+    function getCrosscuts(objID) {
+        var obj = client.getNode(objID),
             crosscuts = [];
 
         if (obj) {
@@ -686,13 +703,13 @@ define(['jquery',
         }
 
         return crosscuts;
-    };
+    }
 
-    var _getSets = function (objID) {
-        var obj = _client.getNode(objID),
+    function getSets(objID) {
+        var obj = client.getNode(objID),
             setNames = obj.getSetNames() || [],
-            aspects = _client.getMetaAspectNames(objID) || [],
-            crossCuts = _getCrosscuts(objID),
+            aspects = client.getMetaAspectNames(objID) || [],
+            crossCuts = getCrosscuts(objID),
             crossCutNames = [];
 
         //filter out ManualAspects from the list
@@ -703,61 +720,61 @@ define(['jquery',
         setNames = _.difference(setNames, crossCutNames, aspects);
 
         return setNames;
-    };
+    }
 
-    var _getFCOId = function () {
+    function getFCOId() {
         var FCO_ID,
-            projectRootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID);
+            projectRootNode = client.getNode(CONSTANTS.PROJECT_ROOT_ID);
 
         if (projectRootNode) {
-            if(projectRootNode.getRegistryNames().indexOf(REGISTRY_KEYS.PROJECT_REGISTRY) !== -1){
+            if (projectRootNode.getRegistryNames().indexOf(REGISTRY_KEYS.PROJECT_REGISTRY) !== -1) {
                 FCO_ID = projectRootNode.getRegistry(REGISTRY_KEYS.PROJECT_REGISTRY)[CONSTANTS.PROJECT_FCO_ID];
             }
         }
 
         return FCO_ID;
-    };
+    }
 
-    var _canMoveNodeHere = function(parentId,nodes){
-        var parent = _client.getNode(parentId),
+    function canMoveNodeHere(parentId, nodes) {
+        var parent = client.getNode(parentId),
             parentBase = parent.getBaseId();
 
-        if(parentBase){
-            if(nodes.indexOf(parentBase) !== -1){
+        if (parentBase) {
+            if (nodes.indexOf(parentBase) !== -1) {
                 return false;
             }
         }
 
         return true;
-    };
+    }
 
     //return utility functions
     return {
-        initialize: _initialize,
-        isConnection: _isConnection,
-        isConnectionType: _isConnectionType,
+        initialize: initialize,
+        isConnection: isConnection,
+        isConnectionType: isConnectionType,
         /*isValidConnectionSource: _isValidConnectionSource,*/
-        canCreateChild: _canCreateChild,
-        isValidConnection: _isValidConnection,
-        isProjectFCO: _isProjectFCO,
-        canCreateChildren: _canCreateChildren,
-        canDeleteNode: _canDeleteNode,
-        getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes,
-        canAddToSet: _canAddToSet,
-        isAbstract: _isAbstract,
-        isPort: _isPort,
-        getValidPointerTypes: _getValidPointerTypes,
-        canCreateChildrenInAspect: _canCreateChildrenInAspect,
-        getValidConnectionTypesFromSourceInAspect: _getValidConnectionTypesFromSourceInAspect,
-        getValidConnectionTypesInAspect: _getValidConnectionTypesInAspect,
-        isValidTypeInAspect: _isValidTypeInAspect,
-        isValidChildrenTypeInCrossCut: _isValidChildrenTypeInCrossCut,
-        getValidPointerTargetTypesFromSource: _getValidPointerTargetTypesFromSource,
-        getValidPointerTypesFromSourceToTarget: _getValidPointerTypesFromSourceToTarget,
-        getValidSetTypesFromContainerToMember: _getValidSetTypesFromContainerToMember,
-        getCrosscuts: _getCrosscuts,
-        getSets: _getSets,
-        getFCOId: _getFCOId,
-        canMoveNodeHere: _canMoveNodeHere
+        canCreateChild: canCreateChild,
+        isValidConnection: isValidConnection,
+        isProjectFCO: isProjectFCO,
+        canCreateChildren: canCreateChildren,
+        canDeleteNode: canDeleteNode,
+        getMETAAspectMergedValidChildrenTypes: getMETAAspectMergedValidChildrenTypes,
+        canAddToSet: canAddToSet,
+        isAbstract: isAbstract,
+        isPort: isPort,
+        getValidPointerTypes: getValidPointerTypes,
+        canCreateChildrenInAspect: canCreateChildrenInAspect,
+        getValidConnectionTypesFromSourceInAspect: getValidConnectionTypesFromSourceInAspect,
+        getValidConnectionTypesInAspect: getValidConnectionTypesInAspect,
+        isValidTypeInAspect: isValidTypeInAspect,
+        isValidChildrenTypeInCrossCut: isValidChildrenTypeInCrossCut,
+        getValidPointerTargetTypesFromSource: getValidPointerTargetTypesFromSource,
+        getValidPointerTypesFromSourceToTarget: getValidPointerTypesFromSourceToTarget,
+        getValidSetTypesFromContainerToMember: getValidSetTypesFromContainerToMember,
+        getCrosscuts: getCrosscuts,
+        getSets: getSets,
+        getFCOId: getFCOId,
+        canMoveNodeHere: canMoveNodeHere
     };
 });

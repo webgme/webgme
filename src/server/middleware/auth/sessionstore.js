@@ -1,9 +1,7 @@
 /*jshint node:true*/
 
 /**
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Tamas Kecskes
+ * @author kecso / https://github.com/kecso
  */
 
 'use strict';
@@ -27,7 +25,10 @@ function sessionStore(parentLogger, gmeConfig) {
     } else if (gmeConfig.server.sessionStore.type.toLowerCase() === 'redis') {
         store = new RedisStore(gmeConfig.server.sessionStore.options);
     } else {
-        logger.error('unknown session store type: ' + gmeConfig.server.sessionStore.type + ' supported types: Memory, Mongo, Redis');
+        logger.error('unknown session store type: ' +
+            gmeConfig.server.sessionStore.type +
+            ' supported types: Memory, Mongo, Redis'
+        );
         // FIXME: throw an exception? hard error?
     }
 

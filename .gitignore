@@ -24,7 +24,7 @@ src/bin/stdout.log
 src/bin/decorators.js
 src/bin/*.xme
 
-/src-cov
+/report
 /coverage
 # ignore file system blob storage files
 blob-local-storage

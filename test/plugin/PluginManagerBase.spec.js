@@ -11,8 +11,8 @@ describe('Plugin Manager Base', function () {
     var WebGME = testFixture.WebGME,
         PluginManagerBase = testFixture.requirejs('plugin/PluginManagerBase'),
         PluginGenerator = testFixture.requirejs('plugin/PluginGenerator/PluginGenerator/PluginGenerator'),
-        MinimalWorkingExample = testFixture.requirejs('plugin/MinimalWorkingExample/MinimalWorkingExample/MinimalWorkingExample'),
-        Storage = testFixture.Storage,
+        MinimalWorkingExample = testFixture.requirejs(
+            'plugin/MinimalWorkingExample/MinimalWorkingExample/MinimalWorkingExample'),
         logger = testFixture.logger;
 
     describe('plugin manager API', function () {
@@ -77,7 +77,6 @@ describe('Plugin Manager Base', function () {
 
             rimraf = testFixture.rimraf,
             BlobClient = testFixture.BlobClient,
-            Artifact = testFixture.requirejs('blob/Artifact'),
             server,
             bcParam = {},
             blobClient,
@@ -97,7 +96,7 @@ describe('Plugin Manager Base', function () {
                 blobClient = new BlobClient(bcParam);
 
                 testFixture.importProject({
-                    filePath: './test/asset/intraPersist.json',
+                    filePath: './test/plugin/PluginManagerBase/project.json',
                     projectName: 'PluginManagerBase',
                     gmeConfig: gmeConfig
                 }, function (err, result) {
@@ -146,7 +145,7 @@ describe('Plugin Manager Base', function () {
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
-            pluginManagerBase.executePlugin('MinimalWorkingExample', managerConfiguration, function (err, result) {
+            pluginManagerBase.executePlugin('MinimalWorkingExample', managerConfiguration, function (err/*, result*/) {
                 // TODO: do proper check.
                 if (err) {
                     done(new Error(err));
@@ -172,7 +171,7 @@ describe('Plugin Manager Base', function () {
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
-            pluginManagerBase.executePlugin('MinimalWorkingExample', managerConfiguration, function (err, result) {
+            pluginManagerBase.executePlugin('MinimalWorkingExample', managerConfiguration, function (err/*, result*/) {
                 // TODO: do proper check.
                 if (err) {
                     done(new Error(err));
@@ -197,7 +196,7 @@ describe('Plugin Manager Base', function () {
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
-            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
+            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err/*, result*/) {
                 // TODO: do proper check.
                 if (err) {
                     done(new Error(err));
@@ -222,7 +221,7 @@ describe('Plugin Manager Base', function () {
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
-            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
+            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err/*, result*/) {
                 // TODO: do proper check.
                 if (err) {
                     done(new Error(err));
@@ -247,7 +246,7 @@ describe('Plugin Manager Base', function () {
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
-            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
+            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err/*, result*/) {
                 // TODO: do proper check.
                 if (err.indexOf('cannot find branch') > -1) {
                     done();
@@ -272,7 +271,7 @@ describe('Plugin Manager Base', function () {
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
-            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
+            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err/*, result*/) {
                 // TODO: do proper check.
                 if (err) {
                     done(new Error(err));
@@ -299,7 +298,7 @@ describe('Plugin Manager Base', function () {
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
-            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
+            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err/*, result*/) {
                 // TODO: do proper check.
                 if (err) {
                     done(new Error(err));
@@ -326,7 +325,7 @@ describe('Plugin Manager Base', function () {
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
-            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
+            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err/*, result*/) {
                 // TODO: do proper check.
                 if (err.indexOf('unable to load') > -1) {
                     done();
@@ -335,7 +334,6 @@ describe('Plugin Manager Base', function () {
                 done(new Error('should have failed to load node'));
             });
         });
-
 
 
         it('should execute plugin, when active selection (node) is not found', function (done) {
@@ -352,7 +350,7 @@ describe('Plugin Manager Base', function () {
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
-            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
+            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err/*, result*/) {
                 // TODO: do proper check.
                 if (err) {
                     done(new Error(err));
@@ -379,7 +377,7 @@ describe('Plugin Manager Base', function () {
 
             pluginManagerBase.initialize(null, null, null);
             (function () {
-                pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
+                pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (/*err, result*/) {
                     //// TODO: do proper check, this function should not throw exceptions!
                 });
             }).should.throw(Error);

@@ -1,4 +1,4 @@
-/* jshint node:true, mocha: true*/
+/* jshint node:true, mocha: true, expr:true*/
 
 /**
  * @author kecso / https://github.com/kecso
@@ -27,10 +27,10 @@ describe('corerel', function () {
             }
             storage.openProject('coreRelTesting', function (err, p) {
                 var child;
-            if (err) {
-                done(err);
-                return;
-            }
+                if (err) {
+                    done(err);
+                    return;
+                }
                 project = p;
                 core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('corerel:core')});
                 root = core.createNode();
@@ -39,9 +39,9 @@ describe('corerel', function () {
                 core.setRegistry(child, 'position', {x: 100, y: 100});
                 core.setPointer(child, 'parent', root);
 
-            done();
+                done();
+            });
         });
-    });
     });
     afterEach(function (done) {
         storage.deleteProject('coreRelTesting', function (err) {
@@ -55,9 +55,9 @@ describe('corerel', function () {
     it('should load all children', function (done) {
         TASYNC.call(function (children) {
             children.should.have.length(1);
-                done();
+            done();
         }, core.loadChildren(root));
-            });
+    });
     it('child should have pointer and root should not', function (done) {
         TASYNC.call(function (children) {
             var child = children[0];
@@ -66,7 +66,7 @@ describe('corerel', function () {
             core.hasPointer(root, 'parent').should.be.false;
             done();
         }, core.loadChildren(root));
-        });
+    });
     it('root should have collection and child should not', function (done) {
         TASYNC.call(function (children) {
             var child = children[0];
@@ -92,7 +92,7 @@ describe('corerel', function () {
             core.getRelid(grandChild).should.not.be.eql(core.getRelid(grandCopy));
             done();
         }, core.loadChildren(root));
-        });
+    });
     it('loading collection and pointer', function (done) {
         TASYNC.call(function (children) {
             children.should.have.length(1);

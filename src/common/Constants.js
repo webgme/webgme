@@ -1,7 +1,9 @@
 /*globals define*/
+/*jshint node: true, browser: true*/
 
-/*
+/**
  * STRING CONSTANT DEFINITIONS USED IN BOTH CLIENT AND SERVER JAVASCRIPT
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 define([], function () {

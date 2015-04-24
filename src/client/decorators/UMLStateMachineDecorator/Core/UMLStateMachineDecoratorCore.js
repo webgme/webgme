@@ -1,18 +1,13 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, _, $*/
+/*jshint browser: true, newcap: false*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
 
-"use strict";
-
-define(['js/Constants',
+//TODO does it really work with the fixed paths????
+define([
+    'js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!./Diagram.html',
@@ -21,16 +16,18 @@ define(['js/Constants',
     'text!./State.html',
     'text!./Transition.html',
     './Transition',
-    './UMLStateMachine.META'], function (CONSTANTS,
-                                       nodePropertyNames,
-                                       DiagramDesignerWidgetConstants,
-                                       DiagramTemplate,
-                                       InitialStateTemplate,
-                                       EndStateTemplate,
-                                       StateTemplate,
-                                       TransitionTemplate,
-                                       Transition,
-                                       UMLStateMachineMETA) {
+    './UMLStateMachine.META'
+], function (CONSTANTS,
+             nodePropertyNames,
+             DiagramDesignerWidgetConstants,
+             DiagramTemplate,
+             InitialStateTemplate,
+             EndStateTemplate,
+             StateTemplate,
+             TransitionTemplate,
+             Transition,
+             UMLStateMachineMETA) {
+    'use strict';
 
     var UMLStateMachineDecoratorCore,
         UMLStateMachineDecoratorClass = 'uml-state-machine',
@@ -45,7 +42,7 @@ define(['js/Constants',
     UMLStateMachineDecoratorCore = function () {
     };
 
-    UMLStateMachineDecoratorCore.prototype.$DOMBase = $('<div/>', {'class': UMLStateMachineDecoratorClass});
+    UMLStateMachineDecoratorCore.prototype.$DOMBase = $('<div/>', {class: UMLStateMachineDecoratorClass});
 
 
     UMLStateMachineDecoratorCore.prototype._initializeDecorator = function (params) {
@@ -82,7 +79,7 @@ define(['js/Constants',
             this.$el.append(this._metaTypeTemplate);
         } else {
             this.$el.addClass(DEFAULT_CLASS);
-            this.$el.append($('<div/>', {'class': 'name'}));
+            this.$el.append($('<div/>', {class: 'name'}));
         }
 
         this.$name = this.$el.find('.name');
@@ -103,7 +100,7 @@ define(['js/Constants',
     UMLStateMachineDecoratorCore.prototype._getName = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._gmeID),
-            name = "(N/A)";
+            name = '(N/A)';
 
         if (nodeObj) {
             name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || name;
@@ -116,7 +113,7 @@ define(['js/Constants',
     UMLStateMachineDecoratorCore.prototype._renderContent = function () {
         //render GME-ID in the DOM, for debugging
         this._gmeID = this._metaInfo[CONSTANTS.GME_ID];
-        this.$el.attr({"data-id": this._gmeID});
+        this.$el.attr({'data-id': this._gmeID});
 
         this._instantiateMetaType();
 

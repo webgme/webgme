@@ -28,7 +28,6 @@ function createAPI(app, mountPath, middlewareOpts) {
         apiDocumentationMountPoint = '/developer/api',
 
         logger = middlewareOpts.logger.fork('api'),
-        gmeConfig = middlewareOpts.gmeConfig,
         gmeAuth = middlewareOpts.gmeAuth,
         ensureAuthenticated = middlewareOpts.ensureAuthenticated,
 
@@ -85,13 +84,13 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.patch('*', ensureAuthenticated);
     router.delete('*', ensureAuthenticated);
 
-    router.get('/', function (req, res, next) {
+    router.get('/', function (req, res/*, next*/) {
         res.json({
-            current_user_url: getFullUrl(req, '/user'),
-            organization_url: getFullUrl(req, '/orgs/{org}'),
-            project_url: getFullUrl(req, '/projects/{owner}/{project}'),
-            user_url: getFullUrl(req, '/users/{user}'),
-            documentation_url: req.protocol + '://' + req.headers.host + apiDocumentationMountPoint
+            current_user_url: getFullUrl(req, '/user'), //jshint ignore: line
+            organization_url: getFullUrl(req, '/orgs/{org}'), //jshint ignore: line
+            project_url: getFullUrl(req, '/projects/{owner}/{project}'), //jshint ignore: line
+            user_url: getFullUrl(req, '/users/{user}'), //jshint ignore: line
+            documentation_url: req.protocol + '://' + req.headers.host + apiDocumentationMountPoint//jshint ignore: line
         });
     });
 
@@ -122,7 +121,8 @@ function createAPI(app, mountPath, middlewareOpts) {
         }
     });
 
-    // Example: curl -i -H "Content-Type: application/json" -X PATCH -d "{\"email\":\"asdf@alkfm.com\",\"canCreate\":false}" http://demo:demo@127.0.0.1:8888/api/v1/user
+    // Example: curl -i -H "Content-Type: application/json" -X PATCH
+    //  -d "{\"email\":\"asdf@alkfm.com\",\"canCreate\":false}" http://demo:demo@127.0.0.1:8888/api/v1/user
     router.patch('/user', function (req, res, next) {
         var userId = getUserId(req);
 
@@ -167,7 +167,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         }
     });
 
-    router.delete('/user', function (req, res, next) {
+    router.delete('/user', function (req, res/*, next*/) {
         var userId = getUserId(req);
 
         gmeAuth.deleteUser(userId, function (err) {
@@ -237,7 +237,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                     receivedData.password,
                     receivedData.canCreate === 'true' || receivedData.canCreate === true,
                     {overwrite: false},
-                    function (err, updateData) {
+                    function (err/*, updateData*/) {
                         if (err) {
                             res.status(400);
                             return next(new Error(err));
@@ -317,7 +317,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                         return next(new Error('setting siteAdmin property requires site admin role'));
                     }
 
-                    gmeAuth.updateUser(req.params.username, receivedData, function (err, updated) {
+                    gmeAuth.updateUser(req.params.username, receivedData, function (err/*, updated*/) {
                         if (err) {
                             res.status(400);
                             return next(new Error(err));
@@ -541,7 +541,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     // error handling
-    router.use(function (err, req, res, next) {
+    router.use(function (err, req, res/*, next*/) {
         var errorMessage = {
                 401: 'Authentication required',
                 403: 'No sufficient role',
@@ -554,7 +554,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         }
         res.json({
             message: errorMessage.hasOwnProperty(res.statusCode) ? errorMessage[res.statusCode] : message,
-            documentation_url: '',
+            documentation_url: '', //jshint ignore: line
             error: err.message ? err.message : err // FIXME: only in dev mode
         });
     });

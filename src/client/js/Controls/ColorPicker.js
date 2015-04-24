@@ -1,14 +1,15 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
-
+/*globals define, $, console*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
 define(['jquery-spectrum',
-    'css!./styles/ColorPicker.css'], function (/*_spectrum*/) {
+    'css!./styles/ColorPicker.css'
+], function (/*_spectrum*/) {
 
-    "use strict";
+    'use strict';
 
     var ColorPicker;
 
@@ -24,8 +25,9 @@ define(['jquery-spectrum',
             showSelectionPalette: false,
             showInput: true,
             showInitial: true,
-            preferredFormat: "hex",
-            allowEmpty:true,
+            preferredFormat: 'hex',
+            allowEmpty: true,
+            //jscs:disable maximumLineLength
             palette: [
                 ['rgb(255, 255, 255)', 'rgb(242, 242, 242);', 'rgb(230, 230, 230);', 'rgb(204, 204, 204);', 'rgb(179, 179, 179);', 'rgb(153, 153, 153);', 'rgb(128, 128, 128);', 'rgb(102, 102, 102);', 'rgb(77, 77, 77);', 'rgb(51, 51, 51);', 'rgb(26, 26, 26);', 'rgb(0, 0, 0);'  ],
                 ['rgb(255, 204, 204);', 'rgb(255, 230, 204);', 'rgb(255, 255, 204);', 'rgb(230, 255, 204);', 'rgb(204, 255, 204);', 'rgb(204, 255, 230);', 'rgb(204, 255, 255);', 'rgb(204, 229, 255);', 'rgb(204, 204, 255);', 'rgb(229, 204, 255);', 'rgb(255, 204, 255);', 'rgb(255, 204, 230);'],
@@ -37,22 +39,23 @@ define(['jquery-spectrum',
                 ['rgb(153, 0, 0);', 'rgb(153, 76, 0);', 'rgb(153, 153, 0);', 'rgb(77, 153, 0);', 'rgb(0, 153, 0);', 'rgb(0, 153, 77);', 'rgb(0, 153, 153);', 'rgb(0, 76, 153);', 'rgb(0, 0, 153);', 'rgb(76, 0, 153);', 'rgb(153, 0, 153);', 'rgb(153, 0, 77);'],
                 ['rgb(102, 0, 0);', 'rgb(102, 51, 0);', 'rgb(102, 102, 0);', 'rgb(51, 102, 0);', 'rgb(0, 102, 0);', 'rgb(0, 102, 51);', 'rgb(0, 102, 102);', 'rgb(0, 51, 102);', 'rgb(0, 0, 102);', 'rgb(51, 0, 102);', 'rgb(102, 0, 102);', 'rgb(102, 0, 51);']
             ],
-            show: function() {
+            //jscs:enable maximumLineLength
+            show: function () {
                 var spectrumContainer = $('.sp-container'),
-                    clearButton = spectrumContainer.find(".sp-clear");
+                    clearButton = spectrumContainer.find('.sp-clear');
 
-                clearButton.off("click.spectrum");
-                clearButton.on("click.ColorPicker", function (e) {
+                clearButton.off('click.spectrum');
+                clearButton.on('click.ColorPicker', function (e) {
                     e.stopPropagation();
                     e.preventDefault();
-                    self.el.spectrum("hide");
+                    self.el.spectrum('hide');
                     self.onColorChanged();
                 });
             },
-            hide: function() {
+            hide: function () {
                 self._destroy();
             },
-            change: function(color) {
+            change: function (color) {
                 self._destroy();
                 if (color) {
                     self.onColorChanged(color.toHexString());
@@ -66,7 +69,7 @@ define(['jquery-spectrum',
     };
 
     ColorPicker.prototype.setColor = function (color) {
-        this.el.spectrum("set", color);
+        this.el.spectrum('set', color);
     };
 
     ColorPicker.prototype.onColorChanged = function (color) {

@@ -1,22 +1,26 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/PanelBase/PanelBaseWithHeader',
-        'js/PanelManager/IActivePanel',
-        'js/Widgets/DataGrid/DataGridWidget',
-        './GridPanelContainmentControlPointers'
-        ], function (PanelBaseWithHeader,
-                     IActivePanel,
-                     DataGridWidget,
-                     GridPanelContainmentControlPointers) {
+    'js/PanelManager/IActivePanel',
+    'js/Widgets/DataGrid/DataGridWidget',
+    './GridPanelContainmentControlPointers'
+], function (PanelBaseWithHeader,
+             IActivePanel,
+             DataGridWidget,
+             GridPanelContainmentControlPointers) {
 
-    "use strict";
+    'use strict';
 
     var GridPanelPointers;
 
     GridPanelPointers = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "GridPanelPointers";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'GridPanelPointers';
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
         //call parent's constructor
@@ -27,7 +31,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("GridPanelPointers ctor finished");
+        this.logger.debug('GridPanelPointers ctor finished');
     };
 
     //inherit from PanelBaseWithHeader
@@ -36,13 +40,15 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     GridPanelPointers.prototype._initialize = function () {
         //set Widget title
-        this.setTitle("ContainmentGrid");
+        this.setTitle('ContainmentGrid');
 
         this.widget = new DataGridWidget(this.$el);
 
-        this.control = new GridPanelContainmentControlPointers({"client": this._client,
-            "widget": this.widget,
-            "panel": this});
+        this.control = new GridPanelContainmentControlPointers({
+            client: this._client,
+            widget: this.widget,
+            panel: this
+        });
 
         this.onActivate();
     };

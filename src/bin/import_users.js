@@ -2,15 +2,14 @@
 /**
  * @author lattmann / https://github.com/lattmann
  */
+'use strict';
 
 var MongoURI = require('mongo-uri'),
     main;
 
 main = function (argv) {
-
-
     var program = require('commander'),
-        userManager = require('./usermanager'),
+        //userManager = require('./usermanager'),
         args = Array.prototype.slice.call(argv),
         uri,
         users,
@@ -58,7 +57,8 @@ main = function (argv) {
             console.log('#  WARN: password does not exist for this user the command will fail');
         }
 
-        console.log('node usermanager.js --db ' + program.db + ' useradd ' + (user.canCreate ? '--canCreate ' : '') + user.login + ' ' + user.email + ' ' + user.password)
+        console.log('node usermanager.js --db ' + program.db + ' useradd ' + (user.canCreate ? '--canCreate ' : '') +
+        user.login + ' ' + user.email + ' ' + user.password);
 
 
         for (projectName in user.projects) {
@@ -75,7 +75,8 @@ main = function (argv) {
                 }
 
                 console.log('# authorizing user', user.login, 'for project:', projectName);
-                console.log('node usermanager.js --db ' + program.db + ' usermod_auth --authorize ' + rights + ' ' + user.login + ' ' + projectName);
+                console.log('node usermanager.js --db ' + program.db + ' usermod_auth --authorize ' + rights +
+                ' ' + user.login + ' ' + projectName);
 
             }
         }

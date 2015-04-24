@@ -1,14 +1,18 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define */
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define([], function () {
 
-    "use strict";
+    'use strict';
 
     //define client-only string constants
-    var dragConstants = {'DRAG_ITEMS': 'DRAG_ITEMS',
-                         'DRAG_EFFECTS': 'DRAG_EFFECTS',
-                         'DRAG_INFO': 'DRAG_INFO',
-                         'DRAG_PARAMS': 'DRAG_PARAMS'};
-
-    return dragConstants;
+    return {
+        DRAG_ITEMS: 'DRAG_ITEMS',
+        DRAG_EFFECTS: 'DRAG_EFFECTS',
+        DRAG_INFO: 'DRAG_INFO',
+        DRAG_PARAMS: 'DRAG_PARAMS'
+    };
 });

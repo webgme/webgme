@@ -1,4 +1,8 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
@@ -9,14 +13,14 @@ define(['js/PanelBase/PanelBaseWithHeader',
              CrosscutWidget,
              CrosscutController) {
 
-    "use strict";
+    'use strict';
 
     var CrosscutPanel;
 
     CrosscutPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "CrosscutPanel";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'CrosscutPanel';
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
         //call parent's constructor
@@ -27,7 +31,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("CrosscutPanel ctor finished");
+        this.logger.debug('CrosscutPanel ctor finished');
     };
 
     //inherit from PanelBaseWithHeader
@@ -39,10 +43,10 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
         //remove title container
         /*if (this.$panelHeaderTitle) {
-            this.$panelHeaderTitle.remove();
-        }*/
+         this.$panelHeaderTitle.remove();
+         }*/
 
-        this.widget = new CrosscutWidget(this.$el, {'toolBar': this.toolBar});
+        this.widget = new CrosscutWidget(this.$el, {toolBar: this.toolBar});
 
         this.widget.setTitle = function (title) {
             self.setTitle(title);
@@ -53,8 +57,10 @@ define(['js/PanelBase/PanelBaseWithHeader',
             WebGMEGlobal.KeyboardManager.setListener(self.widget);
         };
 
-        this.control = new CrosscutController({"client": this._client,
-            "widget": this.widget});
+        this.control = new CrosscutController({
+            client: this._client,
+            widget: this.widget
+        });
 
         this.onActivate();
     };

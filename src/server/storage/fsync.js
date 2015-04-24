@@ -1,4 +1,5 @@
-/*jshint node:true*/
+/*globals requireJS*/
+/*jshint node: true*/
 
 /**
  * @author ksmyth / https://github.com/ksmyth
@@ -12,7 +13,8 @@ function Database(_database, options) {
     ASSERT(typeof options === 'object');
     ASSERT(typeof options.logger === 'object');
 
-    var logger = options.logger.fork('fsync');
+    //TODO not yet used
+    /*var logger = options.logger.fork('fsync');*/
 
     function fsyncDatabase(callback) {
         _database.fsyncDatabase(callback);
@@ -56,11 +58,11 @@ function Database(_database, options) {
                     }
                 }
                 fsyncs = pendingFsyncs;
-            }
+            };
             var op = {numWriteOps: ++numWriteOps};
             writeOps.push(op);
             this_[fn].apply(this_, args);
-        }
+        };
 
         function fsyncDatabase(callback) {
             if (writeOps.size()) {
@@ -105,7 +107,8 @@ function Database(_database, options) {
             setBranchLocks[branch] = setBranchLocks[branch] || new Lock();
             setBranchLocks[branch].lock(function () {
                 return doWriteOp(project, 'setBranchHash', branch, oldhash, newhash, callback);
-                if (writeOps.size()) {
+                //FIXME should be checked
+                /*if (writeOps.size()) {
                     fsyncs.push({
                         numWriteOps: numWriteOps, cb: function () {
                             //project.setBranchHash(branch, oldhash, newhash, callback);
@@ -115,7 +118,7 @@ function Database(_database, options) {
                 } else {
                     //project.setBranchHash(branch, oldhash, newhash, callback);
                     doWriteOp(project, 'setBranchHash', branch, oldhash, newhash, callback);
-                }
+                }*/
             });
         }
 

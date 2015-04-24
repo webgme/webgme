@@ -1,4 +1,7 @@
 /*jshint node:true*/
+/**
+ * @author kecso / https://github.com/kecso
+ */
 
 'use strict';
 // Here you can define global variables for your middleware
@@ -8,7 +11,7 @@ var counter = 0,
     gmeConfig, //global config is passed by server/standalone.js
     logger;
 
-var ExampleRestComponent = function (req, res, next) {
+var ExampleRestComponent = function (req, res/*, next*/) {
     var handleRequest = function () {
         counter++;
         if (counter % 10) {

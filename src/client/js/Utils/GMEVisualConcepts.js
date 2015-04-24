@@ -1,26 +1,33 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _*/
+/*jshint browser: true*/
 
-define(['jquery',
-        'js/Constants',
-        'js/NodePropertyNames',
-        'js/RegistryKeys',
-        'js/Utils/METAAspectHelper',
-        'js/Panels/MetaEditor/MetaEditorConstants',
-        'js/Utils/DisplayFormat'], function (_jquery,
-                                           CONSTANTS,
-                                           nodePropertyNames,
-                                           REGISTRY_KEYS,
-                                           METAAspectHelper,
-                                           MetaEditorConstants,
-                                           displayFormat) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+define([
+    'jquery',
+    'js/Constants',
+    'js/NodePropertyNames',
+    'js/RegistryKeys',
+    'js/Utils/METAAspectHelper',
+    'js/Panels/MetaEditor/MetaEditorConstants',
+    'js/Utils/DisplayFormat'
+], function (_jquery,
+             CONSTANTS,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             METAAspectHelper,
+             MetaEditorConstants,
+             displayFormat) {
+
+    'use strict';
 
     var _client,
         DEFAULT_LINE_STYLE = {};
 
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.WIDTH] = 1;
-    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.COLOR] = "#000000";
+    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.COLOR] = '#000000';
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.PATTERN] = CONSTANTS.LINE_STYLE.PATTERNS.SOLID;
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.TYPE] = CONSTANTS.LINE_STYLE.TYPES.NONE;
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.START_ARROW] = CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE;
@@ -46,7 +53,7 @@ define(['jquery',
             if (srcObj) {
                 regValue = srcObj.getRegistry(regKey);
                 if (regValue) {
-                    switch(type) {
+                    switch (type) {
                         case 'int':
                             try {
                                 result = parseInt(regValue, 10);
@@ -90,7 +97,7 @@ define(['jquery',
 
             //color
             val = getValue(obj, REGISTRY_KEYS.COLOR);
-            if (val && val !== "") {
+            if (val && val !== '') {
                 result[CONSTANTS.LINE_STYLE.COLOR] = val;
             }
 

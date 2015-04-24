@@ -8,8 +8,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['plugin/PluginConfig',
-    'plugin/PluginBase'], function (PluginConfig, PluginBase) {
+define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, PluginBase) {
     'use strict';
 
     /**
@@ -189,7 +188,8 @@ define(['plugin/PluginConfig',
             '      <PrimitivePropertyInstance IDinComponentModel="id-b59c60e6-cf92-4828-b087-ac9ef4b6aae3">' +
             '        <Value DataType="String" />' +
             '      </PrimitivePropertyInstance>' +
-            '      <ConnectorInstance ID="{b2a8a8a7-d528-4bf0-8b09-83775cb339ff}-3abe6223-70d3-42ec-815b-f21f3c08c2b3"/>' +
+            '      <ConnectorInstance ID="' +
+            '{b2a8a8a7-d528-4bf0-8b09-83775cb339ff}-3abe6223-70d3-42ec-815b-f21f3c08c2b3"/>' +
             '    </ComponentInstance>' +
             '    <Connector Name="WheelRotationalInput" ID="2f20ec5e-b1d7-4a0b-9cab-424fb45bb13d"/>' +
             '    <Connector Name="WheelTranslationalOutput" ID="f9f60d89-6f29-4391-a539-82b2841f8107"/>' +

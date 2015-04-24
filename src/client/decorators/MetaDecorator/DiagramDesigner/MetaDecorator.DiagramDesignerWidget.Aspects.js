@@ -1,21 +1,18 @@
-/*globals define, _*/
+/*globals define, _, $*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/Constants',
+define([
+    'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
     './AspectDetailsDialog',
-    './Aspect'], function (CONSTANTS,
-                           GMEConcepts,
-                           nodePropertyNames,
-                            AspectDetailsDialog,
-                            Aspect) {
+    './Aspect'
+], function (CONSTANTS, GMEConcepts, nodePropertyNames, AspectDetailsDialog, Aspect) {
 
-
-    "use strict";
+    'use strict';
 
     var MetaDecoratorDiagramDesignerWidgetAspects;
 
@@ -30,12 +27,12 @@ define(['js/Constants',
         this._aspectNames = [];
         this._aspects = {};
 
-        this._skinParts.$aspectsContainer = this.$el.find(".aspects");
-        this._skinParts.$addAspectContainer = this.$el.find(".add-new-aspect");
+        this._skinParts.$aspectsContainer = this.$el.find('.aspects');
+        this._skinParts.$addAspectContainer = this.$el.find('.add-new-aspect');
 
         this._skinParts.$aspectsContainer.on('dblclick', 'li', function (e) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-                var aspectName = $(this).find('.n').text().replace(":", ""),
+                var aspectName = $(this).find('.n').text().replace(':', ''),
                     aspectNames = client.getMetaAspectNames(objId).slice(0),
                     dialog = new AspectDetailsDialog(),
                     aspectDesc = client.getMetaAspect(objId, aspectName);
@@ -59,8 +56,8 @@ define(['js/Constants',
             e.preventDefault();
         });
 
-        //set the "Add new..." clickhandler
-        this._skinParts.$addAspectContainer.on("click", null, function (event) {
+        //set the 'Add new...' clickhandler
+        this._skinParts.$addAspectContainer.on('click', null, function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                 self._onNewAspectClick();
             }
@@ -75,7 +72,8 @@ define(['js/Constants',
             objId = this._metaInfo[CONSTANTS.GME_ID],
             existingNames = [CONSTANTS.ASPECT_ALL].concat(client.getMetaAspectNames(objId));
 
-        this._onNewClick(existingNames, this._skinParts.$aspectsContainer, this._skinParts.$addAspectContainer, this._skinParts.$aspectsTitle, this._onNewAspectCreate);
+        this._onNewClick(existingNames, this._skinParts.$aspectsContainer, this._skinParts.$addAspectContainer,
+            this._skinParts.$aspectsTitle, this._onNewAspectCreate);
     };
 
     MetaDecoratorDiagramDesignerWidgetAspects.prototype._updateAspects = function () {
@@ -159,14 +157,16 @@ define(['js/Constants',
             aspectNames = client.getMetaAspectNames(objId).slice(0),
             dialog = new AspectDetailsDialog();
 
-        this.logger.debug("_onNewAspectCreate: " + cName);
+        this.logger.debug('_onNewAspectCreate: ' + cName);
 
         //pass all the other attribute names to the dialog
         aspectNames.splice(aspectNames.indexOf(cName), 1);
 
-        desc = {'name': cName,
+        desc = {
+            'name': cName,
             'items': [],
-            'validChildrenTypes': this._getAspectDescriptorValidChildrenTypes()};
+            'validChildrenTypes': this._getAspectDescriptorValidChildrenTypes()
+        };
 
         dialog.show(desc, aspectNames, function (cDesc) {
             self.saveAspectDescriptor(cName, cDesc);
@@ -185,8 +185,10 @@ define(['js/Constants',
         validChildrenTypeIDs = GMEConcepts.getMETAAspectMergedValidChildrenTypes(objId);
         i = validChildrenTypeIDs.length;
         while (i--) {
-            typeInfo = {'id': validChildrenTypeIDs[i],
-                'name': validChildrenTypeIDs[i]};
+            typeInfo = {
+                'id': validChildrenTypeIDs[i],
+                'name': validChildrenTypeIDs[i]
+            };
 
             nodeObj = client.getNode(validChildrenTypeIDs[i]);
             if (nodeObj) {

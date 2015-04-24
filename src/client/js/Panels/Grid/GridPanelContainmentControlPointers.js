@@ -1,19 +1,23 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger',
     'js/util',
     'js/Constants',
-    'js/Panels/Grid/GridPanelContainmentControl.DataGridWidgetEventHandlers'], function (Logger,
-                                    util,
-                                    CONSTANTS,
-                                    GridPanelContainmentControlDataGridWidgetEventHandlers) {
+    'js/Panels/Grid/GridPanelContainmentControl.DataGridWidgetEventHandlers'
+], function (Logger,
+             util,
+             CONSTANTS,
+             GridPanelContainmentControlDataGridWidgetEventHandlers) {
 
-    "use strict";
+    'use strict';
 
-    var GridPanelContainmentControPointers;
+    var GridPanelContainmentControlPointers;
 
-    GridPanelContainmentControPointers = function (options) {
-        var self = this;
+    GridPanelContainmentControlPointers = function (options) {
         this._client = options.client;
         this._panel = options.panel;
         this._dataGridWidget = options.widget;
@@ -23,18 +27,21 @@ define(['js/logger',
 
         this._currentNodeId = null;
 
-        this._logger = Logger.create('gme:Panels:Grid:GridPanelContainmentControPointers', WebGMEGlobal.gmeConfig.client.log);
+        this._logger = Logger.create('gme:Panels:Grid:GridPanelContainmentControlPointers',
+            WebGMEGlobal.gmeConfig.client.log);
 
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDataGridWidgetEventHandlers();
 
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
-    GridPanelContainmentControPointers.prototype.selectedObjectChanged = function (nodeId) {
-        var self = this;
+    GridPanelContainmentControlPointers.prototype.selectedObjectChanged = function (nodeId) {
+        var self = this,
+            desc,
+            title;
 
-        this._logger.debug("activeObject '" + nodeId + "'");
+        this._logger.debug('activeObject "' + nodeId + '"');
 
         //remove current territory patterns
         if (this._territoryId) {
@@ -47,10 +54,10 @@ define(['js/logger',
         if (this._currentNodeId || this._currentNodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 1 };
+            this._selfPatterns[nodeId] = {children: 1};
 
-            var desc = this._discoverNode(nodeId);
-            var title = (desc.Name ? desc.Name + " " : "N/A ") + "(" + desc.ID + ")";
+            desc = this._discoverNode(nodeId);
+            title = (desc.Name ? desc.Name + ' ' : 'N/A ') + '(' + desc.ID + ')';
             this._panel.setTitle(title);
 
             this._territoryId = this._client.addUI(this, function (events) {
@@ -61,16 +68,16 @@ define(['js/logger',
         }
     };
 
-    GridPanelContainmentControPointers.prototype.destroy = function () {
+    GridPanelContainmentControlPointers.prototype.destroy = function () {
         this.detachClientEventListeners();
         this._client.removeUI(this._territoryId);
     };
 
-    GridPanelContainmentControPointers.prototype._eventCallback = function (events) {
+    GridPanelContainmentControlPointers.prototype._eventCallback = function (events) {
         var i = events ? events.length : 0,
             e;
 
-        this._logger.debug("_eventCallback '" + i + "' items");
+        this._logger.debug('_eventCallback "' + i + '" items');
 
         this._insertList = [];
         this._updateList = [];
@@ -88,6 +95,8 @@ define(['js/logger',
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
                     this._onUnload(e.eid);
                     break;
+                default:
+                    break;
             }
         }
 
@@ -95,76 +104,79 @@ define(['js/logger',
         this._dataGridWidget.updateObjects(this._updateList);
         this._dataGridWidget.deleteObjects(this._deleteList);
 
-        this._logger.debug("_eventCallback '" + events.length + "' items - DONE");
+        this._logger.debug('_eventCallback "' + events.length + '" items - DONE');
     };
 
     // PUBLIC METHODS
-    GridPanelContainmentControPointers.prototype._onLoad = function (gmeID) {
+    GridPanelContainmentControlPointers.prototype._onLoad = function (gmeID) {
         var desc = this._discoverNode(gmeID);
 
         this._insertList.push(desc);
     };
 
-    GridPanelContainmentControPointers.prototype._onUpdate = function (gmeID) {
+    GridPanelContainmentControlPointers.prototype._onUpdate = function (gmeID) {
         var desc = this._discoverNode(gmeID);
 
         this._updateList.push(desc);
     };
 
-    GridPanelContainmentControPointers.prototype._onUnload = function (gmeID) {
+    GridPanelContainmentControlPointers.prototype._onUnload = function (gmeID) {
         this._deleteList.push(gmeID);
     };
 
-    GridPanelContainmentControPointers.prototype._discoverNode = function (gmeID) {
-            var nodeDescriptor = {"ID": undefined,
-                                  "Name": undefined,
-                                  "ParentID": undefined,
-                                  "Pointers": undefined},
+    GridPanelContainmentControlPointers.prototype._discoverNode = function (gmeID) {
+        var nodeDescriptor = {
+                ID: undefined,
+                Name: undefined,
+                ParentID: undefined,
+                Pointers: undefined
+            },
 
-                cNode = this._client.getNode(gmeID),
-                _getPointerInfo,
-                ptr;
+            cNode = this._client.getNode(gmeID),
+            _getPointerInfo,
+            ptr;
 
-            _getPointerInfo = function (node) {
-                var result = {},
-                    availablePointers = node.getPointerNames(),
-                    len = availablePointers.length;
+        _getPointerInfo = function (node) {
+            var result = {},
+                availablePointers = node.getPointerNames(),
+                len = availablePointers.length;
 
-                while (len--) {
-                    ptr = node.getPointer(availablePointers[len]);
-                    if (ptr) {
-                        result[availablePointers[len]] = ptr.to;
-                    }
+            while (len--) {
+                ptr = node.getPointer(availablePointers[len]);
+                if (ptr) {
+                    result[availablePointers[len]] = ptr.to;
                 }
-
-                return result;
-            };
-
-            if (cNode) {
-                nodeDescriptor.ID = gmeID;
-                nodeDescriptor.Name = cNode.getAttribute('name');
-                nodeDescriptor.ParentID = cNode.getParentId();
-                nodeDescriptor.Pointers = _getPointerInfo(cNode);
             }
 
-            return nodeDescriptor;
+            return result;
+        };
+
+        if (cNode) {
+            nodeDescriptor.ID = gmeID;
+            nodeDescriptor.Name = cNode.getAttribute('name');
+            nodeDescriptor.ParentID = cNode.getParentId();
+            nodeDescriptor.Pointers = _getPointerInfo(cNode);
+        }
+
+        return nodeDescriptor;
     };
 
-    GridPanelContainmentControPointers.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
+    GridPanelContainmentControlPointers.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
         this.selectedObjectChanged(activeObjectId);
     };
 
-    GridPanelContainmentControPointers.prototype.attachClientEventListeners = function () {
+    GridPanelContainmentControlPointers.prototype.attachClientEventListeners = function () {
         this.detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
     };
 
-    GridPanelContainmentControPointers.prototype.detachClientEventListeners = function () {
+    GridPanelContainmentControlPointers.prototype.detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
     };
 
-    //attach GridPanelContainmentControPointers - DataGridViewEventHandlers event handler functions
-    _.extend(GridPanelContainmentControPointers.prototype, GridPanelContainmentControlDataGridWidgetEventHandlers.prototype);
+    //attach GridPanelContainmentControlPointers - DataGridViewEventHandlers event handler functions
+    _.extend(GridPanelContainmentControlPointers.prototype,
+        GridPanelContainmentControlDataGridWidgetEventHandlers.prototype);
 
-    return GridPanelContainmentControPointers;
+    return GridPanelContainmentControlPointers;
 });

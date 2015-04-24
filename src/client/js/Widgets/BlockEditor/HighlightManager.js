@@ -1,13 +1,14 @@
 /*globals define, _, WebGMEGlobal*/
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
+/*jshint browser: true*/
+
+/**
  * @author brollb / https://github/brollb
  */
 
-define(['js/logger',
-    'js/Widgets/BlockEditor/BlockEditorWidget.Constants'], function (Logger,
-                                                                   BlockEditorWidgetConstants) {
+define([
+    'js/logger',
+    'js/Widgets/BlockEditor/BlockEditorWidget.Constants'
+], function (Logger, BlockEditorWidgetConstants) {
 
     "use strict";
 

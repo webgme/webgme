@@ -1,4 +1,3 @@
-/*globals WebGMEGlobal*/
 /*jshint node:true, mocha:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
@@ -9,8 +8,7 @@ var testFixture = require('../../../_globals.js');
 describe('BlobServer', function () {
     'use strict';
 
-    var gmeConfig = testFixture.getGmeConfig(),
-        agent = testFixture.superagent.agent(),
+    var agent = testFixture.superagent.agent(),
         should = testFixture.should,
         expect = testFixture.expect,
         rimraf = testFixture.rimraf,

@@ -1,14 +1,22 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, $, _*/
+/*jshint browser: true*/
 
-define(['js/Decorators/WidgetDecoratorBase',
-        './DiagramDesignerWidget.Constants',
-        './DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (WidgetDecoratorBase,
-                                                        DiagramDesignerWidgetConstants,
-                                                        DiagramDesignerWidgetDecoratorBaseConnectionArea) {
-    "use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define([
+    'js/Decorators/WidgetDecoratorBase',
+    './DiagramDesignerWidget.Constants',
+    './DiagramDesignerWidget.DecoratorBase.ConnectionArea'
+], function (WidgetDecoratorBase,
+             DiagramDesignerWidgetConstants,
+             DiagramDesignerWidgetDecoratorBaseConnectionArea) {
+
+    'use strict';
 
     var DiagramDesignerWidgetDecoratorBase,
-        DECORATOR_ID = "DiagramDesignerWidgetDecoratorBase";
+        DECORATOR_ID = 'DiagramDesignerWidgetDecoratorBase';
 
     DiagramDesignerWidgetDecoratorBase = function (params) {
         WidgetDecoratorBase.call(this, params);
@@ -21,7 +29,7 @@ define(['js/Decorators/WidgetDecoratorBase',
 
         this._initialize();
 
-        this.logger.debug("Created");
+        this.logger.debug('Created');
     };
 
     _.extend(DiagramDesignerWidgetDecoratorBase.prototype, WidgetDecoratorBase.prototype);
@@ -46,7 +54,7 @@ define(['js/Decorators/WidgetDecoratorBase',
     };
 
     //NOTE - CAN BE OVERRIDDEN TO SPECIFY CUSTOM TEMPLATE FOR THE DECORATOR
-    DiagramDesignerWidgetDecoratorBase.prototype.$DOMBase = $("");
+    DiagramDesignerWidgetDecoratorBase.prototype.$DOMBase = $('');
 
     //initialization code for the decorator
     //this.$el will be created as the top-level container for the decorator's DOM
@@ -61,10 +69,11 @@ define(['js/Decorators/WidgetDecoratorBase',
         this._initializeConnectionAreaUserSelection();
     };
 
-    //as a common default functionality, DiagramDesignerWidgetDecoratorBase provides solution for taking care of the connectors
-    //DiagramDesignerWidgetDecoratorBase will handle DOM elements with class CONNECTOR_CLASS as connectors
-    //these will be queried and detached from the decorator's DOM by default
-    //NODE - CAN BE OVERRIDDEN WHEN NEEDED
+    // As a common default functionality, DiagramDesignerWidgetDecoratorBase provides solution
+    // for taking care of the connectors.
+    // DiagramDesignerWidgetDecoratorBase will handle DOM elements with class CONNECTOR_CLASS as connectors
+    // these will be queried and detached from the decorator's DOM by default.
+    // NODE - CAN BE OVERRIDDEN WHEN NEEDED
     DiagramDesignerWidgetDecoratorBase.prototype.initializeConnectors = function () {
         //find connectors
         this.$sourceConnectors = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
@@ -73,22 +82,23 @@ define(['js/Decorators/WidgetDecoratorBase',
         if (this.hostDesignerItem) {
             this.hostDesignerItem.registerConnectors(this.$sourceConnectors);
         } else {
-            this.logger.error("Decorator's hostDesignerItem is not set");
+            this.logger.error('Decorator\'s hostDesignerItem is not set');
         }
 
         this.hideSourceConnectors();
     };
 
-    //Shows the 'connectors' - appends them to the DOM
-    //Called when a connection drawing starts from a source point and the decorator is notified
-    //to highlight the connectors for its subcomponents with the given IDs
-    //params:
+    // Shows the 'connectors' - appends them to the DOM.
+    // Called when a connection drawing starts from a source point and the decorator is notified.
+    // to highlight the connectors for its subcomponents with the given IDs.
+    // params:
     //  - srcItemMetaInfo: metaInfo of the connection source's host item
     //  - srcSubCompMetaInfo: metaInfo of the connection source's subcomponent (if present)
     //  - connectors: the IDs of the connectors the decorator should highlight
     //            these IDs were defined by the decorator itself
     //            NOTE: if the value is undefined, the connectors for the host item should be highlighted
-    //                  if the value is not undefined, the connector for the corresponding subcomponent should be highlighted
+    //                  if the value is not undefined, the connector for the corresponding subcomponent
+    //                  should be highlighted
     DiagramDesignerWidgetDecoratorBase.prototype.showSourceConnectors = function (params) {
         this.logger.debug('showSourceConnectors: ' + JSON.stringify(params));
         this.$sourceConnectors.appendTo(this.$el);
@@ -107,7 +117,8 @@ define(['js/Decorators/WidgetDecoratorBase',
     //  - connectors: the IDs of the connectors the decorator should highlight
     //            these IDs were defined by the decorator itself
     //            NOTE: if the value is undefined, the connectors for the host item should be highlighted
-    //                  if the value is not undefined, the connector for the corresponding subcomponent should be highlighted
+    //                  if the value is not undefined, the connector for the corresponding
+    //                  subcomponent should be highlighted.
     DiagramDesignerWidgetDecoratorBase.prototype.showEndConnectors = function (params) {
         this.logger.debug('showEndConnectors: ' + JSON.stringify(params));
         this.$endConnectors.appendTo(this.$el);
@@ -118,6 +129,7 @@ define(['js/Decorators/WidgetDecoratorBase',
         this.$endConnectors.detach();
     };
 
+    //jshint camelcase: false
     //Called before the host designer item is added to the canvas DOM (DocumentFragment more precisely)
     //At this point the decorator should create its DOM representation
     //At this point no dimension information is available since the content exist only in memory, not yet rendered
@@ -126,6 +138,7 @@ define(['js/Decorators/WidgetDecoratorBase',
     //NOTE - SHALL BE OVERRIDDEN WHEN NEEDED
     DiagramDesignerWidgetDecoratorBase.prototype.on_addTo = function () {
     };
+    //jshint camelcase: true
 
     //All DOM queries that causes reflow (position / width / height / etc) should be done here
     //Use helper object 'this.renderLayoutInfo' to store info needed
@@ -168,19 +181,21 @@ define(['js/Decorators/WidgetDecoratorBase',
     //connectionMetaInfo object is the metaInfo of the connection component (if any)
     //result should be an array of the area descriptors
     //NOTE - SHALL BE OVERRIDDEN WHEN NEEDED
-    DiagramDesignerWidgetDecoratorBase.prototype.getConnectionAreas = function (id, isEnd, connectionMetaInfo) {
+    DiagramDesignerWidgetDecoratorBase.prototype.getConnectionAreas = function (/*id, isEnd, connectionMetaInfo*/) {
         var result = [];
 
         //by default return the center point of the item
         //canvas will draw the connection to / from this coordinate
-        result.push( {"id": "0",
-            "x1": this.hostDesignerItem.getWidth() / 2,
-            "y1": this.hostDesignerItem.getHeight() / 2,
-            "x2": this.hostDesignerItem.getWidth() / 2,
-            "y2": this.hostDesignerItem.getHeight() / 2,
-            "angle1": 270,
-            "angle2": 270,
-            "len": 10} );
+        result.push({
+            id: '0',
+            x1: this.hostDesignerItem.getWidth() / 2,
+            y1: this.hostDesignerItem.getHeight() / 2,
+            x2: this.hostDesignerItem.getWidth() / 2,
+            y2: this.hostDesignerItem.getHeight() / 2,
+            angle1: 270,
+            angle2: 270,
+            len: 10
+        });
 
         return result;
     };
@@ -190,36 +205,36 @@ define(['js/Decorators/WidgetDecoratorBase',
     //Remove any additional business logic, free up resources, territory, etc...
     //NOTE - CAN BE OVERRIDDEN WHEN NEEDED
     DiagramDesignerWidgetDecoratorBase.prototype.destroy = function () {
-        this.logger.debug("DiagramDesignerWidgetDecoratorBase.destroyed");
+        this.logger.debug('DiagramDesignerWidgetDecoratorBase.destroyed');
     };
 
     /******************** EVENT HANDLERS ************************/
 
-    //called when the mouse enters the DesignerItem's main container
-    //return TRUE if decorator code handled the event
-    //when returned FALSE, DesignerItem's event handler will be executed
-    DiagramDesignerWidgetDecoratorBase.prototype.onMouseEnter = function (event) {
+        //called when the mouse enters the DesignerItem's main container
+        //return TRUE if decorator code handled the event
+        //when returned FALSE, DesignerItem's event handler will be executed
+    DiagramDesignerWidgetDecoratorBase.prototype.onMouseEnter = function (/*event*/) {
         return false;
     };
 
     //called when the mouse leaves the DesignerItem's main container
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    DiagramDesignerWidgetDecoratorBase.prototype.onMouseLeave = function (event) {
+    DiagramDesignerWidgetDecoratorBase.prototype.onMouseLeave = function (/*event*/) {
         return false;
     };
 
     //called when the mouse leaves the DesignerItem's receives mousedown
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    DiagramDesignerWidgetDecoratorBase.prototype.onMouseDown = function (event) {
+    DiagramDesignerWidgetDecoratorBase.prototype.onMouseDown = function (/*event*/) {
         return false;
     };
 
     //called when the mouse leaves the DesignerItem's receives mouseup
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    DiagramDesignerWidgetDecoratorBase.prototype.onMouseUp = function (event) {
+    DiagramDesignerWidgetDecoratorBase.prototype.onMouseUp = function (/*event*/) {
         return false;
     };
 
@@ -240,24 +255,23 @@ define(['js/Decorators/WidgetDecoratorBase',
     //called when double click happens on the DesignerItem
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    DiagramDesignerWidgetDecoratorBase.prototype.onDoubleClick = function (event) {
+    DiagramDesignerWidgetDecoratorBase.prototype.onDoubleClick = function (/*event*/) {
         return false;
     };
 
     /******************** END OF - EVENT HANDLERS ************************/
 
 
-
     /************* ADDITIONAL METHODS ***************************/
-    //called when the designer item should be updated
+        //called when the designer item should be updated
     DiagramDesignerWidgetDecoratorBase.prototype.update = function () {
     };
 
     //called when the designer item's subcomponent should be updated
-    DiagramDesignerWidgetDecoratorBase.prototype.updateSubcomponent = function (subComponentId) {
+    DiagramDesignerWidgetDecoratorBase.prototype.updateSubcomponent = function (/*subComponentId*/) {
     };
 
-    DiagramDesignerWidgetDecoratorBase.prototype.readOnlyMode = function (readOnlyMode) {
+    DiagramDesignerWidgetDecoratorBase.prototype.readOnlyMode = function (/*readOnlyMode*/) {
     };
 
     //Called when connection is being drawn from this item's or one of its subcomponents' connector
@@ -267,26 +281,26 @@ define(['js/Decorators/WidgetDecoratorBase',
     //paramters:
     //  - id: if undefined, need to return the metainfo descriptor for the decorated object
     //  -     if has a value, need to return the metainfo of the subcomponent with the given id
-    DiagramDesignerWidgetDecoratorBase.prototype.getConnectorMetaInfo = function (id) {
+    DiagramDesignerWidgetDecoratorBase.prototype.getConnectorMetaInfo = function (/*id*/) {
         return undefined;
     };
 
     //Search support for DiagramDesignerWidget
     //return true if this item matches the search criteria described in searchDesc
     //otherwise return false
-    DiagramDesignerWidgetDecoratorBase.prototype.doSearch = function (searchDesc) {
+    DiagramDesignerWidgetDecoratorBase.prototype.doSearch = function (/*searchDesc*/) {
         return false;
     };
 
     //Called when a connection drawing starts from this item (or one of it's subcomponent)
     //can return visual properties for the connection being drawn
     //{'width': 2,
-    // 'color': "#FF0000",
-    // 'start-arrow': "diamond",
-    // 'end-arrow': "block",
+    // 'color': '#FF0000',
+    // 'start-arrow': 'diamond',
+    // 'end-arrow': 'block',
     // 'pattern': '.'}
     // for more information see DiagramDesignerWidget.Constants.js
-    DiagramDesignerWidgetDecoratorBase.prototype.getDrawnConnectionVisualStyle = function (subComponentId) {
+    DiagramDesignerWidgetDecoratorBase.prototype.getDrawnConnectionVisualStyle = function (/*subComponentId*/) {
         return null;
     };
 

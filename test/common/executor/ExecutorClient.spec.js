@@ -1,4 +1,3 @@
-/*globals WebGMEGlobal*/
 /*jshint node:true, mocha:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer

@@ -1,25 +1,29 @@
 /*globals define, _*/
+/*jshint browser: true, camelcase: false*/
 
-define(['js/Decorators/DecoratorBase',
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define([
+    'js/Decorators/DecoratorBase',
     './DiagramDesigner/ModelDecorator.DiagramDesignerWidget',
-    './PartBrowser/ModelDecorator.PartBrowserWidget'], function (
-                                                           DecoratorBase,
-                                                           ModelDecoratorDiagramDesignerWidget,
-                                                           ModelDecoratorPartBrowserWidget) {
-    "use strict";
+    './PartBrowser/ModelDecorator.PartBrowserWidget'
+], function (DecoratorBase, ModelDecoratorDiagramDesignerWidget, ModelDecoratorPartBrowserWidget) {
 
+    'use strict';
 
     var ModelDecorator,
         __parent__ = DecoratorBase,
         __parent_proto__ = DecoratorBase.prototype,
-        DECORATOR_ID = "ModelDecorator";
+        DECORATOR_ID = 'ModelDecorator';
 
     ModelDecorator = function (params) {
-        var opts = _.extend( {"loggerName": this.DECORATORID}, params);
+        var opts = _.extend({loggerName: this.DECORATORID}, params);
 
         __parent__.apply(this, [opts]);
 
-        this.logger.debug("ModelDecorator ctor");
+        this.logger.debug('ModelDecorator ctor');
     };
 
     _.extend(ModelDecorator.prototype, __parent_proto__);
@@ -28,8 +32,10 @@ define(['js/Decorators/DecoratorBase',
     /*********************** OVERRIDE DecoratorBase MEMBERS **************************/
 
     ModelDecorator.prototype.initializeSupportedWidgetMap = function () {
-        this.supportedWidgetMap = {'DiagramDesigner': ModelDecoratorDiagramDesignerWidget,
-            'PartBrowser': ModelDecoratorPartBrowserWidget};
+        this.supportedWidgetMap = {
+            DiagramDesigner: ModelDecoratorDiagramDesignerWidget,
+            PartBrowser: ModelDecoratorPartBrowserWidget
+        };
     };
 
     return ModelDecorator;

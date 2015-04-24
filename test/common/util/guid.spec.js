@@ -1,5 +1,4 @@
-/*globals require*/
-/*jshint node:true, mocha:true*/
+/*jshint node:true, mocha:true, expr:true*/
 /**
  * @author lattmann / https://github.com/lattmann
  */

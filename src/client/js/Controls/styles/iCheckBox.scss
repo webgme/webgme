@@ -16,7 +16,6 @@ $height: $width * 0.3;
 $switch-border-width: 1px;
 $switch-width: $width * 0.46 - $switch-border-width;
 
-
 div.iCheckBox {
   width: $width;
   height: $height;
@@ -24,21 +23,21 @@ div.iCheckBox {
   border-radius: 3px;
   position: relative;
   cursor: pointer;
-  background: -moz-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
-  background: -webkit-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
-  background: -o-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
-  background: linear-gradient( to bottom, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
-  box-shadow: 0 0 2px rgba(0,0,0,.4), inset 0 0 2px rgba(0,0,0,.8);
+  background: -moz-linear-gradient(top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom);
+  background: -webkit-linear-gradient(top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom);
+  background: -o-linear-gradient(top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom);
+  background: linear-gradient(to bottom, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom);
+  box-shadow: 0 0 2px rgba(0, 0, 0, .4), inset 0 0 2px rgba(0, 0, 0, .8);
 
   transition: opacity .3s;
 
   .sw {
     width: 50%;
     height: 100%;
-    background: -moz-linear-gradient( top, $switch-background-gradient-top, $switch-background-gradient-bottom );
-    background: -webkit-linear-gradient( top, $switch-background-gradient-top, $switch-background-gradient-bottom );
-    background: -o-linear-gradient( top, $switch-background-gradient-top, $switch-background-gradient-bottom );
-    background: linear-gradient( to bottom, $switch-background-gradient-top, $switch-background-gradient-bottom );
+    background: -moz-linear-gradient(top, $switch-background-gradient-top, $switch-background-gradient-bottom);
+    background: -webkit-linear-gradient(top, $switch-background-gradient-top, $switch-background-gradient-bottom);
+    background: -o-linear-gradient(top, $switch-background-gradient-top, $switch-background-gradient-bottom);
+    background: linear-gradient(to bottom, $switch-background-gradient-top, $switch-background-gradient-bottom);
     border-radius: 3px;
     display: inline-block;
     position: absolute;
@@ -68,16 +67,16 @@ div.iCheckBox {
   }
 
   &.checked {
-    background: -moz-linear-gradient( top, $checked-background-gradient-top, $checked-background-gradient-bottom );
-    background: -webkit-linear-gradient( top, $checked-background-gradient-top, $checked-background-gradient-bottom );
-    background: -o-linear-gradient( top, $checked-background-gradient-top, $checked-background-gradient-bottom );
-    background: linear-gradient( to bottom, $checked-background-gradient-top, $checked-background-gradient-bottom );
+    background: -moz-linear-gradient(top, $checked-background-gradient-top, $checked-background-gradient-bottom);
+    background: -webkit-linear-gradient(top, $checked-background-gradient-top, $checked-background-gradient-bottom);
+    background: -o-linear-gradient(top, $checked-background-gradient-top, $checked-background-gradient-bottom);
+    background: linear-gradient(to bottom, $checked-background-gradient-top, $checked-background-gradient-bottom);
     .sw {
       left: $width - $switch-width - 2 * $switch-border-width;
     }
 
     .txt {
-      left: 0px;
+      left: 0;
       color: $checked-text-color;
     }
   }

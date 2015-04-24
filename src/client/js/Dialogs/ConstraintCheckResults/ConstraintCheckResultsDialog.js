@@ -1,35 +1,41 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
-
+/*globals define, $, WebGMEGlobal*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  * @author kecso / https://github.com/kecso
  */
 
-
 define(['js/util',
     'text!./templates/ConstraintCheckResultsDialog.html',
-    'css!./styles/ConstraintCheckResultsDialog.css'], function (clientUtil, pluginResultsDialogTemplate) {
+    'css!./styles/ConstraintCheckResultsDialog.css'
+], function (clientUtil, pluginResultsDialogTemplate) {
 
-    "use strict";
+    'use strict';
 
-    var ContraintCheckResultsDialog = function(){},
-        PLUGIN_RESULT_ENTRY_BASE = $('<div/>', { 'class': 'constraint-check-result' }),
+    var ContraintCheckResultsDialog = function () {
+        },
+        PLUGIN_RESULT_ENTRY_BASE = $('<div/>', {class: 'constraint-check-result'}),
         PLUGIN_RESULT_HEADER_BASE = $('<div class="alert"></div>'),
         RESULT_SUCCESS_CLASS = 'alert-success',
-        RESULT_ERROR_CLASS  = 'alert-danger',
+        RESULT_ERROR_CLASS = 'alert-danger',
         ICON_SUCCESS = $('<i class="glyphicon glyphicon-ok glyphicon glyphicon-ok"/>'),
         ICON_ERROR = $('<i class="glyphicon glyphicon-warning-sign glyphicon glyphicon-warning-sign"/>'),
-        RESULT_NAME_BASE = $('<span/>', { 'class': 'title' }),
-        RESULT_TIME_BASE = $('<span/>', { 'class': 'time' }),
+        RESULT_NAME_BASE = $('<span/>', {class: 'title'}),
+        RESULT_TIME_BASE = $('<span/>', {class: 'time'}),
+    //jscs:disable maximumLineLength
         RESULT_DETAILS_BTN_BASE = $('<span class="btn btn-micro btn-details pull-right"><i class="glyphicon glyphicon-plus glyphicon glyphicon-plus"/></span>'),
-        RESULT_DETAILS_BASE = $('<div/>', {'class': 'messages collapse'}),
-        NODE_ENTRY_BASE = $('<div/>', { 'class': 'constraint-check-result' }),
+    //jscs:enable maximumLineLength
+        RESULT_DETAILS_BASE = $('<div/>', {class: 'messages collapse'}),
+        NODE_ENTRY_BASE = $('<div/>', {class: 'constraint-check-result'}),
+    //jscs:disable maximumLineLength
         NODE_BTN_BASE = $('<span class="btn btn-micro btn-node pull-left"><i class="glyphicon glyphicon-eye-open glyphicon glyphicon-eye-open"/></span>'),
+    //jscs:enable maximumLineLength
         MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>'),
-        GUID_REGEXP = new RegExp("[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}", 'i');
+    // FIXME: MAGIC do not we have a GUID regexp somewhere???
+        GUID_REGEXP = new RegExp('[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}', 'i');
 
-    ContraintCheckResultsDialog.prototype.show = function (client,pluginResults) {
+    ContraintCheckResultsDialog.prototype.show = function (client, pluginResults) {
         var self = this;
 
         this._dialog = $(pluginResultsDialogTemplate);
@@ -56,23 +62,16 @@ define(['js/util',
             resultHeader,
             spanResultTitle,
             spanResultTime,
-            messageContainer,
             nodeContainer,
             nodeGuids,
             resultDetailsBtn,
             nodeEntry,
-            contraintContainer,
-            contraintNames,
-            contraintEntry,
-            messageEntry,
-            messageEntryBtn,
-            messages,
-            i,j, k,
-            artifactsContainer,
-            artifacts,
-            artifactsUL,
-            artifactEntry,
-            artifactEntryA;
+            constraintContainer,
+            constraintNames,
+            constraintEntry,
+            i,
+            j,
+            k;
 
         for (i = 0; i < pluginResults.length; i += 1) {
             result = pluginResults[i];
@@ -109,48 +108,47 @@ define(['js/util',
 
             //collecting the nodes which has violation
             nodeGuids = Object.keys(result);
-            j=nodeGuids.length;
-            while(--j>=0){
-                if(!(GUID_REGEXP.test(nodeGuids[j]) && result[nodeGuids[j]].hasViolation === true )){
-                    nodeGuids.splice(j,1);
+            j = nodeGuids.length;
+            while (--j >= 0) {
+                if (!(GUID_REGEXP.test(nodeGuids[j]) && result[nodeGuids[j]].hasViolation === true )) {
+                    nodeGuids.splice(j, 1);
                 }
             }
 
             nodeContainer = RESULT_DETAILS_BASE.clone();
-            for(j=0;j<nodeGuids.length;j++){
+            for (j = 0; j < nodeGuids.length; j++) {
                 nodeEntry = NODE_ENTRY_BASE.clone();
 
-                nodeEntry.attr("GMEpath",result[nodeGuids[j]]._path);
+                nodeEntry.attr('GMEpath', result[nodeGuids[j]]._path);
                 nodeEntry.append(NODE_BTN_BASE.clone());
 
                 spanResultTitle = RESULT_NAME_BASE.clone();
-                spanResultTitle.text(result[nodeGuids[j]]._name /*+"["+nodeGuids[j]+"]"*/); //TODO GUID removed, come up some real identification text
+                //TODO GUID removed, come up some real identification text
+                spanResultTitle.text(result[nodeGuids[j]]._name /*+"["+nodeGuids[j]+"]"*/);
 
                 nodeEntry.append(spanResultTitle);
 
                 resultDetailsBtn = RESULT_DETAILS_BTN_BASE.clone();
                 nodeEntry.append(resultDetailsBtn);
 
-                //now the contraint results
-                contraintNames = Object.keys(result[nodeGuids[j]]);
-                k=contraintNames.length;
-                while(--k>=0){
-                    if(!result[nodeGuids[j]][contraintNames[k]].hasViolation === true ){
-                        contraintNames.splice(k,1);
+                //now the constraint results
+                constraintNames = Object.keys(result[nodeGuids[j]]);
+                k = constraintNames.length;
+                while (--k >= 0) {
+                    if (!result[nodeGuids[j]][constraintNames[k]].hasViolation) {
+                        constraintNames.splice(k, 1);
                     }
                 }
 
-                contraintContainer = RESULT_DETAILS_BASE.clone();
-                for(k=0;k<contraintNames.length;k++){
-                    contraintEntry = MESSAGE_ENTRY_BASE.clone();
-                    contraintEntry.find('.msg-title').text(contraintNames[k]);
-                    contraintEntry.find('.msg-body').html(result[nodeGuids[j]][contraintNames[k]].message);
+                constraintContainer = RESULT_DETAILS_BASE.clone();
+                for (k = 0; k < constraintNames.length; k++) {
+                    constraintEntry = MESSAGE_ENTRY_BASE.clone();
+                    constraintEntry.find('.msg-title').text(constraintNames[k]);
+                    constraintEntry.find('.msg-body').html(result[nodeGuids[j]][constraintNames[k]].message);
 
-                    contraintContainer.append(contraintEntry);
+                    constraintContainer.append(constraintEntry);
                 }
-                nodeEntry.append(contraintContainer);
-
-
+                nodeEntry.append(constraintContainer);
 
 
                 nodeContainer.append(nodeEntry);
@@ -169,9 +167,9 @@ define(['js/util',
         });
 
         dialog.on('click', '.btn-details', function (event) {
-            $(this).siblings(".messages").toggleClass('in');
+            $(this).siblings('.messages').toggleClass('in');
 
-            if($(this).children('.glyphicon-plus').length > 0){
+            if ($(this).children('.glyphicon-plus').length > 0) {
                 $(this).html('<i class="glyphicon glyphicon-minus glyphicon glyphicon-minus"/>');
             } else {
                 $(this).html('<i class="glyphicon glyphicon-plus glyphicon glyphicon-plus"/>');
@@ -180,14 +178,14 @@ define(['js/util',
             event.preventDefault();
         });
 
-        dialog.on('click','.btn-node', function(event){
-            var node = client.getNode($(this).parent().attr("GMEpath")),
+        dialog.on('click', '.btn-node', function (/* event */) {
+            var node = client.getNode($(this).parent().attr('GMEpath')),
                 parentId;
 
-            if(node){
+            if (node) {
                 parentId = node.getParentId();
                 //TODO maybe this could be done in a more nicer way
-                if(typeof parentId === 'string'){
+                if (typeof parentId === 'string') {
                     WebGMEGlobal.State.registerActiveObject(parentId);
                     WebGMEGlobal.State.registerActiveSelection([node.getId()]);
                 } else {
@@ -195,7 +193,6 @@ define(['js/util',
                 }
                 dialog.modal('hide');
             }
-
 
 
         });

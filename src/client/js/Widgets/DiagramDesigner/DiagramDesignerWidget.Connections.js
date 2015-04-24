@@ -1,21 +1,26 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, _*/
+/*jshint browser: true*/
 
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-define(['js/Widgets/DiagramDesigner/Connection',
-        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (Connection,
-                                                   DiagramDesignerWidgetConstants) {
+define([
+    'js/Widgets/DiagramDesigner/Connection',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'
+], function (Connection, DiagramDesignerWidgetConstants) {
 
-    "use strict";
+    'use strict';
 
     var DiagramDesignerWidget,
-        CONNECTION_IN_DRAW_CLASS = "connection-drawing";
+        CONNECTION_IN_DRAW_CLASS = 'connection-drawing';
 
     DiagramDesignerWidget = function () {
 
     };
 
     DiagramDesignerWidget.prototype.createConnection = function (objD) {
-        var connectionId = this._getGuid("C_"),
+        var connectionId = this._getGuid('C_'),
             objDescriptor = _.extend({}, objD),
             sourceId = objDescriptor.srcObjId,
             sourceSubcomponentId = objDescriptor.srcSubCompId,
@@ -23,7 +28,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
             targetSubcomponentId = objDescriptor.dstSubCompId,
             newComponent;
 
-        this.logger.debug("Creating connection component with parameters: " + JSON.stringify(objDescriptor));
+        this.logger.debug('Creating connection component with parameters: ' + JSON.stringify(objDescriptor));
 
         objDescriptor.designerCanvas = this;
 
@@ -33,10 +38,12 @@ define(['js/Widgets/DiagramDesigner/Connection',
         this._insertedConnectionIDs.push(connectionId);
 
         //accounting connection info
-        this.connectionEndIDs[connectionId] = {"srcObjId": sourceId,
-                                              "srcSubCompId": sourceSubcomponentId,
-                                              "dstObjId": targetId,
-                                              "dstSubCompId": targetSubcomponentId};
+        this.connectionEndIDs[connectionId] = {
+            srcObjId: sourceId,
+            srcSubCompId: sourceSubcomponentId,
+            dstObjId: targetId,
+            dstSubCompId: targetSubcomponentId
+        };
 
 
         this._saveConnectionIDbyEndID(connectionId, sourceId, sourceSubcomponentId);
@@ -53,7 +60,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
             dstObjId = objDescriptor.dstObjId,
             dstSubCompId = objDescriptor.dstSubCompId;
 
-        this.logger.debug("Updating connection component with ID: '" + id + "'");
+        this.logger.debug('Updating connection component with ID: "' + id + '"');
 
         //add to accounting queues for performance optimization
         this._updatedConnectionIDs.push(id);
@@ -82,16 +89,18 @@ define(['js/Widgets/DiagramDesigner/Connection',
         }
 
         //accounting connection info
-        this.connectionEndIDs[id] = {"srcObjId": srcObjId,
-            "srcSubCompId": srcSubCompId,
-            "dstObjId": dstObjId,
-            "dstSubCompId": dstSubCompId};
+        this.connectionEndIDs[id] = {
+            srcObjId: srcObjId,
+            srcSubCompId: srcSubCompId,
+            dstObjId: dstObjId,
+            dstSubCompId: dstSubCompId
+        };
 
         this.items[id].update(objDescriptor);
     };
 
     DiagramDesignerWidget.prototype.updateConnectionTexts = function (id, texts) {
-        this.logger.debug("Updating connection texts with ID: '" + id + "'");
+        this.logger.debug('Updating connection texts with ID: "' + id + '"');
 
         this.items[id].updateTexts(texts);
     };
@@ -99,7 +108,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
     DiagramDesignerWidget.prototype.deleteConnection = function (id) {
         var idx;
 
-        this.logger.debug("Deleting connection component with ID: '" + id + "'");
+        this.logger.debug('Deleting connection component with ID: "' + id + '"');
 
         //keep up accounting
         this._deletedConnectionIDs.push(id);
@@ -131,7 +140,8 @@ define(['js/Widgets/DiagramDesigner/Connection',
 
     DiagramDesignerWidget.prototype._removeConnectionIDfromEnd = function (connId, isSource) {
         var objId = isSource ? this.connectionEndIDs[connId].srcObjId : this.connectionEndIDs[connId].dstObjId,
-            subComponentId = isSource ? this.connectionEndIDs[connId].srcSubCompId : this.connectionEndIDs[connId].dstSubCompId,
+            subComponentId = isSource ?
+                this.connectionEndIDs[connId].srcSubCompId : this.connectionEndIDs[connId].dstSubCompId,
             idx;
 
         subComponentId = subComponentId || DiagramDesignerWidgetConstants.SELF;
@@ -145,14 +155,14 @@ define(['js/Widgets/DiagramDesigner/Connection',
      * Called when a new connection is being created in the widget by the user
      */
     DiagramDesignerWidget.prototype.onCreateNewConnection = function (params) {
-        this.logger.warn("onCreateNewConnection with parameters: '" + JSON.stringify(params) + "'");
+        this.logger.warn('onCreateNewConnection with parameters: ' + JSON.stringify(params));
     };
 
     DiagramDesignerWidget.prototype._onModifyConnectionEnd = function (params) {
         var oConnectionDesc = _.extend({}, this.connectionEndIDs[params.id]),
             nConnectionDesc = _.extend({}, this.connectionEndIDs[params.id]);
 
-        this.logger.debug("Modifying connection with parameters: '" + JSON.stringify(params) + "'");
+        this.logger.debug('Modifying connection with parameters: ' + JSON.stringify(params));
 
         if (params.endPoint === DiagramDesignerWidgetConstants.CONNECTION_END_SRC) {
             nConnectionDesc.srcObjId = params.endId;
@@ -162,10 +172,12 @@ define(['js/Widgets/DiagramDesigner/Connection',
             nConnectionDesc.dstSubCompId = params.endSubCompId;
         }
 
-        if (_.isEqual(oConnectionDesc, nConnectionDesc) === false ) {
-            this.onModifyConnectionEnd({ "id": params.id,
-                                         "old": oConnectionDesc,
-                                         "new": nConnectionDesc });
+        if (_.isEqual(oConnectionDesc, nConnectionDesc) === false) {
+            this.onModifyConnectionEnd({
+                id: params.id,
+                old: oConnectionDesc,
+                new: nConnectionDesc
+            });
         }
     };
 
@@ -173,7 +185,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
      * Called when a new connection is being created in the widget by the user
      */
     DiagramDesignerWidget.prototype.onModifyConnectionEnd = function (params) {
-        this.logger.warn("onModifyConnectionEnd with parameters: '" + JSON.stringify(params) + "'");
+        this.logger.warn('onModifyConnectionEnd with parameters: ' + JSON.stringify(params));
     };
 
     /*************** NO CONNECTION START / END UI CLASS ADD/REMOVE ***********/
@@ -207,8 +219,12 @@ define(['js/Widgets/DiagramDesigner/Connection',
         var srcItemID = params.srcId,
             srcSubCompID = params.srcSubCompId,
             availableEndPoints = [],
-            srcItemMetaInfo = this.items[srcItemID]._decoratorInstance ? this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo() : undefined,
-            srcSubCompMetaInfo = srcSubCompID ? this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo(srcSubCompID) : undefined,
+
+            srcItemMetaInfo = this.items[srcItemID]._decoratorInstance ?
+                this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo() : undefined,
+
+            srcSubCompMetaInfo = srcSubCompID ?
+                this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo(srcSubCompID) : undefined,
             i,
             objID,
             filteredDroppableEnds;
@@ -222,8 +238,10 @@ define(['js/Widgets/DiagramDesigner/Connection',
         //iterate through all the known items to build the available connection end list
         i = this.itemIds.length;
         while (i--) {
-            availableEndPoints.push({'dstItemID': this.itemIds[i],
-                'dstSubCompID': undefined});
+            availableEndPoints.push({
+                'dstItemID': this.itemIds[i],
+                'dstSubCompID': undefined
+            });
         }
 
         //iterate through all the known items' subcomponents to build the available connection end list
@@ -231,8 +249,10 @@ define(['js/Widgets/DiagramDesigner/Connection',
             if (this._itemSubcomponentsMap.hasOwnProperty(objID)) {
                 i = this._itemSubcomponentsMap[objID].length;
                 while (i--) {
-                    availableEndPoints.push({'dstItemID': objID,
-                        'dstSubCompID': this._itemSubcomponentsMap[objID][i]});
+                    availableEndPoints.push({
+                        'dstItemID': objID,
+                        'dstSubCompID': this._itemSubcomponentsMap[objID][i]
+                    });
                 }
             }
         }
@@ -242,8 +262,10 @@ define(['js/Widgets/DiagramDesigner/Connection',
             //iterate through all the known connections to build the available connection end list
             i = this.connectionIds.length;
             while (i--) {
-                availableEndPoints.push({'dstItemID': this.connectionIds[i],
-                    'dstSubCompID': undefined});
+                availableEndPoints.push({
+                    'dstItemID': this.connectionIds[i],
+                    'dstSubCompID': undefined
+                });
             }
         }
 
@@ -270,11 +292,11 @@ define(['js/Widgets/DiagramDesigner/Connection',
                 }
             }
             decoratorPackages.push([objID, srcItemMetaInfo, srcSubCompMetaInfo, decoratorUpdatePackage]);
-            processedIndices.sort(function(a,b){
-                return a-b;
+            processedIndices.sort(function (a, b) {
+                return a - b;
             });
             i = processedIndices.length;
-            while(i--) {
+            while (i--) {
                 filteredDroppableEnds.splice(processedIndices[i], 1);
             }
         }
@@ -283,9 +305,11 @@ define(['js/Widgets/DiagramDesigner/Connection',
         i = decoratorPackages.length;
         while (i--) {
             objID = decoratorPackages[i][0];
-            this.items[objID].showEndConnectors({'srcItemMetaInfo': decoratorPackages[i][1],
+            this.items[objID].showEndConnectors({
+                'srcItemMetaInfo': decoratorPackages[i][1],
                 'srcSubCompMetaInfo': decoratorPackages[i][2],
-                'connectors': decoratorPackages[i][3]} );
+                'connectors': decoratorPackages[i][3]
+            });
         }
 
         //add class to items container
@@ -293,7 +317,8 @@ define(['js/Widgets/DiagramDesigner/Connection',
     };
 
     DiagramDesignerWidget.prototype.onFilterNewConnectionDroppableEnds = function (params) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onFilterNewConnectionDroppableEnds not overridden in controller. params: " + JSON.stringify(params));
+        this.logger.warn('DiagramDesignerWidget.prototype.onFilterNewConnectionDroppableEnds not overridden ' +
+        'in controller. params: ' + JSON.stringify(params));
 
         return params.availableConnectionEnds;
     };
@@ -321,14 +346,16 @@ define(['js/Widgets/DiagramDesigner/Connection',
 
         //based on 'src' or 'dst' end of the connection is being dragged,
         //set src/dst values and meta descriptors
-        if (srcDragged === true ) {
+        if (srcDragged === true) {
             //source end of the connection is dragged
             //destination is fix
             if (this.connectionEndIDs[connID]) {
                 dstItemID = this.connectionEndIDs[connID].dstObjId;
                 dstSubCompID = this.connectionEndIDs[connID].dstSubCompId;
-                dstItemMetaInfo =  this.items[dstItemID]._decoratorInstance ? this.items[dstItemID]._decoratorInstance.getConnectorMetaInfo() : undefined;
-                dstSubCompMetaInfo = dstSubCompID ? this.items[dstItemID]._decoratorInstance.getConnectorMetaInfo(dstSubCompID) : undefined;
+                dstItemMetaInfo = this.items[dstItemID]._decoratorInstance ?
+                    this.items[dstItemID]._decoratorInstance.getConnectorMetaInfo() : undefined;
+                dstSubCompMetaInfo = dstSubCompID ?
+                    this.items[dstItemID]._decoratorInstance.getConnectorMetaInfo(dstSubCompID) : undefined;
             }
         } else {
             //destination end of the connection is dragged
@@ -336,20 +363,26 @@ define(['js/Widgets/DiagramDesigner/Connection',
             if (this.connectionEndIDs[connID]) {
                 srcItemID = this.connectionEndIDs[connID].srcObjId;
                 srcSubCompID = this.connectionEndIDs[connID].srcSubCompId;
-                srcItemMetaInfo = this.items[srcItemID]._decoratorInstance ? this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo(): undefined;
-                srcSubCompMetaInfo = srcSubCompID ? this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo(srcSubCompID) : undefined;
+                srcItemMetaInfo = this.items[srcItemID]._decoratorInstance ?
+                    this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo() : undefined;
+                srcSubCompMetaInfo = srcSubCompID ?
+                    this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo(srcSubCompID) : undefined;
             }
         }
 
         //iterate through all the known items to build the available connection src/dst list
         i = this.itemIds.length;
         while (i--) {
-            if (srcDragged === true ) {
-                availableSourcePoints.push({'srcItemID': this.itemIds[i],
-                    'srcSubCompID': undefined});
+            if (srcDragged === true) {
+                availableSourcePoints.push({
+                    'srcItemID': this.itemIds[i],
+                    'srcSubCompID': undefined
+                });
             } else {
-                availableEndPoints.push({'dstItemID': this.itemIds[i],
-                    'dstSubCompID': undefined});
+                availableEndPoints.push({
+                    'dstItemID': this.itemIds[i],
+                    'dstSubCompID': undefined
+                });
             }
         }
 
@@ -358,12 +391,16 @@ define(['js/Widgets/DiagramDesigner/Connection',
             if (this._itemSubcomponentsMap.hasOwnProperty(objID)) {
                 i = this._itemSubcomponentsMap[objID].length;
                 while (i--) {
-                    if (srcDragged === true ) {
-                        availableSourcePoints.push({'srcItemID': objID,
-                            'srcSubCompID': this._itemSubcomponentsMap[objID][i]});
+                    if (srcDragged === true) {
+                        availableSourcePoints.push({
+                            'srcItemID': objID,
+                            'srcSubCompID': this._itemSubcomponentsMap[objID][i]
+                        });
                     } else {
-                        availableEndPoints.push({'dstItemID': objID,
-                            'dstSubCompID': this._itemSubcomponentsMap[objID][i]});
+                        availableEndPoints.push({
+                            'dstItemID': objID,
+                            'dstSubCompID': this._itemSubcomponentsMap[objID][i]
+                        });
                     }
                 }
             }
@@ -380,7 +417,8 @@ define(['js/Widgets/DiagramDesigner/Connection',
         filteredResult = this.onFilterReconnectionDroppableEnds(params) || [];
         this.logger.debug('_onStartConnectionReconnect filteredResult:' + JSON.stringify(filteredResult));
 
-        //iterate through all the filteredResult and ask the decorators to highlight the given connection endpoint's connector
+        // Iterate through all the filteredResult and ask the decorators to
+        // highlight the given connection endpoint's connector.
         var processedIndices = [];
         var decoratorPackages = [];
         var prefix = srcDragged ? 'src' : 'dst';
@@ -395,12 +433,13 @@ define(['js/Widgets/DiagramDesigner/Connection',
                     decoratorUpdatePackage.push(filteredResult[i][prefix + 'SubCompID']);
                 }
             }
-            decoratorPackages.push([objID, srcDragged ? srcItemMetaInfo : dstItemMetaInfo, srcDragged ? srcSubCompMetaInfo : dstSubCompMetaInfo, decoratorUpdatePackage]);
-            processedIndices.sort(function(a,b){
-                return a-b;
+            decoratorPackages.push([objID, srcDragged ? srcItemMetaInfo : dstItemMetaInfo,
+                srcDragged ? srcSubCompMetaInfo : dstSubCompMetaInfo, decoratorUpdatePackage]);
+            processedIndices.sort(function (a, b) {
+                return a - b;
             });
             i = processedIndices.length;
-            while(i--) {
+            while (i--) {
                 filteredResult.splice(processedIndices[i], 1);
             }
         }
@@ -410,13 +449,17 @@ define(['js/Widgets/DiagramDesigner/Connection',
         while (i--) {
             objID = decoratorPackages[i][0];
             if (srcDragged) {
-                this.items[objID].showSourceConnectors({'dstItemMetaInfo': decoratorPackages[i][1],
+                this.items[objID].showSourceConnectors({
+                    'dstItemMetaInfo': decoratorPackages[i][1],
                     'dstSubCompMetaInfo': decoratorPackages[i][2],
-                    'connectors': decoratorPackages[i][3]} );
+                    'connectors': decoratorPackages[i][3]
+                });
             } else {
-                this.items[objID].showEndConnectors({'srcItemMetaInfo': decoratorPackages[i][1],
+                this.items[objID].showEndConnectors({
+                    'srcItemMetaInfo': decoratorPackages[i][1],
                     'srcSubCompMetaInfo': decoratorPackages[i][2],
-                    'connectors': decoratorPackages[i][3]} );
+                    'connectors': decoratorPackages[i][3]
+                });
             }
         }
 
@@ -426,7 +469,8 @@ define(['js/Widgets/DiagramDesigner/Connection',
     DiagramDesignerWidget.prototype.onFilterReconnectionDroppableEnds = function (params) {
         var srcDragged = params.draggedEnd === DiagramDesignerWidgetConstants.CONNECTION_END_SRC;
 
-        this.logger.warn("DiagramDesignerWidget.prototype.onFilterReconnectionDroppableEnds not overridden in controller. params: " + JSON.stringify(params));
+        this.logger.warn('DiagramDesignerWidget.prototype.onFilterReconnectionDroppableEnds not overridden in ' +
+        'controller. params: ' + JSON.stringify(params));
 
         if (srcDragged === true) {
             return params.availableConnectionSources;

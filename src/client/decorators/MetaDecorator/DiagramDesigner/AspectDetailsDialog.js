@@ -1,22 +1,24 @@
-/*globals define, _*/
+/*globals define, $, _*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/util',
+define([
+    'js/util',
     'js/Constants',
     'text!./templates/AspectDetailsDialog.html',
-    'css!./styles/AspectDetailsDialog.css'], function ( util,
-                                             CONSTANTS,
-                                             aspectDetailsDialogTemplate) {
+    'css!./styles/AspectDetailsDialog.css'
+], function (util, CONSTANTS, aspectDetailsDialogTemplate) {
 
-    "use strict";
-
+    'use strict';
 
     var AspectDetailsDialog,
-        ASPECT_DESC_BASE = {'name': undefined,
-                            'items': []},
+        ASPECT_DESC_BASE = {
+            name: undefined,
+            items: []
+        },
         TYPE_EL_BASE = $('<label class="checkbox"><input type="checkbox"></label>'),
         DATA_TYPE_ID = 'typeid';
 
@@ -62,7 +64,7 @@ define(['js/util',
             saveDesc.name = self._inputName.val();
             saveDesc.items = [];
 
-            checked.each(function( /*index, el*/ ) {
+            checked.each(function (/*index, el*/) {
                     saveDesc.items.push($(this).data(DATA_TYPE_ID));
                 }
             );
@@ -83,7 +85,8 @@ define(['js/util',
         };
 
         isValidAspectName = function (name) {
-            return !(name === "" || aspectNames.indexOf(name) !== -1 || name.toLowerCase() === CONSTANTS.ASPECT_ALL.toLowerCase());
+            return !(name === '' || aspectNames.indexOf(name) !== -1 ||
+            name.toLowerCase() === CONSTANTS.ASPECT_ALL.toLowerCase());
         };
 
         checkSelected = function () {
@@ -117,10 +120,10 @@ define(['js/util',
             var val = self._inputName.val();
 
             if (!isValidAspectName(val)) {
-                self._pName.addClass("error");
+                self._pName.addClass('error');
                 self._btnSave.disable(true);
             } else {
-                self._pName.removeClass("error");
+                self._pName.removeClass('error');
                 self._btnSave.disable(false);
             }
         });
@@ -173,8 +176,8 @@ define(['js/util',
 
             displayName = typeInfo.name;
             /*if (DEBUG === true) {
-                displayName += ' (' + typeInfo.id + ')';
-            }*/
+             displayName += ' (' + typeInfo.id + ')';
+             }*/
 
             typeEl = TYPE_EL_BASE.clone();
             typeEl.append(displayName);

@@ -1,9 +1,14 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, _*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 
 define(['js/Widgets/DiagramDesigner/DesignerItem'], function (DesignerItem) {
 
-    "use strict";
+    'use strict';
 
     var DiagramDesignerWidgetDesignerItems;
 
@@ -12,12 +17,12 @@ define(['js/Widgets/DiagramDesigner/DesignerItem'], function (DesignerItem) {
     };
 
     DiagramDesignerWidgetDesignerItems.prototype.createDesignerItem = function (objD) {
-        var componentId = this._getGuid("I_"),
+        var componentId = this._getGuid('I_'),
             objDescriptor = _.extend({}, objD),
             alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y),
             newComponent;
 
-        this.logger.debug("Creating model component with id: '" + componentId + "'");
+        this.logger.debug('Creating model component with id: "' + componentId + '"');
 
         objDescriptor.designerCanvas = this;
         objDescriptor.position.x = alignedPosition.x;
@@ -35,7 +40,11 @@ define(['js/Widgets/DiagramDesigner/DesignerItem'], function (DesignerItem) {
         newComponent.moveTo(objDescriptor.position.x, objDescriptor.position.y);
         newComponent.rotateTo(objDescriptor.rotation);
 
-        newComponent.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, objDescriptor.control, objDescriptor.metaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
+        newComponent.__setDecorator(objDescriptor.decorator,
+            objDescriptor.decoratorClass, objDescriptor.control,
+            objDescriptor.metaInfo, objDescriptor.preferencesHelper,
+            objDescriptor.aspect, objDescriptor.decoratorParams);
+
         newComponent.addToDocFragment(this._documentFragment);
 
         return newComponent;
@@ -45,10 +54,12 @@ define(['js/Widgets/DiagramDesigner/DesignerItem'], function (DesignerItem) {
         var alignedPosition;
 
         if (this.itemIds.indexOf(componentId) !== -1) {
-            this.logger.debug("Updating model component with parameters: " + objDescriptor);
+            this.logger.debug('Updating model component with parameters: ' + objDescriptor);
 
             //adjust its position to this canvas
-            if (objDescriptor.position && _.isNumber(objDescriptor.position.x) && _.isNumber(objDescriptor.position.y)) {
+            if (objDescriptor.position && _.isNumber(objDescriptor.position.x) &&
+                _.isNumber(objDescriptor.position.y)) {
+
                 alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
 
                 objDescriptor.position.x = alignedPosition.x;
@@ -64,9 +75,10 @@ define(['js/Widgets/DiagramDesigner/DesignerItem'], function (DesignerItem) {
         }
     };
 
-    DiagramDesignerWidgetDesignerItems.prototype.updateDesignerItemSubComponent = function (componentId, subComponentId) {
+    DiagramDesignerWidgetDesignerItems.prototype.updateDesignerItemSubComponent = function (componentId,
+                                                                                            subComponentId) {
         if (this.itemIds.indexOf(componentId) !== -1) {
-            this.logger.debug("Updating model component's [" + componentId + "] subcomponent: " + subComponentId);
+            this.logger.debug('Updating model component\'s [' + componentId + '] subcomponent: ' + subComponentId);
 
             //add to accounting queues for performance optimization
             this._updatedDesignerItemIDs.push(componentId);
@@ -78,7 +90,7 @@ define(['js/Widgets/DiagramDesigner/DesignerItem'], function (DesignerItem) {
     DiagramDesignerWidgetDesignerItems.prototype.deleteDesignerItem  = function (id) {
         var idx;
 
-        this.logger.debug("Deleting DesignerItem with ID: '" + id + "'");
+        this.logger.debug('Deleting DesignerItem with ID: "' + id + '"');
 
         //keep up accounting
         this._deletedDesignerItemIDs.push(id);
@@ -92,7 +104,8 @@ define(['js/Widgets/DiagramDesigner/DesignerItem'], function (DesignerItem) {
 
     //NOTE: could/should be overridden in the CONTROLLER
     DiagramDesignerWidgetDesignerItems.prototype.onDesignerItemDoubleClick = function (id, event) {
-        this.logger.debug("DesignerItem '" + id + "' received double click at pos: [" + event.offsetX + ", " + event.offsetY + "]");
+        this.logger.debug('DesignerItem "' + id + '" received double click at pos: [' +
+        event.offsetX + ', ' + event.offsetY + ']');
     };
 
     DiagramDesignerWidgetDesignerItems.prototype.notifyItemComponentEvents = function (itemId, eventList) {

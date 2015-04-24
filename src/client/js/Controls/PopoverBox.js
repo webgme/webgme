@@ -1,14 +1,13 @@
-/*globals define, Raphael, window*/
-
+/*globals define */
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 
-define(['jquery',
-        'css!./styles/PopoverBox.css'], function () {
+define(['jquery', 'css!./styles/PopoverBox.css'], function () {
 
-    "use strict";
+    'use strict';
 
     var PopoverBox,
         AUTO_HIDE_MILLISEC = 2000;
@@ -27,9 +26,10 @@ define(['jquery',
 
         //show new
         el.popover({
-            'placement': 'top',
-            'content': message,
-            'container': this._el});
+            placement: 'top',
+            content: message,
+            container: this._el
+        });
 
         el.popover('show');
         el.find('.popover').addClass('pobox');
@@ -46,10 +46,11 @@ define(['jquery',
         }
     };
 
-    PopoverBox.prototype.alertLevels = { 'SUCCESS': 'ddwa-success',
-                                                    'WARNING': 'ddwa-warning',
-                                                    'ERROR': 'ddwa-error',
-                                                    'INFO': 'ddwa-info'
+    PopoverBox.prototype.alertLevels = {
+        SUCCESS: 'ddwa-success',
+        WARNING: 'ddwa-warning',
+        ERROR: 'ddwa-error',
+        INFO: 'ddwa-info'
     };
 
     return PopoverBox;

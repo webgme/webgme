@@ -1,8 +1,12 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define */
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define([], function () {
 
-    "use strict";
+    'use strict';
 
     return {
         DIALOG_WIDGET: 'DIALOG_WIDGET'

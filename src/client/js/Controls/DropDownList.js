@@ -1,25 +1,20 @@
-/*globals define, _*/
-
+/*globals define, _, $*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
 
-define(['jquery',
-        './DropDownMenu'], function (_jquery,
-                                     DropDownMenu) {
+define(['jquery', './DropDownMenu'], function (_jquery, DropDownMenu) {
 
-    "use strict";
+    'use strict';
 
     var DropDownList,
         __parent__ = DropDownMenu,
-        __parent_proto__ = DropDownMenu.prototype,
         DEFAULT_UNDEFINED_TEXT = 'N/A';
 
     DropDownList = function (params) {
-        var self = this;
-
         //apply parent constructor
         __parent__.apply(this, [params]);
 
@@ -41,21 +36,21 @@ define(['jquery',
         this._setSelectedValue(value, false);
     };
 
-    DropDownList.prototype.selectedValueChanged = function (value) {
+    DropDownList.prototype.selectedValueChanged = function (/* value */) {
         //TODO: override this to get notified about new value selection
     };
 
     /*DropDownList.prototype.addItem = function (item) {
-        var firstItem = this._ul.children().length === 0;
+     var firstItem = this._ul.children().length === 0;
 
-        //call parent's addItem
-        __parent_proto__.addItem.apply(this, arguments);
+     //call parent's addItem
+     __parent_proto__.addItem.apply(this, arguments);
 
-        //do List related part
-        if (firstItem === true) {
-            this._setSelectedValue(item.value, true);
-        }
-    };*/
+     //do List related part
+     if (firstItem === true) {
+     this._setSelectedValue(item.value, true);
+     }
+     };*/
 
     //clear in DropDownMenu removes the popup menu
     //here it should never happen
@@ -111,8 +106,10 @@ define(['jquery',
             a = li.find('> a');
             selectedIcon = $('<i class="glyphicon glyphicon-ok glyphicon glyphicon-ok"></i>');
 
-            selectedIcon.css({"margin-left": "-16px",
-                "margin-right": "2px"});
+            selectedIcon.css({
+                'margin-left': '-16px',
+                'margin-right': '2px'
+            });
 
             a.prepend(selectedIcon);
         }

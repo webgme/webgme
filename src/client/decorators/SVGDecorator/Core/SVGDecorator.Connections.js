@@ -1,25 +1,24 @@
-/*globals define,_*/
-/*
- * @author rkereskenyi / https://github/rkereskenyi
- * @author brollb / https://github/brollb
- *
+/*globals define, $, _*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author brollb / https://github.com/brollb
  */
 
-define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], 
-        function (DiagramDesignerWidgetConstants) {
 
-    "use strict";
+define([], function () {
+
+    'use strict';
 
     var SVGDecoratorConnections,
         CONNECTION_AREA_CLASS = 'connection-area',
-        DATA_LEN = 'len',
         DATA_ANGLE = 'angle',
         DATA_ANGLE1 = 'angle1',
         DATA_ANGLE2 = 'angle2',
-        CONNECTOR_BASE = $('<div class="' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '"/>'),
         CONN_AREA_DEFAULTS = {};
 
-    SVGDecoratorConnections = function(){
+    SVGDecoratorConnections = function () {
     };
 
     SVGDecoratorConnections.prototype.setConnectionAreaDefaults = function (attr) {
@@ -75,11 +74,13 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'],
 
             while (len--) {
                 line = $(connAreas[len]);
-                connA = {"id": line.attr('id'),
-                    "x1": parseInt(line.attr('x1'), 10) * ratio,
-                    "y1": parseInt(line.attr('y1'), 10) * ratio,
-                    "x2": parseInt(line.attr('x2'), 10) * ratio,
-                    "y2": parseInt(line.attr('y2'), 10) * ratio};
+                connA = {
+                    id: line.attr('id'),
+                    x1: parseInt(line.attr('x1'), 10) * ratio,
+                    y1: parseInt(line.attr('y1'), 10) * ratio,
+                    x2: parseInt(line.attr('x2'), 10) * ratio,
+                    y2: parseInt(line.attr('y2'), 10) * ratio
+                };
 
                 //try to figure out meta info from the embedded SVG
                 lineData = line.data();
@@ -87,12 +88,13 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'],
                 _.extend(connA, CONN_AREA_DEFAULTS);
                 _.extend(connA, lineData);
 
-                if (!lineData.hasOwnProperty(DATA_ANGLE) &&
-                    !(lineData.hasOwnProperty(DATA_ANGLE1) && lineData.hasOwnProperty(DATA_ANGLE2))) {
+                if (!lineData.hasOwnProperty(DATA_ANGLE) && !(lineData.hasOwnProperty(DATA_ANGLE1) &&
+                    lineData.hasOwnProperty(DATA_ANGLE2))) {
+
                     dx = connA.x2 - connA.x1;
                     dy = connA.y2 - connA.y1;
                     if (dx !== 0 && dy !== 0) {
-                        alpha = Math.atan(dy / dx) * (180/Math.PI);
+                        alpha = Math.atan(dy / dx) * (180 / Math.PI);
                         if (dx > 0) {
                             alpha = 270 + alpha;
                         } else if (dx < 0) {

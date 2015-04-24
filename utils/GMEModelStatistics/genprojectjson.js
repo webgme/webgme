@@ -1,4 +1,4 @@
-/*globals require*/
+/*jshint node:true*/
 
 /**
  * node genprojectjson.js stat.json [projectNameInDataBase] [mongoip] [mongoport] [mongodb]
@@ -8,24 +8,26 @@
  * This takes a report file of a desktop GME instance model and creates a webgme project file.
  * @author pmeijer / https://github.com/pmeijer
  */
+'use strict';
+
 var Chance = require('chance'),
     chance = new Chance(),
     fs = require('fs'),
     importProject = require('../../src/bin/import_project'),
     path = require('path');
 
-function generateProject (stat, options) {
+function generateProject(stat, options) {
     var project = {
-        bases: {},
-        root: {
-            path: '',
-            guid: null
+            bases: {},
+            root: {
+                path: '',
+                guid: null
+            },
+            relids: {},
+            containment: {},
+            nodes: {},
+            metaSheets: {}
         },
-        relids: {},
-        containment: {},
-        nodes: {},
-        metaSheets: {}
-    },
         META_ASPECT_SET = 'MetaAspectSet_' + chance.guid(),
         metaSheetCounter = 1,
         fcoNode,
@@ -36,61 +38,6 @@ function generateProject (stat, options) {
         guidToMetaNode = {},
         nbrOfPointers = statModel.NumberOfReferences + statModel.NumberOfConnections * 2,
         relIdCnt = 2;
-
-    project.root.guid = chance.guid();
-    project.containment = statModel.ContainmentTree;
-
-    fcoNode = createRootNodeAndFCO(project.root.guid);
-    addNode(stat.MetaModel.RootGUID, project.root.guid);
-    guidToMetaNode[stat.MetaModel.RootGUID].attributes.name = 'META_' + stat.ParadigmName;
-    traverseMetaTree(project.containment[stat.MetaModel.RootGUID], stat.MetaModel.RootGUID);
-    traverseTree(project.containment, project.root.guid, '');
-    project.containment[fcoNode._guid] = {};
-    createPointers();
-
-    function NodeObj(guid, baseGuid, parent) {
-        var cnt = 0;
-        this._guid = guid;
-        this.attributes = {
-            name: chance.last()
-        }
-        if (baseGuid) {
-            this.base = baseGuid;
-            this.meta = {};
-            do {
-                cnt += 1;
-                if (guidToMetaNode[baseGuid]) {
-                    this.meta.attributes = JSON.parse(JSON.stringify(guidToMetaNode[baseGuid].meta.attributes));
-                    break;
-                }
-                baseGuid = stat.Model.InheritanceTree[baseGuid];
-                if (cnt > 1000) {
-                    console.error('Caught in a loop!');
-                    break;
-                }
-            } while (true);
-        } else {
-            this.base = null;
-            this.meta = {
-                attributes: {
-                    name: {
-                        type: 'string'
-                    }
-                }
-            };
-        }
-        this.parent = parent ? parent._guid : null;
-        this.pointers = {
-            base: this.base
-        }
-        this.registry = {
-            position: {
-                x: chance.integer({ min: 0, max: 1000 }),
-                y: chance.integer({ min: 0, max: 1000 })
-            }
-        }
-        this.sets = {};
-    }
 
     function createRootNodeAndFCO(rootGuid) {
         var rootNode = new NodeObj(rootGuid),
@@ -134,7 +81,7 @@ function generateProject (stat, options) {
         };
         rootNode.sets = {
             MetaAspectSet: [metaAspectSet]
-        }
+        };
         rootNode.sets[META_ASPECT_SET] = [metaAspectSet];
         // Build the fco node
         fcoNode.attributes.name = 'FCO';
@@ -153,7 +100,7 @@ function generateProject (stat, options) {
         project.relids[fcoGuid] = '1';
         guidToMetaNode[fcoGuid] = fcoNode;
         return fcoNode;
-    };
+    }
 
     function traverseMetaTree(root, rootguid) {
         var id,
@@ -204,7 +151,7 @@ function generateProject (stat, options) {
         }
         relIdCnt += 1;
         return path;
-    };
+    }
 
     function addToMetaAspectSet(guid) {
         var rootNode = project.nodes[project.root.guid],
@@ -213,8 +160,8 @@ function generateProject (stat, options) {
                 guid: guid,
                 registry: {
                     position: {
-                        x: chance.integer({ min: 0, max: 1000 }),
-                        y: chance.integer({ min: 0, max: 1000 })
+                        x: chance.integer({min: 0, max: 1000}),
+                        y: chance.integer({min: 0, max: 1000})
                     }
                 }
             };
@@ -223,16 +170,17 @@ function generateProject (stat, options) {
         rootNode.sets[META_ASPECT_SET].push(metaAspectSet);
 
         metaSheetCounter += 1;
-        if (metaSheetCounter % 30 == 0) {
+        if (metaSheetCounter % 30 === 0) {
             META_ASPECT_SET = 'MetaAspectSet_' + chance.guid();
             rootNode.registry.MetaSheets.push({
                 SetID: META_ASPECT_SET,
-                order: metaSheetCounter/30,
+                order: metaSheetCounter / 30,
                 title: chance.first()
             });
             rootNode.sets[META_ASPECT_SET] = [];
         }
     }
+
     function createPointers() {
         var pointerTypes = [],
             paths = Object.keys(pathToModelNode),
@@ -248,19 +196,19 @@ function generateProject (stat, options) {
         console.log('Generated pointerTypes ', pointerTypes);
         for (i = 0; i < nbrOfPointers; i += 1) {
             index = i % paths.length;
-            targetPath = paths[chance.integer({min:0, max: paths.length-1})];
+            targetPath = paths[chance.integer({min: 0, max: paths.length - 1})];
             whileCnt = 0;
             do {
                 whileCnt += 1;
-                typeIndex = chance.integer({min:0, max: nbrOfPointerTypes-1});
+                typeIndex = chance.integer({min: 0, max: nbrOfPointerTypes - 1});
                 collision = setPointer(pathToModelNode[paths[index]], pointerTypes[typeIndex], targetPath);
                 if (collision && whileCnt > 2 * nbrOfPointerTypes) {
                     console.error('Too many collisions, skipping pointer..');
                 }
             }
-            while (collision)
+            while (collision);
         }
-    };
+    }
 
     function setPointer(node, name, targetPath) {
         var targetNode = pathToModelNode[targetPath];
@@ -277,8 +225,63 @@ function generateProject (stat, options) {
         return false;
     }
 
+    project.root.guid = chance.guid();
+    project.containment = statModel.ContainmentTree;
+
+    fcoNode = createRootNodeAndFCO(project.root.guid);
+    addNode(stat.MetaModel.RootGUID, project.root.guid);
+    guidToMetaNode[stat.MetaModel.RootGUID].attributes.name = 'META_' + stat.ParadigmName;
+    traverseMetaTree(project.containment[stat.MetaModel.RootGUID], stat.MetaModel.RootGUID);
+    traverseTree(project.containment, project.root.guid, '');
+    project.containment[fcoNode._guid] = {};
+    createPointers();
+
+    function NodeObj(guid, baseGuid, parent) {
+        var cnt = 0;
+        this._guid = guid;
+        this.attributes = {
+            name: chance.last()
+        };
+        if (baseGuid) {
+            this.base = baseGuid;
+            this.meta = {};
+            do {
+                cnt += 1;
+                if (guidToMetaNode[baseGuid]) {
+                    this.meta.attributes = JSON.parse(JSON.stringify(guidToMetaNode[baseGuid].meta.attributes));
+                    break;
+                }
+                baseGuid = stat.Model.InheritanceTree[baseGuid];
+                if (cnt > 1000) {
+                    console.error('Caught in a loop!');
+                    break;
+                }
+            } while (true);
+        } else {
+            this.base = null;
+            this.meta = {
+                attributes: {
+                    name: {
+                        type: 'string'
+                    }
+                }
+            };
+        }
+        this.parent = parent ? parent._guid : null;
+        this.pointers = {
+            base: this.base
+        };
+        this.registry = {
+            position: {
+                x: chance.integer({min: 0, max: 1000}),
+                y: chance.integer({min: 0, max: 1000})
+            }
+        };
+        this.sets = {};
+    }
+
     return project;
-};
+}
 
 if (require.main === module) {
     var inputFile = process.argv[2],
@@ -299,7 +302,7 @@ if (require.main === module) {
             } else {
                 console.log('Project successfully imported to ' + projectName);
             }
-        })
+        });
     } else {
         console.log('Will write to', outName);
         fs.writeFile(outName, JSON.stringify(proj, function (key, value) {

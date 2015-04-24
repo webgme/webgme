@@ -1,4 +1,3 @@
-/*globals WebGMEGlobal*/
 /*jshint node:true, mocha:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
@@ -199,7 +198,7 @@ describe('Artifact', function () {
         it('should fail to add invalid object hash addObjectHash', function (done) {
             var bc = new BlobClient(bcParam),
                 artifact = new Artifact('testartifact', bc);
-            artifact.addObjectHash('a.txt', 'invalid hash', function (err, hash) {
+            artifact.addObjectHash('a.txt', 'invalid hash', function (err/*, hash*/) {
                 if (err.indexOf('hash is invalid') > -1) {
                     done();
                     return;
@@ -216,12 +215,12 @@ describe('Artifact', function () {
                     done(new Error(err));
                     return;
                 }
-                artifact.addObjectHash('a.txt', hash, function (err, hash) {
+                artifact.addObjectHash('a.txt', hash, function (err/*, hash*/) {
                     if (err) {
                         done(new Error(err));
                         return;
                     }
-                    artifact.addObjectHash('a.txt', hash, function (err, hash) {
+                    artifact.addObjectHash('a.txt', hash, function (err/*, hash*/) {
                         if (err.indexOf('same name was already added') > -1) {
                             done();
                             return;
@@ -287,7 +286,7 @@ describe('Artifact', function () {
         it('should fail to add invalid object hash addMetadataHash', function (done) {
             var bc = new BlobClient(bcParam),
                 artifact = new Artifact('testartifact', bc);
-            artifact.addMetadataHash('a.txt', 'invalid hash', function (err, hash) {
+            artifact.addMetadataHash('a.txt', 'invalid hash', function (err/*, hash*/) {
                 if (err.indexOf('hash is invalid') > -1) {
                     done();
                     return;
@@ -310,7 +309,7 @@ describe('Artifact', function () {
                         done(new Error(err));
                         return;
                     }
-                    artifact.addMetadataHash('a.txt', hash, function (err, hash) {
+                    artifact.addMetadataHash('a.txt', hash, function (err/*, hash*/) {
                         if (err.indexOf('same name was already added') > -1) {
                             done();
                             return;
@@ -328,7 +327,7 @@ describe('Artifact', function () {
                 },
                 artifact = new Artifact('testartifact', bc);
 
-            artifact.addObjectHashes(objHashes, function (err, hashes) {
+            artifact.addObjectHashes(objHashes, function (err/*, hashes*/) {
                 if (err.indexOf('Failed adding objectHashes:') > -1) {
                     done();
                     return;
@@ -344,7 +343,7 @@ describe('Artifact', function () {
                 },
                 artifact = new Artifact('testartifact', bc);
 
-            artifact.addMetadataHashes(objHashes, function (err, hashes) {
+            artifact.addMetadataHashes(objHashes, function (err/*, hashes*/) {
                 if (err.indexOf('Failed adding objectHashes:') > -1) {
                     done();
                     return;

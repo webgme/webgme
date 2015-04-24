@@ -1,51 +1,76 @@
-/*globals require, nodeRequire, process, console*/
+/*globals define, File, alert*/
+/*jshint node:true*/
+
 /**
- * Created by Zsolt on 5/16/2014.
- *
+ * @author lattmann / https://github.com/lattmann
+ * @author ksmyth / https://github.com/ksmyth
  */
 
-// eb.executorClient.createJob('1092dd2b135af5d164b9d157b5360391246064db', function (err, res) { console.log(require('util').inspect(res)); })
-// eb.executorClient.getInfoByStatus('CREATED', function(err, res) { console.log("xxx " + require('util').inspect(res)); })
+// eb.executorClient.createJob('1092dd2b135af5d164b9d157b5360391246064db',
+//  function (err, res) { console.log(require('util').inspect(res)); })
 
-define(['blob/BlobClient',
-        'blob/BlobMetadata',
-        'fs',
-        'util',
-        'events',
-        'path',
-        'child_process',
-        'minimatch',
-        'executor/ExecutorClient',
-        'executor/WorkerInfo',
-        'executor/JobInfo',
-        'superagent',
-        'rimraf'
-    ],
-    function (BlobClient, BlobMetadata, fs, util, events, path, child_process, minimatch, ExecutorClient, WorkerInfo, JobInfo, superagent, rimraf) {
-        var UNZIP_EXE;
-        var UNZIP_ARGS;
-        if (process.platform === "win32") {
-            UNZIP_EXE = "c:\\Program Files\\7-Zip\\7z.exe";
-            UNZIP_ARGS = ["x", "-y"];
-        } else if (process.platform === "linux" || process.platform === 'darwin') {
-            UNZIP_EXE = "/usr/bin/unzip";
-            UNZIP_ARGS = ["-o"];
-        } else {
-            UNZIP_EXE = "unknown";
-        }
+// eb.executorClient.getInfoByStatus('CREATED',
+// function(err, res) { console.log('xxx ' + require('util').inspect(res)); })
 
-        var walk = function(dir, done) {
+define([
+    'blob/BlobClient',
+    'blob/BlobMetadata',
+    'fs',
+    'util',
+    'events',
+    'path',
+    'child_process',
+    'minimatch',
+    'executor/ExecutorClient',
+    'executor/WorkerInfo',
+    'executor/JobInfo',
+    'superagent',
+    'rimraf'
+], function (BlobClient,
+             BlobMetadata,
+             fs,
+             util,
+             events,
+             path,
+             childProcess,
+             minimatch,
+             ExecutorClient,
+             WorkerInfo,
+             JobInfo,
+             superagent,
+             rimraf) {
+    'use strict';
+
+    var UNZIP_EXE,
+        UNZIP_ARGS;
+    if (process.platform === 'win32') {
+        UNZIP_EXE = 'c:\\Program Files\\7-Zip\\7z.exe';
+        UNZIP_ARGS = ['x', '-y'];
+    } else if (process.platform === 'linux' || process.platform === 'darwin') {
+        UNZIP_EXE = '/usr/bin/unzip';
+        UNZIP_ARGS = ['-o'];
+    } else {
+        UNZIP_EXE = 'unknown';
+    }
+
+    var walk = function (dir, done) {
         var results = [];
-        fs.readdir(dir, function(err, list) {
-            if (err) return done(err);
+        fs.readdir(dir, function (err, list) {
+            if (err) {
+                done(err);
+                return;
+            }
             var i = 0;
             (function next() {
                 var file = list[i++];
-                if (!file) return done(null, results);
+                if (!file) {
+                    done(null, results);
+                    return;
+                }
                 file = dir + '/' + file;
-                fs.stat(file, function(err, stat) {
+                fs.stat(file, function (err, stat) {
                     if (stat && stat.isDirectory()) {
-                        walk(file, function(err, res) {
+                        walk(file, function (err, res) {
                             results = results.concat(res);
                             next();
                         });
@@ -61,9 +86,17 @@ define(['blob/BlobClient',
     //here you can define global variables for your middleware
 
     var ExecutorWorker = function (parameters) {
-        this.blobClient = new BlobClient({server: parameters.server, serverPort: parameters.serverPort, httpsecure: parameters.httpsecure });
+        this.blobClient = new BlobClient({
+            server: parameters.server,
+            serverPort: parameters.serverPort,
+            httpsecure: parameters.httpsecure
+        });
 
-        this.executorClient = new ExecutorClient({server: parameters.server, serverPort: parameters.serverPort, httpsecure: parameters.httpsecure });
+        this.executorClient = new ExecutorClient({
+            server: parameters.server,
+            serverPort: parameters.serverPort,
+            httpsecure: parameters.httpsecure
+        });
         if (parameters.executorNonce) {
             this.executorClient.executorNonce = parameters.executorNonce;
         }
@@ -78,8 +111,8 @@ define(['blob/BlobClient',
         if (!fs.existsSync(this.workingDirectory)) {
             fs.mkdirSync(this.workingDirectory);
         }
-        this.availableProcessesContainer = parameters.availableProcessesContainer || { availableProcesses: 1 };
-        this.clientRequest = new WorkerInfo.ClientRequest({ clientId: null });
+        this.availableProcessesContainer = parameters.availableProcessesContainer || {availableProcesses: 1};
+        this.clientRequest = new WorkerInfo.ClientRequest({clientId: null});
         this.labelJobs = {};
     };
     util.inherits(ExecutorWorker, events.EventEmitter);
@@ -91,7 +124,7 @@ define(['blob/BlobClient',
         // TODO: what if job is already running?
 
         // get metadata for hash
-        self.blobClient.getMetadata(jobInfo.hash, function (err, metadata) {
+        self.blobClient.getMetadata(jobInfo.hash, function (err/*, metadata*/) {
             if (err) {
                 jobInfo.status = 'FAILED_TO_GET_SOURCE_METADATA';
                 errorCallback(err);
@@ -127,43 +160,52 @@ define(['blob/BlobClient',
 
                     var args = [path.basename(zipPath)];
                     args.unshift.apply(args, UNZIP_ARGS);
-                    var child = child_process.execFile(UNZIP_EXE, args, {cwd: jobDir},
+                    childProcess.execFile(UNZIP_EXE, args, {cwd: jobDir},
                         function (err, stdout, stderr) {
-                        if (err) {
-                            jobInfo.status = 'FAILED_UNZIP';
-                            console.error(stderr);
-                            errorCallback(err);
-                            return;
-                        }
-
-                        // delete downloaded file
-                        fs.unlinkSync(zipPath);
-
-                        jobInfo.startTime = new Date().toISOString();
-
-                        // get cmd file dynamically from the this.executorConfigFilename file
-                        fs.readFile(path.join(jobDir, self.executorConfigFilename), 'utf8', function (err, data) {
                             if (err) {
-                                jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
-                                errorCallback('Could not read ' + self.executorConfigFilename + ' err:' + err);
+                                jobInfo.status = 'FAILED_UNZIP';
+                                console.error(stderr);
+                                errorCallback(err);
                                 return;
                             }
-                            var executorConfig = JSON.parse(data);
-                            if (typeof executorConfig.cmd !== 'string' || typeof executorConfig.resultArtifacts !== 'object') {
-                                jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
-                                errorCallback(self.executorConfigFilename +
+
+                            // delete downloaded file
+                            fs.unlinkSync(zipPath);
+
+                            jobInfo.startTime = new Date().toISOString();
+
+                            // get cmd file dynamically from the this.executorConfigFilename file
+                            fs.readFile(path.join(jobDir, self.executorConfigFilename), 'utf8', function (err, data) {
+                                if (err) {
+                                    jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
+                                    errorCallback('Could not read ' + self.executorConfigFilename + ' err:' + err);
+                                    return;
+                                }
+                                var executorConfig = JSON.parse(data);
+                                if (typeof executorConfig.cmd !== 'string' ||
+                                    typeof executorConfig.resultArtifacts !== 'object') {
+
+                                    jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
+                                    errorCallback(self.executorConfigFilename +
                                     ' is missing or wrong type for cmd and/or resultArtifacts.');
-                                return;
-                            }
-                            var cmd = executorConfig.cmd;
-                            var args = executorConfig.args || [];
-                            console.log('working directory: ' + jobDir + ' executing: ' + cmd + ' with args: ' + args.toString());
-                            var child = child_process.spawn(cmd, args, {cwd: jobDir, stdio: ['ignore', 'pipe', 'pipe']});
-                            var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
-                            child.stdout.pipe(outlog);
-                            child.stdout.pipe(fs.createWriteStream(path.join(self.workingDirectory, jobInfo.hash.substr(0, 6) + '_stdout.txt')));
-                            child.stderr.pipe(fs.createWriteStream(path.join(jobDir, 'job_stderr.txt'))); // TODO: maybe put in the same file as stdout
-                            child.on('close', function (code, signal) {
+                                    return;
+                                }
+                                var cmd = executorConfig.cmd;
+                                var args = executorConfig.args || [];
+                                console.log('working directory: ' + jobDir + ' executing: ' + cmd + ' with args: ' +
+                                args.toString());
+
+                                var child = childProcess.spawn(cmd, args, {
+                                    cwd: jobDir,
+                                    stdio: ['ignore', 'pipe', 'pipe']
+                                });
+                                var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
+                                child.stdout.pipe(outlog);
+                                child.stdout.pipe(fs.createWriteStream(path.join(self.workingDirectory,
+                                    jobInfo.hash.substr(0, 6) + '_stdout.txt')));
+                                // TODO: maybe put in the same file as stdout
+                                child.stderr.pipe(fs.createWriteStream(path.join(jobDir, 'job_stderr.txt')));
+                                child.on('close', function (code/*, signal*/) {
 
                                     jobInfo.finishTime = new Date().toISOString();
 
@@ -174,10 +216,11 @@ define(['blob/BlobClient',
 
                                     // TODO: save stderr and stdout to files.
 
-                                    successCallback(jobInfo, jobDir, executorConfig); // normally self.saveJobResults(jobInfo, jobDir, executorConfig);
+                                    successCallback(jobInfo, jobDir, executorConfig);
+                                    // normally self.saveJobResults(jobInfo, jobDir, executorConfig);
                                 });
+                            });
                         });
-                    });
 
                 });
             });
@@ -250,8 +293,8 @@ define(['blob/BlobClient',
                         for (j = 0; j < resultsArtifacts.length; j += 1) {
                             if (resultsArtifacts[j].files[filename] === true) {
                                 resultsArtifacts[j].files[filename] = hash;
-                                //console.log('Replaced! filename: "' + filename + '", artifact "' + resultsArtifacts[j].name
-                                //    + '" with hash: ' + hash);
+                                //console.log('Replaced! filename: "' + filename + '", artifact "'
+                                // + resultsArtifacts[j].name + '" with hash: ' + hash);
                             }
                         }
                         callback(null);
@@ -261,7 +304,8 @@ define(['blob/BlobClient',
             if (typeof File === 'undefined') { // nodejs doesn't have File
                 fs.readFile(filePath, function (err, data) {
                     if (err) {
-                        console.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' + filePath + '", err: ' + err);
+                        console.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' + filePath +
+                        '", err: ' + err);
                         return callback('FAILED_TO_ARCHIVE_FILE');
                     }
                     archiveData(null, data);
@@ -278,7 +322,7 @@ define(['blob/BlobClient',
                     i,
                     counterCallback;
                 if (err) {
-                    console.error(jobInfo.hash + " " + err);
+                    console.error(jobInfo.hash + ' ' + err);
                     jobInfo.status = 'FAILED_TO_SAVE_JOINT_ARTIFACT';
                     self.sendJobUpdate(jobInfo);
                 } else {
@@ -316,14 +360,14 @@ define(['blob/BlobClient',
         };
 
         addObjectHashesAndSaveArtifact = function (resultArtifact, callback) {
-            resultArtifact.artifact.addMetadataHashes(resultArtifact.files, function (err, hashes) {
+            resultArtifact.artifact.addMetadataHashes(resultArtifact.files, function (err/*, hashes*/) {
                 if (err) {
-                    console.error(jobInfo.hash + " " + err);
+                    console.error(jobInfo.hash + ' ' + err);
                     return callback('FAILED_TO_ADD_OBJECT_HASHES');
                 }
                 resultArtifact.artifact.save(function (err, resultHash) {
                     if (err) {
-                        console.error(jobInfo.hash + " " + err);
+                        console.error(jobInfo.hash + ' ' + err);
                         return callback('FAILED_TO_SAVE_ARTIFACT');
                     }
                     jobInfo.resultHashes[resultArtifact.name] = resultHash;
@@ -340,18 +384,20 @@ define(['blob/BlobClient',
                 matched;
             //console.log('Walking the walk..');
             for (i = 0; i < results.length; i += 1) {
-                filename = path.relative(directory, results[i]).replace(/\\/g,'/');
+                filename = path.relative(directory, results[i]).replace(/\\/g, '/');
                 archive = false;
                 for (a = 0; a < resultsArtifacts.length; a += 1) {
                     if (resultsArtifacts[a].patterns.length === 0) {
-                        //console.log('Matched! filename: "' + filename + '", artifact "' + resultsArtifacts[a].name + '"');
+                        //console.log('Matched! filename: "' + filename + '", artifact "' +
+                        // resultsArtifacts[a].name + '"');
                         resultsArtifacts[a].files[filename] = true;
                         archive = true;
                     } else {
                         for (j = 0; j < resultsArtifacts[a].patterns.length; j += 1) {
                             matched = minimatch(filename, resultsArtifacts[a].patterns[j]);
                             if (matched) {
-                                //console.log('Matched! filename: "' + filename + '", artifact "' + resultsArtifacts[a].name + '"');
+                                //console.log('Matched! filename: "' + filename + '", artifact "' +
+                                // resultsArtifacts[a].name + '"');
                                 resultsArtifacts[a].files[filename] = true;
                                 archive = true;
                                 break;
@@ -360,14 +406,14 @@ define(['blob/BlobClient',
                     }
                 }
                 if (archive) {
-                    filesToArchive.push({ filename: filename, filePath: results[i]});
+                    filesToArchive.push({filename: filename, filePath: results[i]});
                 }
             }
             afterWalk(filesToArchive);
         });
     };
 
-    ExecutorWorker.prototype.sendJobUpdate = function(jobInfo) {
+    ExecutorWorker.prototype.sendJobUpdate = function (jobInfo) {
         if (JobInfo.isFinishedStatus(jobInfo.status)) {
             this.availableProcessesContainer.availableProcesses += 1;
         }
@@ -383,12 +429,13 @@ define(['blob/BlobClient',
 
     };
 
-    ExecutorWorker.prototype.checkForUnzipExe = function() {
-        this.checkForUnzipExe = function() { };
+    ExecutorWorker.prototype.checkForUnzipExe = function () {
+        this.checkForUnzipExe = function () {
+        };
         fs.exists(UNZIP_EXE, function (exists) {
             if (exists) {
             } else {
-                alert("Unzip exe \"" + UNZIP_EXE + "\" does not exist. Please install it.");
+                alert('Unzip exe "' + UNZIP_EXE + '" does not exist. Please install it.');
             }
         });
     };
@@ -397,7 +444,7 @@ define(['blob/BlobClient',
         var self = this;
         self.checkForUnzipExe();
 
-        var _queryWorkerAPI = function() {
+        var _queryWorkerAPI = function () {
 
             this.clientRequest.availableProcesses = Math.max(0, this.availableProcessesContainer.availableProcesses);
             var req = superagent.post(self.executorClient.executorUrl + 'worker');
@@ -431,9 +478,9 @@ define(['blob/BlobClient',
                                 self.availableProcessesContainer.availableProcesses -= 1;
                                 self.emit('jobUpdate', info);
                                 self.startJob(info, function (err) {
-                                    console.error(info.hash + " failed to run: " + err + ". Status: " + info.status);
+                                    console.error(info.hash + ' failed to run: ' + err + '. Status: ' + info.status);
                                     self.sendJobUpdate(info);
-                                }, function(jobInfo, jobDir, executorConfig) {
+                                }, function (jobInfo, jobDir, executorConfig) {
                                     self.saveJobResults(jobInfo, jobDir, executorConfig);
                                 });
                             });
@@ -444,17 +491,20 @@ define(['blob/BlobClient',
                                     self.labelJobs[label] = response.labelJobs[label];
                                     self.availableProcessesContainer.availableProcesses -= 1;
                                     (function (label) {
-                                        var info = { hash: response.labelJobs[label] };
+                                        var info = {hash: response.labelJobs[label]};
                                         self.startJob(info, function (err) {
                                             this.availableProcessesContainer.availableProcesses += 1;
-                                            console.error("Label job " + label + "(" + info.hash + ") failed to run: " + err + ". Status: " + info.status);
-                                        }, function(jobInfo, jobDir, executorConfig) {
+                                            console.error('Label job ' + label + '(' + info.hash + ') failed to run: ' +
+                                            err + '. Status: ' + info.status);
+                                        }, function (jobInfo/*, jobDir, executorConfig*/) {
                                             this.availableProcessesContainer.availableProcesses += 1;
                                             if (jobInfo.status !== 'FAILED_TO_EXECUTE') {
                                                 self.clientRequest.labels.push(label);
-                                                console.info("Label job " + label + " succeeded. Labels are " + JSON.stringify(self.clientRequest.labels));
+                                                console.info('Label job ' + label + ' succeeded. Labels are ' +
+                                                JSON.stringify(self.clientRequest.labels));
                                             } else {
-                                                console.error("Label job " + label + "(" + info.hash + ") run failed: " + err + ". Status: " + info.status);
+                                                console.error('Label job ' + label + '(' + info.hash +
+                                                ') run failed: ' + err + '. Status: ' + info.status);
                                             }
                                         });
                                     })(label);
@@ -470,8 +520,8 @@ define(['blob/BlobClient',
         if (self.clientRequest.clientId) {
             _queryWorkerAPI.call(self);
         } else {
-            var child = child_process.execFile("hostname", [], {}, function (err, stdout, stderr) {
-                self.clientRequest.clientId = (stdout.trim() || "unknown") + "_" + process.pid;
+            childProcess.execFile('hostname', [], {}, function (err, stdout/*, stderr*/) {
+                self.clientRequest.clientId = (stdout.trim() || 'unknown') + '_' + process.pid;
                 _queryWorkerAPI.call(self);
             });
         }

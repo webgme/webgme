@@ -1,10 +1,17 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _*/
+/*jshint browser: true*/
 
-define(['js/DragDrop/DragHelper',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (DragHelper,
-                                                             DiagramDesignerWidget) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+
+define([
+    'js/DragDrop/DragHelper',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget'
+], function (DragHelper, DiagramDesignerWidget) {
+
+    'use strict';
 
     var CrosscutWidget,
         BACKGROUND_TEXT_COLOR = '#CCCCFF';
@@ -21,14 +28,14 @@ define(['js/DragDrop/DragHelper',
 
         DiagramDesignerWidget.call(this, container, params);
 
-        this.logger.debug("CrosscutWidget ctor");
+        this.logger.debug('CrosscutWidget ctor');
     };
 
     _.extend(CrosscutWidget.prototype, DiagramDesignerWidget.prototype);
 
-    CrosscutWidget.prototype._initializeUI = function (containerElement) {
+    CrosscutWidget.prototype._initializeUI = function (/*containerElement*/) {
         DiagramDesignerWidget.prototype._initializeUI.apply(this, arguments);
-        this.logger.debug("CrosscutWidget._initializeUI");
+        this.logger.debug('CrosscutWidget._initializeUI');
 
         //TODO: disable connecting at all
 

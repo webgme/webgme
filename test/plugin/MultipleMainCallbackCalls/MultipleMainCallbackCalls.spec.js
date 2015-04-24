@@ -16,7 +16,7 @@ describe('MultipleMainCallbackCalls', function () {
 
     before(function (done) {
         var importParam = {
-            filePath: './test/asset/sm_basic.json',
+            filePath: './test/plugin/MultipleMainCallbackCalls/project.json',
             projectName: 'plugin_mmcc',
             branchName: 'master'
         };
@@ -26,7 +26,7 @@ describe('MultipleMainCallbackCalls', function () {
         storage = new testFixture.Storage({globConf: gmeConfig});
         importParam.storage = storage;
         importParam.gmeConfig = gmeConfig;
-        testFixture.importProject(importParam, function (err, result) {
+        testFixture.importProject(importParam, function (err/*, result*/) {
             expect(err).to.equal(null);
             done();
         });

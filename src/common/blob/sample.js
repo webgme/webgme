@@ -1,6 +1,12 @@
+/*jshint node:true*/
+
 /**
- * Created by zsolt on 4/12/14.
+ * Client module for accessing the blob.
+ *
+ * @author lattmann / https://github.com/lattmann
  */
+
+'use strict';
 
 var requirejs = require('requirejs');
 requirejs.config({
@@ -18,7 +24,7 @@ blobManager.initialize(function (err) {
     }
 
 
-    blobManager.putContent('x', '.txt', 'sssssss', function(err, hash) {
+    blobManager.putContent('x', '.txt', 'sssssss', function (err /*, hash*/) {
         if (err) {
             console.error(err);
             return;
@@ -39,42 +45,38 @@ blobManager.initialize(function (err) {
 
     var readitBack = function () {
         console.log('reading them back');
-
+        function writeContent(hash, desc) {
+            blobManager.getContent(hash, function (err, content) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                fs.writeFileSync(desc.filename, content);
+            });
+        }
         for (var i = 0; i < savedContentHashes.length; i += 1) {
-            var h = savedContentHashes[i];
-            var d = blobManager.getMetadata(savedContentHashes[i]);
-            (function(hash, desc) {
-                blobManager.getContent(hash, function (err, content) {
-                   if (err) {
-                       console.log(err);
-                       return;
-                   }
-                   fs.writeFileSync(desc.filename, content);
-                });
-            })(h, d);
+            writeContent(savedContentHashes[i], blobManager.getMetadata(savedContentHashes[i]));
         }
     };
 
+    function putContent(file) {
+        blobManager.putContent(path.basename(file), path.extname(file), fs.readFileSync(file), function (err, hash) {
+            remaining -= 1;
 
+            if (err) {
+                console.error(err);
+                return;
+            }
+
+            savedContentHashes.push(hash);
+
+            if (remaining === 0) {
+                console.log(sourceFiles.length + ' are stored');
+                readitBack();
+            }
+        });
+    }
     for (var i = 0; i < sourceFiles.length; i += 1) {
-        var filename = path.join(testdir, sourceFiles[i]);
-        (function (file) {
-
-            blobManager.putContent(path.basename(file), path.extname(file), fs.readFileSync(file), function (err, hash) {
-                remaining -= 1;
-
-                if (err) {
-                    console.error(err);
-                    return;
-                }
-
-                savedContentHashes.push(hash);
-
-                if (remaining === 0) {
-                    console.log(sourceFiles.length + ' are stored');
-                    readitBack();
-                }
-            });
-        })(filename);
+        putContent(path.join(testdir, sourceFiles[i]));
     }
 });

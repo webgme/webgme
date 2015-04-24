@@ -1,13 +1,19 @@
-/*globals define, _, requirejs, WebGMEGlobal, alert*/
+/*globals define, $, alert*/
+/*jshint browser: true*/
 
-define(['js/Dialogs/Import/ImportDialog',
-        'js/Loader/LoaderCircles'], function (ImportDialog,
-                                    LoaderCircles) {
+/**
+ * @author kecso / https://github.com/kecso
+ */
 
-    "use strict";
+define([
+    'js/Dialogs/Import/ImportDialog',
+    'js/Loader/LoaderCircles'
+], function (ImportDialog, LoaderCircles) {
+
+    'use strict';
 
     var _client,
-        _loader = new LoaderCircles({"containerElement": $('body')});
+        _loader = new LoaderCircles({containerElement: $('body')});
 
     var _initialize = function (c) {
         //if already initialized, just return
@@ -52,26 +58,26 @@ define(['js/Dialogs/Import/ImportDialog',
         }
     };
 
-    var _importLibrary = function(objID){
+    var _importLibrary = function (objID) {
         var d = new ImportDialog();
-        d.show(function(fileContent){
+        d.show(function (fileContent) {
             _loader.start();
-            _client.updateLibraryAsync(objID,fileContent,function(err){
-                if(err) {
-                    _displayMessage("Library update failed: "+err, true);
+            _client.updateLibraryAsync(objID, fileContent, function (err) {
+                if (err) {
+                    _displayMessage('Library update failed: ' + err, true);
                 }
                 _loader.stop();
             });
         });
     };
 
-    var _addLibrary = function(parentID){
+    var _addLibrary = function (parentID) {
         var d = new ImportDialog();
-        d.show(function(fileContent){
+        d.show(function (fileContent) {
             _loader.start();
-            _client.addLibraryAsync(parentID,fileContent,function(err){
-                if(err) {
-                    _displayMessage("Library update failed: "+err, true);
+            _client.addLibraryAsync(parentID, fileContent, function (err) {
+                if (err) {
+                    _displayMessage('Library update failed: ' + err, true);
                 }
                 _loader.stop();
             });

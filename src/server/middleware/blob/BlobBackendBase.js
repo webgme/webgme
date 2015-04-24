@@ -99,7 +99,6 @@ BlobBackendBase.prototype.getFile = function (metadataHash, subpath, writeStream
     // TODO: get all content based on metadata
     // TODO: write the stream after callback (error, metadata)
     var self = this;
-    var stringStream = new StringStreamWriter();
 
     var softLinkHashes = [];
 
@@ -165,23 +164,13 @@ BlobBackendBase.prototype.getFile = function (metadataHash, subpath, writeStream
                 var zip = new jszip();
 
                 var keys = Object.keys(metadata.content);
-                var remaining = keys.length;
-
-                if (remaining === 0) {
-                    // empty zip no files contained
-                    // FIXME: this empty zip is not handled correctly.
-                    writeStream.end(); // pmeijer -> this seems to work
-                    callback(null, zip.generate({type: 'nodeBuffer'}), metadata.name);
-                    return;
-                }
-
-                for (var i = 0; i < keys.length; i += 1) {
-                    (function (subpartHash, subpartType, subpartName) {
+                var remaining = keys.length,
+                    subPartFunction = function (subpartHash, subpartType, subpartName) {
                         // TODO: what if error?
                         var contentTemp = GUID() + '.tmp';
                         var writeStream2 = fs.createWriteStream(contentTemp);
 
-                        var contentReadyCallback = function (err) {
+                        var contentReadyCallback = function (/*err*/) {
 
                             fs.readFile(contentTemp, function (err, data) {
                                 zip.file(subpartName, data);
@@ -227,10 +216,21 @@ BlobBackendBase.prototype.getFile = function (metadataHash, subpath, writeStream
                         } else {
                             // complex part within complex part is not supported
                             callback('Subpart content type is not supported: ' + subpartType + ' ' + subpartName +
-                                ' ' + subpartHash);
+                            ' ' + subpartHash);
                         }
 
-                    })(metadata.content[keys[i]].content, metadata.content[keys[i]].contentType, keys[i]);
+                    };
+
+                if (remaining === 0) {
+                    // empty zip no files contained
+                    // FIXME: this empty zip is not handled correctly.
+                    writeStream.end(); // pmeijer -> this seems to work
+                    callback(null, zip.generate({type: 'nodeBuffer'}), metadata.name);
+                    return;
+                }
+
+                for (var i = 0; i < keys.length; i += 1) {
+                    subPartFunction(metadata.content[keys[i]].content, metadata.content[keys[i]].contentType, keys[i]);
                 }
             }
         } else {
@@ -288,14 +288,8 @@ BlobBackendBase.prototype.listAllMetadata = function (all, callback) {
             return;
         }
 
-        var remaining = hashes.length;
-
-        if (hashes.length === 0) {
-            callback(null, allMetadata);
-        }
-
-        for (var i = 0; i < hashes.length; i += 1) {
-            self.getMetadata(hashes[i], function (err, hash, metadata) {
+        var remaining = hashes.length,
+            getMetaDataResponse = function (err, hash, metadata) {
                 remaining -= 1;
 
                 if (err) {
@@ -310,13 +304,20 @@ BlobBackendBase.prototype.listAllMetadata = function (all, callback) {
                 if (remaining === 0) {
                     callback(null, allMetadata);
                 }
-            });
+            };
+
+        if (hashes.length === 0) {
+            callback(null, allMetadata);
+        }
+
+        for (var i = 0; i < hashes.length; i += 1) {
+            self.getMetadata(hashes[i], getMetaDataResponse);
         }
     });
 };
 
 
-BlobBackendBase.prototype.test = function (callback) {
+BlobBackendBase.prototype.test = function (/*callback*/) {
     // TODO: write a randomly generated small binary file
     // TODO: read it back by hash
     // TODO: check if it is exactly the same

@@ -2,6 +2,7 @@
 /**
  * @author lattmann / https://github.com/lattmann
  */
+'use strict';
 
 var winston = require('winston'),
     gmeConfig = require('../../config'),

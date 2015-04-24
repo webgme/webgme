@@ -1,7 +1,5 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 $CIRCLE_SIZE: 11px;
 
@@ -12,7 +10,7 @@ $selected-background-color: #DBEAFC;
     position: relative;
     width: $CIRCLE_SIZE;
     height: $CIRCLE_SIZE;
-    
+
     svg {
       top: -3px;
       position: relative;
@@ -28,8 +26,8 @@ $selected-background-color: #DBEAFC;
 
     .circle-shadow {
       position: absolute;
-      top: 0px;
-      left: 0px;
+      top: 0;
+      left: 0;
       display: none;
       width: $CIRCLE_SIZE;
       height: $CIRCLE_SIZE;

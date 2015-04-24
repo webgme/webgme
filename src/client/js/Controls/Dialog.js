@@ -1,23 +1,22 @@
-/*globals define, _*/
-
+/*globals define, $*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-
 define(['text!./templates/Dialog.html'], function (dialogTemplate) {
 
-    "use strict";
+    'use strict';
 
     var dialogBase = $(dialogTemplate);
 
-    var _showDialog = function (title, body, callback, btnCancel) {
-        var btnOKClicked = false;
-        var dialog = dialogBase.clone();
+    function showDialog(title, body, callback, btnCancel) {
+        var btnOKClicked = false,
+            dialog = dialogBase.clone(),
 
-        var lblTitle = dialog.find('.modal-header > h3');
-        var dBody =  dialog.find('.modal-body');
-        var btnOK = dialog.find('.modal-footer > .btn-ok');
+            lblTitle = dialog.find('.modal-header > h3'),
+            dBody = dialog.find('.modal-body'),
+            btnOK = dialog.find('.modal-footer > .btn-ok');
 
         lblTitle.text(title);
         dBody.html(body);
@@ -48,18 +47,18 @@ define(['text!./templates/Dialog.html'], function (dialogTemplate) {
         });
 
         dialog.modal('show');
-    };
+    }
 
-    var _alert = function (title, body, callback) {
-        _showDialog(title, body, callback, false);
-    };
+    function alert(title, body, callback) {
+        showDialog(title, body, callback, false);
+    }
 
-    var _confirm = function (title, body, callback) {
-        _showDialog(title, body, callback, true);
-    };
+    function confirm(title, body, callback) {
+        showDialog(title, body, callback, true);
+    }
 
     return {
-        alert: _alert,
-        confirm: _confirm
+        alert: alert,
+        confirm: confirm
     };
 });

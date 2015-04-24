@@ -39,7 +39,7 @@ describe('corediff apply', function () {
                     logger: testFixture.logger.fork('corediff apply:core')
                 });
                 root = core.createNode();
-                testFixture.WebGME.serializer.import(core, root, jsonProject, function (err, log) {
+                testFixture.WebGME.serializer.import(core, root, jsonProject, function (err/*, log*/) {
                     if (err) {
                         done(err);
                         return;

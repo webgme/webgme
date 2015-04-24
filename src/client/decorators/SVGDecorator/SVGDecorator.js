@@ -1,27 +1,31 @@
-/*globals define,_*/
-/*
- * @author rkereskenyi / https://github/rkereskenyi
+/*globals define, _*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
-define(['js/Decorators/DecoratorBase',
+
+define([
+    'js/Decorators/DecoratorBase',
     './BlockEditor/SVGDecorator.BlockEditorWidget',
     './DiagramDesigner/SVGDecorator.DiagramDesignerWidget',
-    './PartBrowser/SVGDecorator.PartBrowserWidget'], function (
-                                                           DecoratorBase,
-                                                           SVGDecoratorBlockEditorWidget,
-                                                           SVGDecoratorDiagramDesignerWidget,
-                                                           SVGDecoratorPartBrowserWidget) {
+    './PartBrowser/SVGDecorator.PartBrowserWidget'
+], function (DecoratorBase,
+             SVGDecoratorBlockEditorWidget,
+             SVGDecoratorDiagramDesignerWidget,
+             SVGDecoratorPartBrowserWidget) {
 
-    "use strict";
+    'use strict';
 
     var SVGDecorator,
-        DECORATOR_ID = "SVGDecorator";
+        DECORATOR_ID = 'SVGDecorator';
 
     SVGDecorator = function (params) {
-        var opts = _.extend( {"loggerName": this.DECORATORID}, params);
+        var opts = _.extend({loggerName: this.DECORATORID}, params);
 
         DecoratorBase.apply(this, [opts]);
 
-        this.logger.debug("SVGDecorator ctor");
+        this.logger.debug('SVGDecorator ctor');
     };
 
     _.extend(SVGDecorator.prototype, DecoratorBase.prototype);
@@ -32,9 +36,10 @@ define(['js/Decorators/DecoratorBase',
     SVGDecorator.prototype.initializeSupportedWidgetMap = function () {
 
         this.supportedWidgetMap = {
-            'DiagramDesigner': SVGDecoratorDiagramDesignerWidget,
-            'PartBrowser': SVGDecoratorPartBrowserWidget,
-            'BlockEditor': SVGDecoratorBlockEditorWidget};
+            DiagramDesigner: SVGDecoratorDiagramDesignerWidget,
+            PartBrowser: SVGDecoratorPartBrowserWidget,
+            BlockEditor: SVGDecoratorBlockEditorWidget
+        };
 
     };
 

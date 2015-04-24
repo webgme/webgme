@@ -1,3 +1,4 @@
+//jshint ignore: start
 /* 2012 David Chambers <dc@hashify.me>  */
 define([], function() {
     var CANON = {},

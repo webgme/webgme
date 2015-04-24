@@ -1,12 +1,12 @@
-/*
- * Copyright (C) 2014 Vanderbilt University, All rights reserved.
- *
- * Author: Zsolt Lattmann
+/*globals define*/
+/*jshint browser: true, node:true*/
+
+/**
+ * @author lattmann / https://github.com/lattmann
  */
 
-'use strict';
 define([], function () {
-
+    'use strict';
     /**
      * Initializes a new instance of plugin configuration.
      *

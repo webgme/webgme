@@ -1,4 +1,5 @@
 /*globals define, $, _*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -6,35 +7,37 @@
  */
 
 
-define(['js/Constants',
+define([
+    'js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!../Core/SVGDecorator.html',
     './SVGDecorator.Core',
-    'css!./SVGDecorator.DiagramDesignerWidget'], function (CONSTANTS,
-                                                          nodePropertyNames,
-                                                          DiagramDesignerWidgetDecoratorBase,
-                                                          DiagramDesignerWidgetConstants,
-                                                          SVGDecoratorTemplate,
-                                                          SVGDecoratorCore) {
+    'css!./SVGDecorator.DiagramDesignerWidget'
+], function (CONSTANTS,
+             nodePropertyNames,
+             DiagramDesignerWidgetDecoratorBase,
+             DiagramDesignerWidgetConstants,
+             SVGDecoratorTemplate,
+             SVGDecoratorCore) {
 
-    "use strict";
+    'use strict';
 
     var SVGDecoratorDiagramDesignerWidget,
-        DECORATOR_ID = "SVGDecoratorDiagramDesignerWidget";
+        DECORATOR_ID = 'SVGDecoratorDiagramDesignerWidget';
 
     SVGDecoratorDiagramDesignerWidget = function (options) {
-        var opts = _.extend( {}, options);
+        var opts = _.extend({}, options);
 
         DiagramDesignerWidgetDecoratorBase.apply(this, [opts]);
         SVGDecoratorCore.apply(this, [opts]);
 
-        this._initializeVariables({"connectors": true});
+        this._initializeVariables({connectors: true});
 
         this._selfPatterns = {};
 
-        this.logger.debug("SVGDecoratorDiagramDesignerWidget ctor");
+        this.logger.debug('SVGDecoratorDiagramDesignerWidget ctor');
     };
 
     /************************ INHERITANCE *********************/
@@ -51,25 +54,28 @@ define(['js/Constants',
     SVGDecoratorDiagramDesignerWidget.prototype.$DOMBase = $(SVGDecoratorTemplate);
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
+    //jshint camelcase: false
     SVGDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
         var self = this;
 
         this._renderContent();
 
         // set title editable on double-click
-        this.$name.on("dblclick.editOnDblClick", null, function (event) {
+        this.$name.on('dblclick.editOnDblClick', null, function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-                $(this).editInPlace({"class": "",
-                    "value": self.name,
-                    "onChange": function (oldValue, newValue) {
+                $(this).editInPlace({
+                    class: '',
+                    value: self.name,
+                    onChange: function (oldValue, newValue) {
                         self.__onNodeTitleChanged(oldValue, newValue);
-                    }});
+                    }
+                });
             }
             event.stopPropagation();
             event.preventDefault();
         });
     };
-
+    //jshint camelcase: true
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     SVGDecoratorDiagramDesignerWidget.prototype.update = function () {
@@ -116,50 +122,60 @@ define(['js/Constants',
                     result[i].x2 += xShift;
                 }
             } else {
-                //no custom connection area defined in the SVG
-                //by default return the bounding box N, S, E, W edges with a little bit of padding (variable 'edge') from the sides
+                // No custom connection area defined in the SVG.
+                // By default return the bounding box N, S, E, W edges with a little bit of
+                // padding (variable 'edge') from the sides.
+
                 //North side
-                result.push( {"id": "N",
-                    "x1": edge + xShift,
-                    "y1": 0,
-                    "x2": this.svgWidth - edge + xShift,
-                    "y2": 0,
-                    "angle1": 270,
-                    "angle2": 270,
-                    "len": LEN} );
+                result.push({
+                    id: 'N',
+                    x1: edge + xShift,
+                    y1: 0,
+                    x2: this.svgWidth - edge + xShift,
+                    y2: 0,
+                    angle1: 270,
+                    angle2: 270,
+                    len: LEN
+                });
 
                 //South side
-                result.push( {"id": "S",
-                    "x1": edge + xShift,
-                    "y1": this.svgHeight,
-                    "x2": this.svgWidth - edge + xShift,
-                    "y2": this.svgHeight,
-                    "angle1": 90,
-                    "angle2": 90,
-                    "len": LEN} );
+                result.push({
+                    id: 'S',
+                    x1: edge + xShift,
+                    y1: this.svgHeight,
+                    x2: this.svgWidth - edge + xShift,
+                    y2: this.svgHeight,
+                    angle1: 90,
+                    angle2: 90,
+                    len: LEN
+                });
 
                 //East side
                 if (this._rightPorts !== true) {
-                    result.push({"id": "E",
-                        "x1": this.svgWidth + xShift,
-                        "y1": edge,
-                        "x2": this.svgWidth + xShift,
-                        "y2": this.svgHeight - edge,
-                        "angle1": 0,
-                        "angle2": 0,
-                        "len": LEN});
+                    result.push({
+                        id: 'E',
+                        x1: this.svgWidth + xShift,
+                        y1: edge,
+                        x2: this.svgWidth + xShift,
+                        y2: this.svgHeight - edge,
+                        angle1: 0,
+                        angle2: 0,
+                        len: LEN
+                    });
                 }
 
                 //West side
                 if (this._leftPorts !== true) {
-                    result.push({"id": "W",
-                        "x1": 0 + xShift,
-                        "y1": edge,
-                        "x2": 0 + xShift,
-                        "y2": this.svgHeight - edge,
-                        "angle1": 180,
-                        "angle2": 180,
-                        "len": LEN});
+                    result.push({
+                        id: 'W',
+                        x1: 0 + xShift,
+                        y1: edge,
+                        x2: 0 + xShift,
+                        y2: this.svgHeight - edge,
+                        angle1: 180,
+                        angle2: 180,
+                        len: LEN
+                    });
                 }
             }
         } else if (this.ports[id]) {
@@ -169,14 +185,16 @@ define(['js/Constants',
                 x = this._portContainerXShift + (isLeft ? 1 : this.svgWidth - 1),
                 angle = isLeft ? 180 : 0;
 
-                result.push( {"id": id,
-                    "x1": x,
-                    "y1": portTop + this._PORT_HEIGHT / 2,
-                    "x2": x,
-                    "y2": portTop + this._PORT_HEIGHT / 2,
-                    "angle1": angle,
-                    "angle2": angle,
-                    "len": LEN} );
+            result.push({
+                id: id,
+                x1: x,
+                y1: portTop + this._PORT_HEIGHT / 2,
+                x2: x,
+                y2: portTop + this._PORT_HEIGHT / 2,
+                angle1: angle,
+                angle2: angle,
+                len: LEN
+            });
         }
 
         return result;
@@ -184,7 +202,7 @@ define(['js/Constants',
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-    //Shows the 'connectors' - appends them to the DOM
+        //Shows the 'connectors' - appends them to the DOM
     SVGDecoratorDiagramDesignerWidget.prototype.showSourceConnectors = function (params) {
         var connectors,
             i;
@@ -215,7 +233,7 @@ define(['js/Constants',
     };
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-    //Hides the 'connectors' - detaches them from the DOM
+        //Hides the 'connectors' - detaches them from the DOM
     SVGDecoratorDiagramDesignerWidget.prototype.hideSourceConnectors = function () {
         var i;
 
@@ -231,14 +249,14 @@ define(['js/Constants',
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-    //should highlight the connectors for the given elements
+        //should highlight the connectors for the given elements
     SVGDecoratorDiagramDesignerWidget.prototype.showEndConnectors = function (params) {
-       this.showSourceConnectors(params);
+        this.showSourceConnectors(params);
     };
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-    //Hides the 'connectors' - detaches them from the DOM
+        //Hides the 'connectors' - detaches them from the DOM
     SVGDecoratorDiagramDesignerWidget.prototype.hideEndConnectors = function () {
         this.hideSourceConnectors();
     };
@@ -251,7 +269,7 @@ define(['js/Constants',
     };
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-    //called when the designer item's subcomponent should be updated
+        //called when the designer item's subcomponent should be updated
     SVGDecoratorDiagramDesignerWidget.prototype.updateSubcomponent = function (portId) {
         this._updatePort(portId);
     };
@@ -276,13 +294,13 @@ define(['js/Constants',
         SVGDecoratorCore.prototype.removePort.call(this, portId);
     };
 
-    SVGDecoratorDiagramDesignerWidget.prototype.__registerAsSubcomponent = function(portId) {
+    SVGDecoratorDiagramDesignerWidget.prototype.__registerAsSubcomponent = function (portId) {
         if (this.hostDesignerItem) {
-            this.hostDesignerItem.registerSubcomponent(portId, {"GME_ID": portId});
+            this.hostDesignerItem.registerSubcomponent(portId, {GME_ID: portId});
         }
     };
 
-    SVGDecoratorDiagramDesignerWidget.prototype.__unregisterAsSubcomponent = function(portId) {
+    SVGDecoratorDiagramDesignerWidget.prototype.__unregisterAsSubcomponent = function (portId) {
         if (this.hostDesignerItem) {
             this.hostDesignerItem.unregisterSubcomponent(portId);
         }

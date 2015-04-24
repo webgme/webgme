@@ -1,10 +1,8 @@
 /*globals requireJS*/
 /*jshint node:true*/
 
-/*
- * Copyright (C) 2012-2013 Vanderbilt University, All rights reserved.
- *
- * Author: Miklos Maroti
+/**
+ * @author mmaroti / https://github.com/mmaroti
  */
 
 'use strict';

@@ -1,8 +1,12 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, $*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['jquery'], function () {
 
-    "use strict";
+    'use strict';
 
     var DropDownMenu,
         DISABLED_CLASS = 'disabled';
@@ -11,7 +15,7 @@ define(['jquery'], function () {
         this._initialize(params);
     };
 
-    DropDownMenu.prototype.onItemClicked = function (value) {
+    DropDownMenu.prototype.onItemClicked = function (/* value */) {
         //TODO: override this to get notified about new value selection
     };
 
@@ -28,7 +32,7 @@ define(['jquery'], function () {
     };
 
     DropDownMenu.prototype.addItem = function (item) {
-       this._addItem(item);
+        this._addItem(item);
     };
 
     DropDownMenu.prototype.clear = function (noDetach) {
@@ -36,8 +40,9 @@ define(['jquery'], function () {
     };
 
     /****************** PRIVATE API *************************/
-
+    //jscs:disable maximumLineLength
     DropDownMenu.prototype._DOMBase = $('<div class="btn-group"><button class="btn"></button><button class="btn dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button><ul class="dropdown-menu"></ul></div>');
+    //jscs:enable maximumLineLength
 
     DropDownMenu.prototype._initialize = function (params) {
         var self = this;
@@ -97,7 +102,7 @@ define(['jquery'], function () {
     DropDownMenu.prototype._addItem = function (item) {
         var li = $('<li><a href="#">' + item.text + '</a></li>');
 
-        li.data('val',item.value);
+        li.data('val', item.value);
 
         if (this._sorted === false) {
             this._ul.append(li);
@@ -160,13 +165,15 @@ define(['jquery'], function () {
         }
     };
 
-    DropDownMenu.prototype.COLORS = {'BLUE': 0,
-                                    'LIGHT_BLUE': 1,
-                                    'GREEN': 2,
-                                    'ORANGE': 3,
-                                    'RED': 4,
-                                    'BLACK': 5,
-                                    'GRAY': 6};
+    DropDownMenu.prototype.COLORS = {
+        BLUE: 0,
+        LIGHT_BLUE: 1,
+        GREEN: 2,
+        ORANGE: 3,
+        RED: 4,
+        BLACK: 5,
+        GRAY: 6
+    };
 
     DropDownMenu.prototype._colorClasses = ['btn-primary',
         'btn-info',

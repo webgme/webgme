@@ -1,13 +1,13 @@
 /*globals define*/
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
+/*jshint browser: true, bitwise: false*/
+
+/**
  * @author brollb / https://github/brollb
  */
 
-define(['./AutoRouter.Point'], function (ArPoint){
+define(['./AutoRouter.Point'], function (ArPoint) {
 
-    'use strict'; 
+    'use strict';
 
     return {
         EMPTY_POINT: new ArPoint(-100000, -100000),
@@ -16,7 +16,7 @@ define(['./AutoRouter.Point'], function (ArPoint){
         ED_SMALLGAP: 15,
         CONNECTIONCUSTOMIZATIONDATAVERSION: 0,
         EMPTYCONNECTIONCUSTOMIZATIONDATAMAGIC: -1,
-        DEBUG:  false,
+        DEBUG: false,
         BUFFER: 10,
 
         EDLS_S: 15,//ED_SMALLGAP
@@ -28,14 +28,16 @@ define(['./AutoRouter.Point'], function (ArPoint){
         PathEndOnRight: 0x0020,
         PathEndOnBottom: 0x0040,
         PathEndOnLeft: 0x0080,
-        PathEndMask: (0x0010 | 0x0020 | 0x0040 | 0x0080),  // (PathEndOnTop | PathEndOnRight | PathEndOnBottom | PathEndOnLeft),
+        PathEndMask: (0x0010 | 0x0020 | 0x0040 | 0x0080),
+        // (PathEndOnTop | PathEndOnRight | PathEndOnBottom | PathEndOnLeft),
 
         PathStartOnDefault: 0x0000,
         PathStartOnTop: 0x0100,
         PathStartOnRight: 0x0200,
         PathStartOnBottom: 0x0400,
         PathStartOnLeft: 0x0800,
-        PathStartMask: (0x0100 | 0x0200 | 0x0400 | 0x0800),  // (PathStartOnTop | PathStartOnRight | PathStartOnBottom | PathStartOnLeft),
+        PathStartMask: (0x0100 | 0x0200 | 0x0400 | 0x0800),
+        // (PathStartOnTop | PathStartOnRight | PathStartOnBottom | PathStartOnLeft),
 
         PathHighLighted: 0x0002,		// attributes,
         PathFixed: 0x0001,
@@ -72,7 +74,7 @@ define(['./AutoRouter.Point'], function (ArPoint){
         DirBottom: 2,
         DirLeft: 3,
         DirSkew: 4,
-        
+
         //Path Custom Data
         SimpleEdgeDisplacement: 'EdgeDisplacement',
         CustomPointCustomization: 'PointCustomization'

@@ -1,8 +1,7 @@
 .projects-dialog .pre-body {
-  padding: 15px;
-  padding-bottom: 0px; }
+  padding: 15px 15px 0 15px; }
   .projects-dialog .pre-body .tabContainer ul.nav.nav-tabs {
-    margin-bottom: 0px; }
+    margin-bottom: 0; }
     .projects-dialog .pre-body .tabContainer ul.nav.nav-tabs li {
       width: 86px;
       text-align: center; }

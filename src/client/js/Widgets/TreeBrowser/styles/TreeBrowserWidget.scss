@@ -1,7 +1,5 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 $progress-image-url: url("../../../../img/progress.gif");
@@ -18,8 +16,7 @@ $node-progress-font-color: #AAAAAA;
 
 .tree-browser {
   /* DynaTree Vista-theme overrides */
-  ul.dynatree-container
-  {
+  ul.dynatree-container {
     overflow: visible !important;
     padding-bottom: 0 !important;
     height: auto;
@@ -33,25 +30,25 @@ $node-progress-font-color: #AAAAAA;
   }
 
   .dynatree-has-children span.dynatree-icon /* Default icon */
-  {
-        background-position: 0px -16px;
+   {
+    background-position: 0px -16px;
   }
 
   span.dynatree-icon /* Default icon */
-  {
+   {
     margin-top: 1px;
     cursor: pointer;
   }
 
   .dynatree-loading span.dynatree-expander  /* 'Loading' status overrides all others */
-  {
+   {
     background-position: 0 0;
     background-image: $progress-image-url;
   }
 
   ul.dynatree-container a:focus,
   span.dynatree-focused a:link  /* @IE */
-  {
+   {
     background-color: transparent;
     outline: none;
   }
@@ -68,7 +65,7 @@ $node-progress-font-color: #AAAAAA;
         a.dynatree-title {
           margin-left: 0;
 
-          input[type=text]{
+          input[type=text] {
             padding: 0;
             font-size: 12px !important;
             line-height: 12px;
@@ -81,13 +78,13 @@ $node-progress-font-color: #AAAAAA;
 
           a.dynatree-title {
             font-style: normal;
-            background:$selected-node-background-color;
-            border:1px solid $selected-node-border-color;
+            background: $selected-node-background-color;
+            border: 1px solid $selected-node-border-color;
           }
 
           &.dynatree-focused {
             a.dynatree-title {
-              background:$focused-node-background-color;
+              background: $focused-node-background-color;
             }
           }
         }
@@ -100,7 +97,7 @@ $node-progress-font-color: #AAAAAA;
             font-style: italic;
           }
 
-          span.dynatree-icon  {
+          span.dynatree-icon {
             background: $progress-image-url 0 0;
           }
         }
@@ -119,11 +116,23 @@ $node-progress-font-color: #AAAAAA;
     }
   }
 
-  .context-menu-item.icon-edit { background-image: url(../../../../img/edit.png); }
-  .context-menu-item.icon-cut { background-image: url(../../../../img/cut.png); }
-  .context-menu-item.icon-copy { background-image: url(../../../../img/copy.png); }
-  .context-menu-item.icon-paste { background-image: url(../../../../img/paste.png); }
-  .context-menu-item.icon-delete { background-image: url(../../../../img/delete.png); }
-  .context-menu-item.icon-add { background-image: url(../../../../img/create.png); }
+  .context-menu-item.icon-edit {
+    background-image: url(../../../../img/edit.png);
+  }
+  .context-menu-item.icon-cut {
+    background-image: url(../../../../img/cut.png);
+  }
+  .context-menu-item.icon-copy {
+    background-image: url(../../../../img/copy.png);
+  }
+  .context-menu-item.icon-paste {
+    background-image: url(../../../../img/paste.png);
+  }
+  .context-menu-item.icon-delete {
+    background-image: url(../../../../img/delete.png);
+  }
+  .context-menu-item.icon-add {
+    background-image: url(../../../../img/create.png);
+  }
 }
 

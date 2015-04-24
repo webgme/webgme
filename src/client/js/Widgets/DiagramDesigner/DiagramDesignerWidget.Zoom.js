@@ -1,8 +1,13 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, $*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['jquery-csszoom'], function () {
 
-    "use strict";
+    'use strict';
 
     var DiagramDesignerWidgetZoom,
         DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10];
@@ -15,16 +20,17 @@ define(['jquery-csszoom'], function () {
             zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
 
         //zoom
-        this._zoomSlider = $('<div/>', { 'class': 'diagram-designer-zoom' });
+        this._zoomSlider = $('<div/>', {class: 'diagram-designer-zoom'});
         this.$el.parent().append(this._zoomSlider);
 
         this._zoomSlider.csszoom({
-            'zoomTarget': this.skinParts.$itemsContainer,
-            'zoomLevels': zoomValues,
-            'onZoom': function (zoomLevel) {
+            zoomTarget: this.skinParts.$itemsContainer,
+            zoomLevels: zoomValues,
+            onZoom: function (zoomLevel) {
                 self._zoomRatio = zoomLevel;
                 self._resizeItemContainer();
-            }});
+            }
+        });
 
         //add zoom level UI and handlers
         this._addZoomMouseHandler(this.$el);
@@ -34,10 +40,10 @@ define(['jquery-csszoom'], function () {
         var self = this;
 
         //IE, Chrome, etc
-        el.on('mousewheel', function (event){
+        el.on('mousewheel', function (event) {
             var org = event.originalEvent;
 
-            if (org &&  (org.ctrlKey || org.metaKey || org.altKey)) {
+            if (org && (org.ctrlKey || org.metaKey || org.altKey)) {
                 //CTRL + mouse scroll
                 if (org.wheelDelta < 0) {
                     self._zoomSlider.csszoom('zoomOut');
@@ -51,7 +57,7 @@ define(['jquery-csszoom'], function () {
         });
 
         //FIREFOX
-        el.on('DOMMouseScroll', function (event){
+        el.on('DOMMouseScroll', function (event) {
             var org = event.originalEvent;
 
             if (org && (org.ctrlKey || org.metaKey || org.altKey)) {

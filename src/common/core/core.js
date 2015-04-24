@@ -2,24 +2,22 @@
 /*jshint node: true, browser: true*/
 
 /**
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
- *
- * Author: Tamas Kecskes
+ * @author kecso / https://github.com/kecso
  */
 
 define([
-        'common/core/corerel',
-        'common/core/setcore',
-        'common/core/guidcore',
-        'common/core/nullpointercore',
-        'common/core/coreunwrap',
-        'common/core/coretype',
-        'common/core/constraintcore',
-        'common/core/coretree',
-        'common/core/metacore',
-        'common/core/coretreeloader',
-        'common/core/corediff'],
-    function (CoreRel, Set, Guid, NullPtr, UnWrap, Type, Constraint, CoreTree, MetaCore, TreeLoader, CoreDiff) {
+    'common/core/corerel',
+    'common/core/setcore',
+    'common/core/guidcore',
+    'common/core/nullpointercore',
+    'common/core/coreunwrap',
+    'common/core/coretype',
+    'common/core/constraintcore',
+    'common/core/coretree',
+    'common/core/metacore',
+    'common/core/coretreeloader',
+    'common/core/corediff'
+], function (CoreRel, Set, Guid, NullPtr, UnWrap, Type, Constraint, CoreTree, MetaCore, TreeLoader, CoreDiff) {
     'use strict';
 
     function Core(storage, options) {

@@ -1,21 +1,30 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define */
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 
 define([], function () {
-    "use strict";
+    'use strict';
 
-    var BezierHelper;
+    var bezierHelper;
 
-    BezierHelper = {
+    bezierHelper = {
         //SVG canvas uses this...
-        getBezierControlPoints : function (boundingBox1, boundingBox2) {
-            var bb1 = { x: boundingBox1.x,
+        getBezierControlPoints: function (boundingBox1, boundingBox2) {
+            var bb1 = {
+                    x: boundingBox1.x,
                     y: boundingBox1.y,
                     width: boundingBox1.width,
-                    height: boundingBox1.height },
-                bb2 = { x: boundingBox2.x,
+                    height: boundingBox1.height
+                },
+                bb2 = {
+                    x: boundingBox2.x,
                     y: boundingBox2.y,
                     width: boundingBox2.width,
-                    height: boundingBox2.height },
+                    height: boundingBox2.height
+                },
                 p = [{x: bb1.x + bb1.width / 2, y: bb1.y},
                     {x: bb1.x + bb1.width / 2, y: bb1.y + bb1.height},
                     {x: bb1.x, y: bb1.y + bb1.height / 2},
@@ -52,7 +61,9 @@ define([], function () {
                     for (j = 4; j < 8; j += 1) {
                         dx = Math.abs(p[i].x - p[j].x);
                         dy = Math.abs(p[i].y - p[j].y);
-                        if ((i === j - 4) || (((i !== 3 && j !== 6) || p[i].x < p[j].x) && ((i !== 2 && j !== 7) || p[i].x > p[j].x) && ((i !== 0 && j !== 5) || p[i].y > p[j].y) && ((i !== 1 && j !== 4) || p[i].y < p[j].y))) {
+                        if ((i === j - 4) ||
+                            (((i !== 3 && j !== 6) || p[i].x < p[j].x) && ((i !== 2 && j !== 7) || p[i].x > p[j].x) &&
+                             ((i !== 0 && j !== 5) || p[i].y > p[j].y) && ((i !== 1 && j !== 4) || p[i].y < p[j].y))) {
                             dis.push(dx + dy);
                             d[dis[dis.length - 1]] = [i, j];
                         }
@@ -87,15 +98,15 @@ define([], function () {
                 y[3] = [0, 0, 0, 0, y[1] + dy, y[1] - dy, y[4], y[4]][res[1]].toFixed(3);
             }
 
-            result.push({"x": parseFloat(x[1].toFixed(3)), "y": parseFloat(y[1].toFixed(3))});
-            result.push({"x": parseFloat(x[2]), "y": parseFloat(y[2])});
-            result.push({"x": parseFloat(x[3]), "y": parseFloat(y[3])});
-            result.push({"x": parseFloat(x[4].toFixed(3)), "y": parseFloat(y[4].toFixed(3))});
+            result.push({x: parseFloat(x[1].toFixed(3)), y: parseFloat(y[1].toFixed(3))});
+            result.push({x: parseFloat(x[2]), y: parseFloat(y[2])});
+            result.push({x: parseFloat(x[3]), y: parseFloat(y[3])});
+            result.push({x: parseFloat(x[4].toFixed(3)), y: parseFloat(y[4].toFixed(3))});
 
             return result;
         },
 
-        getBezierControlPoints2 : function (pointA, pointB) {
+        getBezierControlPoints2: function (pointA, pointB) {
             var dx,
                 dy,
                 x = [],
@@ -103,17 +114,37 @@ define([], function () {
                 result = [],
                 sideDescriptor = [];
 
-            if (pointA.dir === "N") { sideDescriptor.push(0); }
-            if (pointA.dir === "S") { sideDescriptor.push(1); }
-            if (pointA.dir === "W") { sideDescriptor.push(2); }
-            if (pointA.dir === "E") { sideDescriptor.push(3); }
-            if (pointA.dir === "X") { sideDescriptor.push(3); }
+            if (pointA.dir === 'N') {
+                sideDescriptor.push(0);
+            }
+            if (pointA.dir === 'S') {
+                sideDescriptor.push(1);
+            }
+            if (pointA.dir === 'W') {
+                sideDescriptor.push(2);
+            }
+            if (pointA.dir === 'E') {
+                sideDescriptor.push(3);
+            }
+            if (pointA.dir === 'X') {
+                sideDescriptor.push(3);
+            }
 
-            if (pointB.dir === "N") { sideDescriptor.push(0); }
-            if (pointB.dir === "S") { sideDescriptor.push(1); }
-            if (pointB.dir === "W") { sideDescriptor.push(2); }
-            if (pointB.dir === "E") { sideDescriptor.push(3); }
-            if (pointB.dir === "X") { sideDescriptor.push(3); }
+            if (pointB.dir === 'N') {
+                sideDescriptor.push(0);
+            }
+            if (pointB.dir === 'S') {
+                sideDescriptor.push(1);
+            }
+            if (pointB.dir === 'W') {
+                sideDescriptor.push(2);
+            }
+            if (pointB.dir === 'E') {
+                sideDescriptor.push(3);
+            }
+            if (pointB.dir === 'X') {
+                sideDescriptor.push(3);
+            }
 
             if ((pointA.x === pointB.x) && (pointA.y === pointB.y)) {
                 //when the source and target of the connection is the same
@@ -144,14 +175,14 @@ define([], function () {
                 y[3] = [y[1] + dy, y[1] - dy, y[4], y[4]][sideDescriptor[1]].toFixed(3);
             }
 
-            result.push({"x": parseFloat(x[1].toFixed(3)), "y": parseFloat(y[1].toFixed(3))});
-            result.push({"x": parseFloat(x[2]), "y": parseFloat(y[2])});
-            result.push({"x": parseFloat(x[3]), "y": parseFloat(y[3])});
-            result.push({"x": parseFloat(x[4].toFixed(3)), "y": parseFloat(y[4].toFixed(3))});
+            result.push({x: parseFloat(x[1].toFixed(3)), y: parseFloat(y[1].toFixed(3))});
+            result.push({x: parseFloat(x[2]), y: parseFloat(y[2])});
+            result.push({x: parseFloat(x[3]), y: parseFloat(y[3])});
+            result.push({x: parseFloat(x[4].toFixed(3)), y: parseFloat(y[4].toFixed(3))});
 
             return result;
         }
     };
 
-    return BezierHelper;
+    return bezierHelper;
 });

@@ -1,4 +1,4 @@
-/*jshint node:true, mocha:true*/
+/*jshint node:true, mocha:true, expr:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
@@ -52,7 +52,7 @@ describe('TestAddOn', function () {
 
     it('should start, update and stop', function (done) {
         importParam = {
-            filePath: './test/asset/sm_basic.json',
+            filePath: './test/addon/core/TestAddOn/project.json',
             projectName: 'TestAddOn',
             branchName: 'master',
             gmeConfig: gmeConfig,

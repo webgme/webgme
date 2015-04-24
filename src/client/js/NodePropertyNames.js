@@ -1,10 +1,14 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define([], function () {
 
-    "use strict";
+    'use strict';
 
-    var attributeNames = {  "name" : "name" };
+    var attributeNames = {name: 'name'};
 
-    return { "Attributes": attributeNames};
+    return {Attributes: attributeNames};
 });

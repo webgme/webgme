@@ -1,4 +1,4 @@
-/* jshint node:true, mocha: true*/
+/* jshint node:true, mocha: true, expr:true*/
 
 /**
  * @author kecso / https://github.com/kecso
@@ -34,8 +34,8 @@ describe('corediff-merge', function () {
                         changeObject.root = root;
                         changeObject.commitHash = project.makeCommit([baseCommitHash], changeObject.rootHash,
                             'apply change fininshed ' + new Date().getTime(), function (/*err*/) {
-                            //we ignore this
-                        });
+                                //we ignore this
+                            });
                         //we restore the root object
                         core.loadRoot(baseRootHash, function (err, r) {
                             if (err) {
@@ -63,7 +63,7 @@ describe('corediff-merge', function () {
                     }
                     project = p;
                     try {
-                        jsonProject = JSON.parse(FS.readFileSync('./test/asset/sm_basic_basic.json', 'utf8'));
+                        jsonProject = JSON.parse(FS.readFileSync('./test/common/core/corediff/base002.json', 'utf8'));
                     } catch (err) {
                         done(err);
                         return;
@@ -88,8 +88,8 @@ describe('corediff-merge', function () {
 
                             commit = project.makeCommit([], core.getHash(root), 'initial project import',
                                 function (/*err*/) {
-                                //ignore it
-                            });
+                                    //ignore it
+                                });
                             if (err) {
                                 done(err);
                                 return;

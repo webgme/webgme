@@ -1,10 +1,16 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
+/*jshint browser: true*/
 
-define(['js/logger',
-    'js/Controls/iCheckBox'], function (Logger,
-                                        iCheckBox) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+define([
+    'js/logger',
+    'js/Controls/iCheckBox'
+], function (Logger, ICheckBox) {
+
+    'use strict';
 
     var KeyboardManagerWidget;
 
@@ -17,24 +23,24 @@ define(['js/logger',
         //initialize UI
         this._initializeUI();
 
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     KeyboardManagerWidget.prototype._initializeUI = function () {
-        this.__checkbox = new iCheckBox({
-            "checkedText": 'ON',
-            "uncheckedText": 'OFF',
-            "icon": "gme icon-gme_keyboard",
-            "checkChangedFn": function (data, isChecked) {
+        this.__checkbox = new ICheckBox({
+            checkedText: 'ON',
+            uncheckedText: 'OFF',
+            icon: 'gme icon-gme_keyboard',
+            checkChangedFn: function (data, isChecked) {
                 WebGMEGlobal.KeyboardManager.setEnabled(isChecked);
-            }});
+            }
+        });
 
         //this.__checkbox.setChecked(false);
 
         this._el.append(this.__checkbox.el);
 
     };
-
 
 
     return KeyboardManagerWidget;

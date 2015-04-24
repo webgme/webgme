@@ -1,4 +1,3 @@
-/*globals require, WebGMEGlobal*/
 /*jshint mocha:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer

@@ -1,24 +1,26 @@
-/*globals define, WebGMEGlobal, alert, _*/
-
+/*globals define, $*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-
-define([
-    'js/Controls/PropertyGrid/PropertyGridWidgetManager',
+define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
     'text!./templates/PluginConfigDialog.html',
-    'css!./styles/PluginConfigDialog.css'],
-    function (
-        PropertyGridWidgetManager,
-        pluginConfigDialogTemplate) {
+    'css!./styles/PluginConfigDialog.css'
+], function (PropertyGridWidgetManager,
+             pluginConfigDialogTemplate) {
 
-    "use strict";
+    'use strict';
 
     var PluginConfigDialog,
         PLUGIN_DATA_KEY = 'plugin',
-        ATTRIBUTE_DATA_KEY = 'attribute';
+        ATTRIBUTE_DATA_KEY = 'attribute',
+    //jscs:disable maximumLineLength
+        PLUGIN_CONFIG_SECTION_BASE = $('<div><fieldset><legend></legend><form class="form-horizontal" role="form"></form><fieldset></div>'),
+        ENTRY_BASE = $('<div class="form-group"><label class="col-sm-4 control-label">NAME</label><div class="col-sm-8 controls"></div></div>'),
+    //jscs:enable maximumLineLength
+        DESCRIPTION_BASE = $('<div class="desc muted"></div>');
 
     PluginConfigDialog = function () {
         this._propertyGridWidgetManager = new PropertyGridWidgetManager();
@@ -59,10 +61,10 @@ define([
         }
     };
 
-    var PLUGIN_CONFIG_SECTION_BASE = $('<div><fieldset><legend></legend><form class="form-horizontal" role="form"></form><fieldset></div>');
     PluginConfigDialog.prototype._initDialog = function (pluginConfigs) {
-        var self = this;
-        var pluginSectionEl;
+        var self = this,
+            p,
+            pluginSectionEl;
 
         this._dialog = $(pluginConfigDialogTemplate);
 
@@ -78,7 +80,7 @@ define([
             event.preventDefault();
         });
 
-        for (var p in pluginConfigs) {
+        for (p in pluginConfigs) {
             if (pluginConfigs.hasOwnProperty(p)) {
                 pluginSectionEl = PLUGIN_CONFIG_SECTION_BASE.clone();
                 pluginSectionEl.data(PLUGIN_DATA_KEY, p);
@@ -98,8 +100,6 @@ define([
         });
     };
 
-    var ENTRY_BASE = $('<div class="form-group"><label class="col-sm-4 control-label">NAME</label><div class="col-sm-8 controls"></div></div>');
-    var DESCRIPTION_BASE = $('<div class="desc muted"></div>');
     PluginConfigDialog.prototype._generatePluginSection = function (pluginName, pluginConfig, containerEl) {
         var len = pluginConfig.length,
             i,

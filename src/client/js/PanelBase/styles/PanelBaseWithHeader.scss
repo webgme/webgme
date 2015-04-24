@@ -1,3 +1,7 @@
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 $panel-header-background-color: #EFEFEF;
 $panel-header-active-background-color: #fff;
 $panel-header-active-border-color: #00235b;
@@ -6,7 +10,6 @@ $palePale: #d3d8df;
 
 $floating-title-color: #555;
 $floating-title-active-color: #00235b;
-
 
 $panel-header-active-title-color: #FFF;
 
@@ -24,7 +27,6 @@ $sidepane-panel-border-radius: 0;
 $panel-header-height: 3px;
 $side-panel-header-height: 18px;
 $panel-border-bottom-width: 3px;
-
 
 $title-font-size: 21px;
 
@@ -73,12 +75,12 @@ $title-font-size: 21px;
       textarea,
       input,
       .uneditable-input {
-        margin-bottom: 0px;
+        margin-bottom: 0;
       }
 
       .input-append,
       .input-prepend {
-        margin-bottom: 0px;
+        margin-bottom: 0;
       }
 
       input.no-focus-collapse:not(:focus) {
@@ -104,10 +106,10 @@ $title-font-size: 21px;
     }
 
     &.absolute-header {
-      border-bottom-width: 0px;
+      border-bottom-width: 0;
       position: absolute;
-      top: 0px;
-      left: 0px;
+      top: 0;
+      left: 0;
     }
   }
 
@@ -119,10 +121,10 @@ $title-font-size: 21px;
 
   .floating-title {
     position: absolute;
-    top:0;
+    top: 0;
     left: 0;
     box-shadow: 0;
-    text-shadow: 1.5px 1.5px 0 rgba(0,0,0,.15);
+    text-shadow: 1.5px 1.5px 0 rgba(0, 0, 0, .15);
     opacity: .65;
 
     color: $floating-title-color;
@@ -163,7 +165,6 @@ $title-font-size: 21px;
     border: 1px solid $palePale;
   }
 
-
   &.active-panel {
     .panel-header {
       border-bottom-color: $panel-header-active-border-color;
@@ -187,14 +188,11 @@ $title-font-size: 21px;
   }
 }
 
-
-
-
 .side-panel {
 
   .panel-base-wh {
     position: relative;
-    padding: 0px;
+    padding: 0;
     margin-bottom: 2px;
     border: 0;
     -webkit-border-radius: $sidepane-panel-border-radius;
@@ -209,8 +207,8 @@ $title-font-size: 21px;
 
       .ro-icon {
         position: relative;
-        top: 0px;
-        left: 0px;
+        top: 0;
+        left: 0;
       }
 
       .panel-header-title {
@@ -224,7 +222,7 @@ $title-font-size: 21px;
 
       .panel-header-toolbar {
         display: block;
-     }
+      }
     }
 
     .panel-body {

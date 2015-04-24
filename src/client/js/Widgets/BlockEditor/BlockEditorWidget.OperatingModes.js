@@ -1,7 +1,7 @@
 /*globals define*/
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
+/*jshint browser: true*/
+
+/**
  * @author brollb / https://github/brollb
  */
 

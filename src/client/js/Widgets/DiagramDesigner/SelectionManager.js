@@ -1,23 +1,24 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
+/*globals define, WebGMEGlobal, $, document*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 
-define(['js/logger',
+define([
+    'js/logger',
     'js/util',
-    './DiagramDesignerWidget.Constants'], function (Logger,
-                            clientUtil,
-                            DiagramDesignerWidgetConstants) {
+    './DiagramDesignerWidget.Constants'
+], function (Logger, clientUtil, DiagramDesignerWidgetConstants) {
 
-    "use strict";
+    'use strict';
 
     var SelectionManager,
         SELECTION_OVERLAP_RATIO = 0.5,
         SELECTION_OUTLINE_MARGIN = 15,
         SELECTION_OUTLINE_MIN_WIDTH = 100,
-        MOUSE_EVENT_POSTFIX = "SelectionManager";
+        MOUSE_EVENT_POSTFIX = 'SelectionManager';
 
     SelectionManager = function (options) {
         var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:SelectionManager';
@@ -26,14 +27,14 @@ define(['js/logger',
         this._diagramDesigner = options ? options.diagramDesigner : null;
 
         if (this._diagramDesigner === undefined || this._diagramDesigner === null) {
-            this.logger.error("Trying to initialize a SelectionManager without a diagramDesigner...");
-            throw ("SelectionManager can not be created");
+            this.logger.error('Trying to initialize a SelectionManager without a diagramDesigner...');
+            throw ('SelectionManager can not be created');
         }
 
         this._selectedElements = [];
         this._rotationEnabled = true;
 
-        this.logger.debug("SelectionManager ctor finished");
+        this.logger.debug('SelectionManager ctor finished');
     };
 
     SelectionManager.prototype.activate = function () {
@@ -82,9 +83,11 @@ define(['js/logger',
 
         this.$el = el;
 
-        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_COMPONENT_DELETE, function (__diagramDesigner, componentId) {
-            self._onComponentDelete(componentId);
-        });
+        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_COMPONENT_DELETE,
+            function (__diagramDesigner, componentId) {
+                self._onComponentDelete(componentId);
+            }
+        );
     };
 
     SelectionManager.prototype.getSelectedElements = function () {
@@ -100,11 +103,13 @@ define(['js/logger',
     };
 
     SelectionManager.prototype.onSelectionCommandClicked = function (command, selectedIds) {
-        this.logger.warn("SelectionManager.prototype.onSelectionCommandClicked IS NOT OVERRIDDEN IN HOST COMPONENT. command: '" + command + "', selectedIds: " + selectedIds);
+        this.logger.warn('SelectionManager.prototype.onSelectionCommandClicked IS NOT OVERRIDDEN IN HOST COMPONENT. ' +
+        ' command: "' + command + '", selectedIds: ' + selectedIds);
     };
 
     SelectionManager.prototype.onSelectionChanged = function (selectedIDs) {
-        this.logger.warn("SelectionManager.prototype.onSelectionChanged IS NOT OVERRIDDEN IN HOST COMPONENT. selectedIDs: " + selectedIDs);
+        this.logger.warn('SelectionManager.prototype.onSelectionChanged IS NOT OVERRIDDEN IN HOST COMPONENT.' +
+        ' selectedIDs: ' + selectedIDs);
     };
 
 
@@ -118,19 +123,21 @@ define(['js/logger',
     /*********************** RUBBERBAND SELECTION *************************************/
 
     SelectionManager.prototype._onBackgroundMouseDown = function (event) {
-        var mousePos = {'mX': event.mouseX, 'mY': event.mouseY},
+        var mousePos = {mX: event.mouseX, mY: event.mouseY},
             self = this,
             leftButton = event.rightClick !== true;
 
-        this.logger.debug("SelectionManager._onBackgroundMouseDown at: " + JSON.stringify(mousePos));
+        this.logger.debug('SelectionManager._onBackgroundMouseDown at: ' + JSON.stringify(mousePos));
 
         if (leftButton === true) {
             //start drawing selection rubber-band
-            this._rubberbandSelection = { "x": mousePos.mX,
-                "y": mousePos.mY,
-                "x2": mousePos.mX,
-                "y2": mousePos.mY,
-                "addToExistingSelection": this._isMultiSelectionModifierKeyPressed(event)};
+            this._rubberbandSelection = {
+                x: mousePos.mX,
+                y: mousePos.mY,
+                x2: mousePos.mX,
+                y2: mousePos.mY,
+                addToExistingSelection: this._isMultiSelectionModifierKeyPressed(event)
+            };
 
             if (this._rubberbandSelection.addToExistingSelection !== true) {
                 this._clearSelection();
@@ -152,18 +159,20 @@ define(['js/logger',
         }
     };
 
-    var RUBBERBAND_BASE = $('<div/>', {"class" : "rubberband"});
+    var RUBBERBAND_BASE = $('<div/>', {class: 'rubberband'});
     SelectionManager.prototype._createRubberBand = function () {
         //create rubberband DOM element
         var rubberBand = RUBBERBAND_BASE.clone();
-        rubberBand.css({"display": "none",
-            "position": "absolute"});
+        rubberBand.css({
+            display: 'none',
+            position: 'absolute'
+        });
 
         return rubberBand;
     };
 
     SelectionManager.prototype._onBackgroundMouseMove = function (event) {
-        var mousePos = {'mX': event.mouseX, 'mY': event.mouseY};
+        var mousePos = {mX: event.mouseX, mY: event.mouseY};
 
         if (this._rubberbandSelection) {
             this._rubberbandSelection.x2 = mousePos.mX;
@@ -173,7 +182,7 @@ define(['js/logger',
     };
 
     SelectionManager.prototype._onBackgroundMouseUp = function (event) {
-        var mousePos = {'mX': event.mouseX, 'mY': event.mouseY},
+        var mousePos = {mX: event.mouseX, mY: event.mouseY},
             params;
 
         if (this._rubberbandSelection) {
@@ -182,11 +191,13 @@ define(['js/logger',
 
             this._drawSelectionRubberBand();
 
-            params = {"addToExistingSelection": this._rubberbandSelection.addToExistingSelection,
-                "x": Math.min(this._rubberbandSelection.x, this._rubberbandSelection.x2),
-                "x2": Math.max(this._rubberbandSelection.x, this._rubberbandSelection.x2),
-                "y": Math.min(this._rubberbandSelection.y, this._rubberbandSelection.y2),
-                "y2": Math.max(this._rubberbandSelection.y, this._rubberbandSelection.y2)};
+            params = {
+                addToExistingSelection: this._rubberbandSelection.addToExistingSelection,
+                x: Math.min(this._rubberbandSelection.x, this._rubberbandSelection.x2),
+                x2: Math.max(this._rubberbandSelection.x, this._rubberbandSelection.x2),
+                y: Math.min(this._rubberbandSelection.y, this._rubberbandSelection.y2),
+                y2: Math.max(this._rubberbandSelection.y, this._rubberbandSelection.y2)
+            };
 
             this._selectItemsByRubberBand(params);
 
@@ -211,18 +222,22 @@ define(['js/logger',
             this.$rubberBand.show();
         }
 
-        this.$rubberBand.css({"left": x,
-            "top": y,
-            "width": x2 - x,
-            "height": y2 - y});
+        this.$rubberBand.css({
+            left: x,
+            top: y,
+            width: x2 - x,
+            height: y2 - y
+        });
     };
 
     SelectionManager.prototype._selectItemsByRubberBand = function (params) {
         var i,
-            rbBBox = {  "x":  params.x,
-                "y": params.y,
-                "x2": params.x2,
-                "y2": params.y2 },
+            rbBBox = {
+                x: params.x,
+                y: params.y,
+                x2: params.x2,
+                y2: params.y2
+            },
             itemsInSelection = [],
             selectionContainsBBox,
             items = this._diagramDesigner.items,
@@ -234,7 +249,8 @@ define(['js/logger',
             return;
         }
 
-        this.logger.debug("Select children by rubber band: [" + rbBBox.x + "," + rbBBox.y + "], [" + rbBBox.x2 + "," + rbBBox.y2 + "]");
+        this.logger.debug('Select children by rubber band: [' + rbBBox.x + ',' + rbBBox.y + '], [' +
+        rbBBox.x2 + ',' + rbBBox.y2 + ']');
 
         selectionContainsBBox = function (itemBBox) {
             var interSectionRect,
@@ -243,12 +259,16 @@ define(['js/logger',
             if (itemBBox) {
                 if (clientUtil.overlap(rbBBox, itemBBox)) {
 
-                    interSectionRect = { "x": Math.max(itemBBox.x, rbBBox.x),
-                        "y": Math.max(itemBBox.y, rbBBox.y),
-                        "x2": Math.min(itemBBox.x2, rbBBox.x2),
-                        "y2": Math.min(itemBBox.y2, rbBBox.y2) };
+                    interSectionRect = {
+                        x: Math.max(itemBBox.x, rbBBox.x),
+                        y: Math.max(itemBBox.y, rbBBox.y),
+                        x2: Math.min(itemBBox.x2, rbBBox.x2),
+                        y2: Math.min(itemBBox.y2, rbBBox.y2)
+                    };
 
-                    interSectionRatio = (interSectionRect.x2 - interSectionRect.x) * (interSectionRect.y2 - interSectionRect.y) / ((itemBBox.x2 - itemBBox.x) * (itemBBox.y2 - itemBBox.y));
+                    interSectionRatio = (interSectionRect.x2 - interSectionRect.x) *
+                    (interSectionRect.y2 - interSectionRect.y) / ((itemBBox.x2 - itemBBox.x) *
+                    (itemBBox.y2 - itemBBox.y));
 
                     if (interSectionRatio > SELECTION_OVERLAP_RATIO) {
                         return true;
@@ -314,16 +334,17 @@ define(['js/logger',
             itemId,
             changed = false;
 
-        this.logger.debug("setSelection: " + idList + ", addToExistingSelection: " + addToExistingSelection);
+        this.logger.debug('setSelection: ' + idList + ', addToExistingSelection: ' + addToExistingSelection);
 
         if (len > 0) {
-            //check if the new selection has to be added to the existing selection
+            // Check if the new selection has to be added to the existing selection.
             if (addToExistingSelection === true) {
-                //if not in the selection yet, add IDs to the selection
+                // If not in the selection yet, add IDs to the selection.
 
-                //first let the already selected items know that they are participating in a multiple selection from now on
+                // First let the already selected items know that they are participating in a
+                // multiple selection from now on.
                 i = this._selectedElements.length;
-                while(i--) {
+                while (i--) {
                     item = items[this._selectedElements[i]];
 
                     if ($.isFunction(item.onDeselect)) {
@@ -379,7 +400,7 @@ define(['js/logger',
                     changed = true;
 
                     i = idList.length;
-                    while(i--) {
+                    while (i--) {
                         itemId = idList[i];
                         item = items[itemId];
 
@@ -411,7 +432,7 @@ define(['js/logger',
         }
 
 
-        this.logger.debug("selected elements: " + this._selectedElements);
+        this.logger.debug('selected elements: ' + this._selectedElements);
 
         this.showSelectionOutline();
 
@@ -441,14 +462,14 @@ define(['js/logger',
 
     /*********************** SHOW SELECTION OUTLINE *********************************/
     var SELECTION_OUTLINE_BASE = $('<div/>', {
-        "class" : "selection-outline"
+        class: 'selection-outline'
     });
     SelectionManager.prototype.showSelectionOutline = function () {
         var bBox = this._getSelectionBoundingBox(),
             cW = this._diagramDesigner._actualSize.w,
             cH = this._diagramDesigner._actualSize.h;
 
-        if (bBox && bBox.hasOwnProperty("x")) {
+        if (bBox && bBox.hasOwnProperty('x')) {
 
             bBox.x -= SELECTION_OUTLINE_MARGIN;
             bBox.y -= SELECTION_OUTLINE_MARGIN;
@@ -484,13 +505,16 @@ define(['js/logger',
             } else {
                 this._diagramDesigner.skinParts.$selectionOutline = SELECTION_OUTLINE_BASE.clone();
 
-                this._diagramDesigner.skinParts.$itemsContainer.prepend(this._diagramDesigner.skinParts.$selectionOutline);
+                this._diagramDesigner.skinParts.$itemsContainer.prepend(
+                    this._diagramDesigner.skinParts.$selectionOutline);
             }
 
-            this._diagramDesigner.skinParts.$selectionOutline.css({ "left": bBox.x,
-                "top": bBox.y,
-                "width": bBox.w,
-                "height": bBox.h });
+            this._diagramDesigner.skinParts.$selectionOutline.css({
+                left: bBox.x,
+                top: bBox.y,
+                width: bBox.w,
+                height: bBox.h
+            });
 
             this._renderSelectionActions();
         } else {
@@ -525,10 +549,12 @@ define(['js/logger',
             if (items[id]) {
 
                 if (!bBox) {
-                    bBox = { "x": this._diagramDesigner._actualSize.w,
-                        "y": this._diagramDesigner._actualSize.h,
-                        "x2": 0,
-                        "y2": 0};
+                    bBox = {
+                        x: this._diagramDesigner._actualSize.w,
+                        y: this._diagramDesigner._actualSize.h,
+                        x2: 0,
+                        y2: 0
+                    };
                 }
 
                 childBBox = items[id].getBoundingBox();
@@ -554,20 +580,20 @@ define(['js/logger',
 
     /************* RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
     var DELETE_BUTTON_BASE = $('<div/>', {
-        "class" : "s-btn delete",
-        "command" : "delete"
+        class: 's-btn delete',
+        command: 'delete'
     });
     DELETE_BUTTON_BASE.html('<i class="glyphicon glyphicon-remove"></i>');
 
     var CONTEXT_MENU_BUTTON_BASE = $('<div/>', {
-        "class" : "s-btn contextmenu",
-        "command" : "contextmenu"
+        class: 's-btn contextmenu',
+        command: 'contextmenu'
     });
     CONTEXT_MENU_BUTTON_BASE.html('<i class="glyphicon glyphicon-list"></i>');
 
     var MOVE_BUTTON_BASE = $('<div/>', {
-        "class" : "s-btn move",
-        "command" : "move"
+        class: 's-btn move',
+        command: 'move'
     });
     MOVE_BUTTON_BASE.html('<i class="glyphicon glyphicon-move"></i>');
 
@@ -587,7 +613,7 @@ define(['js/logger',
 
             moveBtn = MOVE_BUTTON_BASE.clone();
             this._diagramDesigner.skinParts.$selectionOutline.append(moveBtn);
-            this._diagramDesigner._makeDraggable({ '$el': moveBtn });
+            this._diagramDesigner._makeDraggable({$el: moveBtn});
         }
 
         //context menu
@@ -595,12 +621,12 @@ define(['js/logger',
         this._diagramDesigner.skinParts.$selectionOutline.append(contextMenuBtn);
 
         //detach mousedown handler on selection outline
-        this._diagramDesigner.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
-        this._diagramDesigner.skinParts.$selectionOutline.on("mousedown", function (event) {
+        this._diagramDesigner.skinParts.$selectionOutline.off('mousedown').off('click', '.s-btn');
+        this._diagramDesigner.skinParts.$selectionOutline.on('mousedown', function (event) {
             event.stopPropagation();
-        }).on("click", ".s-btn", function (event) {
-            var command = $(this).attr("command");
-            self.logger.debug("Selection button clicked with command: '" + command + "'");
+        }).on('click', '.s-btn', function (event) {
+            var command = $(this).attr('command');
+            self.logger.debug('Selection button clicked with command: "' + command + '"');
 
             self.onSelectionCommandClicked(command, self._selectedElements, event);
 
@@ -613,14 +639,20 @@ define(['js/logger',
     /************* END OF --- RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
     var ROTATION_BUTTON_BASE = $(
         '<div/>', {
-            "class" : "s-btn rotate bottom"
+            class: 's-btn rotate bottom'
         });
 
     ROTATION_BUTTON_BASE.html('' +
-        '<i class="glyphicon glyphicon-repeat"><div class="popover right nowrap rotate-options"><div class="arrow"></div><div class="popover-content narrow"><div class="btn-group"><a class="btn btn-small" id="rotate-left" title="Rotate left"><i class="glyphicon glyphicon-repeat flip-vertical"></i></a><a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="glyphicon glyphicon-repeat"></i></a><a class="btn  btn-small" id="rotate-reset" title="Reset rotation"><i class="glyphicon glyphicon-remove"></i></a></div></div></div></i>');
+    '<i class="glyphicon glyphicon-repeat"><div class="popover right nowrap rotate-options">' +
+    '<div class="arrow"></div><div class="popover-content narrow"><div class="btn-group">' +
+    '<a class="btn btn-small" id="rotate-left" title="Rotate left">' +
+    '<i class="glyphicon glyphicon-repeat flip-vertical"></i></a>' +
+    '<a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="glyphicon glyphicon-repeat"></i>' +
+    '</a><a class="btn  btn-small" id="rotate-reset" title="Reset rotation">' +
+    '<i class="glyphicon glyphicon-remove"></i></a></div></div></div></i>');
 
     var ROTATION_DEGREE_BASE = $('<div/>', {
-        "class" : "rotation-deg"
+        class: 'rotation-deg'
     });
     SelectionManager.prototype._renderRotateHandlers = function () {
         var rotateBtnBottom,
@@ -635,16 +667,18 @@ define(['js/logger',
             this._diagramDesigner.skinParts.$selectionOutline.append(rotateBtnBottom);
             this._diagramDesigner.skinParts.$selectionOutline.append(this._rotationDegree);
 
-            this._diagramDesigner.skinParts.$selectionOutline.off("mousedown." + MOUSE_EVENT_POSTFIX, ".rotate");
-            this._diagramDesigner.skinParts.$selectionOutline.on("mousedown." + MOUSE_EVENT_POSTFIX, ".rotate", function (event) {
-                var rotateBtn = $(this);
-                self.logger.debug("selection rotate button mousedown'");
+            this._diagramDesigner.skinParts.$selectionOutline.off('mousedown.' + MOUSE_EVENT_POSTFIX, '.rotate');
+            this._diagramDesigner.skinParts.$selectionOutline.on('mousedown.' + MOUSE_EVENT_POSTFIX, '.rotate',
+                function (event) {
+                    var rotateBtn = $(this);
+                    self.logger.debug('selection rotate button mousedown');
 
-                self._startSelectionRotate(rotateBtn, event);
+                    self._startSelectionRotate(rotateBtn, event);
 
-                event.stopPropagation();
-                event.preventDefault();
-            });
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+            );
 
             rotateBtnBottom.hover(
                 function () {
@@ -659,7 +693,7 @@ define(['js/logger',
                 var btnId = $(this).attr('id'),
                     deg = 0;
 
-                switch(btnId.replace('rotate-', '')) {
+                switch (btnId.replace('rotate-', '')) {
                     case 'left':
                         deg = -90;
                         break;
@@ -685,21 +719,25 @@ define(['js/logger',
             leftButton = event.which === 1;
 
         if (leftButton) {
-            this._rotateDesc = {"startX": mousePos.mX,
-                                "startY": mousePos.mY,
-                                "oX": parseInt(this._diagramDesigner.skinParts.$selectionOutline.css("left"), 10) + parseInt(this._diagramDesigner.skinParts.$selectionOutline.css("width"), 10) / 2,
-                                "oY": parseInt(this._diagramDesigner.skinParts.$selectionOutline.css("top"), 10) + parseInt(this._diagramDesigner.skinParts.$selectionOutline.css("height"), 10) / 2,
-                                "horizontal": rotateBtn.hasClass('top')};
+            this._rotateDesc = {
+                startX: mousePos.mX,
+                startY: mousePos.mY,
+                oX: parseInt(this._diagramDesigner.skinParts.$selectionOutline.css('left'), 10) +
+                parseInt(this._diagramDesigner.skinParts.$selectionOutline.css('width'), 10) / 2,
+                oY: parseInt(this._diagramDesigner.skinParts.$selectionOutline.css('top'), 10) +
+                parseInt(this._diagramDesigner.skinParts.$selectionOutline.css('height'), 10) / 2,
+                horizontal: rotateBtn.hasClass('top')
+            };
 
             this._rotateAngle = 0;
 
-            $(document).on("mousemove.rotate." + MOUSE_EVENT_POSTFIX, function (event) {
+            $(document).on('mousemove.rotate.' + MOUSE_EVENT_POSTFIX, function (event) {
                 self._onSelectionRotate(event);
             });
-            $(document).on("mouseup.rotate." + MOUSE_EVENT_POSTFIX, function (event) {
+            $(document).on('mouseup.rotate.' + MOUSE_EVENT_POSTFIX, function (event) {
                 //unbind mousemove and mouseup handlers
-                $(document).off("mousemove.rotate." + MOUSE_EVENT_POSTFIX);
-                $(document).off("mouseup.rotate." + MOUSE_EVENT_POSTFIX);
+                $(document).off('mousemove.rotate.' + MOUSE_EVENT_POSTFIX);
+                $(document).off('mouseup.rotate.' + MOUSE_EVENT_POSTFIX);
 
                 self._endSelectionRotate(event);
             });
@@ -715,17 +753,21 @@ define(['js/logger',
 
         this._rotateAngle = deg;
 
-        this._rotationDegree.html( (deg >= 0 ? "+" : "") + deg + "°");
+        this._rotationDegree.html((deg >= 0 ? '+' : '') + deg + '°');
 
-        this._diagramDesigner.skinParts.$selectionOutline.css({'transform-origin': '50% 50%',
-            'transform': 'rotate('+ deg + 'deg)'});
+        this._diagramDesigner.skinParts.$selectionOutline.css({
+            'transform-origin': '50% 50%',
+            transform: 'rotate(' + deg + 'deg)'
+        });
     };
 
     SelectionManager.prototype._endSelectionRotate = function (/*event*/) {
         this._rotationDegree.html('');
 
-        this._diagramDesigner.skinParts.$selectionOutline.css({'transform-origin': '50% 50%',
-            'transform': 'rotate(0deg)'});
+        this._diagramDesigner.skinParts.$selectionOutline.css({
+            'transform-origin': '50% 50%',
+            transform: 'rotate(0deg)'
+        });
 
         this._rotateSelectionBy(this._rotateAngle);
     };
@@ -745,14 +787,15 @@ define(['js/logger',
         }
     };
 
-    SelectionManager.prototype._getRotationDegree = function(value, roundTo) {
-        var val = roundTo ? Math.round(value / roundTo) * roundTo  : value;
+    SelectionManager.prototype._getRotationDegree = function (value, roundTo) {
+        var val = roundTo ? Math.round(value / roundTo) * roundTo : value;
 
         return Math.floor(val % 360);
     };
 
     SelectionManager.prototype.onSelectionRotated = function (deg, selectedIds) {
-        this.logger.warn("SelectionManager.prototype.onSelectionRotated IS NOT OVERRIDDEN IN HOST COMPONENT. deg: '" + deg + "'deg, selectedIds: " + selectedIds);
+        this.logger.warn('SelectionManager.prototype.onSelectionRotated IS NOT OVERRIDDEN IN HOST COMPONENT. deg: "' +
+        deg + '"deg, selectedIds: ' + selectedIds);
     };
 
     SelectionManager.prototype.enableRotation = function (enabled) {

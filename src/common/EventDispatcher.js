@@ -1,15 +1,13 @@
-/*
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-"use strict";
+/*globals define*/
+/*jshint node: true, browser: true*/
 
-/*
- * -------- EVENT DIASPATCHER -------
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 define([], function () {
+    'use strict';
+
     var EventDispatcher = function () {
         this._eventList = {};
     };

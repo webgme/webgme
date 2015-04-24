@@ -1,4 +1,10 @@
+/*globals define*/
 /*jshint node:true*/
+/**
+ * @author lattmann / https://github.com/lattmann
+ * @author ksmyth / https://github.com/ksmyth
+ */
+
 var nodeRequire = require;
 
 if (typeof define !== 'undefined') {
@@ -11,9 +17,13 @@ if (typeof define !== 'undefined') {
         'executor/ExecutorWorkerController',
         'url'
     ], function (eventDispatcher, BlobClient, ExecutorWorker, JobInfo, ExecutorWorkerController, url) {
+        'use strict';
+
         return function (webGMEUrl, tempPath, parameters) {
-            var worker;
-            var webGMEPort = url.parse(webGMEUrl).port || (url.parse(webGMEUrl).protocol === 'https:' ? 443 : 80);
+            var worker,
+                webGMEPort = url.parse(webGMEUrl).port || (url.parse(webGMEUrl).protocol === 'https:' ? 443 : 80);
+
+
             worker = new ExecutorWorker({
                 server: url.parse(webGMEUrl).hostname,
                 serverPort: webGMEPort,
@@ -24,29 +34,32 @@ if (typeof define !== 'undefined') {
                 executorNonce: parameters.executorNonce
             });
 
-            console.log("Connecting to " + webGMEUrl);
+            console.log('Connecting to ' + webGMEUrl);
 
             var callback;
             worker.queryWorkerAPI(function (err, response) {
                 if (!err) {
-                    console.log("Connected to " + webGMEUrl);
+                    console.log('Connected to ' + webGMEUrl);
                 }
                 var refreshPeriod = 60 * 1000;
                 callback = callback || function (err, response) {
                     if (err) {
-                        console.log("Error connecting to " + webGMEUrl + " " + err);
-                    } else {}
+                        console.log('Error connecting to ' + webGMEUrl + ' ' + err);
+                    } else {
+                    }
                     if (response && response.refreshPeriod) {
                         refreshPeriod = response.refreshPeriod;
                     }
-                    var timeoutID = setTimeout(function () {
+                    /*var timeoutID = */
+                    setTimeout(function () {
                         worker.queryWorkerAPI(callback);
                     }, refreshPeriod);
                 };
                 callback(err, response);
             });
-            var cancel = function() {
-                callback = function() {};
+            var cancel = function () {
+                callback = function () {
+                };
             };
             return cancel;
         };
@@ -59,8 +72,8 @@ if (nodeRequire.main === module) {
         cas = nodeRequire('ssl-root-cas/latest'),
         superagent = nodeRequire('superagent'),
         configFileName = 'config.json',
-        workingDirectory = 'executor-temp',
-        https = nodeRequire('https');
+        workingDirectory = 'executor-temp';
+    //https = nodeRequire('https'); FIXME take into use or remove it
 
     // This is used for tests
     if (process.argv.length > 2) {
@@ -72,8 +85,9 @@ if (nodeRequire.main === module) {
 
     cas.inject();
     fs.readdirSync(__dirname).forEach(function (file) {
+        'use strict';
         var filename = path.resolve(__dirname, file);
-        if ((filename.indexOf('.pem') == filename.length - 4) || (filename.indexOf('.crt') == filename.length - 4)) {
+        if ((filename.indexOf('.pem') === filename.length - 4) || (filename.indexOf('.crt') === filename.length - 4)) {
             console.log('Adding ' + file + ' to trusted CAs');
             cas.addFile(filename);
         }
@@ -92,24 +106,27 @@ if (nodeRequire.main === module) {
         'rimraf',
         'url'
     ].forEach(function (name) {
-        requirejs.s.contexts._.defined[name] = nodeRequire(name);
-    });
+            'use strict';
+            requirejs.s.contexts._.defined[name] = nodeRequire(name);
+        });
 
     GLOBAL.WebGMEGlobal = {
         getConfig: function () {
+            'use strict';
             return {};
         }
-    } // server: config.server, serverPort: config.port, httpsecure: config.protocol==='https' }; } };
+    }; // server: config.server, serverPort: config.port, httpsecure: config.protocol==='https' }; } };
 
-    var webGMEUrls = Object.create(null);
-    var maxConcurrentJobs = 1;
-    var availableProcessesContainer = {
-        availableProcesses: maxConcurrentJobs
-    }; // shared among all ExecutorWorkers
+    var webGMEUrls = Object.create(null),
+        maxConcurrentJobs = 1,
+        availableProcessesContainer = { //FIXME check why the definition cannot be moved to global namespace
+            availableProcesses: maxConcurrentJobs
+        }; // shared among all ExecutorWorkers
 
     requirejs(['node_worker'], function (addWebGMEConnection) {
-        var fs = nodeRequire('fs');
-        var path = nodeRequire('path');
+        'use strict';
+        var fs = nodeRequire('fs'),
+            path = nodeRequire('path');
 
         function readConfig() {
             var config = {
@@ -126,39 +143,42 @@ if (nodeRequire.main === module) {
                     oldConfig.forEach(function (webGMEUrl) {
                         config[webGMEUrl] = {};
                     });
-                } else if (typeof (config) === "string") {
+                } else if (typeof (config) === 'string') {
                     config = {
                         config: {}
                     };
-                } else {}
+                } else {
+                }
             } catch (e) {
-                if (e.code !== "ENOENT") {
+                if (e.code !== 'ENOENT') {
                     throw e;
                 }
             }
             Object.getOwnPropertyNames(config).forEach(function (key) {
                 var webGMEUrl;
-                if (key.indexOf("http") === 0) {
+                if (key.indexOf('http') === 0) {
                     webGMEUrl = key;
                     if (Object.prototype.hasOwnProperty.call(webGMEUrls, webGMEUrl)) {
                     } else {
-                        webGMEUrls[webGMEUrl] = addWebGMEConnection(webGMEUrl, path.join(workingDirectory, '' + workingDirectoryCount++), config[webGMEUrl]);
+                        webGMEUrls[webGMEUrl] = addWebGMEConnection(webGMEUrl,
+                            path.join(workingDirectory, '' + workingDirectoryCount++),
+                            config[webGMEUrl]);
                     }
-                } else if (key === "maxConcurrentJobs") {
+                } else if (key === 'maxConcurrentJobs') {
                     availableProcessesContainer.availableProcesses += config[maxConcurrentJobs] - maxConcurrentJobs;
                     maxConcurrentJobs = config[maxConcurrentJobs];
                 } else {
-                    console.log("Unknown configuration key " + key);
+                    console.log('Unknown configuration key ' + key);
                 }
             });
             // remove webGMEUrls no longer in config
             Object.getOwnPropertyNames(webGMEUrls).forEach(function (webGMEUrl) {
                 if (Object.prototype.hasOwnProperty.call(config, webGMEUrl) === false) {
-                    console.log("Removing " + webGMEUrl);
+                    console.log('Removing ' + webGMEUrl);
                     webGMEUrls[webGMEUrl]();
                     delete webGMEUrls[webGMEUrl];
                 }
-                });
+            });
         }
 
         var workingDirectoryCount = 0;
@@ -175,7 +195,8 @@ if (nodeRequire.main === module) {
             readConfig();
             fs.watch(configFileName, function () {
                 setTimeout(readConfig, 200);
-            }); // setTimeout: likely handle O_TRUNC of config.json (though `move config.json.tmp config.json` is preferred)
+            }); // setTimeout: likely handle O_TRUNC of config.json
+            // (though `move config.json.tmp config.json` is preferred)
         });
     });
 

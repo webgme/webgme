@@ -1,10 +1,12 @@
-/*globals define, _, WebGMEGlobal*/
+/*globals define, _, $*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/Constants',
+define([
+    'js/Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Loader/LoaderProgressBar',
@@ -13,18 +15,19 @@ define(['js/Constants',
     'js/Decorators/DecoratorWithPorts.Base',
     'js/Utils/DisplayFormat',
     'js/Utils/GMEConcepts',
-    'js/Controls/ContextMenu'], function (CONSTANTS,
-                         nodePropertyNames,
-                         REGISTRY_KEYS,
-                         LoaderProgressBar,
-                         Port,
-                         ModelDecoratorConstants,
-                         DecoratorWithPortsBase,
-                         displayFormat,
-                         GMEConcepts,
-                         ContextMenu) {
+    'js/Controls/ContextMenu'
+], function (CONSTANTS,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             LoaderProgressBar,
+             Port,
+             ModelDecoratorConstants,
+             DecoratorWithPortsBase,
+             displayFormat,
+             GMEConcepts,
+             ContextMenu) {
 
-    "use strict";
+    'use strict';
 
     var ModelDecoratorCore,
         ABSTRACT_CLASS = 'abstract',
@@ -32,8 +35,8 @@ define(['js/Constants',
         EMBEDDED_SVG_CLASS = 'embeddedsvg',
         CONNECTION_TYPE_CLASS = 'conn-type',
         EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET],
-        CONN_TYPE_BASE = $('<div/>', {class: CONNECTION_TYPE_CLASS }),
-        EMBEDDED_SVG_IMG_BASE = $('<img>', {'class': EMBEDDED_SVG_CLASS});
+        CONN_TYPE_BASE = $('<div/>', {class: CONNECTION_TYPE_CLASS}),
+        EMBEDDED_SVG_IMG_BASE = $('<img>', {class: EMBEDDED_SVG_CLASS});
 
 
     ModelDecoratorCore = function (params) {
@@ -47,22 +50,24 @@ define(['js/Constants',
     _.extend(ModelDecoratorCore.prototype, DecoratorWithPortsBase.prototype);
 
     ModelDecoratorCore.prototype._initializeVariables = function (params) {
-        this.name = "";
-        this.formattedName = "";
+        this.name = '';
+        this.formattedName = '';
         this.portIDs = [];
         this.ports = {};
-        this.skinParts = { "$name": undefined,
-            "$portsContainer": undefined,
-            "$portsContainerLeft": undefined,
-            "$portsContainerRight": undefined,
-            "$portsContainerCenter": undefined,
-            "$ptr": undefined,
-            "$imgSVG": undefined};
-		
-		this._displayConnectors = false;			
-		if (params && params.connectors) {
-			this._displayConnectors = params.connectors;			
-		}
+        this.skinParts = {
+            $name: undefined,
+            $portsContainer: undefined,
+            $portsContainerLeft: undefined,
+            $portsContainerRight: undefined,
+            $portsContainerCenter: undefined,
+            $ptr: undefined,
+            $imgSVG: undefined
+        };
+
+        this._displayConnectors = false;
+        if (params && params.connectors) {
+            this._displayConnectors = params.connectors;
+        }
     };
 
     /**** Override from *.WidgetDecoratorBase ****/
@@ -84,20 +89,20 @@ define(['js/Constants',
 
     ModelDecoratorCore.prototype._renderContent = function () {
         //render GME-ID in the DOM, for debugging
-        this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
+        this.$el.attr({'data-id': this._metaInfo[CONSTANTS.GME_ID]});
 
         /* BUILD UI*/
         //find placeholders
-        this.skinParts.$name = this.$el.find(".name");
-        this.skinParts.$portsContainer = this.$el.find(".ports");
-        this.skinParts.$portsContainerLeft = this.skinParts.$portsContainer.find(".left");
-        this.skinParts.$portsContainerRight = this.skinParts.$portsContainer.find(".right");
-        this.skinParts.$portsContainerCenter = this.skinParts.$portsContainer.find(".center");
-		
-		this._update();
+        this.skinParts.$name = this.$el.find('.name');
+        this.skinParts.$portsContainer = this.$el.find('.ports');
+        this.skinParts.$portsContainerLeft = this.skinParts.$portsContainer.find('.left');
+        this.skinParts.$portsContainerRight = this.skinParts.$portsContainer.find('.right');
+        this.skinParts.$portsContainerCenter = this.skinParts.$portsContainer.find('.center');
+
+        this._update();
     };
-	
-	ModelDecoratorCore.prototype._update = function () {
+
+    ModelDecoratorCore.prototype._update = function () {
         this._updateColors();
         this._updateName();
         this._updatePorts();
@@ -117,19 +122,23 @@ define(['js/Constants',
         }
 
         if (this.borderColor) {
-            this.$el.css({'border-color': this.borderColor,
-                          'box-shadow': '0px 0px 7px 0px ' + this.borderColor + ' inset'});
+            this.$el.css({
+                'border-color': this.borderColor,
+                'box-shadow': '0px 0px 7px 0px ' + this.borderColor + ' inset'
+            });
             this.skinParts.$name.css({'border-color': this.borderColor});
         } else {
-            this.$el.css({'border-color': '',
-                'box-shadow': ''});
+            this.$el.css({
+                'border-color': '',
+                'box-shadow': ''
+            });
             this.skinParts.$name.css({'border-color': ''});
         }
 
         if (this.textColor) {
-            this.$el.css({'color': this.textColor});
+            this.$el.css({color: this.textColor});
         } else {
-            this.$el.css({'color': ''});
+            this.$el.css({color: ''});
         }
     };
 
@@ -144,25 +153,25 @@ define(['js/Constants',
     ModelDecoratorCore.prototype._updateName = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            noName = "(N/A)";
+            noName = '(N/A)';
 
         if (nodeObj) {
             this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
             this.formattedName = displayFormat.resolve(nodeObj);
         } else {
-            this.name = "";
+            this.name = '';
             this.formattedName = noName;
         }
 
         this.skinParts.$name.text(this.formattedName);
-        this.skinParts.$name.attr("title", this.formattedName);
+        this.skinParts.$name.attr('title', this.formattedName);
     };
 
     ModelDecoratorCore.prototype._updateConnectionType = function () {
         var isConnectionType = GMEConcepts.isConnectionType(this._metaInfo[CONSTANTS.GME_ID]);
 
         this.skinParts.$name.text(this.formattedName);
-        this.skinParts.$name.attr("title", this.formattedName);
+        this.skinParts.$name.attr('title', this.formattedName);
         if (isConnectionType) {
             if (!this.skinParts.$divConnType) {
                 this.skinParts.$divConnType = CONN_TYPE_BASE.clone();
@@ -189,9 +198,11 @@ define(['js/Constants',
         var client = this._control._client,
             portNode = client.getNode(portId),
             portTitle = displayFormat.resolve(portNode),
-            portInstance = new Port(portId, { "title": portTitle,
-                "decorator": this,
-                "svg": portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)});
+            portInstance = new Port(portId, {
+                title: portTitle,
+                decorator: this,
+                svg: portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)
+            });
 
         this._addPortToContainer(portNode, portInstance);
 
@@ -201,16 +212,16 @@ define(['js/Constants',
 
     ModelDecoratorCore.prototype._addPortToContainer = function (portNode, portInstance) {
         var portId = portNode.getId(),
-            portOrientation = "W",
+            portOrientation = 'W',
             portContainer = this.skinParts.$portsContainerLeft,
-            portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || { "x": 0, "y": 0 },
+            portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || {x: 0, y: 0},
             portToAppendBefore = null,
             i,
             changed;
 
         //check if the port should be on the left or right-side
         if (portPosition.x > 300) {
-            portOrientation = "E";
+            portOrientation = 'E';
             portContainer = this.skinParts.$portsContainerRight;
         }
 
@@ -222,12 +233,16 @@ define(['js/Constants',
                 if (i !== portId) {
                     if (this.ports[i].orientation === portInstance.orientation) {
                         if ((portInstance.position.y < this.ports[i].position.y) ||
-                            ((portInstance.position.y === this.ports[i].position.y) && (portInstance.title < this.ports[i].title))) {
+                            ((portInstance.position.y === this.ports[i].position.y) &&
+                            (portInstance.title < this.ports[i].title))) {
+
                             if (portToAppendBefore === null) {
                                 portToAppendBefore = i;
                             } else {
                                 if ((this.ports[i].position.y < this.ports[portToAppendBefore].position.y) ||
-                                    ((this.ports[i].position.y === this.ports[portToAppendBefore].position.y) && (this.ports[i].title < this.ports[portToAppendBefore].title))) {
+                                    ((this.ports[i].position.y === this.ports[portToAppendBefore].position.y) &&
+                                    (this.ports[i].title < this.ports[portToAppendBefore].title))) {
+
                                     portToAppendBefore = i;
                                 }
                             }
@@ -249,7 +264,7 @@ define(['js/Constants',
     };
 
 
-    ModelDecoratorCore.prototype._portPositionChanged = function (portId) {
+    ModelDecoratorCore.prototype._portPositionChanged = function (/*portId*/) {
     };
 
 
@@ -265,8 +280,10 @@ define(['js/Constants',
             //port already, should it stay one?
             if (isPort === true) {
                 portTitle = displayFormat.resolve(portNode);
-                this.ports[portId].update({"title": portTitle,
-                    "svg": portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)});
+                this.ports[portId].update({
+                    title: portTitle,
+                    svg: portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)
+                });
                 this._updatePortPosition(portId);
             } else {
                 this.removePort(portId);
@@ -279,7 +296,7 @@ define(['js/Constants',
 
     ModelDecoratorCore.prototype._updatePortPosition = function (portId) {
         var portNode = this._control._client.getNode(portId),
-            portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || { "x": 0, "y": 0 };
+            portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || {x: 0, y: 0};
 
         //check if is has changed at all
         if ((this.ports[portId].position.x !== portPosition.x) ||
@@ -330,10 +347,10 @@ define(['js/Constants',
     ModelDecoratorCore.prototype._showPortProgressBar = function () {
         var pgBar = this.$el.find('.' + ModelDecoratorConstants.PROGRESS_BAR_CLASS);
         if (pgBar.length === 0) {
-            pgBar = $('<div/>', {'class': ModelDecoratorConstants.PROGRESS_BAR_CLASS});
+            pgBar = $('<div/>', {class: ModelDecoratorConstants.PROGRESS_BAR_CLASS});
             this.$el.append(pgBar);
 
-            this._loader = new LoaderProgressBar({"containerElement": pgBar});
+            this._loader = new LoaderProgressBar({containerElement: pgBar});
             this._loader.start();
         }
     };
@@ -350,7 +367,8 @@ define(['js/Constants',
     };
 
 
-    ModelDecoratorCore.prototype._ptrUIDOMBase = $('<div class="' + ModelDecoratorConstants.POINTER_CLASS + '"><i class="glyphicon glyphicon-share"></i></div>');
+    ModelDecoratorCore.prototype._ptrUIDOMBase =
+        $('<div class="' + ModelDecoratorConstants.POINTER_CLASS + '"><i class="glyphicon glyphicon-share"></i></div>');
 
 
     ModelDecoratorCore.prototype._updatePointers = function () {
@@ -447,7 +465,7 @@ define(['js/Constants',
             }
 
             if (pointerTargets.length > 0) {
-                pointerTargets.sort(function (a,b) {
+                pointerTargets.sort(function (a, b) {
                     var ptrA = a[0].toLowerCase(),
                         ptrB = b[0].toLowerCase();
                     if (ptrA < ptrB) {
@@ -501,15 +519,17 @@ define(['js/Constants',
 
         for (i = 0; i < ptrNames.length; i += 1) {
             menuItems[ptrNames[i]] = {
-                "name": "Set pointer '" + ptrNames[i] + "'"
+                name: 'Set pointer "' + ptrNames[i] + '"'
             };
         }
 
-        menu = new ContextMenu({'items': menuItems,
-            'callback': function (key) {
+        menu = new ContextMenu({
+            items: menuItems,
+            callback: function (key) {
                 logger.debug('_selectPointerForTarget: ' + key);
                 self._setPointer(key, targetID);
-            }});
+            }
+        });
 
         menu.show({x: mousePos.left, y: mousePos.top});
     };
@@ -533,7 +553,7 @@ define(['js/Constants',
     ModelDecoratorCore.prototype._updateSVG = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            svgFile = "",
+            svgFile = '',
             svgURL,
             self = this;
 

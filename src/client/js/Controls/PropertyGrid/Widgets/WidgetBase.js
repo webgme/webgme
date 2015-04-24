@@ -1,12 +1,17 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, $*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define([], function () {
 
-    "use strict";
+    'use strict';
 
-    var EL_BASE = $("<div/>", {'class': 'widget'});
+    var EL_BASE = $('<div/>', {class: 'widget'}),
+        WidgetBase;
 
-    var WidgetBase = function (propertyDesc) {
+    WidgetBase = function (propertyDesc) {
         this.el = EL_BASE.clone();
 
         this.propertyValue = propertyDesc.value;
@@ -43,9 +48,9 @@ define([], function () {
             if (newValue !== _oldValue) {
                 this.propertyValue = newValue;
                 if (this.__onChange) {
-                    this.__onChange.call(this, { "id": this.propertyID,
-                        "oldValue": _oldValue,
-                        "newValue": newValue });
+                    this.__onChange.call(this, { id: this.propertyID,
+                        oldValue: _oldValue,
+                        newValue: newValue });
                 }
                 this.updateDisplay();
             }
@@ -57,9 +62,9 @@ define([], function () {
     WidgetBase.prototype.fireFinishChange = function () {
         if (this.originalValue !== this.propertyValue) {
             if (this.__onFinishChange) {
-                this.__onFinishChange.call(this, { "id": this.propertyID,
-                    "oldValue": this.originalValue,
-                    "newValue": this.propertyValue });
+                this.__onFinishChange.call(this, { id: this.propertyID,
+                    oldValue: this.originalValue,
+                    newValue: this.propertyValue });
             }
             this.originalValue = this.propertyValue;
         }

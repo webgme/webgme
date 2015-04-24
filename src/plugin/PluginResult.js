@@ -1,10 +1,13 @@
+/*globals define*/
+/*jshint browser: true, node:true*/
+
 /**
- * Created by zsolt on 3/20/14.
+ * @author lattmann / https://github.com/lattmann
  */
 
-'use strict';
-define(['plugin/PluginMessage'], function (PluginMessage) {
 
+define(['plugin/PluginMessage'], function (PluginMessage) {
+    'use strict';
     /**
      * Initializes a new instance of a plugin result object.
      *
@@ -14,6 +17,8 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
      * @constructor
      */
     var PluginResult = function (config) {
+        var pluginMessage,
+            i;
         if (config) {
             this.success = config.success;
             this.pluginName = config.pluginName;
@@ -23,8 +28,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             this.artifacts = config.artifacts;
             this.error = config.error;
 
-            for (var i = 0; i < config.messages.length; i += 1) {
-                var pluginMessage;
+            for (i = 0; i < config.messages.length; i += 1) {
                 if (config.messages[i] instanceof PluginMessage) {
                     pluginMessage = config.messages[i];
                 } else {
@@ -176,9 +180,10 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             startTime: this.startTime,
             finishTime: this.finishTime,
             error: this.error
-        };
+        },
+            i;
 
-        for (var i = 0; i < this.messages.length; i += 1) {
+        for (i = 0; i < this.messages.length; i += 1) {
             result.messages.push(this.messages[i].serialize());
         }
 

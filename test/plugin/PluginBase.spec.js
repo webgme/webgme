@@ -1,4 +1,4 @@
-/*jshint node:true, mocha:true*/
+/*jshint node:true, mocha:true, expr:true*/
 /**
  * @author lattmann / https://github.com/lattmann
  */
@@ -11,7 +11,6 @@ describe('Plugin Base', function () {
     var should = testFixture.should,
         gmeConfig = testFixture.getGmeConfig(),
         PluginBase = testFixture.requirejs('plugin/PluginBase'),
-        PluginResult = testFixture.requirejs('plugin/PluginResult'),
         PluginConfig = testFixture.requirejs('plugin/PluginConfig');
 
     it('should instantiate PluginBase and have defined properties', function () {

@@ -1,4 +1,5 @@
-/*globals define, Raphael, window, WebGMEGlobal, _*/
+/*globals define, _*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -11,14 +12,14 @@ define(['js/PanelBase/PanelBaseWithHeader',
     './InheritanceBrowserControl',
     './CrosscutBrowserControl',
     'js/Widgets/TreeBrowser/TreeBrowserWidget',
-    'css!./styles/ObjectBrowserPanel.css'], function (PanelBaseWithHeader,
-                                                          CONSTANTS,
-                                                          TreeBrowserControl,
-                                                          InheritanceBrowserControl,
-                                                          CrosscutBrowserControl,
-                                                          TreeBrowserWidget) {
-
-    "use strict";
+    'css!./styles/ObjectBrowserPanel.css'
+], function (PanelBaseWithHeader,
+             CONSTANTS,
+             TreeBrowserControl,
+             InheritanceBrowserControl,
+             CrosscutBrowserControl,
+             TreeBrowserWidget) {
+    'use strict';
 
 
     var ObjectBrowserPanel,
@@ -28,7 +29,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
     ObjectBrowserPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "ObjectBrowserPanel";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'ObjectBrowserPanel';
         options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
 
         //call parent's constructor
@@ -39,7 +40,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("ObjectBrowserPanel ctor finished");
+        this.logger.debug('ObjectBrowserPanel ctor finished');
     };
 
     //inherit from PanelBaseWithHeader
@@ -56,17 +57,17 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.$el.addClass(OBJECT_BROWSER_CLASS);
 
         this.$el.html('<ul class="nav nav-tabs">' +
-            '<li class="active"><a href="#composition" data-toggle="tab">Composition</a></li>' +
-            '<li class=""><a href="#inheritance" data-toggle="tab">Inheritance</a></li>' +
-            '<li class=""><a href="#crosscut" data-toggle="tab">Crosscut</a></li>' +
-        '</ul>' + '<div class="tab-content">'+
-            '<div class="tab-pane active" id="composition">composition</div>' +
-            '<div class="tab-pane" id="inheritance">inheritance</div>' +
-            '<div class="tab-pane" id="crosscut">crosscut</div>' +
+        '<li class="active"><a href="#composition" data-toggle="tab">Composition</a></li>' +
+        '<li class=""><a href="#inheritance" data-toggle="tab">Inheritance</a></li>' +
+        '<li class=""><a href="#crosscut" data-toggle="tab">Crosscut</a></li>' +
+        '</ul>' + '<div class="tab-content">' +
+        '<div class="tab-pane active" id="composition">composition</div>' +
+        '<div class="tab-pane" id="inheritance">inheritance</div>' +
+        '<div class="tab-pane" id="crosscut">crosscut</div>' +
         '</div>');
 
         //set Widget title
-        this.setTitle("Object Browser");
+        this.setTitle('Object Browser');
 
         compositionTreeBrowserWidget = new TreeBrowserWidget(this.$el.find('div#composition').first());
         compositionTreeBrowserControl = new TreeBrowserControl(this._client, compositionTreeBrowserWidget);

@@ -68,6 +68,7 @@
 
   "requireLineBreakAfterVariableAssignment": true,
   "requireCommaBeforeLineBreak": true,
+  "disallowQuotedKeysInObjects": true,
   "validateParameterSeparator": ", ",
   "maximumLineLength": 120,
   "validateIndentation": 4

@@ -1,10 +1,13 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _ */
+/*jshint browser: true*/
 
-define(['js/Controls/ColorPicker',
-        './ToolbarButton'], function (ColorPicker,
-                                      ToolbarButton) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+define(['js/Controls/ColorPicker', './ToolbarButton'], function (ColorPicker, ToolbarButton) {
+
+    'use strict';
 
     var ToolbarColorPicker;
 
@@ -13,8 +16,8 @@ define(['js/Controls/ColorPicker',
 
         params = params || {};
         params.clickFn = function (/*data*/) {
-            var _colorPicker = new ColorPicker({'el': self.el});
-            _colorPicker.onColorChanged = function (color) {
+            var colorPicker = new ColorPicker({'el': self.el});
+            colorPicker.onColorChanged = function (color) {
                 if (params && params.colorChangedFn) {
                     params.colorChangedFn.call(self, color);
                 }

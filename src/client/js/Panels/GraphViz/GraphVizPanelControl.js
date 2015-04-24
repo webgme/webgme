@@ -1,28 +1,26 @@
-/*globals define, _, WebGMEGlobal, DEBUG*/
-
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-
 define(['js/logger',
     'js/util',
     'js/Constants',
     'js/Utils/GMEConcepts',
-    'js/NodePropertyNames'], function (Logger,
-                                       util,
-                                       CONSTANTS,
-                                       GMEConcepts,
-                                       nodePropertyNames) {
+    'js/NodePropertyNames'
+], function (Logger,
+             util,
+             CONSTANTS,
+             GMEConcepts,
+             nodePropertyNames) {
 
-    "use strict";
+    'use strict';
 
-    var GraphVizControl,
-        MODEL = 'MODEL';
+    var GraphVizControl;
 
     GraphVizControl = function (options) {
-        var self = this;
 
         this._logger = Logger.create('gme:Panels:GraphViz:GraphVizControl', WebGMEGlobal.gmeConfig.client.log);
 
@@ -38,7 +36,7 @@ define(['js/logger',
 
         this._initWidgetEventHandlers();
 
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     GraphVizControl.prototype._initWidgetEventHandlers = function () {
@@ -51,7 +49,7 @@ define(['js/logger',
         };
 
         this._graphVizWidget.onNodeOpen = function (id) {
-            self._selfPatterns[id] = { "children": 1 };
+            self._selfPatterns[id] = {children: 1};
             self._client.updateTerritory(self._territoryId, self._selfPatterns);
         };
 
@@ -60,15 +58,18 @@ define(['js/logger',
         };
 
         this._graphVizWidget.onNodeClose = function (id) {
-            var deleteRecursive;
+            var deleteRecursive,
+                node,
+                childrenIDs,
+                i;
 
             deleteRecursive = function (nodeId) {
                 if (self._selfPatterns.hasOwnProperty(nodeId)) {
-                    var node = self._nodes[nodeId];
+                    node = self._nodes[nodeId];
 
                     if (node) {
-                        var childrenIDs = node.childrenIDs,
-                            i = childrenIDs.length;
+                        childrenIDs = node.childrenIDs;
+                        i = childrenIDs.length;
 
                         while (i--) {
                             deleteRecursive(childrenIDs[i]);
@@ -83,7 +84,7 @@ define(['js/logger',
             deleteRecursive(id);
 
             if (id === self._currentNodeId) {
-                self._selfPatterns[id] = { "children": 0 };
+                self._selfPatterns[id] = {children: 0};
             }
 
             self._client.updateTerritory(self._territoryId, self._selfPatterns);
@@ -94,7 +95,7 @@ define(['js/logger',
         var desc = this._getObjectDescriptor(nodeId),
             self = this;
 
-        this._logger.debug("activeObject nodeId '" + nodeId + "'");
+        this._logger.debug('activeObject nodeId \'' + nodeId + '\'');
 
         //remove current territory patterns
         if (this._currentNodeId) {
@@ -109,7 +110,7 @@ define(['js/logger',
         if (this._currentNodeId || this._currentNodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 0 };
+            this._selfPatterns[nodeId] = {children: 0};
 
             this._graphVizWidget.setTitle(desc.name.toUpperCase());
 
@@ -128,7 +129,7 @@ define(['js/logger',
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
 
             setTimeout(function () {
-                self._selfPatterns[nodeId] = { "children": 1 };
+                self._selfPatterns[nodeId] = {children: 1};
                 self._client.updateTerritory(self._territoryId, self._selfPatterns);
             }, 1000);
         }
@@ -139,14 +140,16 @@ define(['js/logger',
             objDescriptor;
 
         if (nodeObj) {
-            objDescriptor = {'id': undefined,
-                             'name': undefined,
-                             'childrenIDs': undefined,
-                             'parentId': undefined,
-                             'isConnection': false};
+            objDescriptor = {
+                'id': undefined,
+                'name': undefined,
+                'childrenIDs': undefined,
+                'parentId': undefined,
+                'isConnection': false
+            };
 
             objDescriptor.id = nodeObj.getId();
-            objDescriptor.name =  nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+            objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
             objDescriptor.childrenIDs = nodeObj.getChildrenIds();
             objDescriptor.childrenNum = objDescriptor.childrenIDs.length;
             objDescriptor.parentId = nodeObj.getParentId();
@@ -160,7 +163,7 @@ define(['js/logger',
         var i = events ? events.length : 0,
             e;
 
-        this._logger.debug("_eventCallback '" + i + "' items");
+        this._logger.debug('_eventCallback \'' + i + '\' items');
 
         while (i--) {
             e = events[i];
@@ -174,32 +177,39 @@ define(['js/logger',
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
                     this._onUnload(e.eid);
                     break;
+                default:
+                    break;
             }
         }
 
         this._generateData();
 
-        this._logger.debug("_eventCallback '" + events.length + "' items - DONE");
+        this._logger.debug('_eventCallback \'' + events.length + '\' items - DONE');
     };
 
     GraphVizControl.prototype._generateData = function () {
-        var self = this;
+        var self = this,
+            data;
 
-        var data = _.extend({}, (this._currentNodeId || this._currentNodeId === CONSTANTS.PROJECT_ROOT_ID )? this._nodes[this._currentNodeId] : {});
+        data = _.extend({},
+            (this._currentNodeId || this._currentNodeId === CONSTANTS.PROJECT_ROOT_ID ) ?
+                this._nodes[this._currentNodeId] : {});
 
-        var loadRecursive = function (node) {
+        function loadRecursive(node) {
             var len = (node && node.childrenIDs) ? node.childrenIDs.length : 0;
             while (len--) {
                 node.children = node.children || [];
                 if (self._nodes[node.childrenIDs[len]]) {
-                    if ((self._displayModelsOnly === true && self._nodes[node.childrenIDs[len]].isConnection !== true) ||
+                    if ((self._displayModelsOnly === true &&
+                         self._nodes[node.childrenIDs[len]].isConnection !== true) ||
                         self._displayModelsOnly === false) {
                         node.children.push(_.extend({}, self._nodes[node.childrenIDs[len]]));
-                        loadRecursive(node.children[node.children.length-1]);
+                        loadRecursive(node.children[node.children.length - 1]);
                     }
                 }
             }
-        };
+        }
+
         loadRecursive(data);
 
         this._graphVizWidget.setData(data);
@@ -246,26 +256,32 @@ define(['js/logger',
     };
 
     GraphVizControl.prototype._displayToolbarItems = function () {
-        if (this._toolbarInitialized !== true) {
-            this._initializeToolbar();
-        } else {
-            for (var i = 0; i < this._toolbarItems.length; i++) {
+        var i;
+
+        if (this._toolbarInitialized === true) {
+            for (i = 0; i < this._toolbarItems.length; i++) {
                 this._toolbarItems[i].show();
             }
+        } else {
+            this._initializeToolbar();
         }
     };
 
     GraphVizControl.prototype._hideToolbarItems = function () {
+        var i;
+
         if (this._toolbarInitialized === true) {
-            for (var i = 0; i < this._toolbarItems.length; i++) {
+            for (i = 0; i < this._toolbarItems.length; i++) {
                 this._toolbarItems[i].hide();
             }
         }
     };
 
     GraphVizControl.prototype._removeToolbarItems = function () {
+        var i;
+
         if (this._toolbarInitialized === true) {
-            for (var i = 0; i < this._toolbarItems.length; i++) {
+            for (i = 0; i < this._toolbarItems.length; i++) {
                 this._toolbarItems[i].destroy();
             }
         }
@@ -281,9 +297,9 @@ define(['js/logger',
 
         /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
         this.$btnModelHierarchyUp = toolBar.addButton({
-            "title": "Go to parent",
-            "icon": "glyphicon glyphicon-circle-arrow-up",
-            "clickFn": function (/*data*/) {
+            title: 'Go to parent',
+            icon: 'glyphicon glyphicon-circle-arrow-up',
+            clickFn: function (/*data*/) {
                 WebGMEGlobal.State.registerActiveObject(self._currentNodeParentId);
             }
         });
@@ -294,9 +310,9 @@ define(['js/logger',
         /************** MODEL / CONNECTION filter *******************/
 
         this.$cbShowConnection = toolBar.addCheckBox({
-            "title": "Show connection",
-            "icon": "gme icon-gme_diagonal-arrow",
-            "checkChangedFn": function(data, checked){
+            title: 'Show connection',
+            icon: 'gme icon-gme_diagonal-arrow',
+            checkChangedFn: function (data, checked) {
                 self._displayModelsOnly = !checked;
                 self._generateData();
             }

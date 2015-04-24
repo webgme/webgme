@@ -1,11 +1,17 @@
-/*jshint browser:true*/
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
+/*jshint browser: true*/
 
-define ([
-        'js/util',
-        'js/Constants'
-    ],
-    function (util, CONSTANTS) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
+ */
+
+define([
+    'js/util',
+    'js/Constants'
+], function (util, CONSTANTS) {
 
     'use strict';
 
@@ -17,7 +23,7 @@ define ([
         return {
             layoutToLoad: util.getURLParameterByName('layout') || 'DefaultLayout',
             commitToLoad: util.getURLParameterByName('commit').toLowerCase(),
-            projectToLoad:  util.getURLParameterByName('project'),
+            projectToLoad: util.getURLParameterByName('project'),
             objectToLoad: util.getURLParameterByName('node').toLowerCase() || CONSTANTS.PROJECT_ROOT_ID,
             createNewProject: util.getURLParameterByName('create') === 'true',
             branchToLoad: util.getURLParameterByName('branch'),

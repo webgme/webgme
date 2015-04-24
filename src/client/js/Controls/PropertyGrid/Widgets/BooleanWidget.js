@@ -1,60 +1,63 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, _, $*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
 
-    function (WidgetBase) {
+define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
-        "use strict";
+    'use strict';
 
-        var BooleanWidget,
-            CHECKBOX_BASE = $('<input/>', {"type": "checkbox"});
+    var BooleanWidget,
+        CHECKBOX_BASE = $('<input/>', {type: 'checkbox'});
 
-        BooleanWidget  = function (propertyDesc) {
-            var self = this;
+    BooleanWidget = function (propertyDesc) {
+        var self = this;
 
-            BooleanWidget.superclass.call(this, propertyDesc);
+        BooleanWidget.superclass.call(this, propertyDesc);
 
-            this.__checkbox = CHECKBOX_BASE.clone();
-            this.__checkbox.prop('checked', this.propertyValue);
+        this.__checkbox = CHECKBOX_BASE.clone();
+        this.__checkbox.prop('checked', this.propertyValue);
 
-            this.__checkbox.on('change', function (e) {
-                self.setValue($(this).is(':checked'));
-                self.fireFinishChange();
-            });
+        this.__checkbox.on('change', function (/* e */) {
+            self.setValue($(this).is(':checked'));
+            self.fireFinishChange();
+        });
 
-            this.updateDisplay();
+        this.updateDisplay();
 
-            this.el.append(this.__checkbox);
-        };
+        this.el.append(this.__checkbox);
+    };
 
-        BooleanWidget.superclass = WidgetBase;
+    BooleanWidget.superclass = WidgetBase;
 
-        _.extend(
-            BooleanWidget.prototype,
-            WidgetBase.prototype
-        );
+    _.extend(
+        BooleanWidget.prototype,
+        WidgetBase.prototype
+    );
 
-        BooleanWidget.prototype.updateDisplay =  function () {
+    BooleanWidget.prototype.updateDisplay = function () {
 
-            if (this.getValue() === true) {
-                this.__checkbox.attr('checked', true);
-            } else {
-                this.__checkbox.attr('checked', false);
-            }
+        if (this.getValue() === true) {
+            this.__checkbox.attr('checked', true);
+        } else {
+            this.__checkbox.attr('checked', false);
+        }
 
-            return BooleanWidget.superclass.prototype.updateDisplay.call(this);
-        };
+        return BooleanWidget.superclass.prototype.updateDisplay.call(this);
+    };
 
-        BooleanWidget.prototype.setReadOnly = function (isReadOnly) {
-            BooleanWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+    BooleanWidget.prototype.setReadOnly = function (isReadOnly) {
+        BooleanWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
 
-            if (isReadOnly === true) {
-                this.__checkbox.attr('disabled', 'disabled');
-            } else {
-                this.__checkbox.removeAttr('disabled');
-            }
-        };
+        if (isReadOnly === true) {
+            this.__checkbox.attr('disabled', 'disabled');
+        } else {
+            this.__checkbox.removeAttr('disabled');
+        }
+    };
 
-        return BooleanWidget;
+    return BooleanWidget;
 
-    });
+});

@@ -13,7 +13,7 @@
     background-color: #d9edf7;
     border-color: #bce8f1; }
   .constraint-check-results-dialog .modal-body div.constraint-check-result .alert {
-    margin-bottom: 0px; }
+    margin-bottom: 0; }
   .constraint-check-results-dialog .modal-body div.constraint-check-result .title {
     margin-left: 5px; }
   .constraint-check-results-dialog .modal-body div.constraint-check-result .time {

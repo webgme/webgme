@@ -1,12 +1,12 @@
-/*globals define, Raphael, window, WebGMEGlobal, _*/
+/*globals define, WebGMEGlobal, _, $*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
-
-    "use strict";
+    'use strict';
 
     var TreeBrowserWidgetKeyboard;
 
@@ -33,7 +33,7 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
         var ret = true,
             nodes = this._treeInstance.getSelectedNodes(),
             node = $.ui.dynatree.getNode(this._treeEl.find('.dynatree-focused')),
-            //prevFocused = $.ui.dynatree.getNode(this._treeEl.find('.dynatree-focused')),
+        //prevFocused = $.ui.dynatree.getNode(this._treeEl.find('.dynatree-focused')),
             sib = null,
             parents,
             i,
@@ -177,7 +177,7 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
         return ret;
     };
 
-    TreeBrowserWidgetKeyboard.prototype.onKeyUp = function (eventArgs) {
+    TreeBrowserWidgetKeyboard.prototype.onKeyUp = function (/*eventArgs*/) {
     };
 
 

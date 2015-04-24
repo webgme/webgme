@@ -1,7 +1,7 @@
-/*globals define*/
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
+/*globals define, _*/
+/*jshint browser: true*/
+
+/**
  * @author brollb / https://github/brollb
  */
 
@@ -14,18 +14,18 @@ define(['./BlockEditorWidget.Constants'], function (BlockEditorWidgetConstants) 
     var BlockEditorWidgetMouse = function () {
     };
 
-    BlockEditorWidgetMouse.prototype.initialize = function(el) {
+    BlockEditorWidgetMouse.prototype.initialize = function (el) {
         this.$el = el;
-        
+
         this._activateMouseListeners();
     };
-    
+
     BlockEditorWidgetMouse.prototype._activateMouseListeners = function () {
         var self = this,
             logger = this.logger;
 
         //handle click on linkable-items
-        this.$el.on('mousedown.' + EVENT_POSTFIX, 'div.' + BlockEditorWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
+        this.$el.on('mousedown.' + EVENT_POSTFIX, 'div.' + BlockEditorWidgetConstants.DESIGNER_ITEM_CLASS, function (event) {
             var itemId = $(this).attr("id"),
                 eventDetails = self._processMouseEvent(event, true, false, true, true);
 
@@ -95,13 +95,15 @@ define(['./BlockEditorWidget.Constants'], function (BlockEditorWidgetConstants) 
 
     BlockEditorWidgetMouse.prototype._getMouseEventDetails = function (event) {
         var mousePos = this.getAdjustedMousePos(event),
-            eventDetails = { 'rightClick': event.which === 3,
-                             'ctrlKey': event.ctrlKey,
-                             'metaKey': event.metaKey,
-                             'altKey': event.altKey,
-                             'shiftKey': event.shiftKey,
-                             'mouseX': mousePos.mX,
-                             'mouseY': mousePos.mY };
+            eventDetails = {
+                'rightClick': event.which === 3,
+                'ctrlKey': event.ctrlKey,
+                'metaKey': event.metaKey,
+                'altKey': event.altKey,
+                'shiftKey': event.shiftKey,
+                'mouseX': mousePos.mX,
+                'mouseY': mousePos.mY
+            };
 
         return eventDetails;
     };

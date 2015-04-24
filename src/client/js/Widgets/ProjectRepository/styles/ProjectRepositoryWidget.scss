@@ -1,6 +1,12 @@
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 $commit-background-color: #000000;
 $commit-actual-background-color: #FF7800;
-$commit-size: 8px; /* make sure to update commit_WIDTH and commit_HEIGHT in Widgets/ProjectRepository/ProjectRepositoryWidget.js */
+
+/* make sure to update commit_WIDTH and commit_HEIGHT in Widgets/ProjectRepository/ProjectRepositoryWidget.js */
+$commit-size: 8px;
 $commit-radius: 5px;
 $commit-actual-box-shadow: 0 0 10px 3px $commit-actual-background-color;
 
@@ -8,7 +14,8 @@ $show-more-panel-background-color: #F7F7F7;
 $show-more-panel-height: 36px;
 $show-more-panel-border: 1px solid #3a87ad;
 
-$table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWidget.js Y_DELTA!!!
+$table-row-height: 25px;
+//equals Widgets/ProjectRepository/ProjectRepositoryWidget.js Y_DELTA!!!
 
 .repository-dialog {
   .modal-header {
@@ -33,15 +40,14 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
     position: absolute;
     width: 1px;
     height: 1px;
-    top: 20 /*modal dialog padding*/ + $table-row-height + ($table-row-height - $commit-size)/2; //TO MATCH PERFECT POSITIONING ABOVE TABLE LAYOUT'S FIRST COLUMN
+    //TO MATCH PERFECT POSITIONING ABOVE TABLE LAYOUT'S FIRST COLUMN
+    top: 20 /*modal dialog padding*/ + $table-row-height + ($table-row-height - $commit-size)/2;
     //left: 30px;
-
 
     /*DISABLE OUTER BORDER WHEN FOCUSED*/
     &:focus {
       outline: none;
     }
-
 
     .commit {
       position: absolute;
@@ -52,13 +58,13 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
 
       &.actual {
         background-color: $commit-actual-background-color;
-        -moz-box-shadow:  $commit-actual-box-shadow;
+        -moz-box-shadow: $commit-actual-box-shadow;
         -webkit-box-shadow: $commit-actual-box-shadow;
         box-shadow: $commit-actual-box-shadow;
       }
     }
   }
-  
+
   .show-more {
     height: $show-more-panel-height;
     line-height: $show-more-panel-height;
@@ -67,7 +73,7 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
     border-top: $show-more-panel-border;
     text-align: center;
     margin-top: 15px;
-    position: relative;   //NEEDED BECAUSE OF THE LOADER ANIMATION'S POSITIONNING LOGIC
+    position: relative; //NEEDED BECAUSE OF THE LOADER ANIMATION'S POSITIONNING LOGIC
 
     a:hover {
       text-decoration: none;
@@ -113,7 +119,6 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
           min-width: 200px;
         }
 
-
         .branch-label {
           margin-right: 2px;
 
@@ -153,7 +158,3 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
     }
   }
 }
-
-
-
-

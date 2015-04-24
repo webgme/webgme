@@ -1,27 +1,26 @@
 /*globals define,_,WebGMEGlobal*/
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * @author brollb / https://github/brollb
+/*jshint browser: true*/
+/**
+ * @author brollb / https://github.com/brollb
  */
 
-
 define(['js/PanelBase/PanelBaseWithHeader',
-        'js/PanelManager/IActivePanel',
-        'js/Widgets/BlockEditor/BlockEditorWidget',//FIXME 
-        './BlockEditorControl'
-                                ], function (PanelBaseWithHeader,
-                                    IActivePanel,
-                                    BlockEditorWidget,
-                                    BlockEditorControl) {
+    'js/PanelManager/IActivePanel',
+    'js/Widgets/BlockEditor/BlockEditorWidget',//FIXME
+    './BlockEditorControl'
+], function (PanelBaseWithHeader,
+             IActivePanel,
+             BlockEditorWidget,
+             BlockEditorControl) {
 
-    "use strict";
+    'use strict';
 
     var BlockEditorPanel;
 
     BlockEditorPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "BlockEditorPanel";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'BlockEditorPanel';
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
         //call parent's constructor
@@ -32,7 +31,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("BlockEditorPanel ctor finished");
+        this.logger.debug('BlockEditorPanel ctor finished');
     };
 
     //inherit from PanelBaseWithHeader
@@ -42,7 +41,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
     BlockEditorPanel.prototype._initialize = function () {
         var self = this;
 
-        this.widget = new BlockEditorWidget(this.$el, {'toolBar': this.toolBar});
+        this.widget = new BlockEditorWidget(this.$el, {toolBar: this.toolBar});
 
         this.widget.setTitle = function (title) {
             self.setTitle(title);
@@ -53,8 +52,10 @@ define(['js/PanelBase/PanelBaseWithHeader',
             WebGMEGlobal.KeyboardManager.setListener(self.widget);
         };
 
-        this.control = new BlockEditorControl({"client": this._client,
-            "widget": this.widget});
+        this.control = new BlockEditorControl({
+            client: this._client,
+            widget: this.widget
+        });
 
         this.onActivate();
     };

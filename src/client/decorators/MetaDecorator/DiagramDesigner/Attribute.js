@@ -1,15 +1,12 @@
-/*globals define, WebGMEGlobal*/
+/*globals define, WebGMEGlobal, $*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
+define(['js/logger'], function (Logger) {
 
-define(['js/logger',
-        './AttributeDetailsDialog'], function (Logger,
-                                               AttributeDetailsDialog) {
-
-    "use strict";
+    'use strict';
 
     var Attribute;
 
@@ -23,20 +20,22 @@ define(['js/logger',
         //some comment here
         this.logger = Logger.create('gme:decorators:MetaDecorator:DiagramDesigner:Attribute_' + this.name,
             WebGMEGlobal.gmeConfig.client.log);
-        this.logger.debug("Created");
+        this.logger.debug('Created');
     };
 
-    Attribute.prototype._DOMAttributeBase = $('<div class="attr" data-name="__ID__"><span class="n"></span><span class="t"></span></div>');
+    Attribute.prototype._DOMAttributeBase =
+        $('<div class="attr" data-name="__ID__"><span class="n"></span><span class="t"></span></div>');
 
     Attribute.prototype._render = function () {
-        var self = this;
 
         this.$el = this._DOMAttributeBase.clone();
-        this.$el.attr({"data-name": this.name,
-                      "title": this.name});
+        this.$el.attr({
+            'data-name': this.name,
+            title: this.name
+        });
 
-        this.$el.find(".n").text(this.name + ":");
-        this.$el.find(".t").text(this.type);
+        this.$el.find('.n').text(this.name + ':');
+        this.$el.find('.t').text(this.type);
     };
 
     Attribute.prototype.destroy = function () {

@@ -1,42 +1,45 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, $  */
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define([], function () {
 
-    "use strict";
+    'use strict';
 
-    var _createButton = function (params) {
-        var $btn,
-            i,
-            btnClass = "btn btn-mini";
+    function createButton(params) {
+        var button,
+            btnClass = 'btn btn-mini';
 
-        $btn = $('<a/>', {
-            "class": btnClass,
-            "href": "#",
-            "title": params.title
+        button = $('<a/>', {
+            class: btnClass,
+            href: '#',
+            title: params.title
         });
 
         if (params.data) {
-            $btn.data(params.data);
+            button.data(params.data);
         }
 
         if (params.icon) {
             if (typeof params.icon === 'string') {
-                $btn.append($('<i class="' + params.icon + '"></i>'));
+                button.append($('<i class="' + params.icon + '"></i>'));
             } else {
-                $btn.append(params.icon);
+                button.append(params.icon);
             }
         }
 
         if (params.text) {
             if (params.icon) {
-                $btn.append(' ');
+                button.append(' ');
             }
-            $btn.append(params.text);
+            button.append(params.text);
         }
 
         if (params.clickFn) {
-            $btn.on("click", function (event) {
-                if (!$btn.hasClass("disabled")) {
+            button.on('click', function (event) {
+                if (!button.hasClass('disabled')) {
                     params.clickFn.call(this, $(this).data());
                 }
                 if (params.clickFnEventCancel !== false) {
@@ -46,17 +49,17 @@ define([], function () {
             });
         }
 
-        $btn.enabled = function (enabled) {
+        button.enabled = function (enabled) {
             if (enabled === true) {
-                $btn.disable(false);
+                button.disable(false);
             } else {
-                $btn.disable(true);
+                button.disable(true);
             }
         };
 
-        return $btn;
-    };
+        return button;
+    }
 
 
-    return { createButton: _createButton};
+    return {createButton: createButton};
 });

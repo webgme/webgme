@@ -1,18 +1,23 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger',
     'js/util',
     'js/Constants',
-    'js/NodePropertyNames'], function (Logger,
-                                    util,
-                                    CONSTANTS,
-                                    nodePropertyNames) {
-    "use strict";
+    'js/NodePropertyNames'
+], function (Logger,
+             util,
+             CONSTANTS,
+             nodePropertyNames) {
+
+    'use strict';
 
     var GridPanelSetsControl;
 
     GridPanelSetsControl = function (options) {
-        var self = this;
         this._client = options.client;
         this._panel = options.panel;
         this._dataGridWidget = options.widget;
@@ -24,13 +29,13 @@ define(['js/logger',
 
         this._logger = Logger.create('gme:Panels:Grid:GridPanelSetsControl', WebGMEGlobal.gmeConfig.client.log);
 
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     GridPanelSetsControl.prototype.selectedObjectChanged = function (nodeId) {
         var self = this;
 
-        this._logger.debug("activeObject nodeId '" + nodeId + "'");
+        this._logger.debug('activeObject nodeId "' + nodeId + '"');
 
         //remove current territory patterns
         if (this._territoryId) {
@@ -43,9 +48,9 @@ define(['js/logger',
         if (this._setContainerID || this._setContainerID === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 0 };
+            this._selfPatterns[nodeId] = {children: 0};
 
-            this._territoryId = this._client.addUI(this, function (events) {
+            this._territoryId = this._client.addUI(this, function (/* events */) {
                 self._processSetContainer();
             });
             //update the territory
@@ -63,12 +68,14 @@ define(['js/logger',
             setDescriptor,
             setNames,
             i,
-            set,
+            setName,
             setMembers,
             j,
             memberRegistryNames,
             k,
-            title = " (" + this._setContainerID + ")";
+            title = ' (' + this._setContainerID + ')',
+            setMemberRegName,
+            keyValue;
 
         this._dataGridWidget.clear();
 
@@ -84,22 +91,26 @@ define(['js/logger',
 
             i = setNames.length;
             while (i--) {
-                set = setNames[i];
-                setMembers = setContainer.getMemberIds(set);
+                setName = setNames[i];
+                setMembers = setContainer.getMemberIds(setName);
 
                 //fill set names and member list
-                setDescriptor = {"ID": set,
-                    "Members": setMembers };
+                setDescriptor = {
+                    ID: setName,
+                    Members: setMembers
+                };
 
                 j = setMembers.length;
                 while (j--) {
                     //get set registry
-                    memberRegistryNames = setContainer.getMemberRegistryNames(set, setMembers[j]);
+                    memberRegistryNames = setContainer.getMemberRegistryNames(setName, setMembers[j]);
                     k = memberRegistryNames.length;
                     while (k--) {
-                        var setMemberRegName = /*set + '_' + */memberRegistryNames[k];
+                        setMemberRegName = /*set + '_' + */memberRegistryNames[k];
                         setDescriptor[setMemberRegName] = setDescriptor[setMemberRegName] || [];
-                        var keyValue = setMembers[j] + ': ' + JSON.stringify(setContainer.getMemberRegistry(set, setMembers[j], memberRegistryNames[k]));
+                        keyValue = setMembers[j] + ': ' + JSON.stringify(setContainer.getMemberRegistry(setName,
+                                setMembers[j],
+                                memberRegistryNames[k]));
                         setDescriptor[setMemberRegName].push(keyValue);
                     }
                 }

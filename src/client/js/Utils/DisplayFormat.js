@@ -1,21 +1,27 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define */
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/Constants',
     'js/NodePropertyNames',
-    'js/RegistryKeys'], function (CONSTANTS,
-                                       nodePropertyNames,
-                                       REGISTRY_KEYS) {
+    'js/RegistryKeys'
+], function (CONSTANTS,
+             nodePropertyNames,
+             REGISTRY_KEYS) {
 
-    "use strict";
+    'use strict';
 
-    var ATTRIBUTE_MARKER = CONSTANTS.DISPLAY_FORMAT_ATTRIBUTE_MARKER;
+    var ATTRIBUTE_MARKER = CONSTANTS.DISPLAY_FORMAT_ATTRIBUTE_MARKER,
 
-    var displayFormatKey = REGISTRY_KEYS.DISPLAY_FORMAT;
+        displayFormatKey = REGISTRY_KEYS.DISPLAY_FORMAT;
 
-    var _resolve = function (obj) {
-        var result = "",
+    function resolve(obj) {
+        var result = '',
             displayFormat,
-            regAttr = new RegExp((ATTRIBUTE_MARKER + '\\w+').replace('$', '\\$'), "g"),
+            regAttr = new RegExp((ATTRIBUTE_MARKER + '\\w+').replace('$', '\\$'), 'g'),
             attrKeyValues = {},
             m,
             key,
@@ -34,10 +40,10 @@ define(['js/Constants',
 
             result = displayFormat;
 
-            for(key in attrKeyValues) {
+            for (key in attrKeyValues) {
                 if (attrKeyValues.hasOwnProperty(key)) {
-                    re = new RegExp(key.replace('$', '\\$'), "g");
-                    attrKeyValues[key] = obj.getAttribute(key.replace(ATTRIBUTE_MARKER, ""));
+                    re = new RegExp(key.replace('$', '\\$'), 'g');
+                    attrKeyValues[key] = obj.getAttribute(key.replace(ATTRIBUTE_MARKER, ''));
 
                     if (attrKeyValues[key] !== undefined && attrKeyValues[key] !== null) {
                         result = result.replace(re, attrKeyValues[key]);
@@ -47,7 +53,7 @@ define(['js/Constants',
         }
 
         return result;
-    };
+    }
 
-    return { resolve: _resolve };
+    return {resolve: resolve};
 });

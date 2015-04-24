@@ -1,3 +1,6 @@
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 @import "../Core/CircleDecorator";
 @import "../../../js/Widgets/DiagramDesigner/styles/Connector";
 
@@ -15,8 +18,8 @@ div.designer-item {
       @include connector_basics;
 
       position: absolute;
-      top: 0px;
-      left: 0px;
+      top: 0;
+      left: 0;
     }
   }
 

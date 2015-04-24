@@ -1,11 +1,15 @@
 /*globals define, WebGMEGlobal*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger'], function (Logger) {
 
-    "use strict";
+    'use strict';
 
     var DecoratorBase,
-        DECORATOR_ID = "DecoratorBase";
+        DECORATOR_ID = 'DecoratorBase';
 
     DecoratorBase = function (params) {
         var loggerName = 'gme:Decorators:DecoratorBase:';
@@ -16,7 +20,7 @@ define(['js/logger'], function (Logger) {
 
         this.initializeSupportedWidgetMap();
 
-        this.logger.debug("Created");
+        this.logger.debug('Created');
     };
 
     DecoratorBase.prototype.DECORATORID = DECORATOR_ID;

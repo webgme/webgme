@@ -1,4 +1,8 @@
 /*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger'], function (Logger) {
 

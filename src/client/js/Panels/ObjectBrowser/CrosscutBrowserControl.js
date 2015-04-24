@@ -1,18 +1,23 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger',
-        'js/Utils/GMEConcepts',
-        'js/NodePropertyNames',
-        'js/Constants'], function (Logger,
-                                   GMEConcepts,
-                                   nodePropertyNames,
-                                   CONSTANTS) {
-
-    "use strict";
+    'js/Utils/GMEConcepts',
+    'js/NodePropertyNames',
+    'js/Constants'
+], function (Logger,
+             GMEConcepts,
+             nodePropertyNames,
+             CONSTANTS) {
+    'use strict';
 
     var NODE_PROGRESS_CLASS = 'node-progress',
-        GME_MODEL_CLASS = "gme-model",
-        GME_ATOM_CLASS = "gme-atom",
+        GME_MODEL_CLASS = 'gme-model',
+        GME_ATOM_CLASS = 'gme-atom',
         PROJECT_ROOT_ID = CONSTANTS.PROJECT_ROOT_ID,
         DEFAULT_VISUALIZER = 'Crosscut';
 
@@ -80,20 +85,23 @@ define(['js/logger',
         });
 
         //create a new loading node for root in the tree
-        this._treeNodes[PROJECT_ROOT_ID] = this._treeBrowser.createNode(null, { "id": PROJECT_ROOT_ID,
-            "name": "Initializing...",
-            "hasChildren" : false,
-            "class" :  NODE_PROGRESS_CLASS });
+        this._treeNodes[PROJECT_ROOT_ID] = this._treeBrowser.createNode(null, {
+            id: PROJECT_ROOT_ID,
+            name: 'Initializing...',
+            hasChildren: false,
+            class: NODE_PROGRESS_CLASS
+        });
 
         //add the root to the query
-        this._selfPatterns[PROJECT_ROOT_ID] = { "children": 1};
+        this._selfPatterns[PROJECT_ROOT_ID] = {children: 1};
         this._client.updateTerritory(this._territoryId, this._selfPatterns);
     };
 
     CrosscutBrowserControl.prototype._getNodeDescBase = function () {
         return {
-            "children" : [],
-            "crosscuts": [] };
+            children: [],
+            crosscuts: []
+        };
     };
 
     CrosscutBrowserControl.prototype._territoryCallback = function (events) {
@@ -153,10 +161,12 @@ define(['js/logger',
             parentTreeNode = this._treeNodes[parentId];
 
             //parent is in the tree now, we can create this node
-            this._treeNodes[nodeId] = this._treeBrowser.createNode(parentTreeNode, { "id": nodeId,
-                "name": "...",
-                "hasChildren" : false,
-                "class" :  NODE_PROGRESS_CLASS });
+            this._treeNodes[nodeId] = this._treeBrowser.createNode(parentTreeNode, {
+                id: nodeId,
+                name: '...',
+                hasChildren: false,
+                class: NODE_PROGRESS_CLASS
+            });
 
             this._updateTreeNode(nodeId);
 
@@ -171,9 +181,11 @@ define(['js/logger',
             nodeDescriptor;
 
         //create the node's descriptor for the tree-browser widget
-        nodeDescriptor = {  "name" :  nodeObj.getAttribute(nodePropertyNames.Attributes.name),
-            "hasChildren" : this._isExpandable(nodeId),
-            "class" : GME_MODEL_CLASS };
+        nodeDescriptor = {
+            name: nodeObj.getAttribute(nodePropertyNames.Attributes.name),
+            hasChildren: this._isExpandable(nodeId),
+            class: GME_MODEL_CLASS
+        };
 
         //update the node's representation in the tree
         this._treeBrowser.updateNode(this._treeNodes[nodeId], nodeDescriptor);
@@ -193,7 +205,7 @@ define(['js/logger',
             cc,
             i;
 
-        _.each(crosscuts, function(cc){
+        _.each(crosscuts, function (cc) {
             newCrossCutIDs.push(cc.SetID);
         });
 
@@ -212,7 +224,7 @@ define(['js/logger',
         while (len--) {
             i = crosscuts.length;
             cc = undefined;
-            while(i--) {
+            while (i--) {
                 if (crosscuts[i].SetID === diff[len]) {
                     cc = crosscuts[i];
                     break;
@@ -227,7 +239,7 @@ define(['js/logger',
         while (len--) {
             i = crosscuts.length;
             cc = undefined;
-            while(i--) {
+            while (i--) {
                 if (crosscuts[i].SetID === diff[len]) {
                     cc = crosscuts[i];
                     break;
@@ -276,14 +288,14 @@ define(['js/logger',
             for (i = 0; i < childrenIDs.length; i += 1) {
                 currentChildId = childrenIDs[i];
                 if (this._insertOrUpdate(currentChildId)) {
-                    this._selfPatterns[currentChildId] = { "children": 1 };
+                    this._selfPatterns[currentChildId] = {children: 1};
                     this._nodes[nodeId].children.push(currentChildId);
                 }
             }
 
             //get all the crosscuts of this node and create a node form them in the tree
 
-            _.each(GMEConcepts.getCrosscuts(nodeId), function(crosscut){
+            _.each(GMEConcepts.getCrosscuts(nodeId), function (crosscut) {
                 self._createXCutTreeNode(nodeId, crosscut);
             });
 
@@ -308,10 +320,12 @@ define(['js/logger',
             //update accounting of the node
             this._nodes[nodeId].crosscuts.push(crossCutID);
 
-            this._crosscutTreeNodes[fqCrosscutID] = this._treeBrowser.createNode(parentTreeNode, { "id": fqCrosscutID,
-                "name": crosscut.title,
-                "hasChildren" : false,
-                "class" :   GME_ATOM_CLASS });
+            this._crosscutTreeNodes[fqCrosscutID] = this._treeBrowser.createNode(parentTreeNode, {
+                id: fqCrosscutID,
+                name: crosscut.title,
+                hasChildren: false,
+                class: GME_ATOM_CLASS
+            });
 
             this._crosscuts[fqCrosscutID] = nodeId;
         }
@@ -362,7 +376,8 @@ define(['js/logger',
             }
         };
 
-        //call the cleanup recursively and mark this node (being closed) as non removable (from local hashmap neither from territory)
+        //call the cleanup recursively and mark this node (being closed)
+        // as non removable (from local hashmap neither from territory)
         deleteNodeAndChildrenFromLocalHash(nodeId, false);
         this._nodes[nodeId].crosscuts = [];
         this._nodes[nodeId].children = [];
@@ -374,7 +389,7 @@ define(['js/logger',
     };
 
     CrosscutBrowserControl.prototype._onNodeDoubleClicked = function (nodeId) {
-        this._logger.debug("_onNodeDoubleClicked with nodeId: " + nodeId);
+        this._logger.debug('_onNodeDoubleClicked with nodeId: ' + nodeId);
         var settings = {};
 
         if (this._crosscuts.hasOwnProperty(nodeId)) {
@@ -456,8 +471,10 @@ define(['js/logger',
 
         //only matters if it's already in the tree
         if (this._crosscutTreeNodes[fqCrosscutID]) {
-            this._treeBrowser.updateNode(this._crosscutTreeNodes[fqCrosscutID], { "id": fqCrosscutID,
-                "name": crosscut.title });
+            this._treeBrowser.updateNode(this._crosscutTreeNodes[fqCrosscutID], {
+                id: fqCrosscutID,
+                name: crosscut.title
+            });
         }
     };
 

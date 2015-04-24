@@ -6,11 +6,12 @@
  */
 
 WebGMEGlobal.version = 'x';
-WebGMEGlobal['SUPPORTS_TOUCH'] = 'ontouchstart' in window || navigator.msMaxTouchPoints;
+WebGMEGlobal.SUPPORTS_TOUCH = 'ontouchstart' in window || navigator.msMaxTouchPoints;
 
 
 // let require load all the toplevel needed script and call us on domReady
-define(['js/logger',
+define([
+    'js/logger',
     'text!/gmeConfig.json',
     'text!/package.json',
     'js/client',
@@ -30,33 +31,35 @@ define(['js/logger',
     'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper',
     'js/Dialogs/Projects/ProjectsDialog',
-    'js/Utils/InterpreterManager'], function (Logger,
-                                              gmeConfigJson,
-                                              packagejson,
-                                              Client,
-                                              CONSTANTS,
-                                              METACONSTANTS,
-                                              GMEConcepts,
-                                              GMEVisualConcepts,
-                                              ExportManager,
-                                              ImportManager,
-                                              StateManager,
-                                              WebGMEUrlManager,
-                                              LayoutManager,
-                                              DecoratorManager,
-                                              KeyboardManager,
-                                              PanelManager,
-                                              WebGMEHistory,
-                                              METAAspectHelper,
-                                              PreferencesHelper,
-                                              ProjectsDialog,
-                                              InterpreterManager) {
+    'js/Utils/InterpreterManager'
+], function (Logger,
+             gmeConfigJson,
+             packagejson,
+             Client,
+             CONSTANTS,
+             METACONSTANTS,
+             GMEConcepts,
+             GMEVisualConcepts,
+             ExportManager,
+             ImportManager,
+             StateManager,
+             WebGMEUrlManager,
+             LayoutManager,
+             DecoratorManager,
+             KeyboardManager,
+             PanelManager,
+             WebGMEHistory,
+             METAAspectHelper,
+             PreferencesHelper,
+             ProjectsDialog,
+             InterpreterManager) {
 
-    "use strict";
+    'use strict';
 
     var npmJSON = JSON.parse(packagejson),
         gmeConfig = JSON.parse(gmeConfigJson),
         npmJSONFromSplit;
+
     WebGMEGlobal.version = npmJSON.version;
     WebGMEGlobal.NpmVersion = npmJSON.dist ? npmJSON.version : '';
     WebGMEGlobal.GitHubVersion = '';
@@ -66,7 +69,7 @@ define(['js/logger',
     }
 
 
-    var _webGMEStart = function (afterPanelsLoaded) {
+    function webGMEStart(afterPanelsLoaded) {
         var layoutManager,
             client,
             loadPanels,
@@ -133,7 +136,7 @@ define(['js/logger',
             });
 
             //on project close clear the current state
-            client.addEventListener(client.events.PROJECT_CLOSED, function (__project, projectName) {
+            client.addEventListener(client.events.PROJECT_CLOSED, function (/* __project, projectName */) {
                 WebGMEGlobal.State.clear();
             });
 
@@ -144,10 +147,10 @@ define(['js/logger',
                 }
                 for (i = 0; i < len; i += 1) {
                     panels.push({
-                        'panel': layoutPanels[i].panel,
-                        'container': layoutPanels[i].container,
-                        'control': layoutPanels[i].control,
-                        'params': {'client': client}
+                        panel: layoutPanels[i].panel,
+                        container: layoutPanels[i].container,
+                        control: layoutPanels[i].control,
+                        params: {client: client}
                     });
                 }
 
@@ -181,6 +184,8 @@ define(['js/logger',
                                 return;
                             }
                             client.getAvailableProjectsAsync(function (err, projectArray) {
+                                var seedParameters;
+
                                 if (err) {
                                     logger.error(err);
                                     openProjectLoadDialog();
@@ -196,7 +201,8 @@ define(['js/logger',
                                         }
                                         if (initialThingsToDo.branchToLoad) {
                                             loadBranch(initialThingsToDo.branchToLoad);
-                                        } else if (initialThingsToDo.commitToLoad && initialThingsToDo.commitToLoad !== "") {
+                                        } else if (initialThingsToDo.commitToLoad &&
+                                                   initialThingsToDo.commitToLoad !== '') {
                                             client.selectCommitAsync(initialThingsToDo.commitToLoad, function (err) {
                                                 if (err) {
                                                     logger.error(err);
@@ -212,12 +218,13 @@ define(['js/logger',
                                     });
                                 } else {
                                     //we create the project
-                                    var seedParameters = {
+                                    seedParameters = {
                                         type: 'file', // FIXME: is the default project always file?
                                         projectName: initialThingsToDo.projectToLoad,
                                         seedName: WebGMEGlobal.gmeConfig.seedProjects.defaultProject,
                                         branchName: 'master'
                                     };
+
                                     client.seedProjectAsync(seedParameters, function (err) {
                                         if (err) {
                                             logger.error(err);
@@ -243,8 +250,8 @@ define(['js/logger',
                             openProjectLoadDialog();
                         } else {
                             client.connectToDatabaseAsync({
-                                'open': initialThingsToDo.projectToLoad,
-                                'project': initialThingsToDo.projectToLoad
+                                open: initialThingsToDo.projectToLoad,
+                                project: initialThingsToDo.projectToLoad
                             }, function (err) {
                                 if (err) {
                                     logger.error(err);
@@ -281,7 +288,7 @@ define(['js/logger',
                     logger.error(err);
                     return;
                 }
-                client.getAvailableProjectsAsync(function (err, projectArray) {
+                client.getAvailableProjectsAsync(function (/*err, projectArray*/) {
                     projectOpenDialog = new ProjectsDialog(client);
                     projectOpenDialog.show();
                 });
@@ -351,9 +358,9 @@ define(['js/logger',
             });
         };
 
-    };
+    }
 
     return {
-        start: _webGMEStart
+        start: webGMEStart
     };
 });

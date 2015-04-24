@@ -34,7 +34,7 @@ describe('import CLI tests', function () {
     }
 
     before(function () {
-        jsonProject = testFixture.loadJsonFile('./test/asset/sm_basic.json');
+        jsonProject = testFixture.loadJsonFile('./test/bin/import/project.json');
         storage = storage = new WebGME.serverUserStorage({
             globConf: gmeConfig,
             logger: testFixture.logger.fork('import_CLI_tests:storage')
@@ -114,7 +114,7 @@ describe('import CLI tests', function () {
                 branchName: 'master',
                 nodePaths: [nodePath]
             },
-            tmpJsonProject = testFixture.loadJsonFile('./test/asset/sm_basic_basic.json');
+            tmpJsonProject = testFixture.loadJsonFile('./test/bin/import/basicProject.json');
 
         importCLI.import(Storage, gmeConfig, contextParam.projectName, tmpJsonProject, null, true,
             function (err, data) {

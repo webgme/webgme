@@ -1,19 +1,19 @@
-/*globals define,_*/
-/*
- * @author rkereskenyi / https://github/rkereskenyi
- * @author brollb / https://github/brollb
- *
+/*globals define, $*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author brollb / https://github.com/brollb
  */
 
-define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], 
-        function (DiagramDesignerWidgetConstants) {
+define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetConstants) {
 
-    "use strict";
+    'use strict';
 
     var SVGDecoratorConnectors,
         CONNECTOR_BASE = $('<div class="' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '"/>');
 
-    SVGDecoratorConnectors = function(){
+    SVGDecoratorConnectors = function () {
     };
 
     SVGDecoratorConnectors.prototype._generateConnectors = function () {
@@ -31,29 +31,37 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'],
             //NORTH
             c = CONNECTOR_BASE.clone();
             c.addClass('cn');
-            c.css({'top': 0,
-                   'left': svgWidth / 2});
+            c.css({
+                top: 0,
+                left: svgWidth / 2
+            });
             this.$el.append(c);
 
             //SOUTH
             c = CONNECTOR_BASE.clone();
             c.addClass('cs');
-            c.css({'top': svgHeight,
-                   'left': svgWidth / 2});
+            c.css({
+                top: svgHeight,
+                left: svgWidth / 2
+            });
             this.$el.append(c);
 
             //EAST
             c = CONNECTOR_BASE.clone();
             c.addClass('ce');
-            c.css({'top': svgHeight / 2,
-                   'left': svgWidth});
+            c.css({
+                top: svgHeight / 2,
+                left: svgWidth
+            });
             this.$el.append(c);
 
             //WEST
             c = CONNECTOR_BASE.clone();
             c.addClass('cw');
-            c.css({'top': svgHeight / 2,
-                'left': 0});
+            c.css({
+                top: svgHeight / 2,
+                left: 0
+            });
             this.$el.append(c);
         }
 

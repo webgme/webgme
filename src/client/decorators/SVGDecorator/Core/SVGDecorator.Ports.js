@@ -1,29 +1,30 @@
-/*globals define,_*/
-/*
+/*globals define, _, $*/
+/*jshint browser: true*/
+
+/**
  * @author rkereskenyi / https://github/rkereskenyi
  * @author brollb / https://github/brollb
  */
 
-define(['js/Decorators/DecoratorWithPorts.Base',
-        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-        './SVGPort'], function (DecoratorWithPortsBase,
-                                DiagramDesignerWidgetConstants,
-                                SVGPort) {
+define([
+    'js/Decorators/DecoratorWithPorts.Base',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
+    './SVGPort'
+], function (DecoratorWithPortsBase, DiagramDesignerWidgetConstants, SVGPort) {
 
-    "use strict";
+    'use strict';
 
     var SVGDecoratorPorts,
-        ABSTRACT_CLASS = 'abstract',
         PORT_HEIGHT = 13,   //must be same as SVGDecorator.scss 's $port-height
         DEFAULT_SVG_DEFAULT_HEIGHT = 50;
 
-    SVGDecoratorPorts = function(){
+    SVGDecoratorPorts = function () {
         DecoratorWithPortsBase.apply(this, []);
     };
 
-    _.extend( SVGDecoratorPorts.prototype, DecoratorWithPortsBase.prototype);
+    _.extend(SVGDecoratorPorts.prototype, DecoratorWithPortsBase.prototype);
 
-    SVGDecoratorPorts.prototype._initializePortVariables = function (params) {
+    SVGDecoratorPorts.prototype._initializePortVariables = function (/*params*/) {
         this._PORT_HEIGHT = PORT_HEIGHT;
     };
 
@@ -35,17 +36,19 @@ define(['js/Decorators/DecoratorWithPorts.Base',
         this._portContainerWidth = halfW;
 
         if (!this.$leftPorts) {
-            this.$leftPorts = $('<div/>', {'class': 'ports ports-l'});
+            this.$leftPorts = $('<div/>', {class: 'ports ports-l'});
             this.$leftPorts.insertAfter(this.$svgContent);
         }
-        this.$leftPorts.css({'width': halfW});
+        this.$leftPorts.css({width: halfW});
 
         if (!this.$rightPorts) {
-            this.$rightPorts = $('<div/>', {'class': 'ports ports-r'});
+            this.$rightPorts = $('<div/>', {class: 'ports ports-r'});
             this.$rightPorts.insertAfter(this.$svgContent);
         }
-        this.$rightPorts.css({'width': halfW,
-                              'left': halfW});
+        this.$rightPorts.css({
+            width: halfW,
+            left: halfW
+        });
 
         this.updatePortIDList();
 
@@ -64,10 +67,12 @@ define(['js/Decorators/DecoratorWithPorts.Base',
 
 
     SVGDecoratorPorts.prototype.renderPort = function (portId) {
-        return new SVGPort({'id': portId,
-            'logger': this.logger,
-            'client': this._control._client,
-            'decorator': this});
+        return new SVGPort({
+            id: portId,
+            logger: this.logger,
+            client: this._control._client,
+            decorator: this
+        });
     };
 
     SVGDecoratorPorts.prototype._updatePortPositions = function () {
@@ -118,7 +123,9 @@ define(['js/Decorators/DecoratorWithPorts.Base',
         this.$leftPorts.find('.port > .title').css('left', TITLE_PADDING);
         this.$leftPorts.find('.port > .title').css('width', this._portContainerWidth - TITLE_PADDING);
         this.$leftPorts.find('.port > .icon').css('left', -PORT_HEIGHT);
-        this.$leftPorts.find('.port > .' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).css('left', -PORT_HEIGHT + 1);
+
+        this.$leftPorts.find('.port > .' +
+        DiagramDesignerWidgetConstants.CONNECTOR_CLASS).css('left', -PORT_HEIGHT + 1);
 
         for (i = 0; i < rightPorts.length; i += 1) {
             portInstance = ports[rightPorts[i]];
@@ -130,7 +137,9 @@ define(['js/Decorators/DecoratorWithPorts.Base',
         this.$rightPorts.find('.port > .title').css('right', -this._portContainerWidth + TITLE_PADDING);
         this.$rightPorts.find('.port > .title').css('width', this._portContainerWidth - TITLE_PADDING);
         this.$rightPorts.find('.port > .icon').css('left', this._portContainerWidth);
-        this.$rightPorts.find('.port > .' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).css('left', this._portContainerWidth);
+
+        this.$rightPorts.find('.port > .' +
+        DiagramDesignerWidgetConstants.CONNECTOR_CLASS).css('left', this._portContainerWidth);
 
         //store if we have ports on the left/right
         this._leftPorts = leftPorts.length > 0;

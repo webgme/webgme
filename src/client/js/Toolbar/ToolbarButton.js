@@ -1,9 +1,13 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, $, _*/
+/*jshint browser: true*/
 
-define(['./ButtonBase',
-        './ToolbarItemBase'], function (buttonBase,
-                                        ToolbarItemBase) {
-    "use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define(['./ButtonBase', './ToolbarItemBase'], function (buttonBase, ToolbarItemBase) {
+
+    'use strict';
 
     var ToolbarButton;
 

@@ -1,1 +1,0 @@
-node node_modules/jscoverage/bin/jscoverage src src-cov --exclude .py,.sln,.key,.log,.pem,.svg,.css,.scss,.gif,.png,.html,.gitignore,.eot,.otf,.ttf,.woff,.ico,.md,.json,._js,.map,.txt,LICENSE,.DS

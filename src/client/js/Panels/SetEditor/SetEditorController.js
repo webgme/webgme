@@ -1,20 +1,25 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _ */
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/Utils/GMEConcepts',
     'js/DragDrop/DragHelper',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     './../Crosscut/CrosscutConstants',
-    'js/Panels/ControllerBase/DiagramDesignerWidgetMultiTabMemberListControllerBase'], function (
-                                               GMEConcepts,
-                                               DragHelper,
-                                               nodePropertyNames,
-                                               REGISTRY_KEYS,
-                                               ManualAspectConstants,
-                                               DiagramDesignerWidgetMultiTabMemberListControllerBase) {
+    'js/Panels/ControllerBase/DiagramDesignerWidgetMultiTabMemberListControllerBase'
+], function (GMEConcepts,
+             DragHelper,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             ManualAspectConstants,
+             DiagramDesignerWidgetMultiTabMemberListControllerBase) {
 
 
-    "use strict";
+    'use strict';
 
     var SetEditorController;
 
@@ -24,12 +29,12 @@ define(['js/Utils/GMEConcepts',
 
         DiagramDesignerWidgetMultiTabMemberListControllerBase.call(this, options);
 
-        this.logger.debug("SetEditorController ctor finished");
+        this.logger.debug('SetEditorController ctor finished');
     };
 
     _.extend(SetEditorController.prototype, DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype);
 
-    SetEditorController.prototype.getOrderedMemberListInfo = function (memberListContainerObject) {
+    SetEditorController.prototype.getOrderedMemberListInfo = function (/* memberListContainerObject */) {
         var result = [],
             memberListContainerID = this._memberListContainerID,
             setNames = GMEConcepts.getSets(memberListContainerID),
@@ -37,13 +42,15 @@ define(['js/Utils/GMEConcepts',
 
         len = setNames.length;
         while (len--) {
-            result.push({'memberListID': setNames[len],
+            result.push({
+                'memberListID': setNames[len],
                 'title': setNames[len],
                 'enableDeleteTab': false,
-                'enableRenameTab': false});
+                'enableRenameTab': false
+            });
         }
 
-        result.sort(function (a,b) {
+        result.sort(function (a, b) {
             if (a.title.toLowerCase() < b.title.toLowerCase()) {
                 return -1;
             } else {
@@ -58,12 +65,15 @@ define(['js/Utils/GMEConcepts',
     /**********************************************************/
     /*         HANDLE OBJECT DRAG & DROP ACCEPTANCE           */
     /**********************************************************/
-    SetEditorController.prototype._onBackgroundDroppableAccept = function(event, dragInfo) {
+    SetEditorController.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
         var gmeIDList = DragHelper.getDragItems(dragInfo),
-            accept = DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onBackgroundDroppableAccept.call(this, event, dragInfo);
+            accept = DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onBackgroundDroppableAccept.call(this,
+                event,
+                dragInfo);
 
         if (accept === true) {
-            //if based on the DiagramDesignerWidgetMultiTabMemberListControllerBase check it could be accepted, ie items are not members of the set so far
+            //if based on the DiagramDesignerWidgetMultiTabMemberListControllerBase check it could be accepted,
+            //  i.e. items are not members of the set so far
             //we need to see if we can accept them based on the META rules
             accept = GMEConcepts.canAddToSet(this._memberListContainerID, this._selectedMemberListID, gmeIDList);
         }

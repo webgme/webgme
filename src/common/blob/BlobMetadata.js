@@ -1,17 +1,28 @@
-/*
- * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+/*globals define*/
+/*jshint browser: true, node:true*/
+
+/**
+ * Client module for accessing the blob.
  *
- * Author: Zsolt Lattmann
+ * @author lattmann / https://github.com/lattmann
  */
 
-define(['blob/BlobConfig'], function(BlobConfig){
+define(['blob/BlobConfig'], function (BlobConfig) {
+    'use strict';
 
     /**
      * Initializes a new instance of BlobMetadata
-     * @param {Object<string, string|number|Object>} metadata A serialized metadata object. Name and content must be defined.
+     * @param {object} metadata - A serialized metadata object.
+     * @param {string} metadata.name
+     * @param {string|Object} metadata.content
+     * @param {number} [metadata.size=0]
+     * @param {BlobMetadata.CONTENT_TYPES} [metadata.contentType=BlobMetadata.CONTENT_TYPES.OBJECT]
+     * @param {string} [metadata.mime='']
+     * @param {boolean} [metadata.isPublic=false]
+     * @param {string[]} [metadata.tags=[]]
      * @constructor
      */
-    var BlobMetadata = function(metadata) {
+    var BlobMetadata = function (metadata) {
         var key;
         if (metadata) {
             this.name = metadata.name;
@@ -25,7 +36,7 @@ define(['blob/BlobConfig'], function(BlobConfig){
                 for (key in this.content) {
                     if (this.content.hasOwnProperty(key)) {
                         if (BlobConfig.hashRegex.test(this.content[key].content) === false) {
-                            throw Error("BlobMetadata is malformed: hash is invalid");
+                            throw Error('BlobMetadata is malformed: hash is invalid');
                         }
                     }
                 }
@@ -47,7 +58,13 @@ define(['blob/BlobConfig'], function(BlobConfig){
 
     /**
      * Serializes the metadata to a JSON object.
-     * @returns {{name: string, size: number, mime: string, tags: Array.<string>, content: (string|Object}, contentType: string}}
+     * @returns {{
+     *  name: string,
+     *  size: number,
+     *  mime: string,
+     *  tags: Array.<string>,
+     *  content: (string|Object},
+     *  contentType: string}}
      */
     BlobMetadata.prototype.serialize = function () {
         var metadata = {
@@ -76,5 +93,5 @@ define(['blob/BlobConfig'], function(BlobConfig){
         return metadata;
     };
 
-    return BlobMetadata
+    return BlobMetadata;
 });

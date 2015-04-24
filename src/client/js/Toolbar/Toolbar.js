@@ -16,47 +16,51 @@ define(['js/logger',
     './ToolbarCheckBox',
     './ToolbarDropDownButton',
     './ToolbarColorPicker',
-    'css!./styles/Toolbar.css'], function (Logger,
-                                           ToolbarButton,
-                                           ToolbarSeparator,
-                                           ToolbarRadioButtonGroup,
-                                           ToolbarToggleButton,
-                                           ToolbarTextBox,
-                                           ToolbarLabel,
-                                           ToolbarCheckBox,
-                                           ToolbarDropDownButton,
-                                           ToolbarColorPicker) {
+    'css!./styles/Toolbar.css'
+], function (Logger,
+             ToolbarButton,
+             ToolbarSeparator,
+             ToolbarRadioButtonGroup,
+             ToolbarToggleButton,
+             ToolbarTextBox,
+             ToolbarLabel,
+             ToolbarCheckBox,
+             ToolbarDropDownButton,
+             ToolbarColorPicker) {
 
-    "use strict";
+    'use strict';
 
     var _toolBar,
+        Toolbar,
         TOOLBAR_CLASS = 'webgme-toolbar',
         TOOLBAR_EXT_CLASS = 'webgme-toolbar-ext',
         TOOLBAR_EXT_CLASS_SHOWN_CLASS = 'shown',
         TOOLBAR_EXT_TOGGLE_CLASS = 'webgme-toolbar-ext-toggle',
         MARGIN_RIGHT = 10;  //the toggle button's width plus extar 3 px padding
 
-    var _createToolbar = function (el) {
+    function _createToolbar(el) {
         if (!_toolBar) {
             _toolBar = new Toolbar(el);
         }
 
         //hook up window resize event to do layout refresh
         $(window).on('resize', function (/*event*/) {
-           _toolBar._updateLayout.call(_toolBar);
+            _toolBar._updateLayout.call(_toolBar);
         });
 
         return _toolBar;
-    };
+    }
 
-    var Toolbar = function (el) {
+    Toolbar = function (el) {
         var self = this;
 
         this._el = $('<div/>', {'class': TOOLBAR_CLASS});
 
         this._toolbarExt = $('<div/>', {'class': TOOLBAR_EXT_CLASS});
 
-        this._toolbarExtToggleBtn = $('<div class="' + TOOLBAR_EXT_TOGGLE_CLASS + '"><i class="glyphicon glyphicon-chevron-down"/><i class="glyphicon glyphicon-chevron-down"/></div>');
+        this._toolbarExtToggleBtn = $('<div class="' + TOOLBAR_EXT_TOGGLE_CLASS +
+                                      '"><i class="glyphicon glyphicon-chevron-down"/>' +
+                                      '<i class="glyphicon glyphicon-chevron-down"/></div>');
 
         this._toolbarExtToggleBtn.on('click', function (event) {
             self._toolbarExt.toggleClass(TOOLBAR_EXT_CLASS_SHOWN_CLASS);
@@ -175,5 +179,5 @@ define(['js/logger',
         }
     };
 
-    return { createToolbar: _createToolbar };
+    return {createToolbar: _createToolbar};
 });

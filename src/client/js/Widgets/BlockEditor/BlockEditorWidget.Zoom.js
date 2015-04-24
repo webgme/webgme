@@ -1,7 +1,10 @@
 /*globals define*/
-/*
+/*jshint browser: true*/
+
+/**
  * @author brollb / https://github/brollb
  */
+
 define(['jquery-csszoom'], function () {
 
     "use strict";
@@ -17,7 +20,7 @@ define(['jquery-csszoom'], function () {
             zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
 
         //zoom
-        this._zoomSlider = $('<div/>', { 'class': 'block-editor-zoom' });
+        this._zoomSlider = $('<div/>', {'class': 'block-editor-zoom'});
         this.$el.parent().append(this._zoomSlider);
 
         this._zoomSlider.csszoom({
@@ -26,7 +29,8 @@ define(['jquery-csszoom'], function () {
             'onZoom': function (zoomLevel) {
                 self._zoomRatio = zoomLevel;
                 self._resizeItemContainer();
-            }});
+            }
+        });
 
         //add zoom level UI and handlers
         this._addZoomMouseHandler(this.$el);
@@ -36,10 +40,10 @@ define(['jquery-csszoom'], function () {
         var self = this;
 
         //IE, Chrome, etc
-        el.on('mousewheel', function (event){
+        el.on('mousewheel', function (event) {
             var org = event.originalEvent;
 
-            if (org &&  (org.ctrlKey || org.metaKey || org.altKey)) {
+            if (org && (org.ctrlKey || org.metaKey || org.altKey)) {
                 //CTRL + mouse scroll
                 if (org.wheelDelta < 0) {
                     self._zoomSlider.csszoom('zoomOut');
@@ -53,7 +57,7 @@ define(['jquery-csszoom'], function () {
         });
 
         //FIREFOX
-        el.on('DOMMouseScroll', function (event){
+        el.on('DOMMouseScroll', function (event) {
             var org = event.originalEvent;
 
             if (org && (org.ctrlKey || org.metaKey || org.altKey)) {

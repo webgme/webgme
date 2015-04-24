@@ -1,16 +1,16 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/logger',
-        'css!./styles/ProjectTitleWidget.css'], function (Logger) {
-
-    "use strict";
+define(['js/logger', 'css!./styles/ProjectTitleWidget.css'], function (Logger) {
+    'use strict';
 
     var ProjectTitleWidget,
-        PROJECT_TITLE_WIDGET_TEMPLATE = '<div class="project-title navbar-text"><span class="title">WebGME</span><span class="readOnlyInfo">[READ ONLY]</span></div>';
+        PROJECT_TITLE_WIDGET_TEMPLATE = '<div class="project-title navbar-text">' +
+            '<span class="title">WebGME</span><span class="readOnlyInfo">[READ ONLY]</span></div>';
 
     ProjectTitleWidget = function (containerEl, client) {
         this._logger = Logger.create('gme:Widgets:ProjectTitle:ProjectTitleWidget', WebGMEGlobal.gmeConfig.client.log);
@@ -20,7 +20,7 @@ define(['js/logger',
 
         this._initializeUI();
 
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     ProjectTitleWidget.prototype._initializeUI = function () {
@@ -28,7 +28,7 @@ define(['js/logger',
 
         this._el.html(PROJECT_TITLE_WIDGET_TEMPLATE);
 
-        this._projectTitle = this._el.find(".title");
+        this._projectTitle = this._el.find('.title');
 
         this._client.addEventListener(this._client.events.PROJECT_OPENED, function () {
             self._refresh();
@@ -46,8 +46,8 @@ define(['js/logger',
             actualProject = client.getActiveProjectName(),
             actualBranch = client.getActualBranch(),
             readOnly = client.isProjectReadOnly() || client.isCommitReadOnly(),
-            titleText = actualProject + " @ " + actualBranch,
-            documentTitle = titleText + (readOnly ? " [READ-ONLY]": "");
+            titleText = actualProject + ' @ ' + actualBranch,
+            documentTitle = titleText + (readOnly ? ' [READ-ONLY]' : '');
 
         //change header title
         this._projectTitle.text(titleText);

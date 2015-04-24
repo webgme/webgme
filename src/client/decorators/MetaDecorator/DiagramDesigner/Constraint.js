@@ -1,4 +1,4 @@
-/*globals define, WebGMEGlobal*/
+/*globals define, WebGMEGlobal, $*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -7,8 +7,7 @@
 
 define(['js/logger'], function (Logger) {
 
-
-    "use strict";
+    'use strict';
 
     var Constraint;
 
@@ -24,21 +23,23 @@ define(['js/logger'], function (Logger) {
         //some comment here
         this.logger = Logger.create('gme:decorators:MetaDecorator:DiagramDesigner:Constraint_' + this.name,
             WebGMEGlobal.gmeConfig.client.log);
-        this.logger.debug("Created");
+        this.logger.debug('Created');
     };
 
-    Constraint.prototype._DOMConstraintBase = $('<div class="const" data-name="__ID__"><span class="n"></span><span class="t"></span></div>');
+    Constraint.prototype._DOMConstraintBase =
+        $('<div class="const" data-name="__ID__"><span class="n"></span><span class="t"></span></div>');
 
     Constraint.prototype._render = function () {
-        var self = this;
 
         this.$el = this._DOMConstraintBase.clone();
-        this.$el.attr({"data-name": this.name,
-                      "title": this.name + ", info: " + this.info});
+        this.$el.attr({
+            'data-name': this.name,
+            title: this.name + ', info: ' + this.info
+        });
 
-        this.$el.find(".n").text(this.name /*+ ":"*/);
-        //this.$el.find(".t").text(this.priority);
-        this.$el.find(".i").text(this.info);
+        this.$el.find('.n').text(this.name /*+ ':'*/);
+        //this.$el.find('.t').text(this.priority);
+        this.$el.find('.i').text(this.info);
     };
 
     Constraint.prototype.update = function (constDesc) {
