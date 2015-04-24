@@ -1,19 +1,23 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger',
     'js/util',
     'js/Constants',
-    'js/Panels/Grid/GridPanelContainmentControl.DataGridWidgetEventHandlers'], function (Logger,
-                                    util,
-                                    CONSTANTS,
-                                    GridPanelContainmentControlDataGridWidgetEventHandlers) {
+    'js/Panels/Grid/GridPanelContainmentControl.DataGridWidgetEventHandlers'
+], function (Logger,
+             util,
+             CONSTANTS,
+             GridPanelContainmentControlDataGridWidgetEventHandlers) {
 
-    "use strict";
+    'use strict';
 
     var GridPanelContainmentControl;
 
     GridPanelContainmentControl = function (options) {
-        var self = this;
         this._client = options.client;
         this._panel = options.panel;
         this._dataGridWidget = options.widget;
@@ -27,13 +31,15 @@ define(['js/logger',
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDataGridWidgetEventHandlers();
 
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     GridPanelContainmentControl.prototype.selectedObjectChanged = function (nodeId) {
-        var self = this;
+        var self = this,
+            desc,
+            title;
 
-        this._logger.debug("activeObject '" + nodeId + "'");
+        this._logger.debug('activeObject "' + nodeId + '"');
 
         //remove current territory patterns
         if (this._territoryId) {
@@ -46,10 +52,11 @@ define(['js/logger',
         if (this._currentNodeId || this._currentNodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 1 };
+            this._selfPatterns[nodeId] = {children: 1};
 
-            var desc = this._discoverNode(nodeId);
-            var title = (desc.Attributes && desc.Attributes.name ? desc.Attributes.name + " " : "N/A ") + "(" + desc.ID + ")";
+            desc = this._discoverNode(nodeId);
+            title = (desc.Attributes && desc.Attributes.name ? desc.Attributes.name + ' ' : 'N/A ') + '(' +
+                        desc.ID + ')';
             this._panel.setTitle(title);
 
             this._territoryId = this._client.addUI(this, function (events) {
@@ -69,7 +76,7 @@ define(['js/logger',
         var i = events ? events.length : 0,
             e;
 
-        this._logger.debug("_eventCallback '" + i + "' items");
+        this._logger.debug('_eventCallback "' + i + '" items');
 
         this._insertList = [];
         this._updateList = [];
@@ -87,6 +94,8 @@ define(['js/logger',
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
                     this._onUnload(e.eid);
                     break;
+                default:
+                    break;
             }
         }
 
@@ -94,7 +103,7 @@ define(['js/logger',
         this._dataGridWidget.updateObjects(this._updateList);
         this._dataGridWidget.deleteObjects(this._deleteList);
 
-        this._logger.debug("_eventCallback '" + events.length + "' items - DONE");
+        this._logger.debug('_eventCallback "' + events.length + '" items - DONE');
     };
 
     // PUBLIC METHODS
@@ -115,52 +124,54 @@ define(['js/logger',
     };
 
     GridPanelContainmentControl.prototype._discoverNode = function (gmeID) {
-            var nodeDescriptor = {"ID": undefined,
-                                  "GUID": undefined,
-                                  "ParentID": undefined,
-                                  "Attributes": undefined,
-                                  "Registry": undefined,
-                                  "Pointers": undefined},
+        var nodeDescriptor = {
+                ID: undefined,
+                GUID: undefined,
+                ParentID: undefined,
+                Attributes: undefined,
+                Registry: undefined,
+                Pointers: undefined
+            },
 
-                cNode = this._client.getNode(gmeID),
-                _getNodePropertyValues,
-                _getPointerInfo;
+            cNode = this._client.getNode(gmeID),
+            _getNodePropertyValues,
+            _getPointerInfo;
 
-            _getNodePropertyValues = function (node, propNameFn, propValueFn) {
-                var result =  {},
-                    attrNames = node[propNameFn](),
-                    len = attrNames.length;
+        _getNodePropertyValues = function (node, propNameFn, propValueFn) {
+            var result = {},
+                attrNames = node[propNameFn](),
+                len = attrNames.length;
 
-                while (--len >= 0) {
-                    result[attrNames[len]] = node[propValueFn](attrNames[len]);
-                }
-
-                return result;
-            };
-
-            _getPointerInfo = function (node) {
-                var result = {},
-                    availablePointers = node.getPointerNames(),
-                    len = availablePointers.length;
-
-                while (len--) {
-                    result[availablePointers[len]] = node.getPointer(availablePointers[len]);
-                }
-
-                return result;
-            };
-
-            if (cNode) {
-                nodeDescriptor.ID = gmeID;
-                nodeDescriptor.GUID = cNode.getGuid();
-                nodeDescriptor.ParentID = cNode.getParentId();
-
-                nodeDescriptor.Attributes = _getNodePropertyValues(cNode, "getAttributeNames", "getAttribute");
-                nodeDescriptor.Registry = _getNodePropertyValues(cNode, "getRegistryNames", "getRegistry");
-                nodeDescriptor.Pointers = _getPointerInfo(cNode);
+            while (--len >= 0) {
+                result[attrNames[len]] = node[propValueFn](attrNames[len]);
             }
 
-            return nodeDescriptor;
+            return result;
+        };
+
+        _getPointerInfo = function (node) {
+            var result = {},
+                availablePointers = node.getPointerNames(),
+                len = availablePointers.length;
+
+            while (len--) {
+                result[availablePointers[len]] = node.getPointer(availablePointers[len]);
+            }
+
+            return result;
+        };
+
+        if (cNode) {
+            nodeDescriptor.ID = gmeID;
+            nodeDescriptor.GUID = cNode.getGuid();
+            nodeDescriptor.ParentID = cNode.getParentId();
+
+            nodeDescriptor.Attributes = _getNodePropertyValues(cNode, 'getAttributeNames', 'getAttribute');
+            nodeDescriptor.Registry = _getNodePropertyValues(cNode, 'getRegistryNames', 'getRegistry');
+            nodeDescriptor.Pointers = _getPointerInfo(cNode);
+        }
+
+        return nodeDescriptor;
     };
 
     GridPanelContainmentControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {

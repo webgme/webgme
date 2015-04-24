@@ -1,5 +1,9 @@
-/*globals define, WebGMEGlobal, require*/
+/*globals define*/
+/*jshint browser: true, node:true*/
+
 /**
+ * Client module for creating, monitoring executor jobs.
+ *
  * @author lattmann / https://github.com/lattmann
  * @author ksmyth / https://github.com/ksmyth
  */
@@ -10,8 +14,8 @@ define(['superagent'], function (superagent) {
 
     var ExecutorClient = function (parameters) {
         parameters = parameters || {};
-        this.isNodeJS = (typeof window === 'undefined') && (typeof process === "object");
-        this.isNodeWebkit = (typeof window === 'object') && (typeof process === "object");
+        this.isNodeJS = (typeof window === 'undefined') && (typeof process === 'object');
+        this.isNodeWebkit = (typeof window === 'object') && (typeof process === 'object');
         //console.log(isNode);
         if (this.isNodeJS) {
             this.server = '127.0.0.1';
@@ -28,7 +32,8 @@ define(['superagent'], function (superagent) {
             this.executorUrl = (this.httpsecure ? 'https://' : 'http://') + this.server + ':' + this.serverPort;
         }
         // TODO: TOKEN???
-        this.executorUrl = this.executorUrl + '/rest/executor/'; // TODO: any ways to ask for this or get it from the configuration?
+        // TODO: any ways to ask for this or get it from the configuration?
+        this.executorUrl = this.executorUrl + '/rest/executor/';
         if (parameters.executorNonce) {
             this.executorNonce = parameters.executorNonce;
         }
@@ -68,14 +73,16 @@ define(['superagent'], function (superagent) {
     };
 
     ExecutorClient.prototype.updateJob = function (jobInfo, callback) {
-        this.sendHttpRequestWithData('POST', this.executorUrl + 'update/' + jobInfo.hash, jobInfo, function (err, response) {
-            if (err) {
-                callback(err);
-                return;
-            }
+        this.sendHttpRequestWithData('POST', this.executorUrl + 'update/' + jobInfo.hash, jobInfo,
+            function (err, response) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-            callback(null, response);
-        });
+                callback(null, response);
+            }
+        );
     };
 
     ExecutorClient.prototype.getInfo = function (hash, callback) {

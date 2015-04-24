@@ -1,31 +1,40 @@
-"use strict";
+/*globals define, _, $*/
+/*jshint browser: true*/
 
-define(['js/Constants',
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define([
+    'js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/PartBrowser/PartBrowserWidget.DecoratorBase',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!../Core/ModelDecorator.html',
     '../Core/ModelDecorator.Core',
-    'css!./ModelDecorator.PartBrowserWidget.css'], function (CONSTANTS,
-                                                       nodePropertyNames,
-                                                       PartBrowserWidgetDecoratorBase,
-                                                       DiagramDesignerWidgetConstants,
-                                                       modelDecoratorTemplate,
-                                                       ModelDecoratorCore) {
+    'css!./ModelDecorator.PartBrowserWidget.css'
+], function (CONSTANTS,
+             nodePropertyNames,
+             PartBrowserWidgetDecoratorBase,
+             DiagramDesignerWidgetConstants,
+             modelDecoratorTemplate,
+             ModelDecoratorCore) {
+
+    'use strict';
 
     var ModelDecoratorPartBrowserWidget,
-        DECORATOR_ID = "ModelDecoratorPartBrowserWidget";
+        DECORATOR_ID = 'ModelDecoratorPartBrowserWidget';
 
 
     ModelDecoratorPartBrowserWidget = function (options) {
-        var opts = _.extend( {}, options);
+        var opts = _.extend({}, options);
 
         PartBrowserWidgetDecoratorBase.apply(this, [opts]);
         ModelDecoratorCore.apply(this, [opts]);
 
-        this._initializeVariables({"connectors": false});
+        this._initializeVariables({connectors: false});
 
-        this.logger.debug("ModelDecoratorPartBrowserWidget ctor");
+        this.logger.debug('ModelDecoratorPartBrowserWidget ctor');
     };
 
 

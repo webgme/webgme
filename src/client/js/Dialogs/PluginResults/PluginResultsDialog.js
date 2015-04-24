@@ -1,41 +1,43 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
-
+/*globals define, $, WebGMEGlobal, console*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-
 define(['js/util',
     'blob/BlobClient',
     'text!./templates/PluginResultsDialog.html',
-    'css!./styles/PluginResultsDialog.css'], function (clientUtil,
-                                                                     BlobClient,
-                                                                     pluginResultsDialogTemplate) {
+    'css!./styles/PluginResultsDialog.css'
+], function (clientUtil,
+             BlobClient,
+             pluginResultsDialogTemplate) {
 
-    "use strict";
+    'use strict';
 
     var PluginResultsDialog,
-        PLUGIN_RESULT_ENTRY_BASE = $('<div/>', { 'class': 'plugin-result' }),
+        PLUGIN_RESULT_ENTRY_BASE = $('<div/>', {class: 'plugin-result'}),
         PLUGIN_RESULT_HEADER_BASE = $('<div class="alert"></div>'),
         RESULT_SUCCESS_CLASS = 'alert-success',
-        RESULT_ERROR_CLASS  = 'alert-danger',
+        RESULT_ERROR_CLASS = 'alert-danger',
         ICON_SUCCESS = $('<i class="glyphicon glyphicon-ok glyphicon glyphicon-ok"/>'),
         ICON_ERROR = $('<i class="glyphicon glyphicon-warning-sign glyphicon glyphicon-warning-sign"/>'),
-        RESULT_NAME_BASE = $('<span/>', { 'class': 'title' }),
-        RESULT_TIME_BASE = $('<span/>', { 'class': 'time' }),
+        RESULT_NAME_BASE = $('<span/>', {class: 'title'}),
+        RESULT_TIME_BASE = $('<span/>', {class: 'time'}),
         RESULT_DETAILS_BTN_BASE = $('<span class="btn btn-micro btn-details pull-right">Details</span>'),
-        RESULT_DETAILS_BASE = $('<div/>', {'class': 'messages collapse'}),
+        RESULT_DETAILS_BASE = $('<div/>', {class: 'messages collapse'}),
         MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>'),
         MESSAGE_ENTRY_NODE_BTN_BASE = $('<span class="btn btn-micro btn-node pull-right">Show node</span>'),
+    //jscs:disable maximumLineLength
         RESULT_ARTIFACTS_BASE = $('<div class="artifacts collapse"><div class="artifacts-title">Generated artifacts</div><div class="artifacts-body"><ul></ul></div></div>'),
+    //jscs:enable maximumLineLength
         ARTIFACT_ENTRY_BASE = $('<li><a href="#" target="_blank">Loading...</a></li>'),
         MESSAGE_PREFIX = 'Message #';
 
     PluginResultsDialog = function () {
     };
 
-    PluginResultsDialog.prototype.show = function (client,pluginResults) {
+    PluginResultsDialog.prototype.show = function (client, pluginResults) {
         var self = this;
 
         this._dialog = $(pluginResultsDialogTemplate);
@@ -72,9 +74,31 @@ define(['js/util',
             artifacts,
             artifactsUL,
             artifactEntry,
-            artifactEntryA;
+            artifactEntryA,
+            i,
+            pluginName,
+            pluginTime,
+            blobClient,
+            addArtifactUL;
 
-        for (var i = 0; i < pluginResults.length; i += 1) {
+        addArtifactUL = function (hash, ulE, bc) {
+            bc.getArtifact(hash, function (err, artifact) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+
+                artifactEntry = ARTIFACT_ENTRY_BASE.clone();
+                artifactEntryA = artifactEntry.find('a');
+                //TODO: set the correct URL here
+                artifactEntryA.attr('href', (new BlobClient()).getDownloadURL(hash));
+                //TODO: set the correct link text here
+                artifactEntryA.text(artifact.name);
+                ulE.append(artifactEntry);
+            });
+        };
+
+        for (i = 0; i < pluginResults.length; i += 1) {
             result = pluginResults[i];
 
             resultEntry = PLUGIN_RESULT_ENTRY_BASE.clone();
@@ -93,12 +117,13 @@ define(['js/util',
                 resultHeader.append(ICON_ERROR.clone());
             }
 
-            var pluginName = result.getPluginName ? result.getPluginName() : 'PluginName N/A';
+            pluginName = result.getPluginName ? result.getPluginName() : 'PluginName N/A';
             spanResultTitle = RESULT_NAME_BASE.clone();
             spanResultTitle.text(pluginName);
             resultHeader.append(spanResultTitle);
 
-            var pluginTime = result.getFinishTime ? clientUtil.formattedDate(new Date(result.getFinishTime()), 'elapsed') : 'Time: N/A';
+            pluginTime = result.getFinishTime ? clientUtil.formattedDate(new Date(result.getFinishTime()),
+                'elapsed') : 'Time: N/A';
             spanResultTime = RESULT_TIME_BASE.clone();
             spanResultTime.text(pluginTime);
             resultHeader.append(spanResultTime);
@@ -111,42 +136,26 @@ define(['js/util',
 
             for (j = 0; j < messages.length; j += 1) {
                 messageEntry = MESSAGE_ENTRY_BASE.clone();
-                messageEntry.find('.msg-title').text(MESSAGE_PREFIX + (j+1));
-                if(messages[j].activeNode.id){
+                messageEntry.find('.msg-title').text(MESSAGE_PREFIX + (j + 1));
+                if (messages[j].activeNode.id) {
                     messageEntryBtn = MESSAGE_ENTRY_NODE_BTN_BASE.clone();
                     messageEntry.append(messageEntryBtn);
                     messageEntry.find('.btn-node').attr('node-result-details', JSON.stringify(messages[j]));
                 }
-                //messageEntry.find('.msg-body').html(JSON.stringify(messages[j], 0, 2).replace(/\n/g, '<br/>').replace(/  /g, '&nbsp;&nbsp;'));
                 messageEntry.find('.msg-body').html(messages[j].message);
                 messageContainer.append(messageEntry);
             }
 
             artifactsContainer = undefined;
 
-            var blobClient = new BlobClient();
+            blobClient = new BlobClient();
 
             artifacts = result.getArtifacts();
             if (artifacts.length > 0) {
                 artifactsContainer = RESULT_ARTIFACTS_BASE.clone();
                 artifactsUL = artifactsContainer.find('ul');
                 for (j = 0; j < artifacts.length; j += 1) {
-                    (function(hash, ulE) {
-                        blobClient.getArtifact(hash, function (err, artifact) {
-                            if (err) {
-                                console.error(err);
-                                return;
-                            }
-
-                            artifactEntry = ARTIFACT_ENTRY_BASE.clone();
-                            artifactEntryA = artifactEntry.find('a');
-                            //TODO: set the correct URL here
-                            artifactEntryA.attr('href', (new BlobClient()).getDownloadURL(hash));
-                            //TODO: set the correct link text here
-                            artifactEntryA.text(artifact.name);
-                            ulE.append(artifactEntry);
-                        });
-                    })(artifacts[j], artifactsUL);
+                    addArtifactUL(artifacts[j], artifactsUL, blobClient);
                 }
             }
 
@@ -178,14 +187,14 @@ define(['js/util',
             event.preventDefault();
         });
 
-        dialog.on('click','.btn-node', function(event){
+        dialog.on('click', '.btn-node', function (/* event */) {
             var nodeBtn = $(this),
                 resultEntry = JSON.parse(nodeBtn.attr('node-result-details')),
                 node = client.getNode(resultEntry.activeNode.id),
                 parentId = node ? node.getParentId() : null;
 
             //TODO maybe this could be done in a more nicer way
-            if(typeof parentId === 'string'){
+            if (typeof parentId === 'string') {
                 WebGMEGlobal.State.registerActiveObject(parentId);
                 WebGMEGlobal.State.registerActiveSelection([resultEntry.activeNode.id]);
             } else {

@@ -1,4 +1,8 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true */
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
@@ -9,14 +13,14 @@ define(['js/PanelBase/PanelBaseWithHeader',
              MetaEditorWidget,
              MetaEditorControl) {
 
-    "use strict";
+    'use strict';
 
     var MetaEditorPanel;
 
     MetaEditorPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "MetaEditorPanel";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'MetaEditorPanel';
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
         //call parent's constructor
@@ -27,7 +31,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("MetaEditorPanel ctor finished");
+        this.logger.debug('MetaEditorPanel ctor finished');
     };
 
     //inherit from PanelBaseWithHeader
@@ -44,7 +48,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
         this.widget = new MetaEditorWidget(this.$el, {'toolBar': this.toolBar});
 
-        this.widget.setTitle = function (title) {
+        this.widget.setTitle = function (/* title */) {
             //self.setTitle(title);
         };
 
@@ -53,8 +57,10 @@ define(['js/PanelBase/PanelBaseWithHeader',
             WebGMEGlobal.KeyboardManager.setListener(self.widget);
         };
 
-        this.control = new MetaEditorControl({"client": this._client,
-            "widget": this.widget});
+        this.control = new MetaEditorControl({
+            client: this._client,
+            widget: this.widget
+        });
 
         this.onActivate();
     };
@@ -72,7 +78,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
     MetaEditorPanel.prototype.onResize = function (width, height) {
         this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
         this.widget.onWidgetContainerResize(width, height);
-   };
+    };
 
     MetaEditorPanel.prototype.destroy = function () {
         this.control.destroy();

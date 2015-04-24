@@ -38,28 +38,27 @@ describe('Core IntraPersist', function () {
         project = null;
 
 
-    describe('Pre', function () {
-        it('import the basic project', function (done) {
-            testFixture.importProject({
-                filePath: './test/asset/intraPersist.json',
-                projectName: 'coreIntrapersistTest',
-                gmeConfig: gmeConfig
-            }, function (err, result) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                storage = result.storage;
-                project = result.project;
-                core = result.core;
-                root = result.root;
-                commit = result.commitHash;
-                baseCommit = result.commitHash;
-                rootHash = core.getHash(root);
-                done();
-            });
+    before(function (done) {
+        testFixture.importProject({
+            filePath: 'test/common/core/core/intraPersist.json',
+            projectName: 'coreIntrapersistTest',
+            gmeConfig: gmeConfig
+        }, function (err, result) {
+            if (err) {
+                done(err);
+                return;
+            }
+            storage = result.storage;
+            project = result.project;
+            core = result.core;
+            root = result.root;
+            commit = result.commitHash;
+            baseCommit = result.commitHash;
+            rootHash = core.getHash(root);
+            done();
         });
     });
+
     describe('SimpleChanges', function () {
         var e1NodePath = '/1736622193/1271963336',
             e1NodePrimePath = '/1710723537/1271963336',

@@ -1,30 +1,38 @@
-"use strict";
+/*globals define, _, $*/
+/*jshint browser: true*/
 
-define(['js/Constants',
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define([
+    'js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/PartBrowser/PartBrowserWidget.DecoratorBase',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     '../Core/CircleDecorator.Core',
     'text!../Core/CircleDecorator.html',
-    'css!./CircleDecorator.PartBrowserWidget.css'], function (CONSTANTS,
-                                                          nodePropertyNames,
-                                                          PartBrowserWidgetDecoratorBase,
-                                                          DiagramDesignerWidgetConstants,
-                                                          CircleDecoratorCore,
-                                                          circleDecoratorTemplate) {
+    'css!./CircleDecorator.PartBrowserWidget.css'
+], function (CONSTANTS,
+             nodePropertyNames,
+             PartBrowserWidgetDecoratorBase,
+             DiagramDesignerWidgetConstants,
+             CircleDecoratorCore,
+             circleDecoratorTemplate) {
 
+    'use strict';
     var CircleDecoratorPartBrowserWidget,
-        DECORATOR_ID = "CircleDecoratorPartBrowserWidget";
+        DECORATOR_ID = 'CircleDecoratorPartBrowserWidget';
 
     CircleDecoratorPartBrowserWidget = function (options) {
-        var opts = _.extend( {}, options);
+        var opts = _.extend({}, options);
 
         PartBrowserWidgetDecoratorBase.apply(this, [opts]);
         CircleDecoratorCore.apply(this, [opts]);
 
-        this._initializeVariables({"connectors": false});
+        this._initializeVariables({connectors: false});
 
-        this.logger.debug("CircleDecoratorPartBrowserWidget ctor");
+        this.logger.debug('CircleDecoratorPartBrowserWidget ctor');
     };
 
     /************************ INHERITANCE *********************/
@@ -70,7 +78,7 @@ define(['js/Constants',
 
             var shift = (this.circleSize - nameWidth) / 2;
 
-            this.skinParts.$name.css({ "left": shift });
+            this.skinParts.$name.css({left: shift});
         }
     };
 

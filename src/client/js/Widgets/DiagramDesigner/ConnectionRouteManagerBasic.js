@@ -1,11 +1,16 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, WebGMEGlobal*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger'], function (Logger) {
 
-    "use strict";
+    'use strict';
 
     var ConnectionRouteManagerBasic,
-        DESIGNERITEM_SUBCOMPONENT_SEPARATOR = "_x_";
+        DESIGNERITEM_SUBCOMPONENT_SEPARATOR = '_x_';
 
     ConnectionRouteManagerBasic = function (options) {
         var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:ConnectionRouteManagerBasic';
@@ -14,11 +19,11 @@ define(['js/logger'], function (Logger) {
         this.diagramDesigner = options ? options.diagramDesigner : null;
 
         if (this.diagramDesigner === undefined || this.diagramDesigner === null) {
-            this.logger.error("Trying to initialize a ConnectionRouteManagerBasic without a canvas...");
-            throw ("ConnectionRouteManagerBasic can not be created");
+            this.logger.error('Trying to initialize a ConnectionRouteManagerBasic without a canvas...');
+            throw ('ConnectionRouteManagerBasic can not be created');
         }
 
-        this.logger.debug("ConnectionRouteManagerBasic ctor finished");
+        this.logger.debug('ConnectionRouteManagerBasic ctor finished');
     };
 
     ConnectionRouteManagerBasic.prototype.initialize = function () {
@@ -64,7 +69,7 @@ define(['js/logger'], function (Logger) {
         this.endpointConnectionAreaInfo = {};
 
         //first update the available connection endpoint coordinates
-        while(i--) {
+        while (i--) {
             connId = idList[i];
             srcObjId = canvas.connectionEndIDs[connId].srcObjId;
             srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId;
@@ -78,7 +83,8 @@ define(['js/logger'], function (Logger) {
         }
     };
 
-    ConnectionRouteManagerBasic.prototype._getEndpointConnectionAreas = function (objId, subCompId, isEnd, connectionMetaInfo) {
+    ConnectionRouteManagerBasic.prototype._getEndpointConnectionAreas = function (objId, subCompId, isEnd,
+                                                                                  connectionMetaInfo) {
         var longid = subCompId ? objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId : objId,
             res,
             canvas = this.diagramDesigner,
@@ -90,15 +96,18 @@ define(['js/logger'], function (Logger) {
             this.endpointConnectionAreaInfo[longid] = [];
 
             if (subCompId === undefined ||
-               (subCompId !== undefined && this.diagramDesigner._itemSubcomponentsMap[objId] && this.diagramDesigner._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
+                (subCompId !== undefined && this.diagramDesigner._itemSubcomponentsMap[objId] &&
+                this.diagramDesigner._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
 
                 designerItem = canvas.items[objId];
                 res = designerItem.getConnectionAreas(subCompId, isEnd, connectionMetaInfo) || [];
 
                 j = res.length;
                 while (j--) {
-                    this.endpointConnectionAreaInfo[longid].push({"x": res[j].x1 + (res[j].x2 - res[j].x1) / 2,
-                        "y": res[j].y1 + (res[j].y2 - res[j].y1) / 2});
+                    this.endpointConnectionAreaInfo[longid].push({
+                        x: res[j].x1 + (res[j].x2 - res[j].x1) / 2,
+                        y: res[j].y1 + (res[j].y2 - res[j].y1) / 2
+                    });
                 }
 
             }
@@ -128,9 +137,11 @@ define(['js/logger'], function (Logger) {
             if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
                 //connection's source and destination is the same object/port
                 sourceCoordinates = sourceConnectionPoints[0];
-                targetCoordinates = targetConnectionPoints.length > 1 ? targetConnectionPoints[1] : targetConnectionPoints[0];
+                targetCoordinates = targetConnectionPoints.length > 1 ?
+                    targetConnectionPoints[1] : targetConnectionPoints[0];
             } else {
-                closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints, segmentPoints);
+                closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints,
+                    segmentPoints);
                 sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
                 targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
             }
@@ -142,20 +153,28 @@ define(['js/logger'], function (Logger) {
             if (segmentPoints && segmentPoints.length > 0) {
                 len = segmentPoints.length;
                 for (i = 0; i < len; i += 1) {
-                    connectionPathPoints.push({ "x": segmentPoints[i][0],
-                        "y": segmentPoints[i][1]});
+                    connectionPathPoints.push({
+                        x: segmentPoints[i][0],
+                        y: segmentPoints[i][1]
+                    });
                 }
             } else {
                 if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
                     //self connection, insert fake points
-                    connectionPathPoints.push({"x": sourceCoordinates.x + 100,
-                                               "y": sourceCoordinates.y - 100});
+                    connectionPathPoints.push({
+                        x: sourceCoordinates.x + 100,
+                        y: sourceCoordinates.y - 100
+                    });
 
-                    connectionPathPoints.push({"x": sourceCoordinates.x + 200,
-                        "y": sourceCoordinates.y});
+                    connectionPathPoints.push({
+                        x: sourceCoordinates.x + 200,
+                        y: sourceCoordinates.y
+                    });
 
-                    connectionPathPoints.push({"x": sourceCoordinates.x + 100,
-                        "y": sourceCoordinates.y + 100});
+                    connectionPathPoints.push({
+                        x: sourceCoordinates.x + 100,
+                        y: sourceCoordinates.y + 100
+                    });
                 }
             }
 
@@ -167,7 +186,8 @@ define(['js/logger'], function (Logger) {
     };
 
     //figure out the shortest side to choose between the two
-    ConnectionRouteManagerBasic.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints, segmentPoints) {
+    ConnectionRouteManagerBasic.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints,
+                                                                        segmentPoints) {
         var i,
             j,
             dx,
@@ -180,13 +200,18 @@ define(['js/logger'], function (Logger) {
         if (segmentPoints && segmentPoints.length > 0) {
             for (i = 0; i < srcConnectionPoints.length; i += 1) {
                 for (j = 0; j < tgtConnectionPoints.length; j += 1) {
-                    dx = { "src": Math.abs(srcConnectionPoints[i].x - segmentPoints[0][1]),
-                        "tgt": Math.abs(tgtConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])};
+                    dx = {
+                        src: Math.abs(srcConnectionPoints[i].x - segmentPoints[0][1]),
+                        tgt: Math.abs(tgtConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])
+                    };
 
-                    dy =  { "src": Math.abs(srcConnectionPoints[i].y - segmentPoints[0][1]),
-                        "tgt": Math.abs(tgtConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1][1])};
+                    dy = {
+                        src: Math.abs(srcConnectionPoints[i].y - segmentPoints[0][1]),
+                        tgt: Math.abs(tgtConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1][1])
+                    };
 
-                    cLength = Math.sqrt(dx.src * dx.src + dy.src * dy.src) + Math.sqrt(dx.tgt * dx.tgt + dy.tgt * dy.tgt);
+                    cLength = Math.sqrt(dx.src * dx.src + dy.src * dy.src) +
+                    Math.sqrt(dx.tgt * dx.tgt + dy.tgt * dy.tgt);
 
                     if (minLength === -1 || minLength > cLength) {
                         minLength = cLength;

@@ -1,3 +1,6 @@
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 @import "../../../../js/Widgets/DiagramDesigner/styles/Connector";
 
 $min-width: 90px;
@@ -93,7 +96,7 @@ $abstract-class-name-color: #AAAAAA;
     font-size: 10px;
     cursor: pointer;
     position: absolute;
-    top: 0px;
+    top: 0;
     left: 3px;
 
     &:hover {
@@ -155,7 +158,7 @@ $abstract-class-name-color: #AAAAAA;
 
   &.abstract {
     .name {
-      font-style:italic;
+      font-style: italic;
       color: $abstract-class-name-color;
     }
   }

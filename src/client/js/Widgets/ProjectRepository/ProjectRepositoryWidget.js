@@ -1,4 +1,5 @@
-/*globals define, Raphael*/
+/*globals define, Raphael, WebGMEGlobal, $*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -11,21 +12,18 @@ define(['js/logger',
     './ProjectRepositoryWidgetControl',
     'moment',
     'raphaeljs',
-    'css!./styles/ProjectRepositoryWidget.css'],
-        function (
-            Logger,
-            util,
-            LoaderCircles,
-            ProjectRepositoryWidgetControl,
-            moment
-    ) {
-
-    "use strict";
+    'css!./styles/ProjectRepositoryWidget.css'
+], function (Logger,
+             util,
+             LoaderCircles,
+             ProjectRepositoryWidgetControl,
+             moment) {
+    'use strict';
 
     var ProjectRepositoryWidget,
         MASTER_BRANCH_NAME = 'master',
         REPOSITORY_LOG_VIEW_CLASS = 'project-repository-widget',
-        SHOW_MORE_BUTTON_TEXT = "Show more...",
+        SHOW_MORE_BUTTON_TEXT = 'Show more...',
         COMMIT_PACKAGE_COUNT = 100,
         COMMIT_DATA = 'commitData',
         COMMIT_CLASS = 'commit',
@@ -44,24 +42,25 @@ define(['js/logger',
         BTN_LOAD_COMMIT_CLASS = 'btnLoadCommit',
         COMMIT_IT = 'commitId',
         MESSAGE_DIV_CLASS = 'commit-message',
-        BRANCH_REGEXP = new RegExp("^[0-9a-zA-Z_]*$"); //TODO these kind of rules should be at some centralized point
+        BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$'); //TODO these kind of rules should be at some centralized point
 
     ProjectRepositoryWidget = function (container, client, params) {
+        var commitCount = 'commit_count';
         this._el = container;
 
         this.clear();
         this._initializeUI();
 
-        if (params && params.commit_count) {
-            COMMIT_PACKAGE_COUNT = params.commit_count;
+        if (params && params[commitCount]) {
+            COMMIT_PACKAGE_COUNT = params[commitCount];
         }
 
         //attach its controller
         new ProjectRepositoryWidgetControl(client, this);
 
-        this._logger = Logger.create("gme:Widgets:ProjectRepository:ProjectRepositoryWidget",
+        this._logger = Logger.create('gme:Widgets:ProjectRepository:ProjectRepositoryWidget',
             WebGMEGlobal.gmeConfig.client.log);
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     ProjectRepositoryWidget.prototype.clear = function () {
@@ -85,13 +84,15 @@ define(['js/logger',
         this._el.empty();
 
         //detach event handlers
-        this._el.off("click");
-        this._el.off("keyup");
+        this._el.off('click');
+        this._el.off('keyup');
 
-        this._el.parent().css({"width": "",
-            "margin-left": "",
-            "margin-top": "",
-            "top": ""});
+        this._el.parent().css({
+            width: '',
+            'margin-left': '',
+            'margin-top': '',
+            top: ''
+        });
     };
 
     ProjectRepositoryWidget.prototype.destroy = function () {
@@ -110,11 +111,13 @@ define(['js/logger',
     ProjectRepositoryWidget.prototype.addCommit = function (obj) {
         var idx = this._orderedCommitIds.push(obj.id) - 1;
 
-        this._commits.push({"x": -1,
-            "y": -1,
-            "id": obj.id,
-            "commitData": obj,
-            "ui": undefined});
+        this._commits.push({
+            x: -1,
+            y: -1,
+            id: obj.id,
+            commitData: obj,
+            ui: undefined
+        });
 
         this._calculatePositionForCommit(idx);
     };
@@ -144,19 +147,20 @@ define(['js/logger',
     /******************* PUBLIC API TO BE OVERRIDDEN IN THE CONTROLLER **********************/
 
     ProjectRepositoryWidget.prototype.onLoadMoreCommits = function (num) {
-        this._logger.warn("onLoadMoreCommits is not overridden in Controller...num: '" + num + "'");
+        this._logger.warn('onLoadMoreCommits is not overridden in Controller...num: \'' + num + '\'');
     };
 
     ProjectRepositoryWidget.prototype.onLoadCommit = function (params) {
-        this._logger.warn("onLoadCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
+        this._logger.warn('onLoadCommit is not overridden in Controller...params: \'' + JSON.stringify(params) + '\'');
     };
 
     ProjectRepositoryWidget.prototype.onDeleteBranchClick = function (branch) {
-        this._logger.warn("onDeleteBranchClick is not overridden in Controller...branch: '" + branch + "'");
+        this._logger.warn('onDeleteBranchClick is not overridden in Controller...branch: \'' + branch + '\'');
     };
 
     ProjectRepositoryWidget.prototype.onCreateBranchFromCommit = function (params) {
-        this._logger.warn("onCreateBranchFromCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
+        this._logger.warn('onCreateBranchFromCommit is not overridden in Controller...params: \'' +
+            JSON.stringify(params) + '\'');
     };
 
     /******************* PRIVATE API *****************************/
@@ -171,14 +175,15 @@ define(['js/logger',
         this._el.addClass(REPOSITORY_LOG_VIEW_CLASS);
 
         //initialize all containers
-        this._cMessageStyle = $('<style/>', {"type": "text/css"});
+        this._cMessageStyle = $('<style/>', {type: 'text/css'});
         this._cMessageStyle.html(ProjectRepositoryWidget.cMessageStyleStr.replace('__MW__', '400'));
         this._el.append(this._cMessageStyle);
 
         /*table layout*/
-        this._table = $('<table/>', {"class": "table table-hover user-select-on commit-list"});
+        this._table = $('<table/>', {class: 'table table-hover user-select-on commit-list'});
         this._tHead = $('<thead/>');
-        this._tHead.append($('<tr><th>Graph</th><th>Actions</th><th>Commit</th><th>Message</th><th>User</th><th>Time</th></tr>'));
+        this._tHead.append($('<tr><th>Graph</th><th>Actions</th><th>Commit</th>' +
+            '<th>Message</th><th>User</th><th>Time</th></tr>'));
         this._tBody = $('<tbody/>');
 
         this._table.append(this._tHead).append(this._tBody);
@@ -193,18 +198,18 @@ define(['js/logger',
 
         //generate container for 'show more' button and progress bar
         this._showMoreContainer = $('<div/>', {
-            "class" : "show-more"
+            class: 'show-more'
         });
 
         this._el.append(this._showMoreContainer);
 
-        this._loader = new LoaderCircles({"containerElement": this._showMoreContainer});
+        this._loader = new LoaderCircles({containerElement: this._showMoreContainer});
         this._loader.setSize(30);
 
         //show more button
         this._btnShowMore = $('<a/>', {
-            "class": "",
-            "href": "#"
+            class: '',
+            href: '#'
         });
 
         this._btnShowMore.append(SHOW_MORE_BUTTON_TEXT);
@@ -213,31 +218,31 @@ define(['js/logger',
 
         //generate COMMITS container
         this._commitsContainer = $('<div/>', {
-            "class" : "commits",
+            class: 'commits',
             /*"id": "commits",*/
-            "tabindex": 0
+            tabindex: 0
         });
 
         this._el.append(this._commitsContainer);
 
-        this._svgPaper = Raphael(this._commitsContainer[0]);
-        this._svgPaper.canvas.style.pointerEvents = "visiblePainted";
-        this._svgPaper.setSize("100%", "1px");
-        $(this._svgPaper.canvas).css({"top": "0"});
+        this._svgPaper = Raphael(this._commitsContainer[0]); //jshint ignore: line
+        this._svgPaper.canvas.style.pointerEvents = 'visiblePainted';
+        this._svgPaper.setSize('100%', '1px');
+        $(this._svgPaper.canvas).css({top: '0'});
 
         this._generateSVGGradientDefinition();
 
         /*********** HOOK UP EVENT HANDLERS ***********/
-        this._el.on("click." + BTN_LOAD_COMMIT_CLASS, "." + BTN_LOAD_COMMIT_CLASS, function () {
+        this._el.on('click.' + BTN_LOAD_COMMIT_CLASS, '.' + BTN_LOAD_COMMIT_CLASS, function () {
             var btn = $(this),
                 commitId = btn.data(COMMIT_IT);
 
-            self.onLoadCommit({"id": commitId});
+            self.onLoadCommit({id: commitId});
         });
 
-        this._el.on("click.iconRemove", ".remove-branch-button", function (event) {
+        this._el.on('click.iconRemove', '.remove-branch-button', function (event) {
             var btn = $(this),
-                branch = btn.data("branch");
+                branch = btn.data('branch');
 
             self.onDeleteBranchClick(branch);
 
@@ -252,8 +257,8 @@ define(['js/logger',
         });
 
 
-        this._el.off("click.btnCreateBranchFromCommit", ".btnCreateBranchFromCommit");
-        this._el.on("click.btnCreateBranchFromCommit", ".btnCreateBranchFromCommit", function () {
+        this._el.off('click.btnCreateBranchFromCommit', '.btnCreateBranchFromCommit');
+        this._el.on('click.btnCreateBranchFromCommit', '.btnCreateBranchFromCommit', function () {
             self._onCreateBranchFromCommitButtonClick($(this));
         });
     };
@@ -334,19 +339,21 @@ define(['js/logger',
         }
 
         //draw the commit points
-        for (i = idx ; i < len; i += 1) {
+        for (i = idx; i < len; i += 1) {
             cCommit = this._commits[i];
             if (cCommit.ui) {
                 cCommit.ui.remove();
             }
-            cCommit.ui = this._createItem({"x": cCommit.x,
-                "y": cCommit.y,
-                "id": cCommit.id,
-                "parents": cCommit[COMMIT_DATA].parents,
-                "branch": cCommit[COMMIT_DATA].branch,
-                "user": cCommit[COMMIT_DATA].user,
-                "timestamp": cCommit[COMMIT_DATA].timestamp,
-                "message": cCommit[COMMIT_DATA].message});
+            cCommit.ui = this._createItem({
+                x: cCommit.x,
+                y: cCommit.y,
+                id: cCommit.id,
+                parents: cCommit[COMMIT_DATA].parents,
+                branch: cCommit[COMMIT_DATA].branch,
+                user: cCommit[COMMIT_DATA].user,
+                timestamp: cCommit[COMMIT_DATA].timestamp,
+                message: cCommit[COMMIT_DATA].message
+            });
         }
 
         this._renderIndex = i;
@@ -361,7 +368,7 @@ define(['js/logger',
         this._nonExistingParentPaths = [];
 
         //draw the connections
-        for (i = 0 ; i < len; i += 1) {
+        for (i = 0; i < len; i += 1) {
             cCommit = this._commits[i];
 
             //draw lines to parents
@@ -403,8 +410,9 @@ define(['js/logger',
 
             while (len--) {
                 idx = this._orderedCommitIds.indexOf(this._branches[len].commitId);
-                if ( idx !== -1 ) {
-                    this._applyBranchHeaderLabel(this._commits[idx], this._branches[len].name, this._branches[len].sync);
+                if (idx !== -1) {
+                    this._applyBranchHeaderLabel(this._commits[idx],
+                        this._branches[len].name, this._branches[len].sync);
                 }
             }
 
@@ -413,7 +421,8 @@ define(['js/logger',
     };
 
     ProjectRepositoryWidget.prototype._branchLabelDOMBase = $(
-        '<span class="label"><i data-branch="" class="glyphicon glyphicon-remove icon-white remove-branch-button" title="Delete branch"></i></span>'
+        '<span class="label"><i data-branch="" ' +
+        'class="glyphicon glyphicon-remove icon-white remove-branch-button" title="Delete branch"></i></span>'
     );
 
     ProjectRepositoryWidget.prototype._applyBranchHeaderLabel = function (commit, branchName, sync) {
@@ -422,7 +431,7 @@ define(['js/logger',
             div;
 
         label.prepend(branchName);
-        label.find('i').attr("data-branch",branchName);
+        label.find('i').attr('data-branch', branchName);
         label.addClass(BRANCH_LABEL_CLASS);
 
         if (sync === true) {
@@ -471,13 +480,17 @@ define(['js/logger',
     };
 
     ProjectRepositoryWidget.prototype._trDOMBase = $(
-        '<tr><td></td><td class="actions"></td><td class="commit-hash"></td><td class="message-column"><div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
+        '<tr><td></td><td class="actions"></td><td class="commit-hash"></td><td class="message-column">' +
+        '<div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
     );
     ProjectRepositoryWidget.prototype._createBranchBtnDOMBase = $(
-        '<button class="btn btn-default btn-xs btnCreateBranchFromCommit" href="#" title="Create new branch from here"><i class="glyphicon glyphglyphicon glyphicon-edit"></i></button>'
+        '<button class="btn btn-default btn-xs btnCreateBranchFromCommit" ' +
+        'href="#" title="Create new branch from here">' +
+        '<i class="glyphicon glyphglyphicon glyphicon-edit"></i></button>'
     );
     ProjectRepositoryWidget.prototype._loadCommitBtnDOMBase = $('' +
-        '<button class="btn btn-default btn-xs ' + BTN_LOAD_COMMIT_CLASS + '" href="#" title="Load this commit"><i class="glyphicon glyphicon-share"></i></button>'
+        '<button class="btn btn-default btn-xs ' + BTN_LOAD_COMMIT_CLASS + '" href="#" title="Load this commit">' +
+        '<i class="glyphicon glyphicon-share"></i></button>'
     );
 
 
@@ -488,23 +501,25 @@ define(['js/logger',
             firstRow = this._tBody.children().length === 0,
             when;
 
-        itemObj =  $('<div/>', {
-            "class" : COMMIT_CLASS,
-            "data-id": params.id,
-            "data-b": params.branch
+        itemObj = $('<div/>', {
+            class: COMMIT_CLASS,
+            'data-id': params.id,
+            'data-b': params.branch
         });
 
-        itemObj.css({"left": params.x,
-            "top": params.y});
+        itemObj.css({
+            left: params.x,
+            top: params.y
+        });
 
         if (params.actual) {
-            itemObj.addClass("actual");
+            itemObj.addClass('actual');
         }
 
         this._commitsContainer.append(itemObj);
 
-        this._width = Math.max(this._width,  params.x + ITEM_WIDTH);
-        this._height = Math.max(this._height,  params.y + ITEM_HEIGHT);
+        this._width = Math.max(this._width, params.x + ITEM_WIDTH);
+        this._height = Math.max(this._height, params.y + ITEM_HEIGHT);
 
         //generate table row for this guy
         tr = this._trDOMBase.clone();
@@ -517,8 +532,8 @@ define(['js/logger',
 
         when = new Date(parseInt(params.timestamp, 10));
 
-        $(tr[0].cells[this._tableCellCommitIDIndex]).append( params.id.substr(0, 7));
-        $(tr[0].cells[this._tableCellCommitIDIndex]).attr( 'title', params.id);
+        $(tr[0].cells[this._tableCellCommitIDIndex]).append(params.id.substr(0, 7));
+        $(tr[0].cells[this._tableCellCommitIDIndex]).attr('title', params.id);
 
         $(tr[0].cells[this._tableCellMessageIndex]).find('div.' + MESSAGE_DIV_CLASS).text(params.message);
         $(tr[0].cells[this._tableCellUserIndex]).append(params.user || '');
@@ -528,7 +543,7 @@ define(['js/logger',
         );
 
         $(tr[0].cells[this._tableCellTimeStampIndex]).attr(
-            'title', moment( when ).local().format("dddd, MMMM Do YYYY, h:mm:ss a")
+            'title', moment(when).local().format('dddd, MMMM Do YYYY, h:mm:ss a')
         );
 
         //generate 'Create branch from here' button
@@ -583,7 +598,8 @@ define(['js/logger',
             this._commits[idx].ui.addClass(ACTUAL_COMMIT_CLASS);
 
             //remove 'LoadCommit' button from that row
-            $(this._tBody.children()[idx].cells[this._tableCellActionsIndex]).find('.' + BTN_LOAD_COMMIT_CLASS).remove();
+            $(this._tBody.children()[idx].cells[this._tableCellActionsIndex]).
+                find('.' + BTN_LOAD_COMMIT_CLASS).remove();
         }
     };
 
@@ -605,16 +621,16 @@ define(['js/logger',
 
             if (nonVisibleSource === false) {
                 y = srcDesc.y - 2;
-                pathDef = ["M", x, y, "L", x2, y2 ];
+                pathDef = ['M', x, y, 'L', x2, y2];
             } else {
                 //is it the most bottom commit circle??
                 if (y !== dstDesc.y + ITEM_HEIGHT) {
                     //will be drawn as two separate path
                     //send one will be the gradient
-                    pathDef = ["M", x, y - Y_DELTA, "L", x2, y2 ];
+                    pathDef = ['M', x, y - Y_DELTA, 'L', x2, y2];
 
                     //inject fake initial "move to" --> Gradient will be applied
-                    pathDefGradient = [ "M", x - 1, y, "M", x, y, "L", x2, y - Y_DELTA ];
+                    pathDefGradient = ['M', x - 1, y, 'M', x, y, 'L', x2, y - Y_DELTA];
                 }
             }
         } else {
@@ -624,33 +640,33 @@ define(['js/logger',
                 x2 = dstDesc.x + ITEM_WIDTH + 2;
                 y = srcDesc.y - 1;
                 y2 += 1;
-                pathDef = ["M", x, y, "L", x, y2 + LINE_CORNER_SIZE, "L", x - LINE_CORNER_SIZE, y2, "L", x2, y2 ];
+                pathDef = ['M', x, y, 'L', x, y2 + LINE_CORNER_SIZE, 'L', x - LINE_CORNER_SIZE, y2, 'L', x2, y2];
             } else {
                 //from left to right (new branch)
                 x = srcDesc.x + ITEM_WIDTH + 2;
                 y2 = dstDesc.y + ITEM_HEIGHT + 3;
                 y += 1;
-                pathDef = ["M", x, y, "L", x2 - LINE_CORNER_SIZE, y, "L", x2, y - LINE_CORNER_SIZE, "L", x2, y2 ];
+                pathDef = ['M', x, y, 'L', x2 - LINE_CORNER_SIZE, y, 'L', x2, y - LINE_CORNER_SIZE, 'L', x2, y2];
             }
         }
 
 
         if (nonVisibleSource === true) {
             if (pathDef) {
-                path = this._svgPaper.path(pathDef.join(","));
-                path.attr({"stroke": LINE_FILL_COLOR});
+                path = this._svgPaper.path(pathDef.join(','));
+                path.attr({stroke: LINE_FILL_COLOR});
                 this._nonExistingParentPaths.push(path);
             }
 
             if (pathDefGradient) {
-                path = this._svgPaper.path(pathDefGradient.join(","));
+                path = this._svgPaper.path(pathDefGradient.join(','));
 
-                path.node.setAttribute("stroke", "url(#" + NON_EXISTING_PARENT_LINE_GRADIENT_NAME + ")");
+                path.node.setAttribute('stroke', 'url(#' + NON_EXISTING_PARENT_LINE_GRADIENT_NAME + ')');
                 this._nonExistingParentPaths.push(path);
             }
         } else {
-            path = this._svgPaper.path(pathDef.join(","));
-            path.attr({"stroke": LINE_FILL_COLOR});
+            path = this._svgPaper.path(pathDef.join(','));
+            path.attr({stroke: LINE_FILL_COLOR});
         }
     };
 
@@ -667,7 +683,7 @@ define(['js/logger',
         this._generateSVGGradientDefinition();
 
         //set the correct with for the 'Graph' column in the table to fit the drawn graph
-        this._graphPlaceHolder.css("width", contentWidth);
+        this._graphPlaceHolder.css('width', contentWidth);
 
         //make it almost "full screen"
         wW = wW - 2 * WINDOW_PADDING;
@@ -676,7 +692,7 @@ define(['js/logger',
         this._cMessageStyle.html(ProjectRepositoryWidget.cMessageStyleStr.replace('__MW__', wW * 0.66));
 
         tWidth = this._table.width();
-        this._showMoreContainer.css("width", tWidth);
+        this._showMoreContainer.css('width', tWidth);
     };
 
 
@@ -697,22 +713,24 @@ define(['js/logger',
     ProjectRepositoryWidget.prototype._generateSVGGradientDefinition = function () {
         if (!this._svgPaper.canvas.getElementById(NON_EXISTING_PARENT_LINE_GRADIENT_NAME)) {
             //generate gradient color dinamically into SVG
-            var defs = document.createElementNS("http://www.w3.org/2000/svg", 'defs');
-            var linearGradient = document.createElementNS("http://www.w3.org/2000/svg", 'linearGradient');
-            linearGradient.setAttribute("x1", "0%");
-            linearGradient.setAttribute("x2", "0%");
-            linearGradient.setAttribute("y1", "0%");
-            linearGradient.setAttribute("y2", "100%");
-            linearGradient.setAttribute("id", NON_EXISTING_PARENT_LINE_GRADIENT_NAME);
+            var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs'),
+                linearGradient, stop0, stop1;
+
+            linearGradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+            linearGradient.setAttribute('x1', '0%');
+            linearGradient.setAttribute('x2', '0%');
+            linearGradient.setAttribute('y1', '0%');
+            linearGradient.setAttribute('y2', '100%');
+            linearGradient.setAttribute('id', NON_EXISTING_PARENT_LINE_GRADIENT_NAME);
 
 
-            var stop0 = document.createElementNS("http://www.w3.org/2000/svg", 'stop');
-            stop0.setAttribute("offset", "0%");
-            stop0.setAttribute("style", "stop-color: " + LINE_FILL_COLOR);
+            stop0 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+            stop0.setAttribute('offset', '0%');
+            stop0.setAttribute('style', 'stop-color: ' + LINE_FILL_COLOR);
 
-            var stop1 = document.createElementNS("http://www.w3.org/2000/svg", 'stop');
-            stop1.setAttribute("offset", "100%");
-            stop1.setAttribute("style", "stop-color: #FFFFFF");
+            stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+            stop1.setAttribute('offset', '100%');
+            stop1.setAttribute('style', 'stop-color: #FFFFFF');
 
             linearGradient.appendChild(stop0);
             linearGradient.appendChild(stop1);
@@ -725,14 +743,17 @@ define(['js/logger',
 
     ProjectRepositoryWidget.prototype._onCreateBranchFromCommitButtonClick = function (btn) {
         var td = btn.parent(),
+            currentBranchCreateCtrl,
             createBranchHTML = $('<div class="input-group form-group"></div>'),
             txtInput = $('<input class="form-control span2 input-mini" type="text">'),
-            btnSave = $('<button class="btn btn-default btn-xs" type="button" title="Create branch"><i class="glyphicon glyphicon-ok"></i></button>'),
-            btnCancel = $('<button class="btn btn-default btn-xs" type="button" title="Cancel"><i class="glyphicon glyphicon-remove"></i></button>'),
+            btnSave = $('<button class="btn btn-default btn-xs" type="button" title="Create branch">' +
+                '<i class="glyphicon glyphicon-ok"></i></button>'),
+            btnCancel = $('<button class="btn btn-default btn-xs" type="button" title="Cancel">' +
+                '<i class="glyphicon glyphicon-remove"></i></button>'),
             self = this;
 
         //find already displayed branch create control and 'cancel' it
-        var currentBranchCreateCtrl = this._tBody.find('.' + CREATE_BRANCH_EDIT_CONTROL_CLASS + ' > .btn');
+        currentBranchCreateCtrl = this._tBody.find('.' + CREATE_BRANCH_EDIT_CONTROL_CLASS + ' > .btn');
         if (currentBranchCreateCtrl.length !== 0) {
             $(currentBranchCreateCtrl[1]).trigger('click');
         }
@@ -742,7 +763,7 @@ define(['js/logger',
         createBranchHTML.append(txtInput).append(btnSave).append(btnCancel);
 
         //save old content
-        td.children().css("display", "none");
+        td.children().css('display', 'none');
 
         //add control to TD cell
         td.append(createBranchHTML);
@@ -750,18 +771,18 @@ define(['js/logger',
         //on CANCEL don't do anything, revert DOM change
         btnCancel.on('click', function (event) {
             td.find('.' + CREATE_BRANCH_EDIT_CONTROL_CLASS).remove();
-            td.children().css("display", "inline-block");
+            td.children().css('display', 'inline-block');
             event.stopPropagation();
         });
 
-        txtInput.on("keyup", function (event) {
+        txtInput.on('keyup', function (event) {
             var textVal = txtInput.val();
 
-            if (textVal === "" || self._branchNames.indexOf(textVal) !== -1 || !BRANCH_REGEXP.test(textVal)) {
-                createBranchHTML.addClass("has-error");
+            if (textVal === '' || self._branchNames.indexOf(textVal) !== -1 || !BRANCH_REGEXP.test(textVal)) {
+                createBranchHTML.addClass('has-error');
                 btnSave.disable(true);
             } else {
-                createBranchHTML.removeClass("has-error");
+                createBranchHTML.removeClass('has-error');
                 btnSave.disable(false);
             }
 
@@ -785,12 +806,14 @@ define(['js/logger',
         //on SAVE save changes and revert DOM
         btnSave.on('click', function (event) {
             var bName = txtInput.val();
-            if (bName !== "" && self._branchNames.indexOf(bName) === -1 ) {
+            if (bName !== '' && self._branchNames.indexOf(bName) === -1) {
                 td.find('.' + CREATE_BRANCH_EDIT_CONTROL_CLASS).remove();
-                td.children().css("display", "inline-block");
+                td.children().css('display', 'inline-block');
 
-                self.onCreateBranchFromCommit({"commitId": td.find('.btnCreateBranchFromCommit').data(COMMIT_IT),
-                    "name": bName});
+                self.onCreateBranchFromCommit({
+                    commitId: td.find('.btnCreateBranchFromCommit').data(COMMIT_IT),
+                    name: bName
+                });
             }
             event.stopPropagation();
         });

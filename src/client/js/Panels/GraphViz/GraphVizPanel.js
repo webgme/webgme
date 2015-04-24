@@ -1,20 +1,25 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
     'js/Widgets/GraphViz/GraphVizWidget',
-    './GraphVizPanelControl'], function (PanelBaseWithHeader,
-                                         IActivePanel,
-                                            GraphVizWidget,
-                                            GraphVizPanelControl) {
-    "use strict";
+    './GraphVizPanelControl'
+], function (PanelBaseWithHeader,
+             IActivePanel,
+             GraphVizWidget,
+             GraphVizPanelControl) {
+    'use strict';
 
     var GraphVizPanel;
 
     GraphVizPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "GraphVizPanel";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'GraphVizPanel';
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
         //call parent's constructor
@@ -25,7 +30,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("GraphVizPanel ctor finished");
+        this.logger.debug('GraphVizPanel ctor finished');
     };
 
     //inherit from PanelBaseWithHeader
@@ -36,7 +41,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         var self = this;
 
         //set Widget title
-        this.setTitle("");
+        this.setTitle('');
 
         this.widget = new GraphVizWidget(this.$el);
 
@@ -44,8 +49,10 @@ define(['js/PanelBase/PanelBaseWithHeader',
             self.setTitle(title);
         };
 
-        this.control = new GraphVizPanelControl({"client": this._client,
-            "widget": this.widget});
+        this.control = new GraphVizPanelControl({
+            client: this._client,
+            widget: this.widget
+        });
 
         this.onActivate();
     };

@@ -9,8 +9,8 @@ $z-index: 1000;
 #context-menu-layer {
   position: absolute;
   z-index: $z-index;
-  top: 0px;
-  left: 0px;
+  top: 0;
+  left: 0;
   opacity: 0;
   background-color: rgb(0, 0, 0);
   display: block;
@@ -29,7 +29,7 @@ $z-index: 1000;
       font-size: 14px;
     }
   }
-  
+
   &.show {
     display: block;
   }

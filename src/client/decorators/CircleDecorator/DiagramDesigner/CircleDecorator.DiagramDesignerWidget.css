@@ -1,7 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 div.designer-item .circle-decorator {
   position: relative;
@@ -18,8 +19,8 @@ div.designer-item .circle-decorator {
     position: relative; }
   div.designer-item .circle-decorator .circle-shadow {
     position: absolute;
-    top: 0px;
-    left: 0px;
+    top: 0;
+    left: 0;
     display: none;
     width: 11px;
     height: 11px;
@@ -36,8 +37,8 @@ div.designer-item .circle-decorator .connector {
   border: 1px solid blue;
   z-index: 10;
   position: absolute;
-  top: 0px;
-  left: 0px; }
+  top: 0;
+  left: 0; }
   div.designer-item .circle-decorator .connector:hover {
     border-color: rgba(82, 168, 236, 0.8);
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);

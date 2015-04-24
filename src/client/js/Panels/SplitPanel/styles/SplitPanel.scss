@@ -4,7 +4,6 @@
  * Author: Robert Kereskenyi
  */
 
-
 .split-panel {
   //background-color: #FF0000;
   position: absolute;
@@ -21,7 +20,7 @@
   .splitter {
     z-index: 1000;
     background: #DDD;
-    border: 0px solid #BBB;
+    border: 0 solid #BBB;
     position: absolute;
     box-sizing: border-box;
 

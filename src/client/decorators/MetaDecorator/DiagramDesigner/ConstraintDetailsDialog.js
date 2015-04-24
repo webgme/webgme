@@ -1,19 +1,18 @@
-/*globals define, _*/
+/*globals define, $*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 
-"use strict";
-
-define(['js/util',
+define([
+    'js/util',
     'text!./templates/ConstraintDetailsDialog.html',
     'codemirror',
-    'css!./styles/ConstraintDetailsDialog.css'], function ( util,
-                                                 constraintDetailsDialogTemplate,
-                                                 CodeMirror) {
+    'css!./styles/ConstraintDetailsDialog.css'
+], function (util, constraintDetailsDialogTemplate, codeMirror) {
 
+    'use strict';
     var ConstraintDetailsDialog;
 
     ConstraintDetailsDialog = function () {
@@ -39,17 +38,20 @@ define(['js/util',
         });
     };
 
-    ConstraintDetailsDialog.prototype._initDialog = function (constraintDesc, constraintNames, saveCallBack, deleteCallBack) {
+    ConstraintDetailsDialog.prototype._initDialog = function (constraintDesc, constraintNames, saveCallBack,
+                                                              deleteCallBack) {
         var self = this,
             closeSave,
             closeDelete,
             isValidConstraintName;
 
         closeSave = function () {
-            var constDesc = {'name': self._inputName.val(),
-                            'script': self._codeMirror.getValue(),
-                            'priority': self._inputPriority.val(),
-                            'info': self._inputMessage.val()};
+            var constDesc = {
+                'name': self._inputName.val(),
+                'script': self._codeMirror.getValue(),
+                'priority': self._inputPriority.val(),
+                'info': self._inputMessage.val()
+            };
 
             self._dialog.modal('hide');
 
@@ -67,7 +69,7 @@ define(['js/util',
         };
 
         isValidConstraintName = function (name) {
-            return !(name === "" || constraintNames.indexOf(name) !== -1);
+            return !(name === '' || constraintNames.indexOf(name) !== -1);
         };
 
         this._dialog = $(constraintDetailsDialogTemplate);
@@ -92,10 +94,10 @@ define(['js/util',
             var val = self._inputName.val();
 
             if (!isValidConstraintName(val)) {
-                self._pName.addClass("error");
+                self._pName.addClass('error');
                 self._btnSave.disable(true);
             } else {
-                self._pName.removeClass("error");
+                self._pName.removeClass('error');
                 self._btnSave.disable(false);
             }
         });
@@ -143,10 +145,10 @@ define(['js/util',
         //this._inputPriority.val(constraintDesc.priority);
         this._inputMessage.val(constraintDesc.info);
 
-       this._codeMirror = CodeMirror(this._scriptEditor[0], {
+        this._codeMirror = codeMirror(this._scriptEditor[0], {
             value: constraintDesc.script,
-            mode:  "javascript"
-       });
+            mode: 'javascript'
+        });
     };
 
 

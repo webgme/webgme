@@ -1,3 +1,6 @@
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 .panel-base-wh {
   box-sizing: border-box; }
   .panel-base-wh .ro-icon {
@@ -8,7 +11,7 @@
     left: 2px; }
   .panel-base-wh .panel-header {
     background-color: #efefef;
-    border-bottom: 3px solid rgba(0, 0, 0, 0);
+    border-bottom: 3px solid transparent;
     white-space: nowrap; }
     .panel-base-wh .panel-header .panel-header-title {
       font-size: 21px;
@@ -27,10 +30,10 @@
     .panel-base-wh .panel-header .panel-header-toolbar textarea,
     .panel-base-wh .panel-header .panel-header-toolbar input,
     .panel-base-wh .panel-header .panel-header-toolbar .uneditable-input {
-      margin-bottom: 0px; }
+      margin-bottom: 0; }
     .panel-base-wh .panel-header .panel-header-toolbar .input-append,
     .panel-base-wh .panel-header .panel-header-toolbar .input-prepend {
-      margin-bottom: 0px; }
+      margin-bottom: 0; }
     .panel-base-wh .panel-header .panel-header-toolbar input.no-focus-collapse:not(:focus) {
       width: 30px; }
     .panel-base-wh .panel-header .panel-header-toolbar li div.iCheckBox {
@@ -41,10 +44,10 @@
     .panel-base-wh .panel-header .panel-header-toolbar ul.dropdown-menu .iCheckBox {
       top: 1px; }
     .panel-base-wh .panel-header.absolute-header {
-      border-bottom-width: 0px;
+      border-bottom-width: 0;
       position: absolute;
-      top: 0px;
-      left: 0px; }
+      top: 0;
+      left: 0; }
   .panel-base-wh .panel-body {
     position: relative;
     overflow: auto;
@@ -92,7 +95,7 @@
 
 .side-panel .panel-base-wh {
   position: relative;
-  padding: 0px;
+  padding: 0;
   margin-bottom: 2px;
   border: 0;
   -webkit-border-radius: 0;
@@ -102,11 +105,11 @@
   .side-panel .panel-base-wh .panel-header {
     padding: 3px;
     background-color: whitesmoke;
-    border-bottom: 3px solid rgba(0, 0, 0, 0); }
+    border-bottom: 3px solid transparent; }
     .side-panel .panel-base-wh .panel-header .ro-icon {
       position: relative;
-      top: 0px;
-      left: 0px; }
+      top: 0;
+      left: 0; }
     .side-panel .panel-base-wh .panel-header .panel-header-title {
       font-size: 11px;
       line-height: 18px;

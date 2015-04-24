@@ -1,22 +1,26 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/PanelBase/PanelBaseWithHeader',
-        'js/PanelManager/IActivePanel',
-        'js/Widgets/DataGrid/DataGridWidget',
-        './GridPanelSetsControl'
-        ], function (PanelBaseWithHeader,
-                     IActivePanel,
-                     DataGridWidget,
-                     GridPanelSetsControl) {
+    'js/PanelManager/IActivePanel',
+    'js/Widgets/DataGrid/DataGridWidget',
+    './GridPanelSetsControl'
+], function (PanelBaseWithHeader,
+             IActivePanel,
+             DataGridWidget,
+             GridPanelSetsControl) {
 
-    "use strict";
+    'use strict';
 
     var GridPanelSets;
 
     GridPanelSets = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "GridPanelSets";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'GridPanelSets';
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
         //call parent's constructor
@@ -27,7 +31,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("GridPanelSets ctor finished");
+        this.logger.debug('GridPanelSets ctor finished');
     };
 
     //inherit from PanelBaseWithHeader
@@ -36,13 +40,15 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     GridPanelSets.prototype._initialize = function () {
         //set Widget title
-        this.setTitle("ContainmentGrid");
+        this.setTitle('ContainmentGrid');
 
         this.widget = new DataGridWidget(this.$el);
 
-        this.control = new GridPanelSetsControl({"client": this._client,
-            "widget": this.widget,
-            "panel": this});
+        this.control = new GridPanelSetsControl({
+            client: this._client,
+            widget: this.widget,
+            panel: this
+        });
 
         this.onActivate();
     };

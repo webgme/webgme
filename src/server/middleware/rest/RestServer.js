@@ -30,7 +30,9 @@ function createExpressRest(__app, baseUrl, options) {
         ensureAuthenticated = options.ensureAuthenticated;
 
     __app.get(baseUrl + '/:command', ensureAuthenticated, function (req, res) {
-        __REST.setBaseUrl(options.gmeConfig.server.https.enable === true ? 'https://' : 'http://' + req.headers.host + baseUrl);
+        __REST.setBaseUrl(
+            options.gmeConfig.server.https.enable === true ? 'https://' : 'http://' + req.headers.host + baseUrl
+        );
         __REST.initialize(function (err) {
             if (err) {
                 res.sendStatus(500);
@@ -41,8 +43,8 @@ function createExpressRest(__app, baseUrl, options) {
                     req.headers.webGMEToken,
                     req.query,
                     function (httpStatus, object) {
-                        res.header("Access-Control-Allow-Origin", "*");
-                        res.header("Access-Control-Allow-Headers", "X-Requested-With");
+                        res.header('Access-Control-Allow-Origin', '*');
+                        res.header('Access-Control-Allow-Headers', 'X-Requested-With');
                         if (req.params.command === __REST.command.etf) {
                             if (httpStatus === 200) {
                                 var filename = 'exportedNode.json';
@@ -52,8 +54,8 @@ function createExpressRest(__app, baseUrl, options) {
                                 if (filename.indexOf('.') === -1) {
                                     filename += '.json';
                                 }
-                                res.header("Content-Type", "application/json");
-                                res.header("Content-Disposition", "attachment;filename=\"" + filename + "\"");
+                                res.header('Content-Type', 'application/json');
+                                res.header('Content-Disposition', 'attachment;filename=\"' + filename + '\"');
                                 res.status(httpStatus);
                                 res.end(/*CANON*/JSON.stringify(object, null, 2));
                             } else {

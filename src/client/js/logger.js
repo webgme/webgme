@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, debug*/
 /*jshint node:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
@@ -11,7 +11,7 @@ define(['debug'], function (_debug) {
     //      ex: localStorage.debug = '*,-socket\.io*,-engine\.io*'
     //      will log all but socket.io and engine.io
     function createLogger(name, options) {
-        var log = typeof debug !== 'undefined' ? debug(name) : _debug(name),
+        var log = typeof debug === 'undefined' ? _debug(name) : debug(name),
             level,
             levels = {
                 silly: 0,

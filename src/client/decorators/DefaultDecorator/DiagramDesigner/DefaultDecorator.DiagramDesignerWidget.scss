@@ -1,3 +1,6 @@
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 @import "../../../js/Widgets/DiagramDesigner/styles/Connector";
 
 $min-width: 65px;
@@ -25,21 +28,20 @@ $selected-border: 1px solid #52A8EC;
   }
 
   .connector {
-     @include connector_basics;
+    @include connector_basics;
 
-     margin-left: $connector-size / -2;
-     left: 50%;
+    margin-left: $connector-size / -2;
+    left: 50%;
 
-     &.top {
-       top: $connector-size / -2;
-     }
+    &.top {
+      top: $connector-size / -2;
+    }
 
-     &.bottom {
-       bottom: $connector-size / -2;
-     }
-   }
+    &.bottom {
+      bottom: $connector-size / -2;
+    }
+  }
 }
-
 
 .selected {
   .default-decorator {

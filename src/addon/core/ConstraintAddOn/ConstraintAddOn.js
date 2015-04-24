@@ -1,5 +1,5 @@
 /*globals define*/
-/*jshint node:true*/
+/*jshint node:true, evil:true*/
 
 /**
  * @author kecso / https://github.com/kecso

@@ -1,22 +1,28 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, $, WebGMEGlobal*/
+/*jshint browser: true*/
 
-define(['jquery',
-        'underscore',
-        'js/Constants',
-        'js/NodePropertyNames',
-        'js/logger',
-        'js/Panels/MetaEditor/MetaEditorConstants',
-        'common/EventDispatcher',
-        'text!./METATemplate.js'], function (_jquery,
-                                    _underscore,
-                                    CONSTANTS,
-                                    nodePropertyNames,
-                                    Logger,
-                                    MetaEditorConstants,
-                                    EventDispatcher,
-                                    METATemplateJS) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+
+define([
+    'jquery',
+    'underscore',
+    'js/Constants',
+    'js/NodePropertyNames',
+    'js/logger',
+    'js/Panels/MetaEditor/MetaEditorConstants',
+    'common/EventDispatcher'
+], function (_jquery,
+             _underscore,
+             CONSTANTS,
+             nodePropertyNames,
+             Logger,
+             MetaEditorConstants,
+             EventDispatcher) {
+
+    'use strict';
 
     var META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID,
         _client,
@@ -26,7 +32,7 @@ define(['jquery',
         _metaMembers,
         _patterns = {},
         _logger,
-        _events = {'META_ASPECT_CHANGED': 'META_ASPECT_CHANGED'},
+        _events = {META_ASPECT_CHANGED: 'META_ASPECT_CHANGED'},
         _metaTypes;
 
     TerritoryUI = function () {
@@ -49,9 +55,9 @@ define(['jquery',
 
             _patterns = {};
             _metaMembers = [];
-            _patterns[META_RULES_CONTAINER_NODE_ID] = { "children": 0 };
+            _patterns[META_RULES_CONTAINER_NODE_ID] = {children: 0};
 
-            setTimeout(function (){
+            setTimeout(function () {
                 _client.updateTerritory(_territoryId, _patterns);
             }, 100);
 
@@ -64,17 +70,17 @@ define(['jquery',
             i;
 
         // Not allowed characters to replace.
-        var input = "áéíóöőúüűÁÉÍÓÖŐÚÜŰ ";
+        var input = 'áéíóöőúüűÁÉÍÓÖŐÚÜŰ ';
 
         // Safe characters to replace to.
-        var output = "aeiooouuuAEIOOOUUU_";
+        var output = 'aeiooouuuAEIOOOUUU_';
 
         // allowed characters
         var allowed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_';
 
         i = input.length;
         while (i--) {
-            re = new RegExp(input[i], "g");
+            re = new RegExp(input[i], 'g');
             ret = ret.replace(re, output[i]);
         }
 
@@ -119,7 +125,7 @@ define(['jquery',
                 len = diff.length;
                 while (len--) {
                     if (diff[len] !== META_RULES_CONTAINER_NODE_ID) {
-                        _patterns[diff[len]] = { "children": 0 };
+                        _patterns[diff[len]] = {children: 0};
                         territoryChanged = true;
                     }
                 }
@@ -138,7 +144,7 @@ define(['jquery',
                     if (metaMemberNode) {
                         nodeName = _metaFriendlyName(metaMemberNode.getAttribute(nodePropertyNames.Attributes.name));
 
-                        if (nodeName === undefined || nodeName === null || nodeName === "") {
+                        if (nodeName === undefined || nodeName === null || nodeName === '') {
                             _logger.error('META item "' + nodeID + '" has an invalid name of: ' + nodeName);
                         } else {
                             if (_metaTypes.hasOwnProperty(nodeName)) {
@@ -155,7 +161,7 @@ define(['jquery',
 
                 //there was change in the territory
                 if (territoryChanged === true) {
-                    setTimeout(function (){
+                    setTimeout(function () {
                         _client.updateTerritory(_territoryId, _patterns);
                     }, 10);
                 }
@@ -248,7 +254,7 @@ define(['jquery',
     };
 
     /*
-    Returns the parent meta types of the given object ID in the order of inheritance.
+     Returns the parent meta types of the given object ID in the order of inheritance.
      */
     var _getMETATypesOf = function (objID) {
         var result = [];
@@ -262,65 +268,24 @@ define(['jquery',
         }
 
         // sort based on metatypes inheritance
-        result.sort(function(a, b) {
-            return  _isMETAType(_metaTypes[a], _metaTypes[b]) ? -1 : 1;
+        result.sort(function (a, b) {
+            return _isMETAType(_metaTypes[a], _metaTypes[b]) ? -1 : 1;
         });
 
         return result;
     };
 
 
-    var _generateMETAAspectJavaScript = function () {
-        var result = {};
-
-        if (!_.isEmpty(_metaTypes)) {
-            var projName = _client.getActiveProjectName();
-            var content = METATemplateJS;
-            var sortedMetaTypes = _getMETAAspectTypesSorted();
-            var typeCheckMethodTemplate = 'var _is__METATYPE__ = function (objID) { return METAAspectHelper.isMETAType(objID, _metaTypes.__METATYPE__); };';
-            var typeCheckMethods = '';
-            var typeCheckMethodsMap = [];
-            var typeCheckMethodNamePrefix = 'is';
-            var typeCheckMethodsMapIndent = '\t\t\t';
-            var metaAspectTypesMap = [];
-
-            //generate each type checker method
-            /*
-             var _isXXX = function (objID) {
-                return METAAspectHelper.isMETAType(objID, _metaTypes.XXX);
-             };
-             */
-            for (var t in sortedMetaTypes) {
-                if (sortedMetaTypes.hasOwnProperty(t)) {
-                    typeCheckMethods += typeCheckMethodTemplate.replace(/__METATYPE__/g, t) + '\n\t';
-                    typeCheckMethodsMap.push(typeCheckMethodNamePrefix + t + ": _" + typeCheckMethodNamePrefix + t);
-                    metaAspectTypesMap.push('\'' + t + '\'' + ': ' + '\'' + sortedMetaTypes[t] + '\'');
-                }
-            }
-
-            content = content.replace( /__PROJECT__/g, projName);
-            content = content.replace(/__META_ASPECT_TYPES__/g, '{\n\t\t' + metaAspectTypesMap.join(',\n\t\t') + '\n\t}');
-            content = content.replace(/__META_ASPECT_TYPE_CHECKING__/g, typeCheckMethods);
-            content = content.replace(/__TYPE_CHECK_METHOD_MAP__/g, '{\n' + typeCheckMethodsMapIndent + typeCheckMethodsMap.join(',\n' + typeCheckMethodsMapIndent) + '\n\t\t}');
-
-            result.fileName = projName + ".META.js";
-            result.content = content;
-        }
-
-        return result;
-    };
-
-
     //return utility functions
-    return {initialize: _initialize,
-            isMETAType: _isMETAType,
-            getMetaAspectMembers: _getMetaAspectMembers,
-            events: _events,
-            addEventListener: _addEventListener,
-            removeEventListener: _removeEventListener,
-            getMETAAspectTypes: _getMETAAspectTypes,
-            getMETAAspectTypesSorted: _getMETAAspectTypesSorted,
-            getMETATypesOf: _getMETATypesOf,
-            generateMETAAspectJavaScript: _generateMETAAspectJavaScript
-        };
+    return {
+        initialize: _initialize,
+        isMETAType: _isMETAType,
+        getMetaAspectMembers: _getMetaAspectMembers,
+        events: _events,
+        addEventListener: _addEventListener,
+        removeEventListener: _removeEventListener,
+        getMETAAspectTypes: _getMETAAspectTypes,
+        getMETAAspectTypesSorted: _getMETAAspectTypesSorted,
+        getMETATypesOf: _getMETATypesOf
+    };
 });

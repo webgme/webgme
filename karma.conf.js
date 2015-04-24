@@ -33,7 +33,7 @@ webgme.addToRequireJsPaths(gmeConfig);
                 });
         },
         projectsToImport = [
-            {name: 'ProjectAndBranchOperationsTest', path: './test/asset/sm_basic.json'},
+            {name: 'ProjectAndBranchOperationsTest', path: './test-karma/client/js/client/basicProject.json'},
             {name: 'metaQueryAndManipulationTest', path: './test-karma/client/js/client/metaTestProject.json'},
             {name: 'ClientNodeInquiryTests', path: './test-karma/client/js/client/clientNodeTestProject.json'},
             {name: 'nodeManipulationProject', path: './test-karma/client/js/client/clientNodeTestProject.json'},

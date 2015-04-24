@@ -1,4 +1,4 @@
-/*globals require*/
+/*globals define*/
 /*jshint node:true, mocha:true*/
 /**
  * @author brollb / https://github.com/brollb
@@ -10,13 +10,11 @@ define(['js/Widgets/DiagramDesigner/AutoRouter.ActionApplier', 'underscore'], fu
         HEADER = 'AUTOROUTER REPLAYER:\t';
 
     var AutoRouterBugPlayer = function () {
-        'use strict';
         this.init();
         this.logger = {error: console.log};
     };
 
     AutoRouterBugPlayer.prototype.log = function () {
-        'use strict';
         var msg,
             i;
 
@@ -30,7 +28,6 @@ define(['js/Widgets/DiagramDesigner/AutoRouter.ActionApplier', 'underscore'], fu
     };
 
     AutoRouterBugPlayer.prototype.test = function (actions, options) {
-        'use strict';
         var before,
             after,
             last,

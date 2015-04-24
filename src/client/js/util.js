@@ -1,14 +1,16 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
-
-/*
+/*globals define, _, $*/
+/*jshint browser: true*/
+/**
  * Utility helper functions for the client side
+ *
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 define([], function () {
 
-    "use strict";
+    'use strict';
 
-    var _span = $('<span></span>');
+    var span = $('<span></span>');
 
     Array.prototype.pushUnique = function (val) {
         if (this.indexOf(val) === -1) {
@@ -23,10 +25,11 @@ define([], function () {
         /*
          * Returns true if the two boundingbox overlap
          */
-        overlap : function (boundingBoxA, boundingBoxB) {
+        overlap: function (boundingBoxA, boundingBoxB) {
             var result = false;
 
-            if (boundingBoxA.x < boundingBoxB.x2 && boundingBoxA.x2 > boundingBoxB.x && boundingBoxA.y < boundingBoxB.y2 && boundingBoxA.y2 > boundingBoxB.y) {
+            if (boundingBoxA.x < boundingBoxB.x2 && boundingBoxA.x2 > boundingBoxB.x &&
+                boundingBoxA.y < boundingBoxB.y2 && boundingBoxA.y2 > boundingBoxB.y) {
                 result = true;
             }
 
@@ -43,7 +46,7 @@ define([], function () {
                 for (i in o) {
                     if (o.hasOwnProperty(i)) {
                         if (_.isObject(o[i]) && !_.isArray(o[i])) {
-                            discover(o[i], prefix === "" ? i + "." : prefix + i + ".");
+                            discover(o[i], prefix === '' ? i + '.' : prefix + i + '.');
                         } else {
                             result[prefix + i] = o[i];
                         }
@@ -51,7 +54,7 @@ define([], function () {
                 }
             };
 
-            discover(obj, "");
+            discover(obj, '');
 
             return result;
         },
@@ -102,10 +105,12 @@ define([], function () {
         },
 
         getURLParameterByName: function (name) {
-            name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
-            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-                results = regex.exec(location.search);
-            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+            var regex,
+                results;
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         },
 
         getObjectFromUrlQuery: function (queryString) {
@@ -113,16 +118,18 @@ define([], function () {
             var queryObj = {};
             queryString.replace(
                 new RegExp('([^?=&]+)(=([^&]*))?', 'g'),
-                function($0, $1, $2, $3) { queryObj[$1] = $3; }
+                function ($0, $1, $2, $3) {
+                    queryObj[$1] = $3;
+                }
             );
             return queryObj;
         },
 
         toSafeString: function (string) {
-            return _span.text(string).html();
+            return span.text(string).html();
         },
 
-        caseInsensitiveSort: function (a,b) {
+        caseInsensitiveSort: function (a, b) {
             if (a.toLowerCase() < b.toLowerCase()) {
                 return -1;
             } else {

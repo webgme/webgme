@@ -1,10 +1,12 @@
-/*globals define, WebGMEGlobal*/
+/*globals define, WebGMEGlobal, $, require*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-define(['js/logger',
-        'js/Loader/LoaderCircles'], function (Logger,
-                                    LoaderCircles) {
+define(['js/logger', 'js/Loader/LoaderCircles'], function (Logger, LoaderCircles) {
 
-    "use strict";
+    'use strict';
 
     var LayoutManager,
         LAYOUT_PATH = 'js/Layouts/',
@@ -38,12 +40,12 @@ define(['js/logger',
         this._startProgressBar();
 
         //load new one
-        this._logger.debug("Downloading layout '" + layout + "'...");
+        this._logger.debug('Downloading layout "' + layout + '"...');
 
         require([LAYOUT_PATH + layout],
             function (Layout) {
                 if (Layout) {
-                    self._logger.debug("Layout '" + layout + "' has been downloaded...");
+                    self._logger.debug('Layout "' + layout + '" has been downloaded...');
                     self._currentLayoutName = layout;
                     self._currentLayout = new Layout();
                     self._currentLayout.init();
@@ -51,12 +53,13 @@ define(['js/logger',
                         fnCallback.call(self);
                     }
                 } else {
-                    self._logger.error("Layout '" + layout + "' has been downloaded...BUT UNDEFINED!!!");
+                    self._logger.error('Layout "' + layout + '" has been downloaded...BUT UNDEFINED!!!');
                 }
             },
             function (err) {
                 //on error
-                self._logger.error("Failed to load layout because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'...");
+                self._logger.error('Failed to load layout because of "' + err.requireType + '" with module "' +
+                                   err.requireModules[0] + '"...');
             });
     };
 
@@ -82,20 +85,21 @@ define(['js/logger',
             require([rPath],
                 function (Panel) {
                     if (Panel) {
-                        self._logger.debug("Panel '" + panel + "' has been downloaded...");
+                        self._logger.debug('Panel "' + panel + '" has been downloaded...');
                         self._panels[panel] = new Panel(self, params.params);
 
                         containerSizeUpdateFn = self._currentLayout.addToContainer(self._panels[panel], container);
                         self._panels[panel].afterAppend();
                         self._panels[panel].setContainerUpdateFn(self._currentLayout, containerSizeUpdateFn);
                     } else {
-                        self._logger.error("Panel '" + panel + "' has been downloaded...BUT UNDEFINED!!!");
+                        self._logger.error('Panel "' + panel + '" has been downloaded...BUT UNDEFINED!!!');
                     }
                     fn(self._panels[panel]);
                 },
                 function (err) {
                     //on error
-                    self._logger.error("Failed to load Panel '" + rPath + "' because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'...");
+                    self._logger.error('Failed to load Panel "' + rPath + '" because of "' + err.requireType +
+                                       '" with module "' + err.requireModules[0] + '"...');
                     fn();
                 });
         }
@@ -115,11 +119,11 @@ define(['js/logger',
     };
 
     LayoutManager.prototype._startProgressBar = function () {
-        var _loader;
+        var loader;
 
         //start progressbar
-        _loader = new LoaderCircles({"containerElement": $('body')});
-        _loader.start();
+        loader = new LoaderCircles({containerElement: $('body')});
+        loader.start();
     };
 
     LayoutManager.prototype.setPanelReadOnly = function (readOnly) {

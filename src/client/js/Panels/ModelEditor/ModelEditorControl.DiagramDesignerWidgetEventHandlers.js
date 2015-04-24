@@ -1,5 +1,5 @@
-/*globals define, Raphael, window, WebGMEGlobal, _, alert, hasOwnProperty*/
-
+/*globals define, WebGMEGlobal, _, alert*/
+/*jshint browser: true */
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
@@ -13,22 +13,23 @@ define(['js/logger',
     'js/Utils/ExportManager',
     'js/Utils/ImportManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-    'js/DragDrop/DragHelper'], function (Logger,
-                                        util,
-                                        CONSTANTS,
-                                        nodePropertyNames,
-                                        REGISTRY_KEYS,
-                                        GMEConcepts,
-                                        ExportManager,
-                                        ImportManager,
-                                        DiagramDesignerWidgetConstants,
-                                        DragHelper) {
+    'js/DragDrop/DragHelper'
+], function (Logger,
+             util,
+             CONSTANTS,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             GMEConcepts,
+             ExportManager,
+             ImportManager,
+             DiagramDesignerWidgetConstants,
+             DragHelper) {
 
-    "use strict";
+    'use strict';
 
     var ModelEditorControlDiagramDesignerWidgetEventHandlers,
-        ATTRIBUTES_STRING = "attributes",
-        REGISTRY_STRING = "registry",
+        ATTRIBUTES_STRING = 'attributes',
+        REGISTRY_STRING = 'registry',
         SRC_POINTER_NAME = CONSTANTS.POINTER_SOURCE,
         DST_POINTER_NAME = CONSTANTS.POINTER_TARGET;
 
@@ -40,12 +41,12 @@ define(['js/logger',
 
         /*OVERRIDE DESIGNER CANVAS METHODS*/
         /*this.designerCanvas.onDesignerItemsMove = function (repositionDesc) {
-            self._onDesignerItemsMove(repositionDesc);
-        };
+         self._onDesignerItemsMove(repositionDesc);
+         };
 
-        this.designerCanvas.onDesignerItemsCopy = function (copyDesc) {
-            self._onDesignerItemsCopy(copyDesc);
-        };*/
+         this.designerCanvas.onDesignerItemsCopy = function (copyDesc) {
+         self._onDesignerItemsCopy(copyDesc);
+         };*/
 
         this.designerCanvas.onCreateNewConnection = function (params) {
             self._onCreateNewConnection(params);
@@ -160,7 +161,7 @@ define(['js/logger',
             self._onSelectedTabChanged(tabID);
         };
 
-        this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
+        this.logger.debug('attachDiagramDesignerWidgetEventHandlers finished');
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
@@ -169,14 +170,19 @@ define(['js/logger',
         this._client.startTransaction();
         for (id in repositionDesc) {
             if (repositionDesc.hasOwnProperty(id)) {
-                this._client.setRegistry(this._ComponentID2GmeID[id], REGISTRY_KEYS.POSITION, { "x": repositionDesc[id].x, "y": repositionDesc[id].y });
+                this._client.setRegistry(this._ComponentID2GmeID[id],
+                    REGISTRY_KEYS.POSITION,
+                    {
+                        x: repositionDesc[id].x,
+                        y: repositionDesc[id].y
+                    });
             }
         }
         this._client.completeTransaction();
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsCopy = function (copyDesc) {
-        var copyOpts = { "parentId": this.currentNodeInfo.id },
+        var copyOpts = {parentId: this.currentNodeInfo.id},
             id,
             desc,
             gmeID;
@@ -192,7 +198,7 @@ define(['js/logger',
                 copyOpts[gmeID][ATTRIBUTES_STRING] = {};
                 copyOpts[gmeID][REGISTRY_STRING] = {};
 
-                copyOpts[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = { "x": desc.posX, "y": desc.posY };
+                copyOpts[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = {x: desc.posX, y: desc.posY};
 
                 //remove the component from UI
                 //it will be recreated when the GME client calls back with the result
@@ -228,7 +234,10 @@ define(['js/logger',
             menuItems = {},
             i,
             connTypeObj,
-            aspect = this._selectedAspect;
+            aspect = this._selectedAspect,
+            newConnID,
+            validConnectionTypes,
+            dstPosition;
 
         //local callback to create the connection
         createConnection = function (connTypeToCreate) {
@@ -236,7 +245,7 @@ define(['js/logger',
                 _client.startTransaction();
 
                 //create new object
-                var newConnID = _client.createChild({'parentId': parentId, 'baseId': connTypeToCreate});
+                newConnID = _client.createChild({parentId: parentId, baseId: connTypeToCreate});
 
                 //set source and target pointers
                 _client.makePointer(newConnID, CONSTANTS.POINTER_SOURCE, sourceId);
@@ -259,12 +268,12 @@ define(['js/logger',
         }
 
         //get the list of valid connection types
-        var validConnectionTypes = GMEConcepts.getValidConnectionTypesInAspect(sourceId, targetId, parentId, aspect);
+        validConnectionTypes = GMEConcepts.getValidConnectionTypesInAspect(sourceId, targetId, parentId, aspect);
         //filter them to see which of those can actually be created as a child of the parent
         i = validConnectionTypes.length;
         while (i--) {
             if (!GMEConcepts.canCreateChild(parentId, validConnectionTypes[i])) {
-                validConnectionTypes.splice(i,1);
+                validConnectionTypes.splice(i, 1);
             }
         }
 
@@ -275,18 +284,21 @@ define(['js/logger',
             for (i = 0; i < validConnectionTypes.length; i += 1) {
                 connTypeObj = this._client.getNode(validConnectionTypes[i]);
                 menuItems[validConnectionTypes[i]] = {
-                    "name": 'Create type \'' + (connTypeObj ? connTypeObj.getAttribute(nodePropertyNames.Attributes.name) : validConnectionTypes[i]) + '\'',
-                    "icon": false
+                    name: 'Create type \'' +
+                          (connTypeObj ?
+                              connTypeObj.getAttribute(nodePropertyNames.Attributes.name) : validConnectionTypes[i]) +
+                          '\'',
+                    icon: false
                 };
             }
 
-            var dstPosition = this.designerCanvas.items[params.dst].getBoundingBox();
+            dstPosition = this.designerCanvas.items[params.dst].getBoundingBox();
 
             this.designerCanvas.createMenu(menuItems, function (key) {
                     createConnection(key);
                 },
                 this.designerCanvas.posToPageXY(dstPosition.x - CONTEXT_POS_OFFSET,
-                                                dstPosition.y - CONTEXT_POS_OFFSET)
+                    dstPosition.y - CONTEXT_POS_OFFSET)
             );
         }
     };
@@ -296,7 +308,7 @@ define(['js/logger',
             i = idList.length,
             objID;
 
-        while(i--) {
+        while (i--) {
             objID = this._ComponentID2GmeID[idList[i]];
             //temporary fix to not allow deleting ROOT AND FCO
             if (GMEConcepts.canDeleteNode(objID)) {
@@ -311,11 +323,11 @@ define(['js/logger',
         }
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemDoubleClick = function (id, event) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemDoubleClick = function (id /*, event */) {
         var gmeID = this._ComponentID2GmeID[id];
 
         if (gmeID) {
-            this.logger.debug("Opening model with id '" + gmeID + "'");
+            this.logger.debug('Opening model with id "' + gmeID + '"');
             WebGMEGlobal.State.registerActiveObject(gmeID);
         }
     };
@@ -332,7 +344,7 @@ define(['js/logger',
             //update connection endpoint - SOURCE
             if (oldDesc.srcObjId !== newDesc.srcObjId ||
                 oldDesc.srcSubCompId !== newDesc.srcSubCompId) {
-                if (newDesc.srcSubCompId !== undefined ) {
+                if (newDesc.srcSubCompId !== undefined) {
                     newEndPointGMEID = this._Subcomponent2GMEID[newDesc.srcObjId][newDesc.srcSubCompId];
                 } else {
                     newEndPointGMEID = this._ComponentID2GmeID[newDesc.srcObjId];
@@ -343,7 +355,7 @@ define(['js/logger',
             //update connection endpoint - TARGET
             if (oldDesc.dstObjId !== newDesc.dstObjId ||
                 oldDesc.dstSubCompId !== newDesc.dstSubCompId) {
-                if (newDesc.dstSubCompId !== undefined ) {
+                if (newDesc.dstSubCompId !== undefined) {
                     newEndPointGMEID = this._Subcomponent2GMEID[newDesc.dstObjId][newDesc.dstSubCompId];
                 } else {
                     newEndPointGMEID = this._ComponentID2GmeID[newDesc.dstObjId];
@@ -355,9 +367,11 @@ define(['js/logger',
         }
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onRegisterSubcomponent = function (objID, sCompID,
+                                                                                                       metaInfo) {
         //store that a subcomponent with a given ID has been added to object with objID
-        this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] = this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] || {};
+        this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] = this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] ||
+                                                               {};
         this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]][objID] = sCompID;
 
         this._Subcomponent2GMEID[objID] = this._Subcomponent2GMEID[objID] || {};
@@ -365,7 +379,8 @@ define(['js/logger',
         //TODO: add event handling here that a subcomponent appeared
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onUnregisterSubcomponent = function (objID, sCompID) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onUnregisterSubcomponent = function (objID,
+                                                                                                         sCompID) {
         var gmeID = this._Subcomponent2GMEID[objID][sCompID];
 
         delete this._Subcomponent2GMEID[objID][sCompID];
@@ -388,50 +403,50 @@ define(['js/logger',
             baseTypeNode,
             dragAction,
             aspect = this._selectedAspect,
-            pointerSorter = function (a,b)
-                {
-                    var baseAName = a.name.toLowerCase(),
-                        baseBName = b.name.toLowerCase(),
-                        ptrAName = a.pointer.toLowerCase(),
-                        ptrBName = b.pointer.toLowerCase();
+            pointerSorter = function (a, b) {
+                var baseAName = a.name.toLowerCase(),
+                    baseBName = b.name.toLowerCase(),
+                    ptrAName = a.pointer.toLowerCase(),
+                    ptrBName = b.pointer.toLowerCase();
 
-                    if (ptrAName < ptrBName) {
+                if (ptrAName < ptrBName) {
+                    return -1;
+                } else if (ptrAName > ptrBName) {
+                    return 1;
+                } else {
+                    //ptrAName = ptrBName
+                    if (baseAName < baseBName) {
                         return -1;
-                    } else if (ptrAName > ptrBName) {
-                        return 1;
                     } else {
-                        //ptrAName = ptrBName
-                        if (baseAName < baseBName) {
-                            return -1;
-                        } else {
-                            return 1;
-                        }
+                        return 1;
                     }
-                };
+                }
+            };
 
         //check to see what DROP actions are possible
         if (items.length > 0) {
             i = dragEffects.length;
             while (i--) {
-                switch(dragEffects[i]) {
+                switch (dragEffects[i]) {
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         //check to see if dragParams.parentID and this.parentID are the same
                         //if so, it's not a real move, it is a reposition
                         if (((dragParams && dragParams.parentID === parentID) ||
-                            GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) && GMEConcepts.canMoveNodeHere(parentID,items)) {
-                            dragAction = {'dragEffect': dragEffects[i]};
+                             GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) &&
+                            GMEConcepts.canMoveNodeHere(parentID, items)) {
+                            dragAction = {dragEffect: dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_COPY:
                         if (GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
-                            dragAction = {'dragEffect': dragEffects[i]};
+                            dragAction = {dragEffect: dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                         if (GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
-                            dragAction = {'dragEffect': dragEffects[i]};
+                            dragAction = {dragEffect: dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
                         break;
@@ -446,17 +461,20 @@ define(['js/logger',
                                     baseTypeNode = this._client.getNode(baseTypeID);
                                     validPointerTypes[j].name = baseTypeID;
                                     if (baseTypeNode) {
-                                        validPointerTypes[j].name = baseTypeNode.getAttribute(nodePropertyNames.Attributes.name);
+                                        validPointerTypes[j].name = baseTypeNode.getAttribute(
+                                            nodePropertyNames.Attributes.name);
                                     }
                                 }
 
                                 validPointerTypes.sort(pointerSorter);
 
                                 for (j = 0; j < validPointerTypes.length; j += 1) {
-                                    dragAction = { 'dragEffect': DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER,
-                                        'name': validPointerTypes[j].name,
-                                        'baseId': validPointerTypes[j].baseId,
-                                        'pointer': validPointerTypes[j].pointer};
+                                    dragAction = {
+                                        dragEffect: DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER,
+                                        name: validPointerTypes[j].name,
+                                        baseId: validPointerTypes[j].baseId,
+                                        pointer: validPointerTypes[j].pointer
+                                    };
                                     possibleDropActions.push(dragAction);
                                 }
                             }
@@ -471,7 +489,8 @@ define(['js/logger',
         return possibleDropActions;
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event,
+                                                                                                            dragInfo) {
         var accept;
 
         accept = this._getPossibleDropActions(dragInfo).length > 0;
@@ -479,46 +498,50 @@ define(['js/logger',
         return accept;
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo, position) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo,
+                                                                                                 position) {
         var possibleDropActions = this._getPossibleDropActions(dragInfo),
             len = possibleDropActions.length,
             i,
             selectedAction,
-            self = this;
+            self = this,
+            menuItems;
 
         if (len === 1) {
             selectedAction = possibleDropActions[0];
             this._handleDropAction(selectedAction, dragInfo, position);
         } else {
-            var menuItems = {};
+            menuItems = {};
 
             for (i = 0; i < possibleDropActions.length; i += 1) {
                 switch (possibleDropActions[i].dragEffect) {
                     case DragHelper.DRAG_EFFECTS.DRAG_COPY:
                         menuItems[i] = {
-                            "name": "Copy here",
-                            "icon": 'glyphicon glyphicon-plus'
+                            name: 'Copy here',
+                            icon: 'glyphicon glyphicon-plus'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         menuItems[i] = {
-                            "name": "Move here",
-                            "icon": 'glyphicon glyphicon-move'
+                            name: 'Move here',
+                            icon: 'glyphicon glyphicon-move'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                         menuItems[i] = {
-                            "name": "Create instance here",
-                            "icon": 'glyphicon glyphicon-share-alt'
+                            name: 'Create instance here',
+                            icon: 'glyphicon glyphicon-share-alt'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER:
                         menuItems[i] = {
-                            "name": "Create pointer '" + possibleDropActions[i].pointer + "' of type '" + possibleDropActions[i].name + "'",
-                            "icon": 'glyphicon glyphicon-share'
+                            name: 'Create pointer "' + possibleDropActions[i].pointer + '" of type "' +
+                                    possibleDropActions[i].name + '"',
+                            icon: 'glyphicon glyphicon-share'
                         };
                         break;
                     default:
+                        break;
                 }
             }
 
@@ -531,7 +554,8 @@ define(['js/logger',
         }
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._handleDropAction = function (dropAction, dragInfo, position) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._handleDropAction = function (dropAction, dragInfo,
+                                                                                                 position) {
         var dragEffect = dropAction.dragEffect,
             items = DragHelper.getDragItems(dragInfo),
             dragParams = DragHelper.getDragParams(dragInfo),
@@ -540,7 +564,9 @@ define(['js/logger',
             gmeID,
             params,
             POS_INC = 20,
-            oldPos;
+            oldPos,
+            origNode,
+            ptrName;
 
         this.logger.debug('dropAction: ' + JSON.stringify(dropAction));
         this.logger.debug('dragInfo: ' + JSON.stringify(dragInfo));
@@ -548,16 +574,19 @@ define(['js/logger',
 
         switch (dragEffect) {
             case DragHelper.DRAG_EFFECTS.DRAG_COPY:
-                params = { "parentId": parentID };
+                params = {parentId: parentID};
                 i = items.length;
                 while (i--) {
                     gmeID = items[i];
 
                     params[gmeID] = {};
 
-                    oldPos = dragParams && dragParams.positions[gmeID] || {'x':0, 'y': 0};
+                    oldPos = dragParams && dragParams.positions[gmeID] || {x: 0, y: 0};
                     params[gmeID][REGISTRY_STRING] = {};
-                    params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = { "x": position.x + oldPos.x, "y": position.y + oldPos.y };
+                    params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = {
+                        x: position.x + oldPos.x,
+                        y: position.y + oldPos.y
+                    };
                 }
                 this._client.startTransaction();
                 this._client.copyMoreNodes(params);
@@ -572,16 +601,19 @@ define(['js/logger',
                 } else {
                     //it is a real hierarchical move
 
-                    params = { "parentId": parentID };
+                    params = {parentId: parentID};
                     i = items.length;
                     while (i--) {
                         gmeID = items[i];
 
                         params[gmeID] = {};
 
-                        oldPos = dragParams && dragParams.positions[gmeID] || {'x':0, 'y': 0};
+                        oldPos = dragParams && dragParams.positions[gmeID] || {x: 0, y: 0};
                         params[gmeID][REGISTRY_STRING] = {};
-                        params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = { "x": position.x + oldPos.x, "y": position.y + oldPos.y };
+                        params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = {
+                            x: position.x + oldPos.x,
+                            y: position.y + oldPos.y
+                        };
                     }
 
                     this._client.startTransaction();
@@ -590,11 +622,11 @@ define(['js/logger',
                 }
                 break;
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
-                params = { "parentId": parentID };
+                params = {parentId: parentID};
                 i = items.length;
-                while(i--){
-                    oldPos = dragParams && dragParams.positions[items[i]] || {'x': 0, 'y': 0};
-                    params[items[i]] = { registry: { position:{ x: position.x + oldPos.x, y: position.y + oldPos.y }}};
+                while (i--) {
+                    oldPos = dragParams && dragParams.positions[items[i]] || {x: 0, y: 0};
+                    params[items[i]] = {registry: {position: {x: position.x + oldPos.x, y: position.y + oldPos.y}}};
                     //old position is not in drag-params
                     if (!(dragParams && dragParams.positions[items[i]])) {
                         position.x += POS_INC;
@@ -605,8 +637,10 @@ define(['js/logger',
                 break;
 
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER:
-                params = { "parentId": parentID,
-                           "baseId": dropAction.baseId };
+                params = {
+                    parentId: parentID,
+                    baseId: dropAction.baseId
+                };
 
                 this._client.startTransaction();
 
@@ -614,18 +648,21 @@ define(['js/logger',
 
                 if (gmeID) {
                     //check if old position is in drag-params
-                    oldPos = dragParams && dragParams.positions[items[0]] || {'x':0, 'y': 0};
+                    oldPos = dragParams && dragParams.positions[items[0]] || {x: 0, y: 0};
                     //store new position
-                    this._client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, {'x': position.x + oldPos.x,
-                        'y': position.y + oldPos.y});
+                    this._client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, {
+                        x: position.x + oldPos.x,
+                        y: position.y + oldPos.y
+                    });
 
                     //set reference
                     this._client.makePointer(gmeID, dropAction.pointer, items[0]);
 
                     //try to set name
-                    var origNode = this._client.getNode(items[0]);
+                    origNode = this._client.getNode(items[0]);
                     if (origNode) {
-                        var ptrName = origNode.getAttribute(nodePropertyNames.Attributes.name) + "-" + dropAction.pointer;
+                        ptrName = origNode.getAttribute(nodePropertyNames.Attributes.name) + '-' +
+                                      dropAction.pointer;
                         this._client.setAttributes(gmeID, nodePropertyNames.Attributes.name, ptrName);
                     }
                 }
@@ -633,10 +670,13 @@ define(['js/logger',
                 this._client.completeTransaction();
 
                 break;
+            default:
+                break;
         }
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._repositionItems = function (items, dragPositions, dropPosition) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._repositionItems = function (items, dragPositions,
+                                                                                                dropPosition) {
         var i = items.length,
             oldPos,
             componentID,
@@ -653,7 +693,7 @@ define(['js/logger',
                 gmeID = items[i];
                 oldPos = dragPositions[gmeID];
                 if (!oldPos) {
-                    oldPos = {'x': 0, 'y': 0};
+                    oldPos = {x: 0, y: 0};
                 }
 
                 if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
@@ -661,7 +701,8 @@ define(['js/logger',
                     while (len--) {
                         componentID = this._GmeID2ComponentID[gmeID][len];
                         selectedIDs.push(componentID);
-                        this.designerCanvas.updateDesignerItem(componentID, { "position": {"x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y }});
+                        this.designerCanvas.updateDesignerItem(componentID,
+                            {position: {x: dropPosition.x + oldPos.x, y: dropPosition.y + oldPos.y}});
                     }
                 }
             }
@@ -676,7 +717,8 @@ define(['js/logger',
         }
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._saveReposition = function (items, dragPositions, dropPosition) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._saveReposition = function (items, dragPositions,
+                                                                                               dropPosition) {
         var gmeID,
             oldPos,
             i,
@@ -690,14 +732,26 @@ define(['js/logger',
             gmeID = items[i];
             oldPos = dragPositions[gmeID];
             if (!oldPos) {
-                oldPos = {'x': 0, 'y': 0};
+                oldPos = {x: 0, y: 0};
             }
             //aspect specific coordinate
             if (selectedAspect === CONSTANTS.ASPECT_ALL) {
-                client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
+                client.setRegistry(gmeID,
+                    REGISTRY_KEYS.POSITION,
+                    {
+                        x: dropPosition.x + oldPos.x,
+                        y: dropPosition.y + oldPos.y
+                    });
             } else {
                 client.addMember(modelID, gmeID, selectedAspect);
-                client.setMemberRegistry(modelID, gmeID, selectedAspect, REGISTRY_KEYS.POSITION, {'x': dropPosition.x + oldPos.x, 'y': dropPosition.y + oldPos.y} );
+                client.setMemberRegistry(modelID,
+                    gmeID,
+                    selectedAspect,
+                    REGISTRY_KEYS.POSITION,
+                    {
+                        x: dropPosition.x + oldPos.x,
+                        y: dropPosition.y + oldPos.y
+                    });
             }
         }
 
@@ -708,7 +762,7 @@ define(['js/logger',
         var gmeIDs = [],
             len = selectedIds.length,
             id,
-            onlyConnectionSelected =  selectedIds.length > 0;
+            onlyConnectionSelected = selectedIds.length > 0;
 
         while (len--) {
             id = this._ComponentID2GmeID[selectedIds[len]];
@@ -786,16 +840,18 @@ define(['js/logger',
             j,
             parentID = this.currentNodeInfo.id,
             client = this._client,
-            aspect = this._selectedAspect;
+            aspect = this._selectedAspect,
+            p;
 
-        if (params.srcSubCompId !== undefined) {
-            sourceId = this._Subcomponent2GMEID[params.srcId][params.srcSubCompId];
-        } else {
+        if (params.srcSubCompId === undefined) {
             sourceId = this._ComponentID2GmeID[params.srcId];
+        } else {
+            sourceId = this._Subcomponent2GMEID[params.srcId][params.srcSubCompId];
         }
 
         //need to test for each source-destination pair if the connection can be made or not?
-        //there is at least one valid connection type definition in the parent that could be created between the source and target
+        //there is at least one valid connection type definition in the parent
+        //  that could be created between the source and target
         //there is at least one valid connection type that really can be created in the parent (max chilren num...)
         validConnectionTypes = GMEConcepts.getValidConnectionTypesFromSourceInAspect(sourceId, parentID, aspect);
 
@@ -809,11 +865,11 @@ define(['js/logger',
 
         i = availableConnectionEnds.length;
         while (i--) {
-            var p = availableConnectionEnds[i];
-            if (p.dstSubCompID !== undefined) {
-                targetId = this._Subcomponent2GMEID[p.dstItemID][p.dstSubCompID];
-            } else {
+            p = availableConnectionEnds[i];
+            if (p.dstSubCompID === undefined) {
                 targetId = this._ComponentID2GmeID[p.dstItemID];
+            } else {
+                targetId = this._Subcomponent2GMEID[p.dstItemID][p.dstSubCompID];
             }
 
             j = validConnectionTypes.length;
@@ -847,7 +903,7 @@ define(['js/logger',
         if (srcDragged === true) {
             //'src' end of the connection is being dragged
             //'dst end is fix
-            if (dstSubCompID !== undefined ) {
+            if (dstSubCompID !== undefined) {
                 oldEndPointGMEID = this._Subcomponent2GMEID[dstItemID][dstSubCompID];
             } else {
                 oldEndPointGMEID = this._ComponentID2GmeID[dstItemID];
@@ -857,7 +913,7 @@ define(['js/logger',
             while (i--) {
                 srcItemID = availableConnectionSources[i].srcItemID;
                 srcSubCompID = availableConnectionSources[i].srcSubCompID;
-                if (srcSubCompID !== undefined ) {
+                if (srcSubCompID !== undefined) {
                     newEndPointGMEID = this._Subcomponent2GMEID[srcItemID][srcSubCompID];
                 } else {
                     newEndPointGMEID = this._ComponentID2GmeID[srcItemID];
@@ -870,7 +926,7 @@ define(['js/logger',
         } else {
             //'dst' end of the connection is being dragged
             //'src end is fix
-            if (srcSubCompID !== undefined ) {
+            if (srcSubCompID !== undefined) {
                 oldEndPointGMEID = this._Subcomponent2GMEID[srcItemID][srcSubCompID];
             } else {
                 oldEndPointGMEID = this._ComponentID2GmeID[srcItemID];
@@ -880,7 +936,7 @@ define(['js/logger',
             while (i--) {
                 dstItemID = availableConnectionEnds[i].dstItemID;
                 dstSubCompID = availableConnectionEnds[i].dstSubCompID;
-                if (dstSubCompID !== undefined ) {
+                if (dstSubCompID !== undefined) {
                     newEndPointGMEID = this._Subcomponent2GMEID[dstItemID][dstSubCompID];
                 } else {
                     newEndPointGMEID = this._ComponentID2GmeID[dstItemID];
@@ -894,9 +950,8 @@ define(['js/logger',
         return result;
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDragStartDesignerItemDraggable = function (itemID) {
-        var nodeObj = this._client.getNode(this._ComponentID2GmeID[itemID]),
-            result = true;
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDragStartDesignerItemDraggable = function (/*itemID*/) {
+        var result = true;
 
         return result;
     };
@@ -906,7 +961,7 @@ define(['js/logger',
             result = true;
 
         if (nodeObj) {
-            result = nodeObj.getAttribute('copy') !== "false";
+            result = nodeObj.getAttribute('copy') !== 'false';
         }
 
         return result;
@@ -917,17 +972,18 @@ define(['js/logger',
         return this._onDragStartDesignerItemCopyable(connectionID);
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionRotated = function (degree, selectedIds) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionRotated = function (degree,
+                                                                                                   selectedIds) {
         var i = selectedIds.length,
             regDegree,
             gmeID;
 
         this._client.startTransaction();
-        while(i--) {
+        while (i--) {
             gmeID = this._ComponentID2GmeID[selectedIds[i]];
             regDegree = this._client.getNode(gmeID).getEditableRegistry(REGISTRY_KEYS.ROTATION);
 
-            if (degree === DiagramDesignerWidgetConstants.ROTATION_RESET ) {
+            if (degree === DiagramDesignerWidgetConstants.ROTATION_RESET) {
                 regDegree = 0;
             } else {
                 regDegree = ((regDegree || 0) + degree) % 360;
@@ -944,7 +1000,6 @@ define(['js/logger',
             gmeIDs = [],
             len = items.length,
             id,
-            connRegLineStyle,
             setObjRegistry,
             client = this._client;
 
@@ -965,7 +1020,7 @@ define(['js/logger',
         if (len > 0) {
             this._client.startTransaction();
 
-            while(len--) {
+            while (len--) {
                 id = gmeIDs[len];
                 //set visual properties
                 setObjRegistry(id, CONSTANTS.LINE_STYLE.START_ARROW, REGISTRY_KEYS.LINE_START_ARROW);
@@ -986,14 +1041,18 @@ define(['js/logger',
             gmeID,
             obj,
             nodeObj,
-            cpData = {'project': this._client.getActiveProjectName(),
-                      'items' : []};
+            cpData = {
+                project: this._client.getActiveProjectName(),
+                items: []
+            };
 
-        while(i--) {
+        while (i--) {
             gmeID = this._ComponentID2GmeID[selectedIDs[i]];
-            obj = {'ID': gmeID,
-                   'Name': undefined,
-                   'Position': undefined};
+            obj = {
+                ID: gmeID,
+                Name: undefined,
+                Position: undefined
+            };
 
             nodeObj = this._client.getNode(gmeID);
             if (nodeObj) {
@@ -1013,7 +1072,7 @@ define(['js/logger',
         var len,
             objDesc,
             parentID = this.currentNodeInfo.id,
-            params = { "parentId": parentID },
+            params = {parentId: parentID},
             projectName = this._client.getActiveProjectName(),
             childrenIDs = [],
             aspect = this._selectedAspect;
@@ -1028,7 +1087,8 @@ define(['js/logger',
 
             if (data && data.project && data.items) {
                 if (projectName !== data.project) {
-                    alert('Trying to copy from project \'' + data.project + '\' to project \'' + projectName + '\' which is not supported... Copy&Paste is supported in the same project only.');
+                    alert('Trying to copy from project \'' + data.project + '\' to project \'' + projectName +
+                          '\' which is not supported... Copy&Paste is supported in the same project only.');
                 } else {
                     if (_.isArray(data.items)) {
                         data = data.items;
@@ -1047,9 +1107,11 @@ define(['js/logger',
                             this._client.startTransaction();
                             this._client.copyMoreNodes(params);
                             this._client.completeTransaction();
-                            this.logger.warn('Pasted ' + childrenIDs.length + ' items successfully into node (' + parentID + ')');
+                            this.logger.warn('Pasted ' + childrenIDs.length + ' items successfully into node (' +
+                                             parentID + ')');
                         } else {
-                            this.logger.warn('Can not paste items because not all the items on the clipboard can be created as a child of the currently opened node (' + parentID + ')');
+                            this.logger.warn('Can not paste items because not all the items on the clipboard can be ' +
+                            'created as a child of the currently opened node (' + parentID + ')');
                         }
                     }
                 }
@@ -1062,7 +1124,7 @@ define(['js/logger',
         var res = [],
             i = selectedElements.length;
 
-        while(i--) {
+        while (i--) {
             res.push(this._ComponentID2GmeID[selectedElements[i]]);
         }
 
@@ -1071,8 +1133,10 @@ define(['js/logger',
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragParams = function (selectedElements, event) {
         var oParams = this._oGetDragParams.call(this.designerCanvas, selectedElements, event),
-            params = { 'positions': {},
-                       'parentID': this.currentNodeInfo.id },
+            params = {
+                positions: {},
+                parentID: this.currentNodeInfo.id
+            },
             i;
 
         for (i in oParams.positions) {
@@ -1084,7 +1148,8 @@ define(['js/logger',
         return params;
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds, mousePos) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds,
+                                                                                                       mousePos) {
         var menuItems = {},
             MENU_EXINTCONF = 'exintconf',
             MENU_EXPLIB = 'exportlib',
@@ -1093,35 +1158,35 @@ define(['js/logger',
             self = this;
 
         /*menuItems[MENU_EXINTCONF] = {
-            "name": 'Export model context...',
-            "icon": 'glyphicon glyphicon-cog'
-        };*/
-        if(selectedIds.length === 1){
+         "name": 'Export model context...',
+         "icon": 'glyphicon glyphicon-cog'
+         };*/
+        if (selectedIds.length === 1) {
             menuItems[MENU_EXPLIB] = {
-                "name": 'Export library...',
-                "icon": 'glyphicon glyphicon-book'
+                name: 'Export library...',
+                icon: 'glyphicon glyphicon-book'
             };
             menuItems[MENU_UPDLIB] = {
-                "name": 'Update library...',
-                "icon": 'glyphicon glyphicon-refresh'
+                name: 'Update library...',
+                icon: 'glyphicon glyphicon-refresh'
             };
-            if(self._client.getRunningAddOnNames().indexOf("ConstraintAddOn") !== -1){
+            if (self._client.getRunningAddOnNames().indexOf('ConstraintAddOn') !== -1) {
                 menuItems[MENU_CON_NODE] = {
-                    "name": 'Check Node Constraints...',
-                    "icon": 'glyphicon glyphicon-fire'
+                    name: 'Check Node Constraints...',
+                    icon: 'glyphicon glyphicon-fire'
                 };
             }
 
         }
 
         this.designerCanvas.createMenu(menuItems, function (key) {
-                if (key === MENU_EXINTCONF){
+                if (key === MENU_EXINTCONF) {
                     self._exIntConf(selectedIds);
-                } else if(key === MENU_EXPLIB){
+                } else if (key === MENU_EXPLIB) {
                     self._expLib(selectedIds);
-                } else if(key === MENU_UPDLIB){
+                } else if (key === MENU_UPDLIB) {
                     self._updLib(selectedIds);
-                } else if(key === MENU_CON_NODE){
+                } else if (key === MENU_CON_NODE) {
                     self._nodeConCheck(selectedIds);
                 }
             },
@@ -1134,7 +1199,7 @@ define(['js/logger',
         var i = selectedIds.length,
             gmeIDs = [];
 
-        while(i--) {
+        while (i--) {
             gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
         }
 
@@ -1145,7 +1210,7 @@ define(['js/logger',
             gmeIDs = [],
             id;
 
-        while(i--) {
+        while (i--) {
             gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
         }
 
@@ -1158,7 +1223,7 @@ define(['js/logger',
             gmeIDs = [],
             id;
 
-        while(i--) {
+        while (i--) {
             gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
         }
 
@@ -1172,35 +1237,39 @@ define(['js/logger',
             gmeIDs = [],
             id;
 
-        while(i--) {
+        while (i--) {
             gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
         }
 
         id = gmeIDs[0] || null;
 
-        if(id){
+        if (id) {
             this._client.validateNodeAsync(id);
         }
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements,
+                                                                                                            color) {
         this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.COLOR);
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionBorderColorChanged = function (selectedElements, color) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionBorderColorChanged = function (selectedElements,
+                                                                                                              color) {
         this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.BORDER_COLOR);
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionTextColorChanged = function (selectedElements, color) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionTextColorChanged = function (selectedElements,
+                                                                                                            color) {
         this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.TEXT_COLOR);
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionSetColor = function (selectedIds, color, regKey) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionSetColor = function (selectedIds, color,
+                                                                                                    regKey) {
         var i = selectedIds.length,
             gmeID;
 
         this._client.startTransaction();
-        while(i--) {
+        while (i--) {
             gmeID = this._ComponentID2GmeID[selectedIds[i]];
 
             if (color) {

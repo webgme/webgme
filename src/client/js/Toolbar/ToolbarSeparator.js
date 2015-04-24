@@ -1,15 +1,14 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, $ */
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-define(['./ButtonBase',
-        './ToolbarItemBase'], function (buttonBase,
-                                        ToolbarItemBase) {
+define(['./ButtonBase', './ToolbarItemBase'], function (buttonBase, ToolbarItemBase) {
 
-    "use strict";
+    'use strict';
 
     var ToolbarSeparator,
         EL_BASE = $('<div class="separator"></div>');

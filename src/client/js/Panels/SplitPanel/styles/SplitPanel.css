@@ -15,7 +15,7 @@
   .split-panel .splitter {
     z-index: 1000;
     background: #DDD;
-    border: 0px solid #BBB;
+    border: 0x solid #BBB;
     position: absolute;
     box-sizing: border-box; }
     .split-panel .splitter.vertical {

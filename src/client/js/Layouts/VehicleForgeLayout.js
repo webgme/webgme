@@ -1,21 +1,22 @@
 /*globals define, DEBUG, WebGMEGlobal, _*/
-
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
+define(['lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     'js/logger',
     './DefaultLayout',
     'text!./templates/DefaultLayout.html',
-    'text!./VehicleForgeLayoutConfig.json'], function (_jQueryLayout,
-                                                               Logger,
-                                                               DefaultLayout,
-                                                               vehicleForgeLayoutTemplate,
-                                                               VehicleForgeLayoutConfigJSON) {
+    'text!./VehicleForgeLayoutConfig.json'
+], function (_jQueryLayout,
+             Logger,
+             DefaultLayout,
+             vehicleForgeLayoutTemplate,
+             VehicleForgeLayoutConfigJSON) {
 
-    "use strict";
+    'use strict';
 
     var VehicleForgeLayout,
         CONFIG = JSON.parse(VehicleForgeLayoutConfigJSON);
@@ -24,9 +25,11 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         this._logger = Logger.create('gme:Layouts:VehicleForgeLayout', WebGMEGlobal.gmeConfig.client.log);
 
         //call parent's constructor
-        DefaultLayout.apply(this, [{'logger': this._logger,
-                                    'panels': CONFIG.panels,
-                                    'template': vehicleForgeLayoutTemplate}]);
+        DefaultLayout.apply(this, [{
+            logger: this._logger,
+            panels: CONFIG.panels,
+            template: vehicleForgeLayoutTemplate
+        }]);
     };
 
     //inherit from PanelBaseWithHeader

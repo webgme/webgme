@@ -1,10 +1,12 @@
-/*globals define, $*/
-
+/*globals define, $, WebGMEGlobal*/
+/*jshint browser: true*/
 /**
  * @author lattmann / https://github.com/lattmann
  */
 
-define(['js/Loader/LoaderCircles', 'text!./templates/CreateFromSeed.html'], function (LoaderCircles, createFromSeedDialogTemplate) {
+define(['js/Loader/LoaderCircles',
+    'text!./templates/CreateFromSeed.html'
+], function (LoaderCircles, createFromSeedDialogTemplate) {
 
     'use strict';
 
@@ -72,11 +74,15 @@ define(['js/Loader/LoaderCircles', 'text!./templates/CreateFromSeed.html'], func
                 self.seedProjectName = self._option.val().slice(self._option.val().indexOf(':') + 1);
 
                 if (self.seedProjectType === 'db') {
-                    self.seedProjectName = self._option.val().slice(self._option.val().indexOf(':') + 1, self._option.val().indexOf('#'));
+                    self.seedProjectName = self._option.val().slice(self._option.val().indexOf(':') + 1,
+                        self._option.val().indexOf('#'));
                     self.seedCommitHash = self._option.val().slice(self._option.val().indexOf('#'));
                 }
 
-                self._fnCallback(self.seedProjectType, self.seedProjectName, self.seedProjectBranch, self.seedCommitHash);
+                self._fnCallback(self.seedProjectType,
+                    self.seedProjectName,
+                    self.seedProjectBranch,
+                    self.seedCommitHash);
             }
         });
 
@@ -98,7 +104,7 @@ define(['js/Loader/LoaderCircles', 'text!./templates/CreateFromSeed.html'], func
                 for (i = 0; i < data.file.length; i += 1) {
                     self._optGroupFile.append($('<option>', {text: data.file[i], value: 'file:' + data.file[i]}));
                     if (self.seedProjectName === data.file[i]) {
-                        defaultOption =  'file:' + data.file[i];
+                        defaultOption = 'file:' + data.file[i];
                     }
                 }
 
@@ -120,7 +126,8 @@ define(['js/Loader/LoaderCircles', 'text!./templates/CreateFromSeed.html'], func
                             } else if (Object.keys(projectList[projectId].branches).length === 1) {
                                 branchId = Object.keys(projectList[projectId].branches)[0];
                                 self._optGroupDb.append($('<option>', {
-                                        text: data.db[i] + ' (' + branchId + ' ' + projectList[projectId].branches[branchId].slice(0, 8) + ')',
+                                        text: data.db[i] + ' (' + branchId + ' ' +
+                                               projectList[projectId].branches[branchId].slice(0, 8) + ')',
                                         value: 'db:' + data.db[i] + projectList[projectId].branches[branchId]
                                     }
                                 ));
@@ -136,11 +143,12 @@ define(['js/Loader/LoaderCircles', 'text!./templates/CreateFromSeed.html'], func
                                 self._option.append(proojectGroup);
 
                                 for (branchId in projectList[projectId].branches) {
-                                    if ( projectList[projectId].branches.hasOwnProperty(branchId)) {
+                                    if (projectList[projectId].branches.hasOwnProperty(branchId)) {
                                         proojectGroup.append($('<option>', {
                                                 text: data.db[i] + ' (' + branchId + ' ' +
                                                        projectList[projectId].branches[branchId].slice(0, 8) + ')',
-                                                value: 'db:' + data.db[i] + projectList[projectId].branches[branchId]
+                                                value: 'db:' + data.db[i] +
+                                                       projectList[projectId].branches[branchId]
                                             }
                                         ));
                                     }

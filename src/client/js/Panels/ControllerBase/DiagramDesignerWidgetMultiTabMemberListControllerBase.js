@@ -1,27 +1,32 @@
-/*globals define, _, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal, $ */
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger',
-        'common/util/guid',
-        'js/Constants',
-        'js/NodePropertyNames',
-        'js/RegistryKeys',
-        'js/Utils/GMEConcepts',
-        'js/Utils/GMEVisualConcepts',
-        'js/DragDrop/DragHelper',
-        'js/Utils/PreferencesHelper'], function (Logger,
-                                   generateGuid,
-                                   CONSTANTS,
-                                   nodePropertyNames,
-                                   REGISTRY_KEYS,
-                                   GMEConcepts,
-                                   GMEVisualConcepts,
-                                   DragHelper,
-                                   PreferencesHelper) {
+    'common/util/guid',
+    'js/Constants',
+    'js/NodePropertyNames',
+    'js/RegistryKeys',
+    'js/Utils/GMEConcepts',
+    'js/Utils/GMEVisualConcepts',
+    'js/DragDrop/DragHelper',
+    'js/Utils/PreferencesHelper'
+], function (Logger,
+             generateGuid,
+             CONSTANTS,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             GMEConcepts,
+             GMEVisualConcepts,
+             DragHelper,
+             PreferencesHelper) {
 
-    "use strict";
+    'use strict';
 
     var DiagramDesignerWidgetMultiTabMemberListControllerBase,
-        DEFAULT_DECORATOR = "ModelDecorator",
+        DEFAULT_DECORATOR = 'ModelDecorator',
         WIDGET_NAME = 'DiagramDesigner',
         SRC_POINTER_NAME = CONSTANTS.POINTER_SOURCE,
         DST_POINTER_NAME = CONSTANTS.POINTER_TARGET,
@@ -39,98 +44,99 @@ define(['js/logger',
         this._widget = options.widget;
 
         if (this._client === undefined) {
-            this.logger.error("DiagramDesignerWidgetMultiTabMemberListControllerBase's client is not specified...");
-            throw ("DiagramDesignerWidgetMultiTabMemberListControllerBase can not be created");
+            this.logger.error('DiagramDesignerWidgetMultiTabMemberListControllerBase\'s client is not specified...');
+            throw ('DiagramDesignerWidgetMultiTabMemberListControllerBase can not be created');
         }
 
         if (this._widget === undefined) {
-            this.logger.error("DiagramDesignerWidgetMultiTabMemberListControllerBase's widget is not specified...");
-            throw ("DiagramDesignerWidgetMultiTabMemberListControllerBase can not be created");
+            this.logger.error('DiagramDesignerWidgetMultiTabMemberListControllerBase\'s widget is not specified...');
+            throw ('DiagramDesignerWidgetMultiTabMemberListControllerBase can not be created');
         }
 
         this._attachDiagramDesignerWidgetEventHandlers();
 
-        this.logger.debug("DiagramDesignerWidgetMultiTabMemberListControllerBase ctor finished");
+        this.logger.debug('DiagramDesignerWidgetMultiTabMemberListControllerBase ctor finished');
     };
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._attachDiagramDesignerWidgetEventHandlers = function () {
-        var self = this;
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._attachDiagramDesignerWidgetEventHandlers =
+        function () {
+            var self = this;
 
-        this._widget.onSelectedTabChanged = function (tabID) {
-            self._onSelectedTabChanged(tabID);
-        };
+            this._widget.onSelectedTabChanged = function (tabID) {
+                self._onSelectedTabChanged(tabID);
+            };
 
-        this._widget.onBackgroundDroppableAccept = function (event, dragInfo) {
-            return self._onBackgroundDroppableAccept(event, dragInfo);
-        };
+            this._widget.onBackgroundDroppableAccept = function (event, dragInfo) {
+                return self._onBackgroundDroppableAccept(event, dragInfo);
+            };
 
-        this._widget.onBackgroundDrop = function (event, dragInfo, position) {
-            self._onBackgroundDrop(event, dragInfo, position);
-        };
+            this._widget.onBackgroundDrop = function (event, dragInfo, position) {
+                self._onBackgroundDrop(event, dragInfo, position);
+            };
 
-        this._widget.getDragItems = function (selectedElements) {
-            return self._getDragItems(selectedElements);
-        };
+            this._widget.getDragItems = function (selectedElements) {
+                return self._getDragItems(selectedElements);
+            };
 
-        this._oGetDragParams = this._widget.getDragParams;
-        this._widget.getDragParams = function (selectedElements, event) {
-            return self._getDragParams(selectedElements, event);
-        };
+            this._oGetDragParams = this._widget.getDragParams;
+            this._widget.getDragParams = function (selectedElements, event) {
+                return self._getDragParams(selectedElements, event);
+            };
 
-        this._widget.onSelectionDelete = function (idList) {
-            self._onSelectionDelete(idList);
-        };
+            this._widget.onSelectionDelete = function (idList) {
+                self._onSelectionDelete(idList);
+            };
 
-        this._widget.onTabTitleChanged = function (tabID, oldValue, newValue) {
-            self._onTabTitleChanged(tabID, oldValue, newValue);
-        };
+            this._widget.onTabTitleChanged = function (tabID, oldValue, newValue) {
+                self._onTabTitleChanged(tabID, oldValue, newValue);
+            };
 
-        this._widget.onTabsSorted = function (newTabIDOrder) {
-            self._onTabsSorted(newTabIDOrder);
-        };
+            this._widget.onTabsSorted = function (newTabIDOrder) {
+                self._onTabsSorted(newTabIDOrder);
+            };
 
-        this._widget.onTabDeleteClicked = function (tabID) {
-            self._onTabDeleteClicked(tabID);
-        };
+            this._widget.onTabDeleteClicked = function (tabID) {
+                self._onTabDeleteClicked(tabID);
+            };
 
-        this._widget.onTabAddClicked = function () {
-            self._onTabAddClicked();
-        };
+            this._widget.onTabAddClicked = function () {
+                self._onTabAddClicked();
+            };
 
-        this._widget.onSelectionChanged = function (selectedIds) {
-            self._onSelectionChanged(selectedIds);
-        };
+            this._widget.onSelectionChanged = function (selectedIds) {
+                self._onSelectionChanged(selectedIds);
+            };
 
-        this._widget.onSelectionFillColorChanged = function (selectedElements, color) {
-            self._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.COLOR);
-        };
+            this._widget.onSelectionFillColorChanged = function (selectedElements, color) {
+                self._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.COLOR);
+            };
 
-        this._widget.onSelectionBorderColorChanged = function (selectedElements, color) {
-            self._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.BORDER_COLOR);
-        };
+            this._widget.onSelectionBorderColorChanged = function (selectedElements, color) {
+                self._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.BORDER_COLOR);
+            };
 
-        this._widget.onSelectionTextColorChanged = function (selectedElements, color) {
-            self._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.TEXT_COLOR);
-        };
+            this._widget.onSelectionTextColorChanged = function (selectedElements, color) {
+                self._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.TEXT_COLOR);
+            };
 
-        this._widget.onConnectionSegmentPointsChange = function (params) {
-            self._onConnectionSegmentPointsChange(params);
-        };
+            this._widget.onConnectionSegmentPointsChange = function (params) {
+                self._onConnectionSegmentPointsChange(params);
+            };
 
-        this._widget.onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
-            self._onRegisterSubcomponent(objID, sCompID, metaInfo);
-        };
+            this._widget.onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
+                self._onRegisterSubcomponent(objID, sCompID, metaInfo);
+            };
 
-        this._widget.onUnregisterSubcomponent = function (objID, sCompID) {
-            self._onUnregisterSubcomponent(objID, sCompID);
+            this._widget.onUnregisterSubcomponent = function (objID, sCompID) {
+                self._onUnregisterSubcomponent(objID, sCompID);
+            };
         };
-    };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.selectedObjectChanged = function (nodeId) {
         var self = this,
             pattern;
 
-        this.logger.debug("activeObject nodeId '" + nodeId + "'");
+        this.logger.debug('activeObject nodeId "' + nodeId + '"');
 
         //delete everything from model editor
         this._widget.clear();
@@ -152,7 +158,7 @@ define(['js/logger',
         if (nodeId || nodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             pattern = {};
-            pattern[nodeId] = { "children": 0 };
+            pattern[nodeId] = {children: 0};
 
             this._widget.showProgressbar();
 
@@ -163,7 +169,7 @@ define(['js/logger',
             //update the territory
             this._client.updateTerritory(this._territoryId, pattern);
         } else {
-            this._widget.setBackgroundText("No object to display...");
+            this._widget.setBackgroundText('No object to display...');
         }
     };
 
@@ -200,26 +206,29 @@ define(['js/logger',
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._displayToolbarItems = function () {
-        if (this._toolbarInitialized !== true) {
-            this._initializeToolbar();
-        } else {
-            for (var i = 0; i < this._toolbarItems.length; i++) {
+        var i;
+        if (this._toolbarInitialized === true) {
+            for (i = 0; i < this._toolbarItems.length; i++) {
                 this._toolbarItems[i].show();
             }
+        } else {
+            this._initializeToolbar();
         }
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._hideToolbarItems = function () {
+        var i;
         if (this._toolbarInitialized === true) {
-            for (var i = 0; i < this._toolbarItems.length; i++) {
+            for (i = 0; i < this._toolbarItems.length; i++) {
                 this._toolbarItems[i].hide();
             }
         }
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._removeToolbarItems = function () {
+        var i;
         if (this._toolbarInitialized === true) {
-            for (var i = 0; i < this._toolbarItems.length; i++) {
+            for (i = 0; i < this._toolbarItems.length; i++) {
                 this._toolbarItems[i].destroy();
             }
         }
@@ -231,7 +240,7 @@ define(['js/logger',
         this._toolbarInitialized = true;
     };
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.setReadOnly = function (isReadOnly) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.setReadOnly = function (/* isReadOnly */) {
 
     };
 
@@ -257,7 +266,7 @@ define(['js/logger',
             j,
             gmeID;
 
-        this.logger.debug("_processMemberListContainer");
+        this.logger.debug('_processMemberListContainer');
 
         //#1 - clear tabs
         this._widget.clearTabs();
@@ -295,7 +304,8 @@ define(['js/logger',
                     j = this._memberListMembers[memberListID].length;
                     while (j--) {
                         gmeID = this._memberListMembers[memberListID][j];
-                        this._memberListMemberCoordinates[memberListID][gmeID] = memberListContainerObj.getMemberRegistry(memberListID, gmeID, MEMBER_POSITION_REGISTRY_KEY);
+                        this._memberListMemberCoordinates[memberListID][gmeID] =
+                            memberListContainerObj.getMemberRegistry(memberListID, gmeID, MEMBER_POSITION_REGISTRY_KEY);
                     }
 
                     //#3 - set selected based on actual selection
@@ -325,104 +335,109 @@ define(['js/logger',
         }
     };
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._updateSelectedMemberListMembersTerritoryPatterns = function () {
-        var currentlyDisplayedMembers = (this._selectedMemberListMembers || []).slice(0),
-            actualMembers = (this._memberListMembers[this._selectedMemberListID] || []).slice(0),
-            diff,
-            len,
-            territoryChanged = false,
-            territoryId = this._selectedMemberListMembersTerritoryId,
-            territoryPatterns = this._selectedMemberListMembersTerritoryPatterns,
-            client = this._client,
-            desc,
-            obj;
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._updateSelectedMemberListMembersTerritoryPatterns =
+        function () {
+            var currentlyDisplayedMembers = (this._selectedMemberListMembers || []).slice(0),
+                actualMembers = (this._memberListMembers[this._selectedMemberListID] || []).slice(0),
+                diff,
+                len,
+                territoryChanged = false,
+                territoryId = this._selectedMemberListMembersTerritoryId,
+                territoryPatterns = this._selectedMemberListMembersTerritoryPatterns,
+                client = this._client,
+                desc,
+                obj;
 
-        //let's see who has been deleted
-        diff = _.difference(currentlyDisplayedMembers, actualMembers);
-        len = diff.length;
-        while (len--) {
-            delete territoryPatterns[diff[len]];
-            territoryChanged = true;
-        }
+            //let's see who has been deleted
+            diff = _.difference(currentlyDisplayedMembers, actualMembers);
+            len = diff.length;
+            while (len--) {
+                delete territoryPatterns[diff[len]];
+                territoryChanged = true;
+            }
 
-        //let's see who has been added
-        diff = _.difference(actualMembers, currentlyDisplayedMembers);
-        len = diff.length;
-        while (len--) {
-            territoryPatterns[diff[len]] = { "children": 0 };
-            territoryChanged = true;
-        }
+            //let's see who has been added
+            diff = _.difference(actualMembers, currentlyDisplayedMembers);
+            len = diff.length;
+            while (len--) {
+                territoryPatterns[diff[len]] = {children: 0};
+                territoryChanged = true;
+            }
 
-        //let's update the one that has not been changed but their position might have
-        diff = _.intersection(actualMembers, currentlyDisplayedMembers);
-        len = diff.length;
-        this._widget.beginUpdate();
-        while (len--) {
-            //only items are interesting since only those position is stored in the container's set's registry
-            //connections are interesting too since their color or segment points could have changed which is set specific
-            if (GMEConcepts.isConnection(diff[len]) === false) {
-                this._onUpdate(diff[len], {isConnection: false});
-            } else {
-                if (this._delayedConnectionsAsItems[diff[len]]) {
-                    //delayed connection, rendered as an item
+            //let's update the one that has not been changed but their position might have
+            diff = _.intersection(actualMembers, currentlyDisplayedMembers);
+            len = diff.length;
+            this._widget.beginUpdate();
+            while (len--) {
+                //only items are interesting since only those position is stored in the container's set's registry
+                //connections are interesting too since their color or segment points could have changed
+                // which is set specific
+                if (GMEConcepts.isConnection(diff[len]) === false) {
                     this._onUpdate(diff[len], {isConnection: false});
                 } else {
-                    //real connection
-                    desc = {isConnection: true};
-                    obj = client.getNode(diff[len]);
-                    if (obj) {
-                        desc.srcID  = obj.getPointer(SRC_POINTER_NAME).to;
-                        desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
-                        this._onUpdate(diff[len], desc);
+                    if (this._delayedConnectionsAsItems[diff[len]]) {
+                        //delayed connection, rendered as an item
+                        this._onUpdate(diff[len], {isConnection: false});
+                    } else {
+                        //real connection
+                        desc = {isConnection: true};
+                        obj = client.getNode(diff[len]);
+                        if (obj) {
+                            desc.srcID = obj.getPointer(SRC_POINTER_NAME).to;
+                            desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
+                            this._onUpdate(diff[len], desc);
+                        }
                     }
                 }
             }
-        }
-        this._widget.endUpdate();
+            this._widget.endUpdate();
 
-        //save current list of members
-        this._selectedMemberListMembers = actualMembers;
+            //save current list of members
+            this._selectedMemberListMembers = actualMembers;
 
-        if (territoryChanged) {
-            setTimeout( function () {
-                client.updateTerritory(territoryId, territoryPatterns);
-            }, 10);
-        }
-    };
+            if (territoryChanged) {
+                setTimeout(function () {
+                    client.updateTerritory(territoryId, territoryPatterns);
+                }, 10);
+            }
+        };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getOrderedMemberListInfo = function (memberListContainerObject) {
         //result should be an array of objects:
         /*{
-            'memberListID': setNames[len],
-            'title': setNames[len],
-            'enableDeleteTab': true,
-            'enableRenameTab': true
+         'memberListID': setNames[len],
+         'title': setNames[len],
+         'enableDeleteTab': true,
+         'enableRenameTab': true
          };
-        */
+         */
 
-        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getOrderedMemberListInfo(memberListContainerObject) is not overridden for object "' + memberListContainerObject + '", returning default...');
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getOrderedMemberListInfo(memberList' +
+        'ContainerObject) is not overridden for object "' + memberListContainerObject + '", returning default...');
 
         return undefined;
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistryKey = function () {
-        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistryKey is not overridden, returning default value...');
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistryKey is not ' +
+        'overridden, returning default value...');
         return undefined;
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectedTabChanged = function (tabID) {
         if (this._tabIDMemberListID[tabID] && this._selectedMemberListID !== this._tabIDMemberListID[tabID]) {
             this._selectedMemberListID = this._tabIDMemberListID[tabID];
-            
+
             this.logger.debug('_selectedMemberListID changed to : ' + this._selectedMemberListID);
-            
+
             this._initializeSelectedMemberList();
         }
     };
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._getDragParams = function (selectedElements, event) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._getDragParams = function (selectedElements,
+                                                                                               event) {
         var oParams = this._oGetDragParams.call(this._widget, selectedElements, event),
-            params = { 'positions': {} },
+            params = {positions: {}},
             i;
 
         params[DRAG_PARAMS_MULTI_TAB_MEMBER_LIST_CONTAINER_ID] = this._getDragParamsDataID();
@@ -440,7 +455,7 @@ define(['js/logger',
         var res = [],
             i = selectedElements.length;
 
-        while(i--) {
+        while (i--) {
             res.push(this._ComponentID2GMEID[selectedElements[i]]);
         }
 
@@ -454,7 +469,8 @@ define(['js/logger',
     /**********************************************************/
     /*         HANDLE OBJECT DRAG & DROP ACCEPTANCE           */
     /**********************************************************/
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onBackgroundDroppableAccept = function(event, dragInfo) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onBackgroundDroppableAccept = function (event,
+                                                                                                             dragInfo) {
         var gmeIDList = DragHelper.getDragItems(dragInfo),
             params = DragHelper.getDragParams(dragInfo),
             dragEffects = DragHelper.getDragEffects(dragInfo),
@@ -481,11 +497,13 @@ define(['js/logger',
                     //and do not try to add the container item itself as member of the list
                     if (gmeIDList.length > 0) {
                         accept = true;
-                        for (i = 0; i < gmeIDList.length; i+= 1) {
+                        for (i = 0; i < gmeIDList.length; i += 1) {
                             if (gmeIDList[i] === this._memberListContainerID) {
                                 accept = false;
                                 break;
-                            } else  if (this._memberListMembers[this._selectedMemberListID].indexOf(gmeIDList[i]) !== -1 ) {
+                            } else if (this._memberListMembers[this._selectedMemberListID]
+                                    .indexOf(gmeIDList[i]) !== -1) {
+
                                 accept = false;
                                 break;
                             }
@@ -505,8 +523,9 @@ define(['js/logger',
     /**********************************************************/
     /*  HANDLE OBJECT DRAG & DROP TO SHEET                    */
     /**********************************************************/
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onBackgroundDrop = function (event, dragInfo, position) {
-        var _client = this._client,
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onBackgroundDrop = function (event, dragInfo,
+                                                                                                  position) {
+        var client = this._client,
             memberListContainerID = this._memberListContainerID,
             memberListToAddTo = this._selectedMemberListID,
             gmeIDList = DragHelper.getDragItems(dragInfo),
@@ -524,7 +543,7 @@ define(['js/logger',
 
             //params.position holds the old coordinates of the items being dragged
             //update UI
-            _client.startTransaction();
+            client.startTransaction();
             this._widget.beginUpdate();
 
             for (i in params.positions) {
@@ -533,21 +552,28 @@ define(['js/logger',
                     posX = position.x + params.positions[i].x;
                     posY = position.y + params.positions[i].y;
 
-                    _client.setMemberRegistry(memberListContainerID, i, memberListToAddTo, MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
+                    client.setMemberRegistry(memberListContainerID,
+                        i,
+                        memberListToAddTo,
+                        MEMBER_POSITION_REGISTRY_KEY,
+                        {
+                            x: posX,
+                            y: posY
+                        });
 
                     componentID = this._GMEID2ComponentID[i][0];
 
                     selectedIDs.push(componentID);
-                    this._widget.updateDesignerItem(componentID, { "position": {'x': posX, 'y': posY}});
+                    this._widget.updateDesignerItem(componentID, {position: {x: posX, y: posY}});
                 }
             }
 
             this._widget.endUpdate();
             this._widget.select(selectedIDs);
 
-            _client.completeTransaction();
+            client.completeTransaction();
         } else {
-            _client.startTransaction();
+            client.startTransaction();
 
             //if the item is not currently in the currently selected member list, add it
             if (gmeIDList.length > 0) {
@@ -570,13 +596,20 @@ define(['js/logger',
                             position.y += 20;
                         }
 
-                        _client.addMember(memberListContainerID, componentID, memberListToAddTo);
-                        _client.setMemberRegistry(memberListContainerID, componentID, memberListToAddTo, MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
+                        client.addMember(memberListContainerID, componentID, memberListToAddTo);
+                        client.setMemberRegistry(memberListContainerID,
+                            componentID,
+                            memberListToAddTo,
+                            MEMBER_POSITION_REGISTRY_KEY,
+                            {
+                                x: posX,
+                                y: posY
+                            });
                     }
                 }
             }
 
-            _client.completeTransaction();
+            client.completeTransaction();
         }
     };
     /**********************************************************/
@@ -587,21 +620,21 @@ define(['js/logger',
     /*  HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /*************************************************************/
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectionDelete = function (idList) {
-        var _client = this._client,
+        var client = this._client,
             memberListContainerID = this._memberListContainerID,
             memberListToRemoveFrom = this._selectedMemberListID,
             len,
             gmeID;
 
-        _client.startTransaction();
+        client.startTransaction();
 
         len = idList.length;
         while (len--) {
             gmeID = this._ComponentID2GMEID[idList[len]];
-            _client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
+            client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
         }
 
-        _client.completeTransaction();
+        client.completeTransaction();
     };
     /************************************************************************/
     /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
@@ -610,10 +643,9 @@ define(['js/logger',
     //initialize the selected memberlist's members
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._initializeSelectedMemberList = function () {
         var len,
-            self = this,
-            client = this._client;
+            self = this;
 
-        this.logger.debug("_initializeSelectedMemberList");
+        this.logger.debug('_initializeSelectedMemberList');
 
         //delete everything from model editor
         this._widget.clear();
@@ -654,7 +686,9 @@ define(['js/logger',
             }
             while (len--) {
                 this._selectedMemberListMembers.push(this._memberListMembers[this._selectedMemberListID][len]);
-                this._selectedMemberListMembersTerritoryPatterns[this._memberListMembers[this._selectedMemberListID][len]] = { "children": 0 };
+
+                this._selectedMemberListMembersTerritoryPatterns[this._memberListMembers[
+                    this._selectedMemberListID][len]] = {children: 0};
             }
         }
 
@@ -662,7 +696,8 @@ define(['js/logger',
             self._memberListTerritoryCallback(events);
         });
 
-        this._client.updateTerritory(this._selectedMemberListMembersTerritoryId, this._selectedMemberListMembersTerritoryPatterns);
+        this._client.updateTerritory(this._selectedMemberListMembersTerritoryId,
+            this._selectedMemberListMembersTerritoryPatterns);
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._memberListTerritoryCallback = function (events) {
@@ -674,22 +709,23 @@ define(['js/logger',
             self = this;
 
         while (len--) {
-            if ((events[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (events[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
+            if ((events[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) ||
+                (events[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
 
                 obj = client.getNode(events[len].eid);
 
-                events[len].desc = { isConnection: GMEConcepts.isConnection(events[len].eid) };
+                events[len].desc = {isConnection: GMEConcepts.isConnection(events[len].eid)};
 
                 if (obj) {
                     //if it is a connection find src and dst and do not care about decorator
                     if (events[len].desc.isConnection === true) {
-                        events[len].desc.srcID  = obj.getPointer(SRC_POINTER_NAME).to;
+                        events[len].desc.srcID = obj.getPointer(SRC_POINTER_NAME).to;
                         events[len].desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
                     } else {
                         objDecorator = obj.getRegistry(REGISTRY_KEYS.DECORATOR);
 
                         if (!objDecorator ||
-                            objDecorator === "") {
+                            objDecorator === '') {
                             objDecorator = DEFAULT_DECORATOR;
                         }
 
@@ -714,18 +750,28 @@ define(['js/logger',
             e,
             territoryChanged = false,
             j,
-            ce;
+            ce,
+            orderedItemEvents = [],
+            orderedConnectionEvents = [],
+            unloadEvents,
 
-        this.logger.debug("_dispatchEvents '" + events.length + "' items: " + JSON.stringify(events));
+            srcGMEID,
+            dstGMEID,
+            srcConnIdx,
+            dstConnIdx,
+            insertIdxAfter,
+            insertIdxBefore,
+            MAX_VAL = 999999999,
+            depSrcConnIdx = MAX_VAL,
+            depDstConnIdx = MAX_VAL;
+
+        this.logger.debug('_dispatchEvents "' + events.length + '" items: ' + JSON.stringify(events));
 
         this._widget.beginUpdate();
 
         /********** ORDER EVENTS BASED ON DEPENDENCY ************/
         /** 1: items first, no dependency **/
         /** 2: connections second, dependency if a connection is connected to an other connection **/
-
-        var orderedItemEvents = [];
-        var orderedConnectionEvents = [];
 
         if (this._delayedConnections && this._delayedConnections.length > 0) {
             //if there are saved connections, first check if any UPDATE or UNLOAD event is about them
@@ -743,11 +789,13 @@ define(['js/logger',
 
                             //TODO: connection as box
                             //remove the box that represents this connections
-                            this._widget.deleteComponent(this._delayedConnectionsAsItems[this._delayedConnections[j].ID]);
+                            this._widget.deleteComponent(this._delayedConnectionsAsItems[
+                                this._delayedConnections[j].ID]);
+
                             delete this._delayedConnectionsAsItems[this._delayedConnections[j].ID];
                         }
                     }
-                } else if ( e.etype === CONSTANTS.TERRITORY_EVENT_UPDATE &&
+                } else if (e.etype === CONSTANTS.TERRITORY_EVENT_UPDATE &&
                     e.desc.isConnection === true) {
                     //if it is an UPDATE, update the SRC and DST info
                     j = this._delayedConnections.length;
@@ -765,9 +813,11 @@ define(['js/logger',
             }
 
             for (i = 0; i < this._delayedConnections.length; i += 1) {
-                orderedConnectionEvents.push({'etype': CONSTANTS.TERRITORY_EVENT_LOAD,
-                    'eid': this._delayedConnections[i].ID,
-                    'desc': this._delayedConnections[i].desc});
+                orderedConnectionEvents.push({
+                    etype: CONSTANTS.TERRITORY_EVENT_LOAD,
+                    eid: this._delayedConnections[i].ID,
+                    desc: this._delayedConnections[i].desc
+                });
 
                 //TODO: connection as box
                 //remove the box that represents this connections
@@ -779,98 +829,76 @@ define(['js/logger',
         this._delayedConnections = [];
         this._delayedConnectionsAsItems = {};
 
-        var unloadEvents = [];
+        unloadEvents = [];
         i = events.length;
         while (i--) {
             e = events[i];
 
-            if(e.etype !== CONSTANTS.TERRITORY_EVENT_COMPLETE && e.etype !== CONSTANTS.TERRITORY_EVENT_INCOMPLETE){
-              if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD) {
-                unloadEvents.push(e);
-              } else if (e.desc.isConnection === false) {
-                orderedItemEvents.push(e);
-              } else if (e.desc.isConnection === true) {
-                var srcGMEID  = e.desc.srcID;
-                var dstGMEID = e.desc.dstID;
+            if (e.etype !== CONSTANTS.TERRITORY_EVENT_COMPLETE && e.etype !== CONSTANTS.TERRITORY_EVENT_INCOMPLETE) {
+                if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD) {
+                    unloadEvents.push(e);
+                } else if (e.desc.isConnection === false) {
+                    orderedItemEvents.push(e);
+                } else if (e.desc.isConnection === true) {
+                    srcGMEID = e.desc.srcID;
+                    dstGMEID = e.desc.dstID;
 
-                //check to see if SRC and DST is another connection
-                //if so, put this guy AFTER them
-                var srcConnIdx = -1;
-                var dstConnIdx = -1;
-                j = orderedConnectionEvents.length;
-                while (j--) {
-                  ce = orderedConnectionEvents[j];
-                  if (ce.id === srcGMEID) {
-                    srcConnIdx = j;
-                  } else if (ce.id === dstGMEID) {
-                    dstConnIdx = j;
-                  }
+                    //check to see if SRC and DST is another connection
+                    //if so, put this guy AFTER them
+                    srcConnIdx = -1;
+                    dstConnIdx = -1;
+                    j = orderedConnectionEvents.length;
+                    while (j--) {
+                        ce = orderedConnectionEvents[j];
+                        if (ce.id === srcGMEID) {
+                            srcConnIdx = j;
+                        } else if (ce.id === dstGMEID) {
+                            dstConnIdx = j;
+                        }
 
-                  if (srcConnIdx !== -1 && dstConnIdx !== -1) {
-                    break;
-                  }
+                        if (srcConnIdx !== -1 && dstConnIdx !== -1) {
+                            break;
+                        }
+                    }
+
+                    insertIdxAfter = Math.max(srcConnIdx, dstConnIdx);
+
+                    //check to see if this guy is a DEPENDENT of any already processed CONNECTION
+                    //insert BEFORE THEM
+                    j = orderedConnectionEvents.length;
+                    while (j--) {
+                        ce = orderedConnectionEvents[j];
+                        if (e.eid === ce.desc.srcID) {
+                            depSrcConnIdx = j;
+                        } else if (e.eid === ce.desc.dstID) {
+                            depDstConnIdx = j;
+                        }
+
+                        if (depSrcConnIdx !== MAX_VAL && depDstConnIdx !== MAX_VAL) {
+                            break;
+                        }
+                    }
+
+                    insertIdxBefore = Math.min(depSrcConnIdx, depDstConnIdx);
+                    if (insertIdxAfter === -1 && insertIdxBefore === MAX_VAL) {
+                        orderedConnectionEvents.push(e);
+                    } else {
+                        if (insertIdxAfter !== -1 &&
+                            insertIdxBefore === MAX_VAL) {
+                            orderedConnectionEvents.splice(insertIdxAfter + 1, 0, e);
+                        } else if (insertIdxAfter === -1 &&
+                            insertIdxBefore !== MAX_VAL) {
+                            orderedConnectionEvents.splice(insertIdxBefore, 0, e);
+                        } else if (insertIdxAfter !== -1 &&
+                            insertIdxBefore !== MAX_VAL) {
+                            orderedConnectionEvents.splice(insertIdxBefore, 0, e);
+                        }
+                    }
                 }
-
-                var insertIdxAfter = Math.max(srcConnIdx, dstConnIdx);
-
-                //check to see if this guy is a DEPENDENT of any already processed CONNECTION
-                //insert BEFORE THEM
-                var MAX_VAL = 999999999;
-                var depSrcConnIdx = MAX_VAL;
-                var depDstConnIdx = MAX_VAL;
-                j = orderedConnectionEvents.length;
-                while (j--) {
-                  ce = orderedConnectionEvents[j];
-                  if (e.eid === ce.desc.srcID) {
-                    depSrcConnIdx = j;
-                  } else if (e.eid === ce.desc.dstID) {
-                    depDstConnIdx = j;
-                  }
-
-                  if (depSrcConnIdx !== MAX_VAL && depDstConnIdx !== MAX_VAL) {
-                    break;
-                  }
-                }
-
-                var insertIdxBefore = Math.min(depSrcConnIdx, depDstConnIdx);
-                if (insertIdxAfter === -1 && insertIdxBefore === MAX_VAL) {
-                  orderedConnectionEvents.push(e);
-                } else {
-                  if (insertIdxAfter !== -1 &&
-                    insertIdxBefore === MAX_VAL) {
-                    orderedConnectionEvents.splice(insertIdxAfter + 1,0,e);
-                  } else if (insertIdxAfter === -1 &&
-                    insertIdxBefore !== MAX_VAL) {
-                    orderedConnectionEvents.splice(insertIdxBefore,0,e);
-                  } else if (insertIdxAfter !== -1 &&
-                    insertIdxBefore !== MAX_VAL) {
-                    orderedConnectionEvents.splice(insertIdxBefore,0,e);
-                  }
-                }
-              }
             }
         }
 
-        /** LOG ORDERED CONNECTION LIST ********************/
-        /*this.logger.debug('ITEMS: ');
-        var itemIDList = [];
-        for (i = 0; i < orderedItemEvents.length; i += 1) {
-            j = orderedItemEvents[i];
-            //this.logger.warn("ID: " + j.eid);
-            itemIDList.push(j.eid);
-        }
-
-        this.logger.debug('CONNECTIONS: ');
-        for (i = 0; i < orderedConnectionEvents.length; i += 1) {
-            j = orderedConnectionEvents[i];
-            var connconn = itemIDList.indexOf(j.desc.srcID) === -1 && itemIDList.indexOf(j.desc.dstID) === -1;
-            //this.logger.warn("ID: " + x.eid + ", SRC: " + x.desc.srcID + ", DST: " + x.desc.dstID + (connconn ? " *****" : ""));
-        }*/
-        /** END OF --- LOG ORDERED CONNECTION LIST ********************/
-
         this._notifyPackage = {};
-
-
 
         //item insert/update/unload & connection unload
         events = unloadEvents.concat(orderedItemEvents);
@@ -885,6 +913,8 @@ define(['js/logger',
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
                     territoryChanged = this._onUnload(e.eid) || territoryChanged;
+                    break;
+                default:
                     break;
             }
         }
@@ -905,6 +935,8 @@ define(['js/logger',
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
                     this._onUnload(e.eid);
                     break;
+                default:
+                    break;
             }
         }
 
@@ -916,10 +948,11 @@ define(['js/logger',
         if (territoryChanged) {
             this.logger.debug('Updating territory with ruleset from decorators: ' + JSON.stringify(this._selfPatterns));
 
-            this._client.updateTerritory(this._selectedMemberListMembersTerritoryId, this._selectedMemberListMembersTerritoryPatterns);
+            this._client.updateTerritory(this._selectedMemberListMembersTerritoryId,
+                this._selectedMemberListMembersTerritoryPatterns);
         }
 
-        this.logger.debug("_dispatchEvents '" + events.length + "' items - DONE");
+        this.logger.debug('_dispatchEvents "' + events.length + '" items - DONE');
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._updateDecoratorTerritoryQuery = function (decorator, doDelete) {
@@ -962,7 +995,8 @@ define(['js/logger',
         return result;
     };
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._getAllSourceDestinationPairsForConnection = function (GMESrcId, GMEDstId) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._getAllSourceDestinationPairsForConnection = function (GMESrcId,
+                                                                                                                           GMEDstId) {
         var sources = [],
             destinations = [],
             i;
@@ -971,8 +1005,10 @@ define(['js/logger',
             //src is a DesignerItem
             i = this._GMEID2ComponentID[GMESrcId].length;
             while (i--) {
-                sources.push( {"objId" : this._GMEID2ComponentID[GMESrcId][i],
-                    "subCompId" : undefined });
+                sources.push({
+                    objId: this._GMEID2ComponentID[GMESrcId][i],
+                    subCompId: undefined
+                });
             }
         } else {
             //src is not a DesignerItem
@@ -980,8 +1016,10 @@ define(['js/logger',
             if (this._GMEID2Subcomponent && this._GMEID2Subcomponent.hasOwnProperty(GMESrcId)) {
                 for (i in this._GMEID2Subcomponent[GMESrcId]) {
                     if (this._GMEID2Subcomponent[GMESrcId].hasOwnProperty(i)) {
-                        sources.push( {"objId" : i,
-                            "subCompId" : this._GMEID2Subcomponent[GMESrcId][i] });
+                        sources.push({
+                            objId: i,
+                            subCompId: this._GMEID2Subcomponent[GMESrcId][i]
+                        });
                     }
                 }
             }
@@ -990,8 +1028,10 @@ define(['js/logger',
         if (this._GMEID2ComponentID.hasOwnProperty(GMEDstId)) {
             i = this._GMEID2ComponentID[GMEDstId].length;
             while (i--) {
-                destinations.push( {"objId" : this._GMEID2ComponentID[GMEDstId][i],
-                    "subCompId" : undefined });
+                destinations.push({
+                    objId: this._GMEID2ComponentID[GMEDstId][i],
+                    subCompId: undefined
+                });
             }
         } else {
             //dst is not a DesignerItem
@@ -999,15 +1039,19 @@ define(['js/logger',
             if (this._GMEID2Subcomponent && this._GMEID2Subcomponent.hasOwnProperty(GMEDstId)) {
                 for (i in this._GMEID2Subcomponent[GMEDstId]) {
                     if (this._GMEID2Subcomponent[GMEDstId].hasOwnProperty(i)) {
-                        destinations.push( {"objId" : i,
-                            "subCompId" : this._GMEID2Subcomponent[GMEDstId][i] });
+                        destinations.push({
+                            objId: i,
+                            subCompId: this._GMEID2Subcomponent[GMEDstId][i]
+                        });
                     }
                 }
             }
         }
 
-        return {'sources': sources,
-            'destinations': destinations};
+        return {
+            sources: sources,
+            destinations: destinations
+        };
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onLoad = function (gmeID, desc) {
@@ -1016,7 +1060,14 @@ define(['js/logger',
             objDesc = {},
             sources = [],
             destinations = [],
-            territoryChanged = false;
+            territoryChanged = false,
+
+            srcDst,
+            k,
+            l,
+            connVisualProperties,
+            alreadySaved,
+            len;
 
         //component loaded
         //we are interested in the load of member items and their custom territory involvement
@@ -1031,7 +1082,7 @@ define(['js/logger',
                 objDesc.metaInfo = {};
                 objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
 
-                objDesc.position = { "x": 100,"y": 100 };
+                objDesc.position = {x: 100, y: 100};
 
                 if (this._memberListMemberCoordinates[this._selectedMemberListID] &&
                     this._memberListMemberCoordinates[this._selectedMemberListID][gmeID]) {
@@ -1046,8 +1097,10 @@ define(['js/logger',
 
                 //registry preferences here are:
                 //#1: local set membership registry
-                objDesc.preferencesHelper = PreferencesHelper.getPreferences([{'containerID': this._memberListContainerID,
-                    'setID': this._selectedMemberListID }]);
+                objDesc.preferencesHelper = PreferencesHelper.getPreferences([{
+                    containerID: this._memberListContainerID,
+                    setID: this._selectedMemberListID
+                }]);
 
                 uiComponent = this._widget.createDesignerItem(objDesc);
 
@@ -1055,17 +1108,18 @@ define(['js/logger',
                 this._GMEID2ComponentID[gmeID].push(uiComponent.id);
                 this._ComponentID2GMEID[uiComponent.id] = gmeID;
 
-                territoryChanged = territoryChanged || this._updateDecoratorTerritoryQuery(uiComponent._decoratorInstance, false);
+                territoryChanged = territoryChanged ||
+                this._updateDecoratorTerritoryQuery(uiComponent._decoratorInstance, false);
             } else {
 
-                var srcDst = this._getAllSourceDestinationPairsForConnection(desc.srcID, desc.dstID);
+                srcDst = this._getAllSourceDestinationPairsForConnection(desc.srcID, desc.dstID);
                 sources = srcDst.sources;
                 destinations = srcDst.destinations;
 
-                var k = sources.length;
-                var l = destinations.length;
+                k = sources.length;
+                l = destinations.length;
 
-                var connVisualProperties = this._getConnectionVisualProperties(gmeID);
+                connVisualProperties = this._getConnectionVisualProperties(gmeID);
 
                 if (k > 0 && l > 0) {
                     while (k--) {
@@ -1094,8 +1148,8 @@ define(['js/logger',
                 } else {
                     //the connection is here, but no valid endpoint on canvas
                     //save the connection
-                    var alreadySaved = false;
-                    var len = this._delayedConnections.length;
+                    alreadySaved = false;
+                    len = this._delayedConnections.length;
                     while (len--) {
                         if (this._delayedConnections[len].ID === gmeID) {
                             alreadySaved = true;
@@ -1103,7 +1157,7 @@ define(['js/logger',
                         }
                     }
                     if (alreadySaved !== true) {
-                        this._delayedConnections.push({'ID': gmeID, 'desc': desc});
+                        this._delayedConnections.push({ID: gmeID, desc: desc});
 
                         //create item for this connection just to display it on the screen
                         this._displayConnectionAsItem(gmeID, desc);
@@ -1121,7 +1175,14 @@ define(['js/logger',
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onUpdate = function (gmeID, desc) {
         var componentID,
             len,
-            objDesc = {};
+            objDesc = {},
+            srcDst,
+            k,
+            l,
+            sources,
+            destinations,
+            connVisualProperties,
+            uiComponent;
 
 
         //component updated
@@ -1134,7 +1195,7 @@ define(['js/logger',
                 while (len--) {
                     componentID = this._GMEID2ComponentID[gmeID][len];
 
-                    objDesc = { position: { "x": 100,"y": 100 } };
+                    objDesc = {position: {x: 100, y: 100}};
 
                     if (this._memberListMemberCoordinates[this._selectedMemberListID] &&
                         this._memberListMemberCoordinates[this._selectedMemberListID][gmeID]) {
@@ -1144,8 +1205,10 @@ define(['js/logger',
 
                     if (desc && desc.decorator) {
                         objDesc.decoratorClass = this._getItemDecorator(desc.decorator);
-                        objDesc.preferencesHelper = PreferencesHelper.getPreferences([{'containerID': this._memberListContainerID,
-                            'setID': this._selectedMemberListID }]);
+                        objDesc.preferencesHelper = PreferencesHelper.getPreferences([{
+                            containerID: this._memberListContainerID,
+                            setID: this._selectedMemberListID
+                        }]);
                     }
 
                     this._widget.updateDesignerItem(componentID, objDesc);
@@ -1153,15 +1216,15 @@ define(['js/logger',
             } else {
                 //this is a connection on the screen
                 len = this._GMEID2ComponentID[gmeID].length;
-                var srcDst = this._getAllSourceDestinationPairsForConnection(desc.srcID, desc.dstID);
-                var sources = srcDst.sources;
-                var destinations = srcDst.destinations;
+                srcDst = this._getAllSourceDestinationPairsForConnection(desc.srcID, desc.dstID);
+                sources = srcDst.sources;
+                destinations = srcDst.destinations;
 
-                var k = sources.length;
-                var l = destinations.length;
+                k = sources.length;
+                l = destinations.length;
                 len -= 1;
 
-                var connVisualProperties = this._getConnectionVisualProperties(gmeID);
+                connVisualProperties = this._getConnectionVisualProperties(gmeID);
 
                 while (k--) {
                     while (l--) {
@@ -1178,15 +1241,16 @@ define(['js/logger',
                         delete objDesc.target;
 
                         if (len >= 0) {
-                            componentID =  this._GMEID2ComponentID[gmeID][len];
+                            componentID = this._GMEID2ComponentID[gmeID][len];
 
                             this._widget.updateConnection(componentID, objDesc);
 
                             len -= 1;
                         } else {
-                            this.logger.warn('Updating connections...Existing connections are less than the needed src-dst combo...');
+                            this.logger.warn('Updating connections...Existing connections are less than the needed ' +
+                            'src-dst combo...');
                             //let's create a connection
-                            var uiComponent = this._widget.createConnection(objDesc);
+                            uiComponent = this._widget.createConnection(objDesc);
                             this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + gmeID);
                             this._GMEID2ComponentID[gmeID].push(uiComponent.id);
                             this._ComponentID2GMEID[uiComponent.id] = gmeID;
@@ -1199,7 +1263,7 @@ define(['js/logger',
                     //delete them
                     len += 1;
                     while (len--) {
-                        componentID =  this._GMEID2ComponentID[gmeID][len];
+                        componentID = this._GMEID2ComponentID[gmeID][len];
                         this._widget.deleteComponent(componentID);
                         this._GMEID2ComponentID[gmeID].splice(len, 1);
                         delete this._ComponentID2GMEID[componentID];
@@ -1219,7 +1283,11 @@ define(['js/logger',
             inOutConnections,
             cLen,
             connGMEID,
-            connObj;
+            connObj,
+            alreadyThere,
+            j,
+            connDesc,
+            idx;
 
         if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
             len = this._GMEID2ComponentID[gmeID].length;
@@ -1227,7 +1295,10 @@ define(['js/logger',
                 componentID = this._GMEID2ComponentID[gmeID][len];
 
                 if (this._widget.itemIds.indexOf(componentID) !== -1) {
-                    territoryChanged = territoryChanged || this._updateDecoratorTerritoryQuery(this._widget.items[componentID]._decoratorInstance, true);
+                    territoryChanged = territoryChanged ||
+                    this._updateDecoratorTerritoryQuery(
+                        this._widget.items[componentID]._decoratorInstance,
+                        true);
                 }
 
                 //query the associated connections
@@ -1246,8 +1317,8 @@ define(['js/logger',
                         connGMEID = this._ComponentID2GMEID[componentID];
 
                         //check if already saved for delayedConnections
-                        var alreadyThere = false;
-                        for (var j = 0; j < this._delayedConnections.length; j += 1) {
+                        alreadyThere = false;
+                        for (j = 0; j < this._delayedConnections.length; j += 1) {
                             if (this._delayedConnections[j].ID === connGMEID) {
                                 alreadyThere = true;
                                 break;
@@ -1256,13 +1327,16 @@ define(['js/logger',
 
                         if (alreadyThere === false) {
                             connObj = this._client.getNode(connGMEID);
-                            var connDesc = { isConnection: true,
+                            connDesc = {
+                                isConnection: true,
                                 decorator: connObj.getRegistry(REGISTRY_KEYS.DECORATOR),
                                 srcID: connObj.getPointer(SRC_POINTER_NAME).to,
-                                dstID: connObj.getPointer(DST_POINTER_NAME).to};
+                                dstID: connObj.getPointer(DST_POINTER_NAME).to
+                            };
 
                             if (connObj) {
-                                this._delayedConnections.push({ID: connGMEID,
+                                this._delayedConnections.push({
+                                    ID: connGMEID,
                                     desc: connDesc
                                 });
 
@@ -1277,7 +1351,7 @@ define(['js/logger',
                         //remove from accounting
                         delete this._ComponentID2GMEID[componentID];
 
-                        var idx = this._GMEID2ComponentID[connGMEID].indexOf(componentID);
+                        idx = this._GMEID2ComponentID[connGMEID].indexOf(componentID);
                         if (idx > -1) {
                             this._GMEID2ComponentID[connGMEID].splice(idx, 1);
                         }
@@ -1294,14 +1368,16 @@ define(['js/logger',
         return territoryChanged;
     };
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.registerComponentIDForPartID = function (componentID, partId) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.registerComponentIDForPartID = function (componentID,
+                                                                                                             partId) {
         this._componentIDPartIDMap[componentID] = this._componentIDPartIDMap[componentID] || [];
         if (this._componentIDPartIDMap[componentID].indexOf(partId) === -1) {
             this._componentIDPartIDMap[componentID].push(partId);
         }
     };
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.unregisterComponentIDFromPartID = function (componentID, partId) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.unregisterComponentIDFromPartID = function (componentID,
+                                                                                                                partId) {
         var idx;
 
         if (this._componentIDPartIDMap && this._componentIDPartIDMap[componentID]) {
@@ -1316,13 +1392,16 @@ define(['js/logger',
         }
     };
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._checkComponentDependency = function (gmeID, eventType) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._checkComponentDependency = function (gmeID,
+                                                                                                          eventType) {
         var len;
         if (this._componentIDPartIDMap && this._componentIDPartIDMap[gmeID]) {
             len = this._componentIDPartIDMap[gmeID].length;
             while (len--) {
-                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] = this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] || [];
-                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]].push({'id': gmeID, 'event': eventType});
+                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] =
+                    this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] || [];
+
+                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]].push({id: gmeID, event: eventType});
             }
         }
     };
@@ -1334,7 +1413,8 @@ define(['js/logger',
 
         for (gmeID in this._notifyPackage) {
             if (this._notifyPackage.hasOwnProperty(gmeID)) {
-                this.logger.debug('NotifyPartDecorator: ' + gmeID + ', componentIDs: ' + JSON.stringify(this._notifyPackage[gmeID]));
+                this.logger.debug('NotifyPartDecorator: ' + gmeID + ', componentIDs: ' +
+                JSON.stringify(this._notifyPackage[gmeID]));
 
                 if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
                     //src is a DesignerItem
@@ -1351,7 +1431,8 @@ define(['js/logger',
     /*
      TAB RENAME EVENT HANDLER
      */
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onTabTitleChanged = function (tabID, oldValue, newValue) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onTabTitleChanged = function (tabID, oldValue,
+                                                                                                   newValue) {
         var memberListContainerID = this._memberListContainerID,
             memberListContainer,
             memberListSetsRegistryKey = this.getMemberListSetsRegistryKey(),
@@ -1481,7 +1562,9 @@ define(['js/logger',
             memberListSetsRegistryKey = this.getMemberListSetsRegistryKey(),
             memberListSetsRegistry,
             i,
-            newSetID;
+            newSetID,
+            newSetNamePrefixDesc,
+            newSetDesc;
 
         if (this._canAddTab() &&
             memberListSetsRegistryKey &&
@@ -1505,13 +1588,15 @@ define(['js/logger',
 
             //create new Set's descriptor
             //create new aspect set in  meta container node
-            var newSetNamePrefixDesc = this.getNewSetNamePrefixDesc();
+            newSetNamePrefixDesc = this.getNewSetNamePrefixDesc();
 
             newSetID = newSetNamePrefixDesc.SetID + generateGuid();
 
-            var newSetDesc = {'SetID': newSetID,
-                'order': memberListSetsRegistry.length,
-                'title': newSetNamePrefixDesc.Title + memberListSetsRegistry.length};
+            newSetDesc = {
+                SetID: newSetID,
+                order: memberListSetsRegistry.length,
+                title: newSetNamePrefixDesc.Title + memberListSetsRegistry.length
+            };
 
             memberListSetsRegistry.push(newSetDesc);
 
@@ -1540,10 +1625,13 @@ define(['js/logger',
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getNewSetNamePrefixDesc = function () {
-        var result = {'SetID': 'SET_',
-                      'Title': 'Tab '};
+        var result = {
+            SetID: 'SET_',
+            Title: 'Tab '
+        };
 
-        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getNewSetNamePrefixDesc is not overridden, returning default value: ' + JSON.stringify(result));
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getNewSetNamePrefixDesc ' +
+        'is not overridden, returning default value: ' + JSON.stringify(result));
         return result;
     };
 
@@ -1583,14 +1671,15 @@ define(['js/logger',
     };
 
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectionSetColor = function (selectedIds, color, regKey) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectionSetColor = function (selectedIds, color,
+                                                                                                     regKey) {
         var i = selectedIds.length,
             gmeID,
             containerID = this._memberListContainerID,
             setID = this._selectedMemberListID;
 
         this._client.startTransaction();
-        while(i--) {
+        while (i--) {
             gmeID = this._ComponentID2GMEID[selectedIds[i]];
 
             if (color) {
@@ -1604,17 +1693,19 @@ define(['js/logger',
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._getConnectionVisualProperties = function (objID) {
         var connVisualProperties = GMEVisualConcepts.getConnectionVisualProperties(objID),
-            memberListContainer =  this._client.getNode(this._memberListContainerID),
+            memberListContainer = this._client.getNode(this._memberListContainerID),
             val;
 
         //get custom color from the set's registry object
-        val = memberListContainer.getMemberRegistry(this._selectedMemberListID, objID,  REGISTRY_KEYS.COLOR);
+        val = memberListContainer.getMemberRegistry(this._selectedMemberListID, objID, REGISTRY_KEYS.COLOR);
         if (val) {
             connVisualProperties[CONSTANTS.LINE_STYLE.COLOR] = val;
         }
 
         //get custom points from the set's registry object
-        val = memberListContainer.getMemberRegistry(this._selectedMemberListID, objID,  REGISTRY_KEYS.LINE_CUSTOM_POINTS);
+        val = memberListContainer.getMemberRegistry(this._selectedMemberListID,
+            objID,
+            REGISTRY_KEYS.LINE_CUSTOM_POINTS);
         if (val && _.isArray(val)) {
             connVisualProperties[CONSTANTS.LINE_STYLE.CUSTOM_POINTS] = $.extend(true, [], val);
         }
@@ -1640,16 +1731,19 @@ define(['js/logger',
         }
     };
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onRegisterSubcomponent = function (objID, sCompID,
+                                                                                                        metaInfo) {
         //store that a subcomponent with a given ID has been added to object with objID
-        this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] = this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] || {};
+        this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] = this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] ||
+        {};
         this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]][objID] = sCompID;
 
         this._Subcomponent2GMEID[objID] = this._Subcomponent2GMEID[objID] || {};
         this._Subcomponent2GMEID[objID][sCompID] = metaInfo[CONSTANTS.GME_ID];
     };
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onUnregisterSubcomponent = function (objID, sCompID) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onUnregisterSubcomponent = function (objID,
+                                                                                                          sCompID) {
         var gmeID = this._Subcomponent2GMEID[objID][sCompID];
 
         delete this._Subcomponent2GMEID[objID][sCompID];
@@ -1670,7 +1764,7 @@ define(['js/logger',
         objDesc.metaInfo = {};
         objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
 
-        objDesc.position = { "x": 100,"y": 100 };
+        objDesc.position = {x: 100, y: 100};
 
         if (this._memberListMemberCoordinates[this._selectedMemberListID] &&
             this._memberListMemberCoordinates[this._selectedMemberListID][gmeID]) {
@@ -1685,8 +1779,10 @@ define(['js/logger',
 
         //registry preferences here are:
         //#1: local set membership registry
-        objDesc.preferencesHelper = PreferencesHelper.getPreferences([{'containerID': this._memberListContainerID,
-            'setID': this._selectedMemberListID }]);
+        objDesc.preferencesHelper = PreferencesHelper.getPreferences([{
+            containerID: this._memberListContainerID,
+            setID: this._selectedMemberListID
+        }]);
 
         uiComponent = this._widget.createDesignerItem(objDesc);
 

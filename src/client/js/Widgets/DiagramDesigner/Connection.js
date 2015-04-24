@@ -1,35 +1,38 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
+/*globals define, $, WebGMEGlobal*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/logger',
+define([
+    'js/logger',
     'js/util',
     './DiagramDesignerWidget.Constants',
     './DiagramDesignerWidget.OperatingModes',
     './Connection.EditSegment',
-    './Connection.SegmentPoint'], function (Logger,
-                                            clientUtil,
-                            DiagramDesignerWidgetConstants,
-                            DiagramDesignerWidgetOperatingModes,
-                            ConnectionEditSegment,
-                            ConnectionSegmentPoint) {
+    './Connection.SegmentPoint'
+], function (Logger,
+             clientUtil,
+             DiagramDesignerWidgetConstants,
+             DiagramDesignerWidgetOperatingModes,
+             ConnectionEditSegment,
+             ConnectionSegmentPoint) {
 
-    "use strict";
+    'use strict';
 
     var Connection,
-        TEXT_ID_PREFIX = "t_",
+        TEXT_ID_PREFIX = 't_',
         MIN_WIDTH_NOT_TO_NEED_SHADOW = 5,
         CONNECTION_DEFAULT_WIDTH = 1,
-        CONNECTION_DEFAULT_COLOR = "#000000",
+        CONNECTION_DEFAULT_COLOR = '#000000',
         CONNECTION_DEFAULT_PATTERN = DiagramDesignerWidgetConstants.LINE_PATTERNS.SOLID,
         CONNECTION_NO_END = DiagramDesignerWidgetConstants.LINE_ARROWS.NONE,
         CONNECTION_DEFAULT_END = CONNECTION_NO_END,
         CONNECTION_SHADOW_DEFAULT_OPACITY = 0,
         CONNECTION_SHADOW_DEFAULT_WIDTH = 5,
         CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED = 1,
-        CONNECTION_SHADOW_DEFAULT_COLOR = "#B9DCF7",
+        CONNECTION_SHADOW_DEFAULT_COLOR = '#B9DCF7',
         CONNECTION_DEFAULT_LINE_TYPE = DiagramDesignerWidgetConstants.LINE_TYPES.NONE,
         SHADOW_MARKER_SIZE_INCREMENT = 3,
         SHADOW_MARKER_SIZE_INCREMENT_X = 1,
@@ -41,7 +44,7 @@ define(['js/logger',
 
         this.logger = Logger.create('gme:Widgets:DiagramDesigner:Connection_' + this.id,
             WebGMEGlobal.gmeConfig.client.log);
-        this.logger.debug("Created");
+        this.logger.debug('Created');
     };
 
     Connection.prototype._initialize = function (objDescriptor) {
@@ -63,12 +66,14 @@ define(['js/logger',
         this._readOnly = false;
         this._connectionEditSegments = [];
 
-        this._pathPointsBBox = {'x': 0,
-                          'y': 0,
-                          'x2': 0,
-                          'y2': 0,
-                          'w': 0,
-                          'h': 0};
+        this._pathPointsBBox = {
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 0,
+            w: 0,
+            h: 0
+        };
 
         //read props coming from the DataBase or DiagramDesigner
         this._initializeConnectionProps(objDescriptor);
@@ -78,34 +83,49 @@ define(['js/logger',
         this.reconnectable = objDescriptor.reconnectable === true;
         this.editable = !!objDescriptor.editable;
 
-        this.isBezier = (objDescriptor[DiagramDesignerWidgetConstants.LINE_TYPE] || DiagramDesignerWidgetConstants.LINE_TYPES.NONE).toLowerCase() === DiagramDesignerWidgetConstants.LINE_TYPES.BEZIER;
+        this.isBezier = (objDescriptor[DiagramDesignerWidgetConstants.LINE_TYPE] ||
+        DiagramDesignerWidgetConstants.LINE_TYPES.NONE).toLowerCase() ===
+        DiagramDesignerWidgetConstants.LINE_TYPES.BEZIER;
 
         /*PathAttributes*/
-        this.designerAttributes.arrowStart = objDescriptor[DiagramDesignerWidgetConstants.LINE_START_ARROW] || CONNECTION_DEFAULT_END;
-        this.designerAttributes.arrowEnd = objDescriptor[DiagramDesignerWidgetConstants.LINE_END_ARROW] || CONNECTION_DEFAULT_END;
-        this.designerAttributes.color = objDescriptor[DiagramDesignerWidgetConstants.LINE_COLOR] || CONNECTION_DEFAULT_COLOR;
-        this.designerAttributes.width = parseInt(objDescriptor[DiagramDesignerWidgetConstants.LINE_WIDTH], 10) || CONNECTION_DEFAULT_WIDTH;
-        this.designerAttributes.pattern = objDescriptor[DiagramDesignerWidgetConstants.LINE_PATTERN] || CONNECTION_DEFAULT_PATTERN;
-        this.designerAttributes.shadowWidth = this.designerAttributes.width + CONNECTION_SHADOW_DEFAULT_WIDTH - CONNECTION_DEFAULT_WIDTH;
+        this.designerAttributes.arrowStart = objDescriptor[DiagramDesignerWidgetConstants.LINE_START_ARROW] ||
+        CONNECTION_DEFAULT_END;
+        this.designerAttributes.arrowEnd = objDescriptor[DiagramDesignerWidgetConstants.LINE_END_ARROW] ||
+        CONNECTION_DEFAULT_END;
+        this.designerAttributes.color = objDescriptor[DiagramDesignerWidgetConstants.LINE_COLOR] ||
+        CONNECTION_DEFAULT_COLOR;
+        this.designerAttributes.width = parseInt(objDescriptor[DiagramDesignerWidgetConstants.LINE_WIDTH], 10) ||
+        CONNECTION_DEFAULT_WIDTH;
+        this.designerAttributes.pattern = objDescriptor[DiagramDesignerWidgetConstants.LINE_PATTERN] ||
+        CONNECTION_DEFAULT_PATTERN;
+        this.designerAttributes.shadowWidth = this.designerAttributes.width + CONNECTION_SHADOW_DEFAULT_WIDTH -
+        CONNECTION_DEFAULT_WIDTH;
         this.designerAttributes.shadowOpacity = CONNECTION_SHADOW_DEFAULT_OPACITY;
         this.designerAttributes.shadowOpacityWhenSelected = CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED;
         this.designerAttributes.shadowColor = CONNECTION_SHADOW_DEFAULT_COLOR;
-        this.designerAttributes.lineType = objDescriptor[DiagramDesignerWidgetConstants.LINE_TYPE] || CONNECTION_DEFAULT_LINE_TYPE;
+        this.designerAttributes.lineType = objDescriptor[DiagramDesignerWidgetConstants.LINE_TYPE] ||
+        CONNECTION_DEFAULT_LINE_TYPE;
 
         this.designerAttributes.shadowEndArrowWidth = this.designerAttributes.width + SHADOW_MARKER_SIZE_INCREMENT;
         if (this.designerAttributes.arrowStart.indexOf('-xx') !== -1 ||
             this.designerAttributes.arrowEnd.indexOf('-xx') !== -1 ||
             this.designerAttributes.arrowStart.indexOf('-x') !== -1 ||
             this.designerAttributes.arrowEnd.indexOf('-x') !== -1) {
-            this.designerAttributes.shadowEndArrowWidth = this.designerAttributes.width + SHADOW_MARKER_SIZE_INCREMENT_X;
+            this.designerAttributes.shadowEndArrowWidth = this.designerAttributes.width +
+            SHADOW_MARKER_SIZE_INCREMENT_X;
         }
 
-        this.designerAttributes.shadowArrowStartAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowStart, this.designerAttributes.shadowEndArrowWidth, this.designerAttributes.width, false);
-        this.designerAttributes.shadowArrowEndAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowEnd, this.designerAttributes.shadowEndArrowWidth, this.designerAttributes.width, true);
+        this.designerAttributes.shadowArrowStartAdjust = this._raphaelArrowAdjustForSizeToRefSize(
+            this.designerAttributes.arrowStart, this.designerAttributes.shadowEndArrowWidth,
+            this.designerAttributes.width, false);
+        this.designerAttributes.shadowArrowEndAdjust = this._raphaelArrowAdjustForSizeToRefSize(
+            this.designerAttributes.arrowEnd, this.designerAttributes.shadowEndArrowWidth,
+            this.designerAttributes.width, true);
 
         this.srcText = objDescriptor.srcText;
         this.dstText = objDescriptor.dstText;
-        this.name = objDescriptor.name;/* || this.id;*/
+        this.name = objDescriptor.name;
+        /* || this.id;*/
         this.nameEdit = objDescriptor.nameEdit || false;
         this.srcTextEdit = objDescriptor.srcTextEdit || false;
         this.dstTextEdit = objDescriptor.dstTextEdit || false;
@@ -114,13 +134,17 @@ define(['js/logger',
         this.segmentPoints = [];
         if (objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS]) {
             var fixedP;
-            var len =  objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS].length;
+            var len = objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS].length;
             var cx, cy;
             for (var i = 0; i < len; i += 1) {
-                fixedP = this._fixXY({'x': objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][0],
-                                      'y': objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][1]});
-                cx = objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i].length > 2 ? objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][2] : 0;
-                cy = objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i].length > 2 ? objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][3] : 0;
+                fixedP = this._fixXY({
+                    x: objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][0],
+                    y: objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][1]
+                });
+                cx = objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i].length > 2 ?
+                    objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][2] : 0;
+                cy = objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i].length > 2 ?
+                    objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][3] : 0;
                 this.segmentPoints.push([fixedP.x, fixedP.y, cx, cy]);
             }
         }
@@ -130,59 +154,79 @@ define(['js/logger',
         var raphaelMarkerW = 3, //original RaphaelJS source settings
             raphaelMarkerH = 3,
             refX,
-            values = arrowType.toLowerCase().split("-"),
-            type = "classic",
+            values = arrowType.toLowerCase().split('-'),
+            type = 'classic',
             i = values.length;
 
         while (i--) {
             switch (values[i]) {
-                case "block":
-                case "classic":
-                case "oval":
-                case "diamond":
-                case "open":
-                case "none":
-                case "diamond2":
-                case "inheritance":
+                case 'block':
+                case 'classic':
+                case 'oval':
+                case 'diamond':
+                case 'open':
+                case 'none':
+                case 'diamond2':
+                case 'inheritance':
                     type = values[i];
                     break;
-                case "wide": raphaelMarkerH = 5; break;
-                case "narrow": raphaelMarkerH = 2; break;
-                case "long": raphaelMarkerW = 5; break;
-                case "short": raphaelMarkerW = 2; break;
-                case "xwide": raphaelMarkerH = 9; break;
-                case "xlong": raphaelMarkerW = 9; break;
-                case "xxwide": raphaelMarkerH = 12; break;
-                case "xxlong": raphaelMarkerW = 12; break;
+                case 'wide':
+                    raphaelMarkerH = 5;
+                    break;
+                case 'narrow':
+                    raphaelMarkerH = 2;
+                    break;
+                case 'long':
+                    raphaelMarkerW = 5;
+                    break;
+                case 'short':
+                    raphaelMarkerW = 2;
+                    break;
+                case 'xwide':
+                    raphaelMarkerH = 9;
+                    break;
+                case 'xlong':
+                    raphaelMarkerW = 9;
+                    break;
+                case 'xxwide':
+                    raphaelMarkerH = 12;
+                    break;
+                case 'xxlong':
+                    raphaelMarkerW = 12;
+                    break;
+                default:
+                    break;
             }
         }
 
-        if (type === "none") {
+        if (type === 'none') {
             return 0;
         }
 
         //if there is correction in RaphaelJS source, it is not needed
-        /*if (type === "diamond" || type === "oval") {
+        /*if (type === 'diamond' || type === 'oval') {
          return 0;
          }*/
 
         //open type is no different than other since it's fixed in RaphaelJS lib
-        /*if (type == "open") {
-            raphaelMarkerW += 2;
-            raphaelMarkerH += 2;
-            refX = isEnd ? 4 : 1;
-        } else {
-            refX = raphaelMarkerW / 2;
-        }*/
+        /*if (type == 'open') {
+         raphaelMarkerW += 2;
+         raphaelMarkerH += 2;
+         refX = isEnd ? 4 : 1;
+         } else {
+         refX = raphaelMarkerW / 2;
+         }*/
 
         refX = raphaelMarkerW / 2;
 
         if (isEnd) {
             this.designerAttributes.endArrowMarkerSize = this.designerAttributes.width * raphaelMarkerW;
-            this.designerAttributes.shadowEndArrowMarkerSize = this.designerAttributes.shadowEndArrowWidth * raphaelMarkerW;
+            this.designerAttributes.shadowEndArrowMarkerSize = this.designerAttributes.shadowEndArrowWidth *
+            raphaelMarkerW;
         } else {
             this.designerAttributes.startArrowMarkerSize = this.designerAttributes.width * raphaelMarkerW;
-            this.designerAttributes.shadowStartArrowMarkerSize = this.designerAttributes.shadowEndArrowWidth * raphaelMarkerW;
+            this.designerAttributes.shadowStartArrowMarkerSize = this.designerAttributes.shadowEndArrowWidth *
+            raphaelMarkerW;
         }
 
         return refX * (size - refSize);
@@ -191,54 +235,74 @@ define(['js/logger',
     Connection.prototype._raphaelArrowSizeToRefSize = function (arrowType, refSize) {
         var raphaelMarkerW = 3, //original RaphaelJS source settings
             raphaelMarkerH = 3,
-            values = arrowType.toLowerCase().split("-"),
-            type = "classic",
+            values = arrowType.toLowerCase().split('-'),
+            type = 'classic',
             i = values.length,
             refX,
             refY;
 
         while (i--) {
             switch (values[i]) {
-                case "block":
-                case "classic":
-                case "oval":
-                case "diamond":
-                case "open":
-                case "none":
-                case "diamond2":
-                case "inheritance":
+                case 'block':
+                case 'classic':
+                case 'oval':
+                case 'diamond':
+                case 'open':
+                case 'none':
+                case 'diamond2':
+                case 'inheritance':
                     type = values[i];
                     break;
-                case "wide": raphaelMarkerH = 5; break;
-                case "narrow": raphaelMarkerH = 2; break;
-                case "long": raphaelMarkerW = 5; break;
-                case "short": raphaelMarkerW = 2; break;
-                case "xwide": raphaelMarkerH = 9; break;
-                case "xlong": raphaelMarkerW = 9; break;
-                case "xxwide": raphaelMarkerH = 12; break;
-                case "xxlong": raphaelMarkerW = 12; break;
+                case 'wide':
+                    raphaelMarkerH = 5;
+                    break;
+                case 'narrow':
+                    raphaelMarkerH = 2;
+                    break;
+                case 'long':
+                    raphaelMarkerW = 5;
+                    break;
+                case 'short':
+                    raphaelMarkerW = 2;
+                    break;
+                case 'xwide':
+                    raphaelMarkerH = 9;
+                    break;
+                case 'xlong':
+                    raphaelMarkerW = 9;
+                    break;
+                case 'xxwide':
+                    raphaelMarkerH = 12;
+                    break;
+                case 'xxlong':
+                    raphaelMarkerW = 12;
+                    break;
+                default:
+                    break;
             }
         }
 
-        if (type === "none") {
+        if (type === 'none') {
             return 0;
         }
 
-        /*if (type == "open") {
-            raphaelMarkerW += 2;
-            raphaelMarkerH += 2;
-            refX = raphaelMarkerW / 2;
-        } else {
-            refX = raphaelMarkerW / 2;
-        }*/
+        /*if (type == 'open') {
+         raphaelMarkerW += 2;
+         raphaelMarkerH += 2;
+         refX = raphaelMarkerW / 2;
+         } else {
+         refX = raphaelMarkerW / 2;
+         }*/
 
         refX = raphaelMarkerW / 2;
         refY = raphaelMarkerH / 2;
 
-        return { "w": refSize * raphaelMarkerW,
-                 "h": refSize * raphaelMarkerH,
-                 "refX": refX * refSize,
-                 "refY": refY * refSize };
+        return {
+            w: refSize * raphaelMarkerW,
+            h: refSize * raphaelMarkerH,
+            refX: refX * refSize,
+            refY: refY * refSize
+        };
     };
 
     Connection.prototype.getConnectionProps = function () {
@@ -261,8 +325,10 @@ define(['js/logger',
     //for EVEN width of the path, get the lower integer of the coordinate
     //for ODD width of the path, get the lower integer + 0.5
     Connection.prototype._fixXY = function (point) {
-        var p = {'x': Math.floor(point.x),
-            'y': Math.floor(point.y)};
+        var p = {
+            x: Math.floor(point.x),
+            y: Math.floor(point.y)
+        };
 
         if (this.designerAttributes.width % 2 === 1) {
             p.x += 0.5;
@@ -277,8 +343,10 @@ define(['js/logger',
             len,
             pathDef = [],
             p,
-            lastP = { 'x': NaN,
-                      'y': NaN},
+            lastP = {
+                x: NaN,
+                y: NaN
+            },
             points = [],
             validPath = segPoints && segPoints.length > 1,
             minX,
@@ -307,11 +375,15 @@ define(['js/logger',
 
         this._simplifyTrivially(points);
 
-        this.sourceCoordinates = { "x": -1,
-                                  "y": -1};
+        this.sourceCoordinates = {
+            x: -1,
+            y: -1
+        };
 
-        this.endCoordinates = { "x": -1,
-                                "y": -1};
+        this.endCoordinates = {
+            x: -1,
+            y: -1
+        };
 
         len = points.length;
         validPath = len > 1;
@@ -354,7 +426,7 @@ define(['js/logger',
             //construct the SVG path definition from path-points
             pathDef = this._getPathDefFromPoints(points);
             pathDef = this._jumpOnCrossings(pathDef);
-            pathDef = pathDef.join(" ");
+            pathDef = pathDef.join(' ');
 
             //check if the prev pathDef is the same as the new
             //this way the redraw does not need to happen
@@ -365,24 +437,28 @@ define(['js/logger',
                 this._calculatePathStartEndAngle();
 
                 if (this.skinParts.path) {
-                    this.logger.debug("Redrawing connection with ID: '" + this.id + "'");
-                    this.skinParts.path.attr({ "path": pathDef});
+                    this.logger.debug('Redrawing connection with ID: "' + this.id + '"');
+                    this.skinParts.path.attr({path: pathDef});
                     if (this.skinParts.pathShadow) {
                         this._updatePathShadow(this._pathPoints);
                     }
                 } else {
-                    this.logger.debug("Drawing connection with ID: '" + this.id + "'");
+                    this.logger.debug('Drawing connection with ID: "' + this.id + '"');
                     /*CREATE PATH*/
                     this.skinParts.path = this.paper.path(pathDef);
 
-                    $(this.skinParts.path.node).attr({"id": this.id,
-                        "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
+                    $(this.skinParts.path.node).attr({
+                        id: this.id,
+                        class: DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS
+                    });
 
-                    this.skinParts.path.attr({ "arrow-start": this.designerAttributes.arrowStart,
-                        "arrow-end": this.designerAttributes.arrowEnd,
-                        "stroke": this.designerAttributes.color,
-                        "stroke-width": this.designerAttributes.width,
-                        "stroke-dasharray": this.designerAttributes.pattern});
+                    this.skinParts.path.attr({
+                        'arrow-start': this.designerAttributes.arrowStart,
+                        'arrow-end': this.designerAttributes.arrowEnd,
+                        stroke: this.designerAttributes.color,
+                        'stroke-width': this.designerAttributes.width,
+                        'stroke-dasharray': this.designerAttributes.pattern
+                    });
 
                     if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
                         this._createPathShadow(this._pathPoints);
@@ -420,7 +496,8 @@ define(['js/logger',
             bPoints,
             len;
 
-        //NOTE: getBBox will give back the bounding box of the original path without stroke-width and marker-ending information included
+        // NOTE: getBBox will give back the bounding box of the original path without stroke-width and marker-ending
+        // information included
         if (this.skinParts.pathShadow) {
             bBoxPath = this.skinParts.pathShadow.getBBox();
             strokeWidthAdjust = this.designerAttributes.shadowWidth;
@@ -429,34 +506,41 @@ define(['js/logger',
             bBoxPath = this.skinParts.path.getBBox();
             strokeWidthAdjust = this.designerAttributes.width;
         } else {
-            bBoxPath = { "x": 0,
-                "y": 0,
-                "x2": 0,
-                "y2": 0,
-                "width": 0,
-                "height": 0 };
+            bBoxPath = {
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 0,
+                width: 0,
+                height: 0
+            };
         }
 
         //get a copy of bBoxPath
         //bBoxPath should not be touched because RaphaelJS reuses it unless the path is not redrawn
-        bBox = { "x": bBoxPath.x,
-            "y": bBoxPath.y,
-            "x2": bBoxPath.x2,
-            "y2": bBoxPath.y2,
-            "width": bBoxPath.width,
-            "height": bBoxPath.height };
+        bBox = {
+            x: bBoxPath.x,
+            y: bBoxPath.y,
+            x2: bBoxPath.x2,
+            y2: bBoxPath.y2,
+            width: bBoxPath.width,
+            height: bBoxPath.height
+        };
 
         //calculate the marker-end size
         if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
-            bPoints = this._getRaphaelArrowEndBoundingPoints(this.designerAttributes.arrowStart, strokeWidthAdjust, this._pathStartAngle, false);
+            bPoints = this._getRaphaelArrowEndBoundingPoints(this.designerAttributes.arrowStart, strokeWidthAdjust,
+                this._pathStartAngle, false);
 
             dx = shadowAdjust * Math.cos(this._pathStartAngle);
             dy = shadowAdjust * Math.sin(this._pathStartAngle);
 
-            endMarkerBBox = { "x": this.sourceCoordinates.x - dx,
-                "y": this.sourceCoordinates.y - dy,
-                "x2": this.sourceCoordinates.x - dx,
-                "y2": this.sourceCoordinates.y - dy};
+            endMarkerBBox = {
+                x: this.sourceCoordinates.x - dx,
+                y: this.sourceCoordinates.y - dy,
+                x2: this.sourceCoordinates.x - dx,
+                y2: this.sourceCoordinates.y - dy
+            };
 
 
             len = bPoints.length;
@@ -470,15 +554,18 @@ define(['js/logger',
         }
 
         if (this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
-            bPoints = this._getRaphaelArrowEndBoundingPoints(this.designerAttributes.arrowEnd, strokeWidthAdjust, this._pathEndAngle, true);
+            bPoints = this._getRaphaelArrowEndBoundingPoints(this.designerAttributes.arrowEnd, strokeWidthAdjust,
+                this._pathEndAngle, true);
 
-            dx = shadowAdjust * Math.cos(this._pathEndAngle) ;
-            dy = shadowAdjust * Math.sin(this._pathEndAngle) ;
+            dx = shadowAdjust * Math.cos(this._pathEndAngle);
+            dy = shadowAdjust * Math.sin(this._pathEndAngle);
 
-            endMarkerBBox = endMarkerBBox || { "x": this.endCoordinates.x + dx,
-                             "y": this.endCoordinates.y + dy,
-                             "x2": this.endCoordinates.x + dx,
-                             "y2": this.endCoordinates.y + dy};
+            endMarkerBBox = endMarkerBBox || {
+                x: this.endCoordinates.x + dx,
+                y: this.endCoordinates.y + dy,
+                x2: this.endCoordinates.x + dx,
+                y2: this.endCoordinates.y + dy
+            };
 
 
             len = bPoints.length;
@@ -508,10 +595,10 @@ define(['js/logger',
                 //source is on the left
                 bBox.x -= Math.abs(Math.cos(Math.PI / 2 - this._pathStartAngle) * strokeWidthAdjust / 2);
                 //target is on the right
-                bBox.x2 +=  Math.abs(Math.cos(Math.PI / 2 - this._pathEndAngle) * strokeWidthAdjust / 2);
+                bBox.x2 += Math.abs(Math.cos(Math.PI / 2 - this._pathEndAngle) * strokeWidthAdjust / 2);
             } else {
                 //target is on the left
-                bBox.x -=Math.abs(Math.cos(Math.PI / 2 - this._pathEndAngle) * strokeWidthAdjust / 2);
+                bBox.x -= Math.abs(Math.cos(Math.PI / 2 - this._pathEndAngle) * strokeWidthAdjust / 2);
                 //source is on the right
                 bBox.x2 += Math.abs(Math.cos(Math.PI / 2 - this._pathStartAngle) * strokeWidthAdjust / 2);
             }
@@ -542,12 +629,24 @@ define(['js/logger',
         bBox.height = bBox.y2 - bBox.y;
 
         //safety check
-        if (isNaN(bBox.x)) {bBox.x = 0;}
-        if (isNaN(bBox.y)) {bBox.y = 0;}
-        if (isNaN(bBox.x2)) {bBox.x2 = 0;}
-        if (isNaN(bBox.y2)) {bBox.y2 = 0;}
-        if (isNaN(bBox.width)) {bBox.width = 0;}
-        if (isNaN(bBox.height)) {bBox.height = 0;}
+        if (isNaN(bBox.x)) {
+            bBox.x = 0;
+        }
+        if (isNaN(bBox.y)) {
+            bBox.y = 0;
+        }
+        if (isNaN(bBox.x2)) {
+            bBox.x2 = 0;
+        }
+        if (isNaN(bBox.y2)) {
+            bBox.y2 = 0;
+        }
+        if (isNaN(bBox.width)) {
+            bBox.width = 0;
+        }
+        if (isNaN(bBox.height)) {
+            bBox.height = 0;
+        }
 
         return bBox;
     };
@@ -557,38 +656,50 @@ define(['js/logger',
             arrowEndSize,
             w,
             gamma,
-            topLeft = { "x": 0,
-                        "y": 0},
-            topRight = { "x": 0,
-                        "y": 0},
-            bottomLeft = { "x": 0,
-                "y": 0},
-            bottomRight = { "x": 0,
-                "y": 0},
-            ref = { "x": 0,
-                "y": 0},
-            values = arrowType.toLowerCase().split("-"),
-            type = "classic",
+            topLeft = {
+                x: 0,
+                y: 0
+            },
+            topRight = {
+                x: 0,
+                y: 0
+            },
+            bottomLeft = {
+                x: 0,
+                y: 0
+            },
+            bottomRight = {
+                x: 0,
+                y: 0
+            },
+            ref = {
+                x: 0,
+                y: 0
+            },
+            values = arrowType.toLowerCase().split('-'),
+            type = 'classic',
             i = values.length;
 
         while (i--) {
             switch (values[i]) {
-                case "block":
-                case "classic":
-                case "oval":
-                case "diamond":
-                case "open":
-                case "none":
-                case "diamond2":
-                case "inheritance":
+                case 'block':
+                case 'classic':
+                case 'oval':
+                case 'diamond':
+                case 'open':
+                case 'none':
+                case 'diamond2':
+                case 'inheritance':
                     type = values[i];
+                    break;
+                default:
                     break;
             }
         }
 
         arrowEndSize = this._raphaelArrowSizeToRefSize(arrowType, arrowSize, isEnd);
         w = Math.sqrt(arrowEndSize.w / 2 * arrowEndSize.w / 2 + arrowEndSize.h / 2 * arrowEndSize.h / 2);
-        gamma = Math.atan(arrowEndSize.h / arrowEndSize.w );
+        gamma = Math.atan(arrowEndSize.h / arrowEndSize.w);
 
         bottomRight.x = Math.cos(angle + gamma) * w;
         bottomRight.y = Math.sin(angle + gamma) * w;
@@ -602,25 +713,40 @@ define(['js/logger',
         ref.y = Math.sin(angle) * arrowEndSize.refY;
 
         switch (type) {
-            case "classic":
-            case "block":
-            case "inheritance":
-                bPoints.push( {"x": - ref.x + topLeft.x, "y": - ref.y + topLeft.y});
-                bPoints.push( {"x": ((- ref.x + topRight.x) + (- ref.x + bottomRight.x)) / 2, "y": ((- ref.y + topRight.y) + (- ref.y + bottomRight.y)) /2 });
-                bPoints.push( {"x": - ref.x + bottomLeft.x, "y": - ref.y + bottomLeft.y});
+            case 'classic':
+            case 'block':
+            case 'inheritance':
+                bPoints.push({x: -ref.x + topLeft.x, y: -ref.y + topLeft.y});
+                bPoints.push({
+                    x: ((-ref.x + topRight.x) + (-ref.x + bottomRight.x)) / 2,
+                    y: ((-ref.y + topRight.y) + (-ref.y + bottomRight.y)) / 2
+                });
+                bPoints.push({x: -ref.x + bottomLeft.x, y: -ref.y + bottomLeft.y});
                 break;
-            case "diamond":
-            case "diamond2":
-                bPoints.push( {"x": ((- ref.x + topLeft.x) + (- ref.x + topRight.x))/2, "y": ((- ref.y + topLeft.y) + (- ref.y + topRight.y))/2});
-                bPoints.push( {"x": ((- ref.x + topRight.x) + (- ref.x + bottomRight.x))/2, "y": ((- ref.y + topRight.y) + (- ref.y + bottomRight.y))/2});
-                bPoints.push( {"x": ((- ref.x + bottomLeft.x) + (- ref.x + bottomRight.x))/2, "y": ((- ref.y + bottomLeft.y) + (- ref.y + bottomRight.y))/2});
-                bPoints.push( {"x": ((- ref.x + bottomLeft.x) + (- ref.x + topLeft.x))/2, "y": ((- ref.y + bottomLeft.y) + (- ref.y + topLeft.y))/2});
+            case 'diamond':
+            case 'diamond2':
+                bPoints.push({
+                    x: ((-ref.x + topLeft.x) + (-ref.x + topRight.x)) / 2,
+                    y: ((-ref.y + topLeft.y) + (-ref.y + topRight.y)) / 2
+                });
+                bPoints.push({
+                    x: ((-ref.x + topRight.x) + (-ref.x + bottomRight.x)) / 2,
+                    y: ((-ref.y + topRight.y) + (-ref.y + bottomRight.y)) / 2
+                });
+                bPoints.push({
+                    x: ((-ref.x + bottomLeft.x) + (-ref.x + bottomRight.x)) / 2,
+                    y: ((-ref.y + bottomLeft.y) + (-ref.y + bottomRight.y)) / 2
+                });
+                bPoints.push({
+                    x: ((-ref.x + bottomLeft.x) + (-ref.x + topLeft.x)) / 2,
+                    y: ((-ref.y + bottomLeft.y) + (-ref.y + topLeft.y)) / 2
+                });
                 break;
             default:
-                bPoints.push( {"x": - ref.x + topLeft.x, "y": - ref.y + topLeft.y});
-                bPoints.push( {"x": - ref.x + topRight.x, "y": - ref.y + topRight.y});
-                bPoints.push( {"x": - ref.x + bottomRight.x, "y": - ref.y + bottomRight.y});
-                bPoints.push( {"x": - ref.x + bottomLeft.x, "y": - ref.y + bottomLeft.y});
+                bPoints.push({x: -ref.x + topLeft.x, y: -ref.y + topLeft.y});
+                bPoints.push({x: -ref.x + topRight.x, y: -ref.y + topRight.y});
+                bPoints.push({x: -ref.x + bottomRight.x, y: -ref.y + bottomRight.y});
+                bPoints.push({x: -ref.x + bottomLeft.x, y: -ref.y + bottomLeft.y});
                 break;
         }
 
@@ -645,7 +771,7 @@ define(['js/logger',
 
         this._hideTexts();
 
-        this.logger.debug("Destroyed");
+        this.logger.debug('Destroyed');
     };
 
     /************** HANDLING SELECTION EVENT *********************/
@@ -680,23 +806,23 @@ define(['js/logger',
     Connection.prototype._highlightPath = function () {
         this._createPathShadow(this._pathPoints);
 
-        this.skinParts.pathShadow.attr({"opacity": this.designerAttributes.shadowOpacityWhenSelected});
+        this.skinParts.pathShadow.attr({opacity: this.designerAttributes.shadowOpacityWhenSelected});
         if (this.skinParts.pathShadowArrowStart) {
-            this.skinParts.pathShadowArrowStart.attr({"opacity": this.designerAttributes.shadowOpacityWhenSelected});
+            this.skinParts.pathShadowArrowStart.attr({opacity: this.designerAttributes.shadowOpacityWhenSelected});
         }
         if (this.skinParts.pathShadowArrowEnd) {
-            this.skinParts.pathShadowArrowEnd.attr({"opacity": this.designerAttributes.shadowOpacityWhenSelected});
+            this.skinParts.pathShadowArrowEnd.attr({opacity: this.designerAttributes.shadowOpacityWhenSelected});
         }
     };
 
     Connection.prototype._unHighlightPath = function () {
         if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
-            this.skinParts.pathShadow.attr({"opacity": this.designerAttributes.shadowOpacity});
+            this.skinParts.pathShadow.attr({opacity: this.designerAttributes.shadowOpacity});
             if (this.skinParts.pathShadowArrowStart) {
-                this.skinParts.pathShadowArrowStart.attr({"opacity": this.designerAttributes.shadowOpacity});
+                this.skinParts.pathShadowArrowStart.attr({opacity: this.designerAttributes.shadowOpacity});
             }
             if (this.skinParts.pathShadowArrowEnd) {
-                this.skinParts.pathShadowArrowEnd.attr({"opacity": this.designerAttributes.shadowOpacity});
+                this.skinParts.pathShadowArrowEnd.attr({opacity: this.designerAttributes.shadowOpacity});
             }
         } else {
             this._removePathShadow();
@@ -713,7 +839,7 @@ define(['js/logger',
         dY = this._pathPoints[1].y - this._pathPoints[0].y;
 
         if (dX === 0 && dY !== 0) {
-            this._pathStartAngle = Math.PI / 2 * Math.abs(dY) / dY ;
+            this._pathStartAngle = Math.PI / 2 * Math.abs(dY) / dY;
         } else {
             this._pathStartAngle = Math.atan(dY / dX);
             if (dX < 0) {
@@ -730,7 +856,7 @@ define(['js/logger',
         if (dX === 0 && dY !== 0) {
             this._pathEndAngle = Math.PI / 2 * Math.abs(dY) / dY;
         } else {
-            this._pathEndAngle = Math.atan(dY / dX );
+            this._pathEndAngle = Math.atan(dY / dX);
             if (dX < 0) {
                 this._pathEndAngle += Math.PI;
             }
@@ -743,22 +869,28 @@ define(['js/logger',
 
         /*CREATE SHADOW IF NEEDED*/
         if (this.skinParts.pathShadow === undefined || this.skinParts.pathShadow === null) {
-            this.skinParts.pathShadow = this.paper.path("M0,0 L1,1");
+            this.skinParts.pathShadow = this.paper.path('M0,0 L1,1');
             this.skinParts.pathShadow.insertBefore(this.skinParts.path);
 
-            $(this.skinParts.pathShadow.node).attr({"id": DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX + this.id,
-                "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
+            $(this.skinParts.pathShadow.node).attr({
+                id: DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX + this.id,
+                class: DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS
+            });
 
-            this.skinParts.pathShadow.attr({    "stroke": this.designerAttributes.shadowColor,
-                "stroke-width": this.designerAttributes.shadowWidth,
-                "opacity": this.designerAttributes.shadowOpacity});
+            this.skinParts.pathShadow.attr({
+                stroke: this.designerAttributes.shadowColor,
+                'stroke-width': this.designerAttributes.shadowWidth,
+                opacity: this.designerAttributes.shadowOpacity
+            });
 
             if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
-                this.skinParts.pathShadowArrowStart = this.paper.path("M0,0 L1,1");
+                this.skinParts.pathShadowArrowStart = this.paper.path('M0,0 L1,1');
                 this.skinParts.pathShadowArrowStart.insertBefore(this.skinParts.path);
 
-                $(this.skinParts.pathShadowArrowStart.node).attr({"id": DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX + this.id,
-                    "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
+                $(this.skinParts.pathShadowArrowStart.node).attr({
+                    id: DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX + this.id,
+                    class: DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS
+                });
             } else {
                 if (this.skinParts.pathShadowArrowStart) {
                     this.skinParts.pathShadowArrowStart.remove();
@@ -767,11 +899,13 @@ define(['js/logger',
             }
 
             if (this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
-                this.skinParts.pathShadowArrowEnd = this.paper.path("M0,0 L1,1");
+                this.skinParts.pathShadowArrowEnd = this.paper.path('M0,0 L1,1');
                 this.skinParts.pathShadowArrowEnd.insertBefore(this.skinParts.path);
 
-                $(this.skinParts.pathShadowArrowEnd.node).attr({"id": DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX + this.id,
-                    "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
+                $(this.skinParts.pathShadowArrowEnd.node).attr({
+                    id: DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX + this.id,
+                    class: DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS
+                });
 
             } else {
                 if (this.skinParts.pathShadowArrowEnd) {
@@ -783,20 +917,24 @@ define(['js/logger',
             this._updatePathShadow(segPoints);
 
             if (this.skinParts.pathShadowArrowStart) {
-                shadowArrowStart = this.designerAttributes.arrowStart.replace("inheritance", "block");
+                shadowArrowStart = this.designerAttributes.arrowStart.replace('inheritance', 'block');
 
-                this.skinParts.pathShadowArrowStart.attr({"stroke": this.designerAttributes.shadowColor,
-                    "stroke-width": this.designerAttributes.shadowEndArrowWidth,
-                    "opacity": this.designerAttributes.shadowOpacity,
-                    "arrow-start": shadowArrowStart});
+                this.skinParts.pathShadowArrowStart.attr({
+                    stroke: this.designerAttributes.shadowColor,
+                    'stroke-width': this.designerAttributes.shadowEndArrowWidth,
+                    opacity: this.designerAttributes.shadowOpacity,
+                    'arrow-start': shadowArrowStart
+                });
             }
 
             if (this.skinParts.pathShadowArrowEnd) {
-                shadowArrowEnd = this.designerAttributes.arrowEnd.replace("inheritance", "block");
-                this.skinParts.pathShadowArrowEnd.attr({"stroke": this.designerAttributes.shadowColor,
-                    "stroke-width": this.designerAttributes.shadowEndArrowWidth,
-                    "opacity": this.designerAttributes.shadowOpacity,
-                    "arrow-end": shadowArrowEnd});
+                shadowArrowEnd = this.designerAttributes.arrowEnd.replace('inheritance', 'block');
+                this.skinParts.pathShadowArrowEnd.attr({
+                    stroke: this.designerAttributes.shadowColor,
+                    'stroke-width': this.designerAttributes.shadowEndArrowWidth,
+                    opacity: this.designerAttributes.shadowOpacity,
+                    'arrow-end': shadowArrowEnd
+                });
             }
         }
     };
@@ -837,8 +975,10 @@ define(['js/logger',
             } else {
                 i = 1;
                 j = points.length;
-                newPoints.push({'x': points[0].x,
-                                'y': points[0].y});
+                newPoints.push({
+                    x: points[0].x,
+                    y: points[0].y
+                });
             }
 
             for (; i < j; i += 1) {
@@ -848,14 +988,18 @@ define(['js/logger',
                     //do not add to result list
                 } else {
                     //outside the elimination are, add to list
-                    newPoints.push({'x': points[i].x,
-                        'y': points[i].y});
+                    newPoints.push({
+                        x: points[i].x,
+                        y: points[i].y
+                    });
                 }
             }
 
             if (isEnd) {
-                newPoints.push({'x': points[points.length - 1].x,
-                    'y': points[points.length - 1].y});
+                newPoints.push({
+                    x: points[points.length - 1].x,
+                    y: points[points.length - 1].y
+                });
             }
 
             return newPoints;
@@ -864,8 +1008,8 @@ define(['js/logger',
         //copy over coordinates to prevent them from overwriting
         len = segPoints.length;
         for (i = 0; i < len; i += 1) {
-            points.push({"x": segPoints[i].x, "y": segPoints[i].y});
-            pointsEndArrow.push({"x": segPoints[i].x, "y": segPoints[i].y});
+            points.push({x: segPoints[i].x, y: segPoints[i].y});
+            pointsEndArrow.push({x: segPoints[i].x, y: segPoints[i].y});
         }
 
         if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
@@ -889,8 +1033,8 @@ define(['js/logger',
             pointsEndArrow[0].x -= dx;
             pointsEndArrow[0].y -= dy;
 
-            if (this.designerAttributes.arrowStart.indexOf("block") !== -1 ||
-                this.designerAttributes.arrowStart.indexOf("inheritance") !== -1) {
+            if (this.designerAttributes.arrowStart.indexOf('block') !== -1 ||
+                this.designerAttributes.arrowStart.indexOf('inheritance') !== -1) {
                 if (dx !== 0) {
                     pointsEndArrow[0].x -= SHADOW_MARKER_BLOCK_FIX_OFFSET * (dx / Math.abs(dx));
                 }
@@ -921,8 +1065,8 @@ define(['js/logger',
             pointsEndArrow[len - 1].x += dx;
             pointsEndArrow[len - 1].y += dy;
 
-            if (this.designerAttributes.arrowEnd.indexOf("block") !== -1 ||
-                this.designerAttributes.arrowEnd.indexOf("inheritance") !== -1) {
+            if (this.designerAttributes.arrowEnd.indexOf('block') !== -1 ||
+                this.designerAttributes.arrowEnd.indexOf('inheritance') !== -1) {
                 if (dx !== 0) {
                     pointsEndArrow[len - 1].x += SHADOW_MARKER_BLOCK_FIX_OFFSET * (dx / Math.abs(dx));
                 }
@@ -934,19 +1078,22 @@ define(['js/logger',
 
         //PATHSHADOW without marker endings
         if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
-            points = eliminatePoints(points, {"x": osX, "y": osY}, {"x": points[0].x, "y": points[0].y}, false);
+            points = eliminatePoints(points, {x: osX, y: osY}, {x: points[0].x, y: points[0].y}, false);
         }
 
         if (this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
             len = points.length;
-            points = eliminatePoints(points, {"x": oeX, "y": oeY}, {"x": points[len - 1].x, "y": points[len - 1].y}, true);
+            points = eliminatePoints(points, {x: oeX, y: oeY}, {
+                x: points[len - 1].x,
+                y: points[len - 1].y
+            }, true);
         }
 
         //construct the SVG path definition from path-points
         pathDef = this._getPathDefFromPoints(points);
         pathDef = this._jumpOnCrossings(pathDef);
-        pathDef = pathDef.join(" ");
-        this.skinParts.pathShadow.attr({ "path": pathDef});
+        pathDef = pathDef.join(' ');
+        this.skinParts.pathShadow.attr({path: pathDef});
 
         //MARKER ENDING SHADOWS if needed
         //MARKER ENDING SHADOWS if needed
@@ -959,10 +1106,10 @@ define(['js/logger',
             dy = this.designerAttributes.shadowStartArrowMarkerSize * Math.sin(this._pathStartAngle);
 
             p = pointsEndArrow[0];
-            pathDefArrow.push("M" + p.x + "," + p.y);
-            pathDefArrow.push("L" + (p.x + dx) + "," + (p.y + dy));
-            pathDefArrow = pathDefArrow.join(" ");
-            this.skinParts.pathShadowArrowStart.attr({ "path": pathDefArrow});
+            pathDefArrow.push('M' + p.x + ',' + p.y);
+            pathDefArrow.push('L' + (p.x + dx) + ',' + (p.y + dy));
+            pathDefArrow = pathDefArrow.join(' ');
+            this.skinParts.pathShadowArrowStart.attr({path: pathDefArrow});
         }
 
         if (this.skinParts.pathShadowArrowEnd) {
@@ -976,10 +1123,10 @@ define(['js/logger',
 
             p = pointsEndArrow[len - 1];
 
-            pathDefArrow.push("M" + (p.x - dx) + "," + (p.y - dy));
-            pathDefArrow.push("L" + p.x + "," + p.y);
-            pathDefArrow = pathDefArrow.join(" ");
-            this.skinParts.pathShadowArrowEnd.attr({ "path": pathDefArrow});
+            pathDefArrow.push('M' + (p.x - dx) + ',' + (p.y - dy));
+            pathDefArrow.push('L' + p.x + ',' + p.y);
+            pathDefArrow = pathDefArrow.join(' ');
+            this.skinParts.pathShadowArrowEnd.attr({path: pathDefArrow});
         }
     };
 
@@ -1011,36 +1158,42 @@ define(['js/logger',
         if (this.reconnectable) {
             //editor handle at src
             this.skinParts.srcDragPoint = this.skinParts.srcDragPoint || $('<div/>', {
-                "data-end": DiagramDesignerWidgetConstants.CONNECTION_END_SRC,
-                "data-id": this.id,
-                "class": DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS + " " + DiagramDesignerWidgetConstants.CONNECTION_END_SRC
+                'data-end': DiagramDesignerWidgetConstants.CONNECTION_END_SRC,
+                'data-id': this.id,
+                class: DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS + ' ' +
+                DiagramDesignerWidgetConstants.CONNECTION_END_SRC
             });
             this.skinParts.srcDragPoint.html('S');
 
-            this.skinParts.srcDragPoint.css({"position": "absolute",
-                                             "top": this.sourceCoordinates.y,
-                                             "left": this.sourceCoordinates.x});
+            this.skinParts.srcDragPoint.css({
+                position: 'absolute',
+                top: this.sourceCoordinates.y,
+                left: this.sourceCoordinates.x
+            });
 
             this.diagramDesigner.skinParts.$itemsContainer.append(this.skinParts.srcDragPoint);
 
 
             this.skinParts.dstDragPoint = this.skinParts.dstDragPoint || $('<div/>', {
-                "data-end": DiagramDesignerWidgetConstants.CONNECTION_END_DST,
-                "data-id": this.id,
-                "class": DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS+ " " + DiagramDesignerWidgetConstants.CONNECTION_END_DST
+                'data-end': DiagramDesignerWidgetConstants.CONNECTION_END_DST,
+                'data-id': this.id,
+                class: DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS + ' ' +
+                DiagramDesignerWidgetConstants.CONNECTION_END_DST
             });
             this.skinParts.dstDragPoint.html('D');
 
-            this.skinParts.dstDragPoint.css({"position": "absolute",
-                "top": this.endCoordinates.y,
-                "left": this.endCoordinates.x});
+            this.skinParts.dstDragPoint.css({
+                position: 'absolute',
+                top: this.endCoordinates.y,
+                left: this.endCoordinates.x
+            });
 
             this.diagramDesigner.skinParts.$itemsContainer.append(this.skinParts.dstDragPoint);
 
             //resize connectors to connection width
             var scale = Math.max(1, this.designerAttributes.width / 10); //10px is the width of the connector end
-            this.skinParts.srcDragPoint.css('transform', "scale(" + scale + "," + scale + ")");
-            this.skinParts.dstDragPoint.css('transform', "scale(" + scale + "," + scale + ")");
+            this.skinParts.srcDragPoint.css('transform', 'scale(' + scale + ',' + scale + ')');
+            this.skinParts.dstDragPoint.css('transform', 'scale(' + scale + ',' + scale + ')');
         } else {
             this.hideEndReconnectors();
         }
@@ -1071,11 +1224,11 @@ define(['js/logger',
 
     Connection.prototype._setEditMode = function (editMode) {
         if (this._readOnly === false && this._editMode !== editMode) {
-                this._editMode = editMode;
-                this.setConnectionRenderData(this._pathPoints);
-                if (this._editMode === false) {
-                    this.hideEndReconnectors();
-                }
+            this._editMode = editMode;
+            this.setConnectionRenderData(this._pathPoints);
+            if (this._editMode === false) {
+                this.hideEndReconnectors();
+            }
         }
     };
 
@@ -1095,9 +1248,13 @@ define(['js/logger',
             //the extra routing points that are not segment points, they are not movable
             for (rIt = 0; rIt < routingPointsLen; rIt += 1) {
                 //till we reach the next segment point in the list, all routing points go to the same path-segment
-                if (sIt < segmentPointsLen && this._isSamePoint(routingPoints[rIt], {'x': this.segmentPoints[sIt][0], 'y': this.segmentPoints[sIt][1]})) {
+                if (sIt < segmentPointsLen && this._isSamePoint(routingPoints[rIt], {
+                        x: this.segmentPoints[sIt][0],
+                        y: this.segmentPoints[sIt][1]
+                    })) {
                     //found the end of a segment
-                    pathSegmentPoints.push([this.segmentPoints[sIt][0], this.segmentPoints[sIt][1], this.segmentPoints[sIt][2], this.segmentPoints[sIt][3]]);
+                    pathSegmentPoints.push([this.segmentPoints[sIt][0], this.segmentPoints[sIt][1],
+                        this.segmentPoints[sIt][2], this.segmentPoints[sIt][3]]);
 
                     //create segment
                     this._createEditSegment(pathSegmentPoints, pNum);
@@ -1110,7 +1267,8 @@ define(['js/logger',
 
                     //start new pathSegmentPoint list
                     pathSegmentPoints = [];
-                    pathSegmentPoints.push([this.segmentPoints[sIt - 1][0], this.segmentPoints[sIt - 1][1], this.segmentPoints[sIt - 1][2], this.segmentPoints[sIt - 1][3]]);
+                    pathSegmentPoints.push([this.segmentPoints[sIt - 1][0], this.segmentPoints[sIt - 1][1],
+                        this.segmentPoints[sIt - 1][2], this.segmentPoints[sIt - 1][3]]);
                 } else {
                     pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y, 0, 0]);
                 }
@@ -1137,7 +1295,7 @@ define(['js/logger',
     Connection.prototype._removeConnectionEditSegments = function () {
         var len = this._connectionEditSegments.length;
 
-        while(len--) {
+        while (len--) {
             this._connectionEditSegments[len].destroy();
         }
 
@@ -1149,9 +1307,11 @@ define(['js/logger',
 
         this.logger.debug('_createEditSegment: #' + num + ', ' + JSON.stringify(points));
 
-        segment = new ConnectionEditSegment({'connection': this,
-                                             'id': num,
-                                             'points': points});
+        segment = new ConnectionEditSegment({
+            connection: this,
+            id: num,
+            points: points
+        });
 
         this._connectionEditSegments.push(segment);
     };
@@ -1160,19 +1320,23 @@ define(['js/logger',
         var d = [x, y, cx, cy],
             newSegmentPoints = this.segmentPoints.slice(0);
 
-        newSegmentPoints.splice(idx,0,d);
+        newSegmentPoints.splice(idx, 0, d);
 
-        this.diagramDesigner.onConnectionSegmentPointsChange({'connectionID': this.id,
-                                                              'points': newSegmentPoints});
+        this.diagramDesigner.onConnectionSegmentPointsChange({
+            connectionID: this.id,
+            points: newSegmentPoints
+        });
     };
 
     Connection.prototype.removeSegmentPoint = function (idx) {
         var newSegmentPoints = this.segmentPoints.slice(0);
 
-        newSegmentPoints.splice(idx,1);
+        newSegmentPoints.splice(idx, 1);
 
-        this.diagramDesigner.onConnectionSegmentPointsChange({'connectionID': this.id,
-            'points': newSegmentPoints});
+        this.diagramDesigner.onConnectionSegmentPointsChange({
+            connectionID: this.id,
+            points: newSegmentPoints
+        });
     };
 
     Connection.prototype.setSegmentPoint = function (idx, x, y, cx, cy) {
@@ -1181,8 +1345,10 @@ define(['js/logger',
 
         newSegmentPoints[idx] = d;
 
-        this.diagramDesigner.onConnectionSegmentPointsChange({'connectionID': this.id,
-            'points': newSegmentPoints});
+        this.diagramDesigner.onConnectionSegmentPointsChange({
+            connectionID: this.id,
+            points: newSegmentPoints
+        });
     };
 
     /********************** SEGMENT POINT MARKERS ******************************/
@@ -1195,11 +1361,15 @@ define(['js/logger',
         this._hideSegmentPoints();
 
         while (i--) {
-            marker = new ConnectionSegmentPoint({'connection': this,
-                'id': i,
-                'point': this.segmentPoints[i],
-                'pointAfter': i === len - 1 ? [this._pathPoints[pointsLastIdx].x, this._pathPoints[pointsLastIdx].y, 0, 0] : this.segmentPoints[i + 1],
-                'pointBefore': i === 0 ? [this._pathPoints[0].x, this._pathPoints[0].y, 0, 0] : this.segmentPoints[i - 1]});
+            marker = new ConnectionSegmentPoint({
+                connection: this,
+                id: i,
+                point: this.segmentPoints[i],
+                pointAfter: i === len - 1 ? [this._pathPoints[pointsLastIdx].x,
+                    this._pathPoints[pointsLastIdx].y, 0, 0] : this.segmentPoints[i + 1],
+                pointBefore: i === 0 ?
+                    [this._pathPoints[0].x, this._pathPoints[0].y, 0, 0] : this.segmentPoints[i - 1]
+            });
 
             this._segmentPointMarkers.push(marker);
         }
@@ -1252,47 +1422,53 @@ define(['js/logger',
 
         //update path itself
         if (this.skinParts.path) {
-            this.skinParts.path.attr({ "arrow-start": this.designerAttributes.arrowStart,
-                "arrow-end": this.designerAttributes.arrowEnd,
-                "stroke": this.designerAttributes.color,
-                "stroke-width": this.designerAttributes.width,
-                "stroke-dasharray": this.designerAttributes.pattern});
+            this.skinParts.path.attr({
+                'arrow-start': this.designerAttributes.arrowStart,
+                'arrow-end': this.designerAttributes.arrowEnd,
+                stroke: this.designerAttributes.color,
+                'stroke-width': this.designerAttributes.width,
+                'stroke-dasharray': this.designerAttributes.pattern
+            });
         }
 
         if (this.skinParts.pathShadow) {
             this._updatePathShadow(this._pathPoints);
-            this.skinParts.pathShadow.attr({ "stroke-width": this.designerAttributes.shadowWidth });
+            this.skinParts.pathShadow.attr({'stroke-width': this.designerAttributes.shadowWidth});
         }
 
         if (this.skinParts.pathShadowArrowStart) {
-            shadowArrowStart = this.designerAttributes.arrowStart.replace("inheritance", "block");
+            shadowArrowStart = this.designerAttributes.arrowStart.replace('inheritance', 'block');
 
-            this.skinParts.pathShadowArrowStart.attr({ "stroke-width": this.designerAttributes.shadowEndArrowWidth,
-                "arrow-start": shadowArrowStart});
+            this.skinParts.pathShadowArrowStart.attr({
+                'stroke-width': this.designerAttributes.shadowEndArrowWidth,
+                'arrow-start': shadowArrowStart
+            });
         }
 
         if (this.skinParts.pathShadowArrowEnd) {
-            shadowArrowEnd = this.designerAttributes.arrowEnd.replace("inheritance", "block");
+            shadowArrowEnd = this.designerAttributes.arrowEnd.replace('inheritance', 'block');
 
-            this.skinParts.pathShadowArrowEnd.attr({ "stroke-width": this.designerAttributes.shadowEndArrowWidth,
-                "arrow-end": shadowArrowEnd});
+            this.skinParts.pathShadowArrowEnd.attr({
+                'stroke-width': this.designerAttributes.shadowEndArrowWidth,
+                'arrow-end': shadowArrowEnd
+            });
         }
 
         if (this.skinParts.name) {
-            this.skinParts.name.css({'color': this.designerAttributes.color});
+            this.skinParts.name.css({color: this.designerAttributes.color});
         }
 
         if (this.skinParts.srcText) {
-            this.skinParts.srcText.css({'color': this.designerAttributes.color});
+            this.skinParts.srcText.css({color: this.designerAttributes.color});
         }
 
         if (this.skinParts.dstText) {
-            this.skinParts.dstText.css({'color': this.designerAttributes.color});
+            this.skinParts.dstText.css({color: this.designerAttributes.color});
         }
     };
 
 
-    Connection.prototype.getConnectionAreas = function (id, isEnd) {
+    Connection.prototype.getConnectionAreas = function (/*id, isEnd*/) {
         var result = [],
             AREA_SIZE = 0,
             w = 0,
@@ -1319,28 +1495,31 @@ define(['js/logger',
 
             //by default return the center point of the item
             //canvas will draw the connection to / from this coordinate
-            result.push( {"id": "0",
-                "x1": pos.x - dx,
-                "y1": pos.y - dy,
-                "x2": pos.x - dx + w,
-                "y2": pos.y - dy + h,
-                "angle1": 0,
-                "angle2": 360,
-                "len": 0} );
+            result.push({
+                id: '0',
+                x1: pos.x - dx,
+                y1: pos.y - dy,
+                x2: pos.x - dx + w,
+                y2: pos.y - dy + h,
+                angle1: 0,
+                angle2: 360,
+                len: 0
+            });
         }
 
 
         return result;
     };
 
-    Connection.prototype.showSourceConnectors = function (params) {
+    Connection.prototype.showSourceConnectors = function (/*params*/) {
     };
 
     Connection.prototype.hideSourceConnectors = function () {
     };
 
     Connection.prototype.showEndConnectors = function () {
-        this._connectionConnector = this._connectionConnector || $('<div/>', {'class': 'connector connection-connector'});
+        this._connectionConnector = this._connectionConnector ||
+        $('<div/>', {class: 'connector connection-connector'});
 
         this._connectionConnector.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID, this.id);
 
@@ -1349,8 +1528,10 @@ define(['js/logger',
         var len = this.skinParts.path.getTotalLength();
         var pos = this.skinParts.path.getPointAtLength(len / 2);
 
-        this._connectionConnector.css({'left': pos.x,
-            'top': pos.y});
+        this._connectionConnector.css({
+            left: pos.x,
+            top: pos.y
+        });
     };
 
     Connection.prototype.hideEndConnectors = function () {
@@ -1387,11 +1568,13 @@ define(['js/logger',
             var len = this.skinParts.path.getTotalLength();
             var pos = this.skinParts.path.getPointAtLength(len / 2);
 
-            this._connectionAreaMarker = $('<div/>', {'class': 'c-area'});
+            this._connectionAreaMarker = $('<div/>', {class: 'c-area'});
             this.diagramDesigner.skinParts.$itemsContainer.append(this._connectionAreaMarker);
 
-            this._connectionAreaMarker.css({'top': pos.y,
-                'left': pos.x});
+            this._connectionAreaMarker.css({
+                top: pos.y,
+                left: pos.x
+            });
         }
     };
 
@@ -1429,11 +1612,13 @@ define(['js/logger',
         this.skinParts.textContainer = this._textContainer.clone();
         this.skinParts.textContainer.attr('id', TEXT_ID_PREFIX + this.id);
 
-        if (this.name && this.name !== "") {
+        if (this.name && this.name !== '') {
             this.skinParts.name = this._textNameBase.clone();
-            this.skinParts.name.css({ 'top': pathCenter.y - 4/*+ this.designerAttributes.width / 2*/,
-                'left': pathCenter.x,
-                'color': this.designerAttributes.color});
+            this.skinParts.name.css({
+                top: pathCenter.y - 4/*+ this.designerAttributes.width / 2*/,
+                left: pathCenter.x,
+                color: this.designerAttributes.color
+            });
             this.skinParts.name.find('span').text(this.name);
             this.skinParts.textContainer.append(this.skinParts.name);
             hasText = true;
@@ -1444,19 +1629,21 @@ define(['js/logger',
             }
 
             // set title editable on double-click
-            this.skinParts.name.find('span').on("dblclick.editOnDblClick", null, function (event) {
+            this.skinParts.name.find('span').on('dblclick.editOnDblClick', null, function (event) {
                 if (self.nameEdit === true && self.diagramDesigner.getIsReadOnlyMode() !== true) {
-                    $(this).editInPlace({"class": "",
-                        "onChange": function (oldValue, newValue) {
+                    $(this).editInPlace({
+                        class: '',
+                        onChange: function (oldValue, newValue) {
                             self._onNameChanged(oldValue, newValue);
-                        }});
+                        }
+                    });
                 }
                 event.stopPropagation();
                 event.preventDefault();
             });
         }
 
-        if (this.srcText && this.srcText !== "") {
+        if (this.srcText && this.srcText !== '') {
             this.skinParts.srcText = this._textSrcBase.clone();
             dx = this.designerAttributes.width;
             dy = this.designerAttributes.width;
@@ -1471,7 +1658,7 @@ define(['js/logger',
             } else if (alphaBegin > 135 && alphaBegin <= 180) {
                 dx = -5 * this.srcText.length;
             } else if (alphaBegin > 180 && alphaBegin <= 225) {
-                dx = -5 * this.srcText.length ;
+                dx = -5 * this.srcText.length;
                 dy *= -1;
             } else if (alphaBegin > 225 && alphaBegin <= 270) {
                 dy = -3 * TEXT_OFFSET;
@@ -1481,33 +1668,37 @@ define(['js/logger',
                 dy = -3 * TEXT_OFFSET;
             }
 
-            this.skinParts.srcText.css({ 'top': pathBegin.y + dy,
-                'left': pathBegin.x + dx,
-                'color': this.designerAttributes.color});
+            this.skinParts.srcText.css({
+                top: pathBegin.y + dy,
+                left: pathBegin.x + dx,
+                color: this.designerAttributes.color
+            });
             this.skinParts.srcText.find('span').text(this.srcText);
             this.skinParts.textContainer.append(this.skinParts.srcText);
             hasText = true;
 
             // set title editable on double-click
-            this.skinParts.srcText.find('span').on("dblclick.editOnDblClick", null, function (event) {
+            this.skinParts.srcText.find('span').on('dblclick.editOnDblClick', null, function (event) {
                 if (self.srcTextEdit === true && self.diagramDesigner.getIsReadOnlyMode() !== true) {
-                    $(this).editInPlace({"class": "",
-                        "onChange": function (oldValue, newValue) {
+                    $(this).editInPlace({
+                        class: '',
+                        onChange: function (oldValue, newValue) {
                             self._onSrcTextChanged(oldValue, newValue);
-                        }});
+                        }
+                    });
                 }
                 event.stopPropagation();
                 event.preventDefault();
             });
         }
 
-        if (this.dstText && this.dstText !== "") {
+        if (this.dstText && this.dstText !== '') {
             this.skinParts.dstText = this._textDstBase.clone();
             dx = this.designerAttributes.width;
             dy = this.designerAttributes.width;
 
             if (alphaEnd === 0) {
-                dx = -5 * this.dstText.length ;
+                dx = -5 * this.dstText.length;
                 dy *= -1;
             } else if (alphaEnd > 0 && alphaEnd <= 45) {
                 dy = -3 * TEXT_OFFSET;
@@ -1528,20 +1719,24 @@ define(['js/logger',
                 dx = -5 * this.dstText.length;
             }
 
-            this.skinParts.dstText.css({ 'top': pathEnd.y + dy,
-                'left': pathEnd.x + dx,
-                'color': this.designerAttributes.color});
+            this.skinParts.dstText.css({
+                top: pathEnd.y + dy,
+                left: pathEnd.x + dx,
+                color: this.designerAttributes.color
+            });
             this.skinParts.dstText.find('span').text(this.dstText);
             this.skinParts.textContainer.append(this.skinParts.dstText);
             hasText = true;
 
             // set title editable on double-click
-            this.skinParts.dstText.find('span').on("dblclick.editOnDblClick", null, function (event) {
+            this.skinParts.dstText.find('span').on('dblclick.editOnDblClick', null, function (event) {
                 if (self.dstTextEdit === true && self.diagramDesigner.getIsReadOnlyMode() !== true) {
-                    $(this).editInPlace({"class": "",
-                        "onChange": function (oldValue, newValue) {
+                    $(this).editInPlace({
+                        class: '',
+                        onChange: function (oldValue, newValue) {
                             self._onDstTextChanged(oldValue, newValue);
-                        }});
+                        }
+                    });
                 }
                 event.stopPropagation();
                 event.preventDefault();
@@ -1565,7 +1760,7 @@ define(['js/logger',
             dY = (point1.y - point0.y);
 
         if (dX === 0 && dY !== 0) {
-            alpha = Math.PI / 2 * Math.abs(dY) / dY ;
+            alpha = Math.PI / 2 * Math.abs(dY) / dY;
         } else {
             alpha = Math.atan(dY / dX);
             if (dX < 0) {
@@ -1577,7 +1772,7 @@ define(['js/logger',
             alpha += Math.PI * 2;
         }
 
-        alpha = alpha * (180/Math.PI);
+        alpha = alpha * (180 / Math.PI);
 
         return alpha;
     };
@@ -1647,7 +1842,7 @@ define(['js/logger',
         connectionIDs.splice(selfIdx);
         len = connectionIDs.length;
 
-        while(len--) {
+        while (len--) {
             otherConn = items[connectionIDs[len]];
             if (otherConn.isBezier === false) {
                 xingWithOther = this._pathIntersect(otherConn);
@@ -1655,11 +1850,13 @@ define(['js/logger',
                     for (i = 0; i < xingWithOther.length; i += 1) {
                         xingDesc = xingWithOther[i];
                         intersections[xingDesc.segment1] = intersections[xingDesc.segment1] || [];
-                        intersections[xingDesc.segment1].push({'xy': [xingDesc.x, xingDesc.y],
-                                                        't': xingDesc.t1,
-                                                      'path': xingDesc.path1,
-                                                      'length': xingDesc.segment1Length,
-                                                      'otherWidth': otherConn.designerAttributes.width });
+                        intersections[xingDesc.segment1].push({
+                            xy: [xingDesc.x, xingDesc.y],
+                            t: xingDesc.t1,
+                            path: xingDesc.path1,
+                            length: xingDesc.segment1Length,
+                            otherWidth: otherConn.designerAttributes.width
+                        });
                         if (intersectionSegments.indexOf(xingDesc.segment1) === -1) {
                             intersectionSegments.push(xingDesc.segment1);
                         }
@@ -1669,32 +1866,40 @@ define(['js/logger',
         }
 
         //we got all the intersections of this path with everybody else
-        intersectionSegments.sort(function(a,b){
-            return a-b;
+        intersectionSegments.sort(function (a, b) {
+            return a - b;
         });
         for (len = 0; len < intersectionSegments.length; len += 1) {
             segNum = intersectionSegments[len];
             segmentXings = intersections[segNum];
 
             for (i = 0; i < segmentXings.length; i += 1) {
-                resultIntersectionPathDefs[segNum] = resultIntersectionPathDefs[segNum] || { 't': [], 'paths': {}, 'segmentLength': segmentXings[i].length, 'xings': {}, 'sweepFlag': 0};
+                resultIntersectionPathDefs[segNum] = resultIntersectionPathDefs[segNum] || {
+                    t: [],
+                    paths: {},
+                    segmentLength: segmentXings[i].length,
+                    xings: {},
+                    sweepFlag: 0
+                };
 
                 xRadius = Math.max(this.designerAttributes.width, segmentXings[i].otherWidth) + JUMP_XING_RADIUS;
 
-                segmentLength =  segmentXings[i].length;
+                segmentLength = segmentXings[i].length;
                 pixDiffPercentage = xRadius / segmentLength;
 
                 atLength = segmentXings[i].t - pixDiffPercentage;
                 if (atLength < 0) {
                     atLength = 0;
                 }
-                pointBefore = this._getPointAtLength(segmentXings[i].path[0], segmentXings[i].path[1], segmentXings[i].path[2], segmentXings[i].path[3], atLength * segmentLength);
+                pointBefore = this._getPointAtLength(segmentXings[i].path[0], segmentXings[i].path[1],
+                    segmentXings[i].path[2], segmentXings[i].path[3], atLength * segmentLength);
 
                 atLength = segmentXings[i].t + pixDiffPercentage;
                 if (atLength > 1) {
                     atLength = 1;
                 }
-                pointAfter = this._getPointAtLength(segmentXings[i].path[0], segmentXings[i].path[1], segmentXings[i].path[2], segmentXings[i].path[3], atLength * segmentLength);
+                pointAfter = this._getPointAtLength(segmentXings[i].path[0], segmentXings[i].path[1],
+                    segmentXings[i].path[2], segmentXings[i].path[3], atLength * segmentLength);
 
                 vDir = segmentXings[i].path[3] - segmentXings[i].path[1];
                 if (vDir !== 0) {
@@ -1722,20 +1927,23 @@ define(['js/logger',
                     sweepFlag = 0;
                 }
 
-                xingCurve = "L" + pointBefore.x + "," + pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + pointAfter.x + "," + pointAfter.y;
+                xingCurve = 'L' + pointBefore.x + ',' + pointBefore.y + 'A' + xRadius + ',' + xRadius + ' 0 0,' +
+                sweepFlag + ' ' + pointAfter.x + ',' + pointAfter.y;
 
                 resultIntersectionPathDefs[segNum].t.push(segmentXings[i].t);
                 resultIntersectionPathDefs[segNum].paths[segmentXings[i].t] = xingCurve;
-                resultIntersectionPathDefs[segNum].xings[segmentXings[i].t] = {'pointBefore': pointBefore,
-                                                                               'pointAfter': pointAfter,
-                                                                               'xRadius': xRadius};
+                resultIntersectionPathDefs[segNum].xings[segmentXings[i].t] = {
+                    pointBefore: pointBefore,
+                    pointAfter: pointAfter,
+                    xRadius: xRadius
+                };
                 resultIntersectionPathDefs[segNum].sweepFlag = sweepFlag;
             }
 
             //simplify bumps if they overlap
             //order based on t
-            resultIntersectionPathDefs[segNum].t.sort(function(a,b){
-                return a-b;
+            resultIntersectionPathDefs[segNum].t.sort(function (a, b) {
+                return a - b;
             });
 
             segmentLength = resultIntersectionPathDefs[segNum].segmentLength;
@@ -1748,31 +1956,42 @@ define(['js/logger',
                 var xing1 = resultIntersectionPathDefs[segNum].xings[t1];
 
                 if (this._checkIntersect(xing.pointBefore.x, xing.pointBefore.y,
-                    xing.pointAfter.x, xing.pointAfter.y,
-                    xing1.pointBefore.x, xing1.pointBefore.y,
-                    xing1.pointAfter.x, xing1.pointAfter.y)) {
+                        xing.pointAfter.x, xing.pointAfter.y,
+                        xing1.pointBefore.x, xing1.pointBefore.y,
+                        xing1.pointAfter.x, xing1.pointAfter.y)) {
                     xRadius = Math.max(xing.xRadius, xing1.xRadius);
 
-                    xingCurve = "L" + xing.pointBefore.x + "," + xing.pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + xing1.pointAfter.x + "," + xing1.pointAfter.y;
+                    xingCurve = 'L' + xing.pointBefore.x + ',' + xing.pointBefore.y + 'A' + xRadius + ',' + xRadius +
+                    ' 0 0,' + sweepFlag + ' ' + xing1.pointAfter.x + ',' + xing1.pointAfter.y;
 
                     //try to not draw a huge arc, more like a small arc and a path inbetween - doesn't look that good
-                    /*var totalLength = Math.sqrt((xing1.pointAfter.x - xing.pointBefore.x) * (xing1.pointAfter.x - xing.pointBefore.x) + (xing1.pointAfter.y - xing.pointBefore.y) * (xing1.pointAfter.y - xing.pointBefore.y));
-                    var c1 = this._getPointAtLength(xing.pointBefore.x, xing.pointBefore.y, xing1.pointAfter.x, xing1.pointAfter.y, xRadius);
-                    var c2 = this._getPointAtLength(xing.pointBefore.x, xing.pointBefore.y, xing1.pointAfter.x, xing1.pointAfter.y, totalLength - xRadius);
+                    /*
+                    var totalLength = Math.sqrt((xing1.pointAfter.x - xing.pointBefore.x) *
+                    (xing1.pointAfter.x - xing.pointBefore.x) + (xing1.pointAfter.y - xing.pointBefore.y) *
+                    (xing1.pointAfter.y - xing.pointBefore.y));
+                     var c1 = this._getPointAtLength(xing.pointBefore.x, xing.pointBefore.y, xing1.pointAfter.x,
+                     xing1.pointAfter.y, xRadius);
+                     var c2 = this._getPointAtLength(xing.pointBefore.x, xing.pointBefore.y, xing1.pointAfter.x,
+                     xing1.pointAfter.y, totalLength - xRadius);
 
-                    var ddx = c1.x - xing.pointBefore.x;
-                    var ddy = c1.y - xing.pointBefore.y;
-                    xingCurve = "L" + xing.pointBefore.x + "," + xing.pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + (c1.x + ddy) + "," + (c1.y + ddx);
+                     var ddx = c1.x - xing.pointBefore.x;
+                     var ddy = c1.y - xing.pointBefore.y;
+                     xingCurve = 'L' + xing.pointBefore.x + ',' + xing.pointBefore.y + 'A' + xRadius + ',' + xRadius +
+                      ' 0 0,' + sweepFlag + ' ' + (c1.x + ddy) + ',' + (c1.y + ddx);
 
-                    ddx = xing1.pointAfter.x - c2.x;
-                    ddy = xing1.pointAfter.y - c2.y;
-                    xingCurve += " L" + (c2.x + ddy) + "," + (c2.y + ddx) + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + xing1.pointAfter.x + "," + xing1.pointAfter.y;*/
+                     ddx = xing1.pointAfter.x - c2.x;
+                     ddy = xing1.pointAfter.y - c2.y;
+                     xingCurve += ' L' + (c2.x + ddy) + ',' + (c2.y + ddx) + 'A' + xRadius + ',' + xRadius + ' 0 0,' +
+                      sweepFlag + ' ' + xing1.pointAfter.x + ',' + xing1.pointAfter.y;
+                      */
 
                     resultIntersectionPathDefs[segNum].paths[t] = xingCurve;
 
-                    resultIntersectionPathDefs[segNum].xings[t] = {'pointBefore': xing.pointBefore,
-                        'pointAfter': xing1.pointAfter,
-                        'xRadius': xRadius};
+                    resultIntersectionPathDefs[segNum].xings[t] = {
+                        pointBefore: xing.pointBefore,
+                        pointAfter: xing1.pointAfter,
+                        xRadius: xRadius
+                    };
 
                     resultIntersectionPathDefs[segNum].t.splice(j + 1, 1);
 
@@ -1794,12 +2013,13 @@ define(['js/logger',
             //if resultIntersectionPathDefs[i] exist, use those
             //otherwise pick the corresponding value from the original array
             if (resultIntersectionPathDefs.hasOwnProperty(segNum)) {
-                resultIntersectionPathDefs[segNum].t.sort(function(a,b){
-                    return a-b;
+                resultIntersectionPathDefs[segNum].t.sort(function (a, b) {
+                    return a - b;
                 });
 
                 for (j = 0; j < resultIntersectionPathDefs[segNum].t.length; j += 1) {
-                    resultPathDefArray.push(resultIntersectionPathDefs[segNum].paths[resultIntersectionPathDefs[segNum].t[j]]);
+                    resultPathDefArray.push(resultIntersectionPathDefs[segNum]
+                        .paths[resultIntersectionPathDefs[segNum].t[j]]);
                 }
             }
 
@@ -1815,7 +2035,7 @@ define(['js/logger',
             oPathPoints = otherConn._pathPoints,
             p1len = myPathPoints.length,
             p2len = oPathPoints.length,
-            s1,s2,
+            s1, s2,
             i,
             j,
             res = [],
@@ -1826,18 +2046,22 @@ define(['js/logger',
 
         if (clientUtil.overlap(this._pathPointsBBox, otherConn._pathPointsBBox)) {
             for (i = 0; i < p1len - 1; i += 1) {
-                s1 = {'x1': myPathPoints[i].x,
-                      'y1': myPathPoints[i].y,
-                      'x2': myPathPoints[i + 1].x,
-                      'y2': myPathPoints[i + 1].y};
+                s1 = {
+                    x1: myPathPoints[i].x,
+                    y1: myPathPoints[i].y,
+                    x2: myPathPoints[i + 1].x,
+                    y2: myPathPoints[i + 1].y
+                };
 
                 s1Length = Math.sqrt((s1.x2 - s1.x1) * (s1.x2 - s1.x1) + (s1.y2 - s1.y1) * (s1.y2 - s1.y1));
 
                 for (j = 0; j < p2len - 1; j += 1) {
-                    s2 = {'x1': oPathPoints[j].x,
-                        'y1': oPathPoints[j].y,
-                        'x2': oPathPoints[j + 1].x,
-                        'y2': oPathPoints[j + 1].y};
+                    s2 = {
+                        x1: oPathPoints[j].x,
+                        y1: oPathPoints[j].y,
+                        x2: oPathPoints[j + 1].x,
+                        y2: oPathPoints[j + 1].y
+                    };
 
                     s2Length = Math.sqrt((s2.x2 - s2.x1) * (s2.x2 - s2.x1) + (s2.y2 - s2.y1) * (s2.y2 - s2.y1));
 
@@ -1872,10 +2096,10 @@ define(['js/logger',
 
         if (
             mmax(x1, x2) < mmin(x3, x4) ||
-                mmin(x1, x2) > mmax(x3, x4) ||
-                mmax(y1, y2) < mmin(y3, y4) ||
-                mmin(y1, y2) > mmax(y3, y4)
-            ) {
+            mmin(x1, x2) > mmax(x3, x4) ||
+            mmax(y1, y2) < mmin(y3, y4) ||
+            mmin(y1, y2) > mmax(y3, y4)
+        ) {
             return;
         }
         var nx = (x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4),
@@ -1891,14 +2115,14 @@ define(['js/logger',
             py2 = +py.toFixed(2);
         if (
             px2 < +mmin(x1, x2).toFixed(2) ||
-                px2 > +mmax(x1, x2).toFixed(2) ||
-                px2 < +mmin(x3, x4).toFixed(2) ||
-                px2 > +mmax(x3, x4).toFixed(2) ||
-                py2 < +mmin(y1, y2).toFixed(2) ||
-                py2 > +mmax(y1, y2).toFixed(2) ||
-                py2 < +mmin(y3, y4).toFixed(2) ||
-                py2 > +mmax(y3, y4).toFixed(2)
-            ) {
+            px2 > +mmax(x1, x2).toFixed(2) ||
+            px2 < +mmin(x3, x4).toFixed(2) ||
+            px2 > +mmax(x3, x4).toFixed(2) ||
+            py2 < +mmin(y1, y2).toFixed(2) ||
+            py2 > +mmax(y1, y2).toFixed(2) ||
+            py2 < +mmin(y3, y4).toFixed(2) ||
+            py2 > +mmax(y3, y4).toFixed(2)
+        ) {
             return;
         }
         return {x: px, y: py};
@@ -1910,26 +2134,28 @@ define(['js/logger',
 
         if (
             mmax(x1, x2) < mmin(x3, x4) ||
-                mmin(x1, x2) > mmax(x3, x4) ||
-                mmax(y1, y2) < mmin(y3, y4) ||
-                mmin(y1, y2) > mmax(y3, y4)
-            ) {
+            mmin(x1, x2) > mmax(x3, x4) ||
+            mmax(y1, y2) < mmin(y3, y4) ||
+            mmin(y1, y2) > mmax(y3, y4)
+        ) {
             return;
         }
 
         return true;
     };
 
-    Connection.prototype._getPointAtLength = function(x1, y1, x2, y2, length) {
+    Connection.prototype._getPointAtLength = function (x1, y1, x2, y2, length) {
         var totalLength = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)),
             dx = (x2 - x1) / totalLength,
             dy = (y2 - y1) / totalLength;
 
-        return {'x': x1 + dx * length,
-                'y': y1 + dy * length};
+        return {
+            x: x1 + dx * length,
+            y: y1 + dy * length
+        };
     };
 
-    Connection.prototype._simplifyTrivially = function(pathPoints) {
+    Connection.prototype._simplifyTrivially = function (pathPoints) {
         //eliminate the middle point if 3 consecutive point are on the same line
         var pos = 1,
             p1,
@@ -1992,7 +2218,7 @@ define(['js/logger',
 
         //non-edit mode, one path builds the connection
         p = points[0];
-        pathDef.push("M" + p.x + "," + p.y);
+        pathDef.push('M' + p.x + ',' + p.y);
         pp = points[0];
 
         //fix the counter to start from the second point in the list
@@ -2000,25 +2226,27 @@ define(['js/logger',
         for (i = 1; i < len; i += 1) {
             p = points[i];
             if (this.isBezier === false) {
-                pathDef.push("L" + p.x + "," + p.y);
+                pathDef.push('L' + p.x + ',' + p.y);
             } else {
                 //draw a Quadratic Bezier path
                 //if the next point is a user defined segment point, use it's control points
                 if (segmentPoints.length > 0 &&
                     segmentPoints.length > sIdx &&
-                    this._isSamePoint(p, {'x': segmentPoints[sIdx][0], 'y': segmentPoints[sIdx][1]})) {
+                    this._isSamePoint(p, {x: segmentPoints[sIdx][0], y: segmentPoints[sIdx][1]})) {
                     cX = segmentPoints[sIdx][2];
                     cY = segmentPoints[sIdx][3];
                     sIdx += 1;
                 } else {
-                    //if the segment point is introduced by the routing algorithm but not defined by the user, it has no control point values
+                    // If the segment point is introduced by the routing algorithm but not defined by the user,
+                    // it has no control point values.
                     cX = 0;
                     cY = 0;
                 }
 
                 //C x1,y1 x2,y2 x,y
                 //draws a quadratic Bezier from the current point via control points x1,y1 and x2,y2 to x,y
-                pathDef.push("C" + (pp.x + pcX) + "," + (pp.y + pcY) + " " + (p.x - cX) + "," + (p.y - cY) + " " + p.x + "," + p.y);
+                pathDef.push('C' + (pp.x + pcX) + ',' + (pp.y + pcY) + ' ' + (p.x - cX) + ',' + (p.y - cY) + ' ' +
+                p.x + ',' + p.y);
 
                 pp = p;
                 pcX = cX;

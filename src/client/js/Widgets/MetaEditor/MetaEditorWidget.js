@@ -1,23 +1,27 @@
-/*globals define, Raphael, window, WebGMEGlobal, _*/
+/*globals define, $, _*/
+/*jshint browser: true, camelcase: false*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/logger',
+
+define([
+    'js/logger',
     'js/util',
     'js/DragDrop/DragHelper',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
     'js/Controls/iCheckBox',
     './MetaEditorPointerNamesDialog',
-    'css!./styles/MetaEditorWidget.css'], function (Logger,
-                                                    clientUtil,
-                                                    DragHelper,
-                                                    DiagramDesignerWidget,
-                                                    iCheckBox,
-                                                    MetaEditorPointerNamesDialog) {
+    'css!./styles/MetaEditorWidget.css'
+], function (Logger,
+             clientUtil,
+             DragHelper,
+             DiagramDesignerWidget,
+             ICheckBox,
+             MetaEditorPointerNamesDialog) {
 
-    "use strict";
+    'use strict';
 
     var MetaEditorWidget,
         __parent__ = DiagramDesignerWidget,
@@ -37,14 +41,14 @@ define(['js/logger',
 
         __parent__.call(this, container, params);
 
-        this.logger.debug("MetaEditorWidget ctor");
+        this.logger.debug('MetaEditorWidget ctor');
     };
 
     _.extend(MetaEditorWidget.prototype, DiagramDesignerWidget.prototype);
 
-    MetaEditorWidget.prototype._initializeUI = function (containerElement) {
+    MetaEditorWidget.prototype._initializeUI = function (/*containerElement*/) {
         __parent_proto__._initializeUI.apply(this, arguments);
-        this.logger.debug("MetaEditorWidget._initializeUI");
+        this.logger.debug('MetaEditorWidget._initializeUI');
 
         //disable connection to a connection
         this._connectToConnection = false;
@@ -75,25 +79,26 @@ define(['js/logger',
 
     MetaEditorWidget.prototype._checkChanged = function (value, isChecked) {
         this._refreshHeaderText();
-        this.logger.debug("CheckBox checkChanged: " + value + ", checked: " + isChecked);
+        this.logger.debug('CheckBox checkChanged: ' + value + ', checked: ' + isChecked);
         this.onCheckChanged(value, isChecked);
     };
 
-    MetaEditorWidget.prototype.onCheckChanged = function (value, isChecked) {
+    MetaEditorWidget.prototype.onCheckChanged = function (/*value, isChecked*/) {
         this.logger.warn('MetaEditorWidget.onCheckChanged(value, isChecked) is not overridden!');
     };
 
     MetaEditorWidget.prototype.addFilterItem = function (text, value, iconEl) {
         var item = $('<li/>', {
-                'class': 'filterItem'
+                class: 'filterItem'
             }),
             checkBox,
             self = this;
 
-        checkBox = new iCheckBox({
-            "checkChangedFn": function (data, isChecked) {
+        checkBox = new ICheckBox({
+            checkChangedFn: function (data, isChecked) {
                 self._checkChanged(value, isChecked);
-            }});
+            }
+        });
 
         item.append(iconEl.addClass('inline'));
         item.append(text);
@@ -115,8 +120,9 @@ define(['js/logger',
         this.$filterHeader.html('FILTER' + (all === on ? '' : ' *'));
     };
 
-    MetaEditorWidget.prototype.selectNewPointerName = function (existingPointerNames, notAllowedPointerNames, isSet, callBack) {
-       new MetaEditorPointerNamesDialog().show(existingPointerNames, notAllowedPointerNames, isSet, callBack);
+    MetaEditorWidget.prototype.selectNewPointerName = function (existingPointerNames, notAllowedPointerNames,
+                                                                isSet, callback) {
+        new MetaEditorPointerNamesDialog().show(existingPointerNames, notAllowedPointerNames, isSet, callback);
     };
 
     MetaEditorWidget.prototype.setFilterChecked = function (value) {

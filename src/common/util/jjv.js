@@ -1,3 +1,4 @@
+//jshint ignore: start
 /* jshint proto: true */
 
 /**

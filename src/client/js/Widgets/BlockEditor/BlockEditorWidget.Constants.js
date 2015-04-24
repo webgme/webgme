@@ -1,5 +1,7 @@
 /*globals define*/
-/*
+/*jshint browser: true*/
+
+/**
  * @author brollb / https://github/brollb
  *
  * STRING CONSTANT DEFINITIONS USED IN CONSTRAINT EDITOR
@@ -7,19 +9,19 @@
 
 define([], function () {
 
-    "use strict";
+    'use strict';
     //return string constants
     return {
         /*
          * TERRITORY EVENTS
          */
-        SELF : "__SELF__",
+        SELF: '__SELF__',
 
         /*
          * CLASS DEFINITIONS
-         * May need to change some of these (if I don't use the "designer item")
+         * May need to change some of these (if I don't use the 'designer item')
          */
-        DESIGNER_ITEM_CLASS : "linkable-item",
+        DESIGNER_ITEM_CLASS: 'linkable-item',
         HIGHLIGHT_MODE_CLASS: 'highlight-mode',
         ITEM_HIGHLIGHT_CLASS: 'highlighted',
         DROP_REGION_CLASS: 'drop-region',
@@ -36,23 +38,23 @@ define([], function () {
         /*
          * Linkable constants
          */
-        CONN_INCOMING: "in",
-        CONN_OUTGOING: "out",
+        CONN_INCOMING: 'in',
+        CONN_OUTGOING: 'out',
 
-        //Special "pointers"
-        PTR_NEXT: "next",
-        NAME: "name", 
-        SIBLING_PTRS: ["next"],//pointer names to ptrs on the same level
+        //Special 'pointers'
+        PTR_NEXT: 'next',
+        NAME: 'name',
+        SIBLING_PTRS: ['next'],//pointer names to ptrs on the same level
 
         /*
          * Droppable constants
          */
-        BACKGROUND: "background",
-        ITEM: "item",
+        BACKGROUND: 'background',
+        ITEM: 'item',
 
         /*DOM ELEMENT ATTRIBUTES*/
-        DATA_ITEM_ID : 'data-oid',
-        DATA_SUBCOMPONENT_ID : 'data-sid',
+        DATA_ITEM_ID: 'data-oid',
+        DATA_SUBCOMPONENT_ID: 'data-sid',
 
         /*GME*/
         GME_ID: 'GME_ID',
@@ -68,18 +70,24 @@ define([], function () {
 
         /*DEFAULT HEIGHT MEASUREMENT*/
         INITIAL_MEASURE: 'initial-measure',
-        STRETCH_TYPE: { SVG: 'svg', TEXT: 'text' },
+        STRETCH_TYPE: {SVG: 'svg', TEXT: 'text'},
 
-        DEBUG : false,
+        DEBUG: false,
         /*INPUT FIELDS*/
         INPUT_FIELDS: 'input-field',
-        TEXT_FIELD: { NAME: 'text',
-                      CONTENT: { TEXT: 'text' } },
+        TEXT_FIELD: {
+            NAME: 'text',
+            CONTENT: {TEXT: 'text'}
+        },
 
-        DROPDOWN: { NAME: 'dropdown', 
-                    CONTENT: { POINTERS: 'pointers',
-                               ATTRIBUTES: 'attributes',
-                               META_ENUM: 'enum'  } }
+        DROPDOWN: {
+            NAME: 'dropdown',
+            CONTENT: {
+                POINTERS: 'pointers',
+                ATTRIBUTES: 'attributes',
+                META_ENUM: 'enum'
+            }
+        }
 
     };
 });

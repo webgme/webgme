@@ -1,11 +1,13 @@
-/*globals define,_*/
-/*
+/*globals define, _*/
+/*jshint browser: true*/
+
+/**
  * @author brollb / https://github/brollb
  */
 
 define(['./LinkableItem',
-        './BlockEditorWidget.Constants'], function (LinkableItem,
-                                                   CONSTANTS) {
+    './BlockEditorWidget.Constants'], function (LinkableItem,
+                                                CONSTANTS) {
     "use strict";
 
     var BlockEditorWidgetLinkableItems;
@@ -42,10 +44,10 @@ define(['./LinkableItem',
 
         //Pass ptrs to decorator
         var attrs = Object.keys(objDescriptor.attrInfo),
-            ptrs = Object.keys(objDescriptor.ptrInfo), 
+            ptrs = Object.keys(objDescriptor.ptrInfo),
             stretchers = attrs.concat(ptrs);
 
-        objDescriptor.decoratorParams = { stretchers: stretchers };
+        objDescriptor.decoratorParams = {stretchers: stretchers};
 
         newComponent.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, objDescriptor.control, objDescriptor.metaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
         newComponent.addToDocFragment(this._documentFragment);
@@ -86,11 +88,13 @@ define(['./LinkableItem',
             }
         }
 
-        return { "x": pX,
-            "y": pY };
+        return {
+            "x": pX,
+            "y": pY
+        };
     };
 
-    BlockEditorWidgetLinkableItems.prototype.updateLinkableItem  = function (componentId, objDescriptor) {
+    BlockEditorWidgetLinkableItems.prototype.updateLinkableItem = function (componentId, objDescriptor) {
         var alignedPosition,
             addToUpdateList = null,
             item;
@@ -100,7 +104,7 @@ define(['./LinkableItem',
             item = this.items[componentId];
 
             //Update pointers
-            if (objDescriptor.hasOwnProperty("ptrInfo")){
+            if (objDescriptor.hasOwnProperty("ptrInfo")) {
                 var ptrInfo = this._createPtrInfoObject(objDescriptor.ptrInfo);
                 addToUpdateList = item.updatePtrs(ptrInfo) || addToUpdateList;
                 addToUpdateList = item.updateAttributes(objDescriptor.attrInfo) || addToUpdateList;
@@ -121,24 +125,24 @@ define(['./LinkableItem',
 
             addToUpdateList = this.items[componentId].update(objDescriptor) || addToUpdateList;
 
-            if (addToUpdateList){
+            if (addToUpdateList) {
                 this._linkableItems2Update[componentId] = addToUpdateList;
             }
         }
     };
 
-    BlockEditorWidgetLinkableItems.prototype._createPtrInfoObject = function(ptrInfo) {
+    BlockEditorWidgetLinkableItems.prototype._createPtrInfoObject = function (ptrInfo) {
         // Replace ids with items
         var ids = Object.keys(ptrInfo);
 
-        for (var i = ids.length-1; i >= 0; i--) {
+        for (var i = ids.length - 1; i >= 0; i--) {
             ptrInfo[ids[i]] = this.items[ptrInfo[ids[i]]] || ptrInfo[ids[i]];
         }
 
         return ptrInfo;
     };
 
-    BlockEditorWidgetLinkableItems.prototype.deleteLinkableItem  = function (id) {
+    BlockEditorWidgetLinkableItems.prototype.deleteLinkableItem = function (id) {
         var idx;
 
         this.logger.debug("Deleting LinkableItem with ID: '" + id + "'");
@@ -166,15 +170,15 @@ define(['./LinkableItem',
     };
 
     //BlockEditorWidgetLinkableItems.prototype.connect = function (id1, id2) {
-        ////This connects connArea1 and connArea2 on the screen as being connected. That is
-        ////it positions the parents of connArea1 and connArea2 such that connArea1 and connArea2
-        ////are overlapping and centered on each other.
-        ////
-        ////Note: This is done by moving connArea2 to connArea1.
-        //var item1 = this.items[id1],
-            //item2 = this.items[id2];
+    ////This connects connArea1 and connArea2 on the screen as being connected. That is
+    ////it positions the parents of connArea1 and connArea2 such that connArea1 and connArea2
+    ////are overlapping and centered on each other.
+    ////
+    ////Note: This is done by moving connArea2 to connArea1.
+    //var item1 = this.items[id1],
+    //item2 = this.items[id2];
 
-        //item1.connectToActive(item2);
+    //item1.connectToActive(item2);
     //};
 
     BlockEditorWidgetLinkableItems.prototype.setToConnect = function (id1, id2, ptrName) {
@@ -212,7 +216,7 @@ define(['./LinkableItem',
             return null;
         }
 
-        conn = item.getConnectionArea({id:item.item2Conn[id]});
+        conn = item.getConnectionArea({id: item.item2Conn[id]});
         return {ptr: conn.ptr, id: item.id};
     };
 

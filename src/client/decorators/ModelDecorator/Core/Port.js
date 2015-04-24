@@ -1,12 +1,17 @@
-/*globals define, WebGMEGlobal*/
+/*globals define, WebGMEGlobal, $*/
+/*jshint browser: true*/
 
-define(['js/logger',
-        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-        'js/Constants'], function (Logger,
-                                     DiagramDesignerWidgetConstants,
-                                     CONSTANTS) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+define([
+    'js/logger',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
+    'js/Constants'
+], function (Logger, DiagramDesignerWidgetConstants, CONSTANTS) {
+
+    'use strict';
 
     var Port,
         PORT_CONNECTOR_LEN = 20,
@@ -18,18 +23,20 @@ define(['js/logger',
     Port = function (id, options) {
         this.id = id;
 
-        this.title = options.title || "";
-        this.icon = options.svg || "";
+        this.title = options.title || '';
+        this.icon = options.svg || '';
         this.orientation = undefined;
         this.position = {};
         this.skinParts = [];
-        this.connectionArea = { "x1": 0,
-            "y1": 0,
-            "x2": 0,
-            "y2": 0,
-            "angle1": 0,
-            "angle2": 0,
-            "len": PORT_CONNECTOR_LEN};
+        this.connectionArea = {
+            x1: 0,
+            y1: 0,
+            x2: 0,
+            y2: 0,
+            angle1: 0,
+            angle2: 0,
+            len: PORT_CONNECTOR_LEN
+        };
 
         this.decorator = options.decorator;
 
@@ -37,7 +44,7 @@ define(['js/logger',
         //some comment here
         this.logger = Logger.create('gme:decorators:ModelDecorator:Core:Port_' + this.id,
             WebGMEGlobal.gmeConfig.client.log);
-        this.logger.debug("Created");
+        this.logger.debug('Created');
     };
 
     Port.prototype._DOMPortBase = $('<div  id="__ID__" class="port" data-id="__ID__"></div>');
@@ -46,19 +53,25 @@ define(['js/logger',
     Port.prototype._DOMConnector = $('<div class="connector"></div>');
     Port.prototype._DOMSVGIcon = $('<img class="svg-icon"/>');
 
-    Port.prototype._DOMBaseLeftTemplate = Port.prototype._DOMPortBase.clone().append(Port.prototype._DOMDot.clone()).append(Port.prototype._DOMConnector.clone()).append(Port.prototype._DOMSVGIcon.clone()).append(Port.prototype._DOMTitleWrapper.clone());
+    Port.prototype._DOMBaseLeftTemplate = Port.prototype._DOMPortBase.clone().append(Port.prototype._DOMDot.clone())
+        .append(Port.prototype._DOMConnector.clone()).append(Port.prototype._DOMSVGIcon.clone())
+        .append(Port.prototype._DOMTitleWrapper.clone());
 
-    Port.prototype._DOMBaseRightTemplate = Port.prototype._DOMPortBase.clone().append(Port.prototype._DOMTitleWrapper.clone()).append(Port.prototype._DOMSVGIcon.clone()).append(Port.prototype._DOMDot.clone()).append(Port.prototype._DOMConnector.clone());
+    Port.prototype._DOMBaseRightTemplate = Port.prototype._DOMPortBase.clone()
+        .append(Port.prototype._DOMTitleWrapper.clone()).append(Port.prototype._DOMSVGIcon.clone())
+        .append(Port.prototype._DOMDot.clone()).append(Port.prototype._DOMConnector.clone());
 
     Port.prototype._initialize = function () {
-        var concretePortTemplate = this.orientation === "W" ? this._DOMBaseLeftTemplate : this._DOMBaseRightTemplate;
+        var concretePortTemplate = this.orientation === 'W' ? this._DOMBaseLeftTemplate : this._DOMBaseRightTemplate;
 
         this.$el = concretePortTemplate.clone();
-        this.$el.attr({"id": this.id,
-                      "data-id": this.id,
-                      "title": this.title});
+        this.$el.attr({
+            id: this.id,
+            'data-id': this.id,
+            title: this.title
+        });
 
-        this.$portTitle = this.$el.find(".title");
+        this.$portTitle = this.$el.find('.title');
         this._updateTitle();
 
         this.$portTitleWrapper = this.$el.find('.title-wrapper');
@@ -68,7 +81,7 @@ define(['js/logger',
 
         this.$connectors = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
 
-        this.$portDot = this.$el.find(".dot");
+        this.$portDot = this.$el.find('.dot');
 
         if (this.decorator._displayConnectors === true) {
             if (this.decorator.hostDesignerItem) {
@@ -81,15 +94,15 @@ define(['js/logger',
     };
 
     Port.prototype.update = function (options) {
-        this.title = options.title || "";
-        this.icon = options.svg || "";
+        this.title = options.title || '';
+        this.icon = options.svg || '';
         this._updateTitle();
         this._updateIcon();
     };
 
     Port.prototype._updateTitle = function () {
         this.$portTitle.text(this.title);
-        this.$el.attr({"title": this.title});
+        this.$el.attr({title: this.title});
     };
 
     Port.prototype._updateIcon = function () {
@@ -130,7 +143,7 @@ define(['js/logger',
                 this.$connectors.detach();
                 this.$portDot.detach();
 
-                if (this.orientation === "E") {
+                if (this.orientation === 'E') {
                     //now it has EAST orientation
                     this.$el.append(this.$portDot).append(this.$connectors);
                 } else {
@@ -177,18 +190,18 @@ define(['js/logger',
             }
         }
 
-        this.connectionArea.x1 = this.orientation === "W" ? 0 : this.decorator.hostDesignerItem.getWidth();
+        this.connectionArea.x1 = this.orientation === 'W' ? 0 : this.decorator.hostDesignerItem.getWidth();
         //fix the x coordinate for the dot/svg icon's width
         if (this.icon) {
-            this.connectionArea.x1 += (this.orientation === "W" ? -1 : 1) * (PORT_ICON_WIDTH - 1);
+            this.connectionArea.x1 += (this.orientation === 'W' ? -1 : 1) * (PORT_ICON_WIDTH - 1);
         } else {
-            this.connectionArea.x1 += (this.orientation === "W" ? -1 : 1) * (PORT_DOT_WIDTH - 1);
+            this.connectionArea.x1 += (this.orientation === 'W' ? -1 : 1) * (PORT_DOT_WIDTH - 1);
         }
         this.connectionArea.x2 = this.connectionArea.x1;
         this.connectionArea.y1 = i * PORT_DOM_HEIGHT + 9;
         this.connectionArea.y2 = this.connectionArea.y1;
-        this.connectionArea.angle1 = this.orientation === "W" ? 180 : 0;
-        this.connectionArea.angle2 = this.orientation === "W" ? 180 : 0;
+        this.connectionArea.angle1 = this.orientation === 'W' ? 180 : 0;
+        this.connectionArea.angle2 = this.orientation === 'W' ? 180 : 0;
 
         return this.connectionArea;
     };

@@ -1,7 +1,13 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define */
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define([], function () {
-    "use strict";
+
+    'use strict';
 
     var ToolbarItemBase;
 
@@ -21,7 +27,7 @@ define([], function () {
         }
     };
 
-    ToolbarItemBase.prototype.enabled = function (enabled) {
+    ToolbarItemBase.prototype.enabled = function (/* enabled */) {
     };
 
     ToolbarItemBase.prototype.destroy = function () {

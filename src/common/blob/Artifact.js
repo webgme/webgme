@@ -96,7 +96,8 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
             }
 
             if (self.descriptor.content.hasOwnProperty(name)) {
-                callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
+                callback('Another content with the same name was already added. ' +
+                JSON.stringify(self.descriptor.content[name]));
 
             } else {
                 self.descriptor.size += metadata.size;
@@ -114,7 +115,8 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
         var self = this,
             addMetadata = function (size) {
                 if (self.descriptor.content.hasOwnProperty(name)) {
-                    callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
+                    callback('Another content with the same name was already added. ' +
+                    JSON.stringify(self.descriptor.content[name]));
 
                 } else {
                     self.descriptor.size += size;

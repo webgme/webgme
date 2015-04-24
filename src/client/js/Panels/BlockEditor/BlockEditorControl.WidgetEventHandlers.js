@@ -1,7 +1,9 @@
-/*globals define,_,WebGMEGlobal,alert*/
-/*
- * @author brollb / https:// github/brollb
+/*globals define, _, WebGMEGlobal, alert*/
+/*jshint browser: true*/
+/**
+ * @author brollb / https://github.com/brollb
  */
+
 
 define(['js/logger',
     'js/util',
@@ -12,23 +14,25 @@ define(['js/logger',
     'js/Utils/ExportManager',
     'js/Widgets/BlockEditor/BlockEditorWidget.Constants',
     'js/Widgets/BlockEditor/BlockEditorWidget.Utils',
-    'js/DragDrop/DragHelper'], function (Logger,
-                                         util,
-                                         CONSTANTS,
-                                         nodePropertyNames,
-                                         REGISTRY_KEYS,
-                                         GMEConcepts,
-                                         ExportManager,
-                                         BLOCK_CONSTANTS,
-                                         Utils,
-                                         DragHelper) {
-    "use strict";
+    'js/DragDrop/DragHelper'
+], function (Logger,
+             util,
+             CONSTANTS,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             GMEConcepts,
+             ExportManager,
+             BLOCK_CONSTANTS,
+             Utils,
+             DragHelper) {
+
+    'use strict';
 
     var BlockEditorControlWidgetEventHandlers,
-        ATTRIBUTES_STRING = "attributes",
-        REGISTRY_STRING = "registry";
+        ATTRIBUTES_STRING = 'attributes',
+        REGISTRY_STRING = 'registry';
 
-    BlockEditorControlWidgetEventHandlers = function() {
+    BlockEditorControlWidgetEventHandlers = function () {
     };
 
     BlockEditorControlWidgetEventHandlers.prototype.attachBlockEditorEventHandlers = function () {
@@ -40,10 +44,10 @@ define(['js/logger',
 
         /*
          * Uncomment for hierarchy
-        this.snapCanvas.onDesignerItemDoubleClick = function (id, event) {
-            self._onDesignerItemDoubleClick(id, event);
-        };
-        */
+         this.snapCanvas.onDesignerItemDoubleClick = function (id, event) {
+         self._onDesignerItemDoubleClick(id, event);
+         };
+         */
 
         this.snapCanvas.onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
             self._onRegisterSubcomponent(objID, sCompID, metaInfo);
@@ -126,8 +130,8 @@ define(['js/logger',
             return self._getValidPointerTypes(srcItem, dstItem);
         };
 
-        this.logger.debug("attachBlockEditorWidgetEventHandlers finished");
- 
+        this.logger.debug('attachBlockEditorWidgetEventHandlers finished');
+
     };
 
     BlockEditorControlWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
@@ -136,14 +140,19 @@ define(['js/logger',
         this._client.startTransaction();
         for (id in repositionDesc) {
             if (repositionDesc.hasOwnProperty(id)) {
-                this._client.setRegistry(this._ComponentID2GmeID[id], REGISTRY_KEYS.POSITION, { "x": repositionDesc[id].x, "y": repositionDesc[id].y });
+                this._client.setRegistry(this._ComponentID2GmeID[id],
+                    REGISTRY_KEYS.POSITION,
+                    {
+                        x: repositionDesc[id].x,
+                        y: repositionDesc[id].y
+                    });
             }
         }
         this._client.completeTransaction();
     };
 
     BlockEditorControlWidgetEventHandlers.prototype._onDesignerItemsCopy = function (copyDesc) {
-        var copyOpts = { "parentId": this.currentNodeInfo.id },
+        var copyOpts = {parentId: this.currentNodeInfo.id},
             id,
             desc,
             gmeID;
@@ -159,7 +168,7 @@ define(['js/logger',
                 copyOpts[gmeID][ATTRIBUTES_STRING] = {};
                 copyOpts[gmeID][REGISTRY_STRING] = {};
 
-                copyOpts[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = { "x": desc.posX, "y": desc.posY };
+                copyOpts[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = {x: desc.posX, y: desc.posY};
 
                 // remove the component from UI
                 // it will be recreated when the GME client calls back with the result
@@ -191,7 +200,7 @@ define(['js/logger',
             i = idList.length,
             objID;
 
-        while(i--) {
+        while (i--) {
             objID = this._ComponentID2GmeID[idList[i]];
             // temporary fix to not allow deleting ROOT AND FCO
             if (GMEConcepts.canDeleteNode(objID)) {
@@ -209,19 +218,20 @@ define(['js/logger',
 
     /*
      * Uncomment this for hierarchy
-    BlockEditorControlWidgetEventHandlers.prototype._onDesignerItemDoubleClick = function (id, event) {
-        var gmeID = this._ComponentID2GmeID[id];
+     BlockEditorControlWidgetEventHandlers.prototype._onDesignerItemDoubleClick = function (id, event) {
+     var gmeID = this._ComponentID2GmeID[id];
 
-        if (gmeID) {
-            this.logger.debug("Opening model with id '" + gmeID + "'");
-            WebGMEGlobal.State.setActiveObject(gmeID);
-        }
-    };
-    */
+     if (gmeID) {
+     this.logger.debug("Opening model with id '" + gmeID + "'");
+     WebGMEGlobal.State.setActiveObject(gmeID);
+     }
+     };
+     */
 
     BlockEditorControlWidgetEventHandlers.prototype._onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
         // store that a subcomponent with a given ID has been added to object with objID
-        this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] = this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] || {};
+        this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] = this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] ||
+        {};
         this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]][objID] = sCompID;
 
         this._Subcomponent2GMEID[objID] = this._Subcomponent2GMEID[objID] || {};
@@ -260,25 +270,25 @@ define(['js/logger',
         if (items.length > 0) {
             i = dragEffects.length;
             while (i--) {
-                switch(dragEffects[i]) {
+                switch (dragEffects[i]) {
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         // check to see if dragParams.parentID and this.parentID are the same
                         // if so, it's not a real move, it is a reposition
                         if ((dragParams && dragParams.parentID === parentID) ||
                             GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
-                            dragAction = {'dragEffect': dragEffects[i]};
+                            dragAction = {dragEffect: dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_COPY:
                         if (GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
-                            dragAction = {'dragEffect': dragEffects[i]};
+                            dragAction = {dragEffect: dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                         if (GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
-                            dragAction = {'dragEffect': dragEffects[i]};
+                            dragAction = {dragEffect: dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
                         break;
@@ -293,17 +303,20 @@ define(['js/logger',
                                     baseTypeNode = this._client.getNode(baseTypeID);
                                     validPointerTypes[j].name = baseTypeID;
                                     if (baseTypeNode) {
-                                        validPointerTypes[j].name = baseTypeNode.getAttribute(nodePropertyNames.Attributes.name);
+                                        validPointerTypes[j].name = baseTypeNode.getAttribute(
+                                            nodePropertyNames.Attributes.name);
                                     }
                                 }
 
                                 validPointerTypes.sort(this.__pointerSortCriteria);
 
                                 for (j = 0; j < validPointerTypes.length; j += 1) {
-                                    dragAction = { 'dragEffect': DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER,
-                                        'name': validPointerTypes[j].name,
-                                        'baseId': validPointerTypes[j].baseId,
-                                        'pointer': validPointerTypes[j].pointer};
+                                    dragAction = {
+                                        dragEffect: DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER,
+                                        name: validPointerTypes[j].name,
+                                        baseId: validPointerTypes[j].baseId,
+                                        pointer: validPointerTypes[j].pointer
+                                    };
                                     possibleDropActions.push(dragAction);
                                 }
                             }
@@ -318,7 +331,7 @@ define(['js/logger',
         return possibleDropActions;
     };
 
-    BlockEditorControlWidgetEventHandlers.prototype.__pointerSortCriteria = function (a,b) {
+    BlockEditorControlWidgetEventHandlers.prototype.__pointerSortCriteria = function (a, b) {
         var baseAName = a.name.toLowerCase(),
             baseBName = b.name.toLowerCase(),
             ptrAName = a.pointer.toLowerCase(),
@@ -363,29 +376,31 @@ define(['js/logger',
                 switch (possibleDropActions[i].dragEffect) {
                     case DragHelper.DRAG_EFFECTS.DRAG_COPY:
                         menuItems[i] = {
-                            "name": "Copy here",
-                            "icon": 'icon-plus'
+                            name: 'Copy here',
+                            icon: 'icon-plus'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         menuItems[i] = {
-                            "name": "Move here",
-                            "icon": 'icon-move'
+                            name: 'Move here',
+                            icon: 'icon-move'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                         menuItems[i] = {
-                            "name": "Create instance here",
-                            "icon": 'icon-share-alt'
+                            name: 'Create instance here',
+                            icon: 'icon-share-alt'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER:
                         menuItems[i] = {
-                            "name": "Create pointer '" + possibleDropActions[i].pointer + "' of type '" + possibleDropActions[i].name + "'",
-                            "icon": 'icon-share'
+                            name: 'Create pointer "' + possibleDropActions[i].pointer + '" of type "' +
+                            possibleDropActions[i].name + '"',
+                            icon: 'icon-share'
                         };
                         break;
                     default:
+                        break;
                 }
             }
 
@@ -415,16 +430,19 @@ define(['js/logger',
 
         switch (dragEffect) {
             case DragHelper.DRAG_EFFECTS.DRAG_COPY:
-                params = { "parentId": parentID };
+                params = {parentId: parentID};
                 i = items.length;
                 while (i--) {
                     gmeID = items[i];
 
                     params[gmeID] = {};
 
-                    oldPos = dragParams && dragParams.positions[gmeID] || {'x':0, 'y': 0};
+                    oldPos = dragParams && dragParams.positions[gmeID] || {x: 0, y: 0};
                     params[gmeID][REGISTRY_STRING] = {};
-                    params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = { "x": position.x + oldPos.x, "y": position.y + oldPos.y };
+                    params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = {
+                        x: position.x + oldPos.x,
+                        y: position.y + oldPos.y
+                    };
                 }
                 this._client.startTransaction();
                 this._client.copyMoreNodes(params);
@@ -433,7 +451,7 @@ define(['js/logger',
             case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                 // check to see if dragParams.parentID and this.parentID are the same
                 // if so, it's not a real move, it is a reposition
-                
+
                 // We will remove pointers into the items
                 var isHierarchicalMove = dragParams && dragParams.parentID !== parentID;
 
@@ -449,16 +467,19 @@ define(['js/logger',
                     // This should move all nodes pointed to by any sibling_ptr also
                     items = this._addSiblingDependents(items);
 
-                    params = { "parentId": parentID };
+                    params = {parentId: parentID};
                     i = items.length;
                     while (i--) {
                         gmeID = items[i];
 
                         params[gmeID] = {};
 
-                        oldPos = dragParams && dragParams.positions[gmeID] || {'x':0, 'y': 0};
+                        oldPos = dragParams && dragParams.positions[gmeID] || {x: 0, y: 0};
                         params[gmeID][REGISTRY_STRING] = {};
-                        params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = { "x": position.x + oldPos.x, "y": position.y + oldPos.y };
+                        params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = {
+                            x: position.x + oldPos.x,
+                            y: position.y + oldPos.y
+                        };
                     }
 
                     this._client.startTransaction();
@@ -468,11 +489,11 @@ define(['js/logger',
                 }
                 break;
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
-                params = { "parentId": parentID };
+                params = {parentId: parentID};
                 i = items.length;
-                while(i--) {
-                    oldPos = dragParams && dragParams.positions[items[i]] || {'x': 0, 'y': 0};
-                    params[items[i]] = { registry: { position:{ x: position.x + oldPos.x, y: position.y + oldPos.y }}};
+                while (i--) {
+                    oldPos = dragParams && dragParams.positions[items[i]] || {x: 0, y: 0};
+                    params[items[i]] = {registry: {position: {x: position.x + oldPos.x, y: position.y + oldPos.y}}};
                     // old position is not in drag-params
                     if (!(dragParams && dragParams.positions[items[i]])) {
                         position.x += POS_INC;
@@ -483,8 +504,10 @@ define(['js/logger',
                 break;
 
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER:
-                params = { "parentId": parentID,
-                           "baseId": dropAction.baseId };
+                params = {
+                    parentId: parentID,
+                    baseId: dropAction.baseId
+                };
 
                 this._client.startTransaction();
 
@@ -492,10 +515,12 @@ define(['js/logger',
 
                 if (gmeID) {
                     // check if old position is in drag-params
-                    oldPos = dragParams && dragParams.positions[items[0]] || {'x':0, 'y': 0};
+                    oldPos = dragParams && dragParams.positions[items[0]] || {x: 0, y: 0};
                     // store new position
-                    this._client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, {'x': position.x + oldPos.x,
-                        'y': position.y + oldPos.y});
+                    this._client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, {
+                        x: position.x + oldPos.x,
+                        y: position.y + oldPos.y
+                    });
 
                     // set reference
                     this._client.makePointer(gmeID, dropAction.pointer, items[0]);
@@ -503,13 +528,16 @@ define(['js/logger',
                     // try to set name
                     var origNode = this._client.getNode(items[0]);
                     if (origNode) {
-                        var ptrName = origNode.getAttribute(nodePropertyNames.Attributes.name) + "-" + dropAction.pointer;
+                        var ptrName = origNode.getAttribute(nodePropertyNames.Attributes.name) + '-' +
+                            dropAction.pointer;
                         this._client.setAttributes(gmeID, nodePropertyNames.Attributes.name, ptrName);
                     }
                 }
 
                 this._client.completeTransaction();
 
+                break;
+            default:
                 break;
         }
     };
@@ -541,7 +569,7 @@ define(['js/logger',
             newId,
             componentId;
 
-        for (var i = oldIds.length-1; i >= 0; i--) {
+        for (var i = oldIds.length - 1; i >= 0; i--) {
             newId = ids[oldIds[i]];
             componentId = this._GmeID2ComponentID[oldIds[i]];
 
@@ -569,14 +597,10 @@ define(['js/logger',
             droppedParentId,
             firstId = this._ComponentID2GmeID[droppedItem],
             newIds = {},
-            moveItems,
+            options,
 
-            splicing = false,// check to see if we should splice 
-            prevItem,
-            isSiblingPtr = BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) > -1,
-            nextItem = this.snapCanvas.items[droppedItem],
-            conn = receiverItem.activeConnectionArea,
-            i;
+            splicing = false,// check to see if we should splice
+            isSiblingPtr = BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) > -1;
 
         node = this._client.getNode(firstId);
         droppedParentId = node.getParentId();
@@ -588,7 +612,7 @@ define(['js/logger',
 
         // Check if we should perform hierarchical move
         if (!isSiblingPtr || receiverParentId !== droppedParentId) {
-            var options = {items: droppedItems};
+            options = {items: droppedItems};
             if (isSiblingPtr) {
                 options.parentId = receiverParentId;
             } else {
@@ -602,13 +626,15 @@ define(['js/logger',
         }
 
         // SPLICING
-        splicing = this._tryToSpliceItems({item: params.activeItem,
-                                           rootId: droppedItem,
-                                           receiverItem: receiverItem,
-                                           ids: newIds,
-                                           ptr: ptr,
-                                           offset: params.offset,
-                                           role: role});
+        splicing = this._tryToSpliceItems({
+            item: params.activeItem,
+            rootId: droppedItem,
+            receiverItem: receiverItem,
+            ids: newIds,
+            ptr: ptr,
+            offset: params.offset,
+            role: role
+        });
 
         // Set the first pointer
         if (role === BLOCK_CONSTANTS.CONN_INCOMING) {
@@ -616,10 +642,13 @@ define(['js/logger',
 
             if (!splicing) {
                 // Move firstId to the correct location
-                var options = {src: activeItem.id, 
-                               dst: this._GmeID2ComponentID[receiverId], 
-                               ptr: ptr},
-                    distance = this.snapCanvas.getConnectionDistance(options),
+                options = {
+                    src: activeItem.id,
+                    dst: this._GmeID2ComponentID[receiverId],
+                    ptr: ptr
+                };
+
+                var distance = this.snapCanvas.getConnectionDistance(options),
                     position;
 
                 node = this._client.getNode(firstId);
@@ -629,7 +658,7 @@ define(['js/logger',
 
                 this._client.setRegistry(firstId, REGISTRY_KEYS.POSITION, position);
             }
-            
+
         } else {
             this._client.makePointer(receiverId, ptr, firstId);
         }
@@ -654,7 +683,7 @@ define(['js/logger',
             i,
             params = {parentId: options.parentId};
 
-        for (i = items.length-1; i >= 0; i--) {
+        for (i = items.length - 1; i >= 0; i--) {
             gmeId = items[i];
             params[gmeId] = {};
 
@@ -664,8 +693,8 @@ define(['js/logger',
             id = node.getId();
             ptrs2Create[id] = [];
 
-            for (var j = ptrs.length-1; j >= 0; j--) {
-                ptrs2Create[id].push({ ptr: ptrs[j], to: node.getPointer(ptrs[j]).to });
+            for (var j = ptrs.length - 1; j >= 0; j--) {
+                ptrs2Create[id].push({ptr: ptrs[j], to: node.getPointer(ptrs[j]).to});
             }
         }
 
@@ -674,7 +703,7 @@ define(['js/logger',
         // For each of the items, update the ptrs
         ids = Object.keys(ptrs2Create);
 
-        for (i = ids.length-1; i >= 0; i--) {
+        for (i = ids.length - 1; i >= 0; i--) {
             while (ptrs2Create[ids[i]].length) {
                 ptrInfo = ptrs2Create[ids[i]].pop();
                 oldId = ptrInfo.to;
@@ -690,21 +719,18 @@ define(['js/logger',
     };
 
     BlockEditorControlWidgetEventHandlers.prototype._tryToSpliceItems = function (params) {
-        var end,
-            offset = params.offset || [0,0],
+        var offset = params.offset || [0, 0],
             ptr = params.ptr,
             role = params.role,
             ids = params.ids,
             rootId = params.rootId || params.item.id,
             isSiblingPtr = false,
-            splicing,
             receiverItem = params.receiverItem,
             receiverConnId = receiverItem.activeConnectionArea.id,
             prevItemId,
             prevGmeId,
             spliceToItem,
-            spliceToId,
-            otherPtr;
+            spliceToId;
 
         spliceToItem = receiverItem.conn2Item[receiverConnId];
 
@@ -713,7 +739,7 @@ define(['js/logger',
         }
 
         // Set isSiblingPtr
-        for (var i = BLOCK_CONSTANTS.SIBLING_PTRS.length-1; i >= 0; i--) {
+        for (var i = BLOCK_CONSTANTS.SIBLING_PTRS.length - 1; i >= 0; i--) {
             if (BLOCK_CONSTANTS.SIBLING_PTRS[i] === ptr) {
                 isSiblingPtr = true;
             }
@@ -748,7 +774,7 @@ define(['js/logger',
                 prevItem = prevItem.parent;
             }
             spliceFromItems = [prevItem];
-            
+
         } else if (role === BLOCK_CONSTANTS.CONN_OUTGOING) {
             // Get all the sibling leaves of the tree
 
@@ -756,14 +782,16 @@ define(['js/logger',
         }
 
         // For each of the spliceFromItems, get the closest valid sibling connection
-        spliceInfo = this._getBestItemAndConnection({items: spliceFromItems,
-                                                     receiver: spliceToItem,
-                                                     allowsChildrenPtrs: isSiblingPtr,
-                                                     ids: ids,
-                                                     dx: offset[0],
-                                                     dy: offset[1],
-                                                     role: role});
-        
+        spliceInfo = this._getBestItemAndConnection({
+            items: spliceFromItems,
+            receiver: spliceToItem,
+            allowsChildrenPtrs: isSiblingPtr,
+            ids: ids,
+            dx: offset[0],
+            dy: offset[1],
+            role: role
+        });
+
         if (spliceInfo.item) {
 
             prevItemId = spliceInfo.item.id;
@@ -792,9 +820,9 @@ define(['js/logger',
 
         while (current.length) {
             // Check each of the pointers for an item
-            for (var i = current.length-1; i >= 0; i--) {
+            for (var i = current.length - 1; i >= 0; i--) {
                 isLeaf = true;
-                for (var p = BLOCK_CONSTANTS.SIBLING_PTRS.length-1; p >= 0; p--) {
+                for (var p = BLOCK_CONSTANTS.SIBLING_PTRS.length - 1; p >= 0; p--) {
                     ptr = BLOCK_CONSTANTS.SIBLING_PTRS[p];
                     if (current[i].ptrs[ptr]) {
                         next.push(current[i].ptrs[ptr]);
@@ -809,7 +837,7 @@ define(['js/logger',
             current = next;
             next = [];
         }
-    
+
         return leaves;
     };
 
@@ -819,10 +847,9 @@ define(['js/logger',
      * @param {Object} params
      * @return {Object} {itemId, ptr}
      */
-    BlockEditorControlWidgetEventHandlers.prototype._getBestItemAndConnection = function(params) {
+    BlockEditorControlWidgetEventHandlers.prototype._getBestItemAndConnection = function (params) {
         var items = params.items,
             receiver = params.receiver,
-            receiverId = params.receiverId,
             allowsChildrenPtrs = params.allowsChildrenPtrs || false,
             receiverAreas = receiver.getConnectionAreas(),
             rAreas,
@@ -840,7 +867,7 @@ define(['js/logger',
             closest = {distance: Infinity},
             areas = [],
             self = this,
-            getGmeId = function(componentId) {
+            getGmeId = function (componentId) {
                 var id = self._ComponentID2GmeID[componentId];
                 return params.ids[id] || id;
             };
@@ -857,17 +884,17 @@ define(['js/logger',
             ptrOptions = [null, getGmeId(receiver.id)];
         }
 
-        for (var i = items.length-1; i >= 0; i--) {
+        for (var i = items.length - 1; i >= 0; i--) {
             // Get the valid ptrs wrt the item
             ptrOptions[index] = getGmeId(items[i].id);
             ptrs = GMEConcepts.getValidPointerTypesFromSourceToTarget
-                              .apply(GMEConcepts, ptrOptions);
+                .apply(GMEConcepts, ptrOptions);
 
             // Remove any non-sibling pointers
             if (!allowsChildrenPtrs) {
-                for (var j = ptrs.length-1; j >= 0; j--) {
+                for (var j = ptrs.length - 1; j >= 0; j--) {
                     if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptrs[j]) === -1) {
-                        ptrs.splice(j,1);
+                        ptrs.splice(j, 1);
                     }
                 }
             }
@@ -915,11 +942,11 @@ define(['js/logger',
      * @return {Object} {item, connection}
      */
     BlockEditorControlWidgetEventHandlers.prototype._followPtrToEnd = function (params) {
-        var nextItem = params.item, 
+        var nextItem = params.item,
             items = params.items,
             role = params.role || BLOCK_CONSTANTS.CONN_OUTGOING,
             ptr = params.ptr,
-            getNextConnArea = function(item) {
+            getNextConnArea = function (item) {
                 var area;
                 if (role === BLOCK_CONSTANTS.CONN_INCOMING) {
                     if (item.parent && item.parent.item2Conn[item.id].ptr === ptr) {
@@ -959,10 +986,10 @@ define(['js/logger',
         // This should tell us if the items are contained in another item rather than
         // just the parentId
         var i = items.length,
-            currentDepth = this.currentNodeInfo.id.split("/").length + 1;
+            currentDepth = this.currentNodeInfo.id.split('/').length + 1;
 
         while (i--) {
-            if (items[i].split("/").length > currentDepth) {
+            if (items[i].split('/').length > currentDepth) {
                 return true;
             }
         }
@@ -1011,13 +1038,14 @@ define(['js/logger',
                 gmeID = items[i];
                 oldPos = dragPositions[gmeID];
                 if (!oldPos) {
-                    oldPos = {'x': 0, 'y': 0};
+                    oldPos = {x: 0, y: 0};
                 }
 
                 if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
                     componentID = this._GmeID2ComponentID[gmeID];
                     selectedIDs.push(componentID);
-                    this.snapCanvas.updateLinkableItem(componentID, { "position": {"x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y }});
+                    this.snapCanvas.updateLinkableItem(componentID,
+                        {position: {x: dropPosition.x + oldPos.x, y: dropPosition.y + oldPos.y}});
                 }
             }
 
@@ -1045,14 +1073,26 @@ define(['js/logger',
             gmeID = items[i];
             oldPos = dragPositions[gmeID];
             if (!oldPos) {
-                oldPos = {'x': 0, 'y': 0};
+                oldPos = {x: 0, y: 0};
             }
             // aspect specific coordinate
             if (selectedAspect === CONSTANTS.ASPECT_ALL) {
-                client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
+                client.setRegistry(gmeID,
+                    REGISTRY_KEYS.POSITION,
+                    {
+                        x: dropPosition.x + oldPos.x,
+                        y: dropPosition.y + oldPos.y
+                    });
             } else {
                 client.addMember(modelID, gmeID, selectedAspect);
-                client.setMemberRegistry(modelID, gmeID, selectedAspect, REGISTRY_KEYS.POSITION, {'x': dropPosition.x + oldPos.x, 'y': dropPosition.y + oldPos.y} );
+                client.setMemberRegistry(modelID,
+                    gmeID,
+                    selectedAspect,
+                    REGISTRY_KEYS.POSITION,
+                    {
+                        x: dropPosition.x + oldPos.x,
+                        y: dropPosition.y + oldPos.y
+                    });
             }
         }
 
@@ -1119,7 +1159,7 @@ define(['js/logger',
             result = true;
 
         if (nodeObj) {
-            result = nodeObj.getAttribute('copy') !== "false";
+            result = nodeObj.getAttribute('copy') !== 'false';
         }
 
         return result;
@@ -1133,14 +1173,18 @@ define(['js/logger',
             gmeID,
             obj,
             nodeObj,
-            cpData = {'project': this._client.getActiveProject(),
-                      'items' : []};
+            cpData = {
+                project: this._client.getActiveProject(),
+                items: []
+            };
 
-        while(i--) {
+        while (i--) {
             gmeID = this._ComponentID2GmeID[selectedIDs[i]];
-            obj = {'ID': gmeID,
-                   'Name': undefined,
-                   'Position': undefined};
+            obj = {
+                ID: gmeID,
+                Name: undefined,
+                Position: undefined
+            };
 
             nodeObj = this._client.getNode(gmeID);
             if (nodeObj) {
@@ -1161,7 +1205,7 @@ define(['js/logger',
         var len,
             objDesc,
             parentID = this.currentNodeInfo.id,
-            params = { "parentId": parentID },
+            params = {parentId: parentID},
             projectName = this._client.getActiveProject(),
             childrenIDs = [],
             aspect = this._selectedAspect;
@@ -1176,7 +1220,8 @@ define(['js/logger',
 
             if (data && data.project && data.items) {
                 if (projectName !== data.project) {
-                    alert('Trying to copy from project \'' + data.project + '\' to project \'' + projectName + '\' which is not supported... Copy&Paste is supported in the same project only.');
+                    alert('Trying to copy from project \'' + data.project + '\' to project \'' + projectName +
+                    '\' which is not supported... Copy&Paste is supported in the same project only.');
                 } else {
                     if (_.isArray(data.items)) {
                         data = data.items;
@@ -1195,9 +1240,11 @@ define(['js/logger',
                             this._client.startTransaction();
                             this._client.copyMoreNodes(params);
                             this._client.completeTransaction();
-                            this.logger.warn('Pasted ' + childrenIDs.length + ' items successfully into node (' + parentID + ')');
+                            this.logger.warn('Pasted ' + childrenIDs.length + ' items successfully into node (' +
+                            parentID + ')');
                         } else {
-                            this.logger.warn('Can not paste items because not all the items on the clipboard can be created as a child of the currently opened node (' + parentID + ')');
+                            this.logger.warn('Can not paste items because not all the items on the clipboard can ' +
+                            'be created as a child of the currently opened node (' + parentID + ')');
                         }
                     }
                 }
@@ -1210,7 +1257,7 @@ define(['js/logger',
         var res = [],
             i = selectedElements.length;
 
-        while(i--) {
+        while (i--) {
             res.push(this._ComponentID2GmeID[selectedElements[i]]);
         }
 
@@ -1219,8 +1266,10 @@ define(['js/logger',
 
     BlockEditorControlWidgetEventHandlers.prototype._getDragParams = function (selectedElements, event) {
         var oParams = this._oGetDragParams.call(this.snapCanvas, selectedElements, event),
-            params = { 'positions': {},
-                       'parentID': this.currentNodeInfo.id },
+            params = {
+                positions: {},
+                parentID: this.currentNodeInfo.id
+            },
             i;
 
         for (i in oParams.positions) {
@@ -1239,12 +1288,12 @@ define(['js/logger',
             self = this;
 
         menuItems[MENU_EXPORT] = {
-            "name": 'Export selected...',
-            "icon": 'icon-share'
+            name: 'Export selected...',
+            icon: 'icon-share'
         };
         menuItems[MENU_EXINTCONF] = {
-            "name": 'Export model context...',
-            "icon": 'icon-cog'
+            name: 'Export model context...',
+            icon: 'icon-cog'
         };
 
         this.snapCanvas.createMenu(menuItems, function (key) {
@@ -1263,7 +1312,7 @@ define(['js/logger',
         var i = selectedIds.length,
             gmeIDs = [];
 
-        while(i--) {
+        while (i--) {
             gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
         }
 
@@ -1275,7 +1324,7 @@ define(['js/logger',
         var i = selectedIds.length,
             gmeIDs = [];
 
-        while(i--) {
+        while (i--) {
             gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
         }
 
@@ -1286,7 +1335,8 @@ define(['js/logger',
         this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.COLOR);
     };
 
-    BlockEditorControlWidgetEventHandlers.prototype._onSelectionBorderColorChanged = function (selectedElements, color) {
+    BlockEditorControlWidgetEventHandlers.prototype._onSelectionBorderColorChanged = function (selectedElements,
+                                                                                               color) {
         this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.BORDER_COLOR);
     };
 
@@ -1299,7 +1349,7 @@ define(['js/logger',
             gmeID;
 
         this._client.startTransaction();
-        while(i--) {
+        while (i--) {
             gmeID = this._ComponentID2GmeID[selectedIds[i]];
 
             if (color) {

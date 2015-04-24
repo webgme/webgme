@@ -1,15 +1,13 @@
-/*globals define, _, WebGMEGlobal, DEBUG*/
-
+/*globals define, $*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
+define(['jquery', 'css!./styles/iCheckBox.css'], function () {
 
-define(['jquery',
-        'css!./styles/iCheckBox.css'], function (_jquery) {
-
-    "use strict";
+    'use strict';
 
     var iCheckBox,
         DEFAULT_CHECKED_TEXT = 'ON',
@@ -28,18 +26,18 @@ define(['jquery',
 
         this.el = EL_BASE.clone();
 
-        if ( options.icon ) {
+        if (options.icon) {
             this.el.find('.sw').append('<i class="' + options.icon + '"></i>');
         }
 
-        if ( options.title ) {
-            this.el.attr( 'title', options.title);
+        if (options.title) {
+            this.el.attr('title', options.title);
         }
 
         this._txt = this.el.find('.txt').first();
         this._txt.text(this._checkedText);
 
-        if (options && options.hasOwnProperty("checked")) {
+        if (options && options.hasOwnProperty('checked')) {
             this.setChecked(options.checked);
         }
 
@@ -72,7 +70,7 @@ define(['jquery',
 
             if (checkState !== isChecked) {
                 this.el.toggleClass(CHECKED_CLASS);
-                this._txt.text( isChecked ? this._checkedText : this._uncheckedText );
+                this._txt.text(isChecked ? this._checkedText : this._uncheckedText);
 
                 if (this._checkChangedFn) {
                     this._checkChangedFn.call(this, data, isChecked);

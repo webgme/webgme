@@ -1,5 +1,7 @@
+/*jshint node:true*/
+
 /**
- * Created by zsolt on 4/19/14.
+ * @author lattmann / https://github.com/lattmann
  */
 
 var fs = require('fs');
@@ -16,6 +18,7 @@ var blobBackend = new BlobBackend();
 
 var filename = 'sample.js';
 blobBackend.putFile(filename, fs.createReadStream(filename), function (err, hash) {
+    'use strict';
     if (err) {
         console.log(err);
         return;
@@ -23,7 +26,7 @@ blobBackend.putFile(filename, fs.createReadStream(filename), function (err, hash
 
     console.log(hash);
 
-    blobBackend.getFile(hash, process.stdout, function (err, filename, contentType) {
+    blobBackend.getFile(hash, process.stdout, function (err/*, filename, contentType*/) {
         if (err) {
             console.log(err);
             return;
@@ -34,20 +37,14 @@ blobBackend.putFile(filename, fs.createReadStream(filename), function (err, hash
 });
 
 var addFilesFromTestDir = function (testdir, callback) {
-    var path = require('path');
-    var sourceFiles = fs.readdirSync(testdir);
-    var maxItems = 20;
-    var remaining = Math.min(sourceFiles.length, maxItems);
+    'use strict';
+    var path = require('path'),
+        sourceFiles = fs.readdirSync(testdir),
+        maxItems = 20,
+        remaining = Math.min(sourceFiles.length, maxItems),
 
-    var startTime = new Date();
-
-    if (sourceFiles.length === 0) {
-        callback();
-    }
-
-    for (var i = 0; i < Math.min(sourceFiles.length, maxItems); i += 1) {
-        var fname = path.join(testdir, sourceFiles[i]);
-        (function (file) {
+        startTime = new Date(),
+        filePutter = function (file) {
 
             blobBackend.putFile(file, fs.createReadStream(file), function (err, hash) {
                 if (err) {
@@ -68,11 +65,21 @@ var addFilesFromTestDir = function (testdir, callback) {
                     callback();
                 }
             });
-        })(fname);
+        },
+        fname;
+
+    if (sourceFiles.length === 0) {
+        callback();
+    }
+
+    for (var i = 0; i < Math.min(sourceFiles.length, maxItems); i += 1) {
+        fname = path.join(testdir, sourceFiles[i]);
+        filePutter(fname);
     }
 };
 
-var done = function() {
+var done = function () {
+    'use strict';
     blobBackend.listAllMetadata(true, function (err, allMetadata) {
         if (err) {
             console.log(err);
@@ -91,6 +98,7 @@ var done = function() {
 // 2GB, 1025 files -> 19.2sec - FS
 // 2GB, 1025 files -> 51.4sec - fakeS3 (2GB file copyObject failed)
 addFilesFromTestDir('test-many-files', function () {
+    'use strict';
     done();
 });
 

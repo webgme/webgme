@@ -1,4 +1,4 @@
-/*jshint node:true, mocha:true*/
+/*jshint node:true, mocha:true, expr:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
@@ -43,7 +43,7 @@ describe('openContext', function () {
 
         before(function (done) {
             var importParam = {
-                filePath: './test/asset/sm_basic.json',
+                filePath: './test/common/util/opencontext/project.json',
                 projectName: 'doesExist',
                 branchName: 'master',
                 gmeConfig: gmeConfig
@@ -124,7 +124,7 @@ describe('openContext', function () {
 
         it('should open with createProject=true, overwriteProject=true when project exists', function (done) {
             var importParam = {
-                    filePath: './test/asset/sm_basic.json',
+                    filePath: './test/common/util/opencontext/project.json',
                     projectName: 'willBeOverwritten',
                     branchName: 'master',
                     gmeConfig: gmeConfig,
@@ -318,7 +318,7 @@ describe('openContext', function () {
 
         before(function (done) {
             var importParam = {
-                filePath: './test/asset/sm_basic.json',
+                filePath: './test/common/util/opencontext/project.json',
                 projectName: 'doesExist',
                 branchName: 'master',
                 gmeConfig: gmeConfig,
@@ -417,7 +417,7 @@ describe('openContext', function () {
 
         it('should open with createProject=true, overwriteProject=true when project exists', function (done) {
             var importParam = {
-                    filePath: './test/asset/sm_basic.json',
+                    filePath: './test/common/util/opencontext/project.json',
                     projectName: 'willBeOverwritten',
                     branchName: 'master',
                     gmeConfig: gmeConfig,
@@ -611,7 +611,7 @@ describe('openContext', function () {
 
         before(function (done) {
             var importParam = {
-                filePath: './test/asset/sm_basic.json',
+                filePath: './test/common/util/opencontext/project.json',
                 projectName: 'doesExist',
                 branchName: 'master',
                 gmeConfig: gmeConfig,
@@ -700,7 +700,7 @@ describe('openContext', function () {
 
         it('should open with createProject=true, overwriteProject=true when project exists', function (done) {
             var importParam = {
-                    filePath: './test/asset/sm_basic.json',
+                    filePath: './test/common/util/opencontext/project.json',
                     projectName: 'willBeOverwritten',
                     branchName: 'master',
                     gmeConfig: gmeConfig,

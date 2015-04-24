@@ -1,19 +1,19 @@
-/*globals define, _, WebGMEGlobal, DEBUG*/
-
+/*globals define, $*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-
 define(['js/Constants',
     'assets/decoratorSVG',
     'text!./templates/DecoratorSVGExplorerDialog.html',
-    'css!./styles/DecoratorSVGExplorerDialog.css'], function (CONSTANTS,
-                                                               decoratorSVG,
-                                                               DecoratorSVGExplorerDialogTemplate) {
+    'css!./styles/DecoratorSVGExplorerDialog.css'
+], function (CONSTANTS,
+             decoratorSVG,
+             DecoratorSVGExplorerDialogTemplate) {
 
-    "use strict";
+    'use strict';
 
     var DecoratorSVGExplorerDialog,
         IMG_BASE = $('<div class="img"><img src=""/><div class="desc">description</div></div>'),
@@ -50,7 +50,7 @@ define(['js/Constants',
 
         if (oldValue) {
 
-            $originalSelected = self._modalBody.find("[" + DATA_FILENAME + "='" + oldValue + "']");
+            $originalSelected = self._modalBody.find('[' + DATA_FILENAME + '="' + oldValue + '"]');
             this._setSelected(oldValue, $originalSelected);
         }
 
@@ -119,8 +119,8 @@ define(['js/Constants',
             self._filter($(this).val());
         });
 
-        this._txtFind.on('keypress', function(e) {
-            return  e.keyCode !== 13;
+        this._txtFind.on('keypress', function (e) {
+            return e.keyCode !== 13;
         });
     };
 
@@ -144,7 +144,7 @@ define(['js/Constants',
         this._setSelected();
         if (fileName) {
             this._modalBody.find('div.img').hide();
-            this._modalBody.find('div.img[' + DATA_SVG + '*="' +fileName.toLowerCase() + '"]').show();
+            this._modalBody.find('div.img[' + DATA_SVG + '*="' + fileName.toLowerCase() + '"]').show();
         } else {
             this._modalBody.find('div.img').show();
         }

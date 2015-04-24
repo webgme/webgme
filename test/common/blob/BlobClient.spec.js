@@ -1,4 +1,3 @@
-/*globals WebGMEGlobal*/
 /*jshint node:true, mocha:true*/
 /**
  * @author ksmyth / https://github.com/ksmyth
@@ -61,7 +60,8 @@ describe('BlobClient', function () {
             expect(typeof bc.getDownloadURL === 'function').to.equal(true);
             expect(bc.getDownloadURL()).to.contain('download');
             expect(bc.getDownloadURL('1234567890abcdef')).to.contain('1234567890abcdef');
-            expect(bc.getDownloadURL('1234567890abcdef', 'some/path/to/a/file.txt')).to.contain('1234567890abcdef/some%2Fpath%2Fto%2Fa%2Ffile.txt');
+            expect(bc.getDownloadURL('1234567890abcdef', 'some/path/to/a/file.txt')).
+                to.contain('1234567890abcdef/some%2Fpath%2Fto%2Fa%2Ffile.txt');
         });
 
         it('should have putFile', function () {
@@ -100,18 +100,18 @@ describe('BlobClient', function () {
         it('should create json', function (done) {
             var bc = new BlobClient(bcParam);
 
-            bc.putFile('test.json', str2ab('{"1":2}'), function(err, hash) {
+            bc.putFile('test.json', str2ab('{"1":2}'), function (err, hash) {
                 if (err) {
                     done(err);
                     return;
                 }
-                bc.getMetadata(hash, function(err, metadata) {
+                bc.getMetadata(hash, function (err, metadata) {
                     if (err) {
                         done(err);
                         return;
                     }
                     expect(metadata.mime).to.equal('application/json');
-                    bc.getObject(hash, function(err, res) {
+                    bc.getObject(hash, function (err, res) {
                         if (err) {
                             done(err);
                             return;
@@ -128,18 +128,18 @@ describe('BlobClient', function () {
         it('should create strange filenames', function (done) {
             var bc = new BlobClient(bcParam);
 
-            bc.putFile('te%s#t.json', '{"1":2}', function(err, hash) {
+            bc.putFile('te%s#t.json', '{"1":2}', function (err, hash) {
                 if (err) {
                     done(err);
                     return;
                 }
-                bc.getMetadata(hash, function(err, metadata) {
+                bc.getMetadata(hash, function (err, metadata) {
                     if (err) {
                         done(err);
                         return;
                     }
                     expect(metadata.mime).to.equal('application/json');
-                    bc.getObject(hash, function(err, res) {
+                    bc.getObject(hash, function (err, res) {
                         if (err) {
                             done(err);
                             return;
@@ -155,7 +155,8 @@ describe('BlobClient', function () {
 
         if (typeof global !== 'undefined') {
             it('should create zip', function (done) {
-                var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
+                var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5ia' +
+                'W5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
                 'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
                 'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
                 createZip(data, done);
@@ -165,7 +166,8 @@ describe('BlobClient', function () {
         if (typeof global !== 'undefined') { // i.e. if running under node-webkit
             // need this in package.json: "node-remote": "localhost"
             it('should create zip from Buffer', function (done) {
-                var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
+                var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5ia' +
+                'W5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
                 'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
                 'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
                 createZip(new Buffer(data), done);
@@ -179,7 +181,7 @@ describe('BlobClient', function () {
                 var f = new File('./npm_install.cmd', 'npm_install.cmd');
                 //expect(Object.getOwnPropertyNames(f).join(' ')).to.equal(0);
                 var bc = new BlobClient(bcParam);
-                bc.putFile('npm_install.cmd', f, function(err/*, hash*/) {
+                bc.putFile('npm_install.cmd', f, function (err/*, hash*/) {
                     if (err) {
                         done(err);
                         return;
@@ -260,7 +262,7 @@ describe('BlobClient', function () {
 
         it('putFiles with empty object should return empty hashes obj', function (done) {
             var bc = new BlobClient(bcParam),
-                filesToAdd = { };
+                filesToAdd = {};
             bc.putFiles(filesToAdd, function (err, hashes) {
                 if (err) {
                     done(err);
@@ -363,18 +365,18 @@ describe('BlobClient', function () {
         it('should create json', function (done) {
             var bc = new BlobClient(bcParam);
 
-            bc.putFile('test.json', str2ab('{"1":2}'), function(err, hash) {
+            bc.putFile('test.json', str2ab('{"1":2}'), function (err, hash) {
                 if (err) {
                     done(err);
                     return;
                 }
-                bc.getMetadata(hash, function(err, metadata) {
+                bc.getMetadata(hash, function (err, metadata) {
                     if (err) {
                         done(err);
                         return;
                     }
                     expect(metadata.mime).to.equal('application/json');
-                    bc.getObject(hash, function(err, res) {
+                    bc.getObject(hash, function (err, res) {
                         if (err) {
                             done(err);
                             return;
@@ -391,18 +393,18 @@ describe('BlobClient', function () {
         it('should create strange filenames', function (done) {
             var bc = new BlobClient(bcParam);
 
-            bc.putFile('te%s#t.json', '{"1":2}', function(err, hash) {
+            bc.putFile('te%s#t.json', '{"1":2}', function (err, hash) {
                 if (err) {
                     done(err);
                     return;
                 }
-                bc.getMetadata(hash, function(err, metadata) {
+                bc.getMetadata(hash, function (err, metadata) {
                     if (err) {
                         done(err);
                         return;
                     }
                     expect(metadata.mime).to.equal('application/json');
-                    bc.getObject(hash, function(err, res) {
+                    bc.getObject(hash, function (err, res) {
                         if (err) {
                             done(err);
                             return;
@@ -418,7 +420,8 @@ describe('BlobClient', function () {
 
         if (typeof global !== 'undefined') {
             it('should create zip', function (done) {
-                var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
+                var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5ia' +
+                'W5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
                 'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
                 'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
                 createZip(data, done);
@@ -428,7 +431,8 @@ describe('BlobClient', function () {
         if (typeof global !== 'undefined') { // i.e. if running under node-webkit
             // need this in package.json: "node-remote": "localhost"
             it('should create zip from Buffer', function (done) {
-                var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
+                var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5ia' +
+                'W5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
                 'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
                 'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
                 createZip(new Buffer(data), done);
@@ -442,7 +446,7 @@ describe('BlobClient', function () {
                 var f = new File('./npm_install.cmd', 'npm_install.cmd');
                 //expect(Object.getOwnPropertyNames(f).join(' ')).to.equal(0);
                 var bc = new BlobClient(bcParam);
-                bc.putFile('npm_install.cmd', f, function(err/*, hash*/) {
+                bc.putFile('npm_install.cmd', f, function (err/*, hash*/) {
                     if (err) {
                         done(err);
                         return;
@@ -523,7 +527,7 @@ describe('BlobClient', function () {
 
         it('putFiles with empty object should return empty hashes obj', function (done) {
             var bc = new BlobClient(bcParam),
-                filesToAdd = { };
+                filesToAdd = {};
             bc.putFiles(filesToAdd, function (err, hashes) {
                 if (err) {
                     done(err);
@@ -590,18 +594,18 @@ describe('BlobClient', function () {
 
     function createZip(data, done) {
         var bc = new BlobClient(bcParam);
-        bc.putFile('testzip.zip', data, function(err, hash) {
+        bc.putFile('testzip.zip', data, function (err, hash) {
             if (err) {
                 done(err);
                 return;
             }
-            bc.getMetadata(hash, function(err, metadata) {
+            bc.getMetadata(hash, function (err, metadata) {
                 if (err) {
                     done(err);
                     return;
                 }
                 expect(metadata.mime).to.equal('application/zip');
-                bc.getObject(hash, function(err, res) {
+                bc.getObject(hash, function (err, res) {
                     if (err) {
                         done(err);
                         return;
@@ -619,7 +623,7 @@ describe('BlobClient', function () {
     }
 
     // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
-    function b64ToUint6 (nChr) {
+    function b64ToUint6(nChr) {
         return nChr > 64 && nChr < 91 ?
         nChr - 65
             : nChr > 96 && nChr < 123 ?
@@ -634,13 +638,15 @@ describe('BlobClient', function () {
             0;
     }
 
-    function base64DecToArr (sBase64, nBlocksSize) {
+    function base64DecToArr(sBase64, nBlocksSize) {
         /*jslint bitwise: true */
-        var sB64Enc = sBase64.replace(/[^A-Za-z0-9\+\/]/g, ''), nInLen = sB64Enc.length,
+        var sB64Enc = sBase64.replace(/[^A-Za-z0-9\+\/]/g, ''),
+            nInLen = sB64Enc.length,
             nOutLen = nBlocksSize ? Math.ceil((nInLen * 3 + 1 >> 2) / nBlocksSize) * nBlocksSize : nInLen * 3 + 1 >> 2,
-            taBytes = new Uint8Array(nOutLen);
+            taBytes = new Uint8Array(nOutLen),
+            nMod3, nMod4, nUint24, nOutIdx, nInIdx;
 
-        for (var nMod3, nMod4, nUint24 = 0, nOutIdx = 0, nInIdx = 0; nInIdx < nInLen; nInIdx++) {
+        for (nUint24 = 0, nOutIdx = 0, nInIdx = 0; nInIdx < nInLen; nInIdx++) {
             nMod4 = nInIdx & 3;
             nUint24 |= b64ToUint6(sB64Enc.charCodeAt(nInIdx)) << 18 - 6 * nMod4;
             if (nMod4 === 3 || nInLen - nInIdx === 1) {
@@ -655,9 +661,10 @@ describe('BlobClient', function () {
     }
 
     function str2ab(str) {
-        var buf = new ArrayBuffer(str.length);
-        var bufView = new Uint8Array(buf);
-        for (var i = 0, strLen = str.length; i < strLen; i++) {
+        var buf = new ArrayBuffer(str.length),
+            bufView = new Uint8Array(buf),
+            i, strLen;
+        for (i = 0, strLen = str.length; i < strLen; i++) {
             bufView[i] = str.charCodeAt(i);
         }
 

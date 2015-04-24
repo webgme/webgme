@@ -1,11 +1,15 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, _, $*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWidgetBase) {
 
-    "use strict";
+    'use strict';
 
     var NumberBoxWidget,
-        INPUT_BASE = $('<input/>', {"type": "text"});
+        INPUT_BASE = $('<input/>', {type: 'text'});
 
     NumberBoxWidget = function (propertyDesc) {
         var self = this;
@@ -19,10 +23,10 @@ define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWi
 
         // Makes it so manually specified values are not truncated.
 
-        this.__input.on('change', function (e) {
+        this.__input.on('change', function (/* e */) {
             self._onChange();
         });
-        this.__input.on('blur', function (e) {
+        this.__input.on('blur', function (/* e */) {
             self._onBlur();
         });
 
@@ -50,14 +54,18 @@ define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWi
     /*OVERRIDE INHERITED PROPERTIES*/
 
     NumberBoxWidget.prototype.updateDisplay = function () {
-        this.__input.val(this.__truncationSuspended ? this.getValue() : this._roundToDecimal(this.getValue(), this.__precision));
+        var val = this.__truncationSuspended ?
+            this.getValue() :
+            this._roundToDecimal(this.getValue(), this.__precision);
+
+        this.__input.val(val);
         return NumberBoxWidget.superclass.prototype.updateDisplay.call(this);
     };
 
     /*DEFINE CUSTOM PROPERTIES*/
     NumberBoxWidget.prototype._roundToDecimal = function (value, decimals) {
         var tenTo = Math.pow(10, decimals);
-        if (value === "") {
+        if (value === '') {
             return value;
         }
         return Math.round(value * tenTo) / tenTo;
@@ -65,10 +73,10 @@ define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWi
 
     NumberBoxWidget.prototype._onChange = function () {
         var attempted = parseFloat(this.__input.val());
-        if (!_.isNaN(attempted)) {
-            this.setValue(attempted);
-        } else {
+        if (_.isNaN(attempted)) {
             this.__input.val(this.originalValue);
+        } else {
+            this.setValue(attempted);
         }
     };
 

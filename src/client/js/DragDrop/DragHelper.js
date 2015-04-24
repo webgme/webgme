@@ -1,11 +1,16 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define */
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['./DragConstants',
-        './DragEffects'], function (DragConstants, DragEffects) {
+    './DragEffects'
+], function (DragConstants, DragEffects) {
 
-    "use strict";
+    'use strict';
 
-    var _getParams = function (dragInfo, params, defaultValue) {
+    function getParams(dragInfo, params, defaultValue) {
         var result = defaultValue;
 
         if (dragInfo && params) {
@@ -15,23 +20,25 @@ define(['./DragConstants',
         }
 
         return result;
+    }
+
+    function getDragItems(dragInfo) {
+        return getParams(dragInfo, DragConstants.DRAG_ITEMS, []);
+    }
+
+    function getDragEffects(dragInfo) {
+        return getParams(dragInfo, DragConstants.DRAG_EFFECTS, []);
+    }
+
+    function getDragParams(dragInfo) {
+        return getParams(dragInfo, DragConstants.DRAG_PARAMS, undefined);
+    }
+
+
+    return {
+        getDragItems: getDragItems,
+        getDragEffects: getDragEffects,
+        getDragParams: getDragParams,
+        DRAG_EFFECTS: DragEffects
     };
-
-    var _getDragItems = function (dragInfo) {
-        return _getParams(dragInfo, DragConstants.DRAG_ITEMS, []);
-    };
-
-    var _getDragEffects = function (dragInfo) {
-        return _getParams(dragInfo, DragConstants.DRAG_EFFECTS, []);
-    };
-
-    var _getDragParams = function (dragInfo) {
-        return _getParams(dragInfo, DragConstants.DRAG_PARAMS, undefined);
-    };
-
-
-    return {getDragItems: _getDragItems,
-            getDragEffects: _getDragEffects,
-            getDragParams: _getDragParams,
-            DRAG_EFFECTS: DragEffects};
 });

@@ -1,23 +1,24 @@
-/*globals define,Raphael,_*/
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved
- *
+/*globals define, Raphael, _, $*/
+/*jshint browser: true*/
+
+/**
  * @author brollb / https://github/brollb
- * 
+ *
  * Adding decorator support for showing connection areas
  */
 
-define(['./BlockEditorWidget.Constants'], function (SNAP_CONSTANTS){
-    
-    "use strict";
+
+define(['./BlockEditorWidget.Constants'], function (SNAP_CONSTANTS) {
+
+    'use strict';
 
     //Stuff for displaying connection area
-    var CONN_AREA_EDIT_CLASS = "conn-area-line",
+    var CONN_AREA_EDIT_CLASS = 'conn-area-line',
         CONN_AREA_SIZE = 8,
-        CONN_AREA = "conn-area",
-        DATA_CONN_AREA_ID = "connection-id";
+        CONN_AREA = 'conn-area',
+        DATA_CONN_AREA_ID = 'connection-id';
 
-    var BlockEditorWidgetDecoratorBaseConnectionAreas = function(){
+    var BlockEditorWidgetDecoratorBaseConnectionAreas = function () {
     };
 
     //For debugging
@@ -29,7 +30,7 @@ define(['./BlockEditorWidget.Constants'], function (SNAP_CONSTANTS){
 
         options = options || {};
         this.hideConnectionAreas();
-        while (i--){
+        while (i--) {
             id = areas[i].id;
             this._displayConnectionArea(id);
         }
@@ -44,24 +45,29 @@ define(['./BlockEditorWidget.Constants'], function (SNAP_CONSTANTS){
     BlockEditorWidgetDecoratorBaseConnectionAreas.prototype._displayConnectionArea = function (id) {
         var w = this.$el.outerWidth(true),
             h = this.$el.outerHeight(true),
-            shiftVal = CONN_AREA_SIZE/2,
+            shiftVal = CONN_AREA_SIZE / 2,
             conn = this._getConnectionAreaById(id),
-            line = this._getConnectionHighlight(conn.ptr, conn.role) || conn,
-            highlight;
+            line = this._getConnectionHighlight(conn.ptr, conn.role) || conn;
 
         //Color
-        if(line){
-            if(this._connHighlight === undefined){
-                this._connHighlight = $('<div/>', { 'class': CONN_AREA,
-                    id: id });
-                this._connHighlight.css({ 'position': 'absolute', 
-                                     'left': -shiftVal + 'px',
-                                     'top': -shiftVal + 'px'});
+        if (line) {
+            if (this._connHighlight === undefined) {
+                this._connHighlight = $('<div/>', {
+                    'class': CONN_AREA,
+                    id: id
+                });
+                this._connHighlight.css({
+                    'position': 'absolute',
+                    'left': -shiftVal + 'px',
+                    'top': -shiftVal + 'px'
+                });
 
             }
 
-            if (this._connHighlight.children().length === 0){
+            if (this._connHighlight.children().length === 0) {
+                // jshint newcap: false
                 this._svg = Raphael(this._connHighlight[0], w + CONN_AREA_SIZE, h + CONN_AREA_SIZE);
+                // jshint newcap: true
                 this._svg.canvas.className.baseVal = CONN_AREA;
             }
 
@@ -86,8 +92,8 @@ define(['./BlockEditorWidget.Constants'], function (SNAP_CONSTANTS){
 
             var path = this._svg.path('M ' + line.x1 + ',' + line.y1 + 'L' + line.x2 + ',' + line.y2);
             $(path.node).attr(DATA_CONN_AREA_ID, id);
-            path.attr({ 'stroke-width': CONN_AREA_SIZE });
-            $(path.node).attr({ "class": CONN_AREA_EDIT_CLASS });        
+            path.attr({'stroke-width': CONN_AREA_SIZE});
+            $(path.node).attr({'class': CONN_AREA_EDIT_CLASS});
 
             this.$el.append(this._connHighlight);
         }
@@ -97,11 +103,11 @@ define(['./BlockEditorWidget.Constants'], function (SNAP_CONSTANTS){
         var highlights = this.getSVGCustomData(SNAP_CONSTANTS.CONNECTION_HIGHLIGHT),
             i;
 
-        if (highlights){
+        if (highlights) {
             i = highlights.length;
-            while (i--){
+            while (i--) {
                 if (highlights[i].role === role) {
-                    switch(role) {
+                    switch (role) {
                         case SNAP_CONSTANTS.CONN_INCOMING:
                             return _.extend({}, highlights[i]);
 
@@ -121,8 +127,8 @@ define(['./BlockEditorWidget.Constants'], function (SNAP_CONSTANTS){
         var areas = this.getConnectionAreas(),
             i = areas.length;
 
-        while (i--){
-            if (areas[i].id === id){
+        while (i--) {
+            if (areas[i].id === id) {
                 return areas[i];
             }
         }
@@ -131,7 +137,7 @@ define(['./BlockEditorWidget.Constants'], function (SNAP_CONSTANTS){
     };
 
     BlockEditorWidgetDecoratorBaseConnectionAreas.prototype.hideConnectionAreas = function () {
-        if(this._connHighlight){
+        if (this._connHighlight) {
             this._connHighlight.empty();
         }
     };

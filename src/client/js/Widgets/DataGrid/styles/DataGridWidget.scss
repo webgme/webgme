@@ -1,3 +1,6 @@
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 $dataTable-cell-undefined-value-background-color: #F5E1E1;
 $row-command-btn-read-only-opacity: 0.5;
 
@@ -25,13 +28,11 @@ $td-noaccept-drop-background-color: #da4f49;
   &.table.table thead .sorting_desc.accept-drop,
   &.table.table thead .sorting_asc_disabled.accept-drop,
   &.table.table thead .sorting_desc_disabled.accept-drop,
-
   &.table-striped tbody > tr:nth-child(odd) > td.undefined-value.accept-drop,
   &.table-hover tbody tr:hover > td.undefined-value.accept-drop,
   &.table-striped tbody > tr:nth-child(odd) > td.accept-drop,
-
   td.accept-drop,
-  th.accept-drop{
+  th.accept-drop {
     background-color: $td-accept-drop-background-color;
   }
 
@@ -41,17 +42,14 @@ $td-noaccept-drop-background-color: #da4f49;
   &.table.table thead .sorting_desc.noaccept-drop,
   &.table.table thead .sorting_asc_disabled.noaccept-drop,
   &.table.table thead .sorting_desc_disabled.noaccept-drop,
-
   &.table-striped tbody > tr:nth-child(odd) > td.undefined-value.noaccept-drop,
   &.table-hover tbody tr:hover > td.undefined-value.noaccept-drop,
   &.table-striped tbody > tr:nth-child(odd) > td.noaccept-drop,
-
   td.noaccept-drop,
-  th.noaccept-drop{
+  th.noaccept-drop {
     background-color: $td-noaccept-drop-background-color;
   }
 }
-
 
 .read-only {
   .dataTable {

@@ -1,9 +1,15 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, $*/
+/*jshint browser: true*/
 
-define(['js/DragDrop/DropTarget',
-        './DiagramDesignerWidget.Constants'], function (dropTarget,
-                                                        DiagramDesignerWidgetConstants) {
-    "use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define([
+    'js/DragDrop/DropTarget',
+    './DiagramDesignerWidget.Constants'
+], function (dropTarget, DiagramDesignerWidgetConstants) {
+    'use strict';
 
     var DiagramDesignerWidgetDroppable,
         DROP_REGION_MARGIN = 0;
@@ -17,24 +23,24 @@ define(['js/DragDrop/DropTarget',
 
         this._acceptDroppable = false;
 
-        this.skinParts.$dropRegion = $('<div/>', { "class" : DiagramDesignerWidgetConstants.DROP_REGION_CLASS });
+        this.skinParts.$dropRegion = $('<div/>', {class: DiagramDesignerWidgetConstants.DROP_REGION_CLASS});
 
         this.skinParts.$dropRegion.insertBefore(this.skinParts.$itemsContainer);
 
         dropTarget.makeDroppable(this.skinParts.$dropRegion, {
-            'over': function( event, dragInfo ) {
+            over: function (event, dragInfo) {
                 self._onDroppableOver(event, dragInfo);
             },
-            'out': function(/*event, dragInfo*/) {
+            out: function (/*event, dragInfo*/) {
                 self._onDroppableOut(/*event, dragInfo*/);
             },
-            'drop': function( event, dragInfo ) {
+            drop: function (event, dragInfo) {
                 self._onBackgroundDrop(event, dragInfo);
             },
-            'activate': function(/*event, dragInfo*/) {
+            activate: function (/*event, dragInfo*/) {
                 self._onDroppableActivate(/*event, dragInfo*/);
             },
-            'deactivate': function(/*event, dragInfo*/) {
+            deactivate: function (/*event, dragInfo*/) {
                 self._onDroppableDeactivate(/*event, dragInfo*/);
             }
         });
@@ -43,19 +49,23 @@ define(['js/DragDrop/DropTarget',
 
     DiagramDesignerWidgetDroppable.prototype._onDroppableActivate = function (/*event, dragInfo*/) {
         if (this.mode === this.OPERATING_MODES.DESIGN) {
-            this.skinParts.$dropRegion.css({"width": this._containerSize.w - 2 * DROP_REGION_MARGIN,
-                "height": this._containerSize.h - 2 * DROP_REGION_MARGIN,
-                "top": this._scrollPos.top + DROP_REGION_MARGIN,
-                "left": this._scrollPos.left + DROP_REGION_MARGIN });
+            this.skinParts.$dropRegion.css({
+                width: this._containerSize.w - 2 * DROP_REGION_MARGIN,
+                height: this._containerSize.h - 2 * DROP_REGION_MARGIN,
+                top: this._scrollPos.top + DROP_REGION_MARGIN,
+                left: this._scrollPos.left + DROP_REGION_MARGIN
+            });
         }
     };
 
 
     DiagramDesignerWidgetDroppable.prototype._onDroppableDeactivate = function (/*event, dragInfo*/) {
-        this.skinParts.$dropRegion.css({"width": "0px",
-            "height": "0px",
-            "top": "0px",
-            "left": "0px"});
+        this.skinParts.$dropRegion.css({
+            width: '0px',
+            height: '0px',
+            top: '0px',
+            left: '0px'
+        });
     };
 
 
@@ -85,7 +95,7 @@ define(['js/DragDrop/DropTarget',
         this.logger.debug('_onBackgroundDrop: ' + JSON.stringify(dragInfo));
 
         if (this._acceptDroppable === true) {
-            this.onBackgroundDrop(event, dragInfo, { "x": posX, "y": posY });
+            this.onBackgroundDrop(event, dragInfo, {x: posX, y: posY});
         }
 
         this._doAcceptDroppable(false, false);
@@ -111,13 +121,15 @@ define(['js/DragDrop/DropTarget',
 
 
     DiagramDesignerWidgetDroppable.prototype.onBackgroundDroppableAccept = function (event, dragInfo) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onBackgroundDroppableAccept(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo));
+        this.logger.warn('DiagramDesignerWidget.prototype.onBackgroundDroppableAccept(event, dragInfo) not ' +
+        'overridden in controller!!! dragInfo:' + JSON.stringify(dragInfo));
         return false;
     };
 
 
     DiagramDesignerWidgetDroppable.prototype.onBackgroundDrop = function (event, dragInfo, position) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onBackgroundDrop(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo) + " , position: '" + JSON.stringify(position) + "'");
+        this.logger.warn('DiagramDesignerWidget.prototype.onBackgroundDrop(event, dragInfo) not overridden in ' +
+        'controller!!! dragInfo:' + JSON.stringify(dragInfo) + ' , position: "' + JSON.stringify(position) + '"');
     };
 
 

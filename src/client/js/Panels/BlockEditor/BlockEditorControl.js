@@ -1,7 +1,9 @@
-/*globals define,_,WebGMEGlobal*/
-/*
- * @author brollb / https://github/brollb
+/*globals define, _, WebGMEGlobal, console*/
+/*jshint browser: true*/
+/**
+ * @author brollb / https://github.com/brollb
  */
+
 
 define(['js/logger',
     'js/Constants',
@@ -11,33 +13,34 @@ define(['js/logger',
     'js/Utils/PreferencesHelper',
     'js/Utils/DisplayFormat',
     './BlockEditorControl.WidgetEventHandlers',
-    'js/Utils/GMEConcepts'], function (Logger,
-                                        CONSTANTS,
-                                        SNAP_CONSTANTS,
-                                        nodePropertyNames,
-                                        REGISTRY_KEYS,
-                                        PreferencesHelper,
-                                        DisplayFormat,
-                                        BlockEditorEventHandlers,
-                                        GMEConcepts){
+    'js/Utils/GMEConcepts'
+], function (Logger,
+             CONSTANTS,
+             SNAP_CONSTANTS,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             PreferencesHelper,
+             DisplayFormat,
+             BlockEditorEventHandlers,
+             GMEConcepts) {
 
-    "use strict";
+    'use strict';
 
     var BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30,
-        DEFAULT_DECORATOR = "ModelDecorator",
+        DEFAULT_DECORATOR = 'ModelDecorator',
         WIDGET_NAME = 'BlockEditor';
 
-    var BlockEditorControl = function(params){
-        this._client = params.client;
+    function BlockEditorControl(params) {
         var loggerName = params.loggerName || 'gme:BlockEditor:BlockEditorControl';
+        this._client = params.client;
         this.logger = params.logger || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this.snapCanvas = params.widget;
         this._attachClientEventListeners();
 
         //local variable holding info about the currently opened node
-        this.currentNodeInfo = {"id": null, "children" : [], "parentId": null };
+        this.currentNodeInfo = {id: null, children: [], parentId: null};
 
         this.eventQueue = [];
 
@@ -46,7 +49,7 @@ define(['js/logger',
 
         //Set up toolbar 
         this._addToolbarItems();
-    };
+    }
 
     //Attach listeners
     BlockEditorControl.prototype._attachClientEventListeners = function () {
@@ -62,13 +65,14 @@ define(['js/logger',
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
     };
 
-    BlockEditorControl.prototype.selectedObjectChanged = function(nodeId){
+    BlockEditorControl.prototype.selectedObjectChanged = function (nodeId) {
         var desc,
             nodeName,
             depth = nodeId === CONSTANTS.PROJECT_ROOT_ID ? 1 : 1000000,
-            self = this;
+            self = this,
+            aspectNames;
 
-        this.logger.debug("activeObject '" + nodeId + "'");
+        this.logger.debug('activeObject "' + nodeId + '"');
 
         //delete everything from model editor
         this.snapCanvas.clear();
@@ -78,12 +82,12 @@ define(['js/logger',
         this._GmeID2ComponentID = {};
         this._ComponentID2GmeID = {};
         /*
-        this._GMEModels = [];
+         this._GMEModels = [];
 
 
-        this._GMEID2Subcomponent = {};
-        this._Subcomponent2GMEID = {};
-        */
+         this._GMEID2Subcomponent = {};
+         this._Subcomponent2GMEID = {};
+         */
 
         //remove current territory patterns
         if (this._territoryId) {
@@ -106,9 +110,11 @@ define(['js/logger',
 
             if (this._selectedAspect !== CONSTANTS.ASPECT_ALL) {
                 //make sure that the selectedAspect exist in the node, otherwise fallback to All
-                var aspectNames = this._client.getMetaAspectNames(nodeId) || [];
+                aspectNames = this._client.getMetaAspectNames(nodeId) || [];
                 if (aspectNames.indexOf(this._selectedAspect) === -1) {
-                    this.logger.warn('The currently selected aspect "' + this._selectedAspect + '" does not exist in the object "' + desc.name + ' (' + nodeId + ')", falling back to "All"');
+                    this.logger.warn('The currently selected aspect "' + this._selectedAspect +
+                                     '" does not exist in the object "' + desc.name + ' (' + nodeId +
+                                     ')", falling back to "All"');
                     this._selectedAspect = CONSTANTS.ASPECT_ALL;
                     WebGMEGlobal.State.registerActiveAspect(CONSTANTS.ASPECT_ALL);
                 }
@@ -117,20 +123,22 @@ define(['js/logger',
             //put new node's info into territory rules
             this._selfPatterns = {};
 
-			 if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
-				this._selfPatterns[nodeId] = { "children": depth };
-			} else {
-				this._selfPatterns[nodeId] = this._client.getAspectTerritoryPattern(nodeId, this._selectedAspect);
-				this._selfPatterns[nodeId].children = depth;
-			}
+            if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
+                this._selfPatterns[nodeId] = {children: depth};
+            } else {
+                this._selfPatterns[nodeId] = this._client.getAspectTerritoryPattern(nodeId, this._selectedAspect);
+                this._selfPatterns[nodeId].children = depth;
+            }
 
             this._firstLoad = true;
 
-            nodeName = (desc && desc.name || " ");
+            nodeName = (desc && desc.name || ' ');
 
             this.snapCanvas.setTitle(nodeName);
-            this.snapCanvas.setBackgroundText(nodeName.toUpperCase(), {'font-size': BACKGROUND_TEXT_SIZE,
-                'color': BACKGROUND_TEXT_COLOR });
+            this.snapCanvas.setBackgroundText(nodeName.toUpperCase(), {
+                'font-size': BACKGROUND_TEXT_SIZE,
+                color: BACKGROUND_TEXT_COLOR
+            });
 
             this.snapCanvas.showProgressbar();
 
@@ -140,17 +148,18 @@ define(['js/logger',
             //update the territory
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         } else {
-            this.snapCanvas.setBackgroundText("No object to display", {"color": BACKGROUND_TEXT_COLOR,
-                "font-size": BACKGROUND_TEXT_SIZE});
+            this.snapCanvas.setBackgroundText('No object to display', {
+                color: BACKGROUND_TEXT_COLOR,
+                'font-size': BACKGROUND_TEXT_SIZE
+            });
         }
-    }; 
+    };
 
     BlockEditorControl.prototype._getObjectDescriptorBase = function (nodeId) {
         var node = this._client.getNode(nodeId),
             objDescriptor,
             pos,
             defaultPos = 0,
-            customPoints,
             memberListContainerObj;
 
         if (node) {
@@ -160,39 +169,41 @@ define(['js/logger',
             objDescriptor.name = node.getAttribute(nodePropertyNames.Attributes.name);
             objDescriptor.parentId = node.getParentId();
 
-            if (nodeId !== this.currentNodeInfo.id){
+            if (nodeId !== this.currentNodeInfo.id) {
                 //TODO Get all important info about the object..
-                
+
                 //aspect specific coordinate
                 if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
                     pos = node.getRegistry(REGISTRY_KEYS.POSITION);
                 } else {
                     memberListContainerObj = this._client.getNode(this.currentNodeInfo.id);
-                    pos = memberListContainerObj.getMemberRegistry(this._selectedAspect, nodeId, REGISTRY_KEYS.POSITION) || node.getRegistry(REGISTRY_KEYS.POSITION);
+                    pos = memberListContainerObj.getMemberRegistry(this._selectedAspect,
+                        nodeId,
+                        REGISTRY_KEYS.POSITION) || node.getRegistry(REGISTRY_KEYS.POSITION);
                 }
 
                 if (pos) {
-                    objDescriptor.position = { "x": pos.x, "y": pos.y };
+                    objDescriptor.position = {x: pos.x, y: pos.y};
                 } else {
-                    objDescriptor.position = { "x": defaultPos, "y": defaultPos };
+                    objDescriptor.position = {x: defaultPos, y: defaultPos};
                 }
 
-                if (objDescriptor.position.hasOwnProperty("x")) {
+                if (objDescriptor.position.hasOwnProperty('x')) {
                     objDescriptor.position.x = this._getDefaultValueForNumber(objDescriptor.position.x, defaultPos);
                 } else {
                     objDescriptor.position.x = defaultPos;
                 }
 
-                if (objDescriptor.position.hasOwnProperty("y")) {
+                if (objDescriptor.position.hasOwnProperty('y')) {
                     objDescriptor.position.y = this._getDefaultValueForNumber(objDescriptor.position.y, defaultPos);
                 } else {
                     objDescriptor.position.y = defaultPos;
                 }
 
-                objDescriptor.decorator = node.getRegistry(REGISTRY_KEYS.DECORATOR) || "";
+                objDescriptor.decorator = node.getRegistry(REGISTRY_KEYS.DECORATOR) || '';
 
-                if(node.getPointer(SNAP_CONSTANTS.PTR_NEXT)){
-                    objDescriptor.next = node.getPointer(SNAP_CONSTANTS.PTR_NEXT).to || "";
+                if (node.getPointer(SNAP_CONSTANTS.PTR_NEXT)) {
+                    objDescriptor.next = node.getPointer(SNAP_CONSTANTS.PTR_NEXT).to || '';
                 }
             }
 
@@ -218,14 +229,14 @@ define(['js/logger',
     BlockEditorControl.prototype._eventCallback = function (events) {
         var i = events ? events.length : 0;
 
-        this.logger.debug("_eventCallback '" + i + "' items");
+        this.logger.debug('_eventCallback "' + i + '" items');
 
         if (i > 0) {
             this.eventQueue.push(events);
             this.processNextInQueue();
         }
 
-        this.logger.debug("_eventCallback '" + events.length + "' items - DONE");
+        this.logger.debug('_eventCallback "' + events.length + '" items - DONE');
     };
 
     BlockEditorControl.prototype.processNextInQueue = function () {
@@ -241,12 +252,15 @@ define(['js/logger',
             len = nextBatchInQueue.length;
 
             while (len--) {
-                if ((nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
-                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid)) : this._getObjectDescriptorBase(nextBatchInQueue[len].eid);
+                if ((nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) ||
+                    (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
+                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ?
+                        _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid)) :
+                        this._getObjectDescriptorBase(nextBatchInQueue[len].eid);
 
                     itemDecorator = nextBatchInQueue[len].desc.decorator;
 
-                    if (itemDecorator && itemDecorator !== "") {
+                    if (itemDecorator && itemDecorator !== '') {
                         if (decoratorsToDownload.indexOf(itemDecorator) === -1) {
                             decoratorsToDownload.pushUnique(itemDecorator);
                         }
@@ -266,9 +280,11 @@ define(['js/logger',
             loadEvents = [],
             unloadEvents = [],
             updateEvents = [],
-            self = this;
+            activeSelection,
+            gmeID,
+            ddSelection;
 
-        this.logger.debug("_dispatchEvents '" + i + "' items");
+        this.logger.debug('_dispatchEvents "' + i + '" items');
 
         /********** ORDER EVENTS BASED ON DEPENDENCY ************/
         /** 1: Unload **/
@@ -281,7 +297,7 @@ define(['js/logger',
 
         this.snapCanvas.beginUpdate();
 
-        for (i = events.length-1; i >= 0; i--) {
+        for (i = events.length - 1; i >= 0; i--) {
             switch (events[i].etype) {
                 case CONSTANTS.TERRITORY_EVENT_LOAD:
                     //We collect all loading events and process them at once
@@ -296,11 +312,13 @@ define(['js/logger',
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
                     unloadEvents.push(events.splice(i, 1).pop());
                     break;
+                default:
+                    break;
             }
         }
 
         //Unload
-        for (i = unloadEvents.length-1; i >= 0; i--){
+        for (i = unloadEvents.length - 1; i >= 0; i--) {
             territoryChanged = this._onUnload(unloadEvents[i].eid) || territoryChanged;
         }
 
@@ -308,7 +326,7 @@ define(['js/logger',
         this._onLoad(loadEvents.concat(updateEvents));
 
         //Update
-        for (i = updateEvents.length-1; i >= 0; i--){
+        for (i = updateEvents.length - 1; i >= 0; i--) {
             this._onUpdate(updateEvents[i].eid, updateEvents[i].desc);
         }
 
@@ -320,8 +338,8 @@ define(['js/logger',
 
         //update the territory
         if (territoryChanged) {
-                this.logger.debug('Updating territory with ruleset from decorators: ' + JSON.stringify(this._selfPatterns));
-                this._client.updateTerritory(this._territoryId, this._selfPatterns);
+            this.logger.debug('Updating territory with ruleset from decorators: ' + JSON.stringify(this._selfPatterns));
+            this._client.updateTerritory(this._territoryId, this._selfPatterns);
         }
 
         //check if firstload
@@ -329,12 +347,11 @@ define(['js/logger',
             this._firstLoad = false;
 
             //check if there is active selection set in client
-            var activeSelection = WebGMEGlobal.State.getActiveSelection();
+            activeSelection = WebGMEGlobal.State.getActiveSelection();
 
             if (activeSelection && activeSelection.length > 0) {
                 i = activeSelection.length;
-                var gmeID;
-                var ddSelection = [];
+                ddSelection = [];
                 while (i--) {
                     //try to find each object present in the active selection mapped to DiagramDesigner element
                     gmeID = activeSelection[i];
@@ -348,7 +365,7 @@ define(['js/logger',
             }
         }
 
-        this.logger.debug("_dispatchEvents '" + events.length + "' items - DONE");
+        this.logger.debug('_dispatchEvents "' + events.length + '" items - DONE');
 
         //continue processing event queue
         this.processNextInQueue();
@@ -364,10 +381,18 @@ define(['js/logger',
             nextItem,
             items,
             children = {},
-            territoryChanged = false;
+            territoryChanged = false,
 
-        while(i--){
-            if(events[i].eid !== this.currentNodeInfo.id){
+            parentId,
+
+            prevItem,
+            base,
+            node,
+            ptrs,
+            j;
+
+        while (i--) {
+            if (events[i].eid !== this.currentNodeInfo.id) {
                 independents[events[i].eid] = {};
                 objDesc[events[i].eid] = events[i].desc;
             }
@@ -376,12 +401,12 @@ define(['js/logger',
         //Remove any dependents
         items = Object.keys(independents);
 
-        while(items.length){
+        while (items.length) {
             nextItem = objDesc[items.pop()].next;
 
-            if(independents[nextItem]){
+            if (independents[nextItem]) {
                 //Remove all dependents of the item
-                while(nextItem){
+                while (nextItem) {
                     delete independents[nextItem];
                     nextItem = objDesc[nextItem].next;
                 }
@@ -391,13 +416,12 @@ define(['js/logger',
         //Next, we will remove children and put them in dictionary by parent id
         items = Object.keys(independents);
         i = items.length;
-        var parentId;
-        while(i--){
+        while (i--) {
             item = items[i];
             parentId = item.substring(0, item.lastIndexOf('/'));
-            if(parentId !== this.currentNodeInfo.id){//must be a child of someone else...
+            if (parentId !== this.currentNodeInfo.id) {//must be a child of someone else...
 
-                if(children[parentId] === undefined){
+                if (children[parentId] === undefined) {
                     children[parentId] = [];
                 }
                 children[parentId].push(item);
@@ -405,79 +429,73 @@ define(['js/logger',
         }
 
         //Next, we will sort independents by the level of containment
-        items.sort(function(id1, id2){
-            if(id1.split('/').length < id2.split('/').length){
+        items.sort(function (id1, id2) {
+            if (id1.split('/').length < id2.split('/').length) {
                 return 1;
-            }else{
+            } else {
                 return -1;
             }
         });
 
-        var prevItem,
-            connAreaPrev,
-            connAreaNext,
-            nextList = [],
-            base,
-            node,
-            ptrs,
-            j = items.length;
+        j = items.length;
 
-        while(j--){//For each independent item
+        while (j--) {//For each independent item
             item = items[j];
 
             prevItem = item;
             nextItem = objDesc[prevItem].next;  // TODO update this to BFS
 
-            if (!this._GmeID2ComponentID[prevItem]) {//Load the item if needed
-                territoryChanged = this._onSingleLoad(prevItem, objDesc[prevItem]) || territoryChanged;
-            } else {
+            if (this._GmeID2ComponentID[prevItem]) {//Load the item if needed
                 territoryChanged = this._onUpdate(prevItem, objDesc[prevItem]) || territoryChanged;
+            } else {
+                territoryChanged = this._onSingleLoad(prevItem, objDesc[prevItem]) || territoryChanged;
             }
 
             //Load all the dependent items 
-            while(nextItem){
-                
+            while (nextItem) {
+
                 //Load the item if isn't available
-                if(!this._GmeID2ComponentID[nextItem]){
+                if (this._GmeID2ComponentID[nextItem]) {
+                    this._onUpdate(nextItem, objDesc[nextItem]);
+                } else {
                     territoryChanged = this._onSingleLoad(nextItem, objDesc[nextItem]) || territoryChanged;
 
                     //connect the objects
-                    if(this._GmeID2ComponentID[prevItem] && this._GmeID2ComponentID[nextItem]){
-                        this.snapCanvas.setToConnect(this._GmeID2ComponentID[prevItem], 
-                                this._GmeID2ComponentID[nextItem], SNAP_CONSTANTS.PTR_NEXT);
-                    }else if(prevItem === null){//Connect to parent
+                    if (this._GmeID2ComponentID[prevItem] && this._GmeID2ComponentID[nextItem]) {
+                        this.snapCanvas.setToConnect(this._GmeID2ComponentID[prevItem],
+                            this._GmeID2ComponentID[nextItem], SNAP_CONSTANTS.PTR_NEXT);
+                    } else if (prevItem === null) {//Connect to parent
                         i = nextItem.lastIndexOf('/');
                         base = nextItem.substring(0, i);
 
                         node = this._client.getNode(base);
                         ptrs = node.getPointerNames();
                         i = ptrs.length;
-                        while(i--){
-                            if(this.snapCanvas.itemHasPtr(this._GmeID2ComponentID[base], ptrs[i]) && node.getPointer(ptrs[i]).to === nextItem){
-                                        //Connect them!
-                                        this.snapCanvas.setToConnect(this._GmeID2ComponentID[base], 
-                                                this._GmeID2ComponentID[nextItem], ptrs[i]);
-                                    }
+                        while (i--) {
+                            if (this.snapCanvas.itemHasPtr(this._GmeID2ComponentID[base], ptrs[i]) &&
+                                node.getPointer(ptrs[i]).to === nextItem) {
+                                //Connect them!
+                                this.snapCanvas.setToConnect(this._GmeID2ComponentID[base],
+                                    this._GmeID2ComponentID[nextItem], ptrs[i]);
+                            }
                         }
 
                     }
-                }else{
-                    this._onUpdate(nextItem, objDesc[nextItem]);
                 }
 
                 //If the nextItem is the parent of other nodes, load them next.
 
-                if(children[nextItem] && children[nextItem].length){
+                if (children[nextItem] && children[nextItem].length) {
                     prevItem = null;
-                    nextItem = children[nextItem].pop(); 
-                }else{
+                    nextItem = children[nextItem].pop();
+                } else {
                     prevItem = nextItem;
                     nextItem = objDesc[prevItem].next;
 
                     //if the nextItem is null, see if we can 'bubble' up to the parent
-                    if(!nextItem){
+                    if (!nextItem) {
                         //Find the next item - bubble up as much as necessary
-                        while (base !== this.currentNodeInfo.id && !nextItem){
+                        while (base !== this.currentNodeInfo.id && !nextItem) {
                             i = prevItem.lastIndexOf('/');
                             base = prevItem.substring(0, i);
                             prevItem = base;
@@ -487,34 +505,33 @@ define(['js/logger',
                 }
             }
 
-            //Connect the "independent" node to it's parent if needed
+            //Connect the 'independent' node to it's parent if needed
             i = item.lastIndexOf('/');
-            base = item.substring(0,i);
-            if(base && base !== this.currentNodeInfo.id){
+            base = item.substring(0, i);
+            if (base && base !== this.currentNodeInfo.id) {
                 //find the pointer from it's parent
                 node = this._client.getNode(base);
                 ptrs = node.getPointerNames();
                 i = ptrs.length;
-                while(i--){
-                    if(this.snapCanvas.itemHasPtr(this._GmeID2ComponentID[base], ptrs[i]) && node.getPointer(ptrs[i]).to === item){
+                while (i--) {
+                    if (this.snapCanvas.itemHasPtr(this._GmeID2ComponentID[base], ptrs[i]) &&
+                        node.getPointer(ptrs[i]).to === item) {
                         //Connect them!
-                        this.snapCanvas.setToConnect(this._GmeID2ComponentID[base], 
+                        this.snapCanvas.setToConnect(this._GmeID2ComponentID[base],
                             this._GmeID2ComponentID[item], ptrs[i]);
                     }
                 }
             }
         }
-        
+
     };
 
     BlockEditorControl.prototype._onSingleLoad = function (gmeID, objD) {
         var uiComponent,
-            decClass,
             objDesc,
-            sources = [],
-            destinations = [],
             getDecoratorTerritoryQueries,
             territoryChanged = false,
+            node,
             self = this;
 
         getDecoratorTerritoryQueries = function (decorator) {
@@ -535,43 +552,36 @@ define(['js/logger',
             }
         };
 
-        var node,
-            ptrs,
-            attrs,
-            attributeSchema,
-            id,
-            i;
-
         //component loaded
         //we are interested in the load of sub_components of the opened component
         if (this.currentNodeInfo.id !== gmeID) {
             if (objD) {
                 //if (objD.parentId == this.currentNodeInfo.id) {
-                    objDesc = _.extend({}, objD);
+                objDesc = _.extend({}, objD);
 
-                    this._items.push(gmeID);
-                    node = this._client.getNode(gmeID);
-                    this._extendObjectDescriptor(objDesc, node);//Add ptrs, attributes, decorator
+                this._items.push(gmeID);
+                node = this._client.getNode(gmeID);
+                this._extendObjectDescriptor(objDesc, node);//Add ptrs, attributes, decorator
 
-                    objDesc.control = this;
-                    objDesc.metaInfo = {};
-                    objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
+                objDesc.control = this;
+                objDesc.metaInfo = {};
+                objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
 
-                    uiComponent = this.snapCanvas.createLinkableItem(objDesc);
+                uiComponent = this.snapCanvas.createLinkableItem(objDesc);
 
-                    this._GmeID2ComponentID[gmeID] = uiComponent.id; //Formerly was an array..
-                    this._ComponentID2GmeID[uiComponent.id] = gmeID;
+                this._GmeID2ComponentID[gmeID] = uiComponent.id; //Formerly was an array..
+                this._ComponentID2GmeID[uiComponent.id] = gmeID;
 
-                    getDecoratorTerritoryQueries(uiComponent._decoratorInstance);
+                getDecoratorTerritoryQueries(uiComponent._decoratorInstance);
 
                 //} else {
-                    //supposed to be the grandchild of the currently open node
-                    //--> load of port
-                    /*if(this._GMEModels.indexOf(objD.parentId) !== -1){
-                        this._onUpdate(objD.parentId,this._getObjectDescriptorBase(objD.parentId));
-                    }*/
-                    //this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_LOAD);
-                    //console.log("Found a child of a node... NEED TO IMPLEMENT UI SUPPORT!");
+                //supposed to be the grandchild of the currently open node
+                //--> load of port
+                /*if(this._GMEModels.indexOf(objD.parentId) !== -1){
+                 this._onUpdate(objD.parentId,this._getObjectDescriptorBase(objD.parentId));
+                 }*/
+                //this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_LOAD);
+                //console.log('Found a child of a node... NEED TO IMPLEMENT UI SUPPORT!');
                 //}
             }
         } else {
@@ -586,7 +596,6 @@ define(['js/logger',
 
     BlockEditorControl.prototype._onUnload = function (gmeID) {
         var componentID,
-            len,
             getDecoratorTerritoryQueries,
             self = this,
             territoryChanged = false;
@@ -611,9 +620,12 @@ define(['js/logger',
 
         if (gmeID === this.currentNodeInfo.id) {
             //the opened model has been removed from territoy --> most likely deleted...
-            this.logger.debug('The previously opened model does not exist... --- GMEID: "' + this.currentNodeInfo.id + '"');
-            this.snapCanvas.setBackgroundText('The previously opened model does not exist...', {'font-size': BACKGROUND_TEXT_SIZE,
-                                                                                                     'color': BACKGROUND_TEXT_COLOR});
+            this.logger.debug('The previously opened model does not exist... --- GMEID: "' + this.currentNodeInfo.id +
+                              '"');
+            this.snapCanvas.setBackgroundText('The previously opened model does not exist...', {
+                'font-size': BACKGROUND_TEXT_SIZE,
+                color: BACKGROUND_TEXT_COLOR
+            });
         } else {
             if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
                 componentID = this._GmeID2ComponentID[gmeID];
@@ -635,15 +647,7 @@ define(['js/logger',
 
     BlockEditorControl.prototype._onUpdate = function (gmeID, objDesc) {
         var componentID,
-            decClass,
-            objId,
-            sCompId,
-            ptrs,
-            attrs,
-            attributeSchema,
-            node = this._client.getNode(gmeID),
-            id,
-            i;
+            node = this._client.getNode(gmeID);
 
         //self or child updated
         //check if the updated object is the opened node
@@ -657,7 +661,7 @@ define(['js/logger',
             if (objDesc) {
                 //Make sure that the node is somewhere in the project we are looking at
                 if (objDesc.parentId.indexOf(this.currentNodeInfo.id) !== -1) {
-                    if (this._GmeID2ComponentID[gmeID]){
+                    if (this._GmeID2ComponentID[gmeID]) {
                         componentID = this._GmeID2ComponentID[gmeID];
                         this._extendObjectDescriptor(objDesc, node);
 
@@ -676,44 +680,43 @@ define(['js/logger',
      * @return {Object} objDesc
      */
     BlockEditorControl.prototype._extendObjectDescriptor = function (objDesc, node) {
-        var attrs,
+        var attributes,
             attributeSchema,
-            decClass = this._getItemDecorator(objDesc.decorator),
-            ptrs,
+            pointers,
             id,
             i;
 
-        objDesc.decoratorClass = decClass;
+        objDesc.decoratorClass = this._getItemDecorator(objDesc.decorator);
         objDesc.preferencesHelper = PreferencesHelper.getPreferences();
         objDesc.aspect = this._selectedAspect;
 
         //Get the pointer info
         objDesc.ptrInfo = {};
-        ptrs = node.getPointerNames();
-        i = ptrs.length;
-        while (i--){
-            id = node.getPointer(ptrs[i]).to;
-            if (id && this._GmeID2ComponentID[id]){
-                objDesc.ptrInfo[ptrs[i]] = this._GmeID2ComponentID[id];
+        pointers = node.getPointerNames();
+        i = pointers.length;
+        while (i--) {
+            id = node.getPointer(pointers[i]).to;
+            if (id && this._GmeID2ComponentID[id]) {
+                objDesc.ptrInfo[pointers[i]] = this._GmeID2ComponentID[id];
             } else {
-                objDesc.ptrInfo[ptrs[i]] = false;
+                objDesc.ptrInfo[pointers[i]] = false;
             }
         }
 
         //Get the attribute info
         objDesc.attrInfo = {};
-        attrs = node.getAttributeNames();
-        i = attrs.length;
-        while (i--){
-            objDesc.attrInfo[attrs[i]] = { value: node.getAttribute(attrs[i]) };
-            attributeSchema = this._client.getAttributeSchema(node.getId(), attrs[i]);
-            if (attributeSchema.enum){
-                objDesc.attrInfo[attrs[i]].options = attributeSchema.enum;
+        attributes = node.getAttributeNames();
+        i = attributes.length;
+        while (i--) {
+            objDesc.attrInfo[attributes[i]] = {value: node.getAttribute(attributes[i])};
+            attributeSchema = this._client.getAttributeSchema(node.getId(), attributes[i]);
+            if (attributeSchema.enum) {
+                objDesc.attrInfo[attributes[i]].options = attributeSchema.enum;
             }
         }
 
         //Change the 'name' to formatted name
-        objDesc.attrInfo.name = { value: DisplayFormat.resolve(node) };
+        objDesc.attrInfo.name = {value: DisplayFormat.resolve(node)};
 
         return objDesc;
     };
@@ -732,8 +735,10 @@ define(['js/logger',
 
     BlockEditorControl.prototype._updateSheetName = function (name) {
         this.snapCanvas.setTitle(name);
-        this.snapCanvas.setBackgroundText(name.toUpperCase(), {'font-size': BACKGROUND_TEXT_SIZE,
-            'color': BACKGROUND_TEXT_COLOR });
+        this.snapCanvas.setBackgroundText(name.toUpperCase(), {
+            'font-size': BACKGROUND_TEXT_SIZE,
+            color: BACKGROUND_TEXT_COLOR
+        });
     };
 
     BlockEditorControl.prototype._updateAspects = function () {
@@ -741,7 +746,10 @@ define(['js/logger',
             aspects,
             tabID,
             i,
-            selectedTabID;
+            selectedTabID,
+            nodeId,
+            newAspectRules,
+            aspectRulesChanged;
 
         this._aspects = {};
         this.snapCanvas.clearTabs();
@@ -749,14 +757,14 @@ define(['js/logger',
         if (objId || objId === CONSTANTS.PROJECT_ROOT_ID) {
             aspects = this._client.getMetaAspectNames(objId) || [];
 
-            aspects.sort(function (a,b) {
+            aspects.sort(function (a, b) {
                 var an = a.toLowerCase(),
                     bn = b.toLowerCase();
 
                 return (an < bn) ? -1 : 1;
             });
 
-            aspects.splice(0,0,CONSTANTS.ASPECT_ALL);
+            aspects.splice(0, 0, CONSTANTS.ASPECT_ALL);
 
             this.snapCanvas.addMultipleTabsBegin();
 
@@ -786,20 +794,21 @@ define(['js/logger',
 
         //check if the node's aspect rules has changed or not, and if so, initialize with that
         if (this._selectedAspect !== CONSTANTS.ASPECT_ALL) {
-            var nodeId = this.currentNodeInfo.id;
-            var newAspectRules = this._client.getAspectTerritoryPattern(nodeId, this._selectedAspect);
-            var aspectRulesChanged = false;
+            nodeId = this.currentNodeInfo.id;
+            newAspectRules = this._client.getAspectTerritoryPattern(nodeId, this._selectedAspect);
+            aspectRulesChanged = false;
 
             if (this._selfPatterns[nodeId].items && newAspectRules.items) {
                 aspectRulesChanged = (_.difference(this._selfPatterns[nodeId].items, newAspectRules.items)).length > 0;
                 if (aspectRulesChanged === false) {
-                    aspectRulesChanged = (_.difference(newAspectRules.items, this._selfPatterns[nodeId].items)).length > 0;
+                    aspectRulesChanged = (_.difference(newAspectRules.items, this._selfPatterns[nodeId].items)).length >
+                                         0;
                 }
             } else {
                 if (this._selfPatterns[nodeId].items || newAspectRules.items) {
                     //at least one of them has items
                     aspectRulesChanged = true;
-                } 
+                }
             }
 
             if (aspectRulesChanged) {
@@ -815,7 +824,8 @@ define(['js/logger',
 
         for (gmeID in this._notifyPackage) {
             if (this._notifyPackage.hasOwnProperty(gmeID)) {
-                this.logger.debug('NotifyPartDecorator: ' + gmeID + ', componentIDs: ' + JSON.stringify(this._notifyPackage[gmeID]));
+                this.logger.debug('NotifyPartDecorator: ' + gmeID + ', componentIDs: ' +
+                                  JSON.stringify(this._notifyPackage[gmeID]));
 
                 i = this._GmeID2ComponentID[gmeID].length;
                 while (i--) {
@@ -826,7 +836,7 @@ define(['js/logger',
         }
     };
 
-    BlockEditorControl.prototype.registerComponentIDForPartID = function(){
+    BlockEditorControl.prototype.registerComponentIDForPartID = function () {
         //This method should probably be in a base class that can be overridden
         //as needed. 
         //
@@ -835,54 +845,54 @@ define(['js/logger',
         //FIXME
     };
 
-    BlockEditorControl.prototype.onActivate = function(){
+    BlockEditorControl.prototype.onActivate = function () {
         //When you have the split view and only one is active
         this._attachClientEventListeners();
-    }; 
+    };
 
-    BlockEditorControl.prototype.onDeactivate = function(){
+    BlockEditorControl.prototype.onDeactivate = function () {
         this._detachClientEventListeners();
-    }; 
+    };
 
-    BlockEditorControl.prototype.destroy = function(){
+    BlockEditorControl.prototype.destroy = function () {
         //When you changing to meta view or something
         this._detachClientEventListeners();
         this._removeToolbarItems();
         this._client.removeUI(this._territoryId);
-    }; 
+    };
 
-        /* * * * * * * * * * TOOLBAR * * * * * * * * * * */
-    BlockEditorControl.prototype._addToolbarItems = function(){
-        var self = this,
-            toolBar = WebGMEGlobal.Toolbar;
+    /* * * * * * * * * * TOOLBAR * * * * * * * * * * */
+    BlockEditorControl.prototype._addToolbarItems = function () {
+        //var self = this,
+        //    toolBar = WebGMEGlobal.Toolbar;
 
         this._toolbarItems = [];
 
         //Add items here using toolBar.addButton 
     };
 
-    BlockEditorControl.prototype._removeToolbarItems = function(){
+    BlockEditorControl.prototype._removeToolbarItems = function () {
         //Remove any toolbar items
-        if (this._toolbarItems){
-            while (this._toolbarItems.length){
+        if (this._toolbarItems) {
+            while (this._toolbarItems.length) {
                 this._toolbarItems.pop().destroy();
             }
         }
     };
 
 
-    BlockEditorControl.prototype._constraintCheck = function(){
+    BlockEditorControl.prototype._constraintCheck = function () {
         var self = this;
 
-        self._client.validateProjectAsync(function(err,result){
+        self._client.validateProjectAsync(function (err, result) {
             //TODO here we should pop up the result dialog...
-            console.log('project validation finished',err,result);
+            console.log('project validation finished', err, result);
         });
     };
 
-        /* * * * * * * * * * END TOOLBAR * * * * * * * * * * */
+    /* * * * * * * * * * END TOOLBAR * * * * * * * * * * */
 
-    BlockEditorControl.prototype._getValidPointerTypes = function(params) {
+    BlockEditorControl.prototype._getValidPointerTypes = function (params) {
         // Call GMEConcepts
         var dstGmeId = this._ComponentID2GmeID[params.dst.id],
             srcGmeId = this._ComponentID2GmeID[params.src.id];
@@ -893,5 +903,5 @@ define(['js/logger',
 
     _.extend(BlockEditorControl.prototype, BlockEditorEventHandlers.prototype);
 
-   return BlockEditorControl;
+    return BlockEditorControl;
 });

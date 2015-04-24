@@ -58,13 +58,14 @@ main = function (argv) {
         .option('-c, --canCreate', 'user can create a new project', false)
         .option('-s, --siteAdmin', 'user can create a new project', false)
         .action(function (username, email, password, options) {
-            setupGMEAuth(options.parent.db, function (err) {
+            setupGMEAuth(options.parent.db, function (/*err*/) {
                 // TODO: we may need to use a module like 'prompt' to get user password
                 if (username && email && password) {
-                    auth.addUser(username, email, password, options.canCreate || false, {overwrite: true, siteAdmin: options.siteAdmin || false})
-                        .then(mainDeferred.resolve)
-                        .catch(mainDeferred.reject)
-                        .finally(auth.unload);
+                    auth.addUser(username, email, password, options.canCreate || false,
+                        {overwrite: true, siteAdmin: options.siteAdmin || false})
+                            .then(mainDeferred.resolve)
+                            .catch(mainDeferred.reject)
+                            .finally(auth.unload);
                 } else {
                     mainDeferred.reject(new SyntaxError('username, email, and password parameters are required'));
                 }
@@ -82,7 +83,7 @@ main = function (argv) {
         .command('userlist [username]')
         .description('lists all users or the specified user')
         .action(function (username, options) {
-            setupGMEAuth(options.parent.db, function (err) {
+            setupGMEAuth(options.parent.db, function (/*err*/) {
                 if (username) {
                     auth.getUser(username)
                         .then(function (userObject) {
@@ -116,7 +117,7 @@ main = function (argv) {
         .command('passwd <username> <password>')
         .description('updates the user')
         .action(function (username, password, options) {
-            setupGMEAuth(options.parent.db, function (err) {
+            setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 // TODO: we may need to use a module like 'prompt' to get user password
                 if (username && password) {
@@ -147,10 +148,10 @@ main = function (argv) {
         .command('userdel <username>')
         .description('deletes a user')
         .action(function (username, options) {
-            setupGMEAuth(options.parent.db, function (err) {
+            setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (username) {
-                    auth.removeUserByUserId(username)
+                    auth.deleteUser(username)
                         .then(mainDeferred.resolve)
                         .catch(mainDeferred.reject)
                         .finally(auth.unload);
@@ -170,7 +171,7 @@ main = function (argv) {
         .command('organizationadd <organizationname>')
         .description('adds a new organization')
         .action(function (organizationname, options) {
-            setupGMEAuth(options.parent.db, function (err) {
+            setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (organizationname) {
                     auth.addOrganization(organizationname)
@@ -193,7 +194,7 @@ main = function (argv) {
         .command('organizationdel <organizationname>')
         .description('deletes an existing organization')
         .action(function (organizationname, options) {
-            setupGMEAuth(options.parent.db, function (err) {
+            setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (organizationname) {
                     auth.removeOrganizationByOrgId(organizationname)
@@ -219,7 +220,7 @@ main = function (argv) {
             delete: options.authorize.indexOf('d') !== -1
         };
 
-        setupGMEAuth(options.parent.db, function (err) {
+        setupGMEAuth(options.parent.db, function (/*err*/) {
 
             if (options.deauthorize) {
                 // deauthorize
@@ -278,7 +279,7 @@ main = function (argv) {
         .command('usermod_organization_add <username> <organizationname>')
         .description('adds a user to an existing organization')
         .action(function (username, organizationname, options) {
-            setupGMEAuth(options.parent.db, function (err) {
+            setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (username && organizationname) {
                     auth.addUserToOrganization(username, organizationname)
@@ -301,7 +302,7 @@ main = function (argv) {
         .command('usermod_organization_del <username> <organizationname>')
         .description('removes a user from an existing organization')
         .action(function (username, organizationname, options) {
-            setupGMEAuth(options.parent.db, function (err) {
+            setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (username && organizationname) {
                     auth.removeUserFromOrganization(username, organizationname)

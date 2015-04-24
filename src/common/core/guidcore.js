@@ -4,10 +4,12 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/assert',
+define([
+    'common/util/assert',
     'common/util/guid',
     'common/core/tasync',
-    'common/regexp'], function (ASSERT, GUID, TASYNC, REGEXP) {
+    'common/regexp'
+], function (ASSERT, GUID, TASYNC, REGEXP) {
 
     'use strict';
 
@@ -41,7 +43,8 @@ define(['common/util/assert',
         }
 
         function getRelidGuid(node) {
-            //TODO we always should know what structure we should expect as a relid, now we think it is a number so it can be converted to 0xsomething
+            //TODO we always should know what structure we should expect as a relid -
+            // now we think it is a number so it can be converted to 0xsomething
             var relid = _core.getRelid(node);
             relid = Number(relid);
             if (relid === 'NaN') {
@@ -68,6 +71,7 @@ define(['common/util/assert',
 
             var arrayOut = [];
             for (var i = 0; i < arrayA.length; i++) {
+                /*jshint bitwise: false*/
                 arrayOut.push(arrayA[i] ^ arrayB[i]);
             }
             for (i = 0; i < arrayOut.length; i++) {

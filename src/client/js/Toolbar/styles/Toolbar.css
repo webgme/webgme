@@ -62,7 +62,7 @@
     .webgme-toolbar .toolbar-colorpicker.input-append, .webgme-toolbar .toolbar-colorpicker.input-prepend,
     .webgme-toolbar-ext .toolbar-colorpicker.input-append,
     .webgme-toolbar-ext .toolbar-colorpicker.input-prepend {
-      margin-bottom: 0px !important; }
+      margin-bottom: 0 !important; }
       .webgme-toolbar .toolbar-colorpicker.input-append .add-on i:hover, .webgme-toolbar .toolbar-colorpicker.input-prepend .add-on i:hover,
       .webgme-toolbar-ext .toolbar-colorpicker.input-append .add-on i:hover,
       .webgme-toolbar-ext .toolbar-colorpicker.input-prepend .add-on i:hover {
@@ -70,11 +70,9 @@
 
 .webgme-toolbar-ext {
   position: absolute;
-  right: 0px;
+  right: 0;
   margin-top: 1px;
-  padding: 3px;
-  padding-left: 0;
-  padding-top: 0;
+  padding: 0 3px 3px 0;
   background: whitesmoke;
   border: 1px solid #bbbbbb;
   display: none;

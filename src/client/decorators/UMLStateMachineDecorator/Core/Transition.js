@@ -1,20 +1,18 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, _, Raphael*/
+/*jshint browser: true, newcap: false*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-"use strict";
+define([
+    'raphaeljs',
+    'js/NodePropertyNames',
+    'js/RegistryKeys',
+    'js/Constants',
+    'js/Utils/GMEVisualConcepts'
+], function (_raphaeljs, nodePropertyNames, REGISTRY_KEYS, CONSTANTS, GMEVisualConcepts) {
 
-define(['raphaeljs',
-        'js/NodePropertyNames',
-        'js/RegistryKeys',
-        'js/Constants',
-        'js/Utils/GMEVisualConcepts'], function (_raphaeljs,
-                                   nodePropertyNames,
-                                   REGISTRY_KEYS,
-                                   CONSTANTS,
-                                   GMEVisualConcepts) {
+    'use strict';
 
     var Transition,
         WIDTH = 120,
@@ -45,7 +43,7 @@ define(['raphaeljs',
             displayFormat;
 
         if (nodeObj) {
-            displayFormat = nodeObj.getRegistry(REGISTRY_KEYS.DISPLAY_FORMAT) || "";
+            displayFormat = nodeObj.getRegistry(REGISTRY_KEYS.DISPLAY_FORMAT) || '';
         }
 
         return displayFormat;
@@ -54,18 +52,19 @@ define(['raphaeljs',
     Transition.prototype._renderMetaTypeSpecificParts = function () {
         this.SVGPaper = Raphael(this.$el.find('.svgContainer')[0], WIDTH, 40);
         this.path = this.SVGPaper.path('M ' + MARGIN + ',' + Y + ' L ' + (WIDTH - MARGIN) + ',' + Y);
-        this.txtDisplayFormat = this.SVGPaper.text(WIDTH / 2, 8, "");
+        this.txtDisplayFormat = this.SVGPaper.text(WIDTH / 2, 8, '');
     };
 
     Transition.prototype._updateMetaTypeSpecificParts = function () {
         this._getTransitionLineStyle();
 
         this.path.attr({
-            "stroke": this._lineStyle[CONSTANTS.LINE_STYLE.COLOR],
-            "stroke-width": this._lineStyle[CONSTANTS.LINE_STYLE.WIDTH],
-            "stroke-dasharray": this._lineStyle[CONSTANTS.LINE_STYLE.PATTERN],
-            "arrow-start":this._lineStyle[CONSTANTS.LINE_STYLE.START_ARROW],
-            "arrow-end": this._lineStyle[CONSTANTS.LINE_STYLE.END_ARROW]});
+            stroke: this._lineStyle[CONSTANTS.LINE_STYLE.COLOR],
+            'stroke-width': this._lineStyle[CONSTANTS.LINE_STYLE.WIDTH],
+            'stroke-dasharray': this._lineStyle[CONSTANTS.LINE_STYLE.PATTERN],
+            'arrow-start': this._lineStyle[CONSTANTS.LINE_STYLE.START_ARROW],
+            'arrow-end': this._lineStyle[CONSTANTS.LINE_STYLE.END_ARROW]
+        });
 
         this.txtDisplayFormat.attr('text', this._getDisplayFormat());
     };

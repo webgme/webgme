@@ -1,12 +1,17 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
+/*jshint browser: true*/
 
-define(['js/logger',
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define([
+    'js/logger',
     'js/Controls/DropDownMenu',
-    'js/Controls/PopoverBox'], function (Logger,
-                                           DropDownMenu,
-                                           PopoverBox) {
+    'js/Controls/PopoverBox'
+], function (Logger, DropDownMenu, PopoverBox) {
 
-    "use strict";
+    'use strict';
 
     var BranchStatusWidget;
 
@@ -18,7 +23,7 @@ define(['js/logger',
 
         this._initializeUI();
 
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     BranchStatusWidget.prototype._initializeUI = function () {
@@ -27,10 +32,12 @@ define(['js/logger',
         this._el.empty();
 
         //BranchStatus DropDownMenu
-        this._ddBranchStatus = new DropDownMenu({"dropUp": true,
-            "pullRight": true,
-            "size": "micro",
-            "sort": true});
+        this._ddBranchStatus = new DropDownMenu({
+            dropUp: true,
+            pullRight: true,
+            size: 'micro',
+            sort: true
+        });
         this._ddBranchStatus.setTitle('BRANCHSTATUS');
 
         this._el.append(this._ddBranchStatus.getEl());

@@ -1,5 +1,4 @@
-/*globals*/
-/*jshint node:true, mocha:true*/
+/*jshint node:true, mocha:true, expr:true*/
 /**
  * @author kecso / https://github.com/kecso
  */
@@ -11,7 +10,7 @@ describe('issue110 testing', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         storage = null,
 
-        // global helper functions and globally used variables
+    // global helper functions and globally used variables
         baseCommit = null,
         project = null,
         commit = '',

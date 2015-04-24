@@ -7,7 +7,6 @@ $toolbar-item-margin-left: 2px;
 $toolbar-separator-margin: 0;
 $separator-bg-color: #DADFE7;
 
-
 $webgme-toolbar-ext-background-color: #F5F5F5;
 $webgme-toolbar-ext-border-color: rgb(187, 187, 187);
 $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
@@ -80,13 +79,13 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
     input {
       margin: 0;
       width: 20px;
-      color: rgba(0,0,0,0) !important;
+      color: rgba(0, 0, 0, 0) !important;
     }
 
     &.input-append,
     &.input-prepend {
-      margin-bottom: 0px !important;
-      
+      margin-bottom: 0 !important;
+
       .add-on {
         i:hover {
           cursor: pointer;
@@ -98,11 +97,9 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
 
 .webgme-toolbar-ext {
   position: absolute;
-  right: 0px;
+  right: 0;
   margin-top: 1px;
-  padding: 3px;
-  padding-left: 0;
-  padding-top: 0;
+  padding: 0 3px 3px 0;
   background: $webgme-toolbar-ext-background-color;
   border: 1px solid $webgme-toolbar-ext-border-color;
   display: none;
@@ -143,26 +140,25 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
     left: -3px;
   }
 
-  >i:last-child {
+  > i:last-child {
     top: 11px;
   }
 }
 
-
 div.toolbar-container {
-    position: relative;
-    /*overflow: hidden;*/
-    overflow-x: visible;
-    top: 34px;
-    height: 30px;
-    padding: 0;
+  position: relative;
+  /*overflow: hidden;*/
+  overflow-x: visible;
+  top: 34px;
+  height: 30px;
+  padding: 0;
 }
 
 div.toolbar-container .btn {
-    border: 1px solid #fff;
-    border-radius: 0;
-    padding: 1px 5px;
-    margin: 3px 5px !important;
+  border: 1px solid #fff;
+  border-radius: 0;
+  padding: 1px 5px;
+  margin: 3px 5px !important;
 
-    box-shadow: none;
+  box-shadow: none;
 }

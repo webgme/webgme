@@ -1,5 +1,5 @@
-/*globals define, WebGMEGlobal*/
-
+/*globals define, WebGMEGlobal, $ */
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
@@ -10,10 +10,9 @@ define([
     'text!./templates/CommitDialog.html',
     'css!./styles/CommitDialog.css'
 ], function (Logger,
-        commitDialogTemplate) {
+             commitDialogTemplate) {
 
-    "use strict";
-
+    'use strict';
 
     var CommitDialog;
 
@@ -22,7 +21,7 @@ define([
 
         this._client = client;
 
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     CommitDialog.prototype.show = function () {
@@ -82,9 +81,9 @@ define([
 
         this._btnCommit.on('click', function () {
             var val = self._txtMessage.val();
-            if (val !== "") {
+            if (val !== '') {
                 self._btnCommit.off('click').hide();
-                self._client.commitAsync({"message": val}, function () {
+                self._client.commitAsync({message: val}, function () {
                     self._dialog.modal('hide');
                 });
             }

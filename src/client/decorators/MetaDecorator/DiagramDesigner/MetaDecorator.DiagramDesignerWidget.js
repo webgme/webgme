@@ -1,4 +1,4 @@
-/*globals define, _*/
+/*globals define, _, $*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -6,7 +6,8 @@
  */
 
 
-define(['js/Constants',
+define([
+    'js/Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     '../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget',
@@ -17,46 +18,49 @@ define(['js/Constants',
     './MetaDecorator.DiagramDesignerWidget.Constraints',
     './MetaDecorator.DiagramDesignerWidget.Aspects',
     './MetaTextEditorDialog',
-    'css!./styles/MetaDecorator.DiagramDesignerWidget.css'], function (CONSTANTS,
-                                                          nodePropertyNames,
-                                                          REGISTRY_KEYS,
-                                                          DefaultDecoratorDiagramDesignerWidget,
-                                                          MetaDecoratorTemplate,
-                                                          Attribute,
-                                                          AttributeDetailsDialog,
-                                                          MetaRelations,
-                                                          MetaDecoratorDiagramDesignerWidgetConstraints,
-                                                          MetaDecoratorDiagramDesignerWidgetAspects,
-                                                          MetaTextEditorDialog) {
+    'css!./styles/MetaDecorator.DiagramDesignerWidget.css'
+], function (CONSTANTS,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             DefaultDecoratorDiagramDesignerWidget,
+             MetaDecoratorTemplate,
+             Attribute,
+             AttributeDetailsDialog,
+             MetaRelations,
+             MetaDecoratorDiagramDesignerWidgetConstraints,
+             MetaDecoratorDiagramDesignerWidgetAspects,
+             MetaTextEditorDialog) {
 
-    "use strict";
+    'use strict';
 
     var MetaDecoratorDiagramDesignerWidget,
-        DECORATOR_ID = "MetaDecorator",
+        DECORATOR_ID = 'MetaDecorator',
         ABSTRACT_CLASS = 'abstract',
         TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta"/>');
 
     MetaDecoratorDiagramDesignerWidget = function (options) {
 
-        var opts = _.extend( {}, options);
+        var opts = _.extend({}, options);
 
         DefaultDecoratorDiagramDesignerWidget.apply(this, [opts]);
 
-        this.name = "";
+        this.name = '';
         this._attributeNames = [];
         this._attributes = {};
-        this._skinParts = { "$name": undefined,
-                            "$attributesContainer": undefined,
-                            "$addAttributeContainer": undefined,
-                            "$constraintsContainer": undefined,
-                            "$addConstraintContainer": undefined,
-                            "$aspectsContainer": undefined,
-                            "$addAspectContainer": undefined,
-                            "$attributesTitle": undefined,
-                            "$constraintsTitle": undefined,
-                            "$aspectsTitle": undefined};
+        this._skinParts = {
+            $name: undefined,
+            $attributesContainer: undefined,
+            $addAttributeContainer: undefined,
+            $constraintsContainer: undefined,
+            $addConstraintContainer: undefined,
+            $aspectsContainer: undefined,
+            $addAspectContainer: undefined,
+            $attributesTitle: undefined,
+            $constraintsTitle: undefined,
+            $aspectsTitle: undefined
+        };
 
-        this.logger.debug("MetaDecorator ctor");
+        this.logger.debug('MetaDecorator ctor');
     };
 
     _.extend(MetaDecoratorDiagramDesignerWidget.prototype, DefaultDecoratorDiagramDesignerWidget.prototype);
@@ -68,25 +72,28 @@ define(['js/Constants',
 
     MetaDecoratorDiagramDesignerWidget.prototype.$DOMBase = $(MetaDecoratorTemplate);
 
+    //jshint camelcase: false
     MetaDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
         var self = this;
 
         this._renderContent();
 
         // set title editable on double-click
-        this._skinParts.$name.on("dblclick.editOnDblClick", null, function (event) {
+        this._skinParts.$name.on('dblclick.editOnDblClick', null, function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-                $(this).editInPlace({"class": "",
-                    "onChange": function (oldValue, newValue) {
+                $(this).editInPlace({
+                    class: '',
+                    onChange: function (oldValue, newValue) {
                         self._onNodeTitleChanged(oldValue, newValue);
-                    }});
+                    }
+                });
             }
             event.stopPropagation();
             event.preventDefault();
         });
 
-        //set the "Add new..." clickhandler
-        this._skinParts.$addAttributeContainer.on("click", null, function (event) {
+        //set the 'Add new...' clickhandler
+        this._skinParts.$addAttributeContainer.on('click', null, function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                 self._onNewAttributeClick();
             }
@@ -94,35 +101,35 @@ define(['js/Constants',
             event.preventDefault();
         });
     };
-
+    //jshint camelcase: true
     MetaDecoratorDiagramDesignerWidget.prototype._renderContent = function () {
         var client = this._control._client,
             self = this;
 
         //render GME-ID in the DOM, for debugging
-        this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
+        this.$el.attr({'data-id': this._metaInfo[CONSTANTS.GME_ID]});
 
         /* BUILD UI*/
         //find name placeholder
-        this._skinParts.$name = this.$el.find(".name");
-        this._skinParts.$attributesContainer = this.$el.find(".attributes");
-        this._skinParts.$addAttributeContainer = this.$el.find(".add-new-attribute");
+        this._skinParts.$name = this.$el.find('.name');
+        this._skinParts.$attributesContainer = this.$el.find('.attributes');
+        this._skinParts.$addAttributeContainer = this.$el.find('.add-new-attribute');
 
-        this._skinParts.$attributesTitle =  this.$el.find(".attributes-title");
-        this._skinParts.$constraintsTitle =  this.$el.find(".constraints-title");
-        this._skinParts.$aspectsTitle =  this.$el.find(".aspects-title");
+        this._skinParts.$attributesTitle = this.$el.find('.attributes-title');
+        this._skinParts.$constraintsTitle = this.$el.find('.constraints-title');
+        this._skinParts.$aspectsTitle = this.$el.find('.aspects-title');
 
         this._skinParts.$attributesContainer.on('dblclick', 'li', function (e) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-                var attrName = $(this).find('.n').text().replace(":", ""),
+                var attrName = $(this).find('.n').text().replace(':', ''),
                     attrNames,
                     dialog = new AttributeDetailsDialog(),
-                    atrMeta = client.getAttributeSchema(self._metaInfo[CONSTANTS.GME_ID],attrName);
-                var desc = _.extend({},{name:attrName,type:atrMeta.type,defaultValue:atrMeta.default});
-                if(atrMeta.enum && atrMeta.enum.length >0){
+                    atrMeta = client.getAttributeSchema(self._metaInfo[CONSTANTS.GME_ID], attrName);
+                var desc = _.extend({}, {name: attrName, type: atrMeta.type, defaultValue: atrMeta.default});
+                if (atrMeta.enum && atrMeta.enum.length > 0) {
                     desc.isEnum = true;
                     desc.enumValues = [];
-                    for(var i=0;i<atrMeta.enum.length;i++){
+                    for (var i = 0; i < atrMeta.enum.length; i++) {
                         desc.enumValues.push(atrMeta.enum[i]);
                     }
                 } else {
@@ -157,7 +164,7 @@ define(['js/Constants',
         this.$el.append(this._skinParts.$textMetaEditorBtn);
         this._skinParts.$textMetaEditorBtn.on('click', function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-               self._showMetaTextEditorDialog();
+                self._showMetaTextEditorDialog();
             }
             event.stopPropagation();
             event.preventDefault();
@@ -175,10 +182,10 @@ define(['js/Constants',
     MetaDecoratorDiagramDesignerWidget.prototype.update = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            newName = "";
+            newName = '';
 
         if (nodeObj) {
-            newName = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "";
+            newName = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '';
 
             if (this.name !== newName) {
                 this.name = newName;
@@ -206,15 +213,17 @@ define(['js/Constants',
             this.$el.css({'border-color': this.borderColor});
             this._skinParts.$name.css({'border-color': this.borderColor});
         } else {
-            this.$el.css({'border-color': '',
-                'box-shadow': ''});
+            this.$el.css({
+                'border-color': '',
+                'box-shadow': ''
+            });
             this._skinParts.$name.css({'border-color': ''});
         }
 
         if (this.textColor) {
-            this.$el.css({'color': this.textColor});
+            this.$el.css({color: this.textColor});
         } else {
-            this.$el.css({'color': ''});
+            this.$el.css({color: ''});
         }
     };
 
@@ -228,7 +237,7 @@ define(['js/Constants',
 
     MetaDecoratorDiagramDesignerWidget.prototype._refreshName = function () {
         this._skinParts.$name.text(this.name);
-        this._skinParts.$name.attr("title", this.name);
+        this._skinParts.$name.attr('title', this.name);
     };
 
     MetaDecoratorDiagramDesignerWidget.prototype._updateAbstract = function () {
@@ -273,7 +282,8 @@ define(['js/Constants',
         this._skinParts.$attributesContainer.empty();
         len = this._attributeNames.length;
         for (i = 0; i < len; i += 1) {
-            this._skinParts.$attributesContainer.append(attrLIBase.clone().append(this._attributes[this._attributeNames[i]].$el));
+            this._skinParts.$attributesContainer.append(
+                attrLIBase.clone().append(this._attributes[this._attributeNames[i]].$el));
         }
 
 
@@ -281,7 +291,10 @@ define(['js/Constants',
 
     MetaDecoratorDiagramDesignerWidget.prototype._addAttribute = function (attrName) {
         var client = this._control._client,
-            attrMetaDescriptor = client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID],attrName) ? {name:attrName,type:client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID],attrName).type || "null"} : null;
+            attrMetaDescriptor = client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID], attrName) ? {
+                name: attrName,
+                type: client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID], attrName).type || 'null'
+            } : null;
 
         if (attrMetaDescriptor) {
             this._attributes[attrName] = new Attribute(attrMetaDescriptor);
@@ -323,10 +336,12 @@ define(['js/Constants',
     MetaDecoratorDiagramDesignerWidget.prototype._onNewAttributeClick = function () {
         var client = this._control._client,
             objId = this._metaInfo[CONSTANTS.GME_ID];
-        this._onNewClick(client.getValidAttributeNames(objId), this._skinParts.$attributesContainer, this._skinParts.$addAttributeContainer, this._skinParts.$attributesTitle, this._onNewAttributeCreate);
+        this._onNewClick(client.getValidAttributeNames(objId), this._skinParts.$attributesContainer,
+            this._skinParts.$addAttributeContainer, this._skinParts.$attributesTitle, this._onNewAttributeCreate);
     };
 
-    MetaDecoratorDiagramDesignerWidget.prototype._onNewClick = function (existingNames, itemContainer, addNewContainer, titleContainer, saveFn) {
+    MetaDecoratorDiagramDesignerWidget.prototype._onNewClick = function (existingNames, itemContainer, addNewContainer,
+                                                                         titleContainer, saveFn) {
         var inputCtrl,
             w = itemContainer.width(),
             cancel,
@@ -359,16 +374,19 @@ define(['js/Constants',
             }
         };
 
-        ctrlGroup = $("<div/>",
-                    {"class": "control-group"});
+        ctrlGroup = $('<div/>',
+            {class: 'control-group'});
 
-        inputCtrl = $("<input/>", {
-                    "type": "text",
-                    "class": "new-attr"});
+        inputCtrl = $('<input/>', {
+            type: 'text',
+            class: 'new-attr'
+        });
 
         inputCtrl.outerWidth(w);
-        inputCtrl.css({"box-sizing": "border-box",
-                    "margin": "0px"});
+        inputCtrl.css({
+            'box-sizing': 'border-box',
+            margin: '0px'
+        });
 
         ctrlGroup.append(inputCtrl);
 
@@ -400,15 +418,15 @@ define(['js/Constants',
                         break;
                 }
             }
-        ).keyup( function (/*event*/) {
-            if (self._isValidName(inputCtrl.val(), existingNames)) {
-                ctrlGroup.removeClass("error");
-            } else {
-                ctrlGroup.addClass("error");
-            }
-        }).blur(function (/*event*/) {
-            cancel();
-        });
+        ).keyup(function (/*event*/) {
+                if (self._isValidName(inputCtrl.val(), existingNames)) {
+                    ctrlGroup.removeClass('error');
+                } else {
+                    ctrlGroup.addClass('error');
+                }
+            }).blur(function (/*event*/) {
+                cancel();
+            });
 
         this.hostDesignerItem.canvas.selectNone();
     };
@@ -420,14 +438,16 @@ define(['js/Constants',
             attrNames = this._attributeNames.slice(0),
             dialog = new AttributeDetailsDialog();
 
-        this.logger.debug("_onNewAttributeCreate: " + attrName);
+        this.logger.debug('_onNewAttributeCreate: ' + attrName);
 
         //pass all the other attribute names to the dialog
         attrNames.splice(this._attributeNames.indexOf(attrName), 1);
 
-        desc = {'name': attrName,
-            'type': 'string',
-            'isEnum': false };
+        desc = {
+            name: attrName,
+            type: 'string',
+            isEnum: false
+        };
 
         dialog.show(desc, attrNames, function (attrDesc) {
             self.saveAttributeDescriptor(attrName, attrDesc);
@@ -479,9 +499,8 @@ define(['js/Constants',
             //TODO: as of now we have to create an alibi attribute instance with the same name
             //TODO: just because of this hack, make sure that the name is not overwritten
             //TODO: just because of this hack, delete the alibi attribute as well
-            if (attrName !== nodePropertyNames.Attributes.name)
-            {
-                client.removeAttributeSchema(objID,attrName);
+            if (attrName !== nodePropertyNames.Attributes.name) {
+                client.removeAttributeSchema(objID, attrName);
                 client.delAttributes(objID, attrName);
             }
 
@@ -492,13 +511,12 @@ define(['js/Constants',
 
         //TODO: as of now we have to create an alibi attribute instance with the same name
         //TODO: just because of this hack, make sure that the name is not overwritten
-        if (attrName !== nodePropertyNames.Attributes.name)
-        {
-            attrSchema = {"type":attrDesc.type,"default":attrDesc.defaultValue};
-            if(attrDesc.isEnum){
+        if (attrName !== nodePropertyNames.Attributes.name) {
+            attrSchema = {type: attrDesc.type, default: attrDesc.defaultValue};
+            if (attrDesc.isEnum) {
                 attrSchema.enum = attrDesc.enumValues;
             }
-            client.setAttributeSchema(objID,attrName,attrSchema);
+            client.setAttributeSchema(objID, attrName, attrSchema);
             client.setAttributes(objID, attrName, attrDesc.defaultValue);
         }
 
@@ -514,9 +532,8 @@ define(['js/Constants',
         //TODO: as of now we have to create an alibi attribute instance with the same name
         //TODO: just because of this hack, make sure that the name is not overwritten
         //TODO: just because of this hack, delete the alibi attribute as well
-        if (attrName !== nodePropertyNames.Attributes.name)
-        {
-            client.removeAttributeSchema(objID,attrName);
+        if (attrName !== nodePropertyNames.Attributes.name) {
+            client.removeAttributeSchema(objID, attrName);
             client.delAttributes(objID, attrName);
         }
 
@@ -530,7 +547,8 @@ define(['js/Constants',
         var result = [],
             edge = 10,
             LEN = 20,
-            connType = connectionMetaInfo && connectionMetaInfo[MetaRelations.CONNECTION_META_INFO.TYPE] ? connectionMetaInfo[MetaRelations.CONNECTION_META_INFO.TYPE] : null,
+            connType = connectionMetaInfo && connectionMetaInfo[MetaRelations.CONNECTION_META_INFO.TYPE] ?
+                connectionMetaInfo[MetaRelations.CONNECTION_META_INFO.TYPE] : null,
             cN,
             cE,
             cW,
@@ -541,44 +559,52 @@ define(['js/Constants',
 
         if (id === undefined || id === this.hostDesignerItem.id) {
             //NORTH
-            cN = {"id": "0",
-                "x1": edge,
-                "y1": 0,
-                "x2": this.hostDesignerItem.getWidth() - edge,
-                "y2": 0,
-                "angle1": 270,
-                "angle2": 270,
-                "len": LEN};
+            cN = {
+                id: '0',
+                x1: edge,
+                y1: 0,
+                x2: this.hostDesignerItem.getWidth() - edge,
+                y2: 0,
+                angle1: 270,
+                angle2: 270,
+                len: LEN
+            };
 
             //EAST
-            cE = {"id": "1",
-                "x1": this.hostDesignerItem.getWidth(),
-                "y1": edge,
-                "x2": this.hostDesignerItem.getWidth(),
-                "y2": this.hostDesignerItem.getHeight() - edge,
-                "angle1": 0,
-                "angle2": 0,
-                "len": LEN};
+            cE = {
+                id: '1',
+                x1: this.hostDesignerItem.getWidth(),
+                y1: edge,
+                x2: this.hostDesignerItem.getWidth(),
+                y2: this.hostDesignerItem.getHeight() - edge,
+                angle1: 0,
+                angle2: 0,
+                len: LEN
+            };
 
             //SOUTH
-            cS = {"id": "2",
-                "x1": edge,
-                "y1": this.hostDesignerItem.getHeight(),
-                "x2": this.hostDesignerItem.getWidth() - edge,
-                "y2": this.hostDesignerItem.getHeight(),
-                "angle1": 90,
-                "angle2": 90,
-                "len": LEN};
+            cS = {
+                id: '2',
+                x1: edge,
+                y1: this.hostDesignerItem.getHeight(),
+                x2: this.hostDesignerItem.getWidth() - edge,
+                y2: this.hostDesignerItem.getHeight(),
+                angle1: 90,
+                angle2: 90,
+                len: LEN
+            };
 
             //WEST
-            cW = {"id": "3",
-                "x1": 0,
-                "y1": edge,
-                "x2": 0,
-                "y2": this.hostDesignerItem.getHeight() - edge,
-                "angle1": 180,
-                "angle2": 180,
-                "len": LEN};
+            cW = {
+                id: '3',
+                x1: 0,
+                y1: edge,
+                x2: 0,
+                y2: this.hostDesignerItem.getHeight() - edge,
+                angle1: 180,
+                angle2: 180,
+                len: LEN
+            };
 
             if (connType && connType === MetaRelations.META_RELATIONS.INHERITANCE) {
                 //if the connection is inheritance
@@ -623,13 +649,13 @@ define(['js/Constants',
             self = this;
 
         dialog.show(JSON.stringify(metaObj, undefined, 2), function (text) {
-                try {
-                    var newMetaObj = JSON.parse(text);
-                    client.setMeta(self._metaInfo[CONSTANTS.GME_ID], newMetaObj);
-                } catch (e) {
-                    self.logger.error('Saving META failed... Either not JSON object or something else went wrong...');
-                }
-            });
+            try {
+                var newMetaObj = JSON.parse(text);
+                client.setMeta(self._metaInfo[CONSTANTS.GME_ID], newMetaObj);
+            } catch (e) {
+                self.logger.error('Saving META failed... Either not JSON object or something else went wrong...');
+            }
+        });
     };
 
     return MetaDecoratorDiagramDesignerWidget;

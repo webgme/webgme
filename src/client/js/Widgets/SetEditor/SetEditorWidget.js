@@ -1,10 +1,15 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/DragDrop/DragHelper',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (DragHelper,
-                                                             DiagramDesignerWidget) {
-
-    "use strict";
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget'
+], function (DragHelper,
+             DiagramDesignerWidget) {
+    'use strict';
 
     var SetEditorWidget,
         BACKGROUND_TEXT_COLOR = '#FFCCFF';
@@ -22,14 +27,14 @@ define(['js/DragDrop/DragHelper',
 
         DiagramDesignerWidget.call(this, container, params);
 
-        this.logger.debug("SetEditorWidget ctor");
+        this.logger.debug('SetEditorWidget ctor');
     };
 
     _.extend(SetEditorWidget.prototype, DiagramDesignerWidget.prototype);
 
-    SetEditorWidget.prototype._initializeUI = function (containerElement) {
+    SetEditorWidget.prototype._initializeUI = function (/*containerElement*/) {
         DiagramDesignerWidget.prototype._initializeUI.apply(this, arguments);
-        this.logger.debug("SetEditorWidget._initializeUI");
+        this.logger.debug('SetEditorWidget._initializeUI');
 
         //TODO: disable connecting at all
 

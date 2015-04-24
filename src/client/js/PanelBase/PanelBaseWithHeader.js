@@ -1,27 +1,28 @@
-/*globals define, WebGMEGlobal, alert, _*/
+/*globals define, $, _*/
+/*jshint browser: true, camelcase: false*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-define(['js/PanelBase/PanelBase',
-        'css!./styles/PanelBaseWithHeader.css'], function (PanelBase) {
+define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], function (PanelBase) {
 
-
-    "use strict";
+    'use strict';
 
     var PanelBaseWithHeader,
-        BASE_CLASS = "panel-base-wh"; // /scss/PanelBase/PanelBaseWithHeader.scss
+        BASE_CLASS = 'panel-base-wh'; // /styles/PanelBaseWithHeader.scss
 
     //inherit from PanelBase Phase #1
     PanelBaseWithHeader = function (options, layoutManager) {
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] || "PanelBaseWithHeader";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] =
+            options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] || 'PanelBaseWithHeader';
 
         //add PanelBaseWithHeader specific options when not present
         options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] === true;
-        options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] === true;
+        options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] =
+            options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] === true;
 
         //call parent's constructor
         PanelBase.apply(this, [options, layoutManager]);
@@ -29,8 +30,10 @@ define(['js/PanelBase/PanelBase',
         this.initUI(options);
     };
     //inherit from PanelBase Phase #2
-    PanelBaseWithHeader.OPTIONS = _.extend(PanelBase.OPTIONS, { "HEADER_TITLE": "HEADER_TITLE",
-                                                                "FLOATING_TITLE": "FLOATING_TITLE"});
+    PanelBaseWithHeader.OPTIONS = _.extend(PanelBase.OPTIONS, {
+        HEADER_TITLE: 'HEADER_TITLE',
+        FLOATING_TITLE: 'FLOATING_TITLE'
+    });
     _.extend(PanelBaseWithHeader.prototype, PanelBase.prototype);
 
 
@@ -62,20 +65,20 @@ define(['js/PanelBase/PanelBase',
 
         //Create Panel's HEADER
         this.$panelHeader = $('<div/>', {
-            "class" : "panel-header"
+            class: 'panel-header'
         });
 
         //Create Panel's BODY
         //set $el to panel-body for subclass use
         this.$el = this.$panelBody = $('<div/>', {
-            "class" : "panel-body drawing-canvas"
+            class: 'panel-body drawing-canvas'
         });
 
         //create additional visual pieces
         //READ-ONLY indicator in header
         this.$panelReadOnlyIndicator = $('<div/>', {
-            "class" : "ro-icon",
-            "title" : "READ-ONLY mode ON"
+            class: 'ro-icon',
+            title: 'READ-ONLY mode ON'
         });
         this.$panelReadOnlyIndicator.append($('<i class="glyphicon glyphicon-lock"></i>'));
 
@@ -85,7 +88,7 @@ define(['js/PanelBase/PanelBase',
             this.$_el.append(this.$panelBody);
             this.$panelHeader.append(this.$panelReadOnlyIndicator);
             this.$panelHeaderTitle = $('<div/>', {
-                "class" : "panel-header-title"
+                class: 'panel-header-title'
             });
             this.$panelHeader.append(this.$panelHeaderTitle);
         } else if (options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] === true) {
@@ -93,10 +96,10 @@ define(['js/PanelBase/PanelBase',
             this.$_el.append(this.$panelHeader);
             this.$panelHeader.addClass('absolute-header');
             this.$floatingTitle = $('<div/>', {
-                "class" : "floating-title"
+                class: 'floating-title'
             });
             this.$panelHeaderTitle = $('<div/>', {
-                "class" : "panel-header-title"
+                class: 'panel-header-title'
             });
             this.$floatingTitle.append(this.$panelReadOnlyIndicator);
             this.$floatingTitle.append(this.$panelHeaderTitle);
@@ -122,9 +125,12 @@ define(['js/PanelBase/PanelBase',
     /************** CUSTOM RESIZE HANDLER *****************/
     PanelBaseWithHeader.prototype._setSize = function (w, h) {
         var panelHeaderHeight = this.$panelHeader.outerHeight(true),
-            panelHeaderPadding = parseInt(this.$panelHeader.css('padding-left')) + parseInt(this.$panelHeader.css('padding-right')),
-            panelBodyPadding = parseInt(this.$panelBody.css('padding-left')) + parseInt(this.$panelBody.css('padding-right')),
-            panelBodyPaddingV = parseInt(this.$panelBody.css('padding-top')) + parseInt(this.$panelBody.css('padding-bottom')),
+            panelHeaderPadding = parseInt(this.$panelHeader.css('padding-left')) +
+                parseInt(this.$panelHeader.css('padding-right')),
+            panelBodyPadding = parseInt(this.$panelBody.css('padding-left')) +
+                parseInt(this.$panelBody.css('padding-right')),
+            panelBodyPaddingV = parseInt(this.$panelBody.css('padding-top')) +
+                parseInt(this.$panelBody.css('padding-bottom')),
             panelBorder = parseInt(this.$_el.css('border-left-width')) + parseInt(this.$_el.css('border-right-width')),
             panelMargin = parseInt(this.$_el.css('margin-top')) + parseInt(this.$_el.css('margin-bottom'));
 
@@ -138,8 +144,10 @@ define(['js/PanelBase/PanelBase',
         //get panel-body's offset
         this.offset = this.$el.offset();
 
-        this.size = {"width": w - panelBodyPadding,
-                    "height": h - panelHeaderHeight - panelBodyPaddingV};
+        this.size = {
+            width: w - panelBodyPadding,
+            height: h - panelHeaderHeight - panelBodyPaddingV
+        };
     };
     /************** END OF --- CUSTOM RESIZE HANDLER *****************/
 

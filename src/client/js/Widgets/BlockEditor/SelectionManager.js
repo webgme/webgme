@@ -1,13 +1,11 @@
 /*globals define, WebGMEGlobal*/
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
+/*jshint browser: true*/
+
+/**
  * @author brollb / https://github/brollb
  */
 
-define(['js/logger',
-        'js/util'], function (Logger,
-                              clientUtil) {
+define(['js/logger', 'js/util'], function (Logger, clientUtil) {
 
     "use strict";
 
@@ -135,11 +133,13 @@ define(['js/logger',
 
             this._drawSelectionRubberBand();
 
-            params = {"addToExistingSelection": this._rubberbandSelection.addToExistingSelection,
+            params = {
+                "addToExistingSelection": this._rubberbandSelection.addToExistingSelection,
                 "x": Math.min(this._rubberbandSelection.x, this._rubberbandSelection.x2),
                 "x2": Math.max(this._rubberbandSelection.x, this._rubberbandSelection.x2),
                 "y": Math.min(this._rubberbandSelection.y, this._rubberbandSelection.y2),
-                "y2": Math.max(this._rubberbandSelection.y, this._rubberbandSelection.y2)};
+                "y2": Math.max(this._rubberbandSelection.y, this._rubberbandSelection.y2)
+            };
 
             this._selectItemsByRubberBand(params);
 
@@ -189,18 +189,18 @@ define(['js/logger',
 
         this.logger.debug("setSelection: " + id);
 
-        if(this._selectedElement !== id){
+        if (this._selectedElement !== id) {
             changed = true;
         }
 
-        if(this._selectedElement){
+        if (this._selectedElement) {
             item = items[this._selectedElement];
             if (item && $.isFunction(item.onDeselect)) {
                 item.onDeselect();
             }
         }
 
-        if(id){
+        if (id) {
             this._selectedElement = id;
             item = items[this._selectedElement];
 
@@ -219,7 +219,7 @@ define(['js/logger',
     /*********************** COMPONENT DELETE HANDLER *******************/
     SelectionManager.prototype._onComponentDelete = function (componentId) {
         //items are already deleted, we just need to remove them from the selectedIdList (if there)
-        if (componentId === this._selectedElement){
+        if (componentId === this._selectedElement) {
             this._selectedElement = null;
             this.onSelectionChanged(this._selectedElement);
         }
@@ -229,7 +229,7 @@ define(['js/logger',
 
     /*********************** SHOW SELECTION OUTLINE *********************************/
     var SELECTION_OUTLINE_BASE = $('<div/>', {
-        "class" : "selection-outline"
+        "class": "selection-outline"
     });
     SelectionManager.prototype.showSelectionOutline = function () {
         var bBox = this._getSelectionBoundingBox(),
@@ -275,10 +275,12 @@ define(['js/logger',
                 this._blockEditor.skinParts.$itemsContainer.append(this._blockEditor.skinParts.$selectionOutline);
             }
 
-            this._blockEditor.skinParts.$selectionOutline.css({ "left": bBox.x,
+            this._blockEditor.skinParts.$selectionOutline.css({
+                "left": bBox.x,
                 "top": bBox.y,
                 "width": bBox.w,
-                "height": bBox.h });
+                "height": bBox.h
+            });
 
             this._renderSelectionActions();
         } else {
@@ -316,15 +318,17 @@ define(['js/logger',
             if (items[id]) {
 
                 if (!bBox) {
-                    bBox = { "x": this._blockEditor._actualSize.w,
+                    bBox = {
+                        "x": this._blockEditor._actualSize.w,
                         "y": this._blockEditor._actualSize.h,
                         "x2": 0,
-                        "y2": 0};
+                        "y2": 0
+                    };
                 }
 
                 current = [items[id]];
                 while (current.length) {  // Create the box from box and all sibling pointers
-                    for (var c = current.length-1; c >= 0; c--) {  // Create the box from box and all sibling pointers
+                    for (var c = current.length - 1; c >= 0; c--) {  // Create the box from box and all sibling pointers
                         childBBox = current[c].getBoundingBox();
 
                         if (childBBox.x < bBox.x) {
@@ -341,8 +345,8 @@ define(['js/logger',
                         }
 
                         ptrs = Object.keys(current[c].ptrs);
-                        for (var i = ptrs.length-1; i >= 0; i--) {
-                            child = current[c].ptrs[ptrs[i]]; 
+                        for (var i = ptrs.length - 1; i >= 0; i--) {
+                            child = current[c].ptrs[ptrs[i]];
                             if (child) {
                                 next.push(child);
                             }
@@ -361,10 +365,10 @@ define(['js/logger',
     /************* RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
 
     var DELETE_BUTTON_BASE = $('<div/>', {
-        "class" : "s-btn delete",
-        "command" : "delete"
+        "class": "s-btn delete",
+        "command": "delete"
     });
-    
+
     DELETE_BUTTON_BASE.html('<i class="glyphicon glyphicon-remove"></i>');
 
 

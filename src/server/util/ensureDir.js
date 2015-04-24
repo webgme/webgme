@@ -52,6 +52,7 @@ function _ensureDir(dir, mode, callback) {
  */
 
 function ensureDir(dir, mode, callback) {
+    //jshint bitwise: false
     if (mode && typeof mode === 'function') {
         callback = mode;
         mode = null;

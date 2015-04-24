@@ -1,8 +1,14 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, console*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 
 define([], function () {
 
-    "use strict";
+    'use strict';
 
     var Profiler,
         _profiles;
@@ -19,11 +25,15 @@ define([], function () {
     Profiler.prototype.startProfile = function (id) {
         if (_profiles.hasOwnProperty(id)) {
             //console.error('profile with ID: \'' + id + '\' already exists');
-            _profiles[id].push({'start': Date.now(),
-                'end': undefined});
+            _profiles[id].push({
+                start: Date.now(),
+                end: undefined
+            });
         } else {
-            _profiles[id] = [{'start': Date.now(),
-                             'end': undefined}];
+            _profiles[id] = [{
+                start: Date.now(),
+                end: undefined
+            }];
         }
     };
 

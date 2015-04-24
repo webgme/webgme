@@ -1,13 +1,19 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, $, document, WebGMEGlobal*/
 
-define(['js/logger',
-        'js/Constants',
-        'js/Widgets/DiagramDesigner/DragScroll',
-        './DiagramDesignerWidget.Constants'], function (Logger,
-                                                        CONSTANTS,
-                                                        DragScroll,
-                                                        DiagramDesignerWidgetConstants) {
-    "use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define([
+    'js/logger',
+    'js/Constants',
+    'js/Widgets/DiagramDesigner/DragScroll',
+    './DiagramDesignerWidget.Constants'
+], function (Logger,
+             CONSTANTS,
+             DragScroll,
+             DiagramDesignerWidgetConstants) {
+    'use strict';
 
     var ConnectionDrawingManager,
         EVENTPOSTFIX = 'ConnectionDrawingManager',
@@ -16,13 +22,13 @@ define(['js/logger',
         MOUSEUP = 'mouseup.' + EVENTPOSTFIX,
         MOUSEENTER = 'mouseenter.' + EVENTPOSTFIX,
         MOUSELEAVE = 'mouseleave.' + EVENTPOSTFIX,
-        DEFAULT_COLOR = "#FF7800",
-        DEFAULT_PATTERN = "-",
+        DEFAULT_COLOR = '#FF7800',
+        DEFAULT_PATTERN = '-',
         DEFAULT_WIDTH = 2,
-        DEFAULT_END_ARROW = "none",
-        DEFAULT_START_ARROW = "none",
-        DRAW_TYPE_CREATE = "create",
-        DRAW_TYPE_RECONNECT = "reconnect",
+        DEFAULT_END_ARROW = 'none',
+        DEFAULT_START_ARROW = 'none',
+        DRAW_TYPE_CREATE = 'create',
+        DRAW_TYPE_RECONNECT = 'reconnect',
         MINIMAL_DISTANCE = 10;
 
 
@@ -38,11 +44,11 @@ define(['js/logger',
         this._diagramDesigner = options ? options.diagramDesigner : null;
 
         if (this._diagramDesigner === undefined || this._diagramDesigner === null) {
-            this.logger.error("Trying to initialize a ConnectionDrawingManager without a diagramDesigner...");
-            throw ("ConnectionDrawingManager can not be created");
+            this.logger.error('Trying to initialize a ConnectionDrawingManager without a diagramDesigner...');
+            throw ('ConnectionDrawingManager can not be created');
         }
 
-        this.logger.debug("ConnectionDrawingManager ctor finished");
+        this.logger.debug('ConnectionDrawingManager ctor finished');
     };
 
 
@@ -60,28 +66,38 @@ define(['js/logger',
         this._connectionInDraw = false;
 
         //visual properties of the drawn connection
-        this._connectionPathProps = { "strokeWidth" : DEFAULT_WIDTH,
-            "strokeColor" : DEFAULT_COLOR,
-            "lineType": DEFAULT_PATTERN,
-            "arrowStart": DEFAULT_START_ARROW,
-            "arrowEnd": DEFAULT_END_ARROW };
+        this._connectionPathProps = {
+            strokeWidth: DEFAULT_WIDTH,
+            strokeColor: DEFAULT_COLOR,
+            lineType: DEFAULT_PATTERN,
+            arrowStart: DEFAULT_START_ARROW,
+            arrowEnd: DEFAULT_END_ARROW
+        };
 
         //listen to events of the host DiagramDesigner for item/sub-component relocation/deletion
-        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ITEM_POSITION_CHANGED, function (_canvas, event) {
-            self._designerItemPositionChanged(event.ID);
-        });
+        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ITEM_POSITION_CHANGED,
+            function (_canvas, event) {
+                self._designerItemPositionChanged(event.ID);
+            }
+        );
 
-        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ITEM_SUBCOMPONENT_POSITION_CHANGED, function (_canvas, event) {
-            self._designerItemPositionChanged(event.ItemID);
-        });
+        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ITEM_SUBCOMPONENT_POSITION_CHANGED,
+            function (_canvas, event) {
+                self._designerItemPositionChanged(event.ItemID);
+            }
+        );
 
-        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_COMPONENT_DELETE, function (_canvas, componentId) {
-            self._onComponentDelete(componentId);
-        });
+        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_COMPONENT_DELETE,
+            function (_canvas, componentId) {
+                self._onComponentDelete(componentId);
+            }
+        );
 
-        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_UNREGISTER_SUBCOMPONENT, function (_canvas, eventArgs) {
-            self._onComponentDelete(eventArgs.objectID, eventArgs.subComponentID);
-        });
+        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_UNREGISTER_SUBCOMPONENT,
+            function (_canvas, eventArgs) {
+                self._onComponentDelete(eventArgs.objectID, eventArgs.subComponentID);
+            }
+        );
 
         this._dragScroll = new DragScroll(this._diagramDesigner.skinParts.$diagramDesignerWidgetBody);
 
@@ -116,10 +132,12 @@ define(['js/logger',
 
             if (buttonLeft) {
                 if (objId === undefined || objId === null) {
-                    self.logger.error('MOUSEDOWN on "connector" element but attribute "' + DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
+                    self.logger.error('MOUSEDOWN on "connector" element but attribute "' +
+                    DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
                 } else {
                     if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
-                        self._startConnectionCreate(objId, sCompId, el, self._diagramDesigner.getAdjustedMousePos(event));
+                        self._startConnectionCreate(objId, sCompId, el,
+                            self._diagramDesigner.getAdjustedMousePos(event));
                         self._attachMouseListeners();
                     }
                 }
@@ -132,13 +150,14 @@ define(['js/logger',
         //MOUSE LISTENER FOR CONNECTION END MOUSEDOWN --> RECONNECT CONNECTION END
         this._el.on(MOUSEDOWN, '.' + DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS, function (event) {
             var el = $(this),
-                draggedEnd = el.attr("data-end"),
-                connId = el.attr("data-id"),
+                draggedEnd = el.attr('data-end'),
+                connId = el.attr('data-id'),
                 buttonLeft = event.which === 1;
 
             if (buttonLeft) {
                 if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
-                    self._startConnectionReconnect(connId, draggedEnd, self._diagramDesigner.getAdjustedMousePos(event));
+                    self._startConnectionReconnect(connId, draggedEnd,
+                        self._diagramDesigner.getAdjustedMousePos(event));
                     self._attachMouseListeners();
                 }
             }
@@ -156,7 +175,8 @@ define(['js/logger',
 
             if (self._connectionInDraw === true) {
                 if (objId === undefined || objId === null) {
-                    self.logger.error('MOUSEUP on "connector" element but attribute "' + DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
+                    self.logger.error('MOUSEUP on "connector" element but attribute "' +
+                    DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
                 } else {
                     if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
                         if (self._minimalDistanceMet === true) {
@@ -186,13 +206,20 @@ define(['js/logger',
      * arrowEnd: the Raphael defined line-end arrow at the end of the line
      */
     ConnectionDrawingManager.prototype.setConnectionInDrawProperties = function (params) {
-        this._connectionPathProps.strokeWidth = params[DiagramDesignerWidgetConstants.LINE_WIDTH] || this._connectionPathProps.strokeWidth;
+        this._connectionPathProps.strokeWidth = params[DiagramDesignerWidgetConstants.LINE_WIDTH] ||
+        this._connectionPathProps.strokeWidth;
 
-        this._connectionPathProps.strokeColor = params[DiagramDesignerWidgetConstants.LINE_COLOR] || this._connectionPathProps.strokeColor;
-        this._connectionPathProps.arrowStart = params[DiagramDesignerWidgetConstants.LINE_START_ARROW] || this._connectionPathProps.arrowStart;
-        this._connectionPathProps.arrowEnd = params[DiagramDesignerWidgetConstants.LINE_END_ARROW] || this._connectionPathProps.arrowEnd;
+        this._connectionPathProps.strokeColor = params[DiagramDesignerWidgetConstants.LINE_COLOR] ||
+        this._connectionPathProps.strokeColor;
 
-        this._connectionPathProps.lineType = params[DiagramDesignerWidgetConstants.LINE_PATTERN] || this._connectionPathProps.lineType;
+        this._connectionPathProps.arrowStart = params[DiagramDesignerWidgetConstants.LINE_START_ARROW] ||
+        this._connectionPathProps.arrowStart;
+
+        this._connectionPathProps.arrowEnd = params[DiagramDesignerWidgetConstants.LINE_END_ARROW] ||
+        this._connectionPathProps.arrowEnd;
+
+        this._connectionPathProps.lineType = params[DiagramDesignerWidgetConstants.LINE_PATTERN] ||
+        this._connectionPathProps.lineType;
     };
 
 
@@ -232,8 +259,6 @@ define(['js/logger',
     };
 
 
-
-
     /************************** METHODS FOR INTERNAL USE ONLY ********************************/
 
 
@@ -262,33 +287,38 @@ define(['js/logger',
             return;
         }
 
-        pathDefinition = "M" + x + "," + y + "L" + x2 + "," + y2;
+        pathDefinition = 'M' + x + ',' + y + 'L' + x2 + ',' + y2;
 
         if (this._connectionPath === undefined) {
             this._connectionPath = this._paper.path(pathDefinition);
 
-            this._connectionPath.attr({   "stroke-width": this._connectionPathProps.strokeWidth,
-                "stroke": this._connectionPathProps.strokeColor,
-                "stroke-dasharray": this._connectionPathProps.lineType,
-                "arrow-start": this._connectionPathProps.arrowStart,
-                "arrow-end": this._connectionPathProps.arrowEnd });
+            this._connectionPath.attr({
+                'stroke-width': this._connectionPathProps.strokeWidth,
+                stroke: this._connectionPathProps.strokeColor,
+                'stroke-dasharray': this._connectionPathProps.lineType,
+                'arrow-start': this._connectionPathProps.arrowStart,
+                'arrow-end': this._connectionPathProps.arrowEnd
+            });
         } else {
-            this._connectionPath.attr({ "path": pathDefinition});
+            this._connectionPath.attr({path: pathDefinition});
         }
 
         if (this._connectionInDrawProps.type === DRAW_TYPE_RECONNECT) {
             var connProps = this._diagramDesigner.items[this._connectionInDrawProps.connId].getConnectionProps();
 
             this._connectionPath.attr(
-                {   "stroke-width": connProps.width,
-                    "arrow-start": connProps.arrowStart,
-                    "arrow-end": connProps.arrowEnd }
+                {
+                    'stroke-width': connProps.width,
+                    'arrow-start': connProps.arrowStart,
+                    'arrow-end': connProps.arrowEnd
+                }
             );
         }
     };
 
-    /*
-     * Based on the actual mouse position returns the coordinates of the closest connection point of the source of the connection
+    /**
+     * Based on the actual mouse position returns the coordinates of the closest
+     * connection point of the source of the connection.
      * Params:
      * objId: the designer-item ID the connection is drawn from
      * sCompId: the sub-component ID the connection is drawn from [optional]
@@ -314,8 +344,10 @@ define(['js/logger',
             }
 
             len = connPoints.length;
-            result = { 'x': connPoints[len-1].x1 + (connPoints[len-1].x2 - connPoints[len-1].x1) / 2,
-                       'y': connPoints[len-1].y1 + (connPoints[len-1].y2 - connPoints[len-1].y1) / 2};
+            result = {
+                'x': connPoints[len - 1].x1 + (connPoints[len - 1].x2 - connPoints[len - 1].x1) / 2,
+                'y': connPoints[len - 1].y1 + (connPoints[len - 1].y2 - connPoints[len - 1].y1) / 2
+            };
             delta = Math.sqrt((result.x - mX) * (result.x - mX) + (result.y - mY) * (result.y - mY));
 
             len -= 1;
@@ -324,10 +356,12 @@ define(['js/logger',
                 x = connPoints[len].x1 + (connPoints[len].x2 - connPoints[len].x1) / 2;
                 y = connPoints[len].y1 + (connPoints[len].y2 - connPoints[len].y1) / 2;
                 d1 = Math.sqrt((x - mX) * (x - mX) + (y - mY) * (y - mY));
-                if ( d1 < delta) {
+                if (d1 < delta) {
                     delta = d1;
-                    result = {'x': x,
-                                'y': y};
+                    result = {
+                        'x': x,
+                        'y': y
+                    };
                 }
             }
         }
@@ -344,14 +378,16 @@ define(['js/logger',
      */
     ConnectionDrawingManager.prototype._connectionEndDrop = function (endPointId, sCompId) {
         var desc;
-        this.logger.debug("Connection end dropped on item: '" + endPointId + "', sCompId: '" + sCompId + "'");
+        this.logger.debug('Connection end dropped on item: "' + endPointId + '", sCompId: "' + sCompId + '"');
 
         if (this._connectionInDrawProps.type === DRAW_TYPE_CREATE) {
-            desc = { "src": this._connectionInDrawProps.src,
-                "srcSubCompId": this._connectionInDrawProps.sCompId,
-                "dst": endPointId,
-                "dstSubCompId": sCompId,
-                "visualStyle": {}};
+            desc = {
+                src: this._connectionInDrawProps.src,
+                srcSubCompId: this._connectionInDrawProps.sCompId,
+                dst: endPointId,
+                dstSubCompId: sCompId,
+                visualStyle: {}
+            };
             desc[CONSTANTS.META_INFO] = this._metaInfo;
 
             if (this._connectionPathProps.strokeWidth !== DEFAULT_WIDTH) {
@@ -363,7 +399,8 @@ define(['js/logger',
             }
 
             if (this._connectionPathProps.arrowStart !== DEFAULT_START_ARROW) {
-                desc.visualStyle[DiagramDesignerWidgetConstants.LINE_START_ARROW] = this._connectionPathProps.arrowStart;
+                desc.visualStyle[DiagramDesignerWidgetConstants.LINE_START_ARROW] =
+                    this._connectionPathProps.arrowStart;
             }
 
             if (this._connectionPathProps.arrowEnd !== DEFAULT_END_ARROW) {
@@ -376,10 +413,12 @@ define(['js/logger',
 
             this.onCreateNewConnection(desc);
         } else if (this._connectionInDrawProps.type === DRAW_TYPE_RECONNECT) {
-            this.onModifyConnectionEnd({ "id": this._connectionInDrawProps.connId,
-                "endPoint": this._connectionInDrawProps.draggedEnd,
-                "endId": endPointId,
-                "endSubCompId": sCompId });
+            this.onModifyConnectionEnd({
+                id: this._connectionInDrawProps.connId,
+                endPoint: this._connectionInDrawProps.draggedEnd,
+                endId: endPointId,
+                endSubCompId: sCompId
+            });
         }
     };
 
@@ -387,14 +426,14 @@ define(['js/logger',
      * Called when a new connection is drawn with the creation paramteres
      */
     ConnectionDrawingManager.prototype.onCreateNewConnection = function (params) {
-        this.logger.warn("onCreateNewConnection: " + JSON.stringify(params));
+        this.logger.warn('onCreateNewConnection: ' + JSON.stringify(params));
     };
 
     /*
      * Called when a connection's 'src' or 'dst' is being reconnected to a new connector
      */
     ConnectionDrawingManager.prototype.onModifyConnectionEnd = function (params) {
-        this.logger.warn("onModifyConnectionEnd: " + JSON.stringify(params));
+        this.logger.warn('onModifyConnectionEnd: ' + JSON.stringify(params));
     };
 
 
@@ -409,25 +448,31 @@ define(['js/logger',
     ConnectionDrawingManager.prototype._startConnectionCreate = function (objId, sCompId, el, mousePos) {
         var srcCoord;
 
-        this.logger.debug("Start connection drawing from DesignerItem: '" + objId + "', subcomponent: '" + sCompId + "'");
+        this.logger.debug('Start connection drawing from DesignerItem: "' + objId + '", subcomponent: "' +
+        sCompId + '"');
 
         this._connectionInDraw = true;
 
         this._minimalDistanceMet = false;
 
         //ask the decorator if it wants to specify custom line-in-draw-visual-properties for the connection being drawn
-        this._setTempConnectionInDrawProperties(this._diagramDesigner.items[objId].getDrawnConnectionVisualStyle(sCompId));
+        this._setTempConnectionInDrawProperties(
+            this._diagramDesigner.items[objId].getDrawnConnectionVisualStyle(sCompId));
 
-        this._connectionInDrawProps = {"src": objId,
-            "sCompId": sCompId,
-            "srcEl": el,
-            "type": DRAW_TYPE_CREATE};
+        this._connectionInDrawProps = {
+            src: objId,
+            sCompId: sCompId,
+            srcEl: el,
+            type: DRAW_TYPE_CREATE
+        };
 
         srcCoord = this._getClosestConnectionPointCoordinates(objId, sCompId, mousePos.mX, mousePos.mY);
-        this._connectionDesc = { "x": srcCoord.x,
-            "y": srcCoord.y,
-            "x2": mousePos.mX,
-            "y2": mousePos.mY };
+        this._connectionDesc = {
+            x: srcCoord.x,
+            y: srcCoord.y,
+            x2: mousePos.mX,
+            y2: mousePos.mY
+        };
 
         this._drawConnection();
 
@@ -435,23 +480,26 @@ define(['js/logger',
         this._dragScroll.start();
 
         //fire event
-        this.onStartConnectionCreate({'srcId': objId,
-            'srcSubCompId': sCompId});
+        this.onStartConnectionCreate({
+            'srcId': objId,
+            'srcSubCompId': sCompId
+        });
     };
 
     /*
      * Called on connection drawing start, should be overridden to handle the event
      */
     ConnectionDrawingManager.prototype.onStartConnectionCreate = function (params) {
-        this.logger.warn("onStartConnectionCreate with params: '" + JSON.stringify(params));
+        this.logger.warn('onStartConnectionCreate with params: ' + JSON.stringify(params));
     };
 
 
-    /*
+    /**
      * Start reconnecting an existing connection
      * Params:
      * connectionId: ID of the designer-connection being redrawn
-     * draggedEnd: 'src' or 'dst' representing if the source or the destination end of the connection is being reconnected
+     * draggedEnd: 'src' or 'dst' representing if the source or the destination end of the connection
+      *            is being reconnected
      * mousePos: mouse position event belongs to the 'mousedown' event on the connector
      */
     ConnectionDrawingManager.prototype._startConnectionReconnect = function (connectionId, draggedEnd, mousePos) {
@@ -461,14 +509,18 @@ define(['js/logger',
 
         this._minimalDistanceMet = true;
 
-        this._connectionInDrawProps = { "connId": connectionId,
-                                        "draggedEnd": draggedEnd,
-                                        "type": DRAW_TYPE_RECONNECT};
+        this._connectionInDrawProps = {
+            connId: connectionId,
+            draggedEnd: draggedEnd,
+            type: DRAW_TYPE_RECONNECT
+        };
 
-        this._connectionDesc = { "x": 0,
-            "y": 0,
-            "x2": 0,
-            "y2": 0 };
+        this._connectionDesc = {
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 0
+        };
         this._setConnectionRedrawCoordinates(mousePos);
 
         this._drawConnection();
@@ -477,15 +529,17 @@ define(['js/logger',
         this._dragScroll.start();
 
         //fire event
-        this.onStartConnectionReconnect({'connId': connectionId,
-            'draggedEnd': draggedEnd});
+        this.onStartConnectionReconnect({
+            'connId': connectionId,
+            'draggedEnd': draggedEnd
+        });
     };
 
     /*
      * Called on connection reconnect start, should be overridden to handle the event
      */
     ConnectionDrawingManager.prototype.onStartConnectionReconnect = function (params) {
-        this.logger.warn("onStartConnectionReconnect with params: '" + JSON.stringify(params));
+        this.logger.warn('onStartConnectionReconnect with params: ' + JSON.stringify(params));
     };
 
     /*
@@ -507,13 +561,14 @@ define(['js/logger',
             coord;
 
         if (connID) {
-            if (srcDragged === true ) {
+            if (srcDragged === true) {
                 //source end of the connection is dragged
                 if (this._diagramDesigner.connectionEndIDs[connID]) {
                     var dstObjId = this._diagramDesigner.connectionEndIDs[connID].dstObjId;
                     var dstSubCompId = this._diagramDesigner.connectionEndIDs[connID].dstSubCompId;
 
-                    coord = this._getClosestConnectionPointCoordinates(dstObjId, dstSubCompId, mousePos.mX, mousePos.mY);
+                    coord = this._getClosestConnectionPointCoordinates(dstObjId, dstSubCompId,
+                        mousePos.mX, mousePos.mY);
 
                     this._connectionDesc.x = mousePos.mX;
                     this._connectionDesc.y = mousePos.mY;
@@ -526,7 +581,8 @@ define(['js/logger',
                     var srcObjId = this._diagramDesigner.connectionEndIDs[connID].srcObjId;
                     var srcSubCompId = this._diagramDesigner.connectionEndIDs[connID].srcSubCompId;
 
-                    coord = this._getClosestConnectionPointCoordinates(srcObjId, srcSubCompId, mousePos.mX, mousePos.mY);
+                    coord = this._getClosestConnectionPointCoordinates(srcObjId, srcSubCompId,
+                        mousePos.mX, mousePos.mY);
 
                     this._connectionDesc.x2 = mousePos.mX;
                     this._connectionDesc.y2 = mousePos.mY;
@@ -544,7 +600,8 @@ define(['js/logger',
      * mousePos: the current mouse position
      */
     ConnectionDrawingManager.prototype._setConnectionCreateCoordinates = function (mousePos) {
-        var srcCoord = this._getClosestConnectionPointCoordinates(this._connectionInDrawProps.src, this._connectionInDrawProps.sCompId, mousePos.mX, mousePos.mY);
+        var srcCoord = this._getClosestConnectionPointCoordinates(this._connectionInDrawProps.src,
+            this._connectionInDrawProps.sCompId, mousePos.mX, mousePos.mY);
 
         this._connectionDesc.x = srcCoord.x;
         this._connectionDesc.y = srcCoord.y;
@@ -628,14 +685,14 @@ define(['js/logger',
         //fire event
         this.onEndConnectionDraw();
 
-        this.logger.debug("Stopped connection drawing");
+        this.logger.debug('Stopped connection drawing');
     };
 
     /*
      * Called on connection create/reconnect end, should be overridden to handle the event
      */
     ConnectionDrawingManager.prototype.onEndConnectionDraw = function () {
-        this.logger.warn("onEndConnectionDraw NOT OVERRIDDEN");
+        this.logger.warn('onEndConnectionDraw NOT OVERRIDDEN');
     };
 
 
@@ -651,24 +708,30 @@ define(['js/logger',
         if (this._connectionInDrawProps.type === DRAW_TYPE_CREATE) {
             if (this._connectionInDrawProps.src === objId) {
                 //the item the connection is being drawn from has been repositioned
-                this._setConnectionCreateCoordinates({'mX': this._connectionDesc.x2,
-                                                      'mY': this._connectionDesc.y2});
+                this._setConnectionCreateCoordinates({
+                    'mX': this._connectionDesc.x2,
+                    'mY': this._connectionDesc.y2
+                });
                 this._drawConnection();
             }
         } else if (this._connectionInDrawProps.type === DRAW_TYPE_RECONNECT) {
             //connection redraw is happening
-            if (this._connectionInDrawProps.draggedEnd === DiagramDesignerWidgetConstants.CONNECTION_END_SRC ) {
+            if (this._connectionInDrawProps.draggedEnd === DiagramDesignerWidgetConstants.CONNECTION_END_SRC) {
                 if (this._diagramDesigner.connectionEndIDs[this._connectionInDrawProps.connId].dstObjId === objId) {
                     //'source' end of the connection is dragged
-                    this._setConnectionRedrawCoordinates({'mX': this._connectionDesc.x,
-                        'mY': this._connectionDesc.y});
+                    this._setConnectionRedrawCoordinates({
+                        'mX': this._connectionDesc.x,
+                        'mY': this._connectionDesc.y
+                    });
                     this._drawConnection();
                 }
             } else {
                 if (this._diagramDesigner.connectionEndIDs[this._connectionInDrawProps.connId].srcObjId === objId) {
                     //'destination' end of the connection is dragged
-                    this._setConnectionRedrawCoordinates({'mX': this._connectionDesc.x2,
-                                                      'mY': this._connectionDesc.y2});
+                    this._setConnectionRedrawCoordinates({
+                        'mX': this._connectionDesc.x2,
+                        'mY': this._connectionDesc.y2
+                    });
                     this._drawConnection();
                 }
             }
@@ -693,7 +756,8 @@ define(['js/logger',
                 if (this._connectionInDrawProps.src === objId) {
                     //connection is being drawn from this component
                     cancelDraw = true;
-                    this.logger.debug('Connection source "' + objId + '" is being deleted. Connection creation canceled.');
+                    this.logger.debug('Connection source "' + objId +
+                    '" is being deleted. Connection creation canceled.');
                 }
             } else {
                 //sCompID has a value
@@ -702,7 +766,8 @@ define(['js/logger',
                     this._connectionInDrawProps.sCompId === sCompID) {
                     //connection is being drawn from this component's this subcomponent
                     cancelDraw = true;
-                    this.logger.debug('Connection source "' + objId + '"/"' + sCompID + '" is being deleted. Connection creation canceled.');
+                    this.logger.debug('Connection source "' + objId + '"/"' + sCompID +
+                    '" is being deleted. Connection creation canceled.');
                 }
             }
         } else if (this._connectionInDrawProps.type === DRAW_TYPE_RECONNECT) {
@@ -711,7 +776,8 @@ define(['js/logger',
             if (objId === this._connectionInDrawProps.connId) {
                 //connection is being drawn from/to this component
                 cancelDraw = true;
-                this.logger.debug('Existing connection currently being redrawn "' + objId + '" is being deleted. Connection re-connect canceled.');
+                this.logger.debug('Existing connection currently being redrawn "' + objId +
+                '" is being deleted. Connection re-connect canceled.');
             } else {
                 if (sCompID === undefined || sCompID === null) {
                     //a designer-item is being deleted
@@ -719,18 +785,25 @@ define(['js/logger',
                         this._diagramDesigner.connectionEndIDs[this._connectionInDrawProps.connId].dstObjId === objId) {
                         //connection is being drawn from/to this component
                         cancelDraw = true;
-                        this.logger.debug('Existing connection endpoint "' + objId + '" is being deleted. Connection re-connect canceled.');
+                        this.logger.debug('Existing connection endpoint "' + objId +
+                        '" is being deleted. Connection re-connect canceled.');
                     }
                 } else {
                     //a subcomponent in a designer-item is being deleted
                     //a designer-item is being deleted
-                    if ((this._diagramDesigner.connectionEndIDs[this._connectionInDrawProps.connId].srcObjId === objId &&
-                        this._diagramDesigner.connectionEndIDs[this._connectionInDrawProps.connId].srcSubCompId === sCompID) ||
-                        (this._diagramDesigner.connectionEndIDs[this._connectionInDrawProps.connId].dstObjId === objId &&
-                            this._diagramDesigner.connectionEndIDs[this._connectionInDrawProps.connId].dstSubCompId === sCompID)) {
+                    if ((this._diagramDesigner.connectionEndIDs[this._connectionInDrawProps.connId].srcObjId ===
+                        objId &&
+                        this._diagramDesigner.connectionEndIDs[this._connectionInDrawProps.connId].srcSubCompId ===
+                        sCompID) ||
+                        (this._diagramDesigner.connectionEndIDs[this._connectionInDrawProps.connId].dstObjId ===
+                        objId &&
+                        this._diagramDesigner.connectionEndIDs[this._connectionInDrawProps.connId].dstSubCompId ===
+                        sCompID)) {
+
                         //connection is being drawn from/to this component's this subcomponent
                         cancelDraw = true;
-                        this.logger.debug('Existing connection endpoint "' + objId + '"/"' + sCompID + '" is being deleted. Connection creation canceled.');
+                        this.logger.debug('Existing connection endpoint "' + objId + '"/"' + sCompID +
+                        '" is being deleted. Connection creation canceled.');
                     }
                 }
             }

@@ -40,7 +40,7 @@ describe('Run plugin CLI', function () {
                 }
 
                 try {
-                    jsonProject = getJsonProject('./test/asset/intraPersist.json');
+                    jsonProject = getJsonProject('./test/bin/run_plugin/project.json');
                 } catch (err) {
                     done(err);
                     return;
@@ -105,15 +105,17 @@ describe('Run plugin CLI', function () {
                 should.equal(code, 0, 'Should have succeeded');
             };
 
-            runPlugin.main(['node', filename, '-p', projectName, '-n', 'MinimalWorkingExample'], function (err, result) {
-                if (err) {
-                    done(new Error(err));
-                    return;
+            runPlugin.main(['node', filename, '-p', projectName, '-n', 'MinimalWorkingExample'],
+                function (err, result) {
+                    if (err) {
+                        done(new Error(err));
+                        return;
+                    }
+                    should.equal(result.success, true);
+                    should.equal(result.error, null);
+                    done();
                 }
-                should.equal(result.success, true);
-                should.equal(result.error, null);
-                done();
-            });
+            );
         });
     });
 });

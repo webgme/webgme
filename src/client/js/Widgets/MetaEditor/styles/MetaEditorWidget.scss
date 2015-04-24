@@ -1,3 +1,7 @@
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 $filterPanel-background-color: #FFFFFF;
 $filterPanel-top: 34px;
 $filterPanel-right: 11px;
@@ -5,61 +9,59 @@ $filterPanel-border: 1px solid rgba(0, 0, 0, 0.2);
 $filterPanel-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 $filterPanel-header-min-width: 100px;
 
-
 div.filterPanel {
-	position: absolute;
-	top: $filterPanel-top;
-	right: $filterPanel-right;
+  position: absolute;
+  top: $filterPanel-top;
+  right: $filterPanel-right;
 
-	background-color: $filterPanel-background-color;
-	border: $filterPanel-border;
-	
-	-webkit-border-radius: 6px;
-	-moz-border-radius: 6px;
-	border-radius: 6px;
-	
-	-webkit-box-shadow: $filterPanel-shadow;
-	-moz-box-shadow: $filterPanel-shadow;
-	box-shadow: $filterPanel-shadow;
-	
-	-webkit-background-clip: padding-box;
-	-moz-background-clip: padding;
-	background-clip: padding-box;
+  background-color: $filterPanel-background-color;
+  border: $filterPanel-border;
 
-	.header {
-		min-width: $filterPanel-header-min-width;
-		text-align: center;
-		margin: 0 5px;
-	}
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px;
 
-	.body {
-		display: none;
-		list-style: none;
-		padding: 5px;
-		margin: 0;
+  -webkit-box-shadow: $filterPanel-shadow;
+  -moz-box-shadow: $filterPanel-shadow;
+  box-shadow: $filterPanel-shadow;
+  -webkit-background-clip: padding-box;
+  -moz-background-clip: padding;
+  background-clip: padding-box;
 
-		li.filterItem {
-			margin: 3px 0;
+  .header {
+    min-width: $filterPanel-header-min-width;
+    text-align: center;
+    margin: 0 5px;
+  }
 
-            .iCheckBox {
-              float: right;
-              margin-top: 6px;
-              margin-left: 3px;
-            }
+  .body {
+    display: none;
+    list-style: none;
+    padding: 5px;
+    margin: 0;
 
-            div > svg {
-              margin-top: 4px;
-            }
-		}
-	}
+    li.filterItem {
+      margin: 3px 0;
 
-	&:hover {
-		.header {
-			border-bottom: $filterPanel-border;
-		}
+      .iCheckBox {
+        float: right;
+        margin-top: 6px;
+        margin-left: 3px;
+      }
 
-		.body {
-			display :block;
-		}
-	}
+      div > svg {
+        margin-top: 4px;
+      }
+    }
+  }
+
+  &:hover {
+    .header {
+      border-bottom: $filterPanel-border;
+    }
+
+    .body {
+      display: block;
+    }
+  }
 }

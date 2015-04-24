@@ -1,4 +1,8 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, _ */
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define([
     'js/Controls/PropertyGrid/Widgets/StringWidget',
@@ -11,82 +15,84 @@ define([
     'js/Utils/ColorUtil',
     'js/Controls/PropertyGrid/Widgets/DialogWidget',
     'js/Controls/PropertyGrid/Widgets/AssetWidget',
-    './PropertyGridWidgets'],
-    function (StringWidget,
-              NumberBoxWidget,
-              BooleanWidget,
-              LabelWidget,
-              iCheckBoxWidget,
-              OptionWidget,
-              ColorPickerWidget,
-              colorUtil,
-              DialogWidget,
-              AssetWidget,
-              PropertyGridWidgets) {
+    './PropertyGridWidgets'
+], function (StringWidget,
+             NumberBoxWidget,
+             BooleanWidget,
+             LabelWidget,
+             iCheckBoxWidget,
+             OptionWidget,
+             ColorPickerWidget,
+             colorUtil,
+             DialogWidget,
+             AssetWidget,
+             PropertyGridWidgets) {
 
-        "use strict";
+    'use strict';
 
-        var PropertyGridWidgetManager;
+    var PropertyGridWidgetManager;
 
-        PropertyGridWidgetManager = function () {
-            this._registeredWidgets = {};
-        };
+    PropertyGridWidgetManager = function () {
+        this._registeredWidgets = {};
+    };
 
-        PropertyGridWidgetManager.prototype.getWidgetForProperty = function (propDesc) {
-            var _type = propDesc.valueType || typeof propDesc.value,
-                _readOnly = propDesc.readOnly === true,
-                _isOption = _.isArray(propDesc.valueItems),
-                _isColor = colorUtil.isColor(propDesc.value),
-                _specificWidget = propDesc.widget,
-                _isAsset = _type === 'asset',
-                widget;
+    PropertyGridWidgetManager.prototype.getWidgetForProperty = function (propDesc) {
+        var type = propDesc.valueType || typeof propDesc.value,
+            readOnly = propDesc.readOnly === true,
+            isOption = _.isArray(propDesc.valueItems),
+            isColor = colorUtil.isColor(propDesc.value),
+            SpecificWidget = propDesc.widget,
+            isAsset = type === 'asset',
+            widget;
 
-            if (_readOnly && _type !== 'boolean') {
-                widget = new LabelWidget(propDesc);
-            } else if (_specificWidget) {
-                switch (_specificWidget) {
-                    case PropertyGridWidgets.DIALOG_WIDGET:
-                        widget = new DialogWidget(propDesc);
-                        break;
-                    default:
-                        widget = new _specificWidget(propDesc);
-                        break;
-                }
-            } else if (_isOption){
-                widget = new OptionWidget(propDesc);
-            } else if (_isColor) {
-                widget = new ColorPickerWidget(propDesc);
-            } else {
-                if (this._registeredWidgets[_type]) {
-                    widget = new this._registeredWidgets[_type](propDesc);
-                } else if (_isAsset) {
-                    widget = new AssetWidget(propDesc);
-                } else if (_type === "number") {
-                    widget = new NumberBoxWidget(propDesc);
-                } else if (_type === "boolean") {
-                    widget = new BooleanWidget(propDesc);
-                } else {
-                    widget = new StringWidget(propDesc);
-                }
+        if (readOnly && type !== 'boolean') {
+            widget = new LabelWidget(propDesc);
+        } else if (SpecificWidget) {
+            switch (SpecificWidget) {
+                case PropertyGridWidgets.DIALOG_WIDGET:
+                    widget = new DialogWidget(propDesc);
+                    break;
+                default:
+                    widget = new SpecificWidget(propDesc);
+                    break;
             }
-
-            widget.setReadOnly(_readOnly);
-
-            return widget;
-        };
-
-        PropertyGridWidgetManager.prototype.registerWidgetForType = function (type, widget) {
-            if (typeof  widget === 'string') {
-                switch (widget) {
-                    case 'iCheckBox':
-                        this.registerWidgetForType(type, iCheckBoxWidget);
-                        break;
-                }
+        } else if (isOption) {
+            widget = new OptionWidget(propDesc);
+        } else if (isColor) {
+            widget = new ColorPickerWidget(propDesc);
+        } else {
+            if (this._registeredWidgets[type]) {
+                widget = new this._registeredWidgets[type](propDesc);
+            } else if (isAsset) {
+                widget = new AssetWidget(propDesc);
+            } else if (type === 'number') {
+                widget = new NumberBoxWidget(propDesc);
+            } else if (type === 'boolean') {
+                widget = new BooleanWidget(propDesc);
             } else {
-                this._registeredWidgets[type] = widget;
+                widget = new StringWidget(propDesc);
             }
-        };
+        }
 
-        return PropertyGridWidgetManager;
+        widget.setReadOnly(readOnly);
 
-    });
+        return widget;
+    };
+
+    PropertyGridWidgetManager.prototype.registerWidgetForType = function (type, widget) {
+        if (typeof widget === 'string') {
+            switch (widget) {
+                case 'iCheckBox':
+                    this.registerWidgetForType(type, iCheckBoxWidget);
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            this._registeredWidgets[type] = widget;
+        }
+    };
+
+    return PropertyGridWidgetManager;
+
+});

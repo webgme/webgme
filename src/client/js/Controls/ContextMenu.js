@@ -1,14 +1,13 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
-
+/*globals define, window, $*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-define(['jquery',
-    'css!./styles/ContextMenu.css'], function () {
+define(['jquery', 'css!./styles/ContextMenu.css'], function () {
 
-    "use strict";
+    'use strict';
 
     var ContextMenu,
         ID_MENU = 'context-menu',
@@ -26,7 +25,7 @@ define(['jquery',
         this._backgroundDiv = BACKGROUND_DOM_BASE.clone();
         this._menuUL = this._menuDiv.find('ul').first();
 
-        if (params && params.hasOwnProperty("items")) {
+        if (params && params.hasOwnProperty('items')) {
             this.createMenu(params.items);
         }
 
@@ -48,7 +47,7 @@ define(['jquery',
         body.append(this._backgroundDiv).append(this._menuDiv);
 
         if (!position) {
-            position = {'x': 100, 'y': 100};
+            position = {x: 100, y: 100};
         }
 
         availableHeight = windowHeight - position.y;
@@ -60,7 +59,7 @@ define(['jquery',
         });
 
         this._menuDiv.css({
-            display: "block",
+            display: 'block',
             left: availableWidth > minWidth ? position.x : windowWidth - minWidth,
             top: availableHeight > minHeight ? position.y : windowHeight - minHeight
         });
@@ -98,7 +97,7 @@ define(['jquery',
                 if (items[i].icon) {
                     li.find('a').prepend(' ');
                     if (typeof items[i].icon === 'string') {
-                        icon = $('<i/>', {'class': items[i].icon });
+                        icon = $('<i/>', {class: items[i].icon});
                         li.find('a').prepend(icon);
                     } else {
                         li.find('a').prepend($(items[i].icon));

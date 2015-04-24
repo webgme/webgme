@@ -1,24 +1,25 @@
-/*globals define, WebGMEGlobal*/
+/*globals define, WebGMEGlobal, $*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-define(['js/logger',
+define([
+    'js/logger',
     'js/Constants',
     'js/DragDrop/DragSource',
-    'css!./styles/PartBrowserWidget.css'], function (Logger,
-                                                     CONSTANTS,
-                                                     dragSource) {
+    'css!./styles/PartBrowserWidget.css'
+], function (Logger, CONSTANTS, dragSource) {
 
-    "use strict";
+    'use strict';
 
     var PartBrowserWidget,
-        PART_BROWSER_CLASS = "part-browser",
-        PART_CLASS = "part";
+        PART_BROWSER_CLASS = 'part-browser',
+        PART_CLASS = 'part';
 
-    PartBrowserWidget = function (container, params) {
+    PartBrowserWidget = function (container /*, params*/) {
         this._logger = Logger.create('gme:Widgets:PartBrowser:PartBrowserWidget.DecoratorBase',
             WebGMEGlobal.gmeConfig.client.log);
 
@@ -26,14 +27,14 @@ define(['js/logger',
 
         this._initialize();
 
-        this._logger.debug("PartBrowserWidget ctor finished");
+        this._logger.debug('PartBrowserWidget ctor finished');
     };
 
     PartBrowserWidget.prototype._initialize = function () {
         //set Widget title
         this._el.addClass(PART_BROWSER_CLASS);
 
-        this._list = $("<ul/>");
+        this._list = $('<ul/>');
 
         this._parts = {};
 
@@ -53,24 +54,27 @@ define(['js/logger',
         this._list.empty();
     };
 
-    PartBrowserWidget.prototype.$_DOMBase = $('<div/>').attr({ "class": PART_CLASS });
+    //jshint camelcase: false
+    PartBrowserWidget.prototype.$_DOMBase = $('<div/>').attr({class: PART_CLASS});
 
     PartBrowserWidget.prototype.addPart = function (partId, partDesc) {
         var partContainerDiv = this._getPartDiv(partId),
-            partContainerLi = $("<li/>"),
+            partContainerLi = $('<li/>'),
             DecoratorClass = partDesc.decoratorClass,
             decoratorInstance;
 
         if (partContainerDiv.length > 0) {
             return this.updatePart(partId, partDesc);
         } else {
-            decoratorInstance = new DecoratorClass({'preferencesHelper': partDesc.preferencesHelper,
-                'aspect': partDesc.aspect});
+            decoratorInstance = new DecoratorClass({
+                'preferencesHelper': partDesc.preferencesHelper,
+                'aspect': partDesc.aspect
+            });
             decoratorInstance.setControl(partDesc.control);
             decoratorInstance.setMetaInfo(partDesc.metaInfo);
 
             partContainerDiv = this.$_DOMBase.clone();
-            partContainerDiv.attr({"id": partId});
+            partContainerDiv.attr({id: partId});
 
             //render the part inside 'partContainerDiv'
             decoratorInstance.beforeAppend();
@@ -84,12 +88,16 @@ define(['js/logger',
 
             decoratorInstance.afterAppend();
 
-            this._makeDraggable({ "el": partContainerDiv,
-                "partDesc": partDesc,
-                "partId": partId});
+            this._makeDraggable({
+                el: partContainerDiv,
+                partDesc: partDesc,
+                partId: partId
+            });
 
-            this._parts[partId] = {"decoratorInstance": decoratorInstance,
-                "decoratorClass": partDesc.decoratorClass} ;
+            this._parts[partId] = {
+                decoratorInstance: decoratorInstance,
+                decoratorClass: partDesc.decoratorClass
+            };
 
             return decoratorInstance;
         }
@@ -100,30 +108,30 @@ define(['js/logger',
             self = this;
 
         dragSource.makeDraggable(el, {
-            'dragItems': function (el) {
+            dragItems: function (el) {
                 return self.getDragItems(el);
             },
-            'dragEffects': function (el) {
+            dragEffects: function (el) {
                 return self.getDragEffects(el);
             },
-            'dragParams': function (el) {
+            dragParams: function (el) {
                 return self.getDragParams(el);
             }
         });
     };
 
-    PartBrowserWidget.prototype.getDragItems = function (el) {
-        this._logger.warn("PartBrowserWidget.getDragItems is not overridden in the controller!!!");
+    PartBrowserWidget.prototype.getDragItems = function (/*el*/) {
+        this._logger.warn('PartBrowserWidget.getDragItems is not overridden in the controller!!!');
         return [];
     };
 
-    PartBrowserWidget.prototype.getDragEffects = function (el) {
-        this._logger.warn("PartBrowserWidget.getDragEffects is not overridden in the controller!!!");
+    PartBrowserWidget.prototype.getDragEffects = function (/*el*/) {
+        this._logger.warn('PartBrowserWidget.getDragEffects is not overridden in the controller!!!');
         return [];
     };
 
-    PartBrowserWidget.prototype.getDragParams = function (el) {
-        this._logger.debug("PartBrowserWidget.getDragParams is not overridden in the controller!!!");
+    PartBrowserWidget.prototype.getDragParams = function (/*el*/) {
+        this._logger.debug('PartBrowserWidget.getDragParams is not overridden in the controller!!!');
         return undefined;
     };
 
@@ -132,34 +140,34 @@ define(['js/logger',
     /* OVERWRITE DragSource.prototype.dragHelper */
     //TODO: check if really necessary and clone is really not an option
     /*PartBrowserWidget.prototype.dragHelper = function (el, event) {
-        var draggedEl = self.$_DOMBase.clone(),
-            DecoratorClass = self._parts[partId].decoratorClass,
-            existingDecoratorInstance =  self._parts[partId].decoratorInstance,
-            decoratorInstance,
-            partContainerLi = $("<li/>"),
-            metaInfo = existingDecoratorInstance.getMetaInfo();
+     var draggedEl = self.$_DOMBase.clone(),
+     DecoratorClass = self._parts[partId].decoratorClass,
+     existingDecoratorInstance =  self._parts[partId].decoratorInstance,
+     decoratorInstance,
+     partContainerLi = $('<li/>'),
+     metaInfo = existingDecoratorInstance.getMetaInfo();
 
-        decoratorInstance = new DecoratorClass();
-        decoratorInstance.setControl(existingDecoratorInstance.getControl());
-        decoratorInstance.setMetaInfo(metaInfo);
+     decoratorInstance = new DecoratorClass();
+     decoratorInstance.setControl(existingDecoratorInstance.getControl());
+     decoratorInstance.setMetaInfo(metaInfo);
 
-        //render the part inside 'draggedEl'
-        decoratorInstance.beforeAppend();
-        draggedEl.append(decoratorInstance.$el);
+     //render the part inside 'draggedEl'
+     decoratorInstance.beforeAppend();
+     draggedEl.append(decoratorInstance.$el);
 
-        //add part's GUI
-        self._list.append(partContainerLi.append(draggedEl));
+     //add part's GUI
+     self._list.append(partContainerLi.append(draggedEl));
 
-        decoratorInstance.afterAppend();
+     decoratorInstance.afterAppend();
 
-        draggedEl.remove();
-        partContainerLi.remove();
+     draggedEl.remove();
+     partContainerLi.remove();
 
-        return draggedEl;
-    };*/
+     return draggedEl;
+     };*/
 
     PartBrowserWidget.prototype._getPartDiv = function (partId) {
-        return this._list.find("div." + PART_CLASS + "[id='" + partId + "']");
+        return this._list.find('div.' + PART_CLASS + '[id="' + partId + '"]');
     };
 
     PartBrowserWidget.prototype.removePart = function (partId) {
@@ -182,9 +190,11 @@ define(['js/logger',
             partContainerDiv = this._getPartDiv(partId);
 
         if (partDecoratorInstance) {
-            if (partDesc.decoratorClass && partDecoratorInstance.DECORATORID !== partDesc.decoratorClass.prototype.DECORATORID) {
+            if (partDesc.decoratorClass &&
+                partDecoratorInstance.DECORATORID !== partDesc.decoratorClass.prototype.DECORATORID) {
 
-                this._logger.debug("decorator update: '" + partDecoratorInstance.DECORATORID + "' --> '" + partDesc.decoratorClass.prototype.DECORATORID + "'...");
+                this._logger.debug('decorator update: "' + partDecoratorInstance.DECORATORID + '" --> "' +
+                partDesc.decoratorClass.prototype.DECORATORID + '"...');
 
                 var oldControl = partDecoratorInstance.getControl();
                 var oldMetaInfo = partDecoratorInstance.getMetaInfo();
@@ -194,8 +204,10 @@ define(['js/logger',
                 partDecoratorInstance.destroy();
 
                 //instantiate new one
-                partDecoratorInstance = new DecoratorClass({'preferencesHelper': partDesc.preferencesHelper,
-                    'aspect': partDesc.aspect});
+                partDecoratorInstance = new DecoratorClass({
+                    'preferencesHelper': partDesc.preferencesHelper,
+                    'aspect': partDesc.aspect
+                });
                 partDecoratorInstance.setControl(oldControl);
                 partDecoratorInstance.setMetaInfo(oldMetaInfo);
 
@@ -208,7 +220,7 @@ define(['js/logger',
                 this._parts[partId].decoratorInstance = partDecoratorInstance;
                 this._parts[partId].decoratorClass = partDesc.decoratorClass;
 
-                this._logger.debug("DesignerItem's ['" + this.id + "'] decorator  has been updated.");
+                this._logger.debug('DesignerItem\'s ["' + this.id + '"] decorator  has been updated.');
 
                 return partDecoratorInstance;
             } else {
@@ -256,7 +268,6 @@ define(['js/logger',
             dragSource.enableDraggable(partContainerDiv, enabled);
         }
     };
-
 
 
     return PartBrowserWidget;

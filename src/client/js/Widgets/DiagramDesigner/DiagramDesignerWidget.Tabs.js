@@ -1,12 +1,18 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, $*/
+/*jshint browser: true*/
 
-define(['js/Toolbar/ToolbarButton',
-    'js/Toolbar/ToolbarDropDownButton'], function (ToolbarButton,
-                                                   ToolbarDropDownButton) {
-    "use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define([
+    'js/Toolbar/ToolbarButton',
+    'js/Toolbar/ToolbarDropDownButton'
+], function (ToolbarButton, ToolbarDropDownButton) {
+    'use strict';
 
     var DiagramDesignerWidgetTabs,
-        TABS_CONTAINER = "diagram-designer-tabs-container",
+        TABS_CONTAINER = 'diagram-designer-tabs-container',
         ADD_TAB_CONTAINER_CLASS = 'add-tab-container',
         TAB_LIST_CONTAINER_CLASS = 'tab-list-container',
         TAB_SCROLL = 200,
@@ -24,7 +30,7 @@ define(['js/Toolbar/ToolbarButton',
     DiagramDesignerWidgetTabs.prototype._initializeTabs = function () {
         var self = this;
 
-        this.$tabsContainer = $('<div/>', { 'class': TABS_CONTAINER });
+        this.$tabsContainer = $('<div/>', {class: TABS_CONTAINER});
 
         this.$el.parent().append(this.$tabsContainer);
         this.$el.parent().addClass(WITH_TABS_CLASS);
@@ -33,40 +39,48 @@ define(['js/Toolbar/ToolbarButton',
 
         this._selectedTab = undefined;
 
-        this.$divAddTab = $('<div/>', {'class': ADD_TAB_CONTAINER_CLASS});
+        this.$divAddTab = $('<div/>', {class: ADD_TAB_CONTAINER_CLASS});
 
         if (this._addTabs === true) {
-            this.$btnAddTab = new ToolbarButton({ "title": "Add new tab...",
-                "icon": "glyphicon glyphicon-plus",
-                "clickFn": function (/*data*/) {
+            this.$btnAddTab = new ToolbarButton({
+                title: 'Add new tab...',
+                icon: 'glyphicon glyphicon-plus',
+                clickFn: function (/*data*/) {
                     if (self.getIsReadOnlyMode() !== true) {
                         self.onTabAddClicked();
                     }
-                }});
+                }
+            });
             this.$divAddTab.append(this.$btnAddTab.el);
         }
 
-        this.$ddlTabsList = new ToolbarDropDownButton({ "title": "Tab list",
-            "icon": "glyphicon glyphicon-list"});
+        this.$ddlTabsList = new ToolbarDropDownButton({
+            title: 'Tab list',
+            icon: 'glyphicon glyphicon-list'
+        });
         this.$divAddTab.append(this.$ddlTabsList.el);
 
-        this.$btnScrollLeft = new ToolbarButton({ "title": "Scroll left",
-            "icon": "glyphicon glyphicon-chevron-left",
-            "clickFn": function (/*data*/) {
+        this.$btnScrollLeft = new ToolbarButton({
+            title: 'Scroll left',
+            icon: 'glyphicon glyphicon-chevron-left',
+            clickFn: function (/*data*/) {
                 self._tabsScrollLeft();
-            } });
+            }
+        });
         this.$divAddTab.append(this.$btnScrollLeft.el);
 
-        this.$btnScrollRight = new ToolbarButton({ "title": "Scroll right",
-            "icon": "glyphicon glyphicon-chevron-right",
-            "clickFn": function (/*data*/) {
+        this.$btnScrollRight = new ToolbarButton({
+            title: 'Scroll right',
+            icon: 'glyphicon glyphicon-chevron-right',
+            clickFn: function (/*data*/) {
                 self._tabsScrollRight();
-            } });
+            }
+        });
         this.$divAddTab.append(this.$btnScrollRight.el);
 
 
-        this.$divTabList = $('<div/>', {'class': TAB_LIST_CONTAINER_CLASS});
-        this.$ulTabTab = $('<ul/>', {'class': 'nav nav-tabs'});
+        this.$divTabList = $('<div/>', {class: TAB_LIST_CONTAINER_CLASS});
+        this.$ulTabTab = $('<ul/>', {class: 'nav nav-tabs'});
         this.$divTabList.append(this.$ulTabTab);
 
         this._makeTabsSortable();
@@ -78,15 +92,17 @@ define(['js/Toolbar/ToolbarButton',
 
         //hook up tab rename
         // set title editable on double-click
-        this.$ulTabTab.on("dblclick.editOnDblClick", '.tab-title', function (event) {
+        this.$ulTabTab.on('dblclick.editOnDblClick', '.tab-title', function (event) {
             if (self.getIsReadOnlyMode() !== true) {
                 var li = $(this).parentsUntil('li').parent();
                 if (li.data(TAB_RENAME) === true) {
-                    $(this).editInPlace({"class": "",
-                        "onChange": function (oldValue, newValue) {
+                    $(this).editInPlace({
+                        class: '',
+                        onChange: function (oldValue, newValue) {
                             var li = $(this).parent().parent();
                             self.onTabTitleChanged(li.data(TAB_ID), oldValue, newValue);
-                        }});
+                        }
+                    });
                 }
             }
             event.stopPropagation();
@@ -94,7 +110,7 @@ define(['js/Toolbar/ToolbarButton',
         });
 
         //tab delete handler
-        this.$ulTabTab.on("click.deleteTabClick", 'a > i', function (event) {
+        this.$ulTabTab.on('click.deleteTabClick', 'a > i', function (event) {
             if (self.getIsReadOnlyMode() !== true) {
                 self.onTabDeleteClicked($(this).parent().parent().data(TAB_ID));
             }
@@ -103,7 +119,7 @@ define(['js/Toolbar/ToolbarButton',
         });
 
         //tab selection handler
-        this.$ulTabTab.on("click.selectTabClick", 'li', function (event) {
+        this.$ulTabTab.on('click.selectTabClick', 'li', function (event) {
             self.selectTab($(this).data(TAB_ID));
             event.stopPropagation();
             event.preventDefault();
@@ -132,9 +148,12 @@ define(['js/Toolbar/ToolbarButton',
         if (this.getIsReadOnlyMode() !== true) {
             if (this._reorderTabs === true) {
                 if (!this.$ulTabTab.hasClass('ui-sortable')) {
-                    this.$ulTabTab.sortable({'dropBehaviour': true, 'stop': function () {
-                        self._onTabsSortStop();
-                    }});
+                    this.$ulTabTab.sortable({
+                        dropBehaviour: true,
+                        stop: function () {
+                            self._onTabsSortStop();
+                        }
+                    });
                 }
             }
         }
@@ -151,7 +170,7 @@ define(['js/Toolbar/ToolbarButton',
         var li = TAB_LI_BASE.clone();
 
         li.find('.tab-title').attr('title', title).text(title);
-        li.data(TAB_ID, this._tabCounter + "");
+        li.data(TAB_ID, this._tabCounter + '');
         this._tabCounter += 1;
 
         if (this._deleteTabs === true && deletable === true) {
@@ -164,12 +183,14 @@ define(['js/Toolbar/ToolbarButton',
 
         this.$ulTabTab.append(li);
 
-        this.$ddlTabsList.addButton({ "title": title,
-            "text": title,
-            "data": { 'TAB_ID': li.data(TAB_ID)},
-            "clickFn": function (data) {
+        this.$ddlTabsList.addButton({
+            title: title,
+            text: title,
+            data: {TAB_ID: li.data(TAB_ID)},
+            clickFn: function (data) {
                 self.selectTab(data.TAB_ID);
-            }});
+            }
+        });
 
         if (this._addingMultipleTabs !== true) {
             this._refreshTabScrollButtons();
@@ -199,7 +220,8 @@ define(['js/Toolbar/ToolbarButton',
     };
 
     DiagramDesignerWidgetTabs.prototype._tabsScrollRight = function () {
-        var overflowRightBy = this.$ulTabTab.width() - this.$tabsContainer.width() + this.$divAddTab.outerWidth(true) + this._tabScrollValue;
+        var overflowRightBy = this.$ulTabTab.width() - this.$tabsContainer.width() + this.$divAddTab.outerWidth(true) +
+            this._tabScrollValue;
 
         if (overflowRightBy > 0) {
             overflowRightBy = Math.min(overflowRightBy, TAB_SCROLL);
@@ -223,7 +245,7 @@ define(['js/Toolbar/ToolbarButton',
 
         if (this._selectedTab !== tabID) {
             //select tab
-            for(i = 0; i < allLi.length; i += 1) {
+            for (i = 0; i < allLi.length; i += 1) {
                 li = $(allLi[i]);
                 if (li && li.data(TAB_ID) === tabID) {
                     liToSelect = li;
@@ -236,12 +258,13 @@ define(['js/Toolbar/ToolbarButton',
                 liToSelect.addClass('active');
                 this._selectedTab = liToSelect.data(TAB_ID);
 
-                this.setBackgroundText(this.$ulTabTab.find('li.active').first().find('.tab-title').text().toUpperCase());
+                this.setBackgroundText(this.$ulTabTab.find('li.active').first().find('.tab-title').text()
+                    .toUpperCase());
             }
 
             //select in DropDown
             liToSelect = undefined;
-            for(i = 0; i < allDropDownLi.length; i += 1) {
+            for (i = 0; i < allDropDownLi.length; i += 1) {
                 li = $(allDropDownLi[i]).find('a').first();
                 if (li && li.data(TAB_ID) === tabID) {
                     liToSelect = $(allDropDownLi[i]);
@@ -278,7 +301,8 @@ define(['js/Toolbar/ToolbarButton',
     };
 
     DiagramDesignerWidgetTabs.prototype._refreshTabScrollButtons = function () {
-        var overflowRightBy = this.$ulTabTab.width() - this.$tabsContainer.width() + this.$divAddTab.outerWidth(true) + this._tabScrollValue;
+        var overflowRightBy = this.$ulTabTab.width() - this.$tabsContainer.width() + this.$divAddTab.outerWidth(true) +
+            this._tabScrollValue;
 
         this.$btnScrollLeft.enabled(this._tabScrollValue < 0);
         this.$btnScrollRight.enabled(overflowRightBy > 0);
@@ -303,7 +327,8 @@ define(['js/Toolbar/ToolbarButton',
 
     DiagramDesignerWidgetTabs.prototype._refreshTabTabsScrollOnResize = function () {
         if (this._tabsEnabled === true) {
-            var overflowRightBy = this.$ulTabTab.width() - this.$tabsContainer.width() + this.$divAddTab.outerWidth(true) + this._tabScrollValue;
+            var overflowRightBy = this.$ulTabTab.width() - this.$tabsContainer.width() +
+                this.$divAddTab.outerWidth(true) + this._tabScrollValue;
 
             if (overflowRightBy < 0) {
                 this._scrollTabListBy(-overflowRightBy);
@@ -324,7 +349,8 @@ define(['js/Toolbar/ToolbarButton',
     };
 
     DiagramDesignerWidgetTabs.prototype.onTabTitleChanged = function (tabID, oldValue, newValue) {
-        this.logger.warn('onTabTitleChanged not implemented: ID: ' + tabID + ' "' + oldValue + '" --> "' + newValue + '"');
+        this.logger.warn('onTabTitleChanged not implemented: ID: ' + tabID + ' "' + oldValue + '" --> "' +
+        newValue + '"');
     };
 
     DiagramDesignerWidgetTabs.prototype.onSelectedTabChanged = function (tabID) {

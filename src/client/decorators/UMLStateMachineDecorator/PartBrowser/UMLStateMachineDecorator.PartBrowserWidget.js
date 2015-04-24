@@ -1,34 +1,33 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, _*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
-
-"use strict";
-
 define(['js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/PartBrowser/PartBrowserWidget.DecoratorBase',
     './../Core/UMLStateMachineDecoratorCore',
     './../Core/UMLStateMachine.META',
-    'css!./UMLStateMachineDecorator.PartBrowserWidget.css'], function (CONSTANTS,
-                                                         nodePropertyNames,
-                                                         PartBrowserWidgetDecoratorBase,
-                                                         UMLStateMachineDecoratorCore,
-                                                         UMLStateMachineMETA) {
+    'css!./UMLStateMachineDecorator.PartBrowserWidget.css'
+], function (CONSTANTS,
+             nodePropertyNames,
+             PartBrowserWidgetDecoratorBase,
+             UMLStateMachineDecoratorCore,
+             UMLStateMachineMETA) {
+    'use strict';
 
     var UMLStateMachineDecoratorPartBrowserWidget,
-        DECORATOR_ID = "UMLStateMachineDecoratorPartBrowserWidget";
+        DECORATOR_ID = 'UMLStateMachineDecoratorPartBrowserWidget';
 
 
     UMLStateMachineDecoratorPartBrowserWidget = function (options) {
-        var opts = _.extend( {}, options);
+        var opts = _.extend({}, options);
 
         PartBrowserWidgetDecoratorBase.apply(this, [opts]);
 
-        this._initializeDecorator({"connectors": false});
+        this._initializeDecorator({connectors: false});
 
-        this.logger.debug("UMLStateMachineDecoratorPartBrowserWidget ctor");
+        this.logger.debug('UMLStateMachineDecoratorPartBrowserWidget ctor');
     };
 
 
@@ -60,7 +59,7 @@ define(['js/Constants',
             (this._metaType === META_TYPES.End || this._metaType === META_TYPES.Initial)) {
             var nameWidth = this.$name.outerWidth();
 
-            this.$name.css({ "margin-left": nameWidth / -2 });
+            this.$name.css({'margin-left': nameWidth / -2});
         }
     };
 

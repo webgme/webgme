@@ -1,14 +1,22 @@
-/*globals define, _, requirejs, WebGMEGlobal, DEBUG*/
+/*globals define, DEBUG*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/NodePropertyNames',
-        'js/RegistryKeys',
-        'js/DragDrop/DragHelper'], function (nodePropertyNames,
-                                      REGISTRY_KEYS,
-                                      DragHelper) {
+    'js/RegistryKeys',
+    'js/DragDrop/DragHelper'
+], function (nodePropertyNames,
+             REGISTRY_KEYS,
+             DragHelper) {
 
-    "use strict";
+    'use strict';
 
-    var GridPanelContainmentControlEventHandlers;
+    var GridPanelContainmentControlEventHandlers,
+        KEY_ATTRIBUTES = 'Attributes',
+    //KEY_POINTERS = 'Pointers',
+        KEY_REGISTRY = 'Registry';
 
     GridPanelContainmentControlEventHandlers = function () {
     };
@@ -41,13 +49,12 @@ define(['js/NodePropertyNames',
             self._onGridDrop(gridCellDesc, draggedData);
         };
 
-        this._logger.debug("attachDataGridWidgetEventHandlers finished");
+        this._logger.debug('attachDataGridWidgetEventHandlers finished');
     };
 
     GridPanelContainmentControlEventHandlers.prototype._onCellEdit = function (params) {
         var gmeID = params.id,
             prop = params.prop,
-            /*oldValue = params.oldValue,*/
             newValue = params.newValue,
             keyArr,
             setterFn,
@@ -58,13 +65,13 @@ define(['js/NodePropertyNames',
 
         this._client.startTransaction();
 
-        keyArr = prop.split(".");
-        if (keyArr[0] === "Attributes") {
-            setterFn = "setAttributes";
-            getterFn = "getAttribute";
+        keyArr = prop.split('.');
+        if (keyArr[0] === 'Attributes') {
+            setterFn = 'setAttributes';
+            getterFn = 'getAttribute';
         } else {
-            setterFn = "setRegistry";
-            getterFn = "getRegistry";
+            setterFn = 'setRegistry';
+            getterFn = 'getRegistry';
         }
 
         keyArr.splice(0, 1);
@@ -102,7 +109,7 @@ define(['js/NodePropertyNames',
         var len = columnDefs.length,
             cDef;
 
-        while(len--) {
+        while (len--) {
             cDef = columnDefs[len];
             if (cDef.mData === 'ID' ||
                 cDef.mData === 'ParentID' ||
@@ -116,44 +123,44 @@ define(['js/NodePropertyNames',
         }
     };
 
-    GridPanelContainmentControlEventHandlers.prototype._onRowDelete = function (id, aData) {
+    GridPanelContainmentControlEventHandlers.prototype._onRowDelete = function (id /*, aData */) {
         this._client.delMoreNodes([id]);
     };
 
-    GridPanelContainmentControlEventHandlers.prototype._onRowEdit = function (id, oData, nData) {
-        var cNode = this._client.getNode(id),
-            attrVal;
+    GridPanelContainmentControlEventHandlers.prototype._onRowEdit = function (/*id, oData, nData */) {
+        //var cNode = this._client.getNode(id),
+        //    attrVal;
 
         /*if (cNode) {
-            this._client.startTransaction();
+         this._client.startTransaction();
 
-            attrVal = this._fetchData(nData, "Attributes.name");
-            if (attrVal !== null && attrVal !== undefined) {
-                this._client.setAttributes(id, nodePropertyNames.Attributes.name, attrVal);
-            }
+         attrVal = this._fetchData(nData, "Attributes.name");
+         if (attrVal !== null && attrVal !== undefined) {
+         this._client.setAttributes(id, nodePropertyNames.Attributes.name, attrVal);
+         }
 
-            attrVal = this._fetchData(nData, "Registry.decorator");
-            if (attrVal !== null && attrVal !== undefined) {
-                this._client.setRegistry(id, REGISTRY_KEYS.DECORATOR, attrVal);
-            }
+         attrVal = this._fetchData(nData, "Registry.decorator");
+         if (attrVal !== null && attrVal !== undefined) {
+         this._client.setRegistry(id, REGISTRY_KEYS.DECORATOR, attrVal);
+         }
 
-            attrVal = this._fetchData(nData, "Registry.position");
-            if (attrVal !== null && attrVal !== undefined) {
-                attrVal.x = parseInt(attrVal.x, 10) || 0;
-                attrVal.y = parseInt(attrVal.y, 10) || 0;
-                this._client.setRegistry(id, REGISTRY_KEYS.POSITION, attrVal);
-            }
+         attrVal = this._fetchData(nData, "Registry.position");
+         if (attrVal !== null && attrVal !== undefined) {
+         attrVal.x = parseInt(attrVal.x, 10) || 0;
+         attrVal.y = parseInt(attrVal.y, 10) || 0;
+         this._client.setRegistry(id, REGISTRY_KEYS.POSITION, attrVal);
+         }
 
-            this._client.completeTransaction();
-        }*/
+         this._client.completeTransaction();
+         }*/
     };
 
     GridPanelContainmentControlEventHandlers.prototype._fetchData = function (object, data) {
         var a = data.split('.'),
             k = a[0];
 
-        if (a.length > 1 ) {
-            a.splice(0,1);
+        if (a.length > 1) {
+            a.splice(0, 1);
 
             return this._fetchData(object[k], a.join('.'));
         } else {
@@ -161,38 +168,35 @@ define(['js/NodePropertyNames',
         }
     };
 
-    GridPanelContainmentControlEventHandlers.prototype._onGridDroppableAccept = function (gridCellDesc, draggedData) {
+    GridPanelContainmentControlEventHandlers.prototype._onGridDroppableAccept = function (/* cellDesc, draggedData */) {
         if (DEBUG) {
             return true;
         }
     };
 
-    var KEY_ATTRIBUTES = 'Attributes',
-        KEY_POINTERS = 'Pointers',
-        KEY_REGISTRY = 'Registry';
 
     GridPanelContainmentControlEventHandlers.prototype._onGridDrop = function (gridCellDesc, draggedData) {
-        if (DEBUG) {
-            var idList = DragHelper.getDragItems(draggedData);
-            var gmeID = gridCellDesc.data.ID;
-            var key = gridCellDesc.mData;
-            var setterFn, getterFn;
-            var keyArr;
-            var path;
-            var propObject;
-            var client = this._client;
-            var propPointer;
-            var newVal;
+        var idList = DragHelper.getDragItems(draggedData),
+            gmeID = gridCellDesc.data.ID,
+            key = gridCellDesc.mData,
+            setterFn, getterFn,
+            keyArr,
+            path,
+            propObject,
+            client = this._client,
+            propPointer,
+            newVal;
 
-            keyArr = key.split(".");
+        if (DEBUG) {
+            keyArr = key.split('.');
             setterFn = undefined;
             getterFn = undefined;
             if (keyArr[0] === KEY_ATTRIBUTES) {
-                setterFn = "setAttributes";
-                getterFn = "getEditableAttribute";
+                setterFn = 'setAttributes';
+                getterFn = 'getEditableAttribute';
             } else if (keyArr[0] === KEY_REGISTRY) {
-                setterFn = "setRegistry";
-                getterFn = "getEditableRegistry";
+                setterFn = 'setRegistry';
+                getterFn = 'getEditableRegistry';
             }
 
             if (idList && idList.length === 1 && setterFn) {
@@ -208,7 +212,7 @@ define(['js/NodePropertyNames',
                     propPointer = propObject;
                     keyArr.splice(0, 1);
 
-                    if(keyArr.length < 1){
+                    if (keyArr.length < 1) {
                         //simple value so just set it
                         propObject = newVal;
                     } else {

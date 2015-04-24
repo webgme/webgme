@@ -1,10 +1,17 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _*/
+/*jshint browser: true*/
 
-define(['underscore',
-        'common/util/assert'], function (_underscore,
-                                 ASSERT) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+
+define([
+    'underscore',
+    'common/util/assert'
+], function (_underscore, ASSERT) {
+
+    'use strict';
 
     var Preferences,
         _client;
@@ -85,7 +92,8 @@ define(['underscore',
     };
 
     //return utility functions
-    return { initialize: _initialize,
-             getPreferences: _getPreferencesInstance
+    return {
+        initialize: _initialize,
+        getPreferences: _getPreferencesInstance
     };
 });

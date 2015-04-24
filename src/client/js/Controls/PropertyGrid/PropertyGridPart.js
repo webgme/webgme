@@ -1,15 +1,16 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
-
+/*globals define, $*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
 define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
-        'js/Constants',
-        'css!./styles/PropertyGridPart.css'], function (PropertyGridWidgetManager, CONSTANTS) {
+    'js/Constants',
+    'css!./styles/PropertyGridPart.css'
+], function (PropertyGridWidgetManager, CONSTANTS) {
 
-    "use strict";
+    'use strict';
 
     /** Outer-most className for GUI's */
     var PropertyGridPart,
@@ -24,9 +25,8 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         }
 
 
-
         this._el = $('<div/>', {
-            "class": CSS_NAMESPACE
+            class: CSS_NAMESPACE
         });
 
         this.__ul = $('<ul/>', {});
@@ -61,19 +61,19 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
     };
 
     PropertyGridPart.prototype._addNestedGUI = function (params) {
-        var title_row = this._addRow(this, $(document.createTextNode(params.text || params.name))),
-            on_click_title,
+        var titleRow = this._addRow(this, $(document.createTextNode(params.text || params.name))),
+            onClickTitle,
             self = this;
 
-        on_click_title = function (e) {
+        onClickTitle = function (e) {
             e.preventDefault();
             e.stopPropagation();
             self._toggleClosed();
             return false;
         };
 
-        title_row.addClass('title');
-        title_row.on('click', on_click_title);
+        titleRow.addClass('title');
+        titleRow.on('click', onClickTitle);
     };
 
 
@@ -109,7 +109,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
 
     PropertyGridPart.prototype._change = function (args) {
         if (this.__onChange) {
-            this.__onChange.call(this,  args);
+            this.__onChange.call(this, args);
         }
     };
 
@@ -121,14 +121,14 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
 
     PropertyGridPart.prototype._reset = function (propertyName) {
         if (this.__onReset) {
-            this.__onReset.call(this,  propertyName);
+            this.__onReset.call(this, propertyName);
         }
     };
 
     PropertyGridPart.prototype._getAccumulatedName = function () {
         var parentName = this._parent ? this._parent._getAccumulatedName() : undefined;
 
-        return parentName ? parentName + "." + this._name : this._name;
+        return parentName ? parentName + '.' + this._name : this._name;
     };
 
     /*************** END OF - PRIVATE API *************************/
@@ -149,18 +149,19 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
     PropertyGridPart.prototype.add = function (propertyDesc) {
         var widget,
             container = $('<div/>'),
-            spnName = $('<span/>', {"class": "property-name"}),
-            divReset = $('<div/>', {"class": "p-reset"}),
+            spnName = $('<span/>', {class: 'property-name'}),
+            divReset = $('<div/>', {class: 'p-reset'}),
             li,
             self = this,
-            extraCss = {};
+            extraCss = {},
+            resetBtn;
 
         if (this.__widgets[propertyDesc.name] !== undefined) {
             throw new Error('You already have a widget with the name "' + propertyDesc.name + '"');
         }
 
         if (!propertyDesc.id) {
-            propertyDesc.id = this._getAccumulatedName() + "." + propertyDesc.name;
+            propertyDesc.id = this._getAccumulatedName() + '.' + propertyDesc.name;
         }
 
         widget = this._widgetManager.getWidgetForProperty(propertyDesc);
@@ -186,18 +187,18 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
             }
 
             if (propertyDesc.options.textItalic) {
-                extraCss["font-style"] = "italic";
+                extraCss['font-style'] = 'italic';
             }
 
             if (propertyDesc.options.textBold) {
-                extraCss["font-weight"] = "bold";
+                extraCss['font-weight'] = 'bold';
             }
 
             spnName.css(extraCss);
 
-            //resetable
+            //resettable
             if (propertyDesc.options.resetable === true) {
-                var resetBtn = RESET_BUTTON_BASE.clone();
+                resetBtn = RESET_BUTTON_BASE.clone();
                 divReset.append(resetBtn);
 
                 spnName.addClass('p-reset');
@@ -225,16 +226,16 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
     };
 
     PropertyGridPart.prototype.addFolder = function (name, text) {
-        if (this.__folders[name] !== undefined) {
-            throw new Error('You already have a folder with the name "' + name + '"');
-        }
-
-        var new_gui_params = { name: name, text: text, parent: this },
+        var newGuiParams = {name: name, text: text, parent: this},
             gui,
             li,
             self = this;
 
-        gui = new PropertyGridPart(new_gui_params);
+        if (this.__folders[name] !== undefined) {
+            throw new Error('You already have a folder with the name "' + name + '"');
+        }
+
+        gui = new PropertyGridPart(newGuiParams);
         this.__folders[name] = gui;
 
         gui.onChange(function (args) {

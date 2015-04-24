@@ -1,12 +1,10 @@
-@import url("./../../../../css/dynatree/ui.dynatree.css");
-@import url("./../../../../css/contextmenu/jquery.contextMenu.css");
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 /*IMPORTS*/
 /* original DynaTree Vista-theme css from DynaTree distribution */
+@import url("./../../../../css/dynatree/ui.dynatree.css");
+@import url("./../../../../css/contextmenu/jquery.contextMenu.css");
 .tree-browser {
   /* DynaTree Vista-theme overrides */
   /* END OF --- DynaTree Vista-theme overrides */

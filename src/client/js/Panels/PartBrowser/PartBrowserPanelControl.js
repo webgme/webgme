@@ -1,4 +1,9 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger',
     'js/Constants',
@@ -6,18 +11,19 @@ define(['js/logger',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Utils/METAAspectHelper',
-    'js/Utils/PreferencesHelper'], function (Logger,
-                             CONSTANTS,
-                             GMEConcepts,
-                             nodePropertyNames,
-                             REGISTRY_KEYS,
-                             METAAspectHelper,
-                             PreferencesHelper) {
-    "use strict";
+    'js/Utils/PreferencesHelper'
+], function (Logger,
+             CONSTANTS,
+             GMEConcepts,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             METAAspectHelper,
+             PreferencesHelper) {
+    'use strict';
 
     var PartBrowserControl,
         WIDGET_NAME = 'PartBrowser',
-        DEFAULT_DECORATOR = "ModelDecorator";
+        DEFAULT_DECORATOR = 'ModelDecorator';
 
     PartBrowserControl = function (myClient, myPartBrowserView) {
         var self = this;
@@ -39,8 +45,9 @@ define(['js/logger',
 
         this._initDragDropFeatures();
 
-        this._logger = Logger.create("gme:Panels:PartBrowser:PartBrowserPanelControl", WebGMEGlobal.gmeConfig.client.log);
-        this._logger.debug("Created");
+        this._logger = Logger.create('gme:Panels:PartBrowser:PartBrowserPanelControl',
+            WebGMEGlobal.gmeConfig.client.log);
+        this._logger.debug('Created');
 
         METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
             self._processContainerNode(self._containerNodeId);
@@ -51,51 +58,54 @@ define(['js/logger',
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_ASPECT, function (model, activeAspect) {
-          if(activeAspect !== undefined){
-            self.selectedAspectChanged(activeAspect);
-          }
+            if (activeAspect !== undefined) {
+                self.selectedAspectChanged(activeAspect);
+            }
         });
     };
 
     PartBrowserControl.prototype.selectedObjectChanged = function (nodeId) {
-        var self = this;
+        var self = this,
+            aspectNames;
 
-        this._logger.debug("activeObject: '" + nodeId + "'");
-        this._suppressDecoratorUpdate = true;
+        self._logger.debug('activeObject: \'' + nodeId + '\'');
+        self._suppressDecoratorUpdate = true;
 
         //remove current territory patterns
-        if (this._territoryId) {
-            this._client.removeUI(this._territoryId);
-            this._partBrowserView.clear();
+        if (self._territoryId) {
+            self._client.removeUI(this._territoryId);
+            self._partBrowserView.clear();
         }
 
-        this._containerNodeId = nodeId;
-        this._validChildrenTypeIDs = [];
+        self._containerNodeId = nodeId;
+        self._validChildrenTypeIDs = [];
 
-        this._aspect = WebGMEGlobal.State.getActiveAspect();
+        self._aspect = WebGMEGlobal.State.getActiveAspect();
 
-        if (this._containerNodeId || this._containerNodeId === CONSTANTS.PROJECT_ROOT_ID) {
+        if (self._containerNodeId || this._containerNodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
-            this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 0 };
+            self._selfPatterns = {};
+            self._selfPatterns[nodeId] = {children: 0};
 
-            if (this._aspect !== CONSTANTS.ASPECT_ALL) {
+            if (self._aspect !== CONSTANTS.ASPECT_ALL) {
                 //make sure that the _aspect exist in the node, otherwise fallback to All
-                var aspectNames = this._client.getMetaAspectNames(nodeId) || [];
+                aspectNames = self._client.getMetaAspectNames(nodeId) || [];
                 if (aspectNames.indexOf(this._aspect) === -1) {
-                    this._logger.warn('The currently selected aspect "' + this._aspect + '" does not exist in the object "' + nodeId + '", falling back to "All"');
-                    this._aspect = CONSTANTS.ASPECT_ALL;
+                    self._logger.warn('The currently selected aspect "' +
+                    self._aspect + '" does not exist in the object "' +
+                    nodeId + '", falling back to "All"');
+                    self._aspect = CONSTANTS.ASPECT_ALL;
                 }
             }
 
-            this._territoryId = this._client.addUI(this, function (events) {
+            self._territoryId = this._client.addUI(this, function (events) {
                 if (events[0].etype === 'complete') {
                     self._eventCallback(events);
                 }
             });
             //update the territory
-            this._logger.debug('UPDATING TERRITORY: selectedObjectChanged' + JSON.stringify(this._selfPatterns));
-            this._client.updateTerritory(this._territoryId, this._selfPatterns);
+            self._logger.debug('UPDATING TERRITORY: selectedObjectChanged' + JSON.stringify(this._selfPatterns));
+            self._client.updateTerritory(this._territoryId, this._selfPatterns);
         }
     };
 
@@ -126,7 +136,7 @@ define(['js/logger',
             needsDecoratorUpdate = false;
 
 
-        this._logger.debug("_eventCallback '" + i + "' items, events: " + JSON.stringify(events));
+        this._logger.debug('_eventCallback \'' + i + '\' items, events: ' + JSON.stringify(events));
 
         while (i--) {
             e = events[i];
@@ -159,7 +169,7 @@ define(['js/logger',
             this._logger.debug('_suppressDecoratorUpdate will switch from false to true');
         }
         this._suppressDecoratorUpdate = false;
-        this._logger.debug("_eventCallback '" + events.length + "' items - DONE");
+        this._logger.debug('_eventCallback \'' + events.length + '\' items - DONE');
     };
 
     // PUBLIC METHODS
@@ -224,7 +234,7 @@ define(['js/logger',
                     //add to the territory
                     //only if not self, because it's already in the territory
                     if (id !== gmeID) {
-                        this._selfPatterns[id] = { "children": 0 };
+                        this._selfPatterns[id] = {children: 0};
                         territoryChanged = true;
                     }
                 }
@@ -295,7 +305,7 @@ define(['js/logger',
         var idx;
 
         if (this._componentIDPartIDMap && this._componentIDPartIDMap[componentID]) {
-           idx = this._componentIDPartIDMap[componentID].indexOf(partId);
+            idx = this._componentIDPartIDMap[componentID].indexOf(partId);
             if (idx !== -1) {
                 this._componentIDPartIDMap[componentID].splice(idx, 1);
 
@@ -368,7 +378,7 @@ define(['js/logger',
             territoryChanged = false,
             _selfPatterns = this._selfPatterns,
             partEnabled,
-            _aspectTypes = undefined;
+            _aspectTypes;
 
         getDecoratorTerritoryQueries = function (decorator) {
             var query,
@@ -398,7 +408,7 @@ define(['js/logger',
             var metaAspectDesc = this._client.getMetaAspect(this._containerNodeId, this._aspect);
             if (metaAspectDesc) {
                 //metaAspectDesc.items contains the children types the user specified to participate in this aspect
-                _aspectTypes =  metaAspectDesc.items || [];
+                _aspectTypes = metaAspectDesc.items || [];
             }
         }
 
@@ -478,7 +488,7 @@ define(['js/logger',
         if (this._aspect !== aspect) {
             this._aspect = aspect;
 
-            this._logger.debug("activeAspect: '" + aspect + "'");
+            this._logger.debug('activeAspect: \'' + aspect + '\'');
 
             this._refreshPartList();
         }

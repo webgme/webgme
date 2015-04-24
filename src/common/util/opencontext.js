@@ -69,7 +69,9 @@ define(['common/util/assert', 'common/core/core', 'common/regexp'], function (AS
                         closeOnError('"' + parameters.projectName + '" does not exists among: ' +
                         projectNames.toString() + '. Set flag "createProject" to create a new project.');
                         return;
-                    } else if (projectExists && parameters.createProject && !parameters.overwriteProject && !parameters.branchName) {
+                    } else if (projectExists && parameters.createProject &&
+                        !parameters.overwriteProject && !parameters.branchName) {
+
                         closeOnError('"' + parameters.projectName + '" already exists: ' +
                         projectNames.toString() + '. Set flag "overwriteProject" to overwrite project.');
                         return;

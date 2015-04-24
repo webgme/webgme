@@ -1,4 +1,4 @@
-/* jshint node:true, mocha:true */
+/* jshint node:true, mocha:true, expr:true */
 /**
  * @author kecso / https://github.com/kecso
  */
@@ -20,64 +20,64 @@ describe('merge CLI test', function () {
         oldConsoleError = console.error,
         oldProcessStdoutWrite = process.stdout.write,
         oldConsoleWarn = console.warn,
-        suppressLogAndExit = function(saveBuffer){
+        suppressLogAndExit = function (saveBuffer) {
             process.exit = function (code) {
                 // TODO: would be nice to send notifications for test
-                if(saveBuffer){
+                if (saveBuffer) {
                     saveBuffer.code = code;
                 }
             };
             console.log = function () {
                 //oldConsoleLog(args);
                 var i;
-                if(saveBuffer){
+                if (saveBuffer) {
                     saveBuffer.log = saveBuffer.log || '';
-                    for(i=0;i<arguments.length;i++){
-                        saveBuffer.log += arguments[i]+' ';
+                    for (i = 0; i < arguments.length; i++) {
+                        saveBuffer.log += arguments[i] + ' ';
                     }
-                    saveBuffer.log +='\n';
+                    saveBuffer.log += '\n';
                 }
             };
             console.error = function () {
                 //oldConsoleError(args);
                 var i;
-                if(saveBuffer){
+                if (saveBuffer) {
                     saveBuffer.error = saveBuffer.error || '';
-                    for(i=0;i<arguments.length;i++){
-                        saveBuffer.error += arguments[i]+' ';
+                    for (i = 0; i < arguments.length; i++) {
+                        saveBuffer.error += arguments[i] + ' ';
                     }
-                    saveBuffer.error +='\n';
+                    saveBuffer.error += '\n';
                 }
             };
             console.warn = console.error;
             process.stdout.write = function () {
                 var i;
-                if(saveBuffer){
+                if (saveBuffer) {
                     saveBuffer.log = saveBuffer.log || '';
-                    for(i=0;i<arguments.length;i++){
-                        saveBuffer.log += arguments[i]+' ';
+                    for (i = 0; i < arguments.length; i++) {
+                        saveBuffer.log += arguments[i] + ' ';
                     }
-                    saveBuffer.log +='\n';
+                    saveBuffer.log += '\n';
                 }
             };
         },
-        restoreLogAndExit = function(){
+        restoreLogAndExit = function () {
             console.log = oldConsoleLog;
             console.error = oldConsoleError;
             console.warn = oldConsoleWarn;
             process.stdout.write = oldProcessStdoutWrite;
             process.exit = oldProcessExit;
         },
-        addTest = function(parameters){
-            it(parameters.id,function(done){
-                var buffer = {log:'',error:'',code:0};
+        addTest = function (parameters) {
+            it(parameters.id, function (done) {
+                var buffer = {log: '', error: '', code: 0};
                 suppressLogAndExit(buffer);
-                mergeCli.main(['node',filename,parameters.params ])
+                mergeCli.main(['node', filename, parameters.params])
                     .then(function () {
                         restoreLogAndExit();
                         buffer.code.should.be.eql(parameters.code || 0);
                         buffer.error.should.be.empty;
-                        if(parameters.out){
+                        if (parameters.out) {
                             buffer.log.should.contain(parameters.out);
                         }
                         done();
@@ -92,21 +92,23 @@ describe('merge CLI test', function () {
                     });
             });
         };
-    before(function(done){
+    before(function (done) {
         var oldDone = done,
-            applyChanges = function(){
+            applyChanges = function () {
                 var needed = 2,
                     error = null,
-                    applied = function(err){
+                    applied = function (err) {
                         error = error || err;
-                        if(--needed === 0){
+                        if (--needed === 0) {
                             oldDone(error);
                         }
                     };
-                applyChange('./test/bin/merge/masterDiff.json','master',applied);
-                applyChange('./test/bin/merge/otherDiff.json','other',applied);
-            }, applyChange = function(filePath,branch,next){
-                var nodeApplyPatch = testFixture.childProcess.spawn('node', ['./src/bin/apply.js', filePath, '-m',gmeConfig.mongo.uri, '-p',projectName, '-t',branch]),
+                applyChange('./test/bin/merge/masterDiff.json', 'master', applied);
+                applyChange('./test/bin/merge/otherDiff.json', 'other', applied);
+            },
+            applyChange = function (filePath, branch, next) {
+                var nodeApplyPatch = testFixture.childProcess.spawn('node',
+                        ['./src/bin/apply.js', filePath, '-m', gmeConfig.mongo.uri, '-p', projectName, '-t', branch]),
                     stdoutData,
                     err;
 
@@ -123,7 +125,7 @@ describe('merge CLI test', function () {
                 });
 
                 nodeApplyPatch.on('close', function (code) {
-                    next(code ? new Error('error during patch application: '+ (err || code)) : null);
+                    next(code ? new Error('error during patch application: ' + (err || code)) : null);
                 });
             };
         database.openDatabase(function (err) {
@@ -137,8 +139,8 @@ describe('merge CLI test', function () {
                     oldDone(error || err);
                 });
             };
-            database.deleteProject(projectName,function(err){
-                if(err){
+            database.deleteProject(projectName, function (err) {
+                if (err) {
                     done(err);
                     return;
                 }
@@ -148,35 +150,37 @@ describe('merge CLI test', function () {
                         return;
                     }
 
-                    var core = new testFixture.WebGME.core(project, {globConf: gmeConfig,
-                            logger: testFixture.logger.fork('core')}),
+                    var core = new testFixture.WebGME.core(project, {
+                            globConf: gmeConfig,
+                            logger: testFixture.logger.fork('core')
+                        }),
                         root = core.createNode(),
                         jsonProject = JSON.parse(testFixture.fs.readFileSync('./test/bin/merge/base.json')),
                         commitHash;
 
-                    testFixture.WebGME.serializer.import(core,root,jsonProject,function(err){
-                        if(err){
+                    testFixture.WebGME.serializer.import(core, root, jsonProject, function (err) {
+                        if (err) {
                             done(err);
                             return;
                         }
                         //now creating the start commit and make it the basis of two branches -master- and -other-
-                        core.persist(root,function(err){
-                            if(err){
+                        core.persist(root, function (err) {
+                            if (err) {
                                 done(err);
                                 return;
                             }
-                            commitHash = project.makeCommit([],core.getHash(root),'initial commit',function(err){
-                                if(err){
+                            commitHash = project.makeCommit([], core.getHash(root), 'initial commit', function (err) {
+                                if (err) {
                                     done(err);
                                     return;
                                 }
-                                project.setBranchHash('master','',commitHash,function(err){
-                                    if(err){
+                                project.setBranchHash('master', '', commitHash, function (err) {
+                                    if (err) {
                                         done(err);
                                         return;
                                     }
-                                    project.setBranchHash('other','',commitHash,function(err){
-                                        if(err){
+                                    project.setBranchHash('other', '', commitHash, function (err) {
+                                        if (err) {
                                             done(err);
                                             return;
                                         }
@@ -190,13 +194,13 @@ describe('merge CLI test', function () {
             });
         });
     });
-    after(function(done){
+    after(function (done) {
         database.openDatabase(function (err) {
             if (err) {
                 done(err);
                 return;
             }
-            database.deleteProject(projectName, function (err) {
+            database.deleteProject(projectName, function (/*err*/) {
                 database.closeDatabase(done);
             });
         });
@@ -206,13 +210,30 @@ describe('merge CLI test', function () {
         mergeCli.should.have.property('main');
         mergeCli.should.have.property('merge');
     });
-    addTest({id:'-h prints out help text',params:'-h',out:'Usage: merge [options]'});
-    addTest({id:'--help prints out help text',params:'--help',out:'Usage: merge [options]'});
-    addTest({id:'empty parameter list is faulty',params:'',out:'project identifier'});
-    addTest({id:'missing mine parameter',params:'-p '+projectName,out:'my branch/commit parameter',code:1});
-    addTest({id:'invalid mine parameter',params:'-p '+projectName+' -M faulty@name',out:'invalid \'mine\''});
-    addTest({id:'missing theirs parameter',params:'-p '+projectName+' -M other',out:'their branch/commit',code:1});
-    addTest({id:'invalid mine parameter',params:'-p '+projectName+' -M other -T fault@all',out:'invalid \'theirs\''});
-    addTest({id:'console output of the merge',params:'-p '+projectName+' -M other -T master',out:'diff base->mine:'});
-    addTest({id:'automerge',params:'-p '+projectName+' -M other -T master -a',out:'was successfully updated with the merged result'});
+    addTest({id: '-h prints out help text', params: '-h', out: 'Usage: merge [options]'});
+    addTest({id: '--help prints out help text', params: '--help', out: 'Usage: merge [options]'});
+    addTest({id: 'empty parameter list is faulty', params: '', out: 'project identifier'});
+    addTest({id: 'missing mine parameter', params: '-p ' + projectName, out: 'my branch/commit parameter', code: 1});
+    addTest({id: 'invalid mine parameter', params: '-p ' + projectName + ' -M faulty@name', out: 'invalid \'mine\''});
+    addTest({
+        id: 'missing theirs parameter',
+        params: '-p ' + projectName + ' -M other',
+        out: 'their branch/commit',
+        code: 1
+    });
+    addTest({
+        id: 'invalid mine parameter',
+        params: '-p ' + projectName + ' -M other -T fault@all',
+        out: 'invalid \'theirs\''
+    });
+    addTest({
+        id: 'console output of the merge',
+        params: '-p ' + projectName + ' -M other -T master',
+        out: 'diff base->mine:'
+    });
+    addTest({
+        id: 'automerge',
+        params: '-p ' + projectName + ' -M other -T master -a',
+        out: 'was successfully updated with the merged result'
+    });
 });

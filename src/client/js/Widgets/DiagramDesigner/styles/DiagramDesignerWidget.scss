@@ -3,7 +3,7 @@
 $diagram-designer-selection-rubber-band-background-color: rgba(219, 234, 252, 0.49);
 $diagram-designer-selection-rubber-band-border-color: #52A8EC;
 $diagram-designer-selection-outline-background-color: rgba(255, 255, 0, 0.05);
-$diagram-designer-selection-outline-border: rgba(0,0,0,0.5) dashed 1px;
+$diagram-designer-selection-outline-border: rgba(0, 0, 0, 0.5) dashed 1px;
 $diagram-designer-selection-outline-shadow-start: rgba(0, 0, 0, 0.075);
 $diagram-designer-selection-outline-shadow-end: rgba(0, 0, 0, 0.3);
 $diagram-designer-selection-outline-s-btn-background-color: #FFFFFF;
@@ -16,7 +16,7 @@ $error-decorator-background-color: #F2DEDE;
 $accept-droppable-background-color: rgba(0, 255, 0, 0.1);
 $reject-droppable-background-color: rgba(255, 0, 0, 0.1);
 
-$path-edit-segment-color: rgba(0,0,0,0);
+$path-edit-segment-color: rgba(0, 0, 0, 0);
 $new-segment-point-marker-background-color: #FFFF00;
 $new-segment-point-marker-border-color: #FF0000;
 $segment-point-marker-background-color: #FFFF00;
@@ -44,7 +44,7 @@ $tabs-container-height: 26px;
     position: absolute;
 
     .designer-item,
-    .designer-connection{
+    .designer-connection {
       cursor: pointer;
     }
 
@@ -133,7 +133,7 @@ $tabs-container-height: 26px;
         margin-top: $connector-size / -2;
       }
     }
-    
+
     .c-area {
       position: absolute;
       width: 8px;
@@ -143,7 +143,6 @@ $tabs-container-height: 26px;
       margin-top: -4px;
       margin-left: -4px;
     }
-
 
     .c-d-end {
       @include connector_basics;
@@ -311,7 +310,7 @@ div.diagram-designer-drag-outline {
 .diagram-designer-tabs-container {
   position: absolute;
   top: 3px;
-  width : 100%;
+  width: 100%;
   height: $tabs-container-height;
   background-color: rgba(248, 248, 248, 0.4);
 
@@ -367,7 +366,7 @@ div.diagram-designer-drag-outline {
       &.nav-tabs {
         > li {
           display: inline-block;
-          float:none;
+          float: none;
 
           > a {
             padding-top: 5px;

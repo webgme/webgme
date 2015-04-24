@@ -1,20 +1,23 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 
 define(['js/logger',
-        'js/Utils/GMEConcepts',
-        'js/NodePropertyNames',
-        'js/Constants'], function (Logger,
-                                   GMEConcepts,
-                                   nodePropertyNames,
-                                   CONSTANTS) {
-
-    "use strict";
+    'js/Utils/GMEConcepts',
+    'js/NodePropertyNames',
+    'js/Constants'
+], function (Logger,
+             GMEConcepts,
+             nodePropertyNames,
+             CONSTANTS) {
+    'use strict';
 
     var NODE_PROGRESS_CLASS = 'node-progress',
-        GME_MODEL_CLASS = "gme-model",
-        GME_ATOM_CLASS = "gme-atom",
-        GME_ROOT_ICON = "gme-root",
-        PROJECT_ROOT_ID = CONSTANTS.PROJECT_ROOT_ID,
+        GME_ATOM_CLASS = 'gme-atom',
         DEFAULT_VISUALIZER = 'ModelEditor',
         STATE_LOADING = 0,
         STATE_LOADED = 1,
@@ -23,10 +26,10 @@ define(['js/logger',
     var InheritanceBrowserControl = function (client, treeBrowser) {
         var self = this;
 
-        this._client = client;
-        this._treeBrowser = treeBrowser;
-        this._treeBrowser._enableNodeRename = false;
-        this._logger = Logger.create('gme:Panels:ObjectBrowser:InheritanceBrowserControl',
+        self._client = client;
+        self._treeBrowser = treeBrowser;
+        self._treeBrowser._enableNodeRename = false;
+        self._logger = Logger.create('gme:Panels:ObjectBrowser:InheritanceBrowserControl',
             WebGMEGlobal.gmeConfig.client.log);
 
         setTimeout(function () {
@@ -68,18 +71,22 @@ define(['js/logger',
 
             //add "root" with its children to territory
             //create a new loading node for it in the tree
-            loadingRootTreeNode = this._treeBrowser.createNode(null, {   "id": FCO_ID,
-                "name": "Initializing tree...",
-                "hasChildren" : false,
-                "class" :  NODE_PROGRESS_CLASS });
+            loadingRootTreeNode = this._treeBrowser.createNode(null, {
+                id: FCO_ID,
+                name: 'Initializing tree...',
+                hasChildren: false,
+                class: NODE_PROGRESS_CLASS
+            });
 
             //store the node's info in the local hashmap
-            this._nodes[FCO_ID] = {   "treeNode": loadingRootTreeNode,
-                "inheritance" : [],
-                "state" : STATE_LOADING };
+            this._nodes[FCO_ID] = {
+                treeNode: loadingRootTreeNode,
+                inheritance: [],
+                state: STATE_LOADING
+            };
 
             //add the root to the query
-            this._selfPatterns[FCO_ID] = { "children": 0};
+            this._selfPatterns[FCO_ID] = {children: 0};
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         } else {
             setTimeout(function () {
@@ -137,29 +144,37 @@ define(['js/logger',
                 //check if the node could be retreived from the client
                 if (childNode) {
                     //the node was present on the client side, render ist full data
-                    childTreeNode = this._treeBrowser.createNode(parentNode, {   "id": currentChildId,
-                        "name": childNode.getAttribute("name"),
-                        "hasChildren" : (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
-                        "class" :   this._getNodeClass(childNode) });
+                    childTreeNode = this._treeBrowser.createNode(parentNode, {
+                        id: currentChildId,
+                        name: childNode.getAttribute('name'),
+                        hasChildren: (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
+                        class: this._getNodeClass(childNode)
+                    });
 
                     //store the node's info in the local hashmap
-                    this._nodes[currentChildId] = {    "treeNode": childTreeNode,
-                        "inheritance" : childNode.getCollectionPaths(CONSTANTS.POINTER_BASE),
-                        "state" : STATE_LOADED };
+                    this._nodes[currentChildId] = {
+                        treeNode: childTreeNode,
+                        inheritance: childNode.getCollectionPaths(CONSTANTS.POINTER_BASE),
+                        state: STATE_LOADED
+                    };
                 } else {
                     //the node is not present on the client side, render a loading node instead
                     //create a new node for it in the tree
-                    childTreeNode = this._treeBrowser.createNode(parentNode, {   "id": currentChildId,
-                        "name": "Loading...",
-                        "hasChildren" : false,
-                        "class" :  NODE_PROGRESS_CLASS });
+                    childTreeNode = this._treeBrowser.createNode(parentNode, {
+                        id: currentChildId,
+                        name: 'Loading...',
+                        hasChildren: false,
+                        class: NODE_PROGRESS_CLASS
+                    });
 
                     //store the node's info in the local hashmap
-                    this._nodes[currentChildId] = {    "treeNode": childTreeNode,
-                        "inheritance" : [],
-                        "state" : STATE_LOADING };
+                    this._nodes[currentChildId] = {
+                        treeNode: childTreeNode,
+                        inheritance: [],
+                        state: STATE_LOADING
+                    };
 
-                    this._selfPatterns[currentChildId] = { 'children': 0 };
+                    this._selfPatterns[currentChildId] = {'children': 0};
                 }
             }
 
@@ -197,7 +212,8 @@ define(['js/logger',
             }
         };
 
-        //call the cleanup recursively and mark this node (being closed) as non removable (from local hashmap neither from territory)
+        //call the cleanup recursively and mark this node (being closed)
+        // as non removable (from local hashmap neither from territory)
         deleteNodeAndChildrenFromLocalHash(nodeId, false);
 
         //if there is anything to remove from the territory, do it
@@ -207,7 +223,7 @@ define(['js/logger',
     };
 
     InheritanceBrowserControl.prototype._onNodeDoubleClicked = function (nodeId) {
-        this._logger.debug("_onNodeDoubleClicked with nodeId: " + nodeId);
+        this._logger.debug('_onNodeDoubleClicked with nodeId: ' + nodeId);
         var settings = {};
         var parentId;
         var nodeObj = this._client.getNode(nodeId);
@@ -235,16 +251,14 @@ define(['js/logger',
             len = events.length;
 
         for (i = 0; i < len; i += 1) {
-            switch (events[i].etype) {
-                case "load":
-                    this._refresh("insert", events[i].eid);
-                    break;
-                case "update":
-                    this._refresh("update", events[i].eid);
-                    break;
-                case "unload":
-                    this._refresh("unload", events[i].eid);
-                    break;
+            if (events[i].etype === 'load') {
+                this._refresh('insert', events[i].eid);
+            } else if (events[i].etype === 'update') {
+                this._refresh('update', events[i].eid);
+            } else if (events[i].etype === 'unload') {
+                this._refresh('unload', events[i].eid);
+            } else {
+                this._logger.debug('unknown event type \'' + events[i].etype + '\' ignored');
             }
         }
     };
@@ -264,13 +278,14 @@ define(['js/logger',
             childNode,
             childTreeNode,
             client = this._client,
-            self = this;
+            self = this,
+            xx;
 
-        this._logger.debug("Refresh event '" + eventType + "', with objectId: '" + objectId + "'");
+        this._logger.debug('Refresh event \'' + eventType + '\', with objectId: \'' + objectId + '\'');
 
         //HANDLE INSERT
         //object got inserted into the territory
-        if (eventType === "insert") {
+        if (eventType === 'insert') {
             //check if this control shows any interest for this object
             if (this._nodes[objectId]) {
 
@@ -278,7 +293,7 @@ define(['js/logger',
                 //update the "loading" node accordingly
                 if (this._nodes[objectId].state === STATE_LOADING) {
                     //set eventType to "update" and let it go and be handled by "update" event
-                    eventType = "update";
+                    eventType = 'update';
                 }
             }
         }
@@ -286,12 +301,12 @@ define(['js/logger',
 
         //HANDLE UPDATE
         //object got updated in the territory
-        if (eventType === "update" || eventType === "unload") {
+        if (eventType === 'update' || eventType === 'unload') {
             //handle deleted children
             removeFromTerritory = [];
             //check if this control shows any interest for this object
             if (this._nodes[objectId]) {
-                this._logger.debug("Update object with id: " + objectId);
+                this._logger.debug('Update object with id: ' + objectId);
                 //get the node from the client
                 updatedObject = client.getNode(objectId);
 
@@ -306,9 +321,11 @@ define(['js/logger',
                         objType = this._getNodeClass(updatedObject);
 
                         //create the node's descriptor for the tree-browser widget
-                        nodeDescriptor = {  "name" :  updatedObject.getAttribute("name"),
-                            "hasChildren" : (updatedObject.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
-                            "class" : objType };
+                        nodeDescriptor = {
+                            name: updatedObject.getAttribute('name'),
+                            hasChildren: (updatedObject.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
+                            class: objType
+                        };
 
                         //update the node's representation in the tree
                         this._treeBrowser.updateNode(this._nodes[objectId].treeNode, nodeDescriptor);
@@ -326,9 +343,9 @@ define(['js/logger',
 
                         //create the node's descriptor for the treebrowser widget
                         nodeDescriptor = {
-                            "name" : updatedObject.getAttribute("name"),
-                            "hasChildren" : (updatedObject.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
-                            "class" : objType
+                            name: updatedObject.getAttribute('name'),
+                            hasChildren: (updatedObject.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
+                            class: objType
                         };
 
                         //update the node's representation in the tree
@@ -342,10 +359,11 @@ define(['js/logger',
                             //figure out what are the deleted children's IDs
                             inheritanceDeleted = _.difference(oldInheritance, currentInheritance);
 
-                            //removes all the (nested)childrendIDs from the local hashmap accounting the currently opened this._nodes's info
+                            //removes all the (nested)childrendIDs from the local hashmap
+                            // accounting the currently opened this._nodes's info
                             deleteNodeAndChildrenFromLocalHash = function (childNodeId) {
-                                var xx;
-                                //if the given node is in this hashmap itself, go forward with its children's ID recursively
+                                //if the given node is in this hashmap itself,
+                                // go forward with its children's ID recursively
                                 if (self._nodes[childNodeId]) {
                                     for (xx = 0; xx < self._nodes[childNodeId].inheritance.length; xx += 1) {
                                         deleteNodeAndChildrenFromLocalHash(self._nodes[childNodeId].inheritance[xx]);
@@ -372,7 +390,8 @@ define(['js/logger',
                                     //call the node deletion in the tree-browser widget
                                     this._treeBrowser.deleteNode(this._nodes[currentChildId].treeNode);
 
-                                    //call the cleanup recursively and mark this node (being closed) as non removable (from local hashmap neither from territory)
+                                    //call the cleanup recursively and mark this node (being closed)
+                                    // as non removable (from local hashmap neither from territory)
                                     deleteNodeAndChildrenFromLocalHash(currentChildId);
                                 }
                             }
@@ -395,27 +414,35 @@ define(['js/logger',
                                 //check if the node could be retreived from the project
                                 if (childNode) {
                                     //the node was present on the client side, render ist full data
-                                    childTreeNode = this._treeBrowser.createNode(this._nodes[objectId].treeNode, {  "id": currentChildId,
-                                        "name": childNode.getAttribute("name"),
-                                        "hasChildren": (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
-                                        "class" :  this._getNodeClass(childNode) });
+                                    childTreeNode = this._treeBrowser.createNode(this._nodes[objectId].treeNode, {
+                                        id: currentChildId,
+                                        name: childNode.getAttribute('name'),
+                                        hasChildren: (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
+                                        class: this._getNodeClass(childNode)
+                                    });
 
                                     //store the node's info in the local hashmap
-                                    this._nodes[currentChildId] = {   "treeNode": childTreeNode,
-                                        "inheritance" : childNode.getCollectionPaths(CONSTANTS.POINTER_BASE),
-                                        "state" : STATE_LOADED };
+                                    this._nodes[currentChildId] = {
+                                        treeNode: childTreeNode,
+                                        inheritance: childNode.getCollectionPaths(CONSTANTS.POINTER_BASE),
+                                        state: STATE_LOADED
+                                    };
                                 } else {
                                     //the node is not present on the client side, render a loading node instead
                                     //create a new node for it in the tree
-                                    childTreeNode = this._treeBrowser.createNode(this._nodes[objectId].treeNode, {  "id": currentChildId,
-                                        "name": "Loading...",
-                                        "hasChildren" : false,
-                                        "class" :  NODE_PROGRESS_CLASS  });
+                                    childTreeNode = this._treeBrowser.createNode(this._nodes[objectId].treeNode, {
+                                        id: currentChildId,
+                                        name: 'Loading...',
+                                        hasChildren: false,
+                                        class: NODE_PROGRESS_CLASS
+                                    });
 
                                     //store the node's info in the local hashmap
-                                    this._nodes[currentChildId] = { "treeNode": childTreeNode,
-                                        "inheritance" : [],
-                                        "state" : STATE_LOADING };
+                                    this._nodes[currentChildId] = {
+                                        treeNode: childTreeNode,
+                                        inheritance: [],
+                                        state: STATE_LOADING
+                                    };
                                 }
                             }
                         }

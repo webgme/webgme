@@ -1,4 +1,5 @@
 /*globals define, WebGMEGlobal, _*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -13,17 +14,18 @@ define(['js/logger',
     'js/Utils/DisplayFormat',
     'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
     'js/Controls/PropertyGrid/PropertyGridWidgets',
-    './PointerWidget'], function (Logger,
-                                util,
-                                nodePropertyNames,
-                                REGISTRY_KEYS,
-                                CONSTANTS,
-                                displayFormat,
-                                DecoratorSVGExplorerDialog,
-                                PropertyGridWidgets,
-                                PointerWidget) {
+    './PointerWidget'
+], function (Logger,
+             util,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             CONSTANTS,
+             displayFormat,
+             DecoratorSVGExplorerDialog,
+             PropertyGridWidgets,
+             PointerWidget) {
 
-    "use strict";
+    'use strict';
 
     var PropertyEditorController,
         META_REGISTRY_KEYS = [
@@ -148,7 +150,7 @@ define(['js/logger',
             commonPreferences = {},
             commonMeta = {},
             commonPointers = {},
-            noCommonValueColor = "#f89406",
+            noCommonValueColor = '#f89406',
             _getNodeAttributeValues, //fn
             _getNodeRegistryValues, //fn
             _filterCommon, //fn
@@ -185,7 +187,7 @@ define(['js/logger',
         });
 
         _getNodeAttributeValues = function (node) {
-            var result =  {},
+            var result = {},
                 attrNames = node.getAttributeNames(),
                 len = attrNames.length;
 
@@ -197,7 +199,7 @@ define(['js/logger',
         };
 
         _getNodeRegistryValues = function (node, registryNames) {
-            var result =  {},
+            var result = {},
                 len = registryNames.length;
 
             while (--len >= 0) {
@@ -214,13 +216,17 @@ define(['js/logger',
                 for (it in otherList) {
                     if (otherList.hasOwnProperty(it)) {
                         if (commonAttrMeta.hasOwnProperty(it)) {
-                            resultList[it] = { "value": otherList[it],
-                                "valueType": commonAttrMeta[it].type,
-                                "isCommon": true };
+                            resultList[it] = {
+                                value: otherList[it],
+                                valueType: commonAttrMeta[it].type,
+                                isCommon: true
+                            };
                         } else {
-                            resultList[it] = { "value": otherList[it],
-                                "valueType": typeof otherList[it],
-                                "isCommon": true };
+                            resultList[it] = {
+                                value: otherList[it],
+                                valueType: typeof otherList[it],
+                                isCommon: true
+                            };
                         }
                     }
                 }
@@ -278,7 +284,7 @@ define(['js/logger',
             //if type is enum, the common types should be the intersection of the individual enum types
             while (len--) {
                 attrName = nodeAttributeNames[len];
-                attrMetaDescriptor = _client.getAttributeSchema(nodeId,attrName);
+                attrMetaDescriptor = _client.getAttributeSchema(nodeId, attrName);
                 if (commonAttrMeta.hasOwnProperty(attrName)) {
                     isCommon = true;
                     //this attribute already exist in the attribute meta map
@@ -290,7 +296,8 @@ define(['js/logger',
                             if (isEnumCommon && isEnumAttrMeta) {
                                 //same type, both enum
                                 //get the intersection of the enum values
-                                commonEnumValues = _.intersection(commonAttrMeta[attrName].enum, attrMetaDescriptor.enum);
+                                commonEnumValues = _.intersection(commonAttrMeta[attrName].enum,
+                                    attrMetaDescriptor.enum);
 
                                 if (commonEnumValues.length !== commonAttrMeta[attrName].enum.length) {
                                     if (commonEnumValues.length === 0) {
@@ -379,8 +386,9 @@ define(['js/logger',
 
                         if (ownAttrNames.indexOf(attrName) !== -1) {
                             //there are 1 options:
-                            //#1: the attribute is defined on this level, and that's why it is in the onwAttributeNames list
-                            //#2: the attribute is inherited and overridden on this level (but defined somewhere up in the hierarchy)
+                            //#1: the attribute is defined on this level, and that's why it is in the onwAttributeNames
+                            //#2: the attribute is inherited and overridden on this level
+                            //      (but defined somewhere up in the hierarchy)
                             if (baseNode) {
                                 resetable = baseNode.getAttributeNames().indexOf(attrName) !== -1;
                             } else {
@@ -417,8 +425,9 @@ define(['js/logger',
 
                         if (ownRegistryNames.indexOf(regName) !== -1) {
                             //there are 1 options:
-                            //#1: the registry is defined on this level, and that's why it is in the ownRegistryNames list
-                            //#2: the registry is inherited and overridden on this level (but defined somewhere up in the hierarchy)
+                            //#1: the registry is defined on this level, and that's why it is in the ownRegistryNames
+                            //#2: the registry is inherited and overridden on this level
+                            //      (but defined somewhere up in the hierarchy)
                             if (baseNode) {
                                 resetable = baseNode.getRegistryNames().indexOf(regName) !== -1;
                             } else {
@@ -455,8 +464,9 @@ define(['js/logger',
 
                         if (ownPointerNames.indexOf(pointerName) !== -1) {
                             //there are 1 options:
-                            //#1: the registry is defined on this level, and that's why it is in the ownRegistryNames list
-                            //#2: the registry is inherited and overridden on this level (but defined somewhere up in the hierarchy)
+                            //#1: the registry is defined on this level, and that's why it is in the ownRegistryNames
+                            //#2: the registry is inherited and overridden on this level
+                            //      (but defined somewhere up in the hierarchy)
                             if (baseNode) {
                                 resetable = baseNode.getPointerNames().indexOf(pointerName) !== -1;
                             } else {
@@ -481,8 +491,8 @@ define(['js/logger',
                     keyParts,
                     doDisplay;
 
-                if (prefix !== "") {
-                    prefix += ".";
+                if (prefix !== '') {
+                    prefix += '.';
                 }
 
                 for (i in srcList) {
@@ -493,14 +503,16 @@ define(['js/logger',
 
                         if (doDisplay) {
                             extKey = prefix + i;
-                            keyParts = i.split(".");
+                            keyParts = i.split('.');
 
-                            dstList[extKey] = { "name": keyParts[keyParts.length - 1],
-                                "value": srcList[i].value,
-                                "valueType": srcList[i].valueType,
-                                "options":  srcList[i].options};
+                            dstList[extKey] = {
+                                name: keyParts[keyParts.length - 1],
+                                value: srcList[i].value,
+                                valueType: srcList[i].valueType,
+                                options: srcList[i].options
+                            };
 
-                            if (i === "position.x" || i === "position.y") {
+                            if (i === 'position.x' || i === 'position.y') {
                                 dstList[extKey].minValue = 0;
                                 dstList[extKey].stepValue = 10;
                             }
@@ -510,8 +522,8 @@ define(['js/logger',
                             }
 
                             if (srcList[i].isCommon === false) {
-                                dstList[extKey].value = "";
-                                dstList[extKey].options = {"textColor": noCommonValueColor};
+                                dstList[extKey].value = '';
+                                dstList[extKey].options = {textColor: noCommonValueColor};
                             }
 
                             //is it inherited??? if so, it can be reseted to the inherited value
@@ -561,41 +573,58 @@ define(['js/logger',
             };
 
             if (selectedObjIDs.length === 1) {
-                propList[" ID"] = { "name": 'ID',
-                    "value": selectedObjIDs[0],
-                    "valueType": typeof selectedObjIDs[0],
-                    "isCommon": true,
-                    "readOnly": true};
+                propList[' ID'] = {
+                    name: 'ID',
+                    value: selectedObjIDs[0],
+                    valueType: typeof selectedObjIDs[0],
+                    isCommon: true,
+                    readOnly: true
+                };
 
                 cNode = _client.getNode(selectedObjIDs[0]);
                 if (cNode) {
-                    propList[" GUID"] = { "name": 'GUID',
-                        "value": cNode.getGuid(),
-                        "valueType": typeof selectedObjIDs[0],
-                        "isCommon": true,
-                        "readOnly": true};
+                    propList[' GUID'] = {
+                        name: 'GUID',
+                        value: cNode.getGuid(),
+                        valueType: typeof selectedObjIDs[0],
+                        isCommon: true,
+                        readOnly: true
+                    };
                 }
             }
 
-            propList[CONSTANTS.PROPERTY_GROUP_ATTRIBUTES] = { "name": CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
-                "text": CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
-                "value": undefined};
+            propList[CONSTANTS.PROPERTY_GROUP_ATTRIBUTES] = {
+                name: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
+                text: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
+                value: undefined
+            };
 
-            propList[CONSTANTS.PROPERTY_GROUP_PREFERENCES] = { "name": CONSTANTS.PROPERTY_GROUP_PREFERENCES,
-                "text": CONSTANTS.PROPERTY_GROUP_PREFERENCES,
-                "value": undefined};
+            propList[CONSTANTS.PROPERTY_GROUP_PREFERENCES] = {
+                name: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
+                text: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
+                value: undefined
+            };
 
-            propList[CONSTANTS.PROPERTY_GROUP_META] = { "name": CONSTANTS.PROPERTY_GROUP_META,
-                "text": CONSTANTS.PROPERTY_GROUP_META,
-                "value": undefined};
+            propList[CONSTANTS.PROPERTY_GROUP_META] = {
+                name: CONSTANTS.PROPERTY_GROUP_META,
+                text: CONSTANTS.PROPERTY_GROUP_META,
+                value: undefined
+            };
 
-            propList[CONSTANTS.PROPERTY_GROUP_POINTERS] = { "name": CONSTANTS.PROPERTY_GROUP_POINTERS,
-                "text": CONSTANTS.PROPERTY_GROUP_POINTERS,
-                "value": undefined};
+            propList[CONSTANTS.PROPERTY_GROUP_POINTERS] = {
+                name: CONSTANTS.PROPERTY_GROUP_POINTERS,
+                text: CONSTANTS.PROPERTY_GROUP_POINTERS,
+                value: undefined
+            };
 
             _addItemsToResultList(commonAttrs, CONSTANTS.PROPERTY_GROUP_ATTRIBUTES, propList, true, false, false);
 
-            _addItemsToResultList(commonPreferences, CONSTANTS.PROPERTY_GROUP_PREFERENCES, propList, false, true, false);
+            _addItemsToResultList(commonPreferences,
+                CONSTANTS.PROPERTY_GROUP_PREFERENCES,
+                propList,
+                false,
+                true,
+                false);
 
             _addItemsToResultList(commonMeta, CONSTANTS.PROPERTY_GROUP_META, propList, false, true, false);
 
@@ -620,15 +649,16 @@ define(['js/logger',
         while (--i >= 0) {
             gmeID = selectedObjIDs[i];
 
-            keyArr = args.id.split(".");
+            keyArr = args.id.split('.');
             setterFn = undefined;
             getterFn = undefined;
             if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_ATTRIBUTES) {
-                setterFn = "setAttributes";
-                getterFn = "getEditableAttribute";
-            } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_PREFERENCES || keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
-                setterFn = "setRegistry";
-                getterFn = "getEditableRegistry";
+                setterFn = 'setAttributes';
+                getterFn = 'getEditableAttribute';
+            } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_PREFERENCES ||
+                       keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
+                setterFn = 'setRegistry';
+                getterFn = 'getEditableRegistry';
             }
 
             if (setterFn && getterFn) {
@@ -642,7 +672,7 @@ define(['js/logger',
                 propPointer = propObject;
                 keyArr.splice(0, 1);
 
-                if(keyArr.length < 1){
+                if (keyArr.length < 1) {
                     //simple value so just set it
                     propObject = args.newValue;
                 } else {
@@ -675,14 +705,16 @@ define(['js/logger',
         while (--i >= 0) {
             gmeID = selectedObjIDs[i];
 
-            keyArr = propertyName.split(".");
+            keyArr = propertyName.split('.');
             delFn = undefined;
             if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_ATTRIBUTES) {
-                delFn = "delAttributes";
-            } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_PREFERENCES || keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
-                delFn = "delRegistry";
-            } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_POINTERS && NON_RESETABLE_POINTRS.indexOf(keyArr[1]) === -1) {
-                delFn = "delPointer";
+                delFn = 'delAttributes';
+            } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_PREFERENCES ||
+                       keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
+                delFn = 'delRegistry';
+            } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_POINTERS &&
+                       NON_RESETABLE_POINTRS.indexOf(keyArr[1]) === -1) {
+                delFn = 'delPointer';
             }
 
             if (delFn) {
@@ -695,11 +727,11 @@ define(['js/logger',
         this._client.completeTransaction();
     };
 
-    PropertyEditorController.prototype.startsWith = function ( str, start ) {
-        if ( start === '' ) {
+    PropertyEditorController.prototype.startsWith = function (str, start) {
+        if (start === '') {
             return true;
         }
-        return start.length > 0 && str.substring( 0, start.length ) === start;
+        return start.length > 0 && str.substring(0, start.length) === start;
     };
 
     return PropertyEditorController;

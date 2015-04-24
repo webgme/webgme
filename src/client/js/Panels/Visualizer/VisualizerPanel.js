@@ -1,5 +1,5 @@
-/*globals define, _, $, WebGMEGlobal, DEBUG*/
-/*jshint browser:true*/
+/*globals define, _, $, WebGMEGlobal, DEBUG, require*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -13,14 +13,14 @@ define(['js/logger',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
     '/listAllVisualizerDescriptors',
-    'css!./styles/VisualizerPanel.css'],
-function (Logger,
-          LoaderProgressBar,
-          CONSTANTS,
-          REGISTRY_KEYS,
-          PanelBaseWithHeader,
-          SplitPanel,
-          VisualizersJSON) {
+    'css!./styles/VisualizerPanel.css'
+], function (Logger,
+             LoaderProgressBar,
+             CONSTANTS,
+             REGISTRY_KEYS,
+             PanelBaseWithHeader,
+             SplitPanel,
+             VisualizersJSON) {
 
     'use strict';
 
@@ -74,7 +74,8 @@ function (Logger,
             icon: btnIconBase.clone().addClass('gme icon-gme_split-panels'),
             clickFn: function (data, toggled) {
                 self._p2Editor(toggled);
-            }});
+            }
+        });
 
         this._panel1VisContainer = $('<div/>');
         this._ul1 = $('<ul class="nav nav-pills nav-stacked">');
@@ -96,17 +97,17 @@ function (Logger,
             self.selectedObjectChanged(activeObjectId);
         });
 
-        this._client.addEventListener(this._client.events.PROJECT_CLOSED, function (__project, nodeId) {
+        this._client.addEventListener(this._client.events.PROJECT_CLOSED, function (/* __project, nodeId */) {
             self._p2Editor(false);
             self._validVisualizers = null;
         });
 
-        this._client.addEventListener(this._client.events.PROJECT_OPENED, function (__project, nodeId) {
+        this._client.addEventListener(this._client.events.PROJECT_OPENED, function (/* __project, nodeId */) {
             self._p2Editor(false);
             self._validVisualizers = null;
         });
 
-        this._client.addEventListener(this._client.events.BRANCH_CHANGED, function (__project, nodeId) {
+        this._client.addEventListener(this._client.events.BRANCH_CHANGED, function (/* __project, nodeId */) {
             self._p2Editor(false);
             self._validVisualizers = null;
         });
@@ -151,7 +152,7 @@ function (Logger,
             if (this._visualizers[visualizer]) {
                 PanelClass = this._visualizers[visualizer].panel;
                 if (PanelClass) {
-                    this._activePanel[panel] = new PanelClass(this._layoutManager, {'client': this._client});
+                    this._activePanel[panel] = new PanelClass(this._layoutManager, {client: this._client});
                     this._splitPanel.setPanel(this._activePanel[panel], panel);
                 }
 
@@ -260,31 +261,31 @@ function (Logger,
         }
 
         if (this._visualizers[menuDesc.id]) {
-            this.logger.warn("A visualizer with the ID '" + menuDesc.id + "' already exists...");
+            this.logger.warn('A visualizer with the ID "' + menuDesc.id + '" already exists...');
             doCallBack();
         } else {
-            li.attr("data-id", menuDesc.id);
+            li.attr('data-id', menuDesc.id);
             a.text(menuDesc.title);
 
             this._ul1.append(li);
 
             if (menuDesc.panel) {
 
-                loaderDiv = $("<div/>", { "class": "vis-loader"});
+                loaderDiv = $('<div/>', {class: 'vis-loader'});
 
-                li.loader = new LoaderProgressBar({"containerElement": loaderDiv});
+                li.loader = new LoaderProgressBar({containerElement: loaderDiv});
                 li.loader.start();
                 a.append(loaderDiv);
 
                 require([menuDesc.panel],
                     function (panelClass) {
-                        self.logger.debug("downloaded: " + menuDesc.panel);
+                        self.logger.debug('downloaded: ' + menuDesc.panel);
                         self._visualizers[menuDesc.id] = {panel: panelClass};
                         self._removeLoader(li, loaderDiv);
                         doCallBack();
                     },
                     function (err) {
-                        var msg = "Failed to download '" + err.requireModules[0] + "'";
+                        var msg = 'Failed to download "' + err.requireModules[0] + '"';
                         //for any error store undefined in the list and the default decorator will be used on the canvas
                         self.logger.error(msg);
                         a.append(' <i class="glyphicon glyphicon-warning-sign" title="' + msg + '"></i>');
@@ -294,7 +295,7 @@ function (Logger,
             } else {
                 a.append(' <i class="glyphicon glyphicon-warning-sign"></i>');
 
-                this.logger.warn("The visualizer with the ID '" + menuDesc.id + "' is missing 'panel' or 'control'");
+                this.logger.warn('The visualizer with the ID "' + menuDesc.id + '" is missing "panel" or "control"');
 
                 doCallBack();
             }
@@ -329,6 +330,11 @@ function (Logger,
     };
 
     VisualizerPanel.prototype._p2Editor = function (enabled) {
+        var activeLi,
+            vis,
+            ul,
+            panel;
+
         if (enabled) {
             //show 2 panels
             this._panel2VisContainer = this._panel1VisContainer.clone();
@@ -337,13 +343,13 @@ function (Logger,
             this._panel2VisContainer.find('.pp').text('Panel 2:');
             this.$el.append(this._panel2VisContainer);
             //find the selected on
-            var activeLi = this._panel2VisContainer.find('ul > li.active'),
-                vis = activeLi.attr('data-id'),
-                ul = activeLi.parent();
+            activeLi = this._panel2VisContainer.find('ul > li.active');
+            vis = activeLi.attr('data-id');
+            ul = activeLi.parent();
             this._setActiveVisualizer(vis, ul);
         } else {
             //destroy current controller and visualizer
-            var panel = 'p2';
+            panel = 'p2';
             if (this._activePanel[panel] && this._activePanel[panel].destroy) {
                 this._activePanel[panel].destroy();
             }

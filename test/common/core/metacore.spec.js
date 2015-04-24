@@ -1,4 +1,4 @@
-/* jshint node:true, mocha: true*/
+/* jshint node:true, mocha: true, expr:true*/
 
 /**
  * @author kecso / https://github.com/kecso
@@ -166,7 +166,8 @@ describe('meta core', function () {
     });
     it('checking children rules', function () {
         core.getValidChildrenPaths(childNode).should.have.length(3);
-        core.getValidChildrenPaths(childNode).should.include.members([core.getPath(childNode), core.getPath(attrNode), core.getPath(setNode)]);
+        core.getValidChildrenPaths(childNode).should.include.members([core.getPath(childNode),
+            core.getPath(attrNode), core.getPath(setNode)]);
 
         core.isValidChildOf(attrNode, childNode).should.be.true;
         core.isValidChildOf(childNode, childNode).should.be.true;
@@ -191,9 +192,9 @@ describe('meta core', function () {
 
         core.getValidAspectNames(aspectNode).should.be.empty;
     });
-    it('checks MetaSheet based type query',function(){
-        core.addMember(root,'MetaAspectSet',attrNode);
-        core.addMember(root,'MetaAspectSet',base);
+    it('checks MetaSheet based type query', function () {
+        core.addMember(root, 'MetaAspectSet', attrNode);
+        core.addMember(root, 'MetaAspectSet', base);
 
         core.getPath(core.getBaseType(attrNode)).should.be.eql(core.getPath(attrNode));
         core.getPath(core.getBaseType(setNode)).should.be.eql(core.getPath(base));

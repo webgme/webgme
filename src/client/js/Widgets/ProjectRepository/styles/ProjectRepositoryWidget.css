@@ -1,3 +1,6 @@
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 /* make sure to update commit_WIDTH and commit_HEIGHT in Widgets/ProjectRepository/ProjectRepositoryWidget.js */
 .repository-dialog .modal-header > h3 {
   margin-top: 0;

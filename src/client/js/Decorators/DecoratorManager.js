@@ -1,12 +1,16 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, _, WebGMEGlobal, require*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger'], function (Logger) {
 
-    "use strict";
+    'use strict';
 
     var DecoratorManager,
-        DECORATOR_PATH = "decorators/",
-        NOT_FOUND = "___N/A___";
+        DECORATOR_PATH = 'decorators/',
+        NOT_FOUND = '___N/A___';
 
     DecoratorManager = function () {
         this._logger = Logger.create('gme:Decorators:DecoratorManager', WebGMEGlobal.gmeConfig.client.log);
@@ -14,7 +18,7 @@ define(['js/logger'], function (Logger) {
         this._decorators = {};
         this._widgetDecoratorCache = {};
 
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     DecoratorManager.prototype.downloadAll = function (decoratorNames, callback) {
@@ -30,10 +34,11 @@ define(['js/logger'], function (Logger) {
                     callback();
                 } else {
                     callback('Failed to download all requested decorators ' + decoratorNames.toString() +
-                        ' only got ' + Object.keys(self._decorators).toString());
+                             ' only got ' + Object.keys(self._decorators).toString());
                 }
             }
         }
+
         for (i = 0; i < total; i += 1) {
             self._downloadOne(decoratorNames[i], countCallback);
         }
@@ -51,8 +56,8 @@ define(['js/logger'], function (Logger) {
                 i;
 
             if (len > 0) {
-                self._logger.debug("Remaining decorators for widget '" + widget + "': " + len + ", '" + queue + "'");
-                decorator = queue.splice(0,1)[0];
+                self._logger.debug('Remaining decorators for widget "' + widget + '": ' + len + ', "' + queue + '"');
+                decorator = queue.splice(0, 1)[0];
                 self._downloadOne(decorator, function () {
                     //check if the decorator itself supports this widget
                     //or it specifies other decorators instead of itself
@@ -74,12 +79,12 @@ define(['js/logger'], function (Logger) {
                     processDecorators(queue);
                 });
             } else {
-                self._logger.debug("No more decorators to download for widget '" + widget + "'");
+                self._logger.debug('No more decorators to download for widget "' + widget + '"');
                 fnCallBack.call(self);
             }
         };
 
-        this._logger.debug("Downloading decorators '" + decorators + "' for widget '" + widget + "'");
+        this._logger.debug('Downloading decorators "' + decorators + '" for widget "' + widget + '"');
         processDecorators();
     };
 
@@ -139,7 +144,8 @@ define(['js/logger'], function (Logger) {
         if (this._decorators[decorator]) {
             widgetDecorator = this._decorators[decorator].getDecoratorForWidget(widget);
             if (_.isArray(widgetDecorator)) {
-                this._logger.debug('fallback decorator list for decorator "' + decorator + '" for widget "' + widget + '" is: ' + widgetDecorator);
+                this._logger.debug('fallback decorator list for decorator "' + decorator + '" for widget "' + widget +
+                                   '" is: ' + widgetDecorator);
                 result = processDecoratorChain(widgetDecorator);
             } else {
                 this._logger.debug('found decorator: "' + decorator + '" for widget "' + widget + '"');
@@ -148,45 +154,47 @@ define(['js/logger'], function (Logger) {
         }
 
         //if still no decorator found, return the default decorator
-        if (!result) {
-            this._logger.debug("There is no decorator with name '" + decorator + "' that supports widget '" + widget + "'");
-            this._widgetDecoratorCache[widget][decorator] = NOT_FOUND;
-        } else {
+        if (result) {
             this._widgetDecoratorCache[widget][decorator] = result;
+        } else {
+            this._logger.debug('There is no decorator with name "' + decorator + '" that supports widget "' + widget +
+                               '"');
+            this._widgetDecoratorCache[widget][decorator] = NOT_FOUND;
         }
 
         return result;
     };
 
     DecoratorManager.prototype._getDecoratorFullPath = function (decorator) {
-        return DECORATOR_PATH + decorator + "/" + decorator;
+        return DECORATOR_PATH + decorator + '/' + decorator;
     };
 
     DecoratorManager.prototype._downloadOne = function (decorator, fnCallBack) {
         var self = this,
             decoratorPath = this._getDecoratorFullPath(decorator);
 
-        this._logger.debug("Initiating decorator download for '" + decorator + "'");
+        this._logger.debug('Initiating decorator download for "' + decorator + '"');
 
         if (this._decorators[decorator]) {
-            this._logger.debug("Decorator '" + decorator + "' has already been downloaded...");
+            this._logger.debug('Decorator "' + decorator + '" has already been downloaded...');
             fnCallBack();
         } else {
             require([decoratorPath],
                 function (DecoratorClass) {
-                    self._logger.debug("Decorator '" + decorator + "' has been successfully downloaded");
+                    self._logger.debug('Decorator "' + decorator + '" has been successfully downloaded');
                     try {
                         self._decorators[decorator] = new DecoratorClass();
-                    } catch(err) {
+                    } catch (err) {
                         delete self._decorators[decorator];
-                        self._logger.error("Error while trying to instantiate decorator '" + decorator + "'...");
+                        self._logger.error('Error while trying to instantiate decorator "' + decorator + '"...');
                     }
 
                     fnCallBack.call(self);
                 },
                 function (err) {
                     //for any error store undefined in the list and the default decorator will be used on the canvas
-                    self._logger.error("Failed to download decorator '" + decorator + "' because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'...");
+                    self._logger.error('Failed to download decorator "' + decorator + '" because of "' +
+                                       err.requireType + '" with module "' + err.requireModules[0] + '"...');
                     fnCallBack.call(self);
                 });
         }

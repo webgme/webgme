@@ -1,19 +1,20 @@
-/*globals define, DEBUG, WebGMEGlobal*/
-
+/*globals define, DEBUG, WebGMEGlobal, $ */
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
+define(['lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     'js/logger',
     'text!./templates/DefaultLayout.html',
-    'text!./DefaultLayoutConfig.json'], function (_jQueryLayout,
-                             Logger,
-                             defaultLayoutTemplate,
-                             DefaultLayoutConfigJSON) {
+    'text!./DefaultLayoutConfig.json'
+], function (_jQueryLayout,
+             Logger,
+             defaultLayoutTemplate,
+             DefaultLayoutConfigJSON) {
 
-    "use strict";
+    'use strict';
 
     var DefaultLayout,
         SPACING_OPEN_TOUCH = 10,
@@ -50,21 +51,20 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         this._centerPanels = [];
 
         this._body.layout({
-            defaults: {
-            },
+            defaults: {},
 
             north: {
-                closable :false,
+                closable: false,
                 resizable: false,
                 slidable: false,
-                spacing_open: 0,
+                spacing_open: 0, //jshint ignore: line
                 size: 64
             },
             south: {
-                closable :false,
+                closable: false,
                 resizable: false,
                 slidable: false,
-                spacing_open: 0,
+                spacing_open: 0, //jshint ignore: line
                 size: 27        //has to match footer CSS settings (height + border)
             },
             east: {
@@ -72,24 +72,24 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 minSize: SIDE_PANEL_WIDTH,
                 resizable: true,
                 slidable: false,
-                spacing_open: SPACING_OPEN,
-                spacing_closed: SPACING_CLOSED,
-                onresize : function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
+                spacing_open: SPACING_OPEN, //jshint ignore: line
+                spacing_closed: SPACING_CLOSED, //jshint ignore: line
+                onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
                     self._onEastResize();
                 }
-            },  west: {
+            }, west: {
                 size: SIDE_PANEL_WIDTH,
                 minSize: SIDE_PANEL_WIDTH,
                 resizable: true,
                 slidable: false,
-                spacing_open: SPACING_OPEN,
-                spacing_closed: SPACING_CLOSED,
-                onresize : function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
+                spacing_open: SPACING_OPEN, //jshint ignore: line
+                spacing_closed: SPACING_CLOSED, //jshint ignore: line
+                onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
                     self._onWestResize();
                 }
             },
-            center : {
-                onresize : function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
+            center: {
+                onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
                     self._onCenterResize();
                 }
             }
@@ -120,7 +120,7 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     };
 
     DefaultLayout.prototype.remove = function (panel) {
-          var idx;
+        var idx;
 
         //check it in the east pane
         idx = this._eastPanels.indexOf(panel);
@@ -134,7 +134,7 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 idx = this._centerPanels.indexOf(panel);
 
                 if (idx === -1) {
-                    this._logger.warn("Panel to be removed not found");
+                    this._logger.warn('Panel to be removed not found');
                 } else {
                     this._centerPanels.splice(idx, 1);
                     this._onCenterResize();
@@ -180,8 +180,7 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         var len = this._westPanels.length,
             w = this._westPanel.width(),
             h = this._westPanel.height(),
-            h0,
-            i;
+            h0;
 
         //TODO: fix this
         //second widget takes all the available space

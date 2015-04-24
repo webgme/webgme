@@ -1,11 +1,10 @@
 .projects-dialog {
   .pre-body {
-    padding: 15px;
-    padding-bottom: 0px;
+    padding: 15px 15px 0 15px;
 
     .tabContainer {
       ul.nav.nav-tabs {
-        margin-bottom: 0px;
+        margin-bottom: 0;
 
         li {
           width: 86px;
@@ -14,7 +13,6 @@
       }
     }
   }
-
 
   .modal-body {
     min-height: 300px;

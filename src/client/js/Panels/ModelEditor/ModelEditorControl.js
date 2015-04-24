@@ -1,4 +1,8 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal, $ */
+/*jshint browser: true */
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger',
     'js/Constants',
@@ -8,32 +12,31 @@ define(['js/logger',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts',
-    'js/Utils/PreferencesHelper'], function (Logger,
-                                                        CONSTANTS,
-                                                        nodePropertyNames,
-                                                        REGISTRY_KEYS,
-                                                        DiagramDesignerWidgetConstants,
-                                                        ModelEditorControlDiagramDesignerWidgetEventHandlers,
-                                                        GMEConcepts,
-                                                        GMEVisualConcepts,
-                                                        PreferencesHelper) {
+    'js/Utils/PreferencesHelper'
+], function (Logger,
+             CONSTANTS,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             DiagramDesignerWidgetConstants,
+             ModelEditorControlDiagramDesignerWidgetEventHandlers,
+             GMEConcepts,
+             GMEVisualConcepts,
+             PreferencesHelper) {
 
-    "use strict";
+    'use strict';
 
     var ModelEditorControl,
-        GME_ID = "GME_ID",
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30,
-        DEFAULT_DECORATOR = "ModelDecorator",
+        DEFAULT_DECORATOR = 'ModelDecorator',
         WIDGET_NAME = 'DiagramDesigner',
         SRC_POINTER_NAME = CONSTANTS.POINTER_SOURCE,
         DST_POINTER_NAME = CONSTANTS.POINTER_TARGET;
 
     ModelEditorControl = function (options) {
-        var self = this;
-
         this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:ModelEditor:' +
-            'ModelEditorControl', WebGMEGlobal.gmeConfig.client.log);
+                                                                            'ModelEditorControl',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
 
@@ -43,13 +46,13 @@ define(['js/logger',
         this.designerCanvas = options.widget;
 
         if (this._client === undefined) {
-            this.logger.error("ModelEditorControl's client is not specified...");
-            throw ("ModelEditorControl can not be created");
+            this.logger.error('ModelEditorControl\'s client is not specified...');
+            throw ('ModelEditorControl can not be created');
         }
 
         if (this.designerCanvas === undefined) {
-            this.logger.error("ModelEditorControl's DesignerCanvas is not specified...");
-            throw ("ModelEditorControl can not be created");
+            this.logger.error('ModelEditorControl\'s DesignerCanvas is not specified...');
+            throw ('ModelEditorControl can not be created');
         }
 
         this._selfPatterns = {};
@@ -62,14 +65,14 @@ define(['js/logger',
         this.___SLOW_CONN = false;
 
         //local variable holding info about the currently opened node
-        this.currentNodeInfo = {"id": null, "children" : [], "parentId": null };
+        this.currentNodeInfo = {id: null, children: [], parentId: null};
 
         /****************** END OF - ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
 
-        //attach all the event handlers for event's coming from DesignerCanvas
+            //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDiagramDesignerWidgetEventHandlers();
 
-        this.logger.debug("ModelEditorControl ctor finished");
+        this.logger.debug('ModelEditorControl ctor finished');
     };
 
     ModelEditorControl.prototype.selectedObjectChanged = function (nodeId) {
@@ -77,7 +80,7 @@ define(['js/logger',
             nodeName,
             self = this;
 
-        this.logger.debug("activeObject '" + nodeId + "'");
+        this.logger.debug('activeObject "' + nodeId + '"');
 
         //delete everything from model editor
         this.designerCanvas.clear();
@@ -116,7 +119,9 @@ define(['js/logger',
                 //make sure that the selectedAspect exist in the node, otherwise fallback to All
                 var aspectNames = this._client.getMetaAspectNames(nodeId) || [];
                 if (aspectNames.indexOf(this._selectedAspect) === -1) {
-                    this.logger.warn('The currently selected aspect "' + this._selectedAspect + '" does not exist in the object "' + desc.name + ' (' + nodeId + ')", falling back to "All"');
+                    this.logger.warn('The currently selected aspect "' + this._selectedAspect +
+                                     '" does not exist in the object "' + desc.name + ' (' + nodeId +
+                                     ')", falling back to "All"');
                     this._selectedAspect = CONSTANTS.ASPECT_ALL;
                     WebGMEGlobal.State.registerActiveAspect(CONSTANTS.ASPECT_ALL);
                 }
@@ -126,19 +131,21 @@ define(['js/logger',
             this._selfPatterns = {};
 
             if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
-				this._selfPatterns[nodeId] = { "children": 2 };
-			} else {
-				this._selfPatterns[nodeId] = this._client.getAspectTerritoryPattern(nodeId, this._selectedAspect);
-				this._selfPatterns[nodeId].children = 2;
-			}
+                this._selfPatterns[nodeId] = {children: 2};
+            } else {
+                this._selfPatterns[nodeId] = this._client.getAspectTerritoryPattern(nodeId, this._selectedAspect);
+                this._selfPatterns[nodeId].children = 2;
+            }
 
             this._firstLoad = true;
 
-            nodeName = (desc && desc.name || " ");
+            nodeName = (desc && desc.name || ' ');
 
             this.designerCanvas.setTitle(nodeName);
-            this.designerCanvas.setBackgroundText(nodeName, {'font-size': BACKGROUND_TEXT_SIZE,
-                'color': BACKGROUND_TEXT_COLOR });
+            this.designerCanvas.setBackgroundText(nodeName, {
+                'font-size': BACKGROUND_TEXT_SIZE,
+                color: BACKGROUND_TEXT_COLOR
+            });
 
             this.designerCanvas.showProgressbar();
 
@@ -148,8 +155,10 @@ define(['js/logger',
             //update the territory
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         } else {
-            this.designerCanvas.setBackgroundText("No object to display", {"color": BACKGROUND_TEXT_COLOR,
-                "font-size": BACKGROUND_TEXT_SIZE});
+            this.designerCanvas.setBackgroundText('No object to display', {
+                color: BACKGROUND_TEXT_COLOR,
+                'font-size': BACKGROUND_TEXT_SIZE
+            });
         }
     };
 
@@ -171,7 +180,7 @@ define(['js/logger',
             if (nodeId !== this.currentNodeInfo.id) {
                 //fill the descriptor based on its type
                 if (GMEConcepts.isConnection(nodeId)) {
-                    objDescriptor.kind = "CONNECTION";
+                    objDescriptor.kind = 'CONNECTION';
                     objDescriptor.source = nodeObj.getPointer(SRC_POINTER_NAME).to;
                     objDescriptor.target = nodeObj.getPointer(DST_POINTER_NAME).to;
 
@@ -181,38 +190,41 @@ define(['js/logger',
                     //get custom points from the node object
                     customPoints = nodeObj.getRegistry(REGISTRY_KEYS.LINE_CUSTOM_POINTS);
                     if (customPoints && _.isArray(customPoints)) {
-                        objDescriptor[CONSTANTS.LINE_STYLE.CUSTOM_POINTS] = $.extend(true, [], customPoints); //JSON.parse(JSON.stringify(customPoints));
+                        //JSON.parse(JSON.stringify(customPoints));
+                        objDescriptor[CONSTANTS.LINE_STYLE.CUSTOM_POINTS] = $.extend(true, [], customPoints);
                     }
                 } else {
-                    objDescriptor.kind = "MODEL";
+                    objDescriptor.kind = 'MODEL';
 
                     //aspect specific coordinate
                     if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
                         pos = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
                     } else {
                         memberListContainerObj = this._client.getNode(this.currentNodeInfo.id);
-                        pos = memberListContainerObj.getMemberRegistry(this._selectedAspect, nodeId, REGISTRY_KEYS.POSITION) || nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
+                        pos = memberListContainerObj.getMemberRegistry(this._selectedAspect,
+                            nodeId,
+                            REGISTRY_KEYS.POSITION) || nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
                     }
 
                     if (pos) {
-                        objDescriptor.position = { "x": pos.x, "y": pos.y };
+                        objDescriptor.position = {x: pos.x, y: pos.y};
                     } else {
-                        objDescriptor.position = { "x": defaultPos, "y": defaultPos };
+                        objDescriptor.position = {x: defaultPos, y: defaultPos};
                     }
 
-                    if (objDescriptor.position.hasOwnProperty("x")) {
+                    if (objDescriptor.position.hasOwnProperty('x')) {
                         objDescriptor.position.x = this._getDefaultValueForNumber(objDescriptor.position.x, defaultPos);
                     } else {
                         objDescriptor.position.x = defaultPos;
                     }
 
-                    if (objDescriptor.position.hasOwnProperty("y")) {
+                    if (objDescriptor.position.hasOwnProperty('y')) {
                         objDescriptor.position.y = this._getDefaultValueForNumber(objDescriptor.position.y, defaultPos);
                     } else {
                         objDescriptor.position.y = defaultPos;
                     }
 
-                    objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || "";
+                    objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || '';
                     objDescriptor.rotation = parseInt(nodeObj.getRegistry(REGISTRY_KEYS.ROTATION), 10) || 0;
                 }
             }
@@ -238,14 +250,14 @@ define(['js/logger',
     ModelEditorControl.prototype._eventCallback = function (events) {
         var i = events ? events.length : 0;
 
-        this.logger.debug("_eventCallback '" + i + "' items");
+        this.logger.debug('_eventCallback "' + i + '" items');
 
         if (i > 0) {
             this.eventQueue.push(events);
             this.processNextInQueue();
         }
 
-        this.logger.debug("_eventCallback '" + events.length + "' items - DONE");
+        this.logger.debug('_eventCallback "' + events.length + '" items - DONE');
     };
 
     ModelEditorControl.prototype.processNextInQueue = function () {
@@ -261,12 +273,15 @@ define(['js/logger',
             len = nextBatchInQueue.length;
 
             while (len--) {
-                if ((nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
-                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid)) : this._getObjectDescriptor(nextBatchInQueue[len].eid);
+                if ((nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) ||
+                    (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
+                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ?
+                        _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid)) :
+                        this._getObjectDescriptor(nextBatchInQueue[len].eid);
 
                     itemDecorator = nextBatchInQueue[len].desc.decorator;
 
-                    if (itemDecorator && itemDecorator !== "") {
+                    if (itemDecorator && itemDecorator !== '') {
                         if (decoratorsToDownload.indexOf(itemDecorator) === -1) {
                             decoratorsToDownload.pushUnique(itemDecorator);
                         }
@@ -284,49 +299,65 @@ define(['js/logger',
         var i = events.length,
             e,
             territoryChanged = false,
-            self = this;
+            self = this,
+            orderedItemEvents,
+            orderedConnectionEvents,
+            unloadEvents,
 
-        this.logger.debug("_dispatchEvents "+ events[0].etype);
+            srcGMEID,
+            dstGMEID,
+            srcConnIdx,
+            dstConnIdx,
+            j,
+            ce,
+            insertIdxAfter,
+            insertIdxBefore,
+            MAX_VAL = 999999999,
+            depSrcConnIdx,
+            depDstConnIdx;
+
+        this.logger.debug('_dispatchEvents ' + events[0].etype);
         events.shift();
 
-        this.logger.debug("_dispatchEvents '" + i + "' items");
+        this.logger.debug('_dispatchEvents "' + i + '" items');
 
         /********** ORDER EVENTS BASED ON DEPENDENCY ************/
         /** 1: items first, no dependency **/
         /** 2: connections second, dependency if a connection is connected to an other connection **/
-        var orderedItemEvents = [];
-        var orderedConnectionEvents = [];
+        orderedItemEvents = [];
+        orderedConnectionEvents = [];
 
         if (this._delayedConnections && this._delayedConnections.length > 0) {
             /*this.logger.warn('_delayedConnections: ' + this._delayedConnections.length );*/
             for (i = 0; i < this._delayedConnections.length; i += 1) {
-                orderedConnectionEvents.push({'etype': CONSTANTS.TERRITORY_EVENT_LOAD,
-                                              'eid': this._delayedConnections[i],
-                                              'desc': this._getObjectDescriptor(this._delayedConnections[i]) });
+                orderedConnectionEvents.push({
+                    etype: CONSTANTS.TERRITORY_EVENT_LOAD,
+                    eid: this._delayedConnections[i],
+                    desc: this._getObjectDescriptor(this._delayedConnections[i])
+                });
             }
         }
 
         this._delayedConnections = [];
 
-        var unloadEvents = [];
+        unloadEvents = [];
         i = events.length;
         while (i--) {
             e = events[i];
 
             if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD) {
                 unloadEvents.push(e);
-            } else if (e.desc.kind === "MODEL") {
+            } else if (e.desc.kind === 'MODEL') {
                 orderedItemEvents.push(e);
-            } else if (e.desc.kind === "CONNECTION") {
+            } else if (e.desc.kind === 'CONNECTION') {
                 if (e.desc.parentId === this.currentNodeInfo.id) {
                     //check to see if SRC and DST is another connection
                     //if so, put this guy AFTER them
-                    var srcGMEID = e.desc.source;
-                    var dstGMEID = e.desc.target;
-                    var srcConnIdx = -1;
-                    var dstConnIdx = -1;
-                    var j = orderedConnectionEvents.length,
-                        ce;
+                    srcGMEID = e.desc.source;
+                    dstGMEID = e.desc.target;
+                    srcConnIdx = -1;
+                    dstConnIdx = -1;
+                    j = orderedConnectionEvents.length;
                     while (j--) {
                         ce = orderedConnectionEvents[j];
                         if (ce.id === srcGMEID) {
@@ -340,13 +371,12 @@ define(['js/logger',
                         }
                     }
 
-                    var insertIdxAfter = Math.max(srcConnIdx, dstConnIdx);
+                    insertIdxAfter = Math.max(srcConnIdx, dstConnIdx);
 
                     //check to see if this guy is a DEPENDENT of any already processed CONNECTION
                     //insert BEFORE THEM
-                    var MAX_VAL = 999999999;
-                    var depSrcConnIdx = MAX_VAL;
-                    var depDstConnIdx = MAX_VAL;
+                    depSrcConnIdx = MAX_VAL;
+                    depDstConnIdx = MAX_VAL;
                     j = orderedConnectionEvents.length;
                     while (j--) {
                         ce = orderedConnectionEvents[j];
@@ -361,19 +391,19 @@ define(['js/logger',
                         }
                     }
 
-                    var insertIdxBefore = Math.min(depSrcConnIdx, depDstConnIdx);
+                    insertIdxBefore = Math.min(depSrcConnIdx, depDstConnIdx);
                     if (insertIdxAfter === -1 && insertIdxBefore === MAX_VAL) {
                         orderedConnectionEvents.push(e);
                     } else {
                         if (insertIdxAfter !== -1 &&
                             insertIdxBefore === MAX_VAL) {
-                            orderedConnectionEvents.splice(insertIdxAfter + 1,0,e);
+                            orderedConnectionEvents.splice(insertIdxAfter + 1, 0, e);
                         } else if (insertIdxAfter === -1 &&
-                            insertIdxBefore !== MAX_VAL) {
-                            orderedConnectionEvents.splice(insertIdxBefore,0,e);
+                                   insertIdxBefore !== MAX_VAL) {
+                            orderedConnectionEvents.splice(insertIdxBefore, 0, e);
                         } else if (insertIdxAfter !== -1 &&
-                            insertIdxBefore !== MAX_VAL) {
-                            orderedConnectionEvents.splice(insertIdxBefore,0,e);
+                                   insertIdxBefore !== MAX_VAL) {
+                            orderedConnectionEvents.splice(insertIdxBefore, 0, e);
                         }
                     }
                 } else {
@@ -386,24 +416,6 @@ define(['js/logger',
 
         }
 
-        /** LOG ORDERED CONNECTION LIST ********************/
-        /*this.logger.debug('ITEMS: ');
-        var itemIDList = [];
-        for (i = 0; i < orderedItemEvents.length; i += 1) {
-            var x = orderedItemEvents[i];
-            //console.log("ID: " + x.desc.id);
-            itemIDList.push(x.desc.id);
-        }
-
-        this.logger.debug('CONNECTIONS: ');
-        for (i = 0; i < orderedConnectionEvents.length; i += 1) {
-            var x = orderedConnectionEvents[i];
-            var connconn = itemIDList.indexOf(x.desc.source) === -1 && itemIDList.indexOf(x.desc.target) === -1;
-            this.logger.debug("ID: " + x.desc.id + ", SRC: " + x.desc.source + ", DST: " + x.desc.target + (connconn ? " *****" : ""));
-        }*/
-        /** END OF --- LOG ORDERED CONNECTION LIST ********************/
-
-        //events = unloadEvents.concat(orderedItemEvents, orderedConnectionEvents);
         events = unloadEvents.concat(orderedItemEvents);
         i = events.length;
 
@@ -458,11 +470,13 @@ define(['js/logger',
             //TODO: review this async here
             if (this.___SLOW_CONN === true) {
                 setTimeout(function () {
-                 self.logger.debug('Updating territory with ruleset from decorators: ' + JSON.stringify(self._selfPatterns));
-                 self._client.updateTerritory(self._territoryId, self._selfPatterns);
-                 }, 2000);
+                    self.logger.debug('Updating territory with ruleset from decorators: ' +
+                                      JSON.stringify(self._selfPatterns));
+                    self._client.updateTerritory(self._territoryId, self._selfPatterns);
+                }, 2000);
             } else {
-                this.logger.debug('Updating territory with ruleset from decorators: ' + JSON.stringify(this._selfPatterns));
+                this.logger.debug('Updating territory with ruleset from decorators: ' +
+                                  JSON.stringify(this._selfPatterns));
                 this._client.updateTerritory(this._territoryId, this._selfPatterns);
             }
         }
@@ -491,7 +505,7 @@ define(['js/logger',
             }
         }
 
-        this.logger.debug("_dispatchEvents '" + events.length + "' items - DONE");
+        this.logger.debug('_dispatchEvents "' + events.length + '" items - DONE');
 
         //continue processing event queue
         this.processNextInQueue();
@@ -518,7 +532,11 @@ define(['js/logger',
             destinations = [],
             getDecoratorTerritoryQueries,
             territoryChanged = false,
-            self = this;
+            self = this,
+
+            srcDst,
+            k,
+            l;
 
         getDecoratorTerritoryQueries = function (decorator) {
             var query,
@@ -547,7 +565,7 @@ define(['js/logger',
                     objDesc = _.extend({}, objD);
                     this._GmeID2ComponentID[gmeID] = [];
 
-                    if (objDesc.kind === "MODEL") {
+                    if (objDesc.kind === 'MODEL') {
 
                         this._GMEModels.push(gmeID);
 
@@ -569,16 +587,16 @@ define(['js/logger',
 
                     }
 
-                    if (objDesc.kind === "CONNECTION") {
+                    if (objDesc.kind === 'CONNECTION') {
 
                         this._GMEConnections.push(gmeID);
 
-                        var srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source, objDesc.target);
+                        srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source, objDesc.target);
                         sources = srcDst.sources;
                         destinations = srcDst.destinations;
 
-                        var k = sources.length;
-                        var l = destinations.length;
+                        k = sources.length;
+                        l = destinations.length;
 
                         if (k > 0 && l > 0) {
                             while (k--) {
@@ -596,7 +614,8 @@ define(['js/logger',
                                     _.extend(objDesc, this.getConnectionDescriptor(gmeID));
                                     uiComponent = this.designerCanvas.createConnection(objDesc);
 
-                                    this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + objDesc.id);
+                                    this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' +
+                                                      objDesc.id);
 
                                     this._GmeID2ComponentID[gmeID].push(uiComponent.id);
                                     this._ComponentID2GmeID[uiComponent.id] = gmeID;
@@ -612,8 +631,8 @@ define(['js/logger',
                     //supposed to be the grandchild of the currently open node
                     //--> load of port
                     /*if(this._GMEModels.indexOf(objD.parentId) !== -1){
-                        this._onUpdate(objD.parentId,this._getObjectDescriptor(objD.parentId));
-                    }*/
+                     this._onUpdate(objD.parentId,this._getObjectDescriptor(objD.parentId));
+                     }*/
                     this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_LOAD);
                 }
             }
@@ -631,8 +650,12 @@ define(['js/logger',
         var componentID,
             len,
             decClass,
-            objId,
-            sCompId;
+            srcDst,
+            sources,
+            destinations,
+            k,
+            l,
+            uiComponent;
 
         //self or child updated
         //check if the updated object is the opened node
@@ -645,8 +668,8 @@ define(['js/logger',
         } else {
             if (objDesc) {
                 if (objDesc.parentId === this.currentNodeInfo.id) {
-                    if (objDesc.kind === "MODEL") {
-                        if(this._GmeID2ComponentID[gmeID]){
+                    if (objDesc.kind === 'MODEL') {
+                        if (this._GmeID2ComponentID[gmeID]) {
                             len = this._GmeID2ComponentID[gmeID].length;
                             while (len--) {
                                 componentID = this._GmeID2ComponentID[gmeID][len];
@@ -665,12 +688,12 @@ define(['js/logger',
                     //there is a connection associated with this GMEID
                     if (this._GMEConnections.indexOf(gmeID) !== -1) {
                         len = this._GmeID2ComponentID[gmeID].length;
-                        var srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source, objDesc.target);
-                        var sources = srcDst.sources;
-                        var destinations = srcDst.destinations;
+                        srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source, objDesc.target);
+                        sources = srcDst.sources;
+                        destinations = srcDst.destinations;
 
-                        var k = sources.length;
-                        var l = destinations.length;
+                        k = sources.length;
+                        l = destinations.length;
                         len -= 1;
 
                         while (k--) {
@@ -686,18 +709,20 @@ define(['js/logger',
                                 delete objDesc.target;
 
                                 if (len >= 0) {
-                                    componentID =  this._GmeID2ComponentID[gmeID][len];
+                                    componentID = this._GmeID2ComponentID[gmeID][len];
 
                                     _.extend(objDesc, this.getConnectionDescriptor(gmeID));
                                     this.designerCanvas.updateConnection(componentID, objDesc);
 
                                     len -= 1;
                                 } else {
-                                    this.logger.warn('Updating connections...Existing connections are less than the needed src-dst combo...');
+                                    this.logger.warn('Updating connections...Existing connections are less than the ' +
+                                    'needed src-dst combo...');
                                     //let's create a connection
                                     _.extend(objDesc, this.getConnectionDescriptor(gmeID));
-                                    var uiComponent = this.designerCanvas.createConnection(objDesc);
-                                    this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + objDesc.id);
+                                    uiComponent = this.designerCanvas.createConnection(objDesc);
+                                    this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' +
+                                                      objDesc.id);
                                     this._GmeID2ComponentID[gmeID].push(uiComponent.id);
                                     this._ComponentID2GmeID[uiComponent.id] = gmeID;
                                 }
@@ -709,7 +734,7 @@ define(['js/logger',
                             //delete them
                             len += 1;
                             while (len--) {
-                                componentID =  this._GmeID2ComponentID[gmeID][len];
+                                componentID = this._GmeID2ComponentID[gmeID][len];
                                 this.designerCanvas.deleteComponent(componentID);
                                 this._GmeID2ComponentID[gmeID].splice(len, 1);
                                 delete this._ComponentID2GmeID[componentID];
@@ -726,8 +751,10 @@ define(['js/logger',
 
     ModelEditorControl.prototype._updateSheetName = function (name) {
         this.designerCanvas.setTitle(name);
-        this.designerCanvas.setBackgroundText(name, {'font-size': BACKGROUND_TEXT_SIZE,
-            'color': BACKGROUND_TEXT_COLOR });
+        this.designerCanvas.setBackgroundText(name, {
+            'font-size': BACKGROUND_TEXT_SIZE,
+            color: BACKGROUND_TEXT_COLOR
+        });
     };
 
     ModelEditorControl.prototype._onUnload = function (gmeID) {
@@ -757,9 +784,12 @@ define(['js/logger',
 
         if (gmeID === this.currentNodeInfo.id) {
             //the opened model has been removed from territoy --> most likely deleted...
-            this.logger.debug('The previously opened model does not exist... --- GMEID: "' + this.currentNodeInfo.id + '"');
-            this.designerCanvas.setBackgroundText('The previously opened model does not exist...', {'font-size': BACKGROUND_TEXT_SIZE,
-                                                                                                     'color': BACKGROUND_TEXT_COLOR});
+            this.logger.debug('The previously opened model does not exist... --- GMEID: "' + this.currentNodeInfo.id +
+                              '"');
+            this.designerCanvas.setBackgroundText('The previously opened model does not exist...', {
+                'font-size': BACKGROUND_TEXT_SIZE,
+                color: BACKGROUND_TEXT_COLOR
+            });
         } else {
             if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
                 len = this._GmeID2ComponentID[gmeID].length;
@@ -832,8 +862,10 @@ define(['js/logger',
             //src is a DesignerItem
             i = this._GmeID2ComponentID[GMESrcId].length;
             while (i--) {
-                sources.push( {"objId" : this._GmeID2ComponentID[GMESrcId][i],
-                    "subCompId" : undefined });
+                sources.push({
+                    objId: this._GmeID2ComponentID[GMESrcId][i],
+                    subCompId: undefined
+                });
             }
         } else {
             //src is not a DesignerItem
@@ -841,8 +873,10 @@ define(['js/logger',
             if (this._GMEID2Subcomponent && this._GMEID2Subcomponent.hasOwnProperty(GMESrcId)) {
                 for (i in this._GMEID2Subcomponent[GMESrcId]) {
                     if (this._GMEID2Subcomponent[GMESrcId].hasOwnProperty(i)) {
-                        sources.push( {"objId" : i,
-                            "subCompId" : this._GMEID2Subcomponent[GMESrcId][i] });
+                        sources.push({
+                            objId: i,
+                            subCompId: this._GMEID2Subcomponent[GMESrcId][i]
+                        });
                     }
                 }
             }
@@ -851,8 +885,10 @@ define(['js/logger',
         if (this._GmeID2ComponentID.hasOwnProperty(GMEDstId)) {
             i = this._GmeID2ComponentID[GMEDstId].length;
             while (i--) {
-                destinations.push( {"objId" : this._GmeID2ComponentID[GMEDstId][i],
-                    "subCompId" : undefined });
+                destinations.push({
+                    objId: this._GmeID2ComponentID[GMEDstId][i],
+                    subCompId: undefined
+                });
             }
         } else {
             //dst is not a DesignerItem
@@ -860,15 +896,19 @@ define(['js/logger',
             if (this._GMEID2Subcomponent && this._GMEID2Subcomponent.hasOwnProperty(GMEDstId)) {
                 for (i in this._GMEID2Subcomponent[GMEDstId]) {
                     if (this._GMEID2Subcomponent[GMEDstId].hasOwnProperty(i)) {
-                        destinations.push( {"objId" : i,
-                            "subCompId" : this._GMEID2Subcomponent[GMEDstId][i] });
+                        destinations.push({
+                            objId: i,
+                            subCompId: this._GMEID2Subcomponent[GMEDstId][i]
+                        });
                     }
                 }
             }
         }
 
-        return {'sources': sources,
-                'destinations': destinations};
+        return {
+            sources: sources,
+            destinations: destinations
+        };
     };
 
     ModelEditorControl.prototype.registerComponentIDForPartID = function (componentID, partId) {
@@ -898,8 +938,9 @@ define(['js/logger',
         if (this._componentIDPartIDMap && this._componentIDPartIDMap[gmeID]) {
             len = this._componentIDPartIDMap[gmeID].length;
             while (len--) {
-                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] = this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] || [];
-                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]].push({'id': gmeID, 'event': eventType});
+                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] =
+                    this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] || [];
+                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]].push({id: gmeID, event: eventType});
             }
         }
     };
@@ -911,7 +952,8 @@ define(['js/logger',
 
         for (gmeID in this._notifyPackage) {
             if (this._notifyPackage.hasOwnProperty(gmeID)) {
-                this.logger.debug('NotifyPartDecorator: ' + gmeID + ', componentIDs: ' + JSON.stringify(this._notifyPackage[gmeID]));
+                this.logger.debug('NotifyPartDecorator: ' + gmeID + ', componentIDs: ' +
+                                  JSON.stringify(this._notifyPackage[gmeID]));
 
                 if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
                     //src is a DesignerItem
@@ -997,9 +1039,10 @@ define(['js/logger',
         /****************** ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
 
         /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
-        this.$btnModelHierarchyUp = toolBar.addButton({ "title": "Go to parent",
-            "icon": "glyphicon glyphicon-circle-arrow-up",
-            "clickFn": function (/*data*/) {
+        this.$btnModelHierarchyUp = toolBar.addButton({
+            title: 'Go to parent',
+            icon: 'glyphicon glyphicon-circle-arrow-up',
+            clickFn: function (/*data*/) {
                 self._onModelHierarchyUp();
             }
         });
@@ -1009,9 +1052,10 @@ define(['js/logger',
 
         /************** REMOVE CONNECTION SEGMENTPOINTS BUTTON ****************/
         this.$btnConnectionRemoveSegmentPoints = toolBar.addButton(
-            { "title": "Remove segment points",
-                "icon": "glyphicon glyphicon-remove-circle",
-                "clickFn": function (/*data*/) {
+            {
+                title: 'Remove segment points',
+                icon: 'glyphicon glyphicon-remove-circle',
+                clickFn: function (/*data*/) {
                     self._removeConnectionSegmentPoints();
                 }
             });
@@ -1060,14 +1104,14 @@ define(['js/logger',
         if (objId || objId === CONSTANTS.PROJECT_ROOT_ID) {
             aspects = this._client.getMetaAspectNames(objId) || [];
 
-            aspects.sort(function (a,b) {
+            aspects.sort(function (a, b) {
                 var an = a.toLowerCase(),
                     bn = b.toLowerCase();
 
                 return (an < bn) ? -1 : 1;
             });
 
-            aspects.splice(0,0,CONSTANTS.ASPECT_ALL);
+            aspects.splice(0, 0, CONSTANTS.ASPECT_ALL);
 
             this.designerCanvas.addMultipleTabsBegin();
 
@@ -1104,13 +1148,14 @@ define(['js/logger',
             if (this._selfPatterns[nodeId].items && newAspectRules.items) {
                 aspectRulesChanged = (_.difference(this._selfPatterns[nodeId].items, newAspectRules.items)).length > 0;
                 if (aspectRulesChanged === false) {
-                    aspectRulesChanged = (_.difference(newAspectRules.items, this._selfPatterns[nodeId].items)).length > 0;
+                    aspectRulesChanged = (_.difference(newAspectRules.items, this._selfPatterns[nodeId].items)).length >
+                                         0;
                 }
             } else {
                 if (this._selfPatterns[nodeId].items || newAspectRules.items) {
                     //at least one has an item
                     aspectRulesChanged = true;
-                } 
+                }
             }
 
             if (aspectRulesChanged) {
@@ -1125,7 +1170,7 @@ define(['js/logger',
         this.selectedObjectChanged(this.currentNodeInfo.id);
     };
 
-    ModelEditorControl.prototype.getConnectionDescriptor = function (gmeID) {
+    ModelEditorControl.prototype.getConnectionDescriptor = function (/* gmeID */) {
         return {};
     };
 

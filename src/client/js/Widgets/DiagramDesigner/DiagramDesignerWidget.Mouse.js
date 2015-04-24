@@ -1,8 +1,13 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, $*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetConstants) {
 
-    "use strict";
+    'use strict';
 
     var DiagramDesignerWidgetMouse,
         EVENT_POSTFIX = 'DiagramDesignerWidget';
@@ -21,22 +26,27 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
             logger = this.logger;
 
         //handle click on designer-items
-        this.$el.on('mousedown.' + EVENT_POSTFIX, 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
-            var itemId = $(this).attr("id"),
-                eventDetails = self._processMouseEvent(event, true, true, true, true);
+        this.$el.on('mousedown.' + EVENT_POSTFIX, 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,
+            function (event) {
+                var itemId = $(this).attr('id'),
+                    eventDetails = self._processMouseEvent(event, true, true, true, true);
 
-            logger.debug('mousedown.item, ItemID: ' + itemId + ' eventDetails: ' + JSON.stringify(eventDetails));
+                logger.debug('mousedown.item, ItemID: ' + itemId + ' eventDetails: ' + JSON.stringify(eventDetails));
 
-            if (self.onItemMouseDown) {
-                self.onItemMouseDown.call(self, itemId, eventDetails);
-            } else {
-                logger.warn('onItemMouseDown(itemId, eventDetails) is undefined, ItemID: ' + itemId + ' eventDetails: ' + JSON.stringify(eventDetails));
+                if (self.onItemMouseDown) {
+                    self.onItemMouseDown.call(self, itemId, eventDetails);
+                } else {
+                    logger.warn('onItemMouseDown(itemId, eventDetails) is undefined, ItemID: ' + itemId +
+                    ' eventDetails: ' + JSON.stringify(eventDetails));
+                }
             }
-        });
+        );
 
         //handle click on designer-connections
-        this.$el.on('mousedown.' + EVENT_POSTFIX, 'path[class~="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
-            var connId = $(this).attr("id").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX, "").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX, ""),
+        this.$el.on('mousedown.' + EVENT_POSTFIX, 'path[class~="' +
+        DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS + '"]', function (event) {
+            var connId = $(this).attr('id').replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX, '')
+                    .replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX, ''),
                 eventDetails = self._processMouseEvent(event, true, true, true, true);
 
             logger.debug('mousedown.connection, connId: ' + connId + ' eventDetails: ' + JSON.stringify(eventDetails));
@@ -44,7 +54,8 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
             if (self.onConnectionMouseDown) {
                 self.onConnectionMouseDown.call(self, connId, eventDetails);
             } else {
-                logger.warn('onConnectionMouseDown(connId, eventDetails) is undefined, connId: ' + connId + ' eventDetails: ' + JSON.stringify(eventDetails));
+                logger.warn('onConnectionMouseDown(connId, eventDetails) is undefined, connId: ' + connId +
+                ' eventDetails: ' + JSON.stringify(eventDetails));
             }
         });
 
@@ -57,7 +68,8 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
             if (self.onBackgroundMouseDown) {
                 self.onBackgroundMouseDown.call(self, eventDetails);
             } else {
-                logger.warn('onBackgroundMouseDown(eventDetails) is undefined, eventDetails: ' + JSON.stringify(eventDetails));
+                logger.warn('onBackgroundMouseDown(eventDetails) is undefined, eventDetails: ' +
+                JSON.stringify(eventDetails));
             }
         });
 
@@ -68,7 +80,8 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
             if (self.onBackgroundDblClick) {
                 self.onBackgroundDblClick.call(self, eventDetails);
             } else {
-                logger.warn('onBackgroundDblClick(eventDetails) is undefined, eventDetails: ' + JSON.stringify(eventDetails));
+                logger.warn('onBackgroundDblClick(eventDetails) is undefined, eventDetails: ' +
+                JSON.stringify(eventDetails));
             }
 
             logger.warn('dblclick.background, eventDetails: ' + JSON.stringify(eventDetails));
@@ -82,7 +95,11 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
         });
     };
 
-    DiagramDesignerWidgetMouse.prototype._processMouseEvent = function (event, triggerUIActivity, preventDefault, stopPropagation, stopImmediatePropagation) {
+    DiagramDesignerWidgetMouse.prototype._processMouseEvent = function (event,
+                                                                        triggerUIActivity,
+                                                                        preventDefault,
+                                                                        stopPropagation,
+                                                                        stopImmediatePropagation) {
         //trigger that the user switched to this widget
         if (triggerUIActivity === true) {
             this._triggerUIActivity();
@@ -105,13 +122,15 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
 
     DiagramDesignerWidgetMouse.prototype._getMouseEventDetails = function (event) {
         var mousePos = this.getAdjustedMousePos(event),
-            eventDetails = { 'rightClick': event.which === 3,
-                             'ctrlKey': event.ctrlKey,
-                             'metaKey': event.metaKey,
-                             'altKey': event.altKey,
-                             'shiftKey': event.shiftKey,
-                             'mouseX': mousePos.mX,
-                             'mouseY': mousePos.mY };
+            eventDetails = {
+                'rightClick': event.which === 3,
+                'ctrlKey': event.ctrlKey,
+                'metaKey': event.metaKey,
+                'altKey': event.altKey,
+                'shiftKey': event.shiftKey,
+                'mouseX': mousePos.mX,
+                'mouseY': mousePos.mY
+            };
 
         return eventDetails;
     };

@@ -1,13 +1,14 @@
-/*
-* Copyright (C) 2014 Vanderbilt University, All rights reserved.
-*
-* Author: Zsolt Lattmann, Patrik Meijer
-*
-* This script will combine all ejs files in the current directory (recursively)
-* into one Templates.js file. By importing this file as TEMPLATE you can retrieve the
-* content of each original ejs file through TEMPLATES['plugin.js.ejs'].
-*
-* Usage: Run this script in the directory with the ejs-templates, e.g. '%YourPlugin%/Templates'.
+/*jshint node:true*/
+/**
+ *
+ * This script will combine all ejs files in the current directory (recursively)
+ * into one Templates.js file. By requiring this file as TEMPLATE you can retrieve the
+ * content of each original ejs file through TEMPLATES['plugin.js.ejs'].
+ *
+ * Usage: Run this script in the directory with the ejs-templates, e.g. '%YourPlugin%/Templates'.
+ *
+ * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
 */
 
 var main = function () {

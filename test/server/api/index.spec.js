@@ -1,5 +1,5 @@
 /*globals require*/
-/*jshint node:true, mocha:true*/
+/*jshint node:true, mocha:true, expr:true*/
 
 /**
  * @author lattmann / https://github.com/lattmann
@@ -143,6 +143,7 @@ describe('API', function () {
 
         // NO AUTH methods
         it('should get api documentation link', function (done) {
+            /*jshint camelcase: false */
             agent.get(server.getUrl() + '/api').end(function (err, res) {
                 expect(res.status).equal(200, err);
                 expect(res.body.hasOwnProperty('documentation_url')).true;
@@ -412,7 +413,7 @@ describe('API', function () {
                 });
         });
 
-        it('should fail to grant site admin access with no site admin roles PATCH /api/v1/users/guest', function (done) {
+        it('should fail to grant site admin acc with no site admin roles PATCH /api/v1/users/guest', function (done) {
             var updates = {
                 email: 'new_email_address',
                 canCreate: false,
@@ -676,6 +677,7 @@ describe('API', function () {
 
         // NO AUTH methods
         it('should get api documentation link', function (done) {
+            /*jshint camelcase: false */
             agent.get(server.getUrl() + '/api').end(function (err, res) {
                 expect(res.status).equal(200, err);
                 expect(res.body.hasOwnProperty('documentation_url')).true;
@@ -866,6 +868,7 @@ describe('API', function () {
 
         // NO AUTH methods
         it('should get api documentation link', function (done) {
+            /*jshint camelcase: false */
             agent.get(server.getUrl() + '/api').end(function (err, res) {
                 expect(res.status).equal(200, err);
                 expect(res.body.hasOwnProperty('documentation_url')).true;

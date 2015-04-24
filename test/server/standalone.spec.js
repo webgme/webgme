@@ -1,4 +1,3 @@
-/*globals require, WebGMEGlobal*/
 /*jshint node:true, mocha:true*/
 /**
  * @author lattmann / https://github.com/lattmann
@@ -63,8 +62,14 @@ describe('standalone server', function () {
             {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/Templates/plugin.js.ejs'},
             {code: 200, url: '/decorators/DefaultDecorator/DefaultDecorator.js'},
             {code: 200, url: '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.css'},
-            {code: 200, url: '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.html'},
-            {code: 200, url: '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.js'},
+            {
+                code: 200,
+                url: '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.html'
+            },
+            {
+                code: 200,
+                url: '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.js'
+            },
             {code: 200, url: '/rest/unknown'},
             {code: 200, url: '/rest/does_not_exist'},
             {code: 200, url: '/rest/help'},
@@ -317,7 +322,7 @@ describe('standalone server', function () {
         before(function (done) {
             // we have to set the config here
             var gmeConfig = testFixture.getGmeConfig();
-            gmeConfig.visualization.decoratorPaths  = [];
+            gmeConfig.visualization.decoratorPaths = [];
 
             server = WebGME.standaloneServer(gmeConfig);
             serverBaseUrl = server.getUrl();
@@ -345,8 +350,8 @@ describe('standalone server', function () {
             logIn = function (callback) {
                 agent.post(serverBaseUrl + '/login?redirect=%2F')
                     .type('form')
-                    .send({ username: 'user'})
-                    .send({ password: 'plaintext'})
+                    .send({username: 'user'})
+                    .send({password: 'plaintext'})
                     .end(function (err, res) {
                         if (err) {
                             return callback(err);
@@ -367,7 +372,8 @@ describe('standalone server', function () {
 
                         socket = io.connect(serverBaseUrl,
                             {
-                                'query': 'webGMESessionId=' + /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1],
+                                'query': 'webGMESessionId=' + /webgmeSid=s:([^;]+)\./.exec(
+                                    decodeURIComponent(socketReq.cookies))[1],
                                 'transports': gmeConfig.socketIO.transports,
                                 'multiplex': false
                             });
@@ -463,12 +469,12 @@ describe('standalone server', function () {
                         write: false,
                         delete: false
                     });
-                //}).then(function () {
-                //    return gmeauth.addUser(gmeConfig.authentication.guestAccount,
-                //        gmeConfig.authentication.guestAccount +'@example.com',
-                //        'plaintext',
-                //        true,
-                //        {overwrite: true});
+                    //}).then(function () {
+                    //    return gmeauth.addUser(gmeConfig.authentication.guestAccount,
+                    //        gmeConfig.authentication.guestAccount +'@example.com',
+                    //        'plaintext',
+                    //        true,
+                    //        {overwrite: true});
                 });
             });
 
@@ -515,7 +521,7 @@ describe('standalone server', function () {
                 if (err) {
                     return done(err);
                 }
-                res.redirects.should.deep.equal([ serverBaseUrl + '/' ]);
+                res.redirects.should.deep.equal([serverBaseUrl + '/']);
 
                 agent.get(serverBaseUrl + '/gettoken')
                     .end(function (err, res) {
@@ -528,8 +534,8 @@ describe('standalone server', function () {
         it('should not log in with incorrect password', function (done) {
             agent.post(serverBaseUrl + '/login?redirect=%2F')
                 .type('form')
-                .send({ username: 'user'})
-                .send({ password: 'thisiswrong'})
+                .send({username: 'user'})
+                .send({password: 'thisiswrong'})
                 .end(function (err, res) {
                     if (err) {
                         return done(err);

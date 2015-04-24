@@ -1,18 +1,20 @@
-/*globals define, Raphael, window, WebGMEGlobal, d3, _*/
+/*globals define, WebGMEGlobal, d3, _, $*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/logger',
-        'js/Widgets/GraphViz/GraphVizWidget.Zoom',
-        'd3',
-        'css!./styles/GraphVizWidget.css'], function (Logger,
-                                                               GraphVizWidgetZoom) {
-    "use strict";
+define([
+    'js/logger',
+    'js/Widgets/GraphViz/GraphVizWidget.Zoom',
+    'd3',
+    'css!./styles/GraphVizWidget.css'
+], function (Logger, GraphVizWidgetZoom) {
+    'use strict';
 
     var GraphVizWidget,
-        GRAPH_VIZ_CLASS = "graph-viz",
+        GRAPH_VIZ_CLASS = 'graph-viz',
         DURATION = 750,
         MARGIN = 20,
         i = 0,
@@ -24,7 +26,7 @@ define(['js/logger',
         NODE_SIZE = 15,
         TREE_LEVEL_DISTANCE = 180;
 
-    GraphVizWidget = function (container, params) {
+    GraphVizWidget = function (container /*, params*/) {
         this._logger = Logger.create('gme:Widgets:GraphViz:GraphVizWidget', WebGMEGlobal.gmeConfig.client.log);
 
         this._el = container;
@@ -34,7 +36,7 @@ define(['js/logger',
         //init zoom related UI and handlers
         this._initZoom();
 
-        this._logger.debug("GraphVizWidget ctor finished");
+        this._logger.debug('GraphVizWidget ctor finished');
     };
 
     GraphVizWidget.prototype._initialize = function () {
@@ -50,12 +52,12 @@ define(['js/logger',
         this._tree = d3.layout.tree().sort(function (a, b) {
             return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
         });
-        this.__svg = d3.select(this._el[0]).append("svg");
+        this.__svg = d3.select(this._el[0]).append('svg');
         this._resizeD3Tree(width, height);
 
-        this._svg = this.__svg.append("g").attr("transform", "translate(" + MARGIN + "," + MARGIN + ")");
+        this._svg = this.__svg.append('g').attr('transform', 'translate(' + MARGIN + ',' + MARGIN + ')');
 
-        this._el.on("dblclick", function (event) {
+        this._el.on('dblclick', function (event) {
             event.stopPropagation();
             event.preventDefault();
             self.onBackgroundDblClick();
@@ -78,10 +80,10 @@ define(['js/logger',
         height = Math.max(eh, height);
 
         this._tree.size([height - 2 * MARGIN, width - 2 * MARGIN]);
-        this.__svg.attr("width", width).attr("height", height);
+        this.__svg.attr('width', width).attr('height', height);
     };
 
-    GraphVizWidget.prototype._update = function(source) {
+    GraphVizWidget.prototype._update = function (source) {
         var self = this;
 
         // Compute the new tree layout.
@@ -89,7 +91,9 @@ define(['js/logger',
             links = this._tree.links(nodes);
 
         var diagonal = d3.svg.diagonal()
-            .projection(function(d) { return [d.y, d.x]; });
+            .projection(function (d) {
+                return [d.y, d.x];
+            });
 
         var getOpenStatus = function (d) {
             var status = LEAF;
@@ -106,106 +110,119 @@ define(['js/logger',
         };
 
         // Normalize for fixed-depth.
-        nodes.forEach(function(d) {
+        nodes.forEach(function (d) {
             d.y = d.depth * TREE_LEVEL_DISTANCE;
             d.status = d.status || getOpenStatus(d);
         });
 
         // Update the nodes…
-        var node = this._svg.selectAll("g.node")
-            .data(nodes, function(d) { return d.id || (d.id = ++i); });
+        var node = this._svg.selectAll('g.node')
+            .data(nodes, function (d) {
+                return d.id || (d.id = ++i);
+            });
 
         var getDisplayName = function (d) {
             var n = d.name;
 
             if (d.childrenNum > 0) {
-                n += " [" + d.childrenNum + "]";
+                n += ' [' + d.childrenNum + ']';
             }
 
             return n;
         };
 
         // Enter any new nodes at the parent's previous position.
-        var nodeEnter = node.enter().append("g")
-            .attr("class", "node")
-            .attr("transform", function(d) {
-                return d.parent ? "translate(" + d.parent.y0 + "," + d.parent.x0 + ")" : "translate(" + d.y + "," + d.x + ")";
+        var nodeEnter = node.enter().append('g')
+            .attr('class', 'node')
+            .attr('transform', function (d) {
+                return d.parent ?
+                'translate(' + d.parent.y0 + ',' + d.parent.x0 + ')' : 'translate(' + d.y + ',' + d.x + ')';
             })
-            .on("click", function (d) {
+            .on('click', function (d) {
                 d3.event.stopPropagation();
                 d3.event.preventDefault();
                 self._onNodeClick(d);
             })
-            .on("dblclick", function (d) {
+            .on('dblclick', function (d) {
                 d3.event.preventDefault();
                 d3.event.stopPropagation();
                 self._onNodeDblClick(d);
             });
 
-        nodeEnter.append("circle")
-            .attr("r", 1e-6);
+        nodeEnter.append('circle')
+            .attr('r', 1e-6);
 
-        nodeEnter.append("text")
-            .attr("dy", ".35em")
-            .style("fill-opacity", 1e-6);
+        nodeEnter.append('text')
+            .attr('dy', '.35em')
+            .style('fill-opacity', 1e-6);
 
         // Transition nodes to their new position.
         var nodeUpdate = node.transition()
             .duration(DURATION)
-            .attr("transform", function(d) {
-                return "translate(" + d.y + "," + d.x + ")";
+            .attr('transform', function (d) {
+                return 'translate(' + d.y + ',' + d.x + ')';
             });
 
-        nodeUpdate.select("circle")
-            .attr("r", 4.5);
+        nodeUpdate.select('circle')
+            .attr('r', 4.5);
 
-        nodeUpdate.select("circle")
-            .style("fill", function(d) {
+        nodeUpdate.select('circle')
+            .style('fill', function (d) {
                 var status = d.status,
-                    color = "#FFFFFF";
+                    color = '#FFFFFF';
                 if (status === CLOSED) {
-                    color = "lightsteelblue";
+                    color = 'lightsteelblue';
                 } else if (status === OPENING) {
-                    color =  "#ff0000";
+                    color = '#ff0000';
                 } else if (status === OPEN) {
-                    color =  "#ffFFFF";
+                    color = '#ffFFFF';
                 } else if (status === LEAF) {
-                    color =  "#ffFFFF";
+                    color = '#ffFFFF';
                 } else if (status === CLOSING) {
-                    color = "#00FF00";
+                    color = '#00FF00';
                 }
 
                 return color;
             });
 
-        nodeUpdate.select("text")
-            .attr("x", function(d) { return (d.children && d.children.length > 0) ? -10 : 10; })
-            .attr("text-anchor", function(d) { return (d.children && d.children.length > 0) ? "end" : "start"; })
-            .text(function(d) { return getDisplayName(d); })
-            .style("fill-opacity", 1);
+        nodeUpdate.select('text')
+            .attr('x', function (d) {
+                return (d.children && d.children.length > 0) ? -10 : 10;
+            })
+            .attr('text-anchor', function (d) {
+                return (d.children && d.children.length > 0) ? 'end' : 'start';
+            })
+            .text(function (d) {
+                return getDisplayName(d);
+            })
+            .style('fill-opacity', 1);
 
         // Transition exiting nodes to the parent's new position.
         var nodeExit = node.exit().transition()
             .duration(DURATION)
-            .attr("transform", function(d) {
-                return source ? "translate(" + source.y + "," + source.x + ")" : d.parent ? "translate(" + d.parent.y + "," + d.parent.x + ")" : "translate(" + d.y + "," + d.x + ")";
+            .attr('transform', function (d) {
+                return source ? 'translate(' + source.y + ',' + source.x + ')' :
+                    d.parent ?
+                    'translate(' + d.parent.y + ',' + d.parent.x + ')' : 'translate(' + d.y + ',' + d.x + ')';
             })
             .remove();
 
-        nodeExit.select("circle")
-            .attr("r", 1e-6);
+        nodeExit.select('circle')
+            .attr('r', 1e-6);
 
-        nodeExit.select("text")
-            .style("fill-opacity", 1e-6);
+        nodeExit.select('text')
+            .style('fill-opacity', 1e-6);
 
         // Update the links…
-        var link = this._svg.selectAll("path.link")
-            .data(links, function(d) { return d.target.id; });
+        var link = this._svg.selectAll('path.link')
+            .data(links, function (d) {
+                return d.target.id;
+            });
 
         // Enter any new links at the parent's previous position.
-        link.enter().insert("path", "g")
-            .attr("class", "link")
-            .attr("d", function(d) {
+        link.enter().insert('path', 'g')
+            .attr('class', 'link')
+            .attr('d', function (d) {
                 var o = {x: d.source.x0 || d.source.y, y: d.source.y0 || d.source.y};
                 return diagonal({source: o, target: o});
             });
@@ -213,12 +230,12 @@ define(['js/logger',
         // Transition links to their new position.
         link.transition()
             .duration(DURATION)
-            .attr("d", diagonal);
+            .attr('d', diagonal);
 
         // Transition exiting nodes to the parent's new position.
         link.exit().transition()
             .duration(DURATION)
-            .attr("d", function(d) {
+            .attr('d', function (d) {
                 var o = {x: d.source.x, y: d.source.y};
                 return diagonal({source: o, target: o});
             })
@@ -228,7 +245,7 @@ define(['js/logger',
         var nodesYByDepth = [];
 
 
-        nodes.forEach(function(d) {
+        nodes.forEach(function (d) {
             // Stash the old positions for transition.
             d.x0 = d.x;
             d.y0 = d.y;
@@ -242,24 +259,24 @@ define(['js/logger',
         if (this.__resizing !== true) {
             var l = nodesYByDepth.length;
             var collideAtDepth = [];
-            for (i = 1; i < l; i+= 1) {
+            for (i = 1; i < l; i += 1) {
                 //sort the coordinates for easy check of collision
-                nodesYByDepth[i].sort(function(a,b){
-                    return a-b;
+                nodesYByDepth[i].sort(function (a, b) {
+                    return a - b;
                 });
 
                 //see if any of the nodes overlap
                 var j;
                 var depthLength = nodesYByDepth[i].length;
-                for (j = 0; j < depthLength - 1; j += 1 ) {
-                    if (nodesYByDepth[i][j+1] - NODE_SIZE <= nodesYByDepth[i][j]) {
-                        collideAtDepth.push([i,depthLength]);
+                for (j = 0; j < depthLength - 1; j += 1) {
+                    if (nodesYByDepth[i][j + 1] - NODE_SIZE <= nodesYByDepth[i][j]) {
+                        collideAtDepth.push([i, depthLength]);
                         break;
                     }
                 }
             }
 
-            this._logger.debug("Collide:" + collideAtDepth);
+            this._logger.debug('Collide:' + collideAtDepth);
 
             var sum = 0;
             var len = collideAtDepth.length;
@@ -282,8 +299,8 @@ define(['js/logger',
         }
     };
 
-    GraphVizWidget.prototype._onNodeClick = function(d) {
-        switch(d.status) {
+    GraphVizWidget.prototype._onNodeClick = function (d) {
+        switch (d.status) {
             case CLOSED:
                 d.status = OPENING;
                 this._update(undefined);
@@ -304,7 +321,7 @@ define(['js/logger',
         }
     };
 
-    GraphVizWidget.prototype._onNodeDblClick = function(d) {
+    GraphVizWidget.prototype._onNodeDblClick = function (d) {
         this.onNodeDblClick(d.id);
     };
 
@@ -347,19 +364,19 @@ define(['js/logger',
         if (this._root && this._root.name) {
             var rootNameWidth = this._root.name.length * 6;
             if (this._root.children) {
-                rootNameWidth = (this._root.name + " [" + this._root.children.length + "]").length * 6;
+                rootNameWidth = (this._root.name + ' [' + this._root.children.length + ']').length * 6;
             }
-            this._el.find('svg > g').attr("transform", "translate(" + (rootNameWidth + MARGIN) + "," + MARGIN + ")");
+            this._el.find('svg > g').attr('transform', 'translate(' + (rootNameWidth + MARGIN) + ',' + MARGIN + ')');
         }
     };
 
-    GraphVizWidget.prototype.onNodeOpen = function (id) {
+    GraphVizWidget.prototype.onNodeOpen = function (/*id*/) {
     };
 
-    GraphVizWidget.prototype.onNodeClose = function (id) {
+    GraphVizWidget.prototype.onNodeClose = function (/*id*/) {
     };
 
-    GraphVizWidget.prototype.onNodeDblClick = function (id) {
+    GraphVizWidget.prototype.onNodeDblClick = function (/*id*/) {
     };
 
     GraphVizWidget.prototype.onBackgroundDblClick = function () {

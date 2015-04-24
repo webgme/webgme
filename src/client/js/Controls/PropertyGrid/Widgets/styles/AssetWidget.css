@@ -10,12 +10,11 @@ div.asset-widget {
   width: 50%;
   border-radius: 4px;
   position: relative;
-  border: 1px solid rgba(0, 0, 0, 0);
   background-color: rgba(0, 0, 0, 0.025);
   border: 1px dashed #aaaaaa; }
   div.asset-widget .btn-dialog-open {
     position: absolute;
-    right: 0px;
+    right: 0;
     top: 0;
     padding: 0 3px; }
   div.asset-widget a {

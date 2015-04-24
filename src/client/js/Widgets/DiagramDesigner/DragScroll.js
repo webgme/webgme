@@ -1,10 +1,13 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, $, WebGMEGlobal*/
+/*jshint browser: true*/
 
-define(['jquery',
-        'js/logger'], function (__jquery,
-                                 Logger) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+define(['jquery', 'js/logger'], function (__jquery, Logger) {
+
+    'use strict';
 
     var DragScroll;
 
@@ -50,12 +53,12 @@ define(['jquery',
 
     DragScroll.prototype._onMouseMove = function (event) {
         if (!this._isInContainerBounds(event.pageX, event.pageY)) {
-            this._logger.debug("onMouseMove - outside ContainerBounds");
+            this._logger.debug('onMouseMove - outside ContainerBounds');
             //start scrolling
             this._scrollDelta = this._calculateScrollDelta(event.pageX, event.pageY);
             this._startScroll();
         } else {
-            this._logger.debug("onMouseMove - INSIDE ContainerBounds");
+            this._logger.debug('onMouseMove - INSIDE ContainerBounds');
             //stop scrolling
             this._stopScroll();
         }
@@ -81,12 +84,14 @@ define(['jquery',
     DragScroll.prototype._getContainerBoundaries = function () {
         var offset = this._containerNode.offset();
 
-        this._containerBoundaries = {"left" : offset.left,
-                                    "top" : offset.top,
-                                    "width": this._containerNode.width(),
-                                    "height": this._containerNode.height() };
+        this._containerBoundaries = {
+            left: offset.left,
+            top: offset.top,
+            width: this._containerNode.width(),
+            height: this._containerNode.height()
+        };
 
-        this._logger.debug("_containerBoundaries: " + JSON.stringify(this._containerBoundaries));
+        this._logger.debug('_containerBoundaries: ' + JSON.stringify(this._containerBoundaries));
     };
 
     DragScroll.prototype._isInContainerBounds = function (x, y) {
@@ -112,13 +117,13 @@ define(['jquery',
             dy = DragScroll._SCROLL_STEP;
         }
 
-        return { "x": dx, "y": dy };
+        return {x: dx, y: dy};
     };
 
     DragScroll.prototype._doScroll = function () {
         var sTop, sLeft;
 
-        this._logger.debug("doScroll - " + JSON.stringify(this._scrollDelta));
+        this._logger.debug('doScroll - ' + JSON.stringify(this._scrollDelta));
         this._timer = undefined;
         if (this._scrollDelta) {
             if (this._scrollDelta.x !== 0 || this._scrollDelta.y !== 0) {
@@ -129,12 +134,12 @@ define(['jquery',
                 this._containerNode[0].scrollLeft += this._scrollDelta.x;
 
                 if (this._containerNode[0].scrollTop === 0 ||
-                        this._containerNode[0].scrollTop < sTop + this._scrollDelta.y) {
+                    this._containerNode[0].scrollTop < sTop + this._scrollDelta.y) {
                     this._scrollDelta.y = 0;
                 }
 
                 if (this._containerNode[0].scrollLeft === 0 ||
-                        this._containerNode[0].scrollLeft < sLeft + this._scrollDelta.x) {
+                    this._containerNode[0].scrollLeft < sLeft + this._scrollDelta.x) {
                     this._scrollDelta.x = 0;
                 }
 

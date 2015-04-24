@@ -1,11 +1,16 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, WebGMEGlobal*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/logger'], function (Logger) {
 
-    "use strict";
+    'use strict';
 
     var ConnectionRouteManager2,
-        DESIGNERITEM_SUBCOMPONENT_SEPARATOR = "_x_";
+        DESIGNERITEM_SUBCOMPONENT_SEPARATOR = '_x_';
 
     ConnectionRouteManager2 = function (options) {
         var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:ConnectionRouteManager2';
@@ -14,11 +19,11 @@ define(['js/logger'], function (Logger) {
         this.diagramDesigner = options ? options.diagramDesigner : null;
 
         if (this.diagramDesigner === undefined || this.diagramDesigner === null) {
-            this.logger.error("Trying to initialize a ConnectionRouteManagerBasic without a canvas...");
-            throw ("ConnectionRouteManagerBasic can not be created");
+            this.logger.error('Trying to initialize a ConnectionRouteManagerBasic without a canvas...');
+            throw ('ConnectionRouteManagerBasic can not be created');
         }
 
-        this.logger.debug("ConnectionRouteManagerBasic ctor finished");
+        this.logger.debug('ConnectionRouteManagerBasic ctor finished');
     };
 
     ConnectionRouteManager2.prototype.initialize = function () {
@@ -57,7 +62,7 @@ define(['js/logger'], function (Logger) {
 
             //3 - calculate the connection path informations
             /*i = idList.length;
-            while (i--) {*/
+             while (i--) {*/
             for (i = 0; i < idList.length; i += 1) {
                 this._updateConnectionCoordinates(idList[i]);
             }
@@ -84,7 +89,7 @@ define(['js/logger'], function (Logger) {
             connectionMetaInfo;
 
         //first update the available connection endpoint coordinates
-        while(i--) {
+        while (i--) {
             connId = idList[i];
             srcObjId = canvas.connectionEndIDs[connId].srcObjId;
             srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId;
@@ -110,7 +115,7 @@ define(['js/logger'], function (Logger) {
     };
 
     ConnectionRouteManager2.prototype._getEndPointID = function (connId, objId, subCompId) {
-        var res = "";
+        var res = '';
 
         if (connId) {
             res += connId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR;
@@ -125,7 +130,8 @@ define(['js/logger'], function (Logger) {
         return res;
     };
 
-    ConnectionRouteManager2.prototype._getEndpointConnectionAreas = function (connId, objId, subCompId, isEnd, connectionMetaInfo) {
+    ConnectionRouteManager2.prototype._getEndpointConnectionAreas = function (connId, objId, subCompId, isEnd,
+                                                                              connectionMetaInfo) {
         var longid = this._getEndPointID(connId, objId, subCompId),
             eID = this._getEndPointID(undefined, objId, subCompId),
             res = [],
@@ -134,31 +140,34 @@ define(['js/logger'], function (Logger) {
             designerItem;
 
         //if (this.endpointConnectionAreaInfo.hasOwnProperty(longid) === false) {
-            this.endpointConnectionAreaInfo[longid] = this.endpointConnectionAreaInfo[longid] || [];
-            this.endpointConnectionAreaConnectionInfo[eID] = this.endpointConnectionAreaConnectionInfo[eID] || {};
+        this.endpointConnectionAreaInfo[longid] = this.endpointConnectionAreaInfo[longid] || [];
+        this.endpointConnectionAreaConnectionInfo[eID] = this.endpointConnectionAreaConnectionInfo[eID] || {};
 
-            if (subCompId === undefined ||
-                (subCompId !== undefined && this.diagramDesigner._itemSubcomponentsMap[objId] && this.diagramDesigner._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
+        if (subCompId === undefined ||
+            (subCompId !== undefined && this.diagramDesigner._itemSubcomponentsMap[objId] &&
+            this.diagramDesigner._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
 
-                designerItem = canvas.items[objId];
-                res = designerItem.getConnectionAreas(subCompId, isEnd, connectionMetaInfo) || [];
+            designerItem = canvas.items[objId];
+            res = designerItem.getConnectionAreas(subCompId, isEnd, connectionMetaInfo) || [];
 
-                j = res.length;
-                while (j--) {
-                    this.endpointConnectionAreaInfo[longid][res[j].id] = {"x": res[j].x1,
-                        "y": res[j].y1,
-                        "angle1": res[j].angle1,
-                        "angle2": res[j].angle2,
-                        "len": res[j].len || 10,
-                        "id": res[j].id,
-                        "w": res[j].x2 - res[j].x1,
-                        "h": res[j].y2 - res[j].y1};
+            j = res.length;
+            while (j--) {
+                this.endpointConnectionAreaInfo[longid][res[j].id] = {
+                    x: res[j].x1,
+                    y: res[j].y1,
+                    angle1: res[j].angle1,
+                    angle2: res[j].angle2,
+                    len: res[j].len || 10,
+                    id: res[j].id,
+                    w: res[j].x2 - res[j].x1,
+                    h: res[j].y2 - res[j].y1
+                };
 
-                    if (!this.endpointConnectionAreaConnectionInfo[eID].hasOwnProperty(res[j].id)) {
-                        this.endpointConnectionAreaConnectionInfo[eID][res[j].id] = 0;
-                    }
+                if (!this.endpointConnectionAreaConnectionInfo[eID].hasOwnProperty(res[j].id)) {
+                    this.endpointConnectionAreaConnectionInfo[eID][res[j].id] = 0;
                 }
             }
+        }
         //}
 
         return res.length > 0;
@@ -187,9 +196,11 @@ define(['js/logger'], function (Logger) {
         for (i in this.endpointConnectionAreaInfo[sId]) {
             if (this.endpointConnectionAreaInfo[sId].hasOwnProperty(i)) {
                 desc = this.endpointConnectionAreaInfo[sId][i];
-                newDesc = { "x": desc.x + desc.w / 2,
-                    "y": desc.y + desc.h / 2,
-                    "id": desc.id };
+                newDesc = {
+                    x: desc.x + desc.w / 2,
+                    y: desc.y + desc.h / 2,
+                    id: desc.id
+                };
 
                 sourceConnectionPoints.push(newDesc);
             }
@@ -198,9 +209,11 @@ define(['js/logger'], function (Logger) {
         for (i in this.endpointConnectionAreaInfo[tId]) {
             if (this.endpointConnectionAreaInfo[tId].hasOwnProperty(i)) {
                 desc = this.endpointConnectionAreaInfo[tId][i];
-                newDesc = { "x": desc.x + desc.w / 2,
-                    "y": desc.y + desc.h / 2,
-                    "id": desc.id };
+                newDesc = {
+                    x: desc.x + desc.w / 2,
+                    y: desc.y + desc.h / 2,
+                    id: desc.id
+                };
 
                 targetConnectionPoints.push(newDesc);
             }
@@ -210,20 +223,31 @@ define(['js/logger'], function (Logger) {
             if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
                 //connection's source and destination is the same object/port
                 sourceCoordinates = sourceConnectionPoints[0];
-                targetCoordinates = targetConnectionPoints.length > 1 ? targetConnectionPoints[1] : targetConnectionPoints[0];
+                targetCoordinates = targetConnectionPoints.length > 1 ?
+                    targetConnectionPoints[1] : targetConnectionPoints[0];
             } else {
-                closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints, segmentPoints);
+                closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints,
+                    segmentPoints);
                 sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
                 targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
             }
 
             this.endpointConnectionAreaConnectionInfo[sEId][sourceCoordinates.id] += 1;
             this.endpointConnectionAreaConnectionInfo[tEId][targetCoordinates.id] += 1;
-            this.connectionEndPoints[connectionId] = { "source": [sId, sourceCoordinates.id, this.endpointConnectionAreaConnectionInfo[sEId][sourceCoordinates.id]],
-                                                       "target": [tId, targetCoordinates.id, this.endpointConnectionAreaConnectionInfo[tEId][targetCoordinates.id]]};
+            this.connectionEndPoints[connectionId] = {
+                source: [
+                    sId,
+                    sourceCoordinates.id,
+                    this.endpointConnectionAreaConnectionInfo[sEId][sourceCoordinates.id]
+                ],
+                target: [
+                    tId,
+                    targetCoordinates.id,
+                    this.endpointConnectionAreaConnectionInfo[tEId][targetCoordinates.id]
+                ]
+            };
         }
     };
-
 
 
     ConnectionRouteManager2.prototype._updateConnectionCoordinates = function (connectionId) {
@@ -232,13 +256,13 @@ define(['js/logger'], function (Logger) {
             srcSubCompId = canvas.connectionEndIDs[connectionId].srcSubCompId,
             dstObjId = canvas.connectionEndIDs[connectionId].dstObjId,
             dstSubCompId = canvas.connectionEndIDs[connectionId].dstSubCompId,
-            sId = this._getEndPointID(connectionId, srcObjId, srcSubCompId),
-            tId = this._getEndPointID(connectionId, dstObjId, dstSubCompId),
             sEId = this._getEndPointID(undefined, srcObjId, srcSubCompId),
             tEId = this._getEndPointID(undefined, dstObjId, dstSubCompId),
             segmentPoints = canvas.items[connectionId].segmentPoints,
-            sourceConnectionPoint = this.connectionEndPoints[connectionId] ? this.connectionEndPoints[connectionId].source : undefined,
-            targetConnectionPoint = this.connectionEndPoints[connectionId] ? this.connectionEndPoints[connectionId].target : undefined,
+            sourceConnectionPoint = this.connectionEndPoints[connectionId] ?
+                this.connectionEndPoints[connectionId].source : undefined,
+            targetConnectionPoint = this.connectionEndPoints[connectionId] ?
+                this.connectionEndPoints[connectionId].target : undefined,
             sourceCoordinates = null,
             targetCoordinates = null,
             connectionPathPoints = [],
@@ -252,6 +276,7 @@ define(['js/logger'], function (Logger) {
             slicey,
             p1,
             p2,
+            bbbox,
             connExtender = 0;
 
         if (sourceConnectionPoint && targetConnectionPoint) {
@@ -263,22 +288,32 @@ define(['js/logger'], function (Logger) {
             slicey = sourceCoordinates.h / (this.endpointConnectionAreaConnectionInfo[sEId][sourceCoordinates.id] + 1);
 
             /***************startpoint's coordinates*********************/
-            connectionPathPoints.push({ "x": sourceCoordinates.x + slicex * sourceConnectionPoint[2],
-                                        "y": sourceCoordinates.y + slicey * sourceConnectionPoint[2] });
+            connectionPathPoints.push({
+                x: sourceCoordinates.x + slicex * sourceConnectionPoint[2],
+                y: sourceCoordinates.y + slicey * sourceConnectionPoint[2]
+            });
 
             /***************startpoint's defined connector length*********************/
             if (sourceCoordinates.len !== 0) {
-                connectorDelta = this._getConnectorDelta(sourceCoordinates, this.endpointConnectionAreaConnectionInfo[sEId][sourceCoordinates.id] + 1, sourceConnectionPoint[2]);
-                connectionPathPoints.push({ "x": sourceCoordinates.x + slicex * sourceConnectionPoint[2] + connectorDelta.dx + connectorDelta.dx * connExtender * (sourceConnectionPoint[2] - 1),
-                    "y": sourceCoordinates.y + slicey * sourceConnectionPoint[2] + connectorDelta.dy + connectorDelta.dy * connExtender * (sourceConnectionPoint[2] - 1)});
+                connectorDelta = this._getConnectorDelta(sourceCoordinates,
+                    this.endpointConnectionAreaConnectionInfo[sEId][sourceCoordinates.id] + 1,
+                    sourceConnectionPoint[2]);
+                connectionPathPoints.push({
+                    x: sourceCoordinates.x + slicex * sourceConnectionPoint[2] + connectorDelta.dx +
+                    connectorDelta.dx * connExtender * (sourceConnectionPoint[2] - 1),
+                    y: sourceCoordinates.y + slicey * sourceConnectionPoint[2] + connectorDelta.dy +
+                    connectorDelta.dy * connExtender * (sourceConnectionPoint[2] - 1)
+                });
             }
 
             /*************** segment points *****************************/
             if (segmentPoints && segmentPoints.length > 0) {
                 len = segmentPoints.length;
                 for (i = 0; i < len; i += 1) {
-                    connectionPathPoints.push({ "x": segmentPoints[i][0],
-                        "y": segmentPoints[i][1]});
+                    connectionPathPoints.push({
+                        x: segmentPoints[i][0],
+                        y: segmentPoints[i][1]
+                    });
                 }
             }
 
@@ -288,21 +323,29 @@ define(['js/logger'], function (Logger) {
 
             /***************endpoint's defined connector length*********************/
             if (targetCoordinates.len !== 0) {
-                connectorDelta = this._getConnectorDelta(targetCoordinates, this.endpointConnectionAreaConnectionInfo[tEId][targetCoordinates.id] + 1, targetConnectionPoint[2]);
-                connectionPathPoints.push({ "x": targetCoordinates.x + slicex * targetConnectionPoint[2] + connectorDelta.dx + connectorDelta.dx * connExtender * (targetConnectionPoint[2] - 1),
-                    "y": targetCoordinates.y + slicey * targetConnectionPoint[2] + connectorDelta.dy + connectorDelta.dy * connExtender * (targetConnectionPoint[2] - 1)});
+                connectorDelta = this._getConnectorDelta(targetCoordinates,
+                    this.endpointConnectionAreaConnectionInfo[tEId][targetCoordinates.id] + 1,
+                    targetConnectionPoint[2]);
+                connectionPathPoints.push({
+                    x: targetCoordinates.x + slicex * targetConnectionPoint[2] + connectorDelta.dx +
+                    connectorDelta.dx * connExtender * (targetConnectionPoint[2] - 1),
+                    y: targetCoordinates.y + slicey * targetConnectionPoint[2] + connectorDelta.dy +
+                    connectorDelta.dy * connExtender * (targetConnectionPoint[2] - 1)
+                });
             }
 
             /***************endpoint's coordinates*********************/
-            connectionPathPoints.push({ "x": targetCoordinates.x + slicex * targetConnectionPoint[2],
-                "y": targetCoordinates.y + slicey * targetConnectionPoint[2]});
+            connectionPathPoints.push({
+                x: targetCoordinates.x + slicex * targetConnectionPoint[2],
+                y: targetCoordinates.y + slicey * targetConnectionPoint[2]
+            });
         }
 
         len = connectionPathPoints.length;
         while (len-- > 1) {
             if ((connectionPathPoints[len].x === connectionPathPoints[len - 1].x) &&
                 (connectionPathPoints[len].y === connectionPathPoints[len - 1].y)) {
-                connectionPathPoints.splice(len,1);
+                connectionPathPoints.splice(len, 1);
             }
         }
 
@@ -320,54 +363,64 @@ define(['js/logger'], function (Logger) {
                         if (sourceCoordinates.angle1 >= 0 && sourceCoordinates.angle2 < 90) {
                             //EAST
                             connectionPathPoints.splice(2, 0,
-                                { "x": connectionPathPoints[1].x + 20, "y": connectionPathPoints[1].y - 20},
-                                { "x": connectionPathPoints[1].x + 40, "y": connectionPathPoints[1].y },
-                                { "x": connectionPathPoints[1].x + 20, "y": connectionPathPoints[1].y + 20},
-                                { "x": connectionPathPoints[1].x, "y": connectionPathPoints[1].y});
+                                {x: connectionPathPoints[1].x + 20, y: connectionPathPoints[1].y - 20},
+                                {x: connectionPathPoints[1].x + 40, y: connectionPathPoints[1].y},
+                                {x: connectionPathPoints[1].x + 20, y: connectionPathPoints[1].y + 20},
+                                {x: connectionPathPoints[1].x, y: connectionPathPoints[1].y});
                         } else if (sourceCoordinates.angle1 >= 90 && sourceCoordinates.angle2 < 180) {
                             //SOUTH
                             connectionPathPoints.splice(2, 0,
-                                { "x": connectionPathPoints[1].x + 20, "y": connectionPathPoints[1].y + 20},
-                                { "x": connectionPathPoints[1].x , "y": connectionPathPoints[1].y + 40},
-                                { "x": connectionPathPoints[1].x - 20, "y": connectionPathPoints[1].y + 20},
-                                { "x": connectionPathPoints[1].x, "y": connectionPathPoints[1].y});
+                                {x: connectionPathPoints[1].x + 20, y: connectionPathPoints[1].y + 20},
+                                {x: connectionPathPoints[1].x, y: connectionPathPoints[1].y + 40},
+                                {x: connectionPathPoints[1].x - 20, y: connectionPathPoints[1].y + 20},
+                                {x: connectionPathPoints[1].x, y: connectionPathPoints[1].y});
                         } else if (sourceCoordinates.angle1 >= 180 && sourceCoordinates.angle2 < 270) {
                             //WEST
                             connectionPathPoints.splice(2, 0,
-                                { "x": connectionPathPoints[1].x - 20, "y": connectionPathPoints[1].y - 20},
-                                { "x": connectionPathPoints[1].x - 40, "y": connectionPathPoints[1].y },
-                                { "x": connectionPathPoints[1].x - 20, "y": connectionPathPoints[1].y + 20},
-                                { "x": connectionPathPoints[1].x, "y": connectionPathPoints[1].y});
+                                {x: connectionPathPoints[1].x - 20, y: connectionPathPoints[1].y - 20},
+                                {x: connectionPathPoints[1].x - 40, y: connectionPathPoints[1].y},
+                                {x: connectionPathPoints[1].x - 20, y: connectionPathPoints[1].y + 20},
+                                {x: connectionPathPoints[1].x, y: connectionPathPoints[1].y});
                         } else if (sourceCoordinates.angle1 >= 270 && sourceCoordinates.angle2 < 360) {
                             //NORTH
                             connectionPathPoints.splice(2, 0,
-                                { "x": connectionPathPoints[1].x - 20, "y": connectionPathPoints[1].y - 20},
-                                { "x": connectionPathPoints[1].x , "y": connectionPathPoints[1].y - 40},
-                                { "x": connectionPathPoints[1].x + 20, "y": connectionPathPoints[1].y - 20},
-                                { "x": connectionPathPoints[1].x, "y": connectionPathPoints[1].y});
+                                {x: connectionPathPoints[1].x - 20, y: connectionPathPoints[1].y - 20},
+                                {x: connectionPathPoints[1].x, y: connectionPathPoints[1].y - 40},
+                                {x: connectionPathPoints[1].x + 20, y: connectionPathPoints[1].y - 20},
+                                {x: connectionPathPoints[1].x, y: connectionPathPoints[1].y});
                         }
 
                     } else {
                         //x coordinates are the same
                         //y coordinates are different
-                        var bbbox = canvas.items[srcObjId].getBoundingBox();
-                        connectionPathPoints.splice(2, 0, { "x": connectionPathPoints[1].x + bbbox.width / 2 + 20,
-                            "y": connectionPathPoints[1].y}, { "x": connectionPathPoints[2].x + bbbox.width / 2 + 20,
-                            "y": connectionPathPoints[2].y});
+                        bbbox = canvas.items[srcObjId].getBoundingBox();
+                        connectionPathPoints.splice(2, 0, {
+                            x: connectionPathPoints[1].x + bbbox.width / 2 + 20,
+                            y: connectionPathPoints[1].y
+                        }, {
+                            x: connectionPathPoints[2].x + bbbox.width / 2 + 20,
+                            y: connectionPathPoints[2].y
+                        });
                     }
                 } else {
                     if (connectionPathPoints[0].y === connectionPathPoints[lastIdx].y) {
                         //x coordinates are different
                         //y coordinates are the same
                         bbbox = canvas.items[srcObjId].getBoundingBox();
-                        connectionPathPoints.splice(2, 0, { "x": connectionPathPoints[1].x,
-                            "y": connectionPathPoints[1].y + bbbox.height / 2 + 20}, { "x": connectionPathPoints[2].x,
-                            "y": connectionPathPoints[2].y + bbbox.height / 2 + 20});
+                        connectionPathPoints.splice(2, 0, {
+                            x: connectionPathPoints[1].x,
+                            y: connectionPathPoints[1].y + bbbox.height / 2 + 20
+                        }, {
+                            x: connectionPathPoints[2].x,
+                            y: connectionPathPoints[2].y + bbbox.height / 2 + 20
+                        });
                     } else {
                         //x coordinates are different
                         //y coordinates are different
-                        connectionPathPoints.splice(2, 0, { "x": connectionPathPoints[2].x,
-                            "y": connectionPathPoints[1].y});
+                        connectionPathPoints.splice(2, 0, {
+                            x: connectionPathPoints[2].x,
+                            y: connectionPathPoints[1].y
+                        });
                     }
                 }
             } else {
@@ -395,11 +448,15 @@ define(['js/logger'], function (Logger) {
 
                         if (dx !== 0 && dy !== 0) {
                             //insert 2 extra points in the center to fix the difference
-                            connectionPathPoints.push({ "x": p1.x,
-                                "y": p1.y + dy / 2 });
+                            connectionPathPoints.push({
+                                x: p1.x,
+                                y: p1.y + dy / 2
+                            });
 
-                            connectionPathPoints.push({ "x": p1.x + dx,
-                                "y": p1.y + dy / 2 });
+                            connectionPathPoints.push({
+                                x: p1.x + dx,
+                                y: p1.y + dy / 2
+                            });
                         }
 
                         //p2 always goes to the list
@@ -422,8 +479,9 @@ define(['js/logger'], function (Logger) {
     ConnectionRouteManager2.prototype._getConnectorDelta = function (coordDesc, slices, connOrderNum) {
         var dx = 0,
             dy = 0,
-            angle = (coordDesc.angle1 + ((coordDesc.angle2 - coordDesc.angle1) / slices * connOrderNum )) * (Math.PI/180),
-            result = { "dx": dx, "dy": dy };
+            angle = (coordDesc.angle1 + ((coordDesc.angle2 - coordDesc.angle1) / slices * connOrderNum )) *
+                (Math.PI / 180),
+            result = {dx: dx, dy: dy};
 
         if (coordDesc.len !== 0) {
             var s = Math.sin(angle);
@@ -443,7 +501,8 @@ define(['js/logger'], function (Logger) {
     };
 
     //figure out the shortest side to choose between the two
-    ConnectionRouteManager2.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints, segmentPoints) {
+    ConnectionRouteManager2.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints,
+                                                                    segmentPoints) {
         var i,
             j,
             dx,
@@ -456,13 +515,18 @@ define(['js/logger'], function (Logger) {
         if (segmentPoints && segmentPoints.length > 0) {
             for (i = 0; i < srcConnectionPoints.length; i += 1) {
                 for (j = 0; j < tgtConnectionPoints.length; j += 1) {
-                    dx = { "src": Math.abs(srcConnectionPoints[i].x - segmentPoints[0][0]),
-                        "tgt": Math.abs(tgtConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])};
+                    dx = {
+                        src: Math.abs(srcConnectionPoints[i].x - segmentPoints[0][0]),
+                        tgt: Math.abs(tgtConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])
+                    };
 
-                    dy =  { "src": Math.abs(srcConnectionPoints[i].y - segmentPoints[0][1]),
-                        "tgt": Math.abs(tgtConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1][1])};
+                    dy = {
+                        src: Math.abs(srcConnectionPoints[i].y - segmentPoints[0][1]),
+                        tgt: Math.abs(tgtConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1][1])
+                    };
 
-                    cLength = Math.sqrt(dx.src * dx.src + dy.src * dy.src) + Math.sqrt(dx.tgt * dx.tgt + dy.tgt * dy.tgt);
+                    cLength = Math.sqrt(dx.src * dx.src + dy.src * dy.src) +
+                    Math.sqrt(dx.tgt * dx.tgt + dy.tgt * dy.tgt);
 
                     if (minLength === -1 || minLength > cLength) {
                         minLength = cLength;

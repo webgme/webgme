@@ -1,12 +1,12 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
-
+/*globals define, $*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 define(['css!js/Loader/styles/LoaderProgressBar.css'], function () {
 
-    "use strict";
+    'use strict';
 
     var LoaderProgressBar;
 
@@ -15,7 +15,7 @@ define(['css!js/Loader/styles/LoaderProgressBar.css'], function () {
         this._el = params.containerElement;
 
         if (this._el.length === 0) {
-            throw "LoaderProgressBar's container control with id:'" + params.containerElement + "' could not be found";
+            throw 'LoaderProgressBar\'s container control with id:"' + params.containerElement + '" could not be found';
         }
     };
 
@@ -32,7 +32,7 @@ define(['css!js/Loader/styles/LoaderProgressBar.css'], function () {
 
     LoaderProgressBar.prototype._createElements = function () {
         if (!this._loaderDiv) {
-            this._loaderDiv = $('<div/>', { "class" : "loader-progressbar" });
+            this._loaderDiv = $('<div/>', {class: 'loader-progressbar'});
 
             this._el.append(this._loaderDiv);
 

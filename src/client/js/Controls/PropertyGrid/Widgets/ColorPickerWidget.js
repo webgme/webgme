@@ -1,65 +1,74 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, _, $*/
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
-    'js/Controls/ColorPicker'],
-    function (WidgetBase,
-              ColorPicker) {
+define([
+    'js/Controls/PropertyGrid/Widgets/WidgetBase',
+    'js/Controls/ColorPicker'
+], function (WidgetBase,
+             ColorPicker) {
 
-        "use strict";
+    'use strict';
 
-        var ColorPickerWidget,
-            DIV_BASE = $('<div/>', {'id': 'cpw',
-                'class': 'color-picker'});
+    var ColorPickerWidget,
+        DIV_BASE = $('<div/>', {
+            id: 'cpw',
+            class: 'color-picker'
+        });
 
-        ColorPickerWidget  = function (propertyDesc) {
-            var _self = this;
+    ColorPickerWidget = function (propertyDesc) {
+        var self = this,
+            c,
+            colorPicker;
 
-            this._enabled = true;
+        this._enabled = true;
 
-            ColorPickerWidget.superclass.call(this, propertyDesc);
+        ColorPickerWidget.superclass.call(this, propertyDesc);
 
-            this.__colorDiv = DIV_BASE.clone();
+        this.__colorDiv = DIV_BASE.clone();
 
-            this.__colorDiv.on('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
+        this.__colorDiv.on('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
 
-                if (_self._enabled) {
-                    var c = _self.getValue();
+            if (self._enabled) {
+                c = self.getValue();
 
-                    var _colorPicker = new ColorPicker({'el': _self.__colorDiv, 'color': c});
-                    _colorPicker.onColorChanged = function (color) {
-                        _self.setValue(color);
-                        _self.fireFinishChange();
-                    };
-                }
-            });
+                colorPicker = new ColorPicker({el: self.__colorDiv, color: c});
+                colorPicker.onColorChanged = function (color) {
+                    self.setValue(color);
+                    self.fireFinishChange();
+                };
+            }
+        });
 
-            this.updateDisplay();
+        this.updateDisplay();
 
-            this.el.append(this.__colorDiv);
-        };
+        this.el.append(this.__colorDiv);
+    };
 
-        ColorPickerWidget.superclass = WidgetBase;
+    ColorPickerWidget.superclass = WidgetBase;
 
-        _.extend(
-            ColorPickerWidget.prototype,
-            WidgetBase.prototype
-        );
+    _.extend(
+        ColorPickerWidget.prototype,
+        WidgetBase.prototype
+    );
 
-        ColorPickerWidget.prototype.updateDisplay =  function () {
-            this.__colorDiv.css('background-color', this.getValue());
+    ColorPickerWidget.prototype.updateDisplay = function () {
+        this.__colorDiv.css('background-color', this.getValue());
 
-            return ColorPickerWidget.superclass.prototype.updateDisplay.call(this);
-        };
+        return ColorPickerWidget.superclass.prototype.updateDisplay.call(this);
+    };
 
-        ColorPickerWidget.prototype.setReadOnly = function (isReadOnly) {
+    ColorPickerWidget.prototype.setReadOnly = function (isReadOnly) {
 
-            ColorPickerWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+        ColorPickerWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
 
-            this._enabled = !isReadOnly;
-        };
+        this._enabled = !isReadOnly;
+    };
 
-        return ColorPickerWidget;
+    return ColorPickerWidget;
 
-    });
+});

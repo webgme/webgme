@@ -1,16 +1,19 @@
-/*globals define, WebGMEGlobal, alert, _*/
+/*globals define, _, $*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/logger',
-        'js/Decorators/WidgetDecoratorBase'], function (Logger,
-                                                        WidgetDecoratorBase) {
-    "use strict";
+define([
+    'js/logger',
+    'js/Decorators/WidgetDecoratorBase'
+], function (Logger, WidgetDecoratorBase) {
+
+    'use strict';
 
     var PartBrowserWidgetDecoratorBase,
-        DECORATOR_ID = "PartBrowserWidgetDecoratorBase";
+        DECORATOR_ID = 'PartBrowserWidgetDecoratorBase';
 
     PartBrowserWidgetDecoratorBase = function (params) {
         WidgetDecoratorBase.call(this, params);
@@ -19,7 +22,7 @@ define(['js/logger',
 
         this._initialize();
 
-        this.logger.debug("Created");
+        this.logger.debug('Created');
     };
 
     _.extend(PartBrowserWidgetDecoratorBase.prototype, WidgetDecoratorBase.prototype);
@@ -27,7 +30,7 @@ define(['js/logger',
     PartBrowserWidgetDecoratorBase.prototype.DECORATORID = DECORATOR_ID;
 
     /*PartBrowserWidgetDecoratorBase.prototype.setControlSpecificAttributes = function () {
-    };*/
+     };*/
 
     PartBrowserWidgetDecoratorBase.prototype.setControl = function (control) {
         this._control = control;
@@ -80,12 +83,12 @@ define(['js/logger',
     //Remove any additional business logic, free up resources, territory, etc...
     //NOTE - CAN BE OVERRIDDEN WHEN NEEDED
     PartBrowserWidgetDecoratorBase.prototype.destroy = function () {
-        this.logger.debug("PartBrowserWidgetDecoratorBase.destroyed");
+        this.logger.debug('PartBrowserWidgetDecoratorBase.destroyed');
     };
 
 
     /************* ADDITIONAL METHODS ***************************/
-    //called when the designer item should be updated
+        //called when the designer item should be updated
     PartBrowserWidgetDecoratorBase.prototype.update = function () {
     };
 

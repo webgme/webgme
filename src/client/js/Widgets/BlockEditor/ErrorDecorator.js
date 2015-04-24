@@ -1,7 +1,10 @@
-/*globals define,_*/
-/*
+/*globals define*/
+/*jshint browser: true*/
+
+/**
  * @author brollb / https://github/brollb
  */
+
 define(['js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase'], function (BlockEditorWidgetDecoratorBase) {
 
     "use strict";
@@ -12,7 +15,7 @@ define(['js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase'], function (Blo
         DECORATOR_ID = "ErrorDecorator";
 
     ErrorDecorator = function (options) {
-        var opts = _.extend( {}, options);
+        var opts = _.extend({}, options);
 
         __parent__.apply(this, [opts]);
 

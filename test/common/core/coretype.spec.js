@@ -1,4 +1,4 @@
-/* jshint node:true, mocha: true*/
+/* jshint node:true, mocha: true, expr:true*/
 
 /**
  * @author kecso / https://github.com/kecso
@@ -27,7 +27,7 @@ describe('coretype', function () {
                 return;
             }
             storage.openProject('coreTypeTesting', function (err, p) {
-                var base, bChild, instance, iChild;
+                var base, bChild, instance;
                 if (err) {
                     done(err);
                     return;

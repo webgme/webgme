@@ -1,17 +1,22 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, WebGMEGlobal, _, $*/
+/*jshint browser: true*/
 
-define(['js/logger',
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define([
+    'js/logger',
     './DiagramDesignerWidget.Constants',
-    './ErrorDecorator'], function (Logger,
-                                 DiagramDesignerWidgetConstants,
-                                 ErrorDecorator) {
+    './ErrorDecorator'
+], function (Logger, DiagramDesignerWidgetConstants, ErrorDecorator) {
 
-    "use strict";
+    'use strict';
 
     var DesignerItem,
-        EVENT_POSTFIX = "DesignerItem",
-        HOVER_CLASS = "hover",
-        SELECTABLE_CLASS = "selectable";
+        EVENT_POSTFIX = 'DesignerItem',
+        HOVER_CLASS = 'hover',
+        SELECTABLE_CLASS = 'selectable';
 
     DesignerItem = function (objId, canvas) {
         this.id = objId;
@@ -20,14 +25,14 @@ define(['js/logger',
         this.__initialize();
         this.logger = Logger.create('gme:Widgets:DiagramDesigner:DesignerItem_' + this.id,
             WebGMEGlobal.gmeConfig.client.log);
-        this.logger.debug("Created");
+        this.logger.debug('Created');
     };
 
     DesignerItem.prototype.__initialize = function () {
         this._decoratorInstance = null;
         this._decoratorClass = null;
 
-        this._decoratorID = "";
+        this._decoratorID = '';
 
         this.selected = false;
         this.selectedInMultiSelection = false;
@@ -43,72 +48,87 @@ define(['js/logger',
         this._initializeUI();
     };
 
-    DesignerItem.prototype.__setDecorator = function (decoratorName, decoratorClass, control, metaInfo, preferencesHelper, aspect, decoratorParams) {
-        if (decoratorClass === undefined) {
+    DesignerItem.prototype.__setDecorator = function (decoratorName, DecoratorClass, control, metaInfo,
+                                                      preferencesHelper, aspect, decoratorParams) {
+        if (DecoratorClass === undefined) {
             //the required decorator is not available
             metaInfo = metaInfo || {};
             metaInfo.__missingdecorator__ = decoratorName;
-            decoratorClass = ErrorDecorator;
+            DecoratorClass = ErrorDecorator;
         }
-        if (this._decoratorID !== decoratorClass.prototype.DECORATORID) {
+        if (this._decoratorID !== DecoratorClass.prototype.DECORATORID) {
 
             if (this._decoratorInstance) {
                 //destroy old decorator
-                this._callDecoratorMethod("destroy");
+                this._callDecoratorMethod('destroy');
                 this.$el.empty();
             }
 
-            this._decoratorID = decoratorClass.prototype.DECORATORID;
+            this._decoratorID = DecoratorClass.prototype.DECORATORID;
 
-            this._decoratorClass = decoratorClass;
+            this._decoratorClass = DecoratorClass;
 
-            this._decoratorInstance = new decoratorClass({'host': this,
-                                                          'preferencesHelper': preferencesHelper,
-                                                          'aspect': aspect,
-                                                          'decoratorParams': decoratorParams});
+            this._decoratorInstance = new DecoratorClass({
+                'host': this,
+                'preferencesHelper': preferencesHelper,
+                'aspect': aspect,
+                'decoratorParams': decoratorParams
+            });
             this._decoratorInstance.setControl(control);
             this._decoratorInstance.setMetaInfo(metaInfo);
         }
     };
 
-    DesignerItem.prototype.$_DOMBase = $('<div/>').attr({ "class": DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS });
+    //jshint camelcase: false
+    DesignerItem.prototype.$_DOMBase = $('<div/>').attr({class: DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS});
 
     DesignerItem.prototype._initializeUI = function () {
         //generate skin DOM and cache it
         this.$el = this.$_DOMBase.clone();
 
         //set additional CSS properties
-        this.$el.attr({"id": this.id});
+        this.$el.attr({id: this.id});
 
-        this.$el.css({ "position": "absolute",
-            "left": this.positionX,
-            "top": this.positionY });
+        this.$el.css({
+            position: 'absolute',
+            left: this.positionX,
+            top: this.positionY
+        });
 
         this._attachUserInteractions();
 
         this.canvas._makeDraggable(this);
     };
+    //jshint camelcase: true
 
     DesignerItem.prototype._attachUserInteractions = function () {
         var i,
             self = this;
 
-        this._events = {"mouseenter": { "fn": "onMouseEnter",
-                                        "stopPropagation": true,
-                                        "preventDefault": true,
-                                        "enabledInReadOnlyMode": true},
-                        "mouseleave": { "fn": "onMouseLeave",
-                                        "stopPropagation": true,
-                                        "preventDefault": true,
-                                        "enabledInReadOnlyMode": true},
-                        "dblclick": { "fn": "onDoubleClick",
-                                        "stopPropagation": true,
-                                        "preventDefault": true,
-                                        "enabledInReadOnlyMode": true}};
+        this._events = {
+            mouseenter: {
+                fn: 'onMouseEnter',
+                stopPropagation: true,
+                preventDefault: true,
+                enabledInReadOnlyMode: true
+            },
+            mouseleave: {
+                fn: 'onMouseLeave',
+                stopPropagation: true,
+                preventDefault: true,
+                enabledInReadOnlyMode: true
+            },
+            dblclick: {
+                fn: 'onDoubleClick',
+                stopPropagation: true,
+                preventDefault: true,
+                enabledInReadOnlyMode: true
+            }
+        };
 
         for (i in this._events) {
             if (this._events.hasOwnProperty(i)) {
-                this.$el.on( i + '.' + EVENT_POSTFIX, null, null, function (event) {
+                this.$el.on(i + '.' + EVENT_POSTFIX, null, null, function (event) {
                     var eventHandlerOpts = self._events[event.type],
                         handled = false,
                         enabled = true;
@@ -144,7 +164,7 @@ define(['js/logger',
                             }
                         }
                     }
-                });
+                }); // FIXME
             }
         }
     };
@@ -154,30 +174,30 @@ define(['js/logger',
 
         for (i in this._events) {
             if (this._events.hasOwnProperty(i)) {
-                this.$el.off( i + '.' + EVENT_POSTFIX);
+                this.$el.off(i + '.' + EVENT_POSTFIX);
             }
         }
     };
 
     DesignerItem.prototype.addToDocFragment = function (docFragment) {
-        this._callDecoratorMethod("on_addTo");
+        this._callDecoratorMethod('on_addTo');
 
         this.$el.append(this._decoratorInstance.$el);
 
-        docFragment.appendChild( this.$el[0] );
+        docFragment.appendChild(this.$el[0]);
 
-        this.logger.debug("DesignerItem with id:'" + this.id + "' added to canvas.");
+        this.logger.debug('DesignerItem with id:"' + this.id + '" added to canvas.');
     };
 
     DesignerItem.prototype.renderGetLayoutInfo = function () {
-        this._callDecoratorMethod("onRenderGetLayoutInfo");
+        this._callDecoratorMethod('onRenderGetLayoutInfo');
     };
 
     DesignerItem.prototype.renderSetLayoutInfo = function () {
-        this._callDecoratorMethod("onRenderSetLayoutInfo");
+        this._callDecoratorMethod('onRenderSetLayoutInfo');
     };
 
-    DesignerItem.prototype._remove = function() {
+    DesignerItem.prototype._remove = function () {
         this._containerElement = null;
         this.$el.remove();
         this.$el.empty();
@@ -191,23 +211,25 @@ define(['js/logger',
         this.canvas._destroyDraggable(this);
 
         //destroy old decorator
-        this._callDecoratorMethod("destroy");
+        this._callDecoratorMethod('destroy');
 
         //unregister all subcomponents
         this.canvas.unregisterAllSubcomponents(this.id);
 
         this._remove();
 
-        this.logger.debug("Destroyed");
+        this.logger.debug('Destroyed');
     };
 
     DesignerItem.prototype.getBoundingBox = function () {
-        var bBox = {"x": this.positionX,
-                "y": this.positionY,
-                "width": this._width,
-                "height": this._height,
-                "x2": this.positionX + this._width,
-                "y2":  this.positionY + this._height};
+        var bBox = {
+            x: this.positionX,
+            y: this.positionY,
+            width: this._width,
+            height: this._height,
+            x2: this.positionX + this._width,
+            y2: this.positionY + this._height
+        };
 
         if (this.rotation !== 0) {
             var topLeft = this._rotatePoint(0, 0);
@@ -235,7 +257,7 @@ define(['js/logger',
     DesignerItem.prototype.onMouseEnter = function (/*event*/) {
         var classes = [];
 
-        this.logger.debug("onMouseEnter: " + this.id);
+        this.logger.debug('onMouseEnter: ' + this.id);
 
         //add few classes by default
         classes.push(HOVER_CLASS);
@@ -260,7 +282,7 @@ define(['js/logger',
     DesignerItem.prototype.onMouseLeave = function (/*event*/) {
         var classes = [HOVER_CLASS, SELECTABLE_CLASS];
 
-        this.logger.debug("onMouseLeave: " + this.id);
+        this.logger.debug('onMouseLeave: ' + this.id);
 
         this.$el.removeClass(classes.join(' '));
         if (this.canvas.connectionDrawingManager.isDrawInProgress() !== true) {
@@ -278,7 +300,7 @@ define(['js/logger',
     DesignerItem.prototype.onSelect = function (multiSelection) {
         this.selected = true;
         this.selectedInMultiSelection = multiSelection;
-        this.$el.addClass("selected");
+        this.$el.addClass('selected');
 
         //when selected, no connectors are available
         if (multiSelection === true) {
@@ -286,16 +308,16 @@ define(['js/logger',
         }
 
         //let the decorator know that this item became selected
-        this._callDecoratorMethod("onSelect");
+        this._callDecoratorMethod('onSelect');
     };
 
     DesignerItem.prototype.onDeselect = function () {
         this.selected = false;
         this.selectedInMultiSelection = false;
-        this.$el.removeClass("selected");
+        this.$el.removeClass('selected');
 
         //let the decorator know that this item became deselected
-        this._callDecoratorMethod("onDeselect");
+        this._callDecoratorMethod('onDeselect');
     };
 
     DesignerItem.prototype._callDecoratorMethod = function (fnName, args) {
@@ -305,10 +327,11 @@ define(['js/logger',
             if (_.isFunction(this._decoratorInstance[fnName])) {
                 result = this._decoratorInstance[fnName].apply(this._decoratorInstance, args);
             } else {
-                this.logger.warn("DecoratorInstance '" + $.type(this._decoratorInstance) + "' does not have a method with name '" + fnName + "'...");
+                this.logger.warn('DecoratorInstance "' + $.type(this._decoratorInstance) +
+                '" does not have a method with name "' + fnName + '"...');
             }
         } else {
-            this.logger.error("DecoratorInstance does not exist...");
+            this.logger.error('DecoratorInstance does not exist...');
         }
 
         return result;
@@ -329,19 +352,21 @@ define(['js/logger',
         //update decorator if needed
         if (objDescriptor.decoratorClass && this._decoratorID !== objDescriptor.decoratorClass.prototype.DECORATORID) {
 
-            this.logger.debug("decorator update: '" + this._decoratorID + "' --> '" + objDescriptor.decoratorClass.prototype.DECORATORID + "'...");
+            this.logger.debug('decorator update: "' + this._decoratorID + '" --> "' +
+            objDescriptor.decoratorClass.prototype.DECORATORID + '"...');
 
             var oldControl = this._decoratorInstance.getControl();
             var oldMetaInfo = this._decoratorInstance.getMetaInfo();
 
-            this.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, oldControl, oldMetaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
+            this.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, oldControl, oldMetaInfo,
+                objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
 
             //attach new one
             this.$el.html(this._decoratorInstance.$el);
 
-            this.logger.debug("DesignerItem's ['" + this.id + "'] decorator  has been updated.");
+            this.logger.debug('DesignerItem\'s ["' + this.id + '"] decorator  has been updated.');
 
-            this._callDecoratorMethod("on_addTo");
+            this._callDecoratorMethod('on_addTo');
         } else {
             //if decorator instance not changed
             //let the decorator instance know about the update
@@ -415,29 +440,33 @@ define(['js/logger',
             }
 
             if (positionChanged) {
-                this.$el.css({"left": this.positionX,
-                    "top": this.positionY });
+                this.$el.css({
+                    left: this.positionX,
+                    top: this.positionY
+                });
 
-                this.canvas.dispatchEvent(this.canvas.events.ITEM_POSITION_CHANGED, {"ID": this.id,
-                    "x": this.positionX,
-                    "y": this.positionY});
+                this.canvas.dispatchEvent(this.canvas.events.ITEM_POSITION_CHANGED, {
+                    ID: this.id,
+                    x: this.positionX,
+                    y: this.positionY
+                });
             }
         }
     };
 
     /*DesignerItem.prototype.moveBy = function (dX, dY) {
-        this.moveTo(this.positionX + dX, this.positionY + dY);
-    };*/
+     this.moveTo(this.positionX + dX, this.positionY + dY);
+     };*/
 
 
     /************ SUBCOMPONENT HANDLING *****************/
     DesignerItem.prototype.registerSubcomponent = function (subComponentId, metaInfo) {
-        this.logger.debug("registerSubcomponent - ID: '" + this.id + "', SubComponentID: '" + subComponentId + "'");
+        this.logger.debug('registerSubcomponent - ID: "' + this.id + '", SubComponentID: "' + subComponentId + '"');
         this.canvas.registerSubcomponent(this.id, subComponentId, metaInfo);
     };
 
     DesignerItem.prototype.unregisterSubcomponent = function (subComponentId) {
-        this.logger.debug("unregisterSubcomponent - ID: '" + this.id + "', SubComponentID: '" + subComponentId + "'");
+        this.logger.debug('unregisterSubcomponent - ID: "' + this.id + '", SubComponentID: "' + subComponentId + '"');
         this.canvas.unregisterSubcomponent(this.id, subComponentId);
     };
 
@@ -495,18 +524,22 @@ define(['js/logger',
             if (this.rotation !== degree) {
                 this.rotation = degree;
 
-                this.$el.css({'transform-origin': '50% 50%',
-                    'transform': 'rotate(' + this.rotation + 'deg)'});
+                this.$el.css({
+                    'transform-origin': '50% 50%',
+                    'transform': 'rotate(' + this.rotation + 'deg)'
+                });
 
-                this.canvas.dispatchEvent(this.canvas.events.ITEM_ROTATION_CHANGED, {"ID": this.id,
-                    "deg": this.rotation});
+                this.canvas.dispatchEvent(this.canvas.events.ITEM_ROTATION_CHANGED, {
+                    ID: this.id,
+                    deg: this.rotation
+                });
             }
         }
     };
 
     DesignerItem.prototype._rotatePoint = function (x, y) {
         var fixedRotation = (this.rotation < 0 ? 360 + this.rotation : this.rotation) % 360;
-        var angle = fixedRotation * (Math.PI/180);
+        var angle = fixedRotation * (Math.PI / 180);
 
         var s = Math.sin(angle);
         var c = Math.cos(angle);
@@ -517,8 +550,10 @@ define(['js/logger',
         var rx = fx * c - fy * s;
         var ry = fx * s + fy * c;
 
-        return {"x": rx + this._width / 2,
-            "y": ry + this._height / 2};
+        return {
+            x: rx + this._width / 2,
+            y: ry + this._height / 2
+        };
     };
 
     DesignerItem.prototype.doSearch = function (searchDesc) {
@@ -534,7 +569,7 @@ define(['js/logger',
     };
 
     DesignerItem.prototype.getWidth = function () {
-        return  this._width;
+        return this._width;
     };
 
     DesignerItem.prototype.getHeight = function () {
@@ -556,11 +591,13 @@ define(['js/logger',
             }
 
             if (changed === true) {
-                this.canvas.dispatchEvent(this.canvas.events.ITEM_SIZE_CHANGED, {"ID": this.id,
-                    "w": this._width,
-                    "h": this._height});
+                this.canvas.dispatchEvent(this.canvas.events.ITEM_SIZE_CHANGED, {
+                    ID: this.id,
+                    w: this._width,
+                    h: this._height
+                });
             }
-        };
+        }
     };
 
     return DesignerItem;

@@ -1,18 +1,22 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, WebGMEGlobal, requirejs*/
+/*jshint browser: true*/
 
-define(['common/core/core',
-        'plugin/PluginManagerBase',
-        'plugin/PluginResult',
-        'blob/BlobClient',
-        'js/Dialogs/PluginConfig/PluginConfigDialog',
-        'js/logger'
-                                    ], function (Core,
-                                               PluginManagerBase,
-                                               PluginResult,
-                                               BlobClient,
-                                               PluginConfigDialog,
-                                               Logger) {
-    "use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
+ */
+
+define([
+    'common/core/core',
+    'plugin/PluginManagerBase',
+    'plugin/PluginResult',
+    'blob/BlobClient',
+    'js/Dialogs/PluginConfig/PluginConfigDialog',
+    'js/logger'
+], function (Core, PluginManagerBase, PluginResult, BlobClient, PluginConfigDialog, Logger) {
+
+    'use strict';
 
     var InterpreterManager = function (client, gmeConfig) {
         this._client = client;
@@ -23,7 +27,7 @@ define(['common/core/core',
         this.logger.debug('InterpreterManager ctor');
     };
 
-    var getPlugin = function(name,callback){
+    var getPlugin = function (name, callback) {
         if (WebGMEGlobal && WebGMEGlobal.plugins && WebGMEGlobal.plugins.hasOwnProperty(name)) {
             callback(null, WebGMEGlobal.plugins[name]);
         } else {
@@ -50,9 +54,9 @@ define(['common/core/core',
      */
     InterpreterManager.prototype.run = function (name, silentPluginCfg, callback) {
         var self = this;
-        getPlugin(name,function(err,plugin){
+        getPlugin(name, function (err, plugin) {
             self.logger.debug('Getting getPlugin in run.');
-            if(!err && plugin) {
+            if (!err && plugin) {
                 var plugins = {},
                     runWithConfiguration;
                 plugins[name] = plugin;
@@ -62,26 +66,27 @@ define(['common/core/core',
                     //#1: display config to user
                     var noServerExecution = self.gmeConfig.plugin.allowServerExecution === false,
                         hackedConfig = {
-                        'Global Options': [
-                            {
-                                "name": "runOnServer",
-                                "displayName": "Execute on Server",
-                                "description": noServerExecution ? 'Server side execution is disabled.' : '',
-                                "value": false, // this is the 'default config'
-                                "valueType": "boolean",
-                                "readOnly": noServerExecution
-                            }
-                        ]
-                    };
+                            'Global Options': [
+                                {
+                                    name: 'runOnServer',
+                                    displayName: 'Execute on Server',
+                                    description: noServerExecution ? 'Server side execution is disabled.' : '',
+                                    value: false, // this is the 'default config'
+                                    valueType: 'boolean',
+                                    readOnly: noServerExecution
+                                }
+                            ]
+                        },
+                        i, j, d, len;
 
-                    for (var i in pluginConfigs) {
+                    for (i in pluginConfigs) {
                         if (pluginConfigs.hasOwnProperty(i)) {
                             hackedConfig[i] = pluginConfigs[i];
 
                             // retrieve user settings from previous run
                             if (self._savedConfigs.hasOwnProperty(i)) {
                                 var iConfig = self._savedConfigs[i];
-                                var len = hackedConfig[i].length;
+                                len = hackedConfig[i].length;
 
                                 while (len--) {
                                     if (iConfig.hasOwnProperty(hackedConfig[i][len].name)) {
@@ -102,14 +107,14 @@ define(['common/core/core',
 
                         activeNode = silentPluginCfg.activeNode;
                         if (!activeNode && WebGMEGlobal && WebGMEGlobal.State) {
-                                activeNode = WebGMEGlobal.State.getActiveObject();
+                            activeNode = WebGMEGlobal.State.getActiveObject();
                         }
                         activeSelection = silentPluginCfg.activeSelection;
                         if (!activeSelection && WebGMEGlobal && WebGMEGlobal.State) {
                             activeSelection = WebGMEGlobal.State.getActiveSelection();
                         }
                         // save config from user
-                        for (var i in updatedConfig) {
+                        for (i in updatedConfig) {
                             self._savedConfigs[i] = updatedConfig[i];
                         }
 
@@ -117,24 +122,27 @@ define(['common/core/core',
                         if (configSaveCallback) {
                             configSaveCallback(updatedConfig);
 
-                            // TODO: if global config says try to merge branch then we should pass the name of the branch
+                            // TODO: If global config says try to merge branch then we
+                            // TODO: should pass the name of the branch.
                             var config = {
-                                "project": self._client.getActiveProjectName(),
-                                "token": "",
-                                "activeNode": activeNode, // active object in the editor
-                                "activeSelection": activeSelection || [],
-                                "commit": self._client.getActualCommit(), //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
-                                "branchName": self._client.getActualBranch() // this has priority over the commit if not null
+                                project: self._client.getActiveProjectName(),
+                                token: '',
+                                activeNode: activeNode, // active object in the editor
+                                activeSelection: activeSelection || [],
+                                commit: self._client.getActualCommit(), //#668b3babcdf2ddcd7ba38b51acb62d63da859d90,
+
+                                // this has priority over the commit if not null
+                                branchName: self._client.getActualBranch()
                             };
 
-                            if(globalconfig.runOnServer === true || silentPluginCfg.runOnServer === true){
+                            if (globalconfig.runOnServer === true || silentPluginCfg.runOnServer === true) {
                                 var context = {
                                     managerConfig: config,
-                                    pluginConfigs:updatedConfig
+                                    pluginConfigs: updatedConfig
                                 };
-                                self._client.runServerPlugin(name,context,function(err,result){
-                                    if(err){
-                                        console.error(err);
+                                self._client.runServerPlugin(name, context, function (err, result) {
+                                    if (err) {
+                                        self.logger.error(err);
                                         callback(new PluginResult()); //TODO return proper error result
                                     } else {
                                         var resultObject = new PluginResult(result);
@@ -146,7 +154,7 @@ define(['common/core/core',
 
                                 pluginManager.executePlugin(name, config, function (err, result) {
                                     if (err) {
-                                        console.error(err);
+                                        self.logger.error(err);
                                     }
                                     callback(result);
                                 });
@@ -156,35 +164,36 @@ define(['common/core/core',
 
                     if (silentPluginCfg) {
                         var updatedConfig = {};
-                        for (var i in hackedConfig) {
+                        for (i in hackedConfig) {
                             updatedConfig[i] = {};
-                            var len = hackedConfig[i].length;
+                            len = hackedConfig[i].length;
                             while (len--) {
                                 updatedConfig[i][hackedConfig[i][len].name] = hackedConfig[i][len].value;
                             }
 
                             if (silentPluginCfg && silentPluginCfg.pluginConfig) {
-                                for (var j in silentPluginCfg.pluginConfig) {
+                                for (j in silentPluginCfg.pluginConfig) {
                                     updatedConfig[i][j] = silentPluginCfg.pluginConfig[j];
                                 }
                             }
                         }
                         runWithConfiguration(updatedConfig);
                     } else {
-                        var d = new PluginConfigDialog();
+                        d = new PluginConfigDialog();
                         silentPluginCfg = {};
                         d.show(hackedConfig, runWithConfiguration);
                     }
                 });
             } else {
-                console.error(err);
-                console.error('unable to load plugin');
+                self.logger.error(err);
+                self.logger.error('unable to load plugin');
                 callback(null); //TODO proper result
             }
         });
     };
 
-    //TODO somehow it would feel more right if we do run in async mode, but if not then we should provide getState and getResult synchronous functions as well
+    //TODO: Somehow it would feel more right if we do run in async mode, but if not then we should provide getState and
+    //TODO: getResult synchronous functions as well.
 
     return InterpreterManager;
 });

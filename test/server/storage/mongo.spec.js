@@ -2,6 +2,7 @@
 /**
  * @author kecso / https://github.com/kecso
  */
+
 var testFixture = require('../../_globals.js');
 
 describe('Core Mongo Coverage', function () {

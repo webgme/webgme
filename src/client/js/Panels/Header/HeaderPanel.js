@@ -1,29 +1,35 @@
-/*globals define, WebGMEGlobal, alert, angular, _*/
-
+/*globals define, WebGMEGlobal, angular, _, console, $*/
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
 
-define(['js/PanelBase/PanelBase',
+define([
+    'js/PanelBase/PanelBase',
     'js/Widgets/ProjectTitle/ProjectTitleWidget',
     'js/Widgets/UserProfile/UserProfileWidget',
     'js/Toolbar/Toolbar',
-    './DefaultToolbar',
     './ProjectNavigatorController',
+    './DefaultToolbar',
     'js/Utils/WebGMEUrlManager'
-], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar, ProjectNavigatorController, WebGMEUrlManager) {
-
-    "use strict";
+], function (PanelBase,
+             ProjectTitleWidget,
+             UserProfileWidget,
+             toolbar,
+             ProjectNavigatorController,
+             DefaultToolbar,
+             WebGMEUrlManager) {
+    'use strict';
 
     var HeaderPanel,
         __parent__ = PanelBase;
 
     angular.module(
         'gme.ui.headerPanel', [
-          'isis.ui.dropdownNavigator',
-          'gme.ui.ProjectNavigator'
+            'isis.ui.dropdownNavigator',
+            'gme.ui.ProjectNavigator'
         ]).run(function ($rootScope, $location) {
             // FIXME: this might not be the best place to put it...
             if (WebGMEGlobal && WebGMEGlobal.State) {
@@ -50,7 +56,7 @@ define(['js/PanelBase/PanelBase',
     HeaderPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBase.OPTIONS.LOGGER_INSTANCE_NAME] = "HeaderPanel";
+        options[PanelBase.OPTIONS.LOGGER_INSTANCE_NAME] = 'HeaderPanel';
 
         //call parent's constructor
         __parent__.apply(this, [options]);
@@ -60,7 +66,7 @@ define(['js/PanelBase/PanelBase',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("HeaderPanel ctor finished");
+        this.logger.debug('HeaderPanel ctor finished');
     };
 
     //inherit from PanelBaseWithHeader
@@ -68,35 +74,38 @@ define(['js/PanelBase/PanelBase',
 
     HeaderPanel.prototype._initialize = function () {
         //main container
-        var navBar = $('<div/>', {'class': "navbar navbar-inverse navbar-fixed-top"});
-        var navBarInner = $('<div/>', {'class': "navbar-inner"});
+        var navBar = $('<div/>', {class: 'navbar navbar-inverse navbar-fixed-top'}),
+            navBarInner = $('<div/>', {class: 'navbar-inner'}),
+            app, projectTitleEl, userProfileEl, toolBarEl;
 
         navBar.append(navBarInner);
         this.$el.append(navBar);
 
         // TODO: would be nice to get the app as a parameter
-        var app = angular.module('gmeApp');
+        app = angular.module('gmeApp');
 
         app.controller('ProjectNavigatorController', ProjectNavigatorController);
 
         //project title
-        var projectTitleEl = $(
-            '<div style="display: inline;" data-ng-controller="ProjectNavigatorController"><dropdown-navigator style="display: inline-block;" navigator="navigator"></dropdown-navigator></div>', {'class': "inline"}
+        projectTitleEl = $(
+            '<div style="display: inline;" data-ng-controller="ProjectNavigatorController">' +
+            '<dropdown-navigator style="display: inline-block;" navigator="navigator"></dropdown-navigator></div>',
+            {class: 'inline'}
         );
         //new ProjectTitleWidget(projectTitleEl, this._client);
         navBarInner.append(projectTitleEl);
 
         //user info
         navBarInner.append($('<div class="spacer pull-right"></div>'));
-        var userProfileEl = $('<div/>', {'class': "inline pull-right", style: 'padding: 6px 0px;'});
-        var u = new UserProfileWidget(userProfileEl, this._client);
+        userProfileEl = $('<div/>', {class: 'inline pull-right', style: 'padding: 6px 0px;'});
+        this.defaultUserProfileWidget = new UserProfileWidget(userProfileEl, this._client);
         navBarInner.append(userProfileEl);
 
         //toolbar
-        var toolBarEl = $('<div/>', {'class': "toolbar-container"});
+        toolBarEl = $('<div/>', {class: 'toolbar-container'});
         this.$el.append(toolBarEl);
         WebGMEGlobal.Toolbar = toolbar.createToolbar(toolBarEl);
-        var d= new DefaultToolbar(this._client);
+        new DefaultToolbar(this._client);
     };
 
     return HeaderPanel;

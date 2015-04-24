@@ -1,12 +1,15 @@
 /*globals define*/
+/*jshint node: true, browser: true*/
 
 /**
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/assert',
+define([
+    'common/util/assert',
     'common/util/key',
-    'common/regexp'], function (ASSERT, GENKEY, REGEXP) {
+    'common/regexp'
+], function (ASSERT, GENKEY, REGEXP) {
     'use strict';
 
     function Database(_database, _options) {

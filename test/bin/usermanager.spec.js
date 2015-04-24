@@ -1,4 +1,4 @@
-/*jshint node:true, mocha:true*/
+/*jshint node:true, mocha:true, expr:true*/
 /**
  * @author ksmyth / https://github.com/ksmyth
  * @author lattmann / https://github.com/lattmann
@@ -276,7 +276,14 @@ describe('User manager command line interface (CLI)', function () {
         it('should add user with siteAdmin access', function (done) {
             suppressLogAndExit();
 
-            userManager.main(['node', filename, 'useradd', 'user_site_admin', 'user@example.com', 'plaintext', '--siteAdmin'])
+            userManager.main(['node',
+                    filename,
+                    'useradd',
+                    'user_site_admin',
+                    'user@example.com',
+                    'plaintext',
+                    '--siteAdmin']
+            )
                 .then(function () {
                     auth.getUser('user_site_admin', function (err, data) {
                         restoreLogAndExit();
@@ -297,7 +304,14 @@ describe('User manager command line interface (CLI)', function () {
         it('should add user with canCreate option', function (done) {
             suppressLogAndExit();
 
-            userManager.main(['node', filename, 'useradd', 'user_can_create', 'user@example.com', 'plaintext', '--canCreate'])
+            userManager.main(['node',
+                    filename,
+                    'useradd',
+                    'user_can_create',
+                    'user@example.com',
+                    'plaintext',
+                    '--canCreate']
+            )
                 .then(function () {
                     auth.getUser('user_can_create', function (err, data) {
                         restoreLogAndExit();
@@ -318,7 +332,15 @@ describe('User manager command line interface (CLI)', function () {
         it('should add user if db port and name are not defined', function (done) {
             suppressLogAndExit();
 
-            userManager.main(['node', filename, '--db', 'mongodb://' + uri.hosts[0], 'useradd', 'user', 'user@example.com', 'plaintext'])
+            userManager.main(['node',
+                    filename,
+                    '--db',
+                    'mongodb://' + uri.hosts[0],
+                    'useradd',
+                    'user',
+                    'user@example.com',
+                    'plaintext']
+            )
                 .then(function () {
                     restoreLogAndExit();
                     done();
@@ -366,7 +388,15 @@ describe('User manager command line interface (CLI)', function () {
         it('should delete user', function (done) {
             suppressLogAndExit();
 
-            userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user_to_delete', 'user@example.com', 'plaintext'])
+            userManager.main(['node',
+                    filename,
+                    '--db',
+                    mongoUri,
+                    'useradd',
+                    'user_to_delete',
+                    'user@example.com',
+                    'plaintext']
+            )
                 .then(function () {
                     return userManager.main(['node', filename, '--db', mongoUri, 'userdel', 'user_to_delete']);
                 })
@@ -441,7 +471,8 @@ describe('User manager command line interface (CLI)', function () {
 
             userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
                 .then(function () {
-                    return userManager.main(['node', filename, '--db', mongoUri, 'usermod_auth', 'user', 'project1', '-a', 'rw']);
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'usermod_auth', 'user', 'project1', '-a', 'rw']);
                 })
                 .then(function () {
                     restoreLogAndExit();
@@ -458,7 +489,8 @@ describe('User manager command line interface (CLI)', function () {
 
             userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
                 .then(function () {
-                    return userManager.main(['node', filename, '--db', mongoUri, 'usermod_auth', 'user', 'project1', '-d']);
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'usermod_auth', 'user', 'project1', '-d']);
                 })
                 .then(function () {
                     restoreLogAndExit();
@@ -496,7 +528,8 @@ describe('User manager command line interface (CLI)', function () {
 
             userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org11'])
                 .then(function () {
-                    return userManager.main(['node', filename, '--db', mongoUri, 'orgmod_auth', 'org11', 'project11', '-a', 'rw']);
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'orgmod_auth', 'org11', 'project11', '-a', 'rw']);
                 })
                 .then(function () {
                     return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);
@@ -516,7 +549,8 @@ describe('User manager command line interface (CLI)', function () {
 
             userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org11'])
                 .then(function () {
-                    return userManager.main(['node', filename, '--db', mongoUri, 'orgmod_auth', 'org11', 'project11', '-d']);
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'orgmod_auth', 'org11', 'project11', '-d']);
                 })
                 .then(function () {
                     return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);
@@ -536,10 +570,12 @@ describe('User manager command line interface (CLI)', function () {
 
             userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org11'])
                 .then(function () {
-                    return userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext']);
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext']);
                 })
                 .then(function () {
-                    return userManager.main(['node', filename, '--db', mongoUri, 'usermod_organization_add', 'user', 'org11']);
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'usermod_organization_add', 'user', 'org11']);
                 })
                 .then(function () {
                     return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);
@@ -559,13 +595,16 @@ describe('User manager command line interface (CLI)', function () {
 
             userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org11'])
                 .then(function () {
-                    return userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext']);
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext']);
                 })
                 .then(function () {
-                    return userManager.main(['node', filename, '--db', mongoUri, 'usermod_organization_add', 'user', 'org11']);
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'usermod_organization_add', 'user', 'org11']);
                 })
                 .then(function () {
-                    return userManager.main(['node', filename, '--db', mongoUri, 'usermod_organization_del', 'user', 'org11']);
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'usermod_organization_del', 'user', 'org11']);
                 })
                 .then(function () {
                     return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);

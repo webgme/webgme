@@ -1,10 +1,13 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, $ */
+/*jshint browser: true*/
 
-define(['./ButtonBase',
-        './ToolbarItemBase'], function (buttonBase,
-                                        ToolbarItemBase) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+define(['./ButtonBase', './ToolbarItemBase'], function (buttonBase, ToolbarItemBase) {
+
+    'use strict';
 
     var ToolbarToggleButton,
         EL_BASE = $('<div class="toolbar-button"></div>');

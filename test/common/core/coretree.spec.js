@@ -1,5 +1,5 @@
 /*globals require*/
-/*jshint node:true, mocha:true*/
+/*jshint node:true, mocha:true, expr:true*/
 /**
  * @author lattmann / https://github.com/lattmann
  */
@@ -124,8 +124,7 @@ describe('CoreTree', function () {
 
         it('should return with the path of the child', function () {
             var root = {parent: null, relid: null},
-                child = {parent: root, relid: '1'},
-                grandChild = {parent: child, relid: '2'};
+                child = {parent: root, relid: '1'};
 
             coreTree.getPath(child).should.be.equal('/1');
         });

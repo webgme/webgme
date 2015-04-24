@@ -22,22 +22,22 @@ div.loader-progressbar {
   width: 16px;
   height: 16px;
 
-  background: -webkit-linear-gradient(90deg, $loader-border-color6 1px, transparent 0, transparent 8px, $loader-border-color6 8px), /* 6 */ 
-  -webkit-linear-gradient(0deg, $loader-border-color6 1px,$loader-fill-color6 0,$loader-fill-color6 3px, $loader-border-color6 3px), 
-  
-  -webkit-linear-gradient(90deg, $loader-border-color5 1px, transparent 0, transparent 8px, $loader-border-color5 8px), /* 5 */ 
-  -webkit-linear-gradient(0deg, $loader-border-color5 1px, $loader-fill-color5 0, $loader-fill-color5 3px, $loader-border-color5 3px), 
-  
-  -webkit-linear-gradient(90deg, $loader-border-color4 1px, transparent 0, transparent 8px, $loader-border-color4 8px), /* 4 */ 
-  -webkit-linear-gradient(0deg, $loader-border-color4 1px, $loader-fill-color4 0, $loader-fill-color4 3px, $loader-border-color4 3px), 
-  
-  -webkit-linear-gradient(90deg, $loader-border-color3 1px, transparent 0, transparent 10px, $loader-border-color3 10px), /* 3 */ 
-  -webkit-linear-gradient(0deg, $loader-border-color3 1px, $loader-fill-color3 0, $loader-fill-color3 3px, $loader-border-color3 3px), 
-  
-  -webkit-linear-gradient(90deg, $loader-border-color2 1px, transparent 0, transparent 15px, $loader-border-color2 15px), /* 2 */ 
-  -webkit-linear-gradient(0deg, $loader-border-color2 1px, $loader-fill-color2 0, $loader-fill-color2 3px, $loader-border-color2 3px), 
-  
-  -webkit-linear-gradient(90deg, $loader-border-color 1px, transparent 0, transparent 15px, $loader-border-color 15px), /* 1 */ 
+  background: -webkit-linear-gradient(90deg, $loader-border-color6 1px, transparent 0, transparent 8px, $loader-border-color6 8px), /* 6 */
+  -webkit-linear-gradient(0deg, $loader-border-color6 1px,$loader-fill-color6 0,$loader-fill-color6 3px, $loader-border-color6 3px),
+
+  -webkit-linear-gradient(90deg, $loader-border-color5 1px, transparent 0, transparent 8px, $loader-border-color5 8px), /* 5 */
+  -webkit-linear-gradient(0deg, $loader-border-color5 1px, $loader-fill-color5 0, $loader-fill-color5 3px, $loader-border-color5 3px),
+
+  -webkit-linear-gradient(90deg, $loader-border-color4 1px, transparent 0, transparent 8px, $loader-border-color4 8px), /* 4 */
+  -webkit-linear-gradient(0deg, $loader-border-color4 1px, $loader-fill-color4 0, $loader-fill-color4 3px, $loader-border-color4 3px),
+
+  -webkit-linear-gradient(90deg, $loader-border-color3 1px, transparent 0, transparent 10px, $loader-border-color3 10px), /* 3 */
+  -webkit-linear-gradient(0deg, $loader-border-color3 1px, $loader-fill-color3 0, $loader-fill-color3 3px, $loader-border-color3 3px),
+
+  -webkit-linear-gradient(90deg, $loader-border-color2 1px, transparent 0, transparent 15px, $loader-border-color2 15px), /* 2 */
+  -webkit-linear-gradient(0deg, $loader-border-color2 1px, $loader-fill-color2 0, $loader-fill-color2 3px, $loader-border-color2 3px),
+
+  -webkit-linear-gradient(90deg, $loader-border-color 1px, transparent 0, transparent 15px, $loader-border-color 15px), /* 1 */
   -webkit-linear-gradient(0deg, $loader-border-color 1px, $loader-fill-color 0, $loader-fill-color 3px, $loader-border-color 3px);
 
 

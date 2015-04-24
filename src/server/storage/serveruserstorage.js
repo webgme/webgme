@@ -1,11 +1,9 @@
 /*globals requireJS*/
 /*jshint node:true*/
 
-/*
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
- *
- * Author: Tamas Kecskes
- */
+/**
+* @author kecso / https://github.com/kecso
+*/
 'use strict';
 
 var Cache = requireJS('common/storage/cache'),

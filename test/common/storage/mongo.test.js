@@ -8,8 +8,7 @@
 var testFixture = require('../../_globals.js');
 describe('mongo database', function () {
     'use strict';
-    var gmeConfig = testFixture.getGmeConfig(),
-        db,
+    var db,
         collection,
         collectionName = 'mongotest___test',
         fsyncDatabase = function (callback) {

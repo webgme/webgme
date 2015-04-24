@@ -1,32 +1,34 @@
-/*globals define,_*/
-/*
- * @author rkereskenyi / https://github/rkereskenyi
- *
+/*globals define, $, _*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/Constants',
-        'js/NodePropertyNames',
-        'js/RegistryKeys',
-        'js/Utils/DisplayFormat',
-        'js/Decorators/DecoratorWithPorts.Base',
-        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-        'text!./default.svg'], function (CONSTANTS,
-                                         nodePropertyNames,
-                                         REGISTRY_KEYS,
-                                         displayFormat,
-                                         DecoratorBase,
-                                         DiagramDesignerWidgetConstants,
-                                         DefaultSvgTemplate) {
+define([
+    'js/Constants',
+    'js/NodePropertyNames',
+    'js/RegistryKeys',
+    'js/Utils/DisplayFormat',
+    'js/Decorators/DecoratorWithPorts.Base',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
+    'text!./default.svg'
+], function (CONSTANTS,
+             nodePropertyNames,
+             REGISTRY_KEYS,
+             displayFormat,
+             DecoratorBase,
+             DiagramDesignerWidgetConstants,
+             DefaultSvgTemplate) {
 
-    "use strict";
+    'use strict';
 
     var SVGDecoratorCore,
         ABSTRACT_CLASS = 'abstract',
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
-        FILL_COLOR_CLASS = "fill-color",
-        BORDER_COLOR_CLASS = "border-color",
-        TEXT_COLOR_CLASS = "text-color",
-        DEFAULT_SVG_DEFAULT_HEIGHT = 50;
+        FILL_COLOR_CLASS = 'fill-color',
+        BORDER_COLOR_CLASS = 'border-color',
+        TEXT_COLOR_CLASS = 'text-color';
 
 
     /**
@@ -51,18 +53,18 @@ define(['js/Constants',
     _.extend(SVGDecoratorCore.prototype, DecoratorBase.prototype);
 
     SVGDecoratorCore.prototype._initializeVariables = function (params) {
-        this.name = "";
-        this.formattedName = "";
+        this.name = '';
+        this.formattedName = '';
         this.$name = undefined;
 
         //Get custom data from svg
-        if (params.data){
+        if (params.data) {
             this.customData = [];
             //list of data to retrieve
             var i = params.data.length;
 
-            while (i--){
-                if (this[params.data[i]] === undefined){//Don't overwrite anything meaningful
+            while (i--) {
+                if (this[params.data[i]] === undefined) {//Don't overwrite anything meaningful
                     //add params.data to custom params.data list to retrieve from svg
                     this.customData.push(params.data[i]);
                     this[params.data[i]] = null;
@@ -83,17 +85,17 @@ define(['js/Constants',
 
     SVGDecoratorCore.prototype._renderContent = function () {
         //render GME-ID in the DOM, for debugging
-        this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
+        this.$el.attr({'data-id': this._metaInfo[CONSTANTS.GME_ID]});
 
         /* BUILD UI*/
         //find placeholders
-        this.$name = this.$el.find(".name");
-        this.$svgContent = this.$el.find(".svg-content");
+        this.$name = this.$el.find('.name');
+        this.$svgContent = this.$el.find('.svg-content');
 
-		this._update();
+        this._update();
     };
-	
-	SVGDecoratorCore.prototype._update = function () {
+
+    SVGDecoratorCore.prototype._update = function () {
         this._updateSVGFile();
         this._updateColors();
         this._updateName();
@@ -110,23 +112,23 @@ define(['js/Constants',
         this._getNodeColorsFromRegistry();
 
         if (this.fillColor) {
-            fillColorElements.css({'fill': this.fillColor});
+            fillColorElements.css({fill: this.fillColor});
         } else {
-            fillColorElements.css({'fill': ''});
+            fillColorElements.css({fill: ''});
         }
 
         if (this.borderColor) {
-            borderColorElements.css({'stroke': this.borderColor});
+            borderColorElements.css({stroke: this.borderColor});
         } else {
-            borderColorElements.css({'stroke': ''});
+            borderColorElements.css({stroke: ''});
         }
 
         if (this.textColor) {
-            this.$el.css({'color': this.textColor});
-            textColorElements.css({'fill': this.textColor});
+            this.$el.css({color: this.textColor});
+            textColorElements.css({fill: this.textColor});
         } else {
-            this.$el.css({'color': ''});
-            textColorElements.css({'fill': ''});
+            this.$el.css({color: ''});
+            textColorElements.css({fill: ''});
         }
     };
 
@@ -141,18 +143,18 @@ define(['js/Constants',
     SVGDecoratorCore.prototype._updateName = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            noName = "(N/A)";
+            noName = '(N/A)';
 
         if (nodeObj) {
             this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
             this.formattedName = displayFormat.resolve(nodeObj);
         } else {
-            this.name = "";
+            this.name = '';
             this.formattedName = noName;
         }
 
         this.$name.text(this.formattedName);
-        this.$name.attr("title", this.formattedName);
+        this.$name.attr('title', this.formattedName);
     };
 
     /***** UPDATE THE ABSTRACTNESS OF THE NODE *****/
@@ -175,7 +177,7 @@ define(['js/Constants',
     SVGDecoratorCore.prototype._updateSVGFile = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            svgFile = "",
+            svgFile = '',
             svgURL,
             self = this,
             logger = this.logger;
@@ -191,14 +193,16 @@ define(['js/Constants',
                 } else {
                     // get the svg from the server in SYNC mode, may take some time
                     svgURL = SVG_DIR + svgFile;
-                    $.ajax(svgURL, {'async': false})
-                        .done(function ( data ) {
+                    $.ajax(svgURL, {async: false})
+                        .done(function (data) {
                             // downloaded successfully
                             // cache the content if valid
                             var svgElements = $(data).find('svg');
                             if (svgElements.length > 0) {
-                                self.svgCache[svgFile] = { 'el': svgElements.first(),
-                                                      'customConnectionAreas': undefined};
+                                self.svgCache[svgFile] = {
+                                    el: svgElements.first(),
+                                    customConnectionAreas: undefined
+                                };
                                 self._discoverCustomConnectionAreas(svgFile);
                                 self._getCustomDataFromSvg(svgFile);
                                 self.processCustomSvgData();
@@ -216,7 +220,7 @@ define(['js/Constants',
                 this._SVGFile = svgFile;
             }
         } else {
-            if (svgFile !== "") {
+            if (svgFile !== '') {
                 logger.error('Invalid SVG file: "' + svgFile + '"');
                 this._updateSVGContent(undefined);
             } else {
@@ -256,17 +260,17 @@ define(['js/Constants',
 
     SVGDecoratorCore.prototype._getCustomDataFromSvg = function (svgFile) {
         //Remove custom data from svg and store it appropriately
-        if (this.customData){
+        if (this.customData) {
             var i = this.customData.length,
                 customDataName,
                 svgElement = this.svgCache[svgFile].el,
                 k;
 
-            while (i--){
+            while (i--) {
                 customDataName = this.customData[i];
                 this[customDataName] = svgElement.find('.' + customDataName);
                 k = this[customDataName].length;
-                while (k--){
+                while (k--) {
                     this[customDataName][k].remove();
                 }
             }
@@ -279,10 +283,10 @@ define(['js/Constants',
 
     SVGDecoratorCore.prototype.getSVGCustomData = function (dataName) {
         var result = null;
-        if (this.customData && this.customData.indexOf(dataName) !== -1){
-            if (this[dataName] instanceof Array){
+        if (this.customData && this.customData.indexOf(dataName) !== -1) {
+            if (this[dataName] instanceof Array) {
                 result = this[dataName].slice();
-            } else if (this[dataName] instanceof Object){
+            } else if (this[dataName] instanceof Object) {
                 result = _.extend({}, this[dataName]);
             }
         }
@@ -296,7 +300,7 @@ define(['js/Constants',
     };
 
     /***** PORT FUNCTIONALITY *****/
-    //Overridden in SVGDecorator.Ports.js 
+        //Overridden in SVGDecorator.Ports.js
     SVGDecoratorCore.prototype._updatePorts = function () {
         //If no ports in model, does nothing
     };
@@ -306,7 +310,7 @@ define(['js/Constants',
     };
 
     /***** CONNECTION FUNCTIONALITY *****/
-    //Overridden in SVGDecorator.Connection.js 
+        //Overridden in SVGDecorator.Connection.js
     SVGDecoratorCore.prototype._discoverCustomConnectionAreas = function () {
         //If no connections in model, does nothing
     };

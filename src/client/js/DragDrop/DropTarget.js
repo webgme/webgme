@@ -1,11 +1,14 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _ */
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-define(['./DragEffects',
-    './DragConstants'], function (DragEffects, DragConstants) {
+define(['./DragEffects', './DragConstants'], function (DragEffects, DragConstants) {
 
-    "use strict";
+    'use strict';
 
-    var _makeDroppable = function (el, params) {
+    function _makeDroppable(el, params) {
         var doCallBack;
 
         doCallBack = function (fn, event, ui) {
@@ -22,48 +25,50 @@ define(['./DragEffects',
         };
 
         el.droppable({
-            tolerance: "pointer",
-            over: function( event, ui ) {
+            tolerance: 'pointer',
+            over: function (event, ui) {
                 doCallBack('over', event, ui);
             },
-            out: function( event, ui ) {
+            out: function (event, ui) {
                 doCallBack('out', event, ui);
             },
             drop: function (event, ui) {
                 doCallBack('drop', event, ui);
             },
-            activate: function(event, ui) {
+            activate: function (event, ui) {
                 doCallBack('activate', event, ui);
             },
-            deactivate: function(event, ui) {
+            deactivate: function (event, ui) {
                 doCallBack('deactivate', event, ui);
             }
         });
-    };
+    }
 
 
-    var _destroyDroppable = function (el) {
+    function _destroyDroppable(el) {
         if (_isDroppable(el)) {
-            el.droppable("destroy");
+            el.droppable('destroy');
         }
-    };
+    }
 
 
-    var _enableDroppable = function (el, enabled) {
+    function _enableDroppable(el, enabled) {
         var enabledStr = enabled ? 'enable' : 'disable';
 
         if (_isDroppable(el)) {
             el.droppable(enabledStr);
         }
-    };
+    }
 
 
-    var _isDroppable = function (el) {
+    function _isDroppable(el) {
         return el.hasClass('ui-droppable');
+    }
+
+
+    return {
+        makeDroppable: _makeDroppable,
+        destroyDroppable: _destroyDroppable,
+        enableDroppable: _enableDroppable
     };
-
-
-    return {makeDroppable: _makeDroppable,
-            destroyDroppable: _destroyDroppable,
-            enableDroppable: _enableDroppable};
 });

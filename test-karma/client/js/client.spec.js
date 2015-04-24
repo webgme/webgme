@@ -1,10 +1,10 @@
 /*globals requirejs, expect, console, before*/
-/* jshint browser: true, mocha: true */
+/* jshint browser: true, mocha: true, expr: true */
 /**
  * @author lattmann / https://github.com/lattmann
  */
 
-var WebGMEGlobal = {};
+var WebGMEGlobal = {}; // jshint ignore:line
 
 describe('GME client', function () {
     'use strict';
@@ -728,7 +728,7 @@ describe('GME client', function () {
 
                     expect(commits).to.have.length.least(1);
                     expect(commits[0]).to.contain.keys('_id', 'root', 'updater', 'time', 'message', 'type');
-                    expect(commits[0]['_id']).to.equal(client.getActualCommit());
+                    expect(commits[0]._id).to.equal(client.getActualCommit());
                     done();
                 });
             });
@@ -873,7 +873,7 @@ describe('GME client', function () {
         });
 
         it('should give back the project object (which can be used to create core objects)', function (done) {
-            client.selectProjectAsync(projectName, function (err) {
+            client.selectProjectAsync(projectName, function (/*err*/) {
                 var projectObject = client.getProjectObject();
 
                 expect(projectObject).not.to.equal(null);
@@ -905,7 +905,7 @@ describe('GME client', function () {
         });
 
         it('should return the \'in collection\' meta data of a project', function (done) {
-            client.getProjectInfoAsync('ProjectAndBranchOperationsTest', function (err, info) {
+            client.getProjectInfoAsync('ProjectAndBranchOperationsTest', function (err/*, info*/) {
                 expect(err).to.equal(null);
 
                 //we cannot check the info at this point as no nothing about it
@@ -920,7 +920,7 @@ describe('GME client', function () {
                 function (err) {
                     expect(err).to.equal(null);
 
-                    client.getProjectInfoAsync('ProjectAndBranchOperationsTest', function (err, info) {
+                    client.getProjectInfoAsync('ProjectAndBranchOperationsTest', function (err/*, info*/) {
                         expect(err).to.equal(null);
 
                         //FIXME it is not working??!!!??
@@ -932,7 +932,7 @@ describe('GME client', function () {
         });
 
         it('should return a list of used tags in the \'in collection\' meta data', function (done) {
-            client.getAllInfoTagsAsync(function (err, tags) {
+            client.getAllInfoTagsAsync(function (err/*, tags*/) {
                 expect(err).to.equal(null);
 
                 //FIXME we cannot check the info at this point as no nothing about it
@@ -1138,7 +1138,8 @@ describe('GME client', function () {
             expect(clientNode.getAttribute('unknown_attribute')).to.equal(undefined);
         });
 
-        //TODO right now the object freezing is disabled so we cannot test that the ordinary getAttribute not allows the modification if the attribute is complex
+        //TODO right now the object freezing is disabled
+        // so we cannot test that the ordinary getAttribute not allows the modification if the attribute is complex
         it('should return an editable copy of the attribute', function () {
             expect(clientNode.getEditableAttribute('name')).to.equal('check');
             expect(clientNode.getEditableAttribute('value')).to.equal(10);
@@ -1175,7 +1176,8 @@ describe('GME client', function () {
             expect(clientNode.getRegistry('unknown_registry')).to.equal(undefined);
         });
 
-        //TODO right now the object freezing is disabled so we cannot test that the ordinary getRegistry not allows the modification if the attribute is complex
+        //TODO right now the object freezing is disabled
+        // so we cannot test that the ordinary getRegistry not allows the modification if the attribute is complex
         it('should return an editable copy of the registry', function () {
             expect(clientNode.getEditableRegistry('position')).to.deep.equal({x: 300, y: 466});
         });
@@ -1282,21 +1284,6 @@ describe('GME client', function () {
             expect(collectionPaths).to.have.length(2);
             expect(collectionPaths).to.include('/1697300825');
             expect(collectionPaths).to.include('/1400778473');
-        });
-
-        //TODO refactor this function or remove if no need for it
-        it('should print the content of the node to the console', function (done) {
-            var oldConsoleLog = console.log;
-            console.log = function (txt1, err, txt2, jNode) {
-                console.log = oldConsoleLog;
-                expect(jNode).to.have.ownProperty('attributes');
-                expect(jNode).to.have.ownProperty('pointers');
-                expect(jNode).to.have.ownProperty('children');
-                expect(jNode.attributes).to.have.ownProperty('name');
-                expect(jNode.attributes.name).to.equal('check');
-                done();
-            };
-            clientNode.printData();
         });
 
         it('should return a textual identification of the node', function () {
@@ -1491,7 +1478,6 @@ describe('GME client', function () {
                 UI = {
                     reLaunch: function () {
                         reLaunchCalled = true;
-                        return;
                     }
                 };
 
@@ -1804,7 +1790,6 @@ describe('GME client', function () {
 
                 if (testState === null) {
                     done(new Error('more than one set of events arrived during or after a transaction!'));
-                    return;
                 }
             });
         });
@@ -1980,7 +1965,8 @@ describe('GME client', function () {
                 }
 
                 if (testState === 'checking') {
-                    //FIXME why the update events missing about the source nodes - it works correctly with single node copying
+                    //FIXME why the update events missing about the source nodes -
+                    // it works correctly with single node copying
                     expect(events).to.have.length(8);
 
                     //find out the new node paths
@@ -2182,13 +2168,13 @@ describe('GME client', function () {
             });
         });
 
-        it('should put an error to the console if the container is wrongly given or missing', function (done) {
+        it.skip('should put an error to the console if the container is wrongly given or missing', function (done) {
             var testId = 'copyFailureTests',
                 failures = 0,
                 wantedFailures = 2,
                 oldConsoleLog = console.log; //TODO awkward but probably should be changed in the code as well
 
-            buildUpForTest(testId, {'': {children: 1}}, function (events) {
+            buildUpForTest(testId, {'': {children: 1}}, function (/*events*/) {
 
                 console.log = function (txt) {
                     expect(txt).to.contain('wrong');
@@ -2200,7 +2186,6 @@ describe('GME client', function () {
 
                 client.copyMoreNodes({}, 'try to copy without parentId');
                 client.copyMoreNodes({parentId: '/42/42'}, 'try to copy with unknown parentId');
-                return;
             });
         });
 
@@ -2499,8 +2484,6 @@ describe('GME client', function () {
                     expect(node.getPointer('ptr')).to.deep.equal({to: '/323573539', from: []});
                     expect(node.getAttribute('name')).to.contain('moved');
                     expect(node.getRegistry('position')).to.deep.equal({x: 79, y: 704});
-
-                    return;
                 }
             });
         });
@@ -2558,8 +2541,7 @@ describe('GME client', function () {
             // delConstraint 701504349
             var testState = 'init',
                 testId = 'basicDelConstraint',
-                node,
-                constraint = null;
+                node;
             buildUpForTest(testId, {'/701504349': {children: 0}}, function (events) {
                 if (testState === 'init') {
                     testState = 'checking';
@@ -2728,7 +2710,7 @@ describe('GME client', function () {
                 }
 
                 if (testState === 'add') {
-                    testState = 'del'
+                    testState = 'del';
                     expect(events).to.have.length(3);
 
                     node = client.getNode('/323573539');
@@ -2829,7 +2811,7 @@ describe('GME client', function () {
                 }
 
                 if (testState === 'add') {
-                    testState = 'del'
+                    testState = 'del';
                     expect(events).to.have.length(3);
 
                     node = client.getNode('/323573539');
@@ -2982,7 +2964,6 @@ describe('GME client', function () {
                     expect(node.getBaseId()).to.equal('/701504349');
                     expect(node.getAttributeNames()).to.include('value');
 
-                    return;
                 }
             });
         });
@@ -3030,7 +3011,6 @@ describe('GME client', function () {
                     expect(node.getBaseId()).to.equal(null);
                     expect(node.getAttributeNames()).to.empty;
 
-                    return;
                 }
             });
         });
@@ -3173,7 +3153,6 @@ describe('GME client', function () {
                 }
 
                 done(new Error('some unexpected events received:' + events));
-                return;
             });
         });
 
@@ -3335,7 +3314,7 @@ describe('GME client', function () {
 
                 client.connectToDatabaseAsync({}, function (err) {
                     expect(err).to.equal(null);
-                    client.selectProjectAsync('metaQueryAndManipulationTest', function (err) {
+                    client.selectProjectAsync(projectName, function (err) {
                         expect(err).to.equal(null);
 
                         baseCommitHash = client.getActualCommit();

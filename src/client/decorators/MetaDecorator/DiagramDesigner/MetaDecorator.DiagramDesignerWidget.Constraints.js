@@ -1,21 +1,21 @@
-/*globals define, _*/
+/*globals define, _, $*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 
-define(['js/Constants',
+define([
+    'js/Constants',
     './ConstraintDetailsDialog',
-    './Constraint'], function (CONSTANTS,
-                                            ConstraintDetailsDialog,
-                                            Constraint) {
+    './Constraint'
+], function (CONSTANTS, ConstraintDetailsDialog, Constraint) {
 
 
-    "use strict";
+    'use strict';
 
     var MetaDecoratorDiagramDesignerWidgetConstraints,
-        SCRIPT_TEMPLATE = "function(core, node, callback) {\ncallback(null,{hasViolation:false,message:\"\"});\n}";
+        SCRIPT_TEMPLATE = 'function(core, node, callback) {\ncallback(null,{hasViolation:false,message:\'\'});\n}';
 
     MetaDecoratorDiagramDesignerWidgetConstraints = function () {
     };
@@ -28,12 +28,12 @@ define(['js/Constants',
         this._constraintNames = [];
         this._constraints = {};
 
-        this._skinParts.$constraintsContainer = this.$el.find(".constraints");
-        this._skinParts.$addConstraintContainer = this.$el.find(".add-new-constraint");
+        this._skinParts.$constraintsContainer = this.$el.find('.constraints');
+        this._skinParts.$addConstraintContainer = this.$el.find('.add-new-constraint');
 
         this._skinParts.$constraintsContainer.on('dblclick', 'li', function (e) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-                var constraintName = $(this).find('.n').text().replace(":", ""),
+                var constraintName = $(this).find('.n').text().replace(':', ''),
                     constraintNames = self._constraintNames.slice(0),
                     dialog = new ConstraintDetailsDialog(),
                     desc = _.extend({}, nodeObj.getConstraint(constraintName));
@@ -56,8 +56,8 @@ define(['js/Constants',
             e.preventDefault();
         });
 
-        //set the "Add new..." clickhandler
-        this._skinParts.$addConstraintContainer.on("click", null, function (event) {
+        //set the 'Add new...' clickhandler
+        this._skinParts.$addConstraintContainer.on('click', null, function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                 self._onNewConstraintClick();
             }
@@ -68,7 +68,8 @@ define(['js/Constants',
 
 
     MetaDecoratorDiagramDesignerWidgetConstraints.prototype._onNewConstraintClick = function () {
-        this._onNewClick(this._constraintNames, this._skinParts.$constraintsContainer, this._skinParts.$addConstraintContainer, this._skinParts.$constraintsTitle, this._onNewConstraintCreate);
+        this._onNewClick(this._constraintNames, this._skinParts.$constraintsContainer,
+            this._skinParts.$addConstraintContainer, this._skinParts.$constraintsTitle, this._onNewConstraintCreate);
     };
 
     MetaDecoratorDiagramDesignerWidgetConstraints.prototype._updateConstraints = function () {
@@ -107,7 +108,8 @@ define(['js/Constants',
         this._skinParts.$constraintsContainer.empty();
         len = this._constraintNames.length;
         for (i = 0; i < len; i += 1) {
-            this._skinParts.$constraintsContainer.append(cLIBase.clone().append(this._constraints[this._constraintNames[i]].$el));
+            this._skinParts.$constraintsContainer.append(
+                cLIBase.clone().append(this._constraints[this._constraintNames[i]].$el));
         }
     };
 
@@ -150,15 +152,17 @@ define(['js/Constants',
             constraintNames = this._constraintNames.slice(0),
             dialog = new ConstraintDetailsDialog();
 
-        this.logger.debug("_onNewConstraintCreate: " + cName);
+        this.logger.debug('_onNewConstraintCreate: ' + cName);
 
         //pass all the other attribute names to the dialog
         constraintNames.splice(this._constraintNames.indexOf(cName), 1);
 
-        desc = {'name': cName,
+        desc = {
+            'name': cName,
             'script': SCRIPT_TEMPLATE,
             /*'priority': 0,*/
-            'info': ''};
+            'info': ''
+        };
 
         dialog.show(desc, constraintNames, function (cDesc) {
             self.saveConstraintDescriptor(cName, cDesc);

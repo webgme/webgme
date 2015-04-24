@@ -1,7 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 div.part .circle-decorator {
   position: relative;
@@ -18,8 +19,8 @@ div.part .circle-decorator {
     position: relative; }
   div.part .circle-decorator .circle-shadow {
     position: absolute;
-    top: 0px;
-    left: 0px;
+    top: 0;
+    left: 0;
     display: none;
     width: 11px;
     height: 11px;

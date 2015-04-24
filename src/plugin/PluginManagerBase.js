@@ -1,9 +1,8 @@
 /*globals define*/
+/*jshint browser: true, node:true*/
 
-/*
- * Copyright (C) 2014 Vanderbilt University, All rights reserved.
- *
- * Author: Zsolt Lattmann
+/**
+ * @author lattmann / https://github.com/lattmann
  */
 
 // TODO: Use PluginManagerConfiguration
@@ -14,9 +13,7 @@
 // TODO: PluginManager should download the plugins
 
 
-define(['./PluginBase',
-        './PluginContext'],
-    function (PluginBase, PluginContext) {
+define(['plugin/PluginBase', 'plugin/PluginContext'], function (PluginBase, PluginContext) {
         'use strict';
 
         var PluginManagerBase = function (storage, Core, logger, plugins, gmeConfig) {
@@ -41,6 +38,7 @@ define(['./PluginBase',
 
         PluginManagerBase.prototype.initialize = function (managerConfiguration, configCallback, callbackContext) {
             var self = this,
+                pluginName,
                 plugins = this._plugins;
 
             //#1: PluginManagerBase should load the plugins
@@ -48,19 +46,19 @@ define(['./PluginBase',
             //#2: PluginManagerBase iterates through each plugin and collects the config data
             var pluginConfigs = {};
 
-            for (var p in plugins) {
-                if (plugins.hasOwnProperty(p)) {
-                    var plugin = new plugins[p]();
-                    pluginConfigs[p] = plugin.getConfigStructure();
+            for (pluginName in plugins) {
+                if (plugins.hasOwnProperty(pluginName)) {
+                    var plugin = new plugins[pluginName]();
+                    pluginConfigs[pluginName] = plugin.getConfigStructure();
                 }
             }
 
             if (configCallback) {
                 configCallback.call(callbackContext, pluginConfigs, function (updatedPluginConfig) {
-                    for (var p in updatedPluginConfig) {
-                        if (updatedPluginConfig.hasOwnProperty(p)) {
+                    for (pluginName in updatedPluginConfig) {
+                        if (updatedPluginConfig.hasOwnProperty(pluginName)) {
                             //save it back to the plugin
-                            self._pluginConfigs[p] = updatedPluginConfig[p];
+                            self._pluginConfigs[pluginName] = updatedPluginConfig[pluginName];
                         }
                     }
                 });
@@ -127,13 +125,10 @@ define(['./PluginBase',
          * @param {function} callback
          */
         PluginManagerBase.prototype.getPluginContext = function (managerConfiguration, callback) {
+            var self = this,
+                pluginContext = new PluginContext();
 
             // TODO: check if callback is a function
-
-            var self = this;
-
-            var pluginContext = new PluginContext();
-
             // based on the string values get the node objects
             // 1) Open project
             // 2) Load branch OR commit hash
@@ -154,35 +149,38 @@ define(['./PluginBase',
             pluginContext.activeSelection = []; // selected objects
 
             // add activeSelection
-            var loadActiveSelectionAndMetaNodes = function () {
+            function loadActiveSelectionAndMetaNodes() {
+                var remaining = managerConfiguration.activeSelection.length,
+                    i;
+                function loadNodeByNode(selectedNodePath) {
+                    pluginContext.core.loadByPath(pluginContext.rootNode, selectedNodePath,
+                        function (err, selectedNode) {
+                            remaining -= 1;
+
+                            if (err) {
+                                self.logger.warn('unable to load active selection: ' + selectedNodePath);
+                            } else {
+                                pluginContext.activeSelection.push(selectedNode);
+                            }
+
+                            if (remaining === 0) {
+                                // all nodes from active selection are loaded
+                                self.loadMetaNodes(pluginContext, callback);
+                            }
+                        }
+                    );
+                }
                 if (managerConfiguration.activeSelection.length === 0) {
                     self.loadMetaNodes(pluginContext, callback);
                 } else {
-                    var remaining = managerConfiguration.activeSelection.length;
-
-                    for (var i = 0; i < managerConfiguration.activeSelection.length; i += 1) {
-                        (function (activeNodePath) {
-                            pluginContext.core.loadByPath(pluginContext.rootNode, activeNodePath, function (err, activeNode) {
-                                remaining -= 1;
-
-                                if (err) {
-                                    self.logger.warn('unable to load active selection: ' + activeNodePath);
-                                } else {
-                                    pluginContext.activeSelection.push(activeNode);
-                                }
-
-                                if (remaining === 0) {
-                                    // all nodes from active selection are loaded
-                                    self.loadMetaNodes(pluginContext, callback);
-                                }
-                            });
-                        })(managerConfiguration.activeSelection[i]);
+                    for (i = 0; i < managerConfiguration.activeSelection.length; i += 1) {
+                        loadNodeByNode(managerConfiguration.activeSelection[i]);
                     }
                 }
-            };
+            }
 
             // add activeNode
-            var loadCommitHashAndRun = function (commitHash) {
+            function loadCommitHashAndRun(commitHash) {
                 self.logger.info('Loading commit ' + commitHash);
                 pluginContext.project.loadObject(commitHash, function (err, commitObj) {
                     if (err) {
@@ -197,28 +195,30 @@ define(['./PluginBase',
 
                     pluginContext.core.loadRoot(commitObj.root, function (err, rootNode) {
                         if (err) {
-                            callback("unable to load root", pluginContext);
+                            callback('unable to load root', pluginContext);
                             return;
                         }
 
                         pluginContext.rootNode = rootNode;
                         if (typeof managerConfiguration.activeNode === 'string') {
-                            pluginContext.core.loadByPath(pluginContext.rootNode, managerConfiguration.activeNode, function (err, activeNode) {
-                                if (err) {
-                                    callback("unable to load selected object", pluginContext);
-                                    return;
-                                }
+                            pluginContext.core.loadByPath(pluginContext.rootNode, managerConfiguration.activeNode,
+                                function (err, activeNode) {
+                                    if (err) {
+                                        callback('unable to load selected object', pluginContext);
+                                        return;
+                                    }
 
-                                pluginContext.activeNode = activeNode;
-                                loadActiveSelectionAndMetaNodes();
-                            });
+                                    pluginContext.activeNode = activeNode;
+                                    loadActiveSelectionAndMetaNodes();
+                                }
+                            );
                         } else {
                             pluginContext.activeNode = null;
                             loadActiveSelectionAndMetaNodes();
                         }
                     });
                 });
-            };
+            }
 
             // load commit hash and run based on branch name or commit hash
             if (managerConfiguration.branchName) {
@@ -230,7 +230,7 @@ define(['./PluginBase',
                         pluginContext.branchName = managerConfiguration.branchName;
                         loadCommitHashAndRun(pluginContext.commitHash);
                     } else {
-                        callback('cannot find branch \'' + managerConfiguration.branchName + '\'', pluginContext);
+                        callback('cannot find branch "' + managerConfiguration.branchName + '"', pluginContext);
                     }
                 });
             } else {

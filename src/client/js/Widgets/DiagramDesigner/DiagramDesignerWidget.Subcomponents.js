@@ -1,8 +1,13 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, _*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define([], function () {
 
-    "use strict";
+    'use strict';
 
     var DiagramDesignerWidgetSubcomponents;
 
@@ -23,13 +28,15 @@ define([], function () {
         var idx;
 
         //if there is connection draw or redraw, let the connection manager know about the deletion
-        this.dispatchEvent(this.events.ON_UNREGISTER_SUBCOMPONENT, {'objectID': objID,
-                                                                    'subComponentID': sCompID});
+        this.dispatchEvent(this.events.ON_UNREGISTER_SUBCOMPONENT, {
+            objectID: objID,
+            subComponentID: sCompID
+        });
 
         //store that a subcomponent with a given ID has been removed from object with objID
         idx = this._itemSubcomponentsMap[objID].indexOf(sCompID);
         if (idx !== -1) {
-            this._itemSubcomponentsMap[objID].splice(idx,1);
+            this._itemSubcomponentsMap[objID].splice(idx, 1);
         }
 
         if (_.isFunction(this.onUnregisterSubcomponent)) {

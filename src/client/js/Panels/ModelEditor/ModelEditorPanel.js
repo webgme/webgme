@@ -1,4 +1,8 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
+/*jshint browser: true */
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
@@ -9,14 +13,14 @@ define(['js/PanelBase/PanelBaseWithHeader',
              ModelEditorWidget,
              ModelEditorControl) {
 
-    "use strict";
+    'use strict';
 
     var ModelEditorPanel;
 
     ModelEditorPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "ModelEditorPanel";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'ModelEditorPanel';
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
         //call parent's constructor
@@ -27,7 +31,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("ModelEditorPanel ctor finished");
+        this.logger.debug('ModelEditorPanel ctor finished');
     };
 
     //inherit from PanelBaseWithHeader
@@ -48,8 +52,10 @@ define(['js/PanelBase/PanelBaseWithHeader',
             WebGMEGlobal.KeyboardManager.setListener(self.widget);
         };
 
-        this.control = new ModelEditorControl({"client": this._client,
-            "widget": this.widget});
+        this.control = new ModelEditorControl({
+            client: this._client,
+            widget: this.widget
+        });
 
         this.onActivate();
     };

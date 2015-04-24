@@ -2,9 +2,7 @@
 /*jshint node:true*/
 
 /**
- * Copyright (C) 2012-2013 Vanderbilt University, All rights reserved.
- *
- * Author: Tamas Kecskes
+ * @author kecso / https://github.com/kecso
  */
 
 'use strict';
@@ -24,14 +22,9 @@ var Path = require('path'),
     PassGoogle = require('passport-google'),
     Http = require('http'),
     Https = require('https'),
-    mime = require('mime'),
     URL = require('url'),
 
-    ASSERT = requireJS('common/util/assert'),
-    GUID = requireJS('common/util/guid'),
-    CANON = requireJS('common/util/cJson'),
-
-    // Middleware
+// Middleware
     BlobServer = require('./middleware/blob/BlobServer'),
     ExecutorServer = require('./middleware/executor/ExecutorServer'),
     RestServer = require('./middleware/rest/RestServer'),
@@ -142,7 +135,7 @@ function StandAloneServer(gmeConfig) {
     }
 
     //public functions
-    function start (callback) {
+    function start(callback) {
         var serverDeferred = Q.defer(),
             storageDeferred = Q.defer(),
             gmeAuthDeferred = Q.defer();
@@ -205,7 +198,7 @@ function StandAloneServer(gmeConfig) {
         if (true === gmeConfig.authentication.enable) {
             __storageOptions.sessioncheck = __sessionStore.check;
             __storageOptions.authorization = globalAuthorization;
-            __storageOptions.auth_deleteProject = __gmeAuth.deleteProject;
+            __storageOptions.authDeleteProject = __gmeAuth.deleteProject;
             __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
         }
 
@@ -217,7 +210,7 @@ function StandAloneServer(gmeConfig) {
         __storageOptions.workerManager = __workerManager;
 
         __storageOptions.globConf = gmeConfig;
-        __storage = Storage(__storageOptions); // FIXME: why do not we use the 'new' keyword here?
+        __storage = new Storage(__storageOptions);
         //end of storage creation
         __storage.open(function (err) {
             if (err) {
@@ -246,7 +239,7 @@ function StandAloneServer(gmeConfig) {
             });
     }
 
-    function stop (callback) {
+    function stop(callback) {
         var key;
 
         if (self.isRunning === false) {
@@ -318,9 +311,12 @@ function StandAloneServer(gmeConfig) {
                                         });
                                 }).nodeify(callback);
                         } else {
-                            __gmeAuth.getProjectAuthorizationBySession(sessionId, projectName, function (err, authInfo) {
-                                callback(err, authInfo[type] === true);
-                            });
+                            __gmeAuth.getProjectAuthorizationBySession(sessionId,
+                                projectName,
+                                function (err, authInfo) {
+                                    callback(err, authInfo[type] === true);
+                                }
+                            );
                         }
                         break;
                     default:
@@ -353,7 +349,7 @@ function StandAloneServer(gmeConfig) {
             return next();
         } else {
             var protocolPrefix = gmeConfig.server.https.enable === true ? 'https://' : 'http://';
-            Passport.use(new __googleStrategy({
+            Passport.use(new PassGoogle.Strategy({
                     returnURL: protocolPrefix + req.headers.host + '/login/google/return',
                     realm: protocolPrefix + req.headers.host
                 },
@@ -408,9 +404,8 @@ function StandAloneServer(gmeConfig) {
                             res.sendStatus(401); //TODO find proper error code
                         }
                     });
-                }
-                //request which use token may be authenticated directly
-                else if (req.headers.webGMEToken) {
+                } else if (req.headers.webGMEToken) {
+                    //request which use token may be authenticated directly
                     __gmeAuth.checkToken(req.headers.webGMEToken, function (isOk, userId) {
                         if (isOk) {
                             req.session.authenticated = true;
@@ -548,7 +543,6 @@ function StandAloneServer(gmeConfig) {
         __storage = null,
         __storageOptions = {},
         __gmeAuth = null,
-        gmeAuthDeferred = Q.defer(),
         apiReady,
         __secureSiteInfo = {},
         __app = null,
@@ -556,7 +550,6 @@ function StandAloneServer(gmeConfig) {
         __workerManager,
         __users = {},
         __googleAuthenticationSet = false,
-        __googleStrategy = PassGoogle.Strategy,
         __canCheckToken = true,
         __httpServer = null,
         __logoutUrl = gmeConfig.authentication.logOutUrl || '/',
@@ -571,14 +564,14 @@ function StandAloneServer(gmeConfig) {
     logger = mainLogger.fork('server:standalone');
     self.logger = logger;
 
-    logger.debug("starting standalone server initialization");
+    logger.debug('starting standalone server initialization');
     //initializing https extra infos
     if (gmeConfig.server.https.enable === true) { //TODO move this from here
         __secureSiteInfo.key = FS.readFileSync(gmeConfig.server.https.keyFile);
         __secureSiteInfo.certificate = FS.readFileSync(gmeConfig.server.https.certificateFile);
     }
 
-    logger.debug("initializing session storage");
+    logger.debug('initializing session storage');
     __sessionStore = new SSTORE(logger, gmeConfig);
 
     logger.debug('initializing server worker manager');
@@ -587,12 +580,12 @@ function StandAloneServer(gmeConfig) {
         globConf: gmeConfig
     });
 
-    logger.debug("initializing authentication modules");
+    logger.debug('initializing authentication modules');
     //TODO: do we need to create this even though authentication is disabled?
     // FIXME: we need to connect with gmeAUTH again! start/stop/start/stop
     __gmeAuth = new GMEAUTH(__sessionStore, gmeConfig);
 
-    logger.debug("initializing passport module for user management");
+    logger.debug('initializing passport module for user management');
     //TODO in the long run this also should move to some database
     Passport.serializeUser(
         function (user, done) {
@@ -604,8 +597,8 @@ function StandAloneServer(gmeConfig) {
             done(null, __users[id]);
         });
 
-    logger.debug("initializing static server");
-    __app = Express();
+    logger.debug('initializing static server');
+    __app = new Express();
 
     middlewareOpts = {  //TODO: Pass this to every middleware They must not modify the options!
         gmeConfig: gmeConfig,
@@ -621,7 +614,7 @@ function StandAloneServer(gmeConfig) {
         setInterval(function () {
             if (__reportedRequestCounter !== __requestCounter) {
                 __reportedRequestCounter = __requestCounter;
-                logger.debug("...handled " + __reportedRequestCounter + " requests so far...");
+                logger.debug('...handled ' + __reportedRequestCounter + ' requests so far...');
             }
         }, __requestCheckInterval);
         __app.use(function (req, res, next) {
@@ -629,20 +622,6 @@ function StandAloneServer(gmeConfig) {
             next();
         });
     }
-    __app.use(function (req, res, next) {
-        var infoguid = GUID(),
-            infotxt = "request[" + infoguid + "]:" + req.headers.host + " - " + req.protocol.toUpperCase() + "(" + req.httpVersion + ") - " + req.method.toUpperCase() + " - " + req.originalUrl + " - " + req.ip + " - " + req.headers['user-agent'],
-            infoshort = "incoming[" + infoguid + "]: " + req.originalUrl;
-        //logger.debug(infoshort); // FIXME: not useful at all use `DEBUG=express* npm start` instead
-        var end = res.end;
-        res.end = function (chunk, encoding) {
-            res.end = end;
-            res.end(chunk, encoding);
-            infotxt += " -> " + res.statusCode;
-            //logger.debug(infotxt); // FIXME: not useful at all use `DEBUG=express* npm start` instead
-        };
-        next();
-    });
 
     __app.use(compression());
     __app.use(cookieParser());
@@ -695,14 +674,14 @@ function StandAloneServer(gmeConfig) {
     if (gmeConfig.executor.enable) {
         ExecutorServer.createExpressExecutor(__app, '/rest/executor', middlewareOpts);
     } else {
-        logger.debug('Executor not enabled. Add "executor.enable: true" to configuration to activate.');
+        logger.debug('Executor not enabled. Add \'executor.enable: true\' to configuration to activate.');
     }
 
     setupExternalRestModules();
 
     // Basic authentication
 
-    logger.debug("creating login routing rules for the static server");
+    logger.debug('creating login routing rules for the static server');
     __app.get('/', ensureAuthenticated, function (req, res) {
         expressFileSending(res, __clientBaseDir + '/index.html');
     });
@@ -753,21 +732,21 @@ function StandAloneServer(gmeConfig) {
     });
 
     //TODO: only node_worker/index.html and common/util/common are using this
-    //logger.debug("creating decorator specific routing rules");
+    //logger.debug('creating decorator specific routing rules');
     __app.get('/bin/getconfig.js', ensureAuthenticated, function (req, res) {
         res.status(200);
         res.setHeader('Content-type', 'application/javascript');
-        res.end("define([],function(){ return " + JSON.stringify(clientConfig) + ";});");
+        res.end('define([],function(){ return ' + JSON.stringify(clientConfig) + ';});');
     });
 
-    logger.debug("creating gmeConfig.json specific routing rules");
+    logger.debug('creating gmeConfig.json specific routing rules');
     __app.get('/gmeConfig.json', ensureAuthenticated, function (req, res) {
         res.status(200);
         res.setHeader('Content-type', 'application/json');
         res.end(JSON.stringify(clientConfig));
     });
 
-    logger.debug("creating decorator specific routing rules");
+    logger.debug('creating decorator specific routing rules');
     __app.get(/^\/decorators\/.*/, ensureAuthenticated, function (req, res) {
         var tryNext = function (index) {
             var resolvedPath;
@@ -792,17 +771,18 @@ function StandAloneServer(gmeConfig) {
         }
     });
 
-    logger.debug("creating plug-in specific routing rules");
+    logger.debug('creating plug-in specific routing rules');
     __app.get(/^\/plugin\/.*/, function (req, res) {
         //first we try to give back the common plugin/modules
         res.sendFile(Path.join(__baseDir, req.path), function (err) {
             if (err && err.code !== 'ECONNRESET') {
-                //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format so we try to look for those in our config
+                //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format
+                // so we try to look for those in our config
                 //first we check if we have the plugin registered in our config
                 var urlArray = req.url.split('/'),
                     pluginName = urlArray[2] || null,
                     basePath = getPluginBasePathByName(pluginName),
-                    relPath = "";
+                    relPath = '';
                 urlArray.shift();
                 urlArray.shift();
                 urlArray.shift();
@@ -820,7 +800,7 @@ function StandAloneServer(gmeConfig) {
         });
     });
 
-    logger.debug("creating external library specific routing rules");
+    logger.debug('creating external library specific routing rules');
     __app.get(/^\/extlib\/.*/, ensureAuthenticated, function (req, res) {
         //first we try to give back the common extlib/modules
 
@@ -839,7 +819,7 @@ function StandAloneServer(gmeConfig) {
         expressFileSending(res, absPath);
     });
 
-    logger.debug("creating basic static content related routing rules");
+    logger.debug('creating basic static content related routing rules');
     //static contents
     //javascripts - core and transportation related files //TODO: remove config, middleware and bin
     __app.get(/^\/(common|config|bin|middleware)\/.*\.js$/, function (req, res) {
@@ -870,7 +850,7 @@ function StandAloneServer(gmeConfig) {
         }
     });
 
-    logger.debug("creating token related routing rules");
+    logger.debug('creating token related routing rules');
     __app.get('/gettoken', ensureAuthenticated, function (req, res) {
         if (gmeConfig.rest.secure) {
             __gmeAuth.getToken(req.session.id, function (err, token) {
@@ -885,7 +865,7 @@ function StandAloneServer(gmeConfig) {
         }
     });
     __app.get('/checktoken/:token', function (req, res) {
-        if (gmeConfig.authentication.enable === true) { // FIXME do we need to check CONFIG.authentication or session.authenticated?
+        if (gmeConfig.authentication.enable === true) {
             if (__canCheckToken === true) {
                 setTimeout(function () {
                     __canCheckToken = true;
@@ -915,7 +895,7 @@ function StandAloneServer(gmeConfig) {
     apiReady = api.createAPI(__app, '/api', middlewareOpts);
 
 
-    logger.debug("creating server-worker related routing rules");
+    logger.debug('creating server-worker related routing rules');
     __app.get('/worker/simpleResult/*', function (req, res) {
         var urlArray = req.url.split('/');
         if (urlArray.length > 3) {
@@ -930,8 +910,8 @@ function StandAloneServer(gmeConfig) {
                     if (filename.indexOf('.') === -1) {
                         filename += '.json';
                     }
-                    res.header("Content-Type", "application/json");
-                    res.header("Content-Disposition", "attachment;filename=\"" + filename + "\"");
+                    res.header('Content-Type', 'application/json');
+                    res.header('Content-Disposition', 'attachment;filename=\'' + filename + '\'');
                     res.status(200);
                     res.end(JSON.stringify(result, null, 2));
                 }
@@ -942,14 +922,16 @@ function StandAloneServer(gmeConfig) {
     });
 
 
-    logger.debug("creating list asset rules");
+    logger.debug('creating list asset rules');
     __app.get('/listAllDecorators', ensureAuthenticated, function (req, res) {
         var names = []; //TODO we add everything in the directories!!!
         for (var i = 0; i < gmeConfig.visualization.decoratorPaths.length; i++) {
             var additional = FS.readdirSync(gmeConfig.visualization.decoratorPaths[i]);
             for (var j = 0; j < additional.length; j++) {
                 if (names.indexOf(additional[j]) === -1) {
-                    if (isGoodExtraAsset(additional[j], Path.join(gmeConfig.visualization.decoratorPaths[i], additional[j]))) {
+                    if (isGoodExtraAsset(additional[j],
+                            Path.join(gmeConfig.visualization.decoratorPaths[i],
+                                additional[j]))) {
                         names.push(additional[j]);
                     }
                 }
@@ -961,7 +943,7 @@ function StandAloneServer(gmeConfig) {
     });
 
     __app.get('/listAllPlugins', ensureAuthenticated, function (req, res) {
-        var names = []; //we add only the "*.js" files from the directories
+        var names = []; //we add only the '*.js' files from the directories
         for (var i = 0; i < gmeConfig.plugin.basePaths.length; i++) {
             var additional = FS.readdirSync(gmeConfig.plugin.basePaths[i]);
             for (var j = 0; j < additional.length; j++) {
@@ -980,7 +962,7 @@ function StandAloneServer(gmeConfig) {
         var allVisualizerDescriptors = getVisualizersDescriptor();
         res.status(200);
         res.setHeader('Content-type', 'application/javascript');
-        res.end("define([],function(){ return " + JSON.stringify(allVisualizerDescriptors) + ";});");
+        res.end('define([],function(){ return ' + JSON.stringify(allVisualizerDescriptors) + ';});');
     });
 
 
@@ -1007,28 +989,28 @@ function StandAloneServer(gmeConfig) {
     if (gmeConfig.debug === true) {
         logger.debug('gmeConfig of webgme server', {metadata: gmeConfig});
     }
-    var networkIfs = OS.networkInterfaces();
-    var addresses = 'Valid addresses of gme web server: ';
-    for (var dev in networkIfs) {
-        networkIfs[dev].forEach(function (netIf) {
+    var networkIfs = OS.networkInterfaces(),
+        addresses = 'Valid addresses of gme web server: ',
+        forEveryNetIf = function (netIf) {
             if (netIf.family === 'IPv4') {
                 var address = (gmeConfig.server.https.enable ? 'https' : 'http') + '://' +
                     netIf.address + ':' + gmeConfig.server.port;
                 addresses = addresses + '  ' + address;
             }
-        });
+        };
+    for (var dev in networkIfs) {
+        networkIfs[dev].forEach(forEveryNetIf);
     }
 
     logger.info(addresses);
 
-    logger.debug("standalone server initialization completed");
+    logger.debug('standalone server initialization completed');
 
     return {
-
         getUrl: getUrl,
         start: start,
         stop: stop
-    }
+    };
 }
 
 module.exports = StandAloneServer;

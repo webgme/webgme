@@ -1,9 +1,16 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, Raphael*/
+/*jshint browser: true*/
 
-define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-    'raphaeljs'], function (DiagramDesignerWidgetConstants) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+define([
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
+    'raphaeljs'
+], function (DiagramDesignerWidgetConstants) {
+
+    'use strict';
 
     var ConnectionEditSegment,
         MIN_WIDTH = 5;
@@ -40,21 +47,26 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
 
         for (i = 0; i < len; i += 1) {
             if (i === 0) {
-                pathDef.push("M" + p[i][0] + "," + p[i][1]);
+                pathDef.push('M' + p[i][0] + ',' + p[i][1]);
             } else {
                 if (this.connection.isBezier) {
-                    pathDef.push("C" + (p[i-1][0] + p[i-1][2]) + "," + (p[i-1][1] + p[i-1][3]) + " " + (p[i][0] - p[i][2]) + "," + (p[i][1] - p[i][3]) + " " + p[i][0] + "," + p[i][1]);
+                    pathDef.push('C' + (p[i - 1][0] + p[i - 1][2]) + ',' + (p[i - 1][1] + p[i - 1][3]) + ' ' +
+                    (p[i][0] - p[i][2]) + ',' + (p[i][1] - p[i][3]) + ' ' + p[i][0] + ',' + p[i][1]);
                 } else {
-                    pathDef.push("L" + p[i][0] + "," + p[i][1]);
+                    pathDef.push('L' + p[i][0] + ',' + p[i][1]);
                 }
             }
         }
 
-        this.pathDef = pathDef.join(" ");
+        this.pathDef = pathDef.join(' ');
 
         this.path = this.svgPaper.path(this.pathDef);
 
-        this.path.attr({"stroke-width": this.width});
+        this.path.attr({
+                'stroke-width': this.width
+            }
+        )
+        ;
 
         this.path.node.setAttribute('class', DiagramDesignerWidgetConstants.PATH_EDIT_SEGMENT_CLASS);
 
@@ -66,7 +78,8 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
 
         this.circle = this.svgPaper.circle(0, 0, this.width).hide();
 
-        this.circle.node.setAttribute('class', DiagramDesignerWidgetConstants.PATH_EDIT_SEGMENT_NEW_SEGMENT_POINT_MARKER_CLASS);
+        this.circle.node.setAttribute('class',
+            DiagramDesignerWidgetConstants.PATH_EDIT_SEGMENT_NEW_SEGMENT_POINT_MARKER_CLASS);
 
         this.path.mouseover(function (event) {
             if (self.circle) {
@@ -89,8 +102,10 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
                 pos = self._getSelectedPathPoint(mousePos.mX, mousePos.mY);
 
             if (pos) {
-                self.circle.attr({ "cx": pos.x,
-                    "cy": pos.y });
+                self.circle.attr({
+                    cx: pos.x,
+                    cy: pos.y
+                });
             }
             event.stopPropagation();
             event.preventDefault();
@@ -134,8 +149,8 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
 
     ConnectionEditSegment.prototype._getSelectedPathPoint = function (mouseX, mouseY) {
         var w = this.width + 2,
-            horizontalPath = ["M", mouseX - w, mouseY, "L", mouseX + w, mouseY].join(","),
-            verticalPath = ["M", mouseX, mouseY - w, "L", mouseX, mouseY + w].join(","),
+            horizontalPath = ['M', mouseX - w, mouseY, 'L', mouseX + w, mouseY].join(','),
+            verticalPath = ['M', mouseX, mouseY - w, 'L', mouseX, mouseY + w].join(','),
             intersectionsHorizontal = Raphael.pathIntersection(this.pathDef, horizontalPath),
             intersectionsVertical = Raphael.pathIntersection(this.pathDef, verticalPath),
             distanceH = 1000,
@@ -143,25 +158,31 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
             resultPos;
 
         if (intersectionsHorizontal.length > 0) {
-            distanceH = Math.abs(mouseX - intersectionsHorizontal[0].x) + Math.abs(mouseY - intersectionsHorizontal[0].y);
+            distanceH = Math.abs(mouseX - intersectionsHorizontal[0].x) +
+            Math.abs(mouseY - intersectionsHorizontal[0].y);
         }
         if (intersectionsVertical.length > 0) {
-            distanceW = Math.abs(mouseX - intersectionsVertical[0].x) + Math.abs(mouseY - intersectionsVertical[0].y);
+            distanceW = Math.abs(mouseX - intersectionsVertical[0].x) +
+            Math.abs(mouseY - intersectionsVertical[0].y);
         }
 
         if (distanceH < distanceW) {
             if (intersectionsHorizontal.length > 0) {
-                resultPos = {   "x": intersectionsHorizontal[0].x,
-                    "y": intersectionsHorizontal[0].y,
-                    "t": intersectionsHorizontal[0].t1,
-                    "bez": intersectionsHorizontal[0].bez1 };
+                resultPos = {
+                    x: intersectionsHorizontal[0].x,
+                    y: intersectionsHorizontal[0].y,
+                    t: intersectionsHorizontal[0].t1,
+                    bez: intersectionsHorizontal[0].bez1
+                };
             }
         } else {
             if (intersectionsVertical.length > 0) {
-                resultPos = {   "x": intersectionsVertical[0].x,
-                    "y": intersectionsVertical[0].y,
-                    "t": intersectionsVertical[0].t1,
-                    "bez": intersectionsVertical[0].bez1};
+                resultPos = {
+                    x: intersectionsVertical[0].x,
+                    y: intersectionsVertical[0].y,
+                    t: intersectionsVertical[0].t1,
+                    bez: intersectionsVertical[0].bez1
+                };
             }
         }
 
@@ -169,4 +190,5 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     };
 
     return ConnectionEditSegment;
-});
+})
+;

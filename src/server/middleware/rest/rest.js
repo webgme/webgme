@@ -1,11 +1,13 @@
 /*globals requireJS*/
 /*jshint node:true*/
-
+/**
+ * @author kecso / https://github.com/kecso
+ */
 'use strict';
 
 var Core = requireJS('common/core/core'),
-    ToJson = requireJS('common/core/users/tojson'),
-    Dump = requireJS('common/core/users/dump'),
+    toJson = requireJS('common/core/users/tojson'),
+    dump = requireJS('common/core/users/dump'),
     URL = requireJS('common/util/url'),
     Serialization = requireJS('common/core/users/serialization'),
 
@@ -16,7 +18,7 @@ function Rest(_parameters) {
         workerManager = _parameters.workerManager,
         tokenToUserId = _parameters.tokenToUserId,
         logger = _parameters.logger.fork('middleware:rest');
-    _parameters.baseUrl = _parameters.baseUrl || "http://localhost/rest"; // FIXME: This should come from config
+    _parameters.baseUrl = _parameters.baseUrl || 'http://localhost/rest'; // FIXME: This should come from config
     _parameters.authorization = /*_parameters.authorization || */function (token, projectname, callback) {
         callback(null, true);
     }; //TODO temporary removal of second authorization check
@@ -28,73 +30,83 @@ function Rest(_parameters) {
         _initialized = false,
         _opened = false,
         _requestTypes = {
-            'GET': 'GET',
-            'POST': 'POST',
-            'PUT': 'PUT',
-            'DELETE': 'DELETE'
+            GET: 'GET',
+            POST: 'POST',
+            PUT: 'PUT',
+            DELETE: 'DELETE'
         },
         _commands = {
-            'help': 'help',
-            'projects': 'projects',
-            'branches': 'branches',
-            'commits': 'commits',
-            'commit': 'commit',
-            'node': 'node',
-            'dump': 'dump',
-            'etf': 'etf',
-            'seedProject': 'seedProject'
+            help: 'help',
+            projects: 'projects',
+            branches: 'branches',
+            commits: 'commits',
+            commit: 'commit',
+            node: 'node',
+            dump: 'dump',
+            etf: 'etf',
+            seedProject: 'seedProject'
         },
         _HTTPError = {
-            'badRequest': 400,
-            'authenticate': 401,
-            'forbidden': 403,
-            'notFound': 404,
-            'internalServerError': 500,
-            'notImplemented': 501,
-            'serviceUnavailable': 503,
-            'ok': 200
+            badRequest: 400,
+            authenticate: 401,
+            forbidden: 403,
+            notFound: 404,
+            internalServerError: 500,
+            notImplemented: 501,
+            serviceUnavailable: 503,
+            ok: 200
         };
 
     function printHelp(callback) {
         // TODO: add blob usage documentation here...
         callback(_HTTPError.ok, {
             commands: {
-                'GET': {
-                    'help': {
-                        'description': "Responds with a textual JSON object which describes the available REST commands.",
-                        'example': _baseUrl + '/help'
+                GET: {
+                    help: {
+                        description: 'Responds with a textual JSON object ' +
+                        'which describes the available REST commands.',
+                        example: _baseUrl + '/help'
                     },
-                    'projects': {
-                        'description': "Responds with an array of the names of the available projects.",
-                        'example': _baseUrl + '/projects'
+                    projects: {
+                        description: 'Responds with an array of the names of the available projects.',
+                        example: _baseUrl + '/projects'
                     },
-                    'branches': {
-                        'description': "Responds with the branches of the given project and their commit URLs in a hash table.",
-                        'example': _baseUrl + '/branches?project=projectName'
+                    branches: {
+                        description: 'Responds with the branches of the given project ' +
+                        'and their commit URLs in a hash table.',
+                        example: _baseUrl + '/branches?project=projectName'
                     },
-                    'commit': {
-                        'description': "Responds with the projects asked commit object",
-                        'example': _baseUrl + '/commit?project=projectName&commit=commitHash'
+                    commit: {
+                        description: 'Responds with the projects asked commit object',
+                        example: _baseUrl + '/commit?project=projectName&commit=commitHash'
                     },
-                    'commits': {
-                        'description': "Responds the URL array of the latest N commits. If no N is given then it returns the latest commit's URL in an array.",
-                        'example': _baseUrl + '/commits?project=projectName&number=N'
+                    commits: {
+                        description: 'Responds the URL array of the latest N commits. ' +
+                        'If no N is given then it returns the latest commit\'s URL in an array.',
+                        example: _baseUrl + '/commits?project=projectName&number=N'
                     },
-                    'node': {
-                        'description': "Responds with the JSON representation of the pointed node. All related nodes are presented with JSON reference objects.",
-                        'example': _baseUrl + '/node?project=projectName&root=rootHash&path=pathOfNode'
+                    node: {
+                        description: 'Responds with the JSON representation of the pointed node. ' +
+                        'All related nodes are presented with JSON reference objects.',
+                        example: _baseUrl + '/node?project=projectName&root=rootHash&path=pathOfNode'
                     },
-                    'dump': {
-                        'description': "Responds with the JSON representation of the pointed node. All sub-nodes are extracted and outer relations of the sub-tree represented by JSON reference objects.",
-                        'example': _baseUrl + '/dump?project=projectName&root=rootHash&path=pathOfNode'
+                    dump: {
+                        description: 'Responds with the JSON representation of the pointed node. ' +
+                        'All sub-nodes are extracted and outer relations of ' +
+                        'the sub-tree represented by JSON reference objects.',
+                        example: _baseUrl + '/dump?project=projectName&root=rootHash&path=pathOfNode'
                     },
-                    'etf': {
-                        'description': "Responds with the JSON representation of the pointed node. All sub-nodes are extracted and outer relations of the sub-tree represented by JSON reference objects. It forces file download.",
-                        'example': _baseUrl + '/etf?project=projectName&root=rootHash&path=pathOfNode&output=outputFileName'
+                    etf: {
+                        description: 'Responds with the JSON representation of the pointed node. ' +
+                        'All sub-nodes are extracted and outer relations of ' +
+                        'the sub-tree represented by JSON reference objects. It forces file download.',
+                        example: _baseUrl +
+                        '/etf?project=projectName&root=rootHash&path=pathOfNode&output=outputFileName'
                     },
-                    'seedProject': {
-                        'description': 'Creates a project from the given seed.',
-                        'example': _baseUrl + '/seedProject?type=file&seedName=SignalFlowSystem&projectName=myCopyProject'
+                    seedProject: {
+                        description: 'Creates a project from the given seed.',
+                        example: _baseUrl +
+                        '/seedProject?type=file&seedName=SignalFlowSystem&projectName=myCopyProject'
                     }
                 }
             }
@@ -121,7 +133,8 @@ function Rest(_parameters) {
                         callback(_HTTPError.internalServerError, err);
                     } else {
                         for (var i in names) {
-                            names[i] = URL.urlToRefObject(_baseUrl + '/commit?project=' + projectName + '&commit=' + URL.addSpecialChars(names[i]));
+                            names[i] = URL.urlToRefObject(_baseUrl +
+                            '/commit?project=' + projectName + '&commit=' + URL.addSpecialChars(names[i]));
                         }
                         callback(_HTTPError.ok, names);
                     }
@@ -140,11 +153,21 @@ function Rest(_parameters) {
                         callback(_HTTPError.internalServerError, err);
                     } else {
                         var myCommit = {};
-                        myCommit.self = URL.urlToRefObject(_baseUrl + '/commit?ptoject=' + projectName + '&commit=' + URL.addSpecialChars(commitHash));
-                        myCommit.root = URL.urlToRefObject(_baseUrl + '/node?project=' + projectName + '&root=' + URL.addSpecialChars(commit.root));
+                        myCommit.self = URL.urlToRefObject(
+                            _baseUrl + '/commit?ptoject=' + projectName + '&commit=' + URL.addSpecialChars(commitHash)
+                        );
+                        myCommit.root = URL.urlToRefObject(
+                            _baseUrl + '/node?project=' + projectName + '&root=' + URL.addSpecialChars(commit.root)
+                        );
                         myCommit.parents = [];
                         for (var i = 0; i < commit.parents.length; i++) {
-                            myCommit.parents.push(URL.urlToRefObject(_baseUrl + '/commit?project=' + projectName + '&commit=' + URL.addSpecialChars(commit.parents[i])));
+                            myCommit.parents.push(
+                                URL.urlToRefObject(
+                                    _baseUrl + '/commit?project=' + projectName + '&commit=' + URL.addSpecialChars(
+                                        commit.parents[i]
+                                    )
+                                )
+                            );
                         }
                         myCommit.message = commit.message;
 
@@ -165,7 +188,11 @@ function Rest(_parameters) {
                         callback(_HTTPError.internalServerError, err);
                     } else {
                         for (var i = 0; i < commits.length; i++) {
-                            commits[i] = URL.urlToRefObject(_baseUrl + '/commit?project=' + projectName + '&commit=' + URL.addSpecialChars(commits[i]['_id']));
+                            commits[i] = URL.urlToRefObject(
+                                _baseUrl + '/commit?project=' + projectName + '&commit=' + URL.addSpecialChars(
+                                    commits[i]._id
+                                )
+                            );
                         }
                         callback(_HTTPError.ok, commits);
                     }
@@ -188,13 +215,20 @@ function Rest(_parameters) {
                             if (err) {
                                 callback(_HTTPError.internalServerError, err);
                             } else {
-                                ToJson(core, node, _baseUrl + '/node?project=' + projectName + '&root=' + URL.addSpecialChars(rootHash), 'url', function (err, jNode) {
-                                    if (err) {
-                                        callback(_HTTPError.internalServerError, err);
-                                    } else {
-                                        callback(_HTTPError.ok, jNode);
+                                toJson(core,
+                                    node,
+                                    _baseUrl + '/node?project=' + projectName + '&root=' + URL.addSpecialChars(
+                                        rootHash
+                                    ),
+                                    'url',
+                                    function (err, jNode) {
+                                        if (err) {
+                                            callback(_HTTPError.internalServerError, err);
+                                        } else {
+                                            callback(_HTTPError.ok, jNode);
+                                        }
                                     }
-                                });
+                                );
                             }
                         });
                     }
@@ -217,13 +251,18 @@ function Rest(_parameters) {
                             if (err) {
                                 callback(_HTTPError.internalServerError, err);
                             } else {
-                                Dump(core, node, _baseUrl + '/dump/' + projectName + '/' + URL.addSpecialChars(rootHash), 'guid', function (err, dump) {
-                                    if (err) {
-                                        callback(_HTTPError.internalServerError, err);
-                                    } else {
-                                        callback(_HTTPError.ok, dump);
+                                dump(core,
+                                    node,
+                                    _baseUrl + '/dump/' + projectName + '/' + URL.addSpecialChars(rootHash),
+                                    'guid',
+                                    function (err, dump) {
+                                        if (err) {
+                                            callback(_HTTPError.internalServerError, err);
+                                        } else {
+                                            callback(_HTTPError.ok, dump);
+                                        }
                                     }
-                                });
+                                );
                             }
                         });
                     }
@@ -270,7 +309,7 @@ function Rest(_parameters) {
 
             names = names || [];
             if (names.indexOf(name) === -1) {
-                return callback(_HTTPError.notFound, "unknown project " + name);
+                return callback(_HTTPError.notFound, 'unknown project ' + name);
             }
 
             _storage.openProject(name, function (err, pr) {
@@ -284,7 +323,7 @@ function Rest(_parameters) {
                 if (rootHash) {
                     initialized();
                 } else if (branch) {
-                    project.getBranchHash(branch, "#hack", function (err, cHash) {
+                    project.getBranchHash(branch, '#hack', function (err, cHash) {
                         if (err) {
                             return callback(_HTTPError.internalServerError, err);
                         }
@@ -298,25 +337,26 @@ function Rest(_parameters) {
         });
     }
 
-    function getSeedInfo(userId, callback) {
-        var parameters = {
-            command: 'getSeedInfo',
-            userId: userId
-        };
-        workerManager.request(parameters, function (err, id) {
-            if (!err && id) {
-                workerManager.result(id, function (err, seedInfo) {
-                    if (err) {
-                        return callback(_HTTPError.internalServerError, err);
-                    }
-                    callback(_HTTPError.ok, seedInfo);
-                });
-            } else {
-                //FIXME generate meaningful HTTP result based on the error
-                callback(_HTTPError.forbidden, err);
-            }
-        });
-    }
+    //FIXME either use it or remove it
+    //function getSeedInfo(userId, callback) {
+    //    var parameters = {
+    //        command: 'getSeedInfo',
+    //        userId: userId
+    //    };
+    //    workerManager.request(parameters, function (err, id) {
+    //        if (!err && id) {
+    //            workerManager.result(id, function (err, seedInfo) {
+    //                if (err) {
+    //                    return callback(_HTTPError.internalServerError, err);
+    //                }
+    //                callback(_HTTPError.ok, seedInfo);
+    //            });
+    //        } else {
+    //            //FIXME generate meaningful HTTP result based on the error
+    //            callback(_HTTPError.forbidden, err);
+    //        }
+    //    });
+    //}
 
     //FIXME check for errors  to set HTTPRESULT
     function createProjectFromSeed(userId, inputParameters, callback) {
@@ -392,7 +432,9 @@ function Rest(_parameters) {
                         callback(_HTTPError.internalServerError, err);
                     } else {
                         if (canGo === true) {
-                            listCommits(parameters.project, Number(parameters.number) === 'NaN' ? 1 : Number(parameters.number), callback);
+                            listCommits(parameters.project,
+                                Number(parameters.number) === 'NaN' ? 1 : Number(parameters.number),
+                                callback);
                         } else {
                             callback(_HTTPError.forbidden);
                         }
@@ -418,7 +460,7 @@ function Rest(_parameters) {
                         callback(_HTTPError.internalServerError, err);
                     } else {
                         if (canGo === true) {
-                            printNode(parameters.project, parameters.root, parameters.path || "", callback);
+                            printNode(parameters.project, parameters.root, parameters.path || '', callback);
                         } else {
                             callback(_HTTPError.forbidden);
                         }
@@ -431,7 +473,7 @@ function Rest(_parameters) {
                         callback(_HTTPError.internalServerError, err);
                     } else {
                         if (canGo === true) {
-                            dumpNode(parameters.project, parameters.root, parameters.path || "", callback);
+                            dumpNode(parameters.project, parameters.root, parameters.path || '', callback);
                         } else {
                             callback(_HTTPError.forbidden);
                         }
@@ -444,7 +486,11 @@ function Rest(_parameters) {
                         callback(_HTTPError.internalServerError, err);
                     } else {
                         if (canGo === true) {
-                            exportProject(parameters.project, parameters.root, parameters.branch, parameters.commit, callback);
+                            exportProject(parameters.project,
+                                parameters.root,
+                                parameters.branch,
+                                parameters.commit,
+                                callback);
                         } else {
                             callback(_HTTPError.forbidden);
                         }
@@ -496,7 +542,7 @@ function Rest(_parameters) {
                     doGET(_commands.help, null, callback);
             }
         } else {
-            callback(_HTTPError.serviceUnavailable, {'msg': 'REST actor not yet connected to the database!'});
+            callback(_HTTPError.serviceUnavailable, {msg: 'REST actor not yet connected to the database!'});
         }
     }
 

@@ -1,15 +1,16 @@
-/*globals define,_*/
-/*
+/*globals define, _, $*/
+/*jshint browser: true*/
+
+/**
  * @author brollb / https://github/brollb
  */
-define(['js/Decorators/WidgetDecoratorBase',
-        './BlockEditorWidget.Constants'], function (WidgetDecoratorBase,
-                                                   BlockEditorWidgetConstants) {
 
-    "use strict";
+define(['js/Decorators/WidgetDecoratorBase'], function (WidgetDecoratorBase) {
+
+    'use strict';
 
     var BlockEditorWidgetDecoratorBase,
-        DECORATOR_ID = "BlockEditorWidgetDecoratorBase";
+        DECORATOR_ID = 'BlockEditorWidgetDecoratorBase';
 
     BlockEditorWidgetDecoratorBase = function (params) {
         WidgetDecoratorBase.call(this, params);
@@ -20,7 +21,7 @@ define(['js/Decorators/WidgetDecoratorBase',
 
         this._initialize();
 
-        this.logger.debug("Created");
+        this.logger.debug('Created');
     };
 
     _.extend(BlockEditorWidgetDecoratorBase.prototype, WidgetDecoratorBase.prototype);
@@ -44,7 +45,7 @@ define(['js/Decorators/WidgetDecoratorBase',
     };
 
     //NOTE - CAN BE OVERRIDDEN TO SPECIFY CUSTOM TEMPLATE FOR THE DECORATOR
-    BlockEditorWidgetDecoratorBase.prototype.$DOMBase = $("");
+    BlockEditorWidgetDecoratorBase.prototype.$DOMBase = $('');
 
     //initialization code for the decorator
     //this.$el will be created as the top-level container for the decorator's DOM
@@ -101,17 +102,19 @@ define(['js/Decorators/WidgetDecoratorBase',
     };
 
     //NOTE - SHALL BE OVERRIDDEN WHEN NEEDED
-    BlockEditorWidgetDecoratorBase.prototype.getLinkableAreas = function (id) {
+    BlockEditorWidgetDecoratorBase.prototype.getLinkableAreas = function (/*id*/) {
         var result = [];
 
         //by default return the center point of the item
         //TODO Determine a better way to represent this...
-        //Only allow one "Click" per region
-        result.push( {"id": "0",
-            "x1": this.hostDesignerItem.getWidth() / 2,
-            "y1": this.hostDesignerItem.getHeight() / 2,
-            "x2": this.hostDesignerItem.getWidth() / 2,
-            "y2": this.hostDesignerItem.getHeight() / 2} );
+        //Only allow one 'Click' per region
+        result.push({
+            'id': '0',
+            'x1': this.hostDesignerItem.getWidth() / 2,
+            'y1': this.hostDesignerItem.getHeight() / 2,
+            'x2': this.hostDesignerItem.getWidth() / 2,
+            'y2': this.hostDesignerItem.getHeight() / 2
+        });
 
         return result;
     };
@@ -121,36 +124,36 @@ define(['js/Decorators/WidgetDecoratorBase',
     //Remove any additional business logic, free up resources, territory, etc...
     //NOTE - CAN BE OVERRIDDEN WHEN NEEDED
     BlockEditorWidgetDecoratorBase.prototype.destroy = function () {
-        this.logger.debug("BlockEditorWidgetDecoratorBase.destroyed");
+        this.logger.debug('BlockEditorWidgetDecoratorBase.destroyed');
     };
 
     /******************** EVENT HANDLERS ************************/
 
-    //called when the mouse enters the DesignerItem's main container
-    //return TRUE if decorator code handled the event
-    //when returned FALSE, DesignerItem's event handler will be executed
-    BlockEditorWidgetDecoratorBase.prototype.onMouseEnter = function (event) {
+        //called when the mouse enters the DesignerItem's main container
+        //return TRUE if decorator code handled the event
+        //when returned FALSE, DesignerItem's event handler will be executed
+    BlockEditorWidgetDecoratorBase.prototype.onMouseEnter = function (/*event*/) {
         return false;
     };
 
     //called when the mouse leaves the DesignerItem's main container
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    BlockEditorWidgetDecoratorBase.prototype.onMouseLeave = function (event) {
+    BlockEditorWidgetDecoratorBase.prototype.onMouseLeave = function (/*event*/) {
         return false;
     };
 
     //called when the mouse leaves the DesignerItem's receives mousedown
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    BlockEditorWidgetDecoratorBase.prototype.onMouseDown = function (event) {
+    BlockEditorWidgetDecoratorBase.prototype.onMouseDown = function (/*event*/) {
         return false;
     };
 
     //called when the mouse leaves the DesignerItem's receives mouseup
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    BlockEditorWidgetDecoratorBase.prototype.onMouseUp = function (event) {
+    BlockEditorWidgetDecoratorBase.prototype.onMouseUp = function (/*event*/) {
         return false;
     };
 
@@ -171,30 +174,29 @@ define(['js/Decorators/WidgetDecoratorBase',
     //called when double click happens on the DesignerItem
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    BlockEditorWidgetDecoratorBase.prototype.onDoubleClick = function (event) {
+    BlockEditorWidgetDecoratorBase.prototype.onDoubleClick = function (/*event*/) {
         return false;
     };
 
     /******************** END OF - EVENT HANDLERS ************************/
 
 
-
     /************* ADDITIONAL METHODS ***************************/
-    //called when the designer item should be updated
+        //called when the designer item should be updated
     BlockEditorWidgetDecoratorBase.prototype.update = function () {
     };
 
     //called when the designer item's subcomponent should be updated
-    BlockEditorWidgetDecoratorBase.prototype.updateSubcomponent = function (subComponentId) {
+    BlockEditorWidgetDecoratorBase.prototype.updateSubcomponent = function (/*subComponentId*/) {
     };
 
-    BlockEditorWidgetDecoratorBase.prototype.readOnlyMode = function (readOnlyMode) {
+    BlockEditorWidgetDecoratorBase.prototype.readOnlyMode = function (/*readOnlyMode*/) {
     };
 
     //Search support for BlockEditorWidget
     //return true if this item matches the search criteria described in searchDesc
     //otherwise return false
-    BlockEditorWidgetDecoratorBase.prototype.doSearch = function (searchDesc) {
+    BlockEditorWidgetDecoratorBase.prototype.doSearch = function (/*searchDesc*/) {
         return false;
     };
 
@@ -211,7 +213,7 @@ define(['js/Decorators/WidgetDecoratorBase',
     };
 
     //                            Input Fields
-    
+
     BlockEditorWidgetDecoratorBase.prototype.getInputFieldUpdates = function () {
         this.logger.warn('getInputFieldUpdates not overridden in decorator');
         return {};

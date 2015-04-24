@@ -48,7 +48,7 @@ div.iCheckBox {
     div.iCheckBox.checked .sw {
       left: 31.4px; }
     div.iCheckBox.checked .txt {
-      left: 0px;
+      left: 0;
       color: white; }
   div.iCheckBox.disabled {
     opacity: 0.5; }

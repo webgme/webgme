@@ -1,17 +1,18 @@
-/*globals define*/
-/*
+/*globals define, _*/
+/*jshint browser: true*/
+
+/**
  * @author brollb / https://github/brollb
+ *
+ * This is the connection highlight updater
  */
-//This is the connection highlight updater
+
 define([
     './BlockEditorWidget.Constants.js',
     './BlockEditorWidget.Utils.js'
-], function (
-    BLOCK_CONSTANTS,
-    Utils
-) {
+], function (BLOCK_CONSTANTS, Utils) {
 
-    "use strict";
+    'use strict';
 
     var BlockEditorWidgetHighlightUpdater,
         ROOT = 'root',
@@ -32,8 +33,8 @@ define([
         this._draggedTree = {};
         this._draggedTree[LEAVES] = [];
 
-        for (i = draggedItemContainer.children.length-1; i >= 0; i--){
-            this._draggedIds[ draggedItemContainer.children[i].id ] = true;
+        for (i = draggedItemContainer.children.length - 1; i >= 0; i--) {
+            this._draggedIds[draggedItemContainer.children[i].id] = true;
         }
 
         // BFS from the root taking all sibling ptr paths
@@ -52,16 +53,16 @@ define([
         if (this._draggedConnAreas.indexOf(incomingRootArea) === -1) {
             this._draggedConnAreas.push(incomingRootArea);
         }
-        
+
         this._draggedTree[ROOT] = root;
         current = [root];
 
         // Add all open sibling ptrs conn areas
         while (current.length) {
-            for (i = current.length-1; i >= 0; i--) {
+            for (i = current.length - 1; i >= 0; i--) {
                 isLeaf = false;
                 areas = current[i].getRelativeFreeConnectionAreas();
-                for (var j = areas.length-1; j >= 0; j--) {
+                for (var j = areas.length - 1; j >= 0; j--) {
                     ptr = areas[j].ptr;
                     if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) !== -1) {
                         if (current[i].ptrs[ptr]) {
@@ -95,48 +96,51 @@ define([
     BlockEditorWidgetHighlightUpdater.prototype.registerUnderItem = function (underItem) {
         var connAreas = [],
             i,
-            j,
             validPtrsToDragged,
             validPtrsFromDragged,
-            hasSiblingPtr,
             ptrs;
 
         // Filter the connAreas by META definition
-        if (this._underItems !== null && !this._draggedIds[underItem.id]){
+        if (this._underItems !== null && !this._draggedIds[underItem.id]) {
             connAreas = underItem.getConnectionAreas();
 
             // Get valid pointer types
-            validPtrsToDragged = this.getValidPointerTypes({src: underItem, 
-                                              dst: this._draggedTree[ROOT]});
+            validPtrsToDragged = this.getValidPointerTypes({
+                src: underItem,
+                dst: this._draggedTree[ROOT]
+            });
             validPtrsFromDragged = [];
-            for (i = this._draggedTree[LEAVES].length-1; i >= 0; i--){
-                ptrs = this.getValidPointerTypes({src: this._draggedTree[LEAVES][i], 
-                                                  dst: underItem});
+            for (i = this._draggedTree[LEAVES].length - 1; i >= 0; i--) {
+                ptrs = this.getValidPointerTypes({
+                    src: this._draggedTree[LEAVES][i],
+                    dst: underItem
+                });
 
                 validPtrsFromDragged = validPtrsFromDragged.concat(ptrs);
             }
 
-            connAreas = Utils.filterAreasByPtrs({areas: connAreas, 
-                                                 to: validPtrsToDragged, 
-                                                 from: validPtrsFromDragged});
+            connAreas = Utils.filterAreasByPtrs({
+                areas: connAreas,
+                to: validPtrsToDragged,
+                from: validPtrsFromDragged
+            });
         }
 
         if (connAreas.length) {
             this._underItemCount++;
             this._underItems[underItem.id] = connAreas;
-        
-            if (this._underItemCount === 1){
+
+            if (this._underItemCount === 1) {
                 this._updateHighlights(this);
             }
         }
     };
 
     BlockEditorWidgetHighlightUpdater.prototype.unregisterUnderItem = function (item) {
-
-        if (this._underItems && this._underItems[item.id]){
+        if (this._underItems && this._underItems[item.id]) {
             this._underItemCount--;
             delete this._underItems[item.id];
-            if (this._ui.data(ITEM_TAG) === item.id){
+            if (this._ui.data(ITEM_TAG) === item.id) {
                 item.deactivateConnectionAreas();
                 this.dropFocus = BLOCK_CONSTANTS.BACKGROUND;
 
@@ -147,24 +151,23 @@ define([
         }
     };
 
-    BlockEditorWidgetHighlightUpdater.prototype._updateHighlights = function (self) { 
+    BlockEditorWidgetHighlightUpdater.prototype._updateHighlights = function (self) {
         var shift,
             underConnAreas,
             draggedConnAreas,
             ids,
             closestItem,
             otherItemId,
-            underConnAreas,
             closest,
             i;
 
-        if (self._underItemCount){
-            shift = self._getShiftFromDragged(),
+        if (self._underItemCount) {
+            shift = self._getShiftFromDragged();
 
             // Get connection areas under dragged stuff
             underConnAreas = [];
             ids = Object.keys(self._underItems);
-            for (i = ids.length-1; i >= 0; i--) {
+            for (i = ids.length - 1; i >= 0; i--) {
                 underConnAreas = underConnAreas.concat(self._underItems[ids[i]]);
             }
 
@@ -173,10 +176,10 @@ define([
             closest = Utils.getClosestCompatibleConn(draggedConnAreas, underConnAreas);
 
             // Update the highlight
-            if (closest.area){
+            if (closest.area) {
                 closestItem = self.items[closest.area.parentId];
                 // Deactivate the previous connection area
-                if (self._ui.data(ITEM_TAG)){
+                if (self._ui.data(ITEM_TAG)) {
                     otherItemId = self._ui.data(ITEM_TAG);
                     self.items[otherItemId].deactivateConnectionAreas();
                 }
@@ -196,13 +199,13 @@ define([
         }
     };
 
-    BlockEditorWidgetHighlightUpdater.prototype._getAdjustedDraggedAreas = function (shift) { 
+    BlockEditorWidgetHighlightUpdater.prototype._getAdjustedDraggedAreas = function (shift) {
         var draggedConnAreas = [],
             connArea;
 
         // Shift the position...
 
-        for (var i = this._draggedConnAreas.length-1; i >= 0; i--) {
+        for (var i = this._draggedConnAreas.length - 1; i >= 0; i--) {
             connArea = _.extend({}, this._draggedConnAreas[i]);
             connArea = Utils.shiftConnArea({area: connArea, dx: shift.dx, dy: shift.dy});
 
@@ -213,7 +216,7 @@ define([
 
     };
 
-    BlockEditorWidgetHighlightUpdater.prototype._getShiftFromDragged = function () { 
+    BlockEditorWidgetHighlightUpdater.prototype._getShiftFromDragged = function () {
         var selectedItem,
             itemContainer,
             relativePos,

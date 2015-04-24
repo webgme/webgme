@@ -1,11 +1,15 @@
-/*globals console,document,window,Blob,define*/
-define(['./AutoRouter', 
-        'common/util/assert'], function (AutoRouter,
-                                 assert) {
+/*globals define, console*/
+/*jshint browser: true*/
+
+/**
+ * @author brollb / https://github/brollb
+ */
+
+define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
 
     'use strict';
 
-    var AutoRouterActionApplier = function() {
+    var AutoRouterActionApplier = function () {
     };
 
     AutoRouterActionApplier.prototype.init = function () {
@@ -21,9 +25,9 @@ define(['./AutoRouter',
         // the action sequence
         if (this._recordActions) {
             var self = this;
-            (function(console) {
+            (function (console) {
 
-                console.save = function(data, filename) {
+                console.save = function (data, filename) {
 
                     if (!self.readyToDownload) {
                         return;
@@ -42,12 +46,12 @@ define(['./AutoRouter',
                     }
 
                     var blob = new Blob([data], {type: 'text/json'}),
-                    e = document.createEvent('MouseEvents'),
-                    a = document.createElement('a');
+                        e = document.createEvent('MouseEvents'),
+                        a = document.createElement('a');
 
                     a.download = filename;
                     a.href = window.URL.createObjectURL(blob);
-                    a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':');
+                    a.dataset.downloadurl = ['text/json', a.download, a.href].join(':');
                     e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
                     a.dispatchEvent(e);
                     self.readyToDownload = false;
@@ -83,7 +87,7 @@ define(['./AutoRouter',
     AutoRouterActionApplier.prototype._fixArgs = function (command, args) {
         var id;
         // Fix args, if needed
-        switch(command) {
+        switch (command) {
             case 'move':  // args[0] is id should be the box
                 this._lookupItem(this._autorouterBoxes, args, 0);
                 args[0] = args[0].box;
@@ -119,9 +123,9 @@ define(['./AutoRouter',
                 var item;
 
                 id = args[0];
-                if(this._autorouterBoxes[id]) {
+                if (this._autorouterBoxes[id]) {
                     item = this._autorouterBoxes[id];
-                } else if(this._autorouterPaths[id]) {
+                } else if (this._autorouterPaths[id]) {
                     item = this._autorouterPaths[id];  // If objId is a connection
                 }
 
@@ -131,11 +135,14 @@ define(['./AutoRouter',
             case 'addBox':
                 args.pop();
                 break;
+
+            default:
+                break;
         }
 
     };
 
-    AutoRouterActionApplier.prototype._fixPortArgs = function(port1, port2) { // jshint ignore:line
+    AutoRouterActionApplier.prototype._fixPortArgs = function (port1, port2) { // jshint ignore:line
         var portId,
             portIds,
             arPortId,
@@ -167,11 +174,11 @@ define(['./AutoRouter',
         try {
             return this._invokeAutoRouterMethodUnsafe(command, args);
 
-        } catch(e) {
-            this.logger.error('AutoRouter.'+command+' failed with error: ' + e);
+        } catch (e) {
+            this.logger.error('AutoRouter.' + command + ' failed with error: ' + e);
 
             if (this._recordActions) {  // Can I just save and download this?
-                var filename = 'AR_bug_report'+new Date().getTime()+'.js';
+                var filename = 'AR_bug_report' + new Date().getTime() + '.js';
                 console.save(this._getActionSequence(), filename);
             }
         }
@@ -197,7 +204,7 @@ define(['./AutoRouter',
         var id,
             i;
 
-        switch(command) {
+        switch (command) {
             case 'addPath':
                 id = args.pop();
                 this._autorouterPaths[id] = result;
@@ -217,9 +224,9 @@ define(['./AutoRouter',
 
             case 'remove':
                 id = args[0];
-                if(this._autorouterBoxes[id]) {
+                if (this._autorouterBoxes[id]) {
                     i = this._autorouterPorts[id] ? this._autorouterPorts[id].length : 0;
-                    while(i--) {
+                    while (i--) {
                         var portId = id + this._portSeparator + this._autorouterPorts[id][i]; //ID of child port
                         this._autorouterBoxes[portId] = undefined;
                     }
@@ -227,7 +234,7 @@ define(['./AutoRouter',
                     this._autorouterBoxes[id] = undefined;
                     this._autorouterPorts[id] = undefined;
 
-                } else if(this._autorouterPaths[id]) {
+                } else if (this._autorouterPaths[id]) {
                     this._autorouterPaths[id] = undefined;  // If objId is a connection
                 }
                 break;
@@ -261,7 +268,7 @@ define(['./AutoRouter',
     AutoRouterActionApplier.prototype._recordAction = function (command, args) {
 
         var action = {action: command, args: args},
-            circularFixer = function(key, value) {
+            circularFixer = function (key, value) {
                 if (value.owner) {
                     return value.id;
                 }
@@ -274,7 +281,7 @@ define(['./AutoRouter',
 
     AutoRouterActionApplier.prototype._getActionSequence = function () {
         var index = this.debugActionSequence.lastIndexOf(','),
-            result = this.debugActionSequence.substring(0,index) + '];';
+            result = this.debugActionSequence.substring(0, index) + '];';
 
         return result;
     };

@@ -1,3 +1,4 @@
+//jshint ignore: start
 /*
  * Copyright (C) 2012 Vanderbilt University, All rights reserved.
  * 
@@ -9,75 +10,75 @@ console.error('ERROR: Outdated source file have to be updated');
 process.exit(1);
 
 if (typeof define !== "function") {
-	var requirejs = require("requirejs");
+    var requirejs = require("requirejs");
 
-	requirejs.config({
-		nodeRequire: require,
-		baseUrl: __dirname + "/.."
-	});
+    requirejs.config({
+        nodeRequire: require,
+        baseUrl: __dirname + "/.."
+    });
 
-	requirejs([ "common/util/common", "common/util/assert", "common/core/tasync", "bin/parse_xme" ], function (COMMON, ASSERT, TASYNC, parser) {
-		"use strict";
+    requirejs(["common/util/common", "common/util/assert", "common/core/tasync", "bin/parse_xme"], function (COMMON, ASSERT, TASYNC, parser) {
+        "use strict";
 
-        console.log('we are in',typeof define);
-		TASYNC.trycatch(main, function (error) {
-			console.log(error.trace || error.stack);
+        console.log('we are in', typeof define);
+        TASYNC.trycatch(main, function (error) {
+            console.log(error.trace || error.stack);
 
-			COMMON.setProgress(null);
-			COMMON.closeProject();
-			COMMON.closeDatabase();
-		});
+            COMMON.setProgress(null);
+            COMMON.closeProject();
+            COMMON.closeDatabase();
+        });
 
-		function main () {
-			var args = COMMON.getParameters(null);
+        function main() {
+            var args = COMMON.getParameters(null);
 
-			if (args.length < 1 || COMMON.getParameters("help") !== null) {
-				console.log("Usage: node parse_xme.js <xmlfile> [options]");
-				console.log("");
-				console.log("Parses a GME xme file and stores it int a WEBGME database. Possible options:");
-				console.log("");
-				console.log("  -mongo [database [host [port]]]\topens a mongo database");
-				console.log("  -proj <project>\t\t\tselects the given project");
-				console.log("  -branch <branch>\t\t\tselects the branch to be overwritten");
-				console.log("  -help\t\t\t\t\tprints out this help message");
-				console.log("");
-				return;
-			}
+            if (args.length < 1 || COMMON.getParameters("help") !== null) {
+                console.log("Usage: node parse_xme.js <xmlfile> [options]");
+                console.log("");
+                console.log("Parses a GME xme file and stores it int a WEBGME database. Possible options:");
+                console.log("");
+                console.log("  -mongo [database [host [port]]]\topens a mongo database");
+                console.log("  -proj <project>\t\t\tselects the given project");
+                console.log("  -branch <branch>\t\t\tselects the branch to be overwritten");
+                console.log("  -help\t\t\t\t\tprints out this help message");
+                console.log("");
+                return;
+            }
 
-			var xmlfile = args[0];
+            var xmlfile = args[0];
 
-			var branch = COMMON.getParameters("branch");
-			if (branch) {
-				branch = branch[0] || "parsed";
-			}
+            var branch = COMMON.getParameters("branch");
+            if (branch) {
+                branch = branch[0] || "parsed";
+            }
 
-			var done = TASYNC.call(COMMON.openDatabase);
-			done = TASYNC.call(COMMON.openProject, done);
-			var core = TASYNC.call(COMMON.getCore, done);
-			var hash = TASYNC.call(parser, xmlfile, core);
-			done = TASYNC.call(writeBranch, branch, hash);
-			done = TASYNC.call(COMMON.closeProject, done);
-			done = TASYNC.call(COMMON.closeDatabase, done);
+            var done = TASYNC.call(COMMON.openDatabase);
+            done = TASYNC.call(COMMON.openProject, done);
+            var core = TASYNC.call(COMMON.getCore, done);
+            var hash = TASYNC.call(parser, xmlfile, core);
+            done = TASYNC.call(writeBranch, branch, hash);
+            done = TASYNC.call(COMMON.closeProject, done);
+            done = TASYNC.call(COMMON.closeDatabase, done);
 
-			return done;
-		}
+            return done;
+        }
 
-		function writeBranch (branch, hash) {
-			if (typeof branch === "string") {
-				var project = COMMON.getProject();
-				var oldhash = project.getBranchHash(branch, null);
-				var done = TASYNC.call(project.setBranchHash, branch, oldhash, hash);
-				return TASYNC.call(function () {
-					console.log("Commit " + hash + " written to branch " + branch);
-				}, done);
-			} else {
-				console.log("Created commit " + hash);
-			}
-		}
-	});
+        function writeBranch(branch, hash) {
+            if (typeof branch === "string") {
+                var project = COMMON.getProject();
+                var oldhash = project.getBranchHash(branch, null);
+                var done = TASYNC.call(project.setBranchHash, branch, oldhash, hash);
+                return TASYNC.call(function () {
+                    console.log("Commit " + hash + " written to branch " + branch);
+                }, done);
+            } else {
+                console.log("Created commit " + hash);
+            }
+        }
+    });
 } else {
-    define([ "common/util/assert", "common/core/tasync", "common/util/common" ], function (ASSERT, TASYNC, COMMON) {
-        function parser (xmlfile, core) {
+    define(["common/util/assert", "common/core/tasync", "common/util/common"], function (ASSERT, TASYNC, COMMON) {
+        function parser(xmlfile, core) {
             var root = core.createNode(), stack = [], objects = 1;
             var global = {
                 ids: {},
@@ -86,7 +87,7 @@ if (typeof define !== "function") {
                 typs: []
             };
 
-            function opentag (tag) {
+            function opentag(tag) {
                 var name = tag.name;
 
                 if (name === "project") {
@@ -94,19 +95,19 @@ if (typeof define !== "function") {
                     tag.node = root;
                     var guid = tag.attributes['guid'];
                     // TODO: somehow it needs to adapted better to our guid storage needs
-                    guid = guid.replace(/[{,},-]/g,"");
-                    core.setAttribute(root,"_relguid",guid);
+                    guid = guid.replace(/[{,},-]/g, "");
+                    core.setAttribute(root, "_relguid", guid);
                 } else if (name === "folder" || name === "model" || name === "atom" || name === "connection" || name === "reference" || name === "set") {
                     ASSERT(stack.length >= 1);
                     //**********
-                    var relid = Number(tag.attributes['relid'])+"";
-                    if(relid === "NaN"){
+                    var relid = Number(tag.attributes['relid']) + "";
+                    if (relid === "NaN") {
                         relid = undefined;
                     }
                     var guid = tag.attributes['guid'];
-                    guid = guid.replace(/[{,}]/g,"");
-                    tag.node = core.createNode({parent:stack[stack.length - 1].node,relid:relid,guid:guid});
-                    core.setRegistry(tag.node,'refPortCount',0);
+                    guid = guid.replace(/[{,}]/g, "");
+                    tag.node = core.createNode({parent: stack[stack.length - 1].node, relid: relid, guid: guid});
+                    core.setRegistry(tag.node, 'refPortCount', 0);
                     //**********
                     objects += 1;
                 }
@@ -116,18 +117,18 @@ if (typeof define !== "function") {
                 stack.push(tag);
             }
 
-            function addtext (text) {
+            function addtext(text) {
                 if (stack.length !== 0) {
                     var tag = stack[stack.length - 1];
                     tag.text += text;
                 }
             }
 
-            function getstat () {
+            function getstat() {
                 return objects + " gme objects";
             }
 
-            function closetag (name) {
+            function closetag(name) {
                 ASSERT(stack.length >= 1);
 
                 var tag = stack.pop();
@@ -162,15 +163,15 @@ if (typeof define !== "function") {
             return hash;
         }
 
-        function persist (core, root) {
+        function persist(core, root) {
             console.log("Waiting for objects to be saved ...");
             var done = core.persist(root);
             var hash = core.getHash(root);
             return TASYNC.join(hash, done);
         }
 
-        function makeCommit (xmlfile, hash) {
-            console.log('Making commit for root hash:',hash);
+        function makeCommit(xmlfile, hash) {
+            console.log('Making commit for root hash:', hash);
             var project = COMMON.getProject();
             hash = project.makeCommit([], hash, "parsed " + xmlfile);
             return hash;
@@ -195,7 +196,7 @@ if (typeof define !== "function") {
         var POSITION_KEY_REGEXP = new RegExp("^PartRegs/.*/Position$");
         var POSITION_VAL_REGEXP = new RegExp("^([0-9]*),([0-9]*)$");
 
-        function parseObject (core, tag, global) {
+        function parseObject(core, tag, global) {
             var key = null;
             for (key in registry) {
                 if (typeof tag.attributes[key] !== "undefined") {
@@ -218,7 +219,7 @@ if (typeof define !== "function") {
             if (!core.getRegistry(tag.node, "decorator")) {
                 core.setRegistry(tag.node, "decorator", "");
             }
-            
+
 
             if (tag.name === "connection") {
                 core.setRegistry(tag.node, "isConnection", true);
@@ -241,7 +242,7 @@ if (typeof define !== "function") {
             }
         }
 
-        function setPosition (core, node) {
+        function setPosition(core, node) {
             var pos = core.getRegistry(node, "PartRegs/All/Position");
             if (!pos) {
                 var i, names = core.getRegistryNames(node);
@@ -272,7 +273,7 @@ if (typeof define !== "function") {
             core.setRegistry(node, "position", pos);
         }
 
-        function parseConnPoint (core, tag, global) {
+        function parseConnPoint(core, tag, global) {
             ASSERT(tag.parent.node);
 
             var entry = tag.attributes;
@@ -281,17 +282,17 @@ if (typeof define !== "function") {
             global.cps.push(entry);
         }
 
-        function parseComment (core, tag) {
+        function parseComment(core, tag) {
             ASSERT(tag.parent);
             core.setRegistry(tag.parent.node, tag.name, tag.text);
         }
 
-        function parseName (core, tag) {
+        function parseName(core, tag) {
             ASSERT(tag.parent);
             core.setAttribute(tag.parent.node, tag.name, tag.text);
         }
 
-        function parseValue (core, tag) {
+        function parseValue(core, tag) {
             ASSERT(tag.parent);
 
             if (tag.parent.name === "attribute") {
@@ -326,7 +327,7 @@ if (typeof define !== "function") {
             }
         }
 
-        function resolveAll (core, root, global) {
+        function resolveAll(core, root, global) {
             console.log("Resolving references ...");
 
             var done = true, i;
@@ -345,7 +346,7 @@ if (typeof define !== "function") {
             return done;
         }
 
-        function resolveReference (core, ids, ref) {
+        function resolveReference(core, ids, ref) {
             var target = ids[ref.referred];
             if (target) {
                 core.setPointer(ref.node, "target", target);
@@ -354,7 +355,7 @@ if (typeof define !== "function") {
             }
         }
 
-        function resolveBasetype (core, ids, typ) {
+        function resolveBasetype(core, ids, typ) {
             var target = ids[typ.base];
             if (target) {
                 core.setPointer(typ.node, "proto", target);
@@ -363,7 +364,7 @@ if (typeof define !== "function") {
             }
         }
 
-        function resolveConnPoint (core, ids, cp) {
+        function resolveConnPoint(core, ids, cp) {
             var role = cp.role;
             if (role === "src") {
                 role = "source";
@@ -394,7 +395,7 @@ if (typeof define !== "function") {
             }
         }
 
-        function resolveRefPort (core, source, role, reference, target, targetid, children) {
+        function resolveRefPort(core, source, role, reference, target, targetid, children) {
             ASSERT(children instanceof Array);
 
             var i, refport = null;
@@ -407,8 +408,8 @@ if (typeof define !== "function") {
             }
 
             if (!refport) {
-                refport = core.createNode({parent:reference,relid:""+core.getRegistry(reference,"refPortCount")});
-                core.setRegistry(reference,'refPortCount',core.getRegistry(reference,"refPortCount")+1);
+                refport = core.createNode({parent: reference, relid: "" + core.getRegistry(reference, "refPortCount")});
+                core.setRegistry(reference, 'refPortCount', core.getRegistry(reference, "refPortCount") + 1);
                 core.setAttribute(refport, "name", core.getAttribute(target, "name"));
                 core.setRegistry(refport, "position", core.getRegistry(target, "position"));
                 core.setRegistry(refport, "id", targetid);

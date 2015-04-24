@@ -1,32 +1,40 @@
-/*globals define,_*/
-define(['js/Constants',
+/*globals define, _, $*/
+/*jshint browser: true*/
+
+/**
+ * @author brollb / https://github/brollb
+ */
+
+define([
+    'js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/PartBrowser/PartBrowserWidget.DecoratorBase',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!../Core/SVGDecorator.html',
     './SVGDecorator.Core',
-    'css!./SVGDecorator.PartBrowserWidget'], function (CONSTANTS,
-                                                       nodePropertyNames,
-                                                       PartBrowserWidgetDecoratorBase,
-                                                       DiagramDesignerWidgetConstants,
-                                                       SVGDecoratorTemplate,
-                                                       SVGDecoratorCore) {
+    'css!./SVGDecorator.PartBrowserWidget'
+], function (CONSTANTS,
+             nodePropertyNames,
+             PartBrowserWidgetDecoratorBase,
+             DiagramDesignerWidgetConstants,
+             SVGDecoratorTemplate,
+             SVGDecoratorCore) {
 
-    "use strict";
+    'use strict';
 
     var SVGDecoratorPartBrowserWidget,
-        DECORATOR_ID = "SVGDecoratorPartBrowserWidget";
+        DECORATOR_ID = 'SVGDecoratorPartBrowserWidget';
 
 
     SVGDecoratorPartBrowserWidget = function (options) {
-        var opts = _.extend( {}, options);
+        var opts = _.extend({}, options);
 
         PartBrowserWidgetDecoratorBase.apply(this, [opts]);
         SVGDecoratorCore.apply(this, [opts]);
 
-        this._initializeVariables({"connectors": false});
+        this._initializeVariables({connectors: false});
 
-        this.logger.debug("SVGDecoratorPartBrowserWidget ctor");
+        this.logger.debug('SVGDecoratorPartBrowserWidget ctor');
     };
 
 

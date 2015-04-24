@@ -13,13 +13,13 @@
 .plugin-config-dialog .control-group .controls .widget div.color-picker {
   height: 30px;
   width: 220px;
-  margin-top: 0px;
+  margin-top: 0;
   cursor: pointer;
   border-radius: 4px; }
 .plugin-config-dialog .control-group .controls .widget div.asset-widget {
   height: 30px;
   line-height: 30px;
   width: 220px;
-  margin-top: 0px; }
+  margin-top: 0; }
 .plugin-config-dialog .control-group div.desc {
   margin-left: 180px; }

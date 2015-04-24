@@ -1,4 +1,5 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
+/*globals define, Raphael, window, WebGMEGlobal, $*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -6,7 +7,8 @@
  */
 
 
-define(['js/logger',
+define([
+    'js/logger',
     'js/Constants',
     'raphaeljs',
     'js/Loader/LoaderCircles',
@@ -33,35 +35,36 @@ define(['js/logger',
     './DiagramDesignerWidget.Toolbar',
     './DiagramDesignerWidget.Mouse',
     './DiagramDesignerWidget.Tabs',
-    'css!./styles/DiagramDesignerWidget.css'], function (Logger,
-                                                      CONSTANTS,
-                                                      raphaeljs,
-                                                      LoaderCircles,
-                                                      SelectionManager,
-                                                      DragManager,
-                                                      DiagramDesignerWidgetConstants,
-                                                      DiagramDesignerWidgetOperatingModes,
-                                                      DiagramDesignerWidgetDesignerItems,
-                                                      DiagramDesignerWidgetConnections,
-                                                      DiagramDesignerWidgetSubcomponents,
-                                                      ConnectionRouteManagerBasic,
-                                                      ConnectionRouteManager2,
-                                                      ConnectionRouteManager3,
-                                                      ConnectionDrawingManager,
-                                                      DiagramDesignerWidgetEventDispatcher,
-                                                      DiagramDesignerWidgetZoom,
-                                                      DiagramDesignerWidgetKeyboard,
-                                                      HighlightManager,
-                                                      SearchManager,
-                                                      DiagramDesignerWidgetContextMenu,
-                                                      DiagramDesignerWidgetDroppable,
-                                                      DiagramDesignerWidgetDraggable,
-                                                      DiagramDesignerWidgetClipboard,
-                                                      DiagramDesignerWidgetToolbar,
-                                                      DiagramDesignerWidgetMouse,
-                                                      DiagramDesignerWidgetTabs) {
+    'css!./styles/DiagramDesignerWidget.css'
+], function (Logger,
+             CONSTANTS,
+             raphaeljs,
+             LoaderCircles,
+             SelectionManager,
+             DragManager,
+             DiagramDesignerWidgetConstants,
+             DiagramDesignerWidgetOperatingModes,
+             DiagramDesignerWidgetDesignerItems,
+             DiagramDesignerWidgetConnections,
+             DiagramDesignerWidgetSubcomponents,
+             ConnectionRouteManagerBasic,
+             ConnectionRouteManager2,
+             ConnectionRouteManager3,
+             ConnectionDrawingManager,
+             DiagramDesignerWidgetEventDispatcher,
+             DiagramDesignerWidgetZoom,
+             DiagramDesignerWidgetKeyboard,
+             HighlightManager,
+             SearchManager,
+             DiagramDesignerWidgetContextMenu,
+             DiagramDesignerWidgetDroppable,
+             DiagramDesignerWidgetDraggable,
+             DiagramDesignerWidgetClipboard,
+             DiagramDesignerWidgetToolbar,
+             DiagramDesignerWidgetMouse,
+             DiagramDesignerWidgetTabs) {
 
-    "use strict";
+    'use strict';
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
@@ -74,11 +77,12 @@ define(['js/logger',
         DEBUG = window.DEBUG,
         _ = window._;
 
-    var defaultParams = {'loggerName': 'gme:Widgets:DiagramDesigner:DiagramDesignerWidget',
-                         'gridSize': 10,
-                         'droppable': true,
-                         'zoomValues': [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10],
-                         'zoomUIControls': true
+    var defaultParams = {
+        loggerName: 'gme:Widgets:DiagramDesigner:DiagramDesignerWidget',
+        gridSize: 10,
+        droppable: true,
+        zoomValues: [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10],
+        zoomUIControls: true
     };
 
     DiagramDesignerWidget = function (container, par) {
@@ -149,13 +153,13 @@ define(['js/logger',
         //END OF --- Get DiagramDesignerWidget parameters from options
 
         //define properties of its own
-        this._actualSize = { "w": 0, "h": 0 };
-        this._containerSize = { "w": 0, "h": 0 };
+        this._actualSize = {w: 0, h: 0};
+        this._containerSize = {w: 0, h: 0};
         this._itemIDCounter = 0;
         this._documentFragment = document.createDocumentFragment();
 
-        this._offset = { "left": 0, "top": 0 };
-        this._scrollPos = { "left": 0, "top": 0 };
+        this._offset = {left: 0, top: 0};
+        this._scrollPos = {left: 0, top: 0};
 
         //set default mode to NORMAL
         this.mode = this.OPERATING_MODES.READ_ONLY;
@@ -182,7 +186,7 @@ define(['js/logger',
         this._initZoom(params);
 
         //initiate Selection Manager (if needed)
-        this.selectionManager = params.selectionManager || new SelectionManager({"diagramDesigner": this});
+        this.selectionManager = params.selectionManager || new SelectionManager({diagramDesigner: this});
         this.selectionManager.initialize(this.skinParts.$itemsContainer);
         this.selectionManager.onSelectionCommandClicked = function (command, selectedIds, event) {
             self._onSelectionCommandClicked(command, selectedIds, event);
@@ -197,16 +201,18 @@ define(['js/logger',
         };
 
         //initiate Drag Manager (if needed)
-        //this.dragManager = new DragManager({"diagramDesigner": this});
+        //this.dragManager = new DragManager({diagramDesigner: this});
         //this.dragManager.initialize(this.skinParts.$itemsContainer);
 
         /*********** CONNECTION DRAWING COMPONENT *************/
-        //initiate Connection Router (if needed)
-        this.connectionRouteManager = params.connectionRouteManager || new DEFAULT_CONNECTION_ROUTE_MANAGER({"diagramDesigner": this});
+            //initiate Connection Router (if needed)
+        this.connectionRouteManager = params.connectionRouteManager ||
+        new DEFAULT_CONNECTION_ROUTE_MANAGER({diagramDesigner: this});
+
         this.connectionRouteManager.initialize();
 
         //initiate connection drawing component and hook up event callbacks
-        this.connectionDrawingManager = new ConnectionDrawingManager({"diagramDesigner": this});
+        this.connectionDrawingManager = new ConnectionDrawingManager({diagramDesigner: this});
         this.connectionDrawingManager.initialize(this.skinParts.$itemsContainer);
         this.connectionDrawingManager.onStartConnectionCreate = function (params) {
             self._onStartConnectionCreate(params);
@@ -226,8 +232,8 @@ define(['js/logger',
 
         /*********** END OF --- CONNECTION DRAWING COMPONENT *************/
 
-        //initiate Highlight Manager
-        this.highlightManager = new HighlightManager({"diagramDesigner": this});
+            //initiate Highlight Manager
+        this.highlightManager = new HighlightManager({diagramDesigner: this});
         this.highlightManager.initialize(this.skinParts.$itemsContainer);
         this.highlightManager.onHighlight = function (idList) {
             self.onHighlight(idList);
@@ -238,7 +244,7 @@ define(['js/logger',
         };
 
         //initiate Search Manager
-        this.searchManager = new SearchManager({"diagramDesigner": this});
+        this.searchManager = new SearchManager({diagramDesigner: this});
         this.searchManager.initialize(this.skinParts.$itemsContainer);
 
         this._afterManagersInitialized();
@@ -248,7 +254,7 @@ define(['js/logger',
         this._activateMouseListeners();
 
 
-        this.logger.debug("DiagramDesignerWidget ctor finished");
+        this.logger.debug('DiagramDesignerWidget ctor finished');
     };
 
     DiagramDesignerWidget.prototype._afterManagersInitialized = function () {
@@ -292,13 +298,13 @@ define(['js/logger',
      * Generated a new ID for the box/line (internal use only)
      */
     DiagramDesignerWidget.prototype._getGuid = function (prefix) {
-        var nextID = (this._itemIDCounter++) + "",
+        var nextID = (this._itemIDCounter++) + '',
             len;
 
         //padding 0s
         len = GUID_DIGITS - nextID.length;
-        while(len--) {
-            nextID = "0" + nextID;
+        while (len--) {
+            nextID = '0' + nextID;
         }
 
         if (prefix) {
@@ -339,7 +345,7 @@ define(['js/logger',
 
     /****************** PUBLIC FUNCTIONS ***********************************/
 
-    //Called when the widget's container size changed
+        //Called when the widget's container size changed
     DiagramDesignerWidget.prototype.onWidgetContainerResize = function (width, height) {
         this._containerSize.w = width;
         this._containerSize.h = height;
@@ -357,9 +363,8 @@ define(['js/logger',
     };
 
     DiagramDesignerWidget.prototype._initializeUI = function () {
-        var self = this;
 
-        this.logger.debug("DiagramDesignerWidget._initializeUI");
+        this.logger.debug('DiagramDesignerWidget._initializeUI');
 
         //clear content
         this.$el.empty();
@@ -377,14 +382,16 @@ define(['js/logger',
 
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
-            "class" : "items"
+            class: 'items'
         });
         this.skinParts.$diagramDesignerWidgetBody.append(this.skinParts.$itemsContainer);
 
+        //jshint newcap:false
         //initialize Raphael paper from children container and set it to be full size of the HTML container
         this.skinParts.SVGPaper = Raphael(this.skinParts.$itemsContainer[0]);
-        this.skinParts.SVGPaper.canvas.style.pointerEvents = "visiblePainted";
-        this.skinParts.SVGPaper.canvas.className.baseVal = DiagramDesignerWidgetConstants.CONNECTION_CONTAINER_SVG_CLASS;
+        this.skinParts.SVGPaper.canvas.style.pointerEvents = 'visiblePainted';
+        this.skinParts.SVGPaper.canvas.className.baseVal =
+            DiagramDesignerWidgetConstants.CONNECTION_CONTAINER_SVG_CLASS;
 
         //finally resize the whole content according to available space
         this._containerSize.w = this.$el.width();
@@ -395,42 +402,50 @@ define(['js/logger',
             this._initDroppable();
         }
 
-        this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
+        this.__loader = new LoaderCircles({containerElement: this.$el.parent()});
 
         if (this._tabsEnabled === true) {
             this._initializeTabs();
         }
     };
 
-    DiagramDesignerWidget.prototype._createLineStyleMenuItem = function (width, color, pattern, startArrow, endArrow, type) {
+    DiagramDesignerWidget.prototype._createLineStyleMenuItem = function (width, color, pattern, startArrow,
+                                                                         endArrow, type) {
+        //jshint newcap:false
         var el = $('<div/>'),
             path,
             hSize = 50,
             vSize = 20,
             paper = Raphael(el[0], hSize, vSize),
-            pathParams = {},
             bezierControlOffset = 10;
 
+
         width = width || 1;
-        color = color || "#000000";
+        color = color || '#000000';
         pattern = pattern || DiagramDesignerWidgetConstants.LINE_PATTERNS.SOLID;
         startArrow = startArrow || DiagramDesignerWidgetConstants.LINE_ARROWS.NONE;
         endArrow = endArrow || DiagramDesignerWidgetConstants.LINE_ARROWS.NONE;
         type = (type || DiagramDesignerWidgetConstants.LINE_TYPES.NONE).toLowerCase();
 
-        el.attr({"style": "height: " + vSize + "px; width: " + hSize + "px;"});
+        el.attr({style: 'height: ' + vSize + 'px; width: ' + hSize + 'px;'});
 
         if (type === DiagramDesignerWidgetConstants.LINE_TYPES.BEZIER) {
-            path = paper.path("M 5," + (Math.round(vSize / 2) + 0.5) + " C" + (5 + bezierControlOffset) + "," +  (Math.round(vSize / 2) + 0.5 - bezierControlOffset * 2) + " " + (hSize - bezierControlOffset) + "," +  (Math.round(vSize / 2) + 0.5 + bezierControlOffset * 2) + " " + (hSize - 5) + "," + (Math.round(vSize / 2) + 0.5));
+            path = paper.path('M 5,' + (Math.round(vSize / 2) + 0.5) + ' C' + (5 + bezierControlOffset) + ',' +
+            (Math.round(vSize / 2) + 0.5 - bezierControlOffset * 2) + ' ' + (hSize - bezierControlOffset) + ',' +
+            (Math.round(vSize / 2) + 0.5 + bezierControlOffset * 2) + ' ' + (hSize - 5) + ',' +
+            (Math.round(vSize / 2) + 0.5));
         } else {
-            path = paper.path("M 5," + (Math.round(vSize / 2) + 0.5) + " L" + (hSize - 5) + "," + (Math.round(vSize / 2) + 0.5));
+            path = paper.path('M 5,' + (Math.round(vSize / 2) + 0.5) + ' L' + (hSize - 5) + ',' +
+            (Math.round(vSize / 2) + 0.5));
         }
 
-        path.attr({ "arrow-start": startArrow,
-            "arrow-end": endArrow,
-            "stroke":  color,
-            "stroke-width": width,
-            "stroke-dasharray": pattern});
+        path.attr({
+            'arrow-start': startArrow,
+            'arrow-end': endArrow,
+            stroke: color,
+            'stroke-width': width,
+            'stroke-dasharray': pattern
+        });
 
         return el;
     };
@@ -438,7 +453,7 @@ define(['js/logger',
     DiagramDesignerWidget.prototype._attachScrollHandler = function (el) {
         var self = this;
 
-        el.on('scroll', function (event) {
+        el.on('scroll', function (/*event*/) {
             self._scrollPos.left = el.scrollLeft();
             self._scrollPos.top = el.scrollTop();
         });
@@ -460,21 +475,25 @@ define(['js/logger',
         zoomedWidth = Math.max(zoomedWidth, this._actualSize.w);
         zoomedHeight = Math.max(zoomedHeight, this._actualSize.h);
 
-        this.skinParts.$itemsContainer.css({"width": zoomedWidth,
-            "height": zoomedHeight});
+        this.skinParts.$itemsContainer.css({
+            width: zoomedWidth,
+            height: zoomedHeight
+        });
 
         this.skinParts.SVGPaper.setSize(zoomedWidth, zoomedHeight);
         this.skinParts.SVGPaper.setViewBox(0, 0, zoomedWidth, zoomedHeight, false);
 
-        this._svgPaperSize = {"w": zoomedWidth,
-                           "h": zoomedHeight};
+        this._svgPaperSize = {
+            w: zoomedWidth,
+            h: zoomedHeight
+        };
 
         this._centerBackgroundText();
 
         offset = this.skinParts.$diagramDesignerWidgetBody.offset();
 
-        paddingTop = parseInt( this.skinParts.$diagramDesignerWidgetBody.css('padding-top').replace("px", "") );
-        paddingLeft = parseInt( this.skinParts.$diagramDesignerWidgetBody.css('padding-left').replace("px", "") );
+        paddingTop = parseInt(this.skinParts.$diagramDesignerWidgetBody.css('padding-top').replace('px', ''));
+        paddingLeft = parseInt(this.skinParts.$diagramDesignerWidgetBody.css('padding-left').replace('px', ''));
 
         offset.left += paddingLeft;
         offset.top += paddingTop;
@@ -494,8 +513,8 @@ define(['js/logger',
         pY /= this._zoomRatio;
 
         position = {
-            "mX": pX > 0 ? pX : 0,
-            "mY": pY > 0 ? pY : 0
+            mX: pX > 0 ? pX : 0,
+            mY: pY > 0 ? pY : 0
         };
 
         return position;
@@ -506,8 +525,10 @@ define(['js/logger',
             left = (offset.left - childrenContainerOffset.left) / this._zoomRatio + childrenContainerOffset.left,
             top = (offset.top - childrenContainerOffset.top) / this._zoomRatio + childrenContainerOffset.top;
 
-        return { "left": left,
-            "top": top };
+        return {
+            left: left,
+            top: top
+        };
     };
 
     DiagramDesignerWidget.prototype.posToPageXY = function (x, y) {
@@ -519,8 +540,10 @@ define(['js/logger',
         pX += childrenContainerOffset.left - childrenContainerScroll.left;
         pY += childrenContainerOffset.top - childrenContainerScroll.top;
 
-        return { "x": pX > 0 ? pX : 0,
-            "y": pY > 0 ? pY : 0 };
+        return {
+            x: pX > 0 ? pX : 0,
+            y: pY > 0 ? pY : 0
+        };
     };
 
     DiagramDesignerWidget.prototype.clear = function () {
@@ -528,7 +551,7 @@ define(['js/logger',
 
         this.setTitle('');
 
-        this.selectionManager.clear(); 
+        this.selectionManager.clear();
 
         for (i in this.items) {
             if (this.items.hasOwnProperty(i)) {
@@ -539,7 +562,7 @@ define(['js/logger',
         //initialize all the required collections with empty value
         this._initializeCollections();
 
-        this._actualSize = { "w": 0, "h": 0 };
+        this._actualSize = {w: 0, h: 0};
 
         this._resizeItemContainer();
 
@@ -561,7 +584,7 @@ define(['js/logger',
     /*********************************/
 
     DiagramDesignerWidget.prototype.beginUpdate = function () {
-        this.logger.debug("beginUpdate");
+        this.logger.debug('beginUpdate');
 
         this._updating = true;
 
@@ -577,7 +600,7 @@ define(['js/logger',
     };
 
     DiagramDesignerWidget.prototype.endUpdate = function () {
-        this.logger.debug("endUpdate");
+        this.logger.debug('endUpdate');
 
         this._updating = false;
         this._tryRefreshScreen();
@@ -587,23 +610,23 @@ define(['js/logger',
         var insertedLen = 0,
             updatedLen = 0,
             deletedLen = 0,
-            msg = "";
+            msg = '';
 
         //check whether controller update finished or not
         if (this._updating !== true) {
 
-            insertedLen += this._insertedDesignerItemIDs ? this._insertedDesignerItemIDs.length : 0 ;
-            insertedLen += this._insertedConnectionIDs ? this._insertedConnectionIDs.length : 0 ;
+            insertedLen += this._insertedDesignerItemIDs ? this._insertedDesignerItemIDs.length : 0;
+            insertedLen += this._insertedConnectionIDs ? this._insertedConnectionIDs.length : 0;
 
-            updatedLen += this._updatedDesignerItemIDs ? this._updatedDesignerItemIDs.length : 0 ;
-            updatedLen += this._updatedConnectionIDs ? this._updatedConnectionIDs.length : 0 ;
+            updatedLen += this._updatedDesignerItemIDs ? this._updatedDesignerItemIDs.length : 0;
+            updatedLen += this._updatedConnectionIDs ? this._updatedConnectionIDs.length : 0;
 
-            deletedLen += this._deletedDesignerItemIDs ? this._deletedDesignerItemIDs.length : 0 ;
-            deletedLen += this._deletedConnectionIDs ? this._deletedConnectionIDs.length : 0 ;
+            deletedLen += this._deletedDesignerItemIDs ? this._deletedDesignerItemIDs.length : 0;
+            deletedLen += this._deletedConnectionIDs ? this._deletedConnectionIDs.length : 0;
 
-            msg += "I: " + insertedLen;
-            msg += " U: " + updatedLen;
-            msg += " D: " + deletedLen;
+            msg += 'I: ' + insertedLen;
+            msg += ' U: ' + updatedLen;
+            msg += ' D: ' + deletedLen;
 
             this.logger.debug(msg);
             if (DEBUG === true && this.toolbarItems && this.toolbarItems.progressText) {
@@ -628,7 +651,7 @@ define(['js/logger',
             dispatchEvents,
             self = this;
 
-        this.logger.debug("_refreshScreen START");
+        this.logger.debug('_refreshScreen START');
 
         //TODO: updated items probably touched the DOM for modification
         //hopefully none of them forced a reflow by reading values, only setting values
@@ -636,7 +659,7 @@ define(['js/logger',
         //http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/ --- BROWSER ARE SMART
 
         /***************** FIRST HANDLE THE DESIGNER ITEMS *****************/
-        //add all the inserted items, they are still on a document Fragment
+            //add all the inserted items, they are still on a document Fragment
         this.skinParts.$itemsContainer[0].appendChild(this._documentFragment);
         this._documentFragment = document.createDocumentFragment();
 
@@ -668,7 +691,7 @@ define(['js/logger',
                 cItem.renderSetLayoutInfo();
             }
         };
-        
+
         doRenderSetLayout(this._insertedDesignerItemIDs);
         doRenderSetLayout(this._updatedDesignerItemIDs);
 
@@ -689,20 +712,24 @@ define(['js/logger',
 
         /***************** THEN HANDLE THE CONNECTIONS *****************/
 
-        //get all the connections that needs to be updated
-        // - inserted connections
-        // - updated connections
-        // - connections that are affected because of
-        //      - endpoint appearance
-        //      - endpoint remove
-        //      - endpoint updated
-        //TODO: fix this, but right now we call refresh on all of the connections
-        affectedItems = this._insertedDesignerItemIDs.concat(this._updatedDesignerItemIDs, this._deletedDesignerItemIDs);
+            //get all the connections that needs to be updated
+            // - inserted connections
+            // - updated connections
+            // - connections that are affected because of
+            //      - endpoint appearance
+            //      - endpoint remove
+            //      - endpoint updated
+            //TODO: fix this, but right now we call refresh on all of the connections
+        affectedItems = this._insertedDesignerItemIDs.concat(this._updatedDesignerItemIDs,
+            this._deletedDesignerItemIDs);
 
-        connectionIDsToUpdate = this._insertedConnectionIDs.concat(this._updatedConnectionIDs, this._getAssociatedConnectionsForItems(affectedItems));
+        connectionIDsToUpdate = this._insertedConnectionIDs.concat(this._updatedConnectionIDs,
+            this._getAssociatedConnectionsForItems(affectedItems));
+
         connectionIDsToUpdate = _.uniq(connectionIDsToUpdate).sort();
 
-        this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
+        this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' +
+        this.connectionIds.length);
 
         redrawnConnectionIDs = this._redrawConnections(connectionIDsToUpdate);
 
@@ -710,7 +737,7 @@ define(['js/logger',
 
         i = redrawnConnectionIDs.length;
 
-        while(i--) {
+        while (i--) {
             itemBBox = items[redrawnConnectionIDs[i]].getBoundingBox();
             maxWidth = Math.max(maxWidth, itemBBox.x2);
             maxHeight = Math.max(maxHeight, itemBBox.y2);
@@ -724,14 +751,14 @@ define(['js/logger',
 
         //let the selection manager know about deleted items and connections
         /*i = this._deletedDesignerItemIDs.length;
-        while (i--) {
-            this.dispatchEvent(this.events.ON_COMPONENT_DELETE, this._deletedDesignerItemIDs[i]);
-        }
+         while (i--) {
+         this.dispatchEvent(this.events.ON_COMPONENT_DELETE, this._deletedDesignerItemIDs[i]);
+         }
 
-        i = this._deletedConnectionIDs.length;
-        while (i--) {
-            this.dispatchEvent(this.events.ON_COMPONENT_DELETE, this._deletedConnectionIDs[i]);
-        }*/
+         i = this._deletedConnectionIDs.length;
+         while (i--) {
+         this.dispatchEvent(this.events.ON_COMPONENT_DELETE, this._deletedConnectionIDs[i]);
+         }*/
 
         /* clear collections */
         this._insertedDesignerItemIDs = [];
@@ -744,10 +771,10 @@ define(['js/logger',
 
         if (this.mode === this.OPERATING_MODES.DESIGN ||
             this.mode === this.OPERATING_MODES.READ_ONLY) {
-            this.selectionManager.showSelectionOutline();    
+            this.selectionManager.showSelectionOutline();
         }
 
-        this.logger.debug("_refreshScreen END");
+        this.logger.debug('_refreshScreen END');
     };
 
     /*************** MODEL CREATE / UPDATE / DELETE ***********************/
@@ -774,8 +801,10 @@ define(['js/logger',
             }
         }
 
-        return { "x": pX,
-            "y": pY };
+        return {
+            x: pX,
+            y: pY
+        };
     };
 
     DiagramDesignerWidget.prototype._checkPositionOverlap = function (itemId, objDescriptor) {
@@ -810,8 +839,10 @@ define(['js/logger',
     DiagramDesignerWidget.prototype.onDesignerItemDragStart = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.hideSelectionOutline();
 
-        this._preDragActualSize = {"w": this._actualSize.w,
-                                    "h": this._actualSize.h};
+        this._preDragActualSize = {
+            w: this._actualSize.w,
+            h: this._actualSize.h
+        };
 
         var len = allDraggedItemIDs.length;
         while (len--) {
@@ -830,7 +861,7 @@ define(['js/logger',
 
         //get the position and size of all dragged guy and temporarily resize canvas to fit them
         while (i--) {
-            itemBBox =  items[allDraggedItemIDs[i]].getBoundingBox();
+            itemBBox = items[allDraggedItemIDs[i]].getBoundingBox();
             maxWidth = Math.max(maxWidth, itemBBox.x2);
             maxHeight = Math.max(maxHeight, itemBBox.y2);
         }
@@ -842,8 +873,9 @@ define(['js/logger',
 
         //refresh only the connections that are really needed
         connectionIDsToUpdate = this._getAssociatedConnectionsForItems(allDraggedItemIDs).sort();
-        
-        this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
+
+        this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' +
+        this.connectionIds.length);
 
         redrawnConnectionIDs = this._redrawConnections(connectionIDsToUpdate) || [];
 
@@ -852,7 +884,7 @@ define(['js/logger',
         i = redrawnConnectionIDs.len;
     };
 
-    DiagramDesignerWidget.prototype.onDesignerItemDragStop = function (draggedItemId, allDraggedItemIDs) {
+    DiagramDesignerWidget.prototype.onDesignerItemDragStop = function (/*draggedItemId, allDraggedItemIDs*/) {
         this.selectionManager.showSelectionOutline();
 
         delete this._preDragActualSize;
@@ -863,7 +895,7 @@ define(['js/logger',
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
     DiagramDesignerWidget.prototype._onSelectionCommandClicked = function (command, selectedIds, event) {
-        switch(command) {
+        switch (command) {
             case 'delete':
                 this.onSelectionDelete(selectedIds);
                 break;
@@ -874,11 +906,13 @@ define(['js/logger',
     };
 
     DiagramDesignerWidget.prototype.onSelectionDelete = function (selectedIds) {
-        this.logger.warn("DiagramDesignerWidget.onSelectionDelete IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "'");
+        this.logger.warn('DiagramDesignerWidget.onSelectionDelete IS NOT OVERRIDDEN IN A CONTROLLER. ID: "' +
+        selectedIds + '"');
     };
 
     DiagramDesignerWidget.prototype.onSelectionContextMenu = function (selectedIds, mousePos) {
-        this.logger.warn("DiagramDesignerWidget.onSelectionContextMenu IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "', mousePos: " + JSON.stringify(mousePos));
+        this.logger.warn('DiagramDesignerWidget.onSelectionContextMenu IS NOT OVERRIDDEN IN A CONTROLLER. ID: "' +
+        selectedIds + '", mousePos: ' + JSON.stringify(mousePos));
     };
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
@@ -946,8 +980,8 @@ define(['js/logger',
         this.onSelectionChanged(selectedIds);
     };
 
-    DiagramDesignerWidget.prototype.onSelectionChanged = function (selectedIds) {
-        this.logger.debug("DiagramDesignerWidget.onSelectionChanged IS NOT OVERRIDDEN IN A CONTROLLER...");
+    DiagramDesignerWidget.prototype.onSelectionChanged = function (/*selectedIds*/) {
+        this.logger.debug('DiagramDesignerWidget.onSelectionChanged IS NOT OVERRIDDEN IN A CONTROLLER...');
     };
 
     /************************** END OF - SELECTION CHANGED HANDLER ****************************/
@@ -967,30 +1001,36 @@ define(['js/logger',
         this.beginUpdate();
 
         switch (mode) {
-            case "diagonal":
+            case 'diagonal':
                 while (i--) {
                     w = this.items[this.itemIds[i]].getWidth();
                     h = Math.max(h, this.items[this.itemIds[i]].getHeight());
-                    this.updateDesignerItem(this.itemIds[i], {"position": {"x": x, "y": y}});
-                    newPositions[this.itemIds[i]] = { "x": this.items[this.itemIds[i]].positionX, "y": this.items[this.itemIds[i]].positionY };
+                    this.updateDesignerItem(this.itemIds[i], {position: {x: x, y: y}});
+                    newPositions[this.itemIds[i]] = {
+                        x: this.items[this.itemIds[i]].positionX,
+                        y: this.items[this.itemIds[i]].positionY
+                    };
                     x += w + dx;
                     y += h + dy;
                 }
                 break;
-            //case "cozygrid":
-            //case "grid":
+            //case 'cozygrid':
+            //case 'grid':
             default:
                 dx = 20;
                 dy = 20;
-                if (mode === "cozygrid") {
+                if (mode === 'cozygrid') {
                     dx = 100;
                     dy = 100;
                 }
                 while (i--) {
                     w = this.items[this.itemIds[i]].getWidth();
                     h = Math.max(h, this.items[this.itemIds[i]].getHeight());
-                    this.updateDesignerItem(this.itemIds[i], {"position": {"x": x, "y": y}});
-                    newPositions[this.itemIds[i]] = { "x": this.items[this.itemIds[i]].positionX, "y": this.items[this.itemIds[i]].positionY };
+                    this.updateDesignerItem(this.itemIds[i], {position: {x: x, y: y}});
+                    newPositions[this.itemIds[i]] = {
+                        x: this.items[this.itemIds[i]].positionX,
+                        y: this.items[this.itemIds[i]].positionY
+                    };
                     x += w + dx;
                     if (x >= 1000) {
                         x = 10;
@@ -1015,24 +1055,24 @@ define(['js/logger',
             this.connectionRouteManager.destroy();
         }
 
-        switch(type) {
-            case "basic":
-                this.connectionRouteManager = new ConnectionRouteManagerBasic({"diagramDesigner": this});
+        switch (type) {
+            case 'basic':
+                this.connectionRouteManager = new ConnectionRouteManagerBasic({diagramDesigner: this});
                 break;
-            case "basic2":
-                this.connectionRouteManager = new ConnectionRouteManager2({"diagramDesigner": this});
+            case 'basic2':
+                this.connectionRouteManager = new ConnectionRouteManager2({diagramDesigner: this});
                 break;
-            case "basic3":
-                this.connectionRouteManager = new ConnectionRouteManager3({"diagramDesigner": this});
+            case 'basic3':
+                this.connectionRouteManager = new ConnectionRouteManager3({diagramDesigner: this});
                 break;
             default:
-                this.connectionRouteManager = new ConnectionRouteManagerBasic({"diagramDesigner": this});
+                this.connectionRouteManager = new ConnectionRouteManagerBasic({diagramDesigner: this});
                 break;
         }
 
         this.connectionRouteManager.initialize();
 
-        this._redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+        this._redrawConnections(this.connectionIds.slice(0).sort() || []);
 
         this.selectionManager.showSelectionOutline();
     };
@@ -1066,7 +1106,7 @@ define(['js/logger',
         }
 
         connList = _.uniq(connList);
-        
+
         return connList;
     };
 
@@ -1103,11 +1143,12 @@ define(['js/logger',
         var svgParams = {},
             setSvgAttrFromParams;
 
-        if (!this._backGroundText ) {
+        if (!this._backGroundText) {
             if (!text) {
-                this.logger.error("Invalid parameter 'text' for method 'setBackgroundText'");
+                this.logger.error('Invalid parameter "text" for method "setBackgroundText"');
             } else {
-                this._backGroundText = this.skinParts.SVGPaper.text(this._svgPaperSize.w / 2, this._svgPaperSize.h / 2, text);
+                this._backGroundText = this.skinParts.SVGPaper.text(this._svgPaperSize.w / 2, this._svgPaperSize.h / 2,
+                    text);
             }
         } else {
             svgParams.text = text;
@@ -1132,17 +1173,19 @@ define(['js/logger',
 
             if (params) {
                 setSvgAttrFromParams([['color', 'fill'],
-                                 ['font-size', 'font-size']]);
+                    ['font-size', 'font-size']]);
             }
-            
+
             this._backGroundText.attr(svgParams);
         }
     };
 
     DiagramDesignerWidget.prototype._centerBackgroundText = function () {
         if (this._backGroundText) {
-            this._backGroundText.attr({"x" : this._svgPaperSize.w / 2,
-                                       "y" : this._svgPaperSize.h / 2});
+            this._backGroundText.attr({
+                x: this._svgPaperSize.w / 2,
+                y: this._svgPaperSize.h / 2
+            });
         }
     };
 
@@ -1155,7 +1198,7 @@ define(['js/logger',
 
     /************** API REGARDING TO MANAGERS ***********************/
 
-    DiagramDesignerWidget.prototype.enableDragCopy = function (enabled) {
+    DiagramDesignerWidget.prototype.enableDragCopy = function (/*enabled*/) {
         //this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
     };
 
@@ -1175,7 +1218,8 @@ define(['js/logger',
     };
 
     DiagramDesignerWidget.prototype.selectInvert = function () {
-        var invertList = _.difference(this.itemIds.concat(this.connectionIds), this.selectionManager.getSelectedElements());
+        var invertList = _.difference(this.itemIds.concat(this.connectionIds),
+            this.selectionManager.getSelectedElements());
 
         this.selectionManager.clear();
         this.selectionManager.setSelection(invertList, false);
@@ -1202,18 +1246,20 @@ define(['js/logger',
     /************ COPY PASTE API **********************/
 
     DiagramDesignerWidget.prototype.onClipboardCopy = function (selectedIds) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onClipboardCopy not overridden in controller!!! selectedIds: '" + selectedIds + "'");
+        this.logger.warn('DiagramDesignerWidget.prototype.onClipboardCopy not overridden in controller!!!' +
+        'selectedIds: "' + selectedIds + '"');
     };
 
     DiagramDesignerWidget.prototype.onClipboardPaste = function () {
-        this.logger.warn("DiagramDesignerWidget.prototype.onClipboardPaste not overridden in controller!!!");
+        this.logger.warn('DiagramDesignerWidget.prototype.onClipboardPaste not overridden in controller!!!');
     };
 
     /************ END OF --- COPY PASTE API **********************/
 
     /************************* CONNECTION SEGMENT POINTS CHANGE ************************/
     DiagramDesignerWidget.prototype.onConnectionSegmentPointsChange = function (params) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onConnectionSegmentPointsChange not overridden in controller. params: " + JSON.stringify(params));
+        this.logger.warn('DiagramDesignerWidget.prototype.onConnectionSegmentPointsChange not overridden in ' +
+        'controller. params: ' + JSON.stringify(params));
     };
     /************************* END OF --- CONNECTION SEGMENT POINTS CHANGE ************************/
 
@@ -1271,7 +1317,7 @@ define(['js/logger',
             this.items[this.itemIds[i]].renderSetLayoutInfo();
         }
 
-        this._redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+        this._redrawConnections(this.connectionIds.slice(0).sort() || []);
 
         i = this.connectionIds.length;
         while (i--) {
@@ -1281,53 +1327,61 @@ define(['js/logger',
 
     /************************* DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
     DiagramDesignerWidget.prototype.onDragStartDesignerItemDraggable = function (itemID) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onDesignerItemDraggable not overridden in controller. itemID: " + itemID);
+        this.logger.warn('DiagramDesignerWidget.prototype.onDesignerItemDraggable not overridden in controller. ' +
+        'itemID: ' + itemID);
 
         return true;
     };
 
 
     DiagramDesignerWidget.prototype.onDragStartDesignerItemCopyable = function (itemID) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onDragStartDesignerItemCopyable not overridden in controller. itemID: " + itemID);
+        this.logger.warn('DiagramDesignerWidget.prototype.onDragStartDesignerItemCopyable not overridden in ' +
+        'controller. itemID: ' + itemID);
 
         return true;
     };
 
 
     DiagramDesignerWidget.prototype.onDragStartDesignerConnectionCopyable = function (connectionID) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onDragStartDesignerConnectionCopyable not overridden in controller. connectionID: " + connectionID);
+        this.logger.warn('DiagramDesignerWidget.prototype.onDragStartDesignerConnectionCopyable not overridden in ' +
+        'controller. connectionID: ' + connectionID);
 
         return true;
     };
-    /************************* END OF --- DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
+    /************************ END OF --- DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START **********************/
 
     /************************* HIGHLIGHTED / UNHIGHLIGHTED EVENT *****************************/
     DiagramDesignerWidget.prototype.onHighlight = function (idList) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onHighlight not overridden in controller. idList: " + idList);
+        this.logger.warn('DiagramDesignerWidget.prototype.onHighlight not overridden in controller. idList: ' + idList);
     };
 
     DiagramDesignerWidget.prototype.onUnhighlight = function (idList) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onUnhighlight not overridden in controller. idList: " + idList);
+        this.logger.warn('DiagramDesignerWidget.prototype.onUnhighlight not overridden in controller. idList: ' +
+        idList);
     };
     /************************* HIGHLIGHTED / UNHIGHLIGHTED EVENT *****************************/
 
 
     DiagramDesignerWidget.prototype.onSelectionRotated = function (deg, selectedIds) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onSelectionRotated IS NOT OVERRIDDEN IN CONTROLLER. deg: '" + deg + "', selectedIds: " + selectedIds);
+        this.logger.warn('DiagramDesignerWidget.prototype.onSelectionRotated IS NOT OVERRIDDEN IN CONTROLLER. deg: "' +
+        deg + '", selectedIds: ' + selectedIds);
     };
 
     /*********************** CONNECTION TEXT CHANGED HANDLERS **************************/
 
     DiagramDesignerWidget.prototype.onConnectionNameChanged = function (connId, oldValue, newValue) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onConnectionNameChanged IS NOT OVERRIDDEN IN CONTROLLER. connId: '" + connId + "', oldValue: " + oldValue + ", newValue:" + newValue);
+        this.logger.warn('DiagramDesignerWidget.prototype.onConnectionNameChanged IS NOT OVERRIDDEN IN CONTROLLER.' +
+        ' connId: "' + connId + '", oldValue: "' + oldValue + '", newValue: "' + newValue + '"');
     };
 
     DiagramDesignerWidget.prototype.onConnectionSrcTextChanged = function (connId, oldValue, newValue) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onConnectionSrcTextChanged IS NOT OVERRIDDEN IN CONTROLLER. connId: '" + connId + "', oldValue: " + oldValue + ", newValue:" + newValue);
+        this.logger.warn('DiagramDesignerWidget.prototype.onConnectionSrcTextChanged IS NOT OVERRIDDEN IN CONTROLLER.' +
+        'connId: "' + connId + '", oldValue: "' + oldValue + '", newValue: "' + newValue + '"');
     };
 
     DiagramDesignerWidget.prototype.onConnectionDstTextChanged = function (connId, oldValue, newValue) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onConnectionDstTextChanged IS NOT OVERRIDDEN IN CONTROLLER. connId: '" + connId + "', oldValue: " + oldValue + ", newValue:" + newValue);
+        this.logger.warn('DiagramDesignerWidget.prototype.onConnectionDstTextChanged IS NOT OVERRIDDEN IN ' +
+        'CONTROLLER. ' + 'connId: "' + connId + '", oldValue: "' + oldValue + '", newValue: "' + newValue + '"');
     };
 
     /*********************** END OF CONNECTION TEXT CHANGED HANDLERS **************************/
@@ -1341,12 +1395,10 @@ define(['js/logger',
 
     /*********************** CONNECTION CROSSING JUMP ENABLE / DISABLE *****************************/
     DiagramDesignerWidget.prototype._setConnectionXingJumpMode = function (enabled) {
-        var i = this.connectionIds.length;
-
         if (this._connectionJumpXing !== enabled) {
             this._connectionJumpXing = enabled;
 
-            this._redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+            this._redrawConnections(this.connectionIds.slice(0).sort() || []);
         }
     };
     /*********************** END OF --- CONNECTION CROSSING JUMP ENABLE / DISABLE *****************************/
@@ -1357,13 +1409,16 @@ define(['js/logger',
         var selectedIds = this.selectionManager.getSelectedElements();
 
         if (selectedIds.length > 0) {
-            this.onSetConnectionProperty({'items': selectedIds,
-                'params': params});
+            this.onSetConnectionProperty({
+                items: selectedIds,
+                params: params
+            });
         }
     };
 
     DiagramDesignerWidget.prototype.onSetConnectionProperty = function (params) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onSetConnectionProperty IS NOT OVERRIDDEN IN CONTROLLER. params: '" + JSON.stringify(params));
+        this.logger.warn('DiagramDesignerWidget.prototype.onSetConnectionProperty IS NOT OVERRIDDEN IN CONTROLLER.' +
+        'params: ' + JSON.stringify(params));
     };
     /*********************** ENBD OF --- SET CONNECTION VISUAL PROPERTIES *****************************/
 
@@ -1372,13 +1427,13 @@ define(['js/logger',
     };
 
     DiagramDesignerWidget.prototype.onUIActivity = function () {
-        this.logger.warn("DiagramDesignerWidget.prototype.onUIActivity IS NOT OVERRIDDEN...");
+        this.logger.warn('DiagramDesignerWidget.prototype.onUIActivity IS NOT OVERRIDDEN...');
     };
 
     DiagramDesignerWidget.prototype._redrawConnections = function (connIDs) {
         var res;
         /*var startTime;
-        var endTime;*/
+         var endTime;*/
         try {
             //startTime = new Date();
             res = this.connectionRouteManager.redrawConnections(connIDs) || [];
@@ -1400,20 +1455,23 @@ define(['js/logger',
     };
 
     DiagramDesignerWidget.prototype.onSelectionFillColorChanged = function (selectedElements, color) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onSelectionFillColorChanged(selectedElements, color) IS NOT OVERRIDDEN IN CONTROLLER. color: " + color);
+        this.logger.warn('DiagramDesignerWidget.prototype.onSelectionFillColorChanged(selectedElements, color) ' +
+        'IS NOT OVERRIDDEN IN CONTROLLER. color: ' + color);
     };
 
     DiagramDesignerWidget.prototype.onSelectionBorderColorChanged = function (selectedElements, color) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onSelectionBorderColorChanged(selectedElements, color) IS NOT OVERRIDDEN IN CONTROLLER. color: " + color);
+        this.logger.warn('DiagramDesignerWidget.prototype.onSelectionBorderColorChanged(selectedElements, color) ' +
+        'IS NOT OVERRIDDEN IN CONTROLLER. color: ' + color);
     };
 
     DiagramDesignerWidget.prototype.onSelectionTextColorChanged = function (selectedElements, color) {
-        this.logger.warn("DiagramDesignerWidget.prototype.onSelectionTextColorChanged(selectedElements, color) IS NOT OVERRIDDEN IN CONTROLLER. color: " + color);
+        this.logger.warn('DiagramDesignerWidget.prototype.onSelectionTextColorChanged(selectedElements, color) ' +
+        'IS NOT OVERRIDDEN IN CONTROLLER. color: ' + color);
     };
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
-    //additional code pieces for DiagramDesignerWidget
+        //additional code pieces for DiagramDesignerWidget
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetOperatingModes.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDesignerItems.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetConnections.prototype);

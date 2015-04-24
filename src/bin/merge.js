@@ -158,39 +158,49 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
                                         return;
                                     }
                                     var newHash = core.getHash(baseRoot),
-                                        newCommitHash = project.makeCommit([myCommitHash, theirCommitHash], newHash, 'merging [' +
-                                        sourceBranchOrCommit + '] into [' + targetBranchOrCommit + ']', function (err) {
-                                            if (err) {
-                                                error = err;
-                                                finishUp();
-                                                return;
-                                            }
-                                            result.finalCommitHash = newCommitHash;
-
-                                            if (REGEXP.BRANCH.test(targetBranchOrCommit)) {
-                                                //we updates the branch as well
-                                                project.setBranchHash(targetBranchOrCommit, theirCommitHash, newCommitHash, function (err) {
-                                                    if (err) {
-                                                        error = err;
-                                                        finishUp();
-                                                        return;
-                                                    }
-                                                    result.updatedBranch = targetBranchOrCommit;
+                                        newCommitHash = project.makeCommit([myCommitHash, theirCommitHash],
+                                            newHash,
+                                            'merging [' + sourceBranchOrCommit + '] into [' +
+                                            targetBranchOrCommit + ']',
+                                            function (err) {
+                                                if (err) {
+                                                    error = err;
                                                     finishUp();
-                                                });
-                                            } else {
-                                                finishUp();
+                                                    return;
+                                                }
+                                                result.finalCommitHash = newCommitHash;
+
+                                                if (REGEXP.BRANCH.test(targetBranchOrCommit)) {
+                                                    //we updates the branch as well
+                                                    project.setBranchHash(targetBranchOrCommit,
+                                                        theirCommitHash,
+                                                        newCommitHash,
+                                                        function (err) {
+                                                            if (err) {
+                                                                error = err;
+                                                                finishUp();
+                                                                return;
+                                                            }
+                                                            result.updatedBranch = targetBranchOrCommit;
+                                                            finishUp();
+                                                        }
+                                                    );
+                                                } else {
+                                                    finishUp();
+                                                }
                                             }
-                                        });
+                                        );
                                 });
                             });
 
                         } else {
                             if (autoMerge === true) {
                                 if (conflict === null) {
-                                    autoFailureReason = ' cannot do automatic merge as empty conflict object was generated';
+                                    autoFailureReason = ' cannot do automatic merge as empty ' +
+                                    'conflict object was generated';
                                 } else if (conflict.item.length > 0) {
-                                    autoFailureReason = 'cannot do automatic merge as there are conflicts that cannot be resolved';
+                                    autoFailureReason = 'cannot do automatic merge as there are ' +
+                                    'conflicts that cannot be resolved';
                                 }
                                 error = error || new Error(autoFailureReason);
                                 finishUp();
@@ -270,7 +280,8 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
 
         //check necessary arguments
         if (!program.mongoDatabaseUri && !gmeConfig.mongo.uri) {
-            logger.error('there is no preconfigured mongoDb commection so the mongo-database-uri parameter is mandatory');
+            logger.error('there is no preconfigured mongoDb commection so the mongo-database-uri' +
+            'parameter is mandatory');
             program.outputHelp();
             mainDeferred.reject(new SyntaxError('invalid mongo database connection parameter'));
             return;

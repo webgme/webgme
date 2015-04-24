@@ -1,10 +1,12 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, _ */
+/*jshint browser: true*/
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-define(['js/Constants',
-    'js/Utils/GMEConcepts'], function (CONSTANTS,
-                                 GMEConcepts) {
+define(['js/Constants', 'js/Utils/GMEConcepts'], function (CONSTANTS, GMEConcepts) {
 
-    "use strict";
+    'use strict';
 
     var DecoratorWithPortsBase;
 
@@ -15,21 +17,22 @@ define(['js/Constants',
 
     /**** Override from *Widget.DecoratorBase ****/
     /*
-    * Specifies the territory rule for the decorator
-    * By default the Decorator that displays ports needs to have the children of the node loaded
-    * NOTE: can be overridden
-    */
+     * Specifies the territory rule for the decorator
+     * By default the Decorator that displays ports needs to have the children of the node loaded
+     * NOTE: can be overridden
+     */
     DecoratorWithPortsBase.prototype.getTerritoryQuery = function () {
         var territoryRule = {},
             gmeID = this._metaInfo[CONSTANTS.GME_ID],
             client = this._control._client,
-            hasAspect = this._aspect && this._aspect !== CONSTANTS.ASPECT_ALL && client.getMetaAspectNames(gmeID).indexOf(this._aspect) !== -1;
+            hasAspect = this._aspect && this._aspect !== CONSTANTS.ASPECT_ALL &&
+                        client.getMetaAspectNames(gmeID).indexOf(this._aspect) !== -1;
 
         if (hasAspect) {
             territoryRule[gmeID] = client.getAspectTerritoryPattern(gmeID, this._aspect);
             territoryRule[gmeID].children = 1;
         } else {
-            territoryRule[gmeID] = { "children": 1 };
+            territoryRule[gmeID] = {children: 1};
         }
 
         return territoryRule;
@@ -37,11 +40,11 @@ define(['js/Constants',
 
     //register NodeID for notification in the client
     /*
-    * Registers the portId with the controller so the controller will notify this decorator
-    * when an insert/update/delete with the given portID happens
-    * NOTE: can be overridden
-    */
-    DecoratorWithPortsBase.prototype.registerPortIdForNotification = function(portId) {
+     * Registers the portId with the controller so the controller will notify this decorator
+     * when an insert/update/delete with the given portID happens
+     * NOTE: can be overridden
+     */
+    DecoratorWithPortsBase.prototype.registerPortIdForNotification = function (portId) {
         var partId = this._metaInfo[CONSTANTS.GME_ID];
 
         this._control.registerComponentIDForPartID(portId, partId);
@@ -53,7 +56,7 @@ define(['js/Constants',
      * when an insert/update/delete with the given portID happens
      * NOTE: can be overridden
      */
-    DecoratorWithPortsBase.prototype.unregisterPortIdForNotification = function(portId) {
+    DecoratorWithPortsBase.prototype.unregisterPortIdForNotification = function (portId) {
         var partId = this._metaInfo[CONSTANTS.GME_ID];
 
         this._control.unregisterComponentIDFromPartID(portId, partId);
@@ -93,7 +96,8 @@ define(['js/Constants',
             childrenIDs = [],
             len,
             gmeID = this._metaInfo[CONSTANTS.GME_ID],
-            hasAspect = this._aspect && this._aspect !== CONSTANTS.ASPECT_ALL && client.getMetaAspectNames(gmeID).indexOf(this._aspect) !== -1;
+            hasAspect = this._aspect && this._aspect !== CONSTANTS.ASPECT_ALL &&
+                        client.getMetaAspectNames(gmeID).indexOf(this._aspect) !== -1;
 
         if (nodeObj) {
             childrenIDs = nodeObj.getChildrenIds().slice(0);
@@ -103,7 +107,7 @@ define(['js/Constants',
                 len = childrenIDs.length;
                 while (len--) {
                     if (!GMEConcepts.isValidTypeInAspect(childrenIDs[len], gmeID, this._aspect)) {
-                       childrenIDs.splice(len, 1);
+                        childrenIDs.splice(len, 1);
                     }
                 }
             }
@@ -124,11 +128,14 @@ define(['js/Constants',
     };
 
     /*
-    * Creates and returns the Port instance and also renders it on the screen
-    * the returned port instance has to have a destroy method because removePort will call it
+     * Creates and returns the Port instance and also renders it on the screen
+     * the returned port instance has to have a destroy method because removePort will call it
      */
-    DecoratorWithPortsBase.prototype.renderPort = function (portId) {
-        return {destroy: function () {}};
+    DecoratorWithPortsBase.prototype.renderPort = function (/* portId */) {
+        return {
+            destroy: function () {
+            }
+        };
     };
 
     DecoratorWithPortsBase.prototype.removePort = function (portId) {
@@ -138,7 +145,7 @@ define(['js/Constants',
         if (idx !== -1) {
             this.ports[portId].destroy();
             delete this.ports[portId];
-            this.portIDs.splice(idx,1);
+            this.portIDs.splice(idx, 1);
         }
     };
 

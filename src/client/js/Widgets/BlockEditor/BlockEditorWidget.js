@@ -1,29 +1,29 @@
-/*globals define,_,Raphael,DEBUG*/
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * @author brollb / https:// github/brollb
+/*globals define, _, DEBUG, WebGMEGlobal, Raphael, $*/
+/*jshint browser: true*/
+
+/**
+ * @author brollb / https://github/brollb
  */
 
 define(['js/logger',
-        'raphaeljs',
-        './BlockEditorWidget.Zoom',
-        './BlockEditorWidget.Mouse',
-        './BlockEditorWidget.LinkableItem',
-        'js/Widgets/BlockEditor/BlockEditorWidget.EventDispatcher',
-        './BlockEditorWidget.OperatingModes',
-        './BlockEditorWidget.Keyboard',
-        './BlockEditorWidget.Draggable',
-        './BlockEditorWidget.Droppable',
-        './BlockEditorWidget.HighlightUpdater',
-        './BlockEditorWidget.ContextMenu',
-        './SearchManager',
-        './SelectionManager',
-        './HighlightManager',
-        'common/util/assert',
-        'js/Loader/LoaderCircles',
-        'css!./styles/BlockEditorWidget.css',
-        'css!./styles/BlockEditorWidget.DecoratorBase.ConnectionArea.css'
+    'raphaeljs',
+    './BlockEditorWidget.Zoom',
+    './BlockEditorWidget.Mouse',
+    './BlockEditorWidget.LinkableItem',
+    'js/Widgets/BlockEditor/BlockEditorWidget.EventDispatcher',
+    './BlockEditorWidget.OperatingModes',
+    './BlockEditorWidget.Keyboard',
+    './BlockEditorWidget.Draggable',
+    './BlockEditorWidget.Droppable',
+    './BlockEditorWidget.HighlightUpdater',
+    './BlockEditorWidget.ContextMenu',
+    './SearchManager',
+    './SelectionManager',
+    './HighlightManager',
+    'common/util/assert',
+    'js/Loader/LoaderCircles',
+    'css!./styles/BlockEditorWidget.css',
+    'css!./styles/BlockEditorWidget.DecoratorBase.ConnectionArea.css'
 ], function (Logger,
              raphaeljs,
              BlockEditorWidgetZoom,
@@ -42,20 +42,22 @@ define(['js/logger',
              assert,
              LoaderCircles) {
 
-    "use strict";
+    'use strict';
 
     var BlockEditorWidget,
         CANVAS_EDGE = 100,
         GUID_DIGITS = 6,
-        WIDGET_CLASS = 'block-editor',  
-        BACKGROUND_TEXT_COLOR = '#DEDEDE',  
+        WIDGET_CLASS = 'block-editor',
+        BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30;
 
-    var defaultParams = {'loggerName': 'BlockEditorWidget',
-                         'gridSize': 10,
-                         'droppable': true,
-                         'zoomValues': [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10],
-                         'zoomUIControls': true };
+    var defaultParams = {
+        'loggerName': 'BlockEditorWidget',
+        'gridSize': 10,
+        'droppable': true,
+        'zoomValues': [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10],
+        'zoomUIControls': true
+    };
 
     BlockEditorWidget = function (container, params) {
         params = params || {};
@@ -76,16 +78,16 @@ define(['js/logger',
         this._updatedLinkableItemIDs = [];
         this._deletedLinkableItemIDs = [];
 
- 
+
         /* * * * * * * * * * UI Components * * * * * * * * * */
 
         // Default Size values
-        this._actualSize = { "w": 0, "h": 0 };
-        this._containerSize = { "w": 0, "h": 0 };
+        this._actualSize = {'w': 0, 'h': 0};
+        this._containerSize = {'w': 0, 'h': 0};
         this._itemIDCounter = 0;
         this._documentFragment = document.createDocumentFragment();
 
-        this._backgroundText = "Block Editor";
+        this._backgroundText = 'Block Editor';
         this._zoomRatio = 1;
 
         // if the widget has to support drop feature at all
@@ -98,14 +100,14 @@ define(['js/logger',
         this._initZoom(params);
 
         // Scroll and view info
-        this._offset = { "left": 0, "top": 0 };
-        this._scrollPos = { "left": 0, "top": 0 };
+        this._offset = {'left': 0, 'top': 0};
+        this._scrollPos = {'left': 0, 'top': 0};
 
         this.gridSize = params.gridSize;
 
-       // initiate Highlight Manager
+        // initiate Highlight Manager
         var self = this;
-        this.highlightManager = new HighlightManager({"widget": this});
+        this.highlightManager = new HighlightManager({'widget': this});
         this.highlightManager.initialize(this.skinParts.$itemsContainer);
         this.highlightManager.onHighlight = function (idList) {
             self.onHighlight(idList);
@@ -116,7 +118,7 @@ define(['js/logger',
         };
 
         // initiate Selection Manager (if needed)
-        this.selectionManager = params.selectionManager || new SelectionManager({"blockEditor": this});
+        this.selectionManager = params.selectionManager || new SelectionManager({'blockEditor': this});
         this.selectionManager.initialize(this.skinParts.$itemsContainer);
         this.selectionManager.onSelectionCommandClicked = function (command, selectedIds, event) {
             self._onSelectionCommandClicked(command, selectedIds, event);
@@ -127,26 +129,24 @@ define(['js/logger',
         };
 
         // initiate Search Manager
-        this.searchManager = new SearchManager({"widget": this});
+        this.searchManager = new SearchManager({'widget': this});
         this.searchManager.initialize(this.skinParts.$itemsContainer);
 
         this.setOperatingMode(BlockEditorWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN);
         this._activateMouseListeners();
 
-        this.logger.debug("BlockEditorWidget ctor");
+        this.logger.debug('BlockEditorWidget ctor');
     };
 
-    BlockEditorWidget.prototype._init = function (container, params){// Container is the div element
-                                                                    // Params is the extra stuff (ie, the toolbar)
+    BlockEditorWidget.prototype._init = function (container /*, params*/) {// Container is the div element
+        // Params is the extra stuff (ie, the toolbar)
         this.$el = container; // Everything goes inside this.$el
 
         this._initializeUI();
     };
 
-    BlockEditorWidget.prototype._initializeUI = function(){
-        var self = this;
-
-        this.logger.debug("BlockWidget._initializeUI");
+    BlockEditorWidget.prototype._initializeUI = function () {
+        this.logger.debug('BlockWidget._initializeUI');
 
         // clear content
         this.$el.empty();
@@ -163,13 +163,13 @@ define(['js/logger',
 
         // CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
-            "class" : "items"
+            'class': 'items'
         });
         this.skinParts.$blockWidgetBody.append(this.skinParts.$itemsContainer);
 
         // initialize Raphael paper from children container and set it to be full size of the HTML container
         this.skinParts.SVGPaper = Raphael(this.skinParts.$itemsContainer[0]);
-        this.skinParts.SVGPaper.canvas.style.pointerEvents = "visiblePainted";
+        this.skinParts.SVGPaper.canvas.style.pointerEvents = 'visiblePainted';
 
         // finally resize the whole content according to available space
         this._containerSize.w = this.$el.width();
@@ -180,7 +180,7 @@ define(['js/logger',
             this._initDroppable();
         }
 
-        this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
+        this.__loader = new LoaderCircles({'containerElement': this.$el.parent()});
 
         if (this._tabsEnabled === true) {
             this._initializeTabs();
@@ -201,31 +201,35 @@ define(['js/logger',
         zoomedWidth = Math.max(zoomedWidth, this._actualSize.w);
         zoomedHeight = Math.max(zoomedHeight, this._actualSize.h);
 
-        this.skinParts.$itemsContainer.css({"width": zoomedWidth,
-            "height": zoomedHeight});
+        this.skinParts.$itemsContainer.css({
+            'width': zoomedWidth,
+            'height': zoomedHeight
+        });
 
         this.skinParts.SVGPaper.setSize(zoomedWidth, zoomedHeight);
         this.skinParts.SVGPaper.setViewBox(0, 0, zoomedWidth, zoomedHeight, false);
 
-        this._svgPaperSize = {"w": zoomedWidth,
-                           "h": zoomedHeight};
+        this._svgPaperSize = {
+            'w': zoomedWidth,
+            'h': zoomedHeight
+        };
 
         this._centerBackgroundText();
 
         offset = this.skinParts.$blockWidgetBody.offset();
 
-        paddingTop = parseInt( this.skinParts.$blockWidgetBody.css('padding-top').replace("px", "") );
-        paddingLeft = parseInt( this.skinParts.$blockWidgetBody.css('padding-left').replace("px", "") );
+        paddingTop = parseInt(this.skinParts.$blockWidgetBody.css('padding-top').replace('px', ''));
+        paddingLeft = parseInt(this.skinParts.$blockWidgetBody.css('padding-left').replace('px', ''));
 
         offset.left += paddingLeft;
         offset.top += paddingTop;
 
         this._offset = offset;
 
-        // jQuery does not take into account the css "transform" 
+        // jQuery does not take into account the css 'transform'
         // property correctly. Therefore, we will 
         // adjust each item's container width/height to allow droppable
-        for (var i = this.itemIds.length-1; i >= 0; i--) {
+        for (var i = this.itemIds.length - 1; i >= 0; i--) {
             if (this.items[this.itemIds[i]].updateZoom(this._zoomRatio)) {
                 this.items[this.itemIds[i]].applySizeContainerInfo();
             }
@@ -235,28 +239,28 @@ define(['js/logger',
     BlockEditorWidget.prototype._attachScrollHandler = function (el) {
         var self = this;
 
-        el.on('scroll', function (event) {
+        el.on('scroll', function (/*event*/) {
             self._scrollPos.left = el.scrollLeft();
             self._scrollPos.top = el.scrollTop();
         });
     };
 
     /************** WAITPROGRESS *********************/
-    BlockEditorWidget.prototype.showProgressbar = function (){
+    BlockEditorWidget.prototype.showProgressbar = function () {
         this.__loader.start();
     };
 
-    BlockEditorWidget.prototype.hideProgressbar = function (){
+    BlockEditorWidget.prototype.hideProgressbar = function () {
         this.__loader.stop();
     };
 
     /************** END WAITPROGRESS *********************/
 
-    BlockEditorWidget.prototype.onActivate = function (){
+    BlockEditorWidget.prototype.onActivate = function () {
         // This function is required
     };
 
-    BlockEditorWidget.prototype.onDeactivate = function (){
+    BlockEditorWidget.prototype.onDeactivate = function () {
         this.__loader.destroy();
         // this._hideToolbarItems();
     };
@@ -289,7 +293,7 @@ define(['js/logger',
 
     /****************** PUBLIC FUNCTIONS ***********************************/
 
-    // Called when the widget's container size changed
+        // Called when the widget's container size changed
     BlockEditorWidget.prototype.setSize = function (width, height) {
         this._containerSize.w = width;
         this._containerSize.h = height;
@@ -314,12 +318,14 @@ define(['js/logger',
         pX /= this._zoomRatio;
         pY /= this._zoomRatio;
 
-        return { "mX": pX > 0 ? pX : 0,
-            "mY": pY > 0 ? pY : 0 };
+        return {
+            'mX': pX > 0 ? pX : 0,
+            'mY': pY > 0 ? pY : 0
+        };
     };
 
     BlockEditorWidget.prototype._triggerUIActivity = function () {
-        this.logger.info("MOUSE CLICK DETECTED");
+        this.logger.info('MOUSE CLICK DETECTED');
         this.onUIActivity();
     };
 
@@ -328,10 +334,10 @@ define(['js/logger',
 
         this._itemIDCounter++;
 
-        while(guid.length < GUID_DIGITS){
-            guid = "0" + guid;
+        while (guid.length < GUID_DIGITS) {
+            guid = '0' + guid;
         }
-        guid = "S_" + guid; // S => Blockping Object
+        guid = 'S_' + guid; // S => Blockping Object
 
         return guid;
     };
@@ -384,31 +390,33 @@ define(['js/logger',
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
-    BlockEditorWidget.prototype._onSelectionCommandClicked = function (command, id, event) {
+    BlockEditorWidget.prototype._onSelectionCommandClicked = function (command, id /*, event*/) {
         var idList;
 
         // Get the list of siblings of the item
         idList = this.items[id].getDependentsByType().siblings;
         idList.push(id);
 
-        switch(command) {
+        switch (command) {
             case 'delete':
                 this.onSelectionDelete(idList);
                 break;
-                /*
-            case 'contextmenu':
-                this.onSelectionContextMenu(idList, this.getAdjustedMousePos(event));
-                break;
-               */
+            /*
+             case 'contextmenu':
+             this.onSelectionContextMenu(idList, this.getAdjustedMousePos(event));
+             break;
+             */
         }
     };
 
     BlockEditorWidget.prototype.onSelectionDelete = function (selectedIds) {
-        this.logger.warn("BlockEditorWidget.onSelectionDelete IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "'");
+        this.logger.warn('BlockEditorWidget.onSelectionDelete IS NOT OVERRIDDEN IN A CONTROLLER. ID: "' +
+        selectedIds + '"');
     };
 
     BlockEditorWidget.prototype.onSelectionContextMenu = function (selectedIds, mousePos) {
-        this.logger.warn("BlockEditorWidget.onSelectionContextMenu IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "', mousePos: " + JSON.stringify(mousePos));
+        this.logger.warn('BlockEditorWidget.onSelectionContextMenu IS NOT OVERRIDDEN IN A CONTROLLER. ID: "' +
+        selectedIds + '", mousePos: ' + JSON.stringify(mousePos));
     };
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
@@ -419,8 +427,8 @@ define(['js/logger',
         this.onSelectionChanged(selectedIds);
     };
 
-    BlockEditorWidget.prototype.onSelectionChanged = function (selectedIds) {
-        this.logger.debug("BlockEditorWidget.onSelectionChanged IS NOT OVERRIDDEN IN A CONTROLLER...");
+    BlockEditorWidget.prototype.onSelectionChanged = function (/*selectedIds*/) {
+        this.logger.debug('BlockEditorWidget.onSelectionChanged IS NOT OVERRIDDEN IN A CONTROLLER...');
     };
 
 
@@ -429,42 +437,48 @@ define(['js/logger',
 
     /* * * * * * * * * * * * * * COPY PASTE API * * * * * * * * * * * * * */
     BlockEditorWidget.prototype.onClipboardCopy = function (selectedIds) {
-        this.logger.warn("BlockEditorWidget.prototype.onClipboardCopy not overridden in controller!!! selectedIds: '" + selectedIds + "'");
+        this.logger.warn('BlockEditorWidget.prototype.onClipboardCopy not overridden in controller!!! selectedIds: "' +
+        selectedIds + '"');
     };
 
     BlockEditorWidget.prototype.onClipboardPaste = function () {
-        this.logger.warn("BlockEditorWidget.prototype.onClipboardPaste not overridden in controller!!!");
+        this.logger.warn('BlockEditorWidget.prototype.onClipboardPaste not overridden in controller!!!');
     };
     /* * * * * * * * * * * * * * END COPY PASTE API * * * * * * * * * * * * * */
 
     /************************* DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
     BlockEditorWidget.prototype.onDragStartLinkableItemDraggable = function (itemID) {
-        this.logger.warn("BlockEditorWidget.prototype.onLinkableItemDraggable not overridden in controller. itemID: " + itemID);
+        this.logger.warn('BlockEditorWidget.prototype.onLinkableItemDraggable not overridden in controller. itemID: ' +
+        itemID);
 
         return true;
     };
 
 
     BlockEditorWidget.prototype.onDragStartLinkableItemCopyable = function (itemID) {
-        this.logger.warn("BlockEditorWidget.prototype.onDragStartLinkableItemCopyable not overridden in controller. itemID: " + itemID);
+        this.logger.warn('BlockEditorWidget.prototype.onDragStartLinkableItemCopyable not overridden in controller.' +
+        ' itemID: ' + itemID);
 
         return true;
     };
 
 
     BlockEditorWidget.prototype.onDragStartDesignerConnectionCopyable = function (connectionID) {
-        this.logger.warn("BlockEditorWidget.prototype.onDragStartDesignerConnectionCopyable not overridden in controller. connectionID: " + connectionID);
+        this.logger.warn('BlockEditorWidget.prototype.onDragStartDesignerConnectionCopyable not overridden in ' +
+        'controller. connectionID: ' + connectionID);
 
         return true;
     };
-    /************************* END OF --- DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
+    /************************* END OF --- DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START **********************/
 
     /************************** DRAG ITEM ***************************/
     BlockEditorWidget.prototype.onLinkableItemDragStart = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.hideSelectionOutline();
 
-        this._preDragActualSize = {"w": this._actualSize.w,
-                                    "h": this._actualSize.h};
+        this._preDragActualSize = {
+            'w': this._actualSize.w,
+            'h': this._actualSize.h
+        };
 
         var len = allDraggedItemIDs.length;
         while (len--) {
@@ -483,7 +497,7 @@ define(['js/logger',
 
         // get the position and size of all dragged guy and temporarily resize canvas to fit them
         while (i--) {
-            itemBBox =  items[allDraggedItemIDs[i]].getBoundingBox();
+            itemBBox = items[allDraggedItemIDs[i]].getBoundingBox();
             maxWidth = Math.max(maxWidth, itemBBox.x2);
             maxHeight = Math.max(maxHeight, itemBBox.y2);
         }
@@ -495,8 +509,9 @@ define(['js/logger',
 
         // refresh only the connections that are really needed
         connectionIDsToUpdate = this._getAssociatedConnectionsForItems(allDraggedItemIDs).sort();
-        
-        this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
+
+        this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' +
+        this.connectionIds.length);
 
         redrawnConnectionIDs = this._redrawConnections(connectionIDsToUpdate) || [];
 
@@ -505,7 +520,7 @@ define(['js/logger',
         i = redrawnConnectionIDs.len;
     };
 
-    BlockEditorWidget.prototype.onLinkableItemDragStop = function (draggedItemId, allDraggedItemIDs) {
+    BlockEditorWidget.prototype.onLinkableItemDragStop = function (/*draggedItemId, allDraggedItemIDs*/) {
         this.selectionManager.showSelectionOutline();
 
         delete this._preDragActualSize;
@@ -514,17 +529,17 @@ define(['js/logger',
     /************************** END - DRAG ITEM ***************************/
 
 
-
     /* * * * * * * * * * * * * * BACKGROUND TEXT * * * * * * * * * * * * * */
     BlockEditorWidget.prototype.setBackgroundText = function (text, params) {
         var svgParams = {},
             setSvgAttrFromParams;
 
-        if (!this._backGroundText ) {
+        if (!this._backGroundText) {
             if (!text) {
-                this.logger.error("Invalid parameter 'text' for method 'setBackgroundText'");
+                this.logger.error('Invalid parameter "text" for method "setBackgroundText"');
             } else {
-                this._backGroundText = this.skinParts.SVGPaper.text(this._svgPaperSize.w / 2, this._svgPaperSize.h / 2, text);
+                this._backGroundText = this.skinParts.SVGPaper.text(this._svgPaperSize.w / 2, this._svgPaperSize.h / 2,
+                    text);
             }
         } else {
             svgParams.text = text;
@@ -549,9 +564,9 @@ define(['js/logger',
 
             if (params) {
                 setSvgAttrFromParams([['color', 'fill'],
-                                 ['font-size', 'font-size']]);
+                    ['font-size', 'font-size']]);
             }
-            
+
             this._backGroundText.attr(svgParams);
         }
     };
@@ -559,8 +574,10 @@ define(['js/logger',
 
     BlockEditorWidget.prototype._centerBackgroundText = function () {
         if (this._backGroundText) {
-            this._backGroundText.attr({"x" : this._svgPaperSize.w / 2,
-                                       "y" : this._svgPaperSize.h / 2});
+            this._backGroundText.attr({
+                'x': this._svgPaperSize.w / 2,
+                'y': this._svgPaperSize.h / 2
+            });
         }
     };
     /* * * * * * * * * * * * * * END BACKGROUND TEXT * * * * * * * * * * * * * */
@@ -568,7 +585,7 @@ define(['js/logger',
     /* * * * * * * * * * * * * * UPDATE VIEW * * * * * * * * * * * * * */
 
     BlockEditorWidget.prototype.beginUpdate = function () {
-        this.logger.debug("beginUpdate");
+        this.logger.debug('beginUpdate');
 
         this._updating = true;
 
@@ -582,7 +599,7 @@ define(['js/logger',
     };
 
     BlockEditorWidget.prototype.endUpdate = function () {
-        this.logger.debug("endUpdate");
+        this.logger.debug('endUpdate');
 
         this._updating = false;
         this._tryRefreshScreen();
@@ -592,7 +609,7 @@ define(['js/logger',
         var insertedLen = 0,
             updatedLen = 0,
             deletedLen = 0,
-            msg = "";
+            msg = '';
 
         // check whether controller update finished or not
         if (this._updating !== true) {
@@ -601,9 +618,9 @@ define(['js/logger',
             updatedLen += this._updatedLinkableItemIDs.length;
             deletedLen += this._deletedLinkableItemIDs.length;
 
-            msg += "I: " + insertedLen;
-            msg += " U: " + updatedLen;
-            msg += " D: " + deletedLen;
+            msg += 'I: ' + insertedLen;
+            msg += ' U: ' + updatedLen;
+            msg += ' D: ' + deletedLen;
 
             this.logger.debug(msg);
             if (DEBUG === true && this.toolbarItems && this.toolbarItems.progressText) {
@@ -615,10 +632,8 @@ define(['js/logger',
     };
 
     BlockEditorWidget.prototype._refreshScreen = function () {
-        var i,
-            maxWidth = 0,
+        var maxWidth = 0,
             maxHeight = 0,
-            itemBBox,
             doRenderGetLayout,
             doRenderSetText,
             doRenderSetLayout,
@@ -627,10 +642,10 @@ define(['js/logger',
             dispatchEvents,
             self = this;
 
-        this.logger.debug("_refreshScreen START");
+        this.logger.debug('_refreshScreen START');
 
         /***************** FIRST HANDLE THE DESIGNER ITEMS *****************/
-        // add all the inserted items, they are still on a document Fragment
+            // add all the inserted items, they are still on a document Fragment
         this.skinParts.$itemsContainer[0].appendChild(this._documentFragment);
         this._documentFragment = document.createDocumentFragment();
 
@@ -656,26 +671,25 @@ define(['js/logger',
 
         // Update the text fields of all linkable items
         doRenderSetText = function (itemIDList) {
-            for (var i = itemIDList.length-1; i >= 0; i--){
+            for (var i = itemIDList.length - 1; i >= 0; i--) {
                 items[itemIDList[i]].renderSetTextInfo();
             }
         };
         doRenderSetText(this._insertedLinkableItemIDs);
         doRenderSetText(this._updatedLinkableItemIDs);
-        
+
         // Update all linkable items that need updating
         this._updateLinkableItems();
 
         // STEP 2: call the inserted and updated items' setRenderLayout
         doRenderSetLayout = function (itemIDList) {
-            var i = itemIDList.length,
-                cItem;
+            var i = itemIDList.length;
 
-            for (var i = itemIDList.length-1; i >= 0; i--){
+            for (i = itemIDList.length - 1; i >= 0; i--) {
                 items[itemIDList[i]].renderSetLayoutInfo();
             }
         };
-        
+
         doRenderSetLayout(this._insertedLinkableItemIDs);
         doRenderSetLayout(this._updatedLinkableItemIDs);
 
@@ -693,7 +707,8 @@ define(['js/logger',
         /*********************/
 
 
-        affectedItems = this._insertedLinkableItemIDs.concat(this._updatedLinkableItemIDs, this._deletedLinkableItemIDs);
+        affectedItems = this._insertedLinkableItemIDs.concat(this._updatedLinkableItemIDs,
+            this._deletedLinkableItemIDs);
 
         // adjust the canvas size to the new 'grown' are that the inserted / updated require
         // TODO: canvas size decrease not handled yet
@@ -708,10 +723,10 @@ define(['js/logger',
 
         if (this.mode === this.OPERATING_MODES.DESIGN ||
             this.mode === this.OPERATING_MODES.READ_ONLY) {
-            this.selectionManager.showSelectionOutline();    
+            this.selectionManager.showSelectionOutline();
         }
 
-        this.logger.debug("_refreshScreen END");
+        this.logger.debug('_refreshScreen END');
     };
 
     // This next method will find the scope of items that could be affected by
@@ -722,9 +737,9 @@ define(['js/logger',
     // the item; that is, a dependent item is dependent on the item
     // for it's position. 
     //
-    // This tree contains two different types of dependents: "siblings" 
-    // and "children". Children are items that are contained inside of
-    // the item (eg, command block inside of an "if" statement - these
+    // This tree contains two different types of dependents: 'siblings'
+    // and 'children'. Children are items that are contained inside of
+    // the item (eg, command block inside of an 'if' statement - these
     // are usually rendered on top of the given item). Siblings are 
     // items that are stored in the same node in the database - they
     // are hierarchical siblings (eg, a command block connected to 
@@ -749,7 +764,7 @@ define(['js/logger',
     //
     // After resizing these items, we will iterate over the items in 
     // the opposite order and move the items to their correct location.
-    
+
     /**
      * Update the size and position of the items affected by last update.
      *
@@ -758,18 +773,18 @@ define(['js/logger',
     BlockEditorWidget.prototype._updateLinkableItems = function () {
         // First, finding the highest node in the dependency tree that could
         // affected by the change
-        
+
         var items = Object.keys(this._linkableItems2Update),
             item,
             params,
             i = -1;
 
-        while (++i < items.length){
+        while (++i < items.length) {
             delete this._linkableItems2Update[items[i]];
             item = items[i];
 
-            // get the "highest" item possibly affected
-            while (this.items[item].parent !== null){
+            // get the 'highest' item possibly affected
+            while (this.items[item].parent !== null) {
                 item = this.items[item].parent.id;
             }
 
@@ -782,11 +797,11 @@ define(['js/logger',
         //    + resize sibling dependents
         //    + resize self
         var resizeQueue,
-            moveQueue = [], 
+            moveQueue = [],
             dependents,
             visited = {},
             self = this,
-            sortByDependency = function(children){
+            sortByDependency = function (children) {
                 // Sort the children by dependency on one another
                 // Make sure that this works if we start on a child that is halfway through the list
                 var childMap = {},
@@ -794,22 +809,21 @@ define(['js/logger',
                     sorted = [],
                     depList = [],
                     child,
-                    index,
                     i;
 
                 // Create a map of children from array
-                for (i = children.length -1; i >= 0; i--){
+                for (i = children.length - 1; i >= 0; i--) {
                     childMap[children[i]] = true;
                 }
 
                 i = 0;
-                while (i < children.length){
+                while (i < children.length) {
 
                     depList = [];
                     child = self.items[children[i]];
-                    
+
                     // While we haven't visited child and it is in our set
-                    while(!visited[child.id] && childMap[child.id]){
+                    while (!visited[child.id] && childMap[child.id]) {
                         // add the child to the depList
                         depList.unshift(child.id);
                         visited[child.id] = true;
@@ -817,13 +831,13 @@ define(['js/logger',
                     }
 
                     // Add depList to sorted as appropriate
-                    if (visited[child.id]){
+                    if (visited[child.id]) {
                         sorted = sorted.concat(depList);
                     } else {
                         sorted = depList.concat(sorted);
                     }
 
-                    while (visited[children[i]]){
+                    while (visited[children[i]]) {
                         i++;
                     }
 
@@ -838,19 +852,19 @@ define(['js/logger',
             item = items.pop();
 
             resizeQueue = [item];
-            while(resizeQueue.length){
+            while (resizeQueue.length) {
                 dependents = this.items[resizeQueue[0]].getDependentsByType();
                 // Try to follow children
-                while(dependents.children && !visited[resizeQueue[0]]){
+                while (dependents.children && !visited[resizeQueue[0]]) {
                     visited[resizeQueue[0]] = true;
                     // Sort children by dependency
                     dependents.children = sortByDependency(dependents.children);
                     resizeQueue = dependents.children.concat(dependents.siblings, resizeQueue);
                     dependents = this.items[resizeQueue[0]].getDependentsByType();
                 }
-                moveQueue.push(resizeQueue.splice(0,1).pop());
-                this.items[moveQueue[moveQueue.length-1]].updateSize();
-                this.items[moveQueue[moveQueue.length-1]].updateDependents(params);  // positions all dependents
+                moveQueue.push(resizeQueue.splice(0, 1).pop());
+                this.items[moveQueue[moveQueue.length - 1]].updateSize();
+                this.items[moveQueue[moveQueue.length - 1]].updateDependents(params);  // positions all dependents
             }
         }
 
@@ -861,30 +875,30 @@ define(['js/logger',
 
         this.setTitle('');
 
-        this.selectionManager.clear(); 
+        this.selectionManager.clear();
 
         var keys = this.itemIds,
             key;
 
-        while(keys.length){
+        while (keys.length) {
             key = keys.pop();
             this.items[key].destroy();
             delete this.items[key];
         }
 
-        assert(Object.keys(this.items).length === 0, "Items have not been fully removed from previous screen");
+        assert(Object.keys(this.items).length === 0, 'Items have not been fully removed from previous screen');
 
         // initialize all the required collections with empty value
         this._initializeCollections();
 
-        this._actualSize = { "w": 0, "h": 0 };
+        this._actualSize = {'w': 0, 'h': 0};
 
         this._resizeItemContainer();
 
         // this.dispatchEvent(this.events.ON_CLEAR);
     };
 
-    BlockEditorWidget.prototype._initializeCollections = function() {
+    BlockEditorWidget.prototype._initializeCollections = function () {
         this._itemIDCounter = 0;
         this.updating = false;
 
@@ -894,7 +908,7 @@ define(['js/logger',
         this._updatedLinkableItemIDs = [];
         this._deletedLinkableItemIDs = [];
     };
-    
+
 
     BlockEditorWidget.prototype.deleteComponent = function (componentId) {
         // let the selection manager / drag-manager / connection drawing manager / etc know about the deletion
@@ -960,11 +974,11 @@ define(['js/logger',
 
     /************************* HIGHLIGHTED / UNHIGHLIGHTED EVENT *****************************/
     BlockEditorWidget.prototype.onHighlight = function (idList) {
-        this.logger.warn("BlockEditorWidget.prototype.onHighlight not overridden in controller. idList: " + idList);
+        this.logger.warn('BlockEditorWidget.prototype.onHighlight not overridden in controller. idList: ' + idList);
     };
 
     BlockEditorWidget.prototype.onUnhighlight = function (idList) {
-        this.logger.warn("BlockEditorWidget.prototype.onUnhighlight not overridden in controller. idList: " + idList);
+        this.logger.warn('BlockEditorWidget.prototype.onUnhighlight not overridden in controller. idList: ' + idList);
     };
     /************************* HIGHLIGHTED / UNHIGHLIGHTED EVENT *****************************/
 

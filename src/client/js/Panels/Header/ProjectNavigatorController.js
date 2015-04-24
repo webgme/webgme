@@ -1,4 +1,5 @@
 /*globals define, angular, WebGMEGlobal*/
+/*jshint browser: true*/
 /**
  * @author nabana / https://github.com/nabana
  * @author lattmann / https://github.com/lattmann
@@ -10,14 +11,10 @@ define([
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
-
     'isis-ui-components/simpleDialog/simpleDialog',
-
     'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html'
-
-
 ], function (Logger, ng, ProjectsDialog, CommitDialog, ProjectRepositoryDialog, ConfirmDialog, DeleteDialogTemplate) {
-    "use strict";
+    'use strict';
 
 
     angular.module('gme.ui.ProjectNavigator', []).run(function ($templateCache) {
@@ -25,8 +22,9 @@ define([
     });
 
 
-    var ProjectNavigatorController = function ($scope, gmeClient, $simpleDialog, $timeout, $window) {
+    var ProjectNavigatorController;
 
+    ProjectNavigatorController = function ($scope, gmeClient, $simpleDialog, $timeout, $window) {
         var self = this;
         self.logger = Logger.create('gme:Panels:Header:ProjectNavigatorController', WebGMEGlobal.gmeConfig.client.log);
         self.$scope = $scope;
@@ -59,7 +57,7 @@ define([
         this.logger.debug('update');
         // force ui update
         this.$timeout(function () {
-            
+
         });
     };
 
@@ -75,17 +73,17 @@ define([
         };
 
         if (self.gmeClient) {
-            manageProjects = newProject = function (data) {
+            manageProjects = newProject = function (/*data*/) {
                 var pd = new ProjectsDialog(self.gmeClient);
                 pd.show();
             };
 
         } else {
-            newProject = function (data) {
+            newProject = function (/*data*/) {
                 self.dummyProjectsGenerator('New Project ' + Math.floor(Math.random() * 10000), 4);
             };
 
-            manageProjects = function (data) {
+            manageProjects = function (/*data*/) {
                 self.dummyProjectsGenerator('Manage projects ' + Math.floor(Math.random() * 10000), 4);
             };
         }
@@ -154,13 +152,13 @@ define([
 
         // register all event listeners on gmeClient
 
-        self.gmeClient.addEventListener(self.gmeClient.events.NETWORKSTATUS_CHANGED, function (client) {
+        self.gmeClient.addEventListener(self.gmeClient.events.NETWORKSTATUS_CHANGED, function (/*client*/) {
             if (self.gmeClient.getActualNetworkStatus() === self.gmeClient.networkStates.CONNECTED) {
                 // get project list
                 self.updateProjectList();
             } else {
                 // get project list
-                self.logger.warn(self.gmeClient.getActualNetworkStatus() + " network status is not handled yet.");
+                self.logger.warn(self.gmeClient.getActualNetworkStatus() + ' network status is not handled yet.');
             }
 
         });
@@ -222,12 +220,12 @@ define([
                     //TODO we should block UI until undo/redo is done
                     if (e.shiftKey) {
                         self.$timeout(function () {
-                            self.gmeClient.redo(self.gmeClient.getActualBranch(), function (err) {
+                            self.gmeClient.redo(self.gmeClient.getActualBranch(), function (/*err*/) {
                             });
                         });
                     } else {
                         self.$timeout(function () {
-                            self.gmeClient.undo(self.gmeClient.getActualBranch(), function (err) {
+                            self.gmeClient.undo(self.gmeClient.getActualBranch(), function (/*err*/) {
                             });
 
                         });
@@ -322,9 +320,9 @@ define([
             updateProjectList;
 
         rights = rights || {
-            'delete': true,
-            'read': true,
-            'write': true
+            delete: true,
+            read: true,
+            write: true
         };
 
         if (self.gmeClient) {
@@ -335,12 +333,13 @@ define([
                     prd.show();
                 } else {
                     self.selectProject({projectId: projectId}, function (err) {
+                        var dialog = new ProjectRepositoryDialog(self.gmeClient);
+
                         if (err) {
                             // TODO: handle errors
                             return;
                         }
 
-                        var dialog = new ProjectRepositoryDialog(self.gmeClient);
                         dialog.show();
                     });
                 }
@@ -355,7 +354,6 @@ define([
             };
 
             deleteProject = function (data) {
-
                 var deleteProjectModal;
 
                 self.$scope.thingName = 'project "' + data.projectId + '"';
@@ -364,13 +362,11 @@ define([
                     dialogTitle: 'Confirm delete',
                     dialogContentTemplate: 'DeleteDialogTemplate.html',
                     onOk: function () {
-
                         var activeProjectId = self.gmeClient.getActiveProjectName();
 
                         self.gmeClient.deleteProjectAsync(data.projectId, function (err) {
                             if (err) {
                                 self.logger.error(err);
-                                return;
                             } else {
 
                                 if (data.projectId === activeProjectId) {
@@ -492,8 +488,7 @@ define([
 
             deleteBranchItem,
             undoLastCommitItem,
-            redoLastUndoItem,
-            mergeBranchItem;
+            redoLastUndoItem;
 
         if (self.projects.hasOwnProperty(projectId) === false) {
             self.logger.warn('project is not in the list yet: ', projectId);
@@ -520,14 +515,12 @@ define([
                 }
             };
 
-            createBranch = function (data) {
+            createBranch = function (/*data*/) {
                 var prd = new ProjectRepositoryDialog(self.gmeClient);
                 prd.show();
             };
 
             deleteBranch = function (data) {
-
-
                 var deleteBranchModal;
 
                 self.$scope.thingName = 'branch "' + data.branchId + '"';
@@ -542,7 +535,6 @@ define([
                             function (err) {
                                 if (err) {
                                     self.logger.error(err);
-                                    return;
                                 }
                             });
                     },
@@ -576,7 +568,6 @@ define([
             };
 
             deleteBranch = function (data) {
-
                 var deleteBranchModal;
 
                 self.logger.debug('delete branch');
@@ -588,7 +579,8 @@ define([
                     dialogContentTemplate: 'DeleteDialogTemplate.html',
                     onOk: function () {
                         self.removeBranch(data.projectId, data.branchId);
-                        //self.selectProject( data ); you cannot delete the actual branch so there is no need for re-selection
+                        //self.selectProject( data );
+                        // you cannot delete the actual branch so there is no need for re-selection
                     },
                     scope: self.$scope
                 });
@@ -624,7 +616,7 @@ define([
             iconClass: 'fa fa-reply',
             disabled: true, // TODO: set this from handler to enable/disable
             action: function (actionData) {
-                self.gmeClient.undo(actionData.branchId, function (err) {
+                self.gmeClient.undo(actionData.branchId, function (/*err*/) {
                 });
             },
             // Put whatever you need to get passed back above
@@ -641,7 +633,7 @@ define([
             iconClass: 'fa fa-mail-forward',
             disabled: true, // TODO: set this from handler to enable/disable
             action: function (actionData) {
-                self.gmeClient.redo(actionData.branchId, function (err) {
+                self.gmeClient.redo(actionData.branchId, function (/*err*/) {
                 });
             },
             // Put whatever you need to get passed back above
@@ -652,23 +644,6 @@ define([
             }
         };
 
-        mergeBranchItem = {
-            id: 'mergeBranch',
-            label: 'Merge into current branch',
-            iconClass: 'fa fa-share-alt fa-rotate-90',
-            disabled: false, // TODO: set this from handler to enable/disable
-            action: function (actionData) {
-                self.mergeBranch(actionData.projectId,
-                    actionData.branchId,
-                    self.$scope.navigator.items[self.navIdBranch].id);
-            },
-            // Put whatever you need to get passed back above
-            actionData: {
-                projectId: projectId,
-                branchId: branchId,
-                branchInfo: branchInfo
-            }
-        }
         // create the new branch structure
         self.projects[projectId].branches[branchId] = {
             id: branchId,
@@ -712,17 +687,6 @@ define([
                                 projectId: projectId,
                                 branchId: branchId
                             }
-                        },
-                        mergeBranchItem,
-                        {
-                            id: 'createCommitMessage',
-                            label: 'Create commit message',
-                            iconClass: 'glyphicon glyphicon-tag',
-                            action: createCommitMessage,
-                            actionData: {
-                                projectId: projectId,
-                                branchId: branchId
-                            }
                         }
                     ]
 
@@ -733,7 +697,6 @@ define([
         self.projects[projectId].branches[branchId].deleteBranchItem = deleteBranchItem;
         self.projects[projectId].branches[branchId].undoLastCommitItem = undoLastCommitItem;
         self.projects[projectId].branches[branchId].redoLastUndoItem = redoLastUndoItem;
-        self.projects[projectId].branches[branchId].mergeBranchItem = mergeBranchItem;
 
         for (i = 0; i < self.projects[projectId].menu.length; i += 1) {
 
@@ -754,7 +717,7 @@ define([
         }
     };
 
-    ProjectNavigatorController.prototype.removeProject = function (projectId, callback) {
+    ProjectNavigatorController.prototype.removeProject = function (projectId/*, callback*/) {
         var self = this,
             i;
 
@@ -824,13 +787,12 @@ define([
         if (currentBranch) {
             currentBranch.isSelected = false;
             currentBranch.deleteBranchItem.disabled = false;
-            currentBranch.mergeBranchItem.disabled = false;
         }
 
         if (projectId || projectId === '') {
             if (self.projects.hasOwnProperty(projectId) === false) {
                 self.logger.warn(projectId +
-                                 ' does not exist yet in the navigation bar, requesting selection to be loaded.');
+                ' does not exist yet in the navigation bar, requesting selection to be loaded.');
                 self.requestedSelection = data;
                 // let's update the project list, in case the server did not notify us.
                 this.updateProjectList();
@@ -847,7 +809,6 @@ define([
                 if (currentBranch) {
                     currentBranch.isSelected = true;
                     currentBranch.deleteBranchItem.disabled = true;
-                    currentBranch.mergeBranchItem.disabled = true;
                 }
 
                 return;
@@ -904,7 +865,6 @@ define([
                 self.projects[projectId].branches[branchId].isSelected = true;
 
                 self.projects[projectId].branches[branchId].deleteBranchItem.disabled = true;
-                self.projects[projectId].branches[branchId].mergeBranchItem.disabled = true;
 
                 if (self.gmeClient) {
                     if (branchId !== self.gmeClient.getActualBranch()) {
@@ -951,14 +911,6 @@ define([
         }
     };
 
-    ProjectNavigatorController.prototype.mergeBranch = function (projectId, whatBranchId, whereBranchId) {
-        var url = window.location.origin + "/merge.html?project=" + projectId + "&mine=" +
-                  this.projects[projectId].branches[whatBranchId].properties.hashTag + "&theirs=" +
-                  this.projects[projectId].branches[whereBranchId].properties.hashTag;
-        //TODO probably window.location setting type redirection should be used as that way we could keep the authentication credentials...
-        window.open(url);
-    };
-
     ProjectNavigatorController.prototype.dummyProjectsGenerator = function (name, maxCount) {
         var self = this,
             i,
@@ -971,9 +923,9 @@ define([
         for (i = 0; i < count; i += 1) {
             id = name + '_' + i;
             rights = {
-                'read': Math.random() > 0.2,
-                'write': false,
-                'delete': false
+                read: Math.random() > 0.2,
+                write: false,
+                delete: false
             };
 
             if (rights.read) {

@@ -1,21 +1,24 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, $ */
+/*jshint browser: true*/
 
-define(['./ButtonBase',
-        './ToolbarItemBase'], function (buttonBase,
-                                        ToolbarItemBase) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+define(['./ButtonBase', './ToolbarItemBase'], function (buttonBase, ToolbarItemBase) {
+
+    'use strict';
 
     var ToolbarRadioButtonGroup,
-        EL_BASE = $('<div/>', {"class": "btn-group"});
+        EL_BASE = $('<div/>', {class: 'btn-group'});
 
     ToolbarRadioButtonGroup = function (clickFn) {
         var btnGroup;
         this.el = btnGroup = EL_BASE.clone();
 
         if (clickFn) {
-            btnGroup.on("click", ".btn", function (event) {
-                if (!$(this).hasClass("disabled")) {
+            btnGroup.on('click', '.btn', function (event) {
+                if (!$(this).hasClass('disabled')) {
                     btnGroup.find('.btn.active').removeClass('active');
                     $(this).addClass('active');
                     clickFn.call(this, $(this).data());

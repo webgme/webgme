@@ -1,14 +1,15 @@
 /*globals define, _, WebGMEGlobal*/
-/*
+/*jshint browser: true*/
+
+/**
  * @author brollb / https://github/brollb
- *
  */
 
 define(['js/logger',
-    './ErrorDecorator'], function (Logger,
-                                   ErrorDecorator) {
+    './ErrorDecorator'
+], function (Logger, ErrorDecorator) {
 
-   "use strict";
+    "use strict";
 
     var ItemBase,
         HOVER_CLASS = "hover",
@@ -16,7 +17,7 @@ define(['js/logger',
         ITEM_CLASS,
         EVENT_POSTFIX;
 
-    ItemBase = function(){
+    ItemBase = function () {
     };
 
     ItemBase.prototype.initialize = function (name, objId, canvas) {
@@ -53,7 +54,7 @@ define(['js/logger',
         this.logger.debug("Created");
     };
 
-    ItemBase.prototype.__initialize = function(){
+    ItemBase.prototype.__initialize = function () {
         //Override in inherited classes as needed
     };
 
@@ -79,10 +80,12 @@ define(['js/logger',
 
             this._DecoratorClass = DecoratorClass;
 
-            this._decoratorInstance = new DecoratorClass({'host': this,
+            this._decoratorInstance = new DecoratorClass({
+                'host': this,
                 'preferencesHelper': preferencesHelper,
                 'aspect': aspect,
-                'decoratorParams': decoratorParams});
+                'decoratorParams': decoratorParams
+            });
             this._decoratorInstance.setControl(control);
             this._decoratorInstance.setMetaInfo(metaInfo);
         }
@@ -95,13 +98,15 @@ define(['js/logger',
         //set additional CSS properties
         this.$el.attr({"id": this.id});
 
-        this.$el.css({ "position": "absolute",
+        this.$el.css({
+            "position": "absolute",
             "left": this.positionX,
-            "top": this.positionY });
+            "top": this.positionY
+        });
 
         this._attachUserInteractions();
 
-        if(this.canvas._makeDraggable !== undefined){
+        if (this.canvas._makeDraggable !== undefined) {
             this.canvas._makeDraggable(this);
         }
     };
@@ -111,23 +116,31 @@ define(['js/logger',
             self = this,
             i;
 
-        this._events = {"mouseenter": { "fn": "onMouseEnter",
-            "stopPropagation": true,
-            "preventDefault": true,
-            "enabledInReadOnlyMode": true},
-            "mouseleave": { "fn": "onMouseLeave",
+        this._events = {
+            "mouseenter": {
+                "fn": "onMouseEnter",
                 "stopPropagation": true,
                 "preventDefault": true,
-                "enabledInReadOnlyMode": true},
-            "dblclick": { "fn": "onDoubleClick",
+                "enabledInReadOnlyMode": true
+            },
+            "mouseleave": {
+                "fn": "onMouseLeave",
                 "stopPropagation": true,
                 "preventDefault": true,
-                "enabledInReadOnlyMode": true}};
+                "enabledInReadOnlyMode": true
+            },
+            "dblclick": {
+                "fn": "onDoubleClick",
+                "stopPropagation": true,
+                "preventDefault": true,
+                "enabledInReadOnlyMode": true
+            }
+        };
 
-        handleEvent = function (event){
+        handleEvent = function (event) {
             var eventHandlerOpts = self._events[event.type],
-            handled = false,
-            enabled = true;
+                handled = false,
+                enabled = true;
 
             if (self.canvas.mode !== self.canvas.OPERATING_MODES.READ_ONLY &&
                 self.canvas.mode !== self.canvas.OPERATING_MODES.DESIGN) {
@@ -164,7 +177,7 @@ define(['js/logger',
 
         for (i in this._events) {
             if (this._events.hasOwnProperty(i)) {
-                this.$el.on( i + '.' + EVENT_POSTFIX, null, null, handleEvent);
+                this.$el.on(i + '.' + EVENT_POSTFIX, null, null, handleEvent);
             }
         }
     };
@@ -174,7 +187,7 @@ define(['js/logger',
 
         for (i in this._events) {
             if (this._events.hasOwnProperty(i)) {
-                this.$el.off( i + '.' + EVENT_POSTFIX);
+                this.$el.off(i + '.' + EVENT_POSTFIX);
             }
         }
     };
@@ -184,7 +197,7 @@ define(['js/logger',
 
         this.$el.append(this._decoratorInstance.$el);
 
-        docFragment.appendChild( this.$el[0] );
+        docFragment.appendChild(this.$el[0]);
 
         this.logger.debug("ItemBase with id:'" + this.id + "' added to canvas.");
     };
@@ -258,12 +271,16 @@ define(['js/logger',
             }
 
             if (positionChanged) {
-                this.$el.css({"left": this.positionX,
-                    "top": this.positionY });
+                this.$el.css({
+                    "left": this.positionX,
+                    "top": this.positionY
+                });
 
-                this.canvas.dispatchEvent(this.canvas.events.ITEM_POSITION_CHANGED, {"ID": this.id,
+                this.canvas.dispatchEvent(this.canvas.events.ITEM_POSITION_CHANGED, {
+                    "ID": this.id,
                     "x": this.positionX,
-                    "y": this.positionY});
+                    "y": this.positionY
+                });
             }
         }
     };
@@ -276,7 +293,7 @@ define(['js/logger',
         this._callDecoratorMethod("onRenderSetLayoutInfo");
     };
 
-    ItemBase.prototype._remove = function() {
+    ItemBase.prototype._remove = function () {
         this._containerElement = null;
         this.$el.remove();
         this.$el.empty();
@@ -298,12 +315,14 @@ define(['js/logger',
     };
 
     ItemBase.prototype.getBoundingBox = function () {
-        var bBox = {"x": this.positionX,
-                "y": this.positionY,
-                "width": this._width,
-                "height": this._height,
-                "x2": this.positionX + this._width,
-                "y2":  this.positionY + this._height};
+        var bBox = {
+            "x": this.positionX,
+            "y": this.positionY,
+            "width": this._width,
+            "height": this._height,
+            "x2": this.positionX + this._width,
+            "y2": this.positionY + this._height
+        };
 
         if (this.rotation !== 0) {
             var topLeft = this._rotatePoint(0, 0);
@@ -357,7 +376,7 @@ define(['js/logger',
     };
 
     ItemBase.prototype.onDoubleClick = function (event) {
-        if (this.canvas.onItemBaseDoubleClick && _.isFunction(this.canvas.onItemBaseDoubleClick)){
+        if (this.canvas.onItemBaseDoubleClick && _.isFunction(this.canvas.onItemBaseDoubleClick)) {
             this.canvas.onItemBaseDoubleClick(this.id, event);
         }
     };
@@ -408,9 +427,11 @@ define(['js/logger',
             }
 
             if (changed === true) {
-                this.canvas.dispatchEvent(this.canvas.events.ITEM_SIZE_CHANGED, {"ID": this.id,
+                this.canvas.dispatchEvent(this.canvas.events.ITEM_SIZE_CHANGED, {
+                    "ID": this.id,
                     "w": this._width,
-                    "h": this._height});
+                    "h": this._height
+                });
             }
         }
     };

@@ -1,4 +1,3 @@
-/*globals require, WebGMEGlobal*/
 /*jshint node:true, mocha:true*/
 /**
  * @author kecso / https://github.com/kecso
@@ -49,7 +48,7 @@ describe('ServerWorkerManager', function () {
             swm = new ServerWorkerManager(workerManagerParameters);
         });
 
-        it.skip('should reserve a worker when starts', function (done) {
+        it.skip('should reserve a worker when starts', function (/*done*/) {
 
         });
 
@@ -103,7 +102,7 @@ describe('ServerWorkerManager', function () {
         });
 
         it('should respond with error to unknown request', function (done) {
-            swm.request({command: 'unknown command'}, function (err, resultId) {
+            swm.request({command: 'unknown command'}, function (err/*, resultId*/) {
                 expect(err).not.to.equal(null);
                 done();
             });
@@ -117,7 +116,7 @@ describe('ServerWorkerManager', function () {
                 branch: 'master'
             };
 
-            swm.request(addOnRequest, function (err, id) {
+            swm.request(addOnRequest, function (err/*, id*/) {
                 expect(err).not.to.equal(null);
 
                 expect(err).to.include('not enabled');
@@ -127,7 +126,7 @@ describe('ServerWorkerManager', function () {
         });
 
         it('should fail to proxy query to an unknown id', function (done) {
-            swm.query('no id', {}, function (err, result) {
+            swm.query('no id', {}, function (err/*, result*/) {
                 expect(err).not.to.equal(null);
 
                 expect(err).to.contain('identification');
@@ -251,7 +250,7 @@ describe('ServerWorkerManager', function () {
 
             swm.request(connectedWorkerStartRequest, function (err, id) {
                 expect(err).to.equal(null);
-                swm.query(id, {}, function (err, result) {
+                swm.query(id, {}, function (err/*, result*/) {
                     expect(err).to.equal(null);
 
                     swm.result(id, function (err) {
@@ -267,11 +266,11 @@ describe('ServerWorkerManager', function () {
 
             swm.request(connectedWorkerStartRequest, function (err, id) {
                 expect(err).to.equal(null);
-                swm.query(id, {}, function (err, result) {
+                swm.query(id, {}, function (err/*, result*/) {
                     expect(err).to.equal(null);
 
                     swm.stop(function () {
-                        swm.query(id, {}, function (err, result) {
+                        swm.query(id, {}, function (err/*, result*/) {
                             expect(err).not.to.equal(null);
 
                             expect(err).to.contain('handler cannot be found');
@@ -288,7 +287,7 @@ describe('ServerWorkerManager', function () {
             swm.request(connectedWorkerStartRequest, function (err, id) {
                 expect(err).to.equal(null);
 
-                swm.query(id, {}, function (err, result) {
+                swm.query(id, {}, function (err/*, result*/) {
                     expect(err).to.equal(null);
 
                     swm.stop(function () {

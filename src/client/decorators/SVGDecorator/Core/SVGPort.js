@@ -1,18 +1,18 @@
-/*globals define*/
+/*globals define, $*/
+/*jshint browser: true*/
 
 /**
- * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author rkereskenyi / https://github/rkereskenyi
  */
 
-define(['js/Constants',
-        'js/Utils/DisplayFormat',
-        'js/RegistryKeys',
-        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (CONSTANTS,
-                                      displayFormat,
-                                      RegistryKeys,
-                                      DiagramDesignerWidgetConstants) {
+define([
+    'js/Constants',
+    'js/Utils/DisplayFormat',
+    'js/RegistryKeys',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'
+], function (CONSTANTS, displayFormat, RegistryKeys, DiagramDesignerWidgetConstants) {
 
-    "use strict";
+    'use strict';
 
     var SVGPort,
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
@@ -38,10 +38,10 @@ define(['js/Constants',
     };
 
     SVGPort.prototype._initialize = function () {
-        this.$el = $('<div/>', {'class': 'port'});
-        this.$title = $('<div/>', {'class': 'title'});
-        this.$icon = $('<div/>', {'class': 'icon'});
-        this.$connector = $('<div/>', {'class': DiagramDesignerWidgetConstants.CONNECTOR_CLASS});
+        this.$el = $('<div/>', {class: 'port'});
+        this.$title = $('<div/>', {class: 'title'});
+        this.$icon = $('<div/>', {class: 'icon'});
+        this.$connector = $('<div/>', {class: DiagramDesignerWidgetConstants.CONNECTOR_CLASS});
 
         this.$imgIcon = $('<img/>');
         this.$icon.append(this.$imgIcon);
@@ -110,7 +110,6 @@ define(['js/Constants',
     SVGPort.prototype.hideConnectors = function () {
         this.$connector.hide();
     };
-
 
 
     return SVGPort;

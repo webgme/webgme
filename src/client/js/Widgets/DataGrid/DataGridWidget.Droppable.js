@@ -1,8 +1,13 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, $*/
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/DragDrop/DropTarget'], function (dropTarget) {
 
-    "use strict";
+    'use strict';
 
     var DataGridWidgetDroppable,
         MOUSE_EVENT_POSTFIX = 'DataGridWidgetDroppable',
@@ -22,19 +27,19 @@ define(['js/DragDrop/DropTarget'], function (dropTarget) {
         this._oTDAcceptDrop = false;
 
         dropTarget.makeDroppable(table, {
-            over: function(event, dragInfo) {
+            over: function (/*event, dragInfo*/) {
                 //self._onBackgroundDroppableOver(event, dragInfo);
             },
-            out: function(event, dragInfo) {
+            out: function (/*event, dragInfo*/) {
                 //self._onBackgroundDroppableOut(event, dragInfo);
             },
             drop: function (event, dragInfo) {
                 self._onTableDrop(event, dragInfo);
             },
-            activate: function(event, dragInfo) {
+            activate: function (event, dragInfo) {
                 self._activateDroppable(event, dragInfo);
             },
-            deactivate: function(event, dragInfo) {
+            deactivate: function (event, dragInfo) {
                 self._deactivateDroppable(event, dragInfo);
             }
         });
@@ -77,10 +82,10 @@ define(['js/DragDrop/DropTarget'], function (dropTarget) {
             }
 
             this._oTD = td;
-            if (td[0].tagName === "TD" ||
-                td[0].tagName === "TH") {
+            if (td[0].tagName === 'TD' ||
+                td[0].tagName === 'TH') {
 
-                if (td[0].tagName === "TD") {
+                if (td[0].tagName === 'TD') {
                     cellPos = this._getCellPos(this._oTD);
                 } else {
                     //check if it is a real column header
@@ -97,7 +102,8 @@ define(['js/DragDrop/DropTarget'], function (dropTarget) {
                 if (cellPos > 0 ||
                     (cellPos === 0 && this._actionButtonsInFirstColumn === false)) {
                     //check if the dragged data should be accepted for drop over this cell
-                    this._oTDAcceptDrop = this.onGridDroppableAccept(this._getCellDataDesc(this._oTD), this._draggedData);
+                    this._oTDAcceptDrop = this.onGridDroppableAccept(this._getCellDataDesc(this._oTD),
+                        this._draggedData);
                 } else {
                     //no drop accepted on first column if it has the 'edit' buttons
                     this._oTDAcceptDrop = false;
@@ -127,16 +133,18 @@ define(['js/DragDrop/DropTarget'], function (dropTarget) {
         var aPos,
             rIdx,
             cIdxAll,
-            result = {"data": undefined,
-                      "mData": undefined};
+            result = {
+                data: undefined,
+                mData: undefined
+            };
 
-        if (el[0].tagName === "TD") {
-            aPos = this._droppableTable.fnGetPosition( el[0] );
+        if (el[0].tagName === 'TD') {
+            aPos = this._droppableTable.fnGetPosition(el[0]);
             rIdx = aPos[0];
             cIdxAll = aPos[2];
-            result.data = this._extractOriginalData(this._oTable.fnGetData( rIdx ));
+            result.data = this._extractOriginalData(this._oTable.fnGetData(rIdx));
             result.mData = this._droppableTable.fnSettings().aoColumns[cIdxAll].mData;
-        } else if (el[0].tagName === "TH") {
+        } else if (el[0].tagName === 'TH') {
             //header cell
             cIdxAll = this._getHeaderCellPos(el);
             result.data = ON_HEADER_CELL;
@@ -150,9 +158,9 @@ define(['js/DragDrop/DropTarget'], function (dropTarget) {
         var tagName = el[0].tagName,
             pos = -1;
 
-        if (tagName === "TH") {
+        if (tagName === 'TH') {
             pos = this._getHeaderCellPos(el);
-        } else if (tagName === "TD") {
+        } else if (tagName === 'TD') {
             pos = this._getTableCellPos(el);
         }
 
@@ -200,13 +208,14 @@ define(['js/DragDrop/DropTarget'], function (dropTarget) {
     };
 
 
-    DataGridWidgetDroppable.prototype.onGridDroppableAccept = function (gridCellDesc, draggedData) {
+    DataGridWidgetDroppable.prototype.onGridDroppableAccept = function (/*gridCellDesc, draggedData*/) {
         this.logger.warn('default onGridDroppableAccept (gridCellDesc, draggedData) called... returning true');
         return true;
     };
 
     DataGridWidgetDroppable.prototype.onGridDrop = function (gridCellDesc, draggedData) {
-        this.logger.warn('onGridDrop --->\ngridCellDesc: ' + JSON.stringify(gridCellDesc) + "\ndraggedData: " + JSON.stringify(draggedData));
+        this.logger.warn('onGridDrop --->\ngridCellDesc: ' + JSON.stringify(gridCellDesc) + '\ndraggedData: ' +
+        JSON.stringify(draggedData));
     };
 
     return DataGridWidgetDroppable;

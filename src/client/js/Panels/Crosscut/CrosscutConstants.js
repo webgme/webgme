@@ -1,13 +1,15 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
-
-/*
+/*globals define */
+/*jshint browser: true*/
+/**
  * STRING CONSTANT DEFINITIONS USED IN MANUAL ASPECT CONTROLLER
+ *
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 define([], function () {
-    "use strict";
+    'use strict';
     //return string constants
     return {
-        CROSSCUT_NAME_PREFIX : 'Crosscut_'
+        CROSSCUT_NAME_PREFIX: 'Crosscut_'
     };
 });

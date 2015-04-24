@@ -107,7 +107,8 @@ describe('GME authentication', function () {
 
 
     it('adds random user without overwrite', function (done) {
-        auth.addUser('no_overwrite_user' + (new Date()).toISOString(), 'no_overwrite_user@example.com', 'plaintext', true, {overwrite: false}, done);
+        auth.addUser('no_overwrite_user' + (new Date()).toISOString(),
+            'no_overwrite_user@example.com', 'plaintext', true, {overwrite: false}, done);
     });
 
     it('adds user without overwrite', function (done) {
@@ -275,7 +276,7 @@ describe('GME authentication', function () {
     it('removes user by id', function (done) {
         auth.addUser('user_to_remove', 'user_to_remove@example.com', 'plaintext', true, {overwrite: true}).
             then(function () {
-                return auth.removeUserByUserId('user_to_remove');
+                return auth.deleteUser('user_to_remove');
             })
             .nodeify(done);
     });

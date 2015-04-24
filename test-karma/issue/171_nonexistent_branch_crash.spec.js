@@ -1,9 +1,9 @@
-/*globals require, WebGMEGlobal*/
-/*jshint node:true, mocha:true*/
+/*globals requirejs, expect*/
+/*jshint node: true, mocha: true*/
 /**
  * @author kecso / https://github.com/kecso
  */
-var WebGMEGlobal = {};
+var WebGMEGlobal = {}; //jshint ignore: line
 
 describe('issue 171 server crashes when trying to switch to non-existent branch', function () {
     'use strict';

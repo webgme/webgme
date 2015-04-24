@@ -1,5 +1,4 @@
-/*globals*/
-/*jshint node:true, mocha:true*/
+/*jshint node:true, mocha:true, expr:true*/
 /**
  * @author kecso / https://github.com/kecso
  */
@@ -68,7 +67,6 @@ describe('local', function () {
     });
 
     describe('operations open and close', function () {
-        var project;
         before(function (done) {
             storageWithCache.openDatabase(function (err) {
                 if (err) {

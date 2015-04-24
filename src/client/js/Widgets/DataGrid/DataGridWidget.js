@@ -1,32 +1,30 @@
-/*globals define, Raphael, window, WebGMEGlobal, _*/
+/*globals define, WebGMEGlobal, _, $*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-
-define(['js/logger',
+define([
+    'js/logger',
     'js/util',
     'js/Constants',
     'js/Widgets/DataGrid/DataGridWidget.Droppable',
     'text!./templates/DataTableTemplate.html',
-    'css!./styles/DataGridWidget.css'], function (Logger,
-                                                  util,
-                                                  CONSTANTS,
-                                                  DataGridWidgetDroppable,
-                                                  dataTableTemplate) {
-    "use strict";
+    'css!./styles/DataGridWidget.css'
+], function (Logger, util, CONSTANTS, DataGridWidgetDroppable, dataTableTemplate) {
+    'use strict';
 
     var DataGridWidget,
-        DEFAULT_DATAMEMBER_ID = "ID",
+        DEFAULT_DATAMEMBER_ID = 'ID',
         DEFAULT_NON_EXISTING_VALUE = '__undefined__',
-        UNDEFINED_VALUE_CLASS = "undefined-value",
-        ROW_COMMAND_DELETE = "delete",
-        ROW_COMMAND_EDIT = "edit",
-        ROW_COMMAND_DELETE_TITLE = "Delete row",
-        ROW_COMMAND_EDIT_TITLE = "edit row";
+        UNDEFINED_VALUE_CLASS = 'undefined-value',
+        ROW_COMMAND_DELETE = 'delete',
+        ROW_COMMAND_EDIT = 'edit',
+        ROW_COMMAND_DELETE_TITLE = 'Delete row',
+        ROW_COMMAND_EDIT_TITLE = 'edit row';
 
-    DataGridWidget = function (container, params) {
+    DataGridWidget = function (container /*, params*/) {
         this.logger = Logger.create('gme:Widgets:DataGridWidget', WebGMEGlobal.gmeConfig.client.log);
 
         this.$el = container;
@@ -45,15 +43,16 @@ define(['js/logger',
 
         this.clear();
 
-        this.logger.debug("DataGridWidget ctor finished");
+        this.logger.debug('DataGridWidget ctor finished');
     };
-    
+
     //implement DataGridWidgetDroppable as well
     _.extend(DataGridWidget.prototype, DataGridWidgetDroppable.prototype);
 
     DataGridWidget.prototype.initializeUI = function () {
     };
 
+    //jshint camelcase: false
     DataGridWidget.prototype.$_dataTableBase = $(dataTableTemplate);
 
     DataGridWidget.prototype.clear = function () {
@@ -95,7 +94,7 @@ define(['js/logger',
             maxRowSpan = 1,
             tHeadFirstRow,
             defaultSortCol = 0,
-            actionBtnColContent = "";
+            actionBtnColContent = '';
 
         this._isInitializing = true;
 
@@ -112,31 +111,33 @@ define(['js/logger',
 
         //check if any action is enabled for the rows
         if (this._rowEdit === true) {
-            actionBtnColContent = '<i class="glyphicon glyphicon-edit pointer rowCommandBtn" data-action="' + ROW_COMMAND_EDIT + '" title="' + ROW_COMMAND_EDIT_TITLE + '"></i>';
+            actionBtnColContent = '<i class="glyphicon glyphicon-edit pointer rowCommandBtn" data-action="' +
+            ROW_COMMAND_EDIT + '" title="' + ROW_COMMAND_EDIT_TITLE + '"></i>';
             this._actionButtonsInFirstColumn = true;
         }
 
         if (this._rowDelete === true) {
-            if (actionBtnColContent !== "") {
-                actionBtnColContent += " ";
+            if (actionBtnColContent !== '') {
+                actionBtnColContent += ' ';
             }
-            actionBtnColContent += '<i class="glyphicon glyphicon-trash pointer rowCommandBtn" data-action="' + ROW_COMMAND_DELETE  + '" title="' + ROW_COMMAND_DELETE_TITLE + '">';
+            actionBtnColContent += '<i class="glyphicon glyphicon-trash pointer rowCommandBtn" data-action="' +
+            ROW_COMMAND_DELETE + '" title="' + ROW_COMMAND_DELETE_TITLE + '">';
             this._actionButtonsInFirstColumn = true;
         }
 
         //if there is any action enabled
         if (this._actionButtonsInFirstColumn === true) {
             //extend header with an extra column for the action buttons
-            tHeadFirstRow = $(this.$table.find("> thead > tr")[0]);
+            tHeadFirstRow = $(this.$table.find('> thead > tr')[0]);
             tHeadFirstRow.prepend('<th rowspan="' + maxRowSpan + '"></th>');
 
             //add command buttons' cell to the beginning
             _editorColumns.push({
-                "mData": null,
-                "sDefaultContent": actionBtnColContent,
-                "bSearchable": false,
-                "bSortable": false,
-                "sClass": "center nowrap"
+                mData: null,
+                sDefaultContent: actionBtnColContent,
+                bSearchable: false,
+                bSortable: false,
+                sClass: 'center nowrap'
             });
             defaultSortCol = 1;
         }
@@ -144,38 +145,39 @@ define(['js/logger',
         //add the (autodetected/given) columns to the list
         _columns = _editorColumns.concat(columns);
 
-        this._oTable = this.$table.dataTable( {
-            "bPaginate": false,
-            "bInfo": false,
-            "bLengthChange": false,
-            "bSortClasses": false,
-            "bFilter": true,
-            "bAutoWidth": false,
-            "bDestroy": true,
-            "bRetrieve": false,
-            "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+        this._oTable = this.$table.dataTable({
+            bPaginate: false,
+            bInfo: false,
+            bLengthChange: false,
+            bSortClasses: false,
+            bFilter: true,
+            bAutoWidth: false,
+            bDestroy: true,
+            bRetrieve: false,
+            fnRowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
                 self._fnRowCallback(nRow, aData, iDisplayIndex, iDisplayIndexFull);
             },
-            "aoColumns": _columns,
-            "sDom": "lrtip",
-            "aaSorting": [[defaultSortCol,'asc']],
-            "fnDrawCallback": function( oSettings  ) {
+            aoColumns: _columns,
+            sDom: 'lrtip',
+            aaSorting: [[defaultSortCol, 'asc']],
+            fnDrawCallback: function (oSettings) {
                 self._fnDrawCallback(oSettings);
-            }});
+            }
+        });
 
         /* IN PLACE EDIT ON CELL DOUBLECLICK */
         /*this.$table.on('dblclick', 'td', function (event) {
-            if (!self._readOnlyMode) {
-                self._editCell(this);
-            }
-            event.stopPropagation();
-            event.preventDefault();
-        });*/
+         if (!self._readOnlyMode) {
+         self._editCell(this);
+         }
+         event.stopPropagation();
+         event.preventDefault();
+         });*/
 
         if (this._actionButtonsInFirstColumn === true) {
             this.$table.on('click', '.rowCommandBtn', function (event) {
                 var btn = $(this),
-                    command = btn.attr("data-action"),
+                    command = btn.attr('data-action'),
                     td = btn.parent()[0];
 
                 if (self._readOnly !== true) {
@@ -200,7 +202,7 @@ define(['js/logger',
             buildLayout,
             processLayout,
             generateHeader,
-            tHead = this.$table.find("> thead"),
+            tHead = this.$table.find('> thead'),
             maxRowSpan = 0;
 
         buildLayout = function (level, col) {
@@ -215,7 +217,7 @@ define(['js/logger',
 
             if (groupCol === true) {
                 sName = cName.split('.')[0];
-                rName = cName.substring(cName.indexOf('.') + 1 );
+                rName = cName.substring(cName.indexOf('.') + 1);
                 while (len--) {
                     cCol = layoutRow[len];
                     if (cCol.sName === sName) {
@@ -227,16 +229,20 @@ define(['js/logger',
                 }
 
                 if (inserted === false) {
-                    layoutRow.push({"sName": sName,
-                        "rowspan": 1,
-                        "colspan": 1,
-                        "subCols": [rName]});
+                    layoutRow.push({
+                        sName: sName,
+                        rowspan: 1,
+                        colspan: 1,
+                        subCols: [rName]
+                    });
                 }
             } else {
-                layoutRow.push({"sName": cName,
-                             "rowspan": 1,
-                             "colspan": 1,
-                             "subCols": []});
+                layoutRow.push({
+                    sName: cName,
+                    rowspan: 1,
+                    colspan: 1,
+                    subCols: []
+                });
             }
         };
 
@@ -254,14 +260,14 @@ define(['js/logger',
             for (i = 0; i < len; i += 1) {
                 cCol = layoutRow[i];
                 subColLen = cCol.subCols.length;
-                for (j = 0; j <  subColLen; j += 1) {
-                    buildLayout(level + 1, {"sTitle": cCol.subCols[j] });
+                for (j = 0; j < subColLen; j += 1) {
+                    buildLayout(level + 1, {sTitle: cCol.subCols[j]});
                 }
             }
 
             if (layout[level + 1].length > 0) {
                 //increase rowspan value in the rows 'current and up'
-                for (j = 0; j <= level; j+= 1) {
+                for (j = 0; j <= level; j += 1) {
                     len = layout[j].length;
                     for (i = 0; i < len; i += 1) {
                         //if it has exactly 1 subelement, no neet to rowspan
@@ -284,7 +290,7 @@ define(['js/logger',
                 rowSpan,
                 colSpan;
 
-            for (i = 0; i < len ; i += 1) {
+            for (i = 0; i < len; i += 1) {
                 colSpan = row[i].colspan;
                 rowSpan = colSpan === 1 ? row[i].rowspan : 1;
                 cellHtml = '<th rowspan="' + rowSpan + '" colspan="' + colSpan + '">' + row[i].sName + '</th>';
@@ -296,7 +302,7 @@ define(['js/logger',
             }
 
             if (rowHtml !== '') {
-                tHead.append($( '<tr>' + rowHtml + '</tr>'));
+                tHead.append($('<tr>' + rowHtml + '</tr>'));
             }
 
             layout.splice(0, 1);
@@ -305,7 +311,7 @@ define(['js/logger',
             }
         };
 
-        for (i = 0; i <  len; i++) {
+        for (i = 0; i < len; i++) {
             buildLayout(0, columns[i]);
             if (columns[i].sTitle.indexOf('.') !== 1) {
                 columns[i].sTitle = columns[i].sTitle.substring(columns[i].sTitle.lastIndexOf('.') + 1);
@@ -356,20 +362,22 @@ define(['js/logger',
             key;
 
         if (len > 0) {
-            //TODO: check if there are additional columns in the updated object compared to whatever is displayed in the grid rightnow!!!
+            //TODO: check if there are additional columns in the updated object compared
+            //TODO: to whatever is displayed in the grid rightnow!!!
             if (this.dataMemberID) {
                 while (len--) {
                     key = this._getDataMemberID(objects[len]);
                     if (this._dataMap.hasOwnProperty(key)) {
-                        if( 1 === this._oTable.fnUpdate( objects[len], this._dataMap[key]) ) {
-                            this.logger.warn("Updating object with dataMemberID '" + key + "' was unsuccessful");
+                        if (1 === this._oTable.fnUpdate(objects[len], this._dataMap[key])) {
+                            this.logger.warn('Updating object with dataMemberID "' + key + '" was unsuccessful');
                         }
                     } else {
-                        this.logger.warn("Can not update object with dataMemberID '" + key + "'. Object with this ID is not present in grid...");
+                        this.logger.warn('Can not update object with dataMemberID "' + key +
+                        '". Object with this ID is not present in grid...');
                     }
                 }
             } else {
-                this.logger.warn("Cannot update grid since dataMemberID is not set. Can not match elements...");
+                this.logger.warn('Cannot update grid since dataMemberID is not set. Can not match elements...');
             }
         }
     };
@@ -398,11 +406,13 @@ define(['js/logger',
                             }
                         }
                     } else {
-                        this.logger.warn("Can not delete object with dataMemberID '" + key + "'. Object with this dataMemberID is not present in grid...");
+                        this.logger.warn('Can not delete object with dataMemberID "' + key +
+                        '". Object with this dataMemberID is not present in grid...');
                     }
                 }
             } else {
-                this.logger.warn("Cannot delete objects from grid since dataMemberID is not set. Can not match elements...");
+                this.logger.warn('Cannot delete objects from grid since dataMemberID is not set. ' +
+                'Can not match elements...');
             }
         }
     };
@@ -414,35 +424,37 @@ define(['js/logger',
             flattenedObj,
             prop,
             n,
-i,
+            i,
             idx;
 
         while (len--) {
-            flattenedObj = util.flattenObject( objects[len]);
+            flattenedObj = util.flattenObject(objects[len]);
 
             for (prop in flattenedObj) {
-               if (flattenedObj.hasOwnProperty(prop)) {
-                   if (columnNames.indexOf(prop) === -1) {
-                       columnNames.push(prop);
+                if (flattenedObj.hasOwnProperty(prop)) {
+                    if (columnNames.indexOf(prop) === -1) {
+                        columnNames.push(prop);
 
-                       columns[prop] = {"title": prop,
-                                        "data": prop};
-                   }
-               }
+                        columns[prop] = {
+                            title: prop,
+                            data: prop
+                        };
+                    }
+                }
             }
         }
 
         columnNames = columnNames.sort();
         len = columnNames.length;
-        
- //if dataMemberID is set and is present in the columns
+
+        //if dataMemberID is set and is present in the columns
         //let it be the first column
-        if (this.dataMemberID && this.dataMemberID !== "") {
+        if (this.dataMemberID && this.dataMemberID !== '') {
             idx = columnNames.indexOf(this.dataMemberID);
             if (idx !== -1) {
-                columnNames.splice(idx,1);
+                columnNames.splice(idx, 1);
             }
-            columnNames.splice(0,0,this.dataMemberID);
+            columnNames.splice(0, 0, this.dataMemberID);
         }
 
         for (i = 0; i < len; i += 1) {
@@ -450,21 +462,6 @@ i,
 
             this._addColumnDef(columns[n].title, columns[n].data, true);
         }
-        
-        //if dataMemberID is set and is present in the columns
-        //let it be the first column
-        /*if (this.dataMemberID && this.dataMemberID !== "") {
-            if (columnNames.indexOf(this.dataMemberID) !== -1) {
-                this._addColumnDef(this.dataMemberID, this.dataMemberID, false);
-            }
-        }
-
-        for (i = 0; i < len; i += 1) {
-            n = columnNames[i];
-            if (this.dataMemberID !== n) {
-                this._addColumnDef(columns[n].title, columns[n].data, true);
-            }
-        }*/
 
         this.onColumnsAutoDetected(this._columns);
 
@@ -474,13 +471,14 @@ i,
     };
 
     DataGridWidget.prototype._addColumnDef = function (title, data, editable) {
-        this._columns.push({"sTitle": title,
-                            "mData": data,
-                            "bEditable": editable,
-                            "bSearchable": true,
-                            "bSortable": true,
-                            "sClass": ""
-           });
+        this._columns.push({
+            sTitle: title,
+            mData: data,
+            bEditable: editable,
+            bSearchable: true,
+            bSortable: true,
+            sClass: ''
+        });
     };
 
     DataGridWidget.prototype._extendColumnDefs = function () {
@@ -490,13 +488,13 @@ i,
 
         while (len--) {
             $.extend(this._columns[len], {
-                "mRender": function (data , type, full) {
+                mRender: function (data, type, full) {
                     return self._mRender(data, type, full);
                 },
-                "sDefaultContent" : DEFAULT_NON_EXISTING_VALUE
+                sDefaultContent: DEFAULT_NON_EXISTING_VALUE
             });
             if (this._noWrapColumns && this._noWrapColumns.indexOf(this._columns[len].mData) !== -1) {
-                sClass = this._columns[len].sClass || "";
+                sClass = this._columns[len].sClass || '';
                 sClass = sClass.split(' ');
                 if (sClass.indexOf('nowrap') === -1) {
                     sClass.push('nowrap');
@@ -507,8 +505,8 @@ i,
         }
     };
 
-    DataGridWidget.prototype._mRender = function (data , type, full) {
-        if (data === DEFAULT_NON_EXISTING_VALUE ) {
+    DataGridWidget.prototype._mRender = function (data, type /*, full*/) {
+        if (data === DEFAULT_NON_EXISTING_VALUE) {
             return '';
         }
 
@@ -519,7 +517,7 @@ i,
         return data;
     };
 
-    DataGridWidget.prototype._fnRowCallback = function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+    DataGridWidget.prototype._fnRowCallback = function (nRow, aData/*, iDisplayIndex, iDisplayIndexFull*/) {
         var len = nRow.cells.length,
             d,
             $td,
@@ -527,7 +525,7 @@ i,
             aoColumn = this._oTable.fnSettings().aoColumns;
 
         while (len--) {
-            aPos = this._oTable.fnGetPosition( nRow.cells[len] );
+            aPos = this._oTable.fnGetPosition(nRow.cells[len]);
             if (aPos[2] && aPos[2] !== -1) {
                 //d = this._oTable.fnGetData( aPos[0], aPos[2] );
                 d = this._fetchData(aData, aoColumn[len].mData);
@@ -549,8 +547,8 @@ i,
         var a = data.split('.'),
             k = a[0];
 
-        if (a.length > 1 ) {
-            a.splice(0,1);
+        if (a.length > 1) {
+            a.splice(0, 1);
 
             return this._fetchData(object[k], a.join('.'));
         } else {
@@ -558,47 +556,13 @@ i,
         }
     };
 
-    /*DataGridWidget.prototype._editCell = function (td) {
-        var $td = $(td),
-            aPos = this._oTable.fnGetPosition(td),
-            aData = this._oTable.fnGetData( aPos[0]),
-            id = this._fetchData(aData, this.dataMemberID),
-            colSettings = this._oTable.fnSettings().aoColumns[aPos[2]],
-            oldVal = colSettings.fnGetData(aData),
-            mData = colSettings.mData,
-            sType = colSettings.sType,
-            self = this;
-
-
-        if (this.dataMemberID && this.dataMemberID !== '') {
-            if (this._columns[aPos[2]].bEditable) {
-                $td.editInPlace({"enableEmpty": true,
-                                 "onChange": function (oldValue, newValue) {
-                    var typeSafeOldValue = self._typeSafeValue(oldValue, oldValue),
-                        typeSafeNewValue = self._typeSafeValue(newValue, oldValue);
-
-                    if (typeSafeNewValue !== typeSafeOldValue) {
-                        self._onCellEdit(id, mData, oldValue, newValue);
-                    } else {
-                        $td.html(oldValue);
-                    }
-                }});
-            }
-        } else {
-            this.logger.warn("Cell edit is not possible since dataMemberID is not set...");
-        }
-    };*/
-
-    /*DataGridWidget.prototype._typeSafeValue = function (val, defaultValue) {
-        //TODO:
-        return val;
-    };*/
-
     DataGridWidget.prototype._onCellEdit = function (id, prop, oldValue, newValue) {
-        this.onCellEdit({"id": id,
-                         "prop": prop,
-                         "oldValue": oldValue,
-                         "newValue": newValue });
+        this.onCellEdit({
+            id: id,
+            prop: prop,
+            oldValue: oldValue,
+            newValue: newValue
+        });
     };
 
     DataGridWidget.prototype._onRowCommand = function (command, td) {
@@ -607,7 +571,7 @@ i,
             aData = this._oTable.fnGetData(aRow),
             id = this._fetchData(aData, this.dataMemberID);
 
-        switch(command) {
+        switch (command) {
             case ROW_COMMAND_DELETE:
                 this._onRowDelete(id, aData);
                 break;
@@ -622,9 +586,10 @@ i,
         this.onRowDelete(id, aData);
     };
 
-    DataGridWidget.prototype.$_editSaveCancel = $('<i class="glyphicon glyphicon-ok glyphicon glyphicon-ok editSave"></i> <i class="glyphicon glyphicon-remove editCancel"></i>');
+    DataGridWidget.prototype.$_editSaveCancel = $('<i class="glyphicon glyphicon-ok glyphicon glyphicon-ok editSave">' +
+    '</i> <i class="glyphicon glyphicon-remove editCancel"></i>');
 
-    DataGridWidget.prototype._onRowEdit = function (rowIndex, id, aData) {
+    DataGridWidget.prototype._onRowEdit = function (rowIndex, id /*, aData*/) {
         var nRow = this._oTable.fnGetNodes(rowIndex),
             len = nRow.cells.length,
             d,
@@ -635,7 +600,7 @@ i,
             col,
             row,
             editCtrl,
-            editCtrlClass = "glyphicon glyphicon-edit",
+            editCtrlClass = 'glyphicon glyphicon-edit',
             endEdit,
             self = this;
 
@@ -643,12 +608,12 @@ i,
             $td = $(nRow.cells[len]);
 
             if (len > 0) {
-                aPos = this._oTable.fnGetPosition( nRow.cells[len] );
+                aPos = this._oTable.fnGetPosition(nRow.cells[len]);
                 row = aPos[0];
                 col = aPos[2];
                 if (this._columns[col - 1].bEditable === true) {
                     //figure out the data value from the bound object
-                    d = this._oTable.fnGetData( row, col );
+                    d = this._oTable.fnGetData(row, col);
                     //TODO: figure out the edit control / type
 
                     //set up edit controls in the cell
@@ -665,12 +630,12 @@ i,
 
         $tdCommand.html(this.$_editSaveCancel.clone());
         $tdCommand.off('click');
-        $tdCommand.on('click', ".editSave", function (event) {
+        $tdCommand.on('click', '.editSave', function (event) {
             endEdit(true);
             event.stopPropagation();
             event.preventDefault();
         });
-        $tdCommand.on('click', ".editCancel", function (event) {
+        $tdCommand.on('click', '.editCancel', function (event) {
             endEdit(false);
             event.stopPropagation();
             event.preventDefault();
@@ -682,7 +647,7 @@ i,
 
             $tdCommand.off('click');
 
-            aPos = self._oTable.fnGetPosition( $tdCommand[0] );
+            aPos = self._oTable.fnGetPosition($tdCommand[0]);
             row = aPos[0];
 
             oData = $.extend(true, {}, self._oTable.fnGetData(row));
@@ -698,7 +663,7 @@ i,
                     $td = $(nRow.cells[len]);
 
                     if (len > 0) {
-                        aPos = self._oTable.fnGetPosition( nRow.cells[len] );
+                        aPos = self._oTable.fnGetPosition(nRow.cells[len]);
                         row = aPos[0];
                         col = aPos[2];
                         if (self._columns[col - 1].bEditable === true) {
@@ -707,7 +672,7 @@ i,
 
                             if (editCtrl) {
                                 d = editCtrl.val();
-                                self._saveData(nData, aoColumns[col].mData, d );
+                                self._saveData(nData, aoColumns[col].mData, d);
                             }
                         }
                     }
@@ -749,7 +714,7 @@ i,
         for (i in data) {
             if (data.hasOwnProperty(i)) {
                 if (_.isObject(data[i])) {
-                    if (_.isArray(data[i]) ) {
+                    if (_.isArray(data[i])) {
                         result[i] = [];
                         len = data[i].length;
                         for (j = 0; j < len; j += 1) {
@@ -773,8 +738,8 @@ i,
         var a = data.split('.'),
             k = a[0];
 
-        if (a.length > 1 ) {
-            a.splice(0,1);
+        if (a.length > 1) {
+            a.splice(0, 1);
 
             object[k] = object[k] || {};
             this._saveData(object[k], a.join('.'), value);
@@ -791,7 +756,7 @@ i,
     };
 
     DataGridWidget.prototype._refilterDataTable = function () {
-        if (this._prevFilter && this._prevFilter !== "") {
+        if (this._prevFilter && this._prevFilter !== '') {
             this._filterDataTable(this._prevFilter);
         }
     };
@@ -799,7 +764,8 @@ i,
 
     /******************* CREATE COLUMN SHOW/HIDE UI CONTROL *******************/
 
-    DataGridWidget.prototype._createColumnShowHideControlInToolBar = function (columns, isColumnsGrouped, isActionButtonsInFirstColumn) {
+    DataGridWidget.prototype._createColumnShowHideControlInToolBar = function (columns, isColumnsGrouped,
+                                                                               isActionButtonsInFirstColumn) {
         var i,
             len = columns.length,
             self = this;
@@ -807,15 +773,17 @@ i,
         //clear dropdown menu
         this.toolbarItems.ddColumnVisibility.clear();
         this._columnVisibilityCheckboxList = [];
-        for (i = isActionButtonsInFirstColumn ? 1 : 0; i < len; i+= 1) {
+        for (i = isActionButtonsInFirstColumn ? 1 : 0; i < len; i += 1) {
 
             if (this.dataMemberID !== columns[i].mData) {
-                var chkBtn = this.toolbarItems.ddColumnVisibility.addCheckBox({"text": columns[i].mData,
-                    "data": { "idx": i },
-                    "checkChangedFn": function (data, isChecked) {
+                var chkBtn = this.toolbarItems.ddColumnVisibility.addCheckBox({
+                    text: columns[i].mData,
+                    data: {idx: i},
+                    checkChangedFn: function (data, isChecked) {
                         self.setColumnVisibility(data.idx, isChecked);
                         self._refilterDataTable();
-                    }});
+                    }
+                });
 
                 this._columnVisibilityCheckboxList.push(chkBtn);
             }
@@ -851,7 +819,7 @@ i,
 
     DataGridWidget.prototype.displayCommonColumnsOnly = function (commonColumnOnly) {
         this._displayCommonColumnsOnly = commonColumnOnly === true;
-        this.logger.debug("setting displayCommonColumnsOnly to: " + this._displayCommonColumnsOnly);
+        this.logger.debug('setting displayCommonColumnsOnly to: ' + this._displayCommonColumnsOnly);
         this._applyCommonColumnFilter();
     };
 
@@ -874,7 +842,7 @@ i,
             index -= 1;
         }
 
-        if (this.dataMemberID && this.dataMemberID !== "") {
+        if (this.dataMemberID && this.dataMemberID !== '') {
             index -= 1;
         }
 
@@ -888,7 +856,7 @@ i,
             index -= 1;
         }
 
-        if (this.dataMemberID && this.dataMemberID !== "") {
+        if (this.dataMemberID && this.dataMemberID !== '') {
             index -= 1;
         }
 
@@ -898,13 +866,10 @@ i,
     };
 
 
-
     DataGridWidget.prototype._applyCommonColumnFilter = function () {
         var displayedData,
-            displayedRows,
             len,
             flattenedObj,
-            idx,
             prop,
             columnCount = {},
             maxColumnCount = 0,
@@ -921,14 +886,14 @@ i,
             aoColumns = this._oTable.fnSettings().aoColumns;
 
             if (this._displayCommonColumnsOnly === true) {
-                displayedData = this._oTable._('tr', {"filter": "applied"});
-                /*displayedRows = this._oTable.$('tr', {"filter": "applied"});*/
+                displayedData = this._oTable._('tr', {filter: 'applied'});
+                /*displayedRows = this._oTable.$('tr', {'filter': 'applied'});*/
 
                 len = displayedData.length;
 
                 //flatten the data and get the count the columns that are present in each object
                 while (len--) {
-                    flattenedObj = util.flattenObject( displayedData[len]);
+                    flattenedObj = util.flattenObject(displayedData[len]);
 
                     for (prop in flattenedObj) {
                         if (flattenedObj.hasOwnProperty(prop) && flattenedObj[prop] !== DEFAULT_NON_EXISTING_VALUE) {
@@ -1017,14 +982,11 @@ i,
     };
 
     DataGridWidget.prototype._updateInfo = function (oSettings) {
-        var iStart = oSettings._iDisplayStart+1,
-            iEnd = oSettings.fnDisplayEnd(),
-            iMax = oSettings.fnRecordsTotal(),
+        var iMax = oSettings.fnRecordsTotal(),
             iTotal = oSettings.fnRecordsDisplay(),
             sOut;
 
-        if ( iTotal === iMax )
-        {
+        if (iTotal === iMax) {
             sOut = 'Displaying ' + iTotal + ' entries';
         } else {
             /* Record set after filtering */
@@ -1050,22 +1012,24 @@ i,
     /************** PUBLIC API OVERRIDABLES **************************/
 
     DataGridWidget.prototype.onCellEdit = function (params) {
-        this.logger.warn("onCellEdit is not overridden... " + JSON.stringify(params));
+        this.logger.warn('onCellEdit is not overridden... ' + JSON.stringify(params));
     };
 
     DataGridWidget.prototype.onColumnsAutoDetected = function (columnDefs) {
-        this.logger.warn("onColumnsAutoDetected is not overridden... " + JSON.stringify(columnDefs));
+        this.logger.warn('onColumnsAutoDetected is not overridden... ' + JSON.stringify(columnDefs));
     };
 
     DataGridWidget.prototype.onRowDelete = function (id, aData) {
-        this.logger.warn("onRowDelete is not overridden... ID:'" + id + "'\r\naData:" + JSON.stringify(aData));
+        this.logger.warn('onRowDelete is not overridden... ID:"' + id + '"\r\naData:' + JSON.stringify(aData));
     };
 
     DataGridWidget.prototype.onRowEdit = function (id, oData, nData) {
-        this.logger.warn("onRowEdit is not overridden... ID:'" + id + "'\r\noldData:" + JSON.stringify(oData) + ",\r\nnewData: " + JSON.stringify(nData));
+        this.logger.warn('onRowEdit is not overridden... ID:"' + id + '"\r\noldData:' + JSON.stringify(oData) +
+        ',\r\nnewData: ' + JSON.stringify(nData));
     };
 
-    DataGridWidget.prototype.createColumnShowHideControl = function (columns, isColumnsGrouped, isActionButtonsInFirstColumn) {
+    DataGridWidget.prototype.createColumnShowHideControl = function (columns, isColumnsGrouped,
+                                                                     isActionButtonsInFirstColumn) {
         this._createColumnShowHideControlInToolBar(columns, isColumnsGrouped, isActionButtonsInFirstColumn);
     };
 
@@ -1091,8 +1055,8 @@ i,
 
         //add FILTER box to toolbar
         this.toolbarItems.filterBox = toolBar.addTextBox({
-            "label": "Filter",
-            "textChangedFn": function (oldVal, newVal) {
+            label: 'Filter',
+            textChangedFn: function (oldVal, newVal) {
                 self._filterDataTable(newVal);
             }
         });
@@ -1100,11 +1064,12 @@ i,
         this.toolbarItems.infoLabel = toolBar.addLabel();
 
         //add DROPDOWN MENU to toolbar for column hide/show
-        this.toolbarItems.ddColumnVisibility = toolBar.addDropDownButton({ "text": "Columns" });
+        this.toolbarItems.ddColumnVisibility = toolBar.addDropDownButton({text: 'Columns'});
 
         this.toolbarItems.toggleButtonAllColumns = toolBar.addToggleButton(
-            {"text": "Show common columns only",
-                "clickFn": function (data, isPressed) {
+            {
+                text: 'Show common columns only',
+                clickFn: function (data, isPressed) {
                     self.displayCommonColumnsOnly(isPressed);
                 }
             }
@@ -1145,7 +1110,6 @@ i,
     DataGridWidget.prototype.setNoWrapColumns = function (c) {
         this._noWrapColumns = c.slice(0);
     };
-
 
 
     return DataGridWidget;

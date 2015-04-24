@@ -1,4 +1,4 @@
-/*jshint node:true, mocha:true */
+/*jshint node:true, mocha:true, expr:true */
 
 /**
  * @author kecso / https://github.com/kecso

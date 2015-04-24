@@ -1,10 +1,16 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
+/*jshint browser: true*/
 
-define(['js/logger',
-    'js/Controls/DropDownMenu'], function (Logger,
-                                            DropDownMenu) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+define([
+    'js/logger',
+    'js/Controls/DropDownMenu'
+], function (Logger, DropDownMenu) {
+
+    'use strict';
 
     var BranchSelectorWidget,
         NO_BRANCH_TEXT = 'NO BRANCH SELECTED';
@@ -17,7 +23,7 @@ define(['js/logger',
 
         this._initializeUI();
 
-        this._logger.debug("Created");
+        this._logger.debug('Created');
     };
 
     BranchSelectorWidget.prototype._initializeUI = function () {
@@ -25,11 +31,13 @@ define(['js/logger',
 
         this._el.empty();
 
-        this._ddBranches = new DropDownMenu({"dropUp": true,
-            "pullRight": true,
-            "size": "micro",
-            "sort": true,
-            "icon": "glyphicon glyphicon-random"});
+        this._ddBranches = new DropDownMenu({
+            dropUp: true,
+            pullRight: true,
+            size: 'micro',
+            sort: true,
+            icon: 'glyphicon glyphicon-random'
+        });
         this._ddBranches.setTitle(NO_BRANCH_TEXT);
 
         this._el.append(this._ddBranches.getEl());
@@ -50,7 +58,10 @@ define(['js/logger',
         this._ddBranches.onDropDownMenuOpen = function () {
             self._ddBranches.clear(true);
             self._timeoutID = window.setTimeout(function () {
-                self._ddBranches.addItem({'text': '<div class="loader-progressbar" style="left: 50%;position: relative;margin-left: -8px;"></div>'});
+                self._ddBranches.addItem({
+                    text: '<div class="loader-progressbar" style="' +
+                    'left: 50%;position: relative;margin-left: -8px;"></div>'}
+                );
             }, 50);
             self._refreshBranchList();
         };
@@ -95,8 +106,10 @@ define(['js/logger',
 
                 while (i--) {
                     if (actualbranch !== data[i].name) {
-                        self._ddBranches.addItem({"text": data[i].name,
-                            "value": data[i].name});
+                        self._ddBranches.addItem({
+                            text: data[i].name,
+                            value: data[i].name
+                        });
                     }
                 }
             }

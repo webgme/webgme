@@ -1,24 +1,32 @@
-define(["common/util/assert"], function (ASSERT) {
-    "use strict";
+/*globals define*/
+/*jshint node: true, browser: true*/
+
+/**
+ * @author kecso / https://github.com/kecso
+ */
+
+define(['common/util/assert'], function (ASSERT) {
+    'use strict';
 
     var Database = function (database, options) {
         ASSERT(typeof database === 'object');
         ASSERT(typeof options === 'object');
-        ASSERT(typeof options.logger !== 'undefined');
-        ASSERT(typeof options.globConf === 'object');
-        var gmeConfig = options.globConf,
-            logger = options.logger.fork('broadcaster');
+        // TODO: Add logging to this layer
+        //ASSERT(typeof options.logger !== 'undefined');
+        //ASSERT(typeof options.globConf === 'object');
+        //var gmeConfig = options.globConf,
+        //    logger = options.logger.fork('broadcaster');
 
         function openProject(name, callback) {
             var branches = {},
                 project,
                 getBranchHash = function getBranchHash(name, oldhash, callback) {
-                    ASSERT(typeof name === "string" && typeof callback === "function");
-                    ASSERT(typeof oldhash === "string" || oldhash === null);
+                    ASSERT(typeof name === 'string' && typeof callback === 'function');
+                    ASSERT(typeof oldhash === 'string' || oldhash === null);
 
-                    var tag = name + "@" + oldhash;
+                    var tag = name + '@' + oldhash;
                     var branch = branches[tag];
-                    if (typeof branch === "undefined") {
+                    if (typeof branch === 'undefined') {
                         branch = [callback];
                         branches[tag] = branch;
 
@@ -37,12 +45,13 @@ define(["common/util/assert"], function (ASSERT) {
                     }
                 },
                 setBranchHash = function setBranchHash(name, oldhash, newhash, callback) {
-                    ASSERT(typeof name === "string" && typeof oldhash === "string");
-                    ASSERT(typeof newhash === "string" && typeof callback === "function");
+                    ASSERT(typeof name === 'string' && typeof oldhash === 'string');
+                    ASSERT(typeof newhash === 'string' && typeof callback === 'function');
 
                     project.setBranchHash(name, oldhash, newhash, function (err) {
                         if (!err) {
-                            var prefix = name + "@", tag;
+                            var prefix = name + '@',
+                                tag;
                             for (tag in branches) {
                                 if (tag.substr(0, prefix.length) === prefix) {
                                     var cb, branch = branches[tag];
@@ -61,7 +70,7 @@ define(["common/util/assert"], function (ASSERT) {
                     var callbacks,
                         key,
                         cb,
-                        err = new Error("project closed");
+                        err = new Error('project closed');
                     for (key in branches) {
                         callbacks = branches[key];
                         while ((cb = callbacks.pop())) {

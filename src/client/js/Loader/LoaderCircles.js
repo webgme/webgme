@@ -1,11 +1,11 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
-
+/*globals define, $ */
+/*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 define(['css!js/Loader/styles/LoaderCircles.css'], function () {
-    "use strict";
+    'use strict';
 
     var LoaderCircles,
         CIRCLE_O_SHADOW_SIZE = 36,
@@ -20,7 +20,7 @@ define(['css!js/Loader/styles/LoaderCircles.css'], function () {
         this._el = params.containerElement;
 
         if (this._el.length === 0) {
-            throw "LoaderCircles's container control with id:'" + params.containerElement + "' could not be found";
+            throw 'LoaderCircles\'s container control with id:"' + params.containerElement + '" could not be found';
         }
 
         this._loaderBackgroundCssProps = {};
@@ -45,28 +45,35 @@ define(['css!js/Loader/styles/LoaderCircles.css'], function () {
 
     LoaderCircles.prototype._createElements = function () {
         if (!this._loaderContainer) {
-            this._loaderContainer = $('<div/>', { "class" : "loader-container" }).css(this._loaderContentCssProps);
+            this._loaderContainer = $('<div/>', {class: 'loader-container'}).css(this._loaderContentCssProps);
 
-            this._loaderBackground = $('<div/>', { "class" : "loader-bg" }).css(this._loaderBackgroundCssProps);
+            this._loaderBackground = $('<div/>', {class: 'loader-bg'}).css(this._loaderBackgroundCssProps);
 
-            this._circleOuter = $('<div/>', { "class" : "circle-o" });
+            this._circleOuter = $('<div/>', {class: 'circle-o'});
 
-            this._circleInner = $('<div/>', { "class" : "circle-i" });
+            this._circleInner = $('<div/>', {class: 'circle-i'});
 
             if (this._size) {
-                this._circleOuter.css({"width": this._size,
-                    "height": this._size,
-                    "border-radius": this._size});
+                this._circleOuter.css({
+                    width: this._size,
+                    height: this._size,
+                    'border-radius': this._size //jshint ignore: line
+                });
 
-                this._circleInner.css({"width": this._size - CIRCLE_I_SIZE_DIFF,
-                    "height": this._size - CIRCLE_I_SIZE_DIFF,
-                    "border-radius": this._size - CIRCLE_I_SIZE_DIFF,
-                    "top": 0 - CIRCLE_O_SHADOW_SIZE/3 - this._size/2 - (this._size - CIRCLE_I_SIZE_DIFF)/2 - 2 * CIRCLE_BORDER_SIZE});
+                this._circleInner.css({
+                    width:         this._size - CIRCLE_I_SIZE_DIFF,
+                    height:        this._size - CIRCLE_I_SIZE_DIFF,
+                    'border-radius': this._size - CIRCLE_I_SIZE_DIFF,
+                    top:           0 - CIRCLE_O_SHADOW_SIZE / 3 - this._size / 2 -
+                                     (this._size - CIRCLE_I_SIZE_DIFF) / 2 - 2 * CIRCLE_BORDER_SIZE
+                });
 
-                this._loaderContainer.css({"width": this._size + CIRCLE_O_SHADOW_SIZE,
-                    "height": this._size + CIRCLE_O_SHADOW_SIZE,
-                    "margin-top": (this._size + CIRCLE_O_SHADOW_SIZE) / -2,
-                    "margin-left": (this._size + CIRCLE_O_SHADOW_SIZE) / -2});
+                this._loaderContainer.css({
+                    width:       this._size + CIRCLE_O_SHADOW_SIZE,
+                    height:      this._size + CIRCLE_O_SHADOW_SIZE,
+                    'margin-top':  (this._size + CIRCLE_O_SHADOW_SIZE) / -2,
+                    'margin-left': (this._size + CIRCLE_O_SHADOW_SIZE) / -2
+                });
             }
 
             this._loaderContainer.append(this._circleOuter).append(this._circleInner);
@@ -94,7 +101,8 @@ define(['css!js/Loader/styles/LoaderCircles.css'], function () {
     };
 
     LoaderCircles.prototype.foreGroundColor = function (color) {
-        this._loaderContentCssProps["background-color"] = color;
+        // FIXME: is this foreGroundColor or background color now???
+        this._loaderContentCssProps['background-color'] = color;
     };
 
     LoaderCircles.prototype.setSize = function (size) {

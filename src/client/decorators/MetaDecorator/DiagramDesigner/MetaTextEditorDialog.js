@@ -1,17 +1,17 @@
-/*globals define, _*/
+/*globals define, $*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/util',
+define([
+    'js/util',
     'text!./templates/MetaTextEditorDialog.html',
     'codemirror',
-    'css!./styles/MetaTextEditorDialog.css'], function ( util,
-                                                 metaTextEditorDialogTemplate,
-                                                 CodeMirror) {
+    'css!./styles/MetaTextEditorDialog.css'
+], function (util, metaTextEditorDialogTemplate, codeMirror) {
 
-    "use strict";
+    'use strict';
 
     var MetaTextEditorDialog;
 
@@ -69,9 +69,9 @@ define(['js/util',
             event.preventDefault();
         });
 
-        this._codeMirror = CodeMirror(this._scriptEditor[0], {
+        this._codeMirror = codeMirror(this._scriptEditor[0], {
             value: metaText,
-            mode:  "javascript"
+            mode: 'javascript'
         });
     };
 

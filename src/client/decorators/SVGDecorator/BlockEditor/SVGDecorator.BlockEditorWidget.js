@@ -1,36 +1,38 @@
-/*globals define,_*/
+/*globals define, _, $*/
+/*jshint browser: true*/
 
-/*
+/**
  * @author brollb / https://github/brollb
  */
 
-define(['js/Constants',
-        'common/util/assert',
-        'js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase',
-        'js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase.ConnectionAreas',
-        'js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase.Stretch',
-        'js/Widgets/BlockEditor/BlockEditorWidget.Constants',
-        'text!../Core/SVGDecorator.html',
-        './SVGDecorator.Core',
-        'js/Utils/DisplayFormat',
-        'css!./SVGDecorator.BlockEditorWidget'], function (CONSTANTS,
-                                                          assert,
-                                                          BlockEditorWidgetDecoratorBase,
-                                                          BlockEditorWidgetDecoratorBaseConnectionAreas,
-                                                          BlockEditorWidgetDecoratorBaseStretch,
-                                                          BLOCK_CONSTANTS,
-                                                          SVGDecoratorTemplate,
-                                                          SVGDecoratorCore,
-                                                          DisplayFormat) {
+define([
+    'js/Constants',
+    'common/util/assert',
+    'js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase',
+    'js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase.ConnectionAreas',
+    'js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase.Stretch',
+    'js/Widgets/BlockEditor/BlockEditorWidget.Constants',
+    'text!../Core/SVGDecorator.html',
+    './SVGDecorator.Core',
+    'js/Utils/DisplayFormat',
+    'css!./SVGDecorator.BlockEditorWidget'
+], function (CONSTANTS,
+             assert,
+             BlockEditorWidgetDecoratorBase,
+             BlockEditorWidgetDecoratorBaseConnectionAreas,
+             BlockEditorWidgetDecoratorBaseStretch,
+             BLOCK_CONSTANTS,
+             SVGDecoratorTemplate,
+             SVGDecoratorCore) {
 
-    "use strict";
+    'use strict';
 
     var SVGDecoratorBlockEditorWidget,
-        DECORATOR_ID = "SVGDecoratorBlockEditorWidget",
-        SVG_COLOR_ID = "colors",
-        EMPTY_STRING = "_",//svg text elements need a value to getBBox
-        EMPTY_STYLE = "opacity:0;",//svg text elements need a value to getBBox
-        EDIT_TEXT = { VERTICAL_PADDING: 2, HORIZONTAL_PADDING: 5, MIN_WIDTH: 30};
+        DECORATOR_ID = 'SVGDecoratorBlockEditorWidget',
+        SVG_COLOR_ID = 'colors',
+        EMPTY_STRING = '_',//svg text elements need a value to getBBox
+        EMPTY_STYLE = 'opacity:0;',//svg text elements need a value to getBBox
+        EDIT_TEXT = {VERTICAL_PADDING: 2, HORIZONTAL_PADDING: 5, MIN_WIDTH: 30};
 
     /**
      * SVGDecoratorBlockEditorWidget
@@ -40,13 +42,15 @@ define(['js/Constants',
      * @return {undefined}
      */
     SVGDecoratorBlockEditorWidget = function (options) {
-        var opts = _.extend( {}, options);
+        var opts = _.extend({}, options);
 
         BlockEditorWidgetDecoratorBase.apply(this, [opts]);
         SVGDecoratorCore.apply(this, [opts]);
 
-        this._initializeVariables({ data: [BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT, 
-            BLOCK_CONSTANTS.INITIAL_MEASURE, BLOCK_CONSTANTS.INPUT_FIELDS], connectors: false});
+        this._initializeVariables({
+            data: [BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT,
+                BLOCK_CONSTANTS.INITIAL_MEASURE, BLOCK_CONSTANTS.INPUT_FIELDS], connectors: false
+        });
 
         this._selfPatterns = {};
 
@@ -57,7 +61,7 @@ define(['js/Constants',
         this._attributes = {};//Only if they have a text field for it
         this._textFieldStyles = {};//initial styles of editable text fields
 
-        this.logger.debug("SVGDecoratorBlockEditorWidget ctor");
+        this.logger.debug('SVGDecoratorBlockEditorWidget ctor');
     };
 
     /************************ INHERITANCE *********************/
@@ -76,6 +80,7 @@ define(['js/Constants',
     SVGDecoratorBlockEditorWidget.prototype.$DOMBase = $(SVGDecoratorTemplate);
 
     /**** Override from BlockEditorWidgetDecoratorBase ****/
+    //jshint camelcase: false
     /**
      * This is called before the item is added to the canvas DOM. The item must create it's
      * DOM representation.
@@ -89,36 +94,39 @@ define(['js/Constants',
 
         this.$svgContent.css('position', 'relative');
         // set title editable on double-click if editable
-        if (this.$name.attr('data-editable')){
-            this.$name.on("dblclick.editOnDblClick", null, function (event) {
+        if (this.$name.attr('data-editable')) {
+            this.$name.on('dblclick.editOnDblClick', null, function (event) {
                 if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                     var id = $(this).attr('id'),
                         box = {},
                         width,
-                        tempName = $('<div/>', { id: id + '-edit', 
-                                             text: $(this).text()});
+                        tempName = $('<div/>', {
+                            id: id + '-edit',
+                            text: $(this).text()
+                        });
 
-                     self.$svgContent.append(tempName);
+                    self.$svgContent.append(tempName);
 
-                     tempName.css('position', 'absolute');
-                     box = self.$name[0].getBBox();
-                     tempName.css('left', box.x + self._transforms[id].shift.x);
-                     tempName.css('top', box.y);
-                     width = Math.max(box.width + EDIT_TEXT.HORIZONTAL_PADDING, EDIT_TEXT.MIN_WIDTH);
-                     tempName.css('width', width);
-                     tempName.css('height', box.height + EDIT_TEXT.VERTICAL_PADDING);
+                    tempName.css('position', 'absolute');
+                    box = self.$name[0].getBBox();
+                    tempName.css('left', box.x + self._transforms[id].shift.x);
+                    tempName.css('top', box.y);
+                    width = Math.max(box.width + EDIT_TEXT.HORIZONTAL_PADDING, EDIT_TEXT.MIN_WIDTH);
+                    tempName.css('width', width);
+                    tempName.css('height', box.height + EDIT_TEXT.VERTICAL_PADDING);
 
-                     $(tempName).editInPlace({"class": id + "-edit",
-                                             "value": self.name,
-                                             "css": { 'z-index': 10000 },
-                                             "onChange": function (oldValue, newValue) {
-                                                 self._saveAttributeChange(id, newValue);
-                                             },
-                                             "onFinish": function () {
-                                                 $(this).remove();
-                                             }
+                    $(tempName).editInPlace({
+                        class: id + '-edit',
+                        value: self.name,
+                        css: {'z-index': 10000},
+                        onChange: function (oldValue, newValue) {
+                            self._saveAttributeChange(id, newValue);
+                        },
+                        onFinish: function () {
+                            $(this).remove();
+                        }
 
-                     });
+                    });
                 }
                 event.stopPropagation();
                 event.preventDefault();
@@ -132,9 +140,9 @@ define(['js/Constants',
      * @this {SVGDecoratorBlockEditorWidget}
      * @param {String} attributeName
      * @param {String} value
-     * @return {undefined} 
+     * @return {undefined}
      */
-    SVGDecoratorBlockEditorWidget.prototype._saveAttributeChange = function(attributeName, value){
+    SVGDecoratorBlockEditorWidget.prototype._saveAttributeChange = function (attributeName, value) {
         var client = this._control._client;
 
         client.setAttributes(this._metaInfo[CONSTANTS.GME_ID], attributeName, value);
@@ -145,7 +153,7 @@ define(['js/Constants',
     SVGDecoratorBlockEditorWidget.prototype.removeAttributeText = function (attr) {
         var fields;
 
-        if (this._attributes.hasOwnProperty( attr )){
+        if (this._attributes.hasOwnProperty(attr)) {
             fields = this.$el.find('text').filter('#' + attr);
             fields.remove();
             delete this._attributes[attr];
@@ -153,19 +161,19 @@ define(['js/Constants',
     };
 
     SVGDecoratorBlockEditorWidget.prototype.updateAttributeContent = function (attr, value) {
-        if (this._attributes.hasOwnProperty(attr)){
+        if (this._attributes.hasOwnProperty(attr)) {
             this._attributes[attr].value = value;
         }
     };
 
     SVGDecoratorBlockEditorWidget.prototype.setAttributeEnabled = function (attr, enabled) {
-        if (this._attributes.hasOwnProperty(attr)){
+        if (this._attributes.hasOwnProperty(attr)) {
             this._attributes[attr].enabled = enabled;
         }
     };
 
     /**
-     * Update the text in the svg for the attribute specified (or all attributes is none 
+     * Update the text in the svg for the attribute specified (or all attributes is none
      * provided)
      *
      * @param {String} attribute (optional)
@@ -180,29 +188,29 @@ define(['js/Constants',
             value,
             fields;
 
-        if (this._attributes[attribute] !== undefined){
+        if (this._attributes[attribute] !== undefined) {
             attributes = [attribute];
         } else {
             attributes = Object.keys(this._attributes);
         }
 
-        while (attributes.length){
+        while (attributes.length) {
             attr = attributes.pop();
             enabled = this._attributes[attr].enabled;
             value = this._attributes[attr].value;
-            fields = textFields.filter("#" + attr);
+            fields = textFields.filter('#' + attr);
 
-            //If they are "" or whitespace, the text will not have a BBox
+            //If they are '' or whitespace, the text will not have a BBox
             //and the edit box will be messed up (hence the EMPTY_STRING, EMPTY_STYLE)
-            if (!enabled || /^[ ]*$/.test(value)){
-                options = { style: EMPTY_STYLE };
+            if (!enabled || /^[ ]*$/.test(value)) {
+                options = {style: EMPTY_STYLE};
                 value = EMPTY_STRING;
 
             } else {
-                    options = { style: this._textFieldStyles[attr] || null };
+                options = {style: this._textFieldStyles[attr] || null};
             }
 
-            if (fields.length){
+            if (fields.length) {
                 this._setTextAndStretch(fields, value, attr, options);
             }
         }
@@ -221,69 +229,68 @@ define(['js/Constants',
             input,
             field;
 
-            for (var i = fields.length-1; i >= 0; i--) {
-                //Get the div containing this input field or create one
-                field = fields[i];
-                input = null;
-                if (this.inputFields[field].visible === true){
-                    //container = this.$inputFields.find("#"+field+ "-container");
-                    container = this.$el.find("#"+field+ "-container");
-                    if (!container.length){
-                        container = $('<div id="' + field + '-container" />');
-                        //this.$inputFields.append(container);
-                        this.$el.append(container);
-                    } else {//Remove any old info
-                        container.empty();
-                    }
+        for (var i = fields.length - 1; i >= 0; i--) {
+            //Get the div containing this input field or create one
+            field = fields[i];
+            input = null;
+            if (this.inputFields[field].visible === true) {
+                //container = this.$inputFields.find('#'+field+ '-container');
+                container = this.$el.find('#' + field + '-container');
+                if (!container.length) {
+                    container = $('<div id="' + field + '-container" />');
+                    //this.$inputFields.append(container);
+                    this.$el.append(container);
+                } else {//Remove any old info
+                    container.empty();
+                }
 
-                    //Update field
-                    if (this.inputFields[field].type === BLOCK_CONSTANTS.TEXT_FIELD.NAME){
-                        //Create a text field
-                        input = $('<input>', { id: field, type: "text", text: this.inputFields[field].content });
-                    } else if (this.inputFields[field].type === BLOCK_CONSTANTS.DROPDOWN.NAME){
-                        input = $('<select>', { id: field, class: "input-small" });
-                        if (this.inputFields[field].options){//If it has options
+                //Update field
+                if (this.inputFields[field].type === BLOCK_CONSTANTS.TEXT_FIELD.NAME) {
+                    //Create a text field
+                    input = $('<input>', {id: field, type: 'text', text: this.inputFields[field].content});
+                } else if (this.inputFields[field].type === BLOCK_CONSTANTS.DROPDOWN.NAME) {
+                    input = $('<select>', {id: field, class: 'input-small'});
+                    if (this.inputFields[field].options) {//If it has options
 
-                            for (var j = 0; j < this.inputFields[field].options.length; j++){
-                                input.append($('<option>', { text: this.inputFields[field].options[j] }));
-                            }
+                        for (var j = 0; j < this.inputFields[field].options.length; j++) {
+                            input.append($('<option>', {text: this.inputFields[field].options[j]}));
                         }
                     }
-
-                    if (input){
-                        container.css("left", this.inputFields[field].x);
-                        container.css("top", this.inputFields[field].y);
-                        container.css("position", "absolute");
-
-                        input.css("width", this.inputFields[field].width);
-                        input.css("height", this.inputFields[field].height);
-
-                        input.css("z-index", this.zIndex+1);
-                        container.append(input);
-                    }
-
-                    delete this._inputFields2Update[field];
                 }
-            }
 
-        this.$el.css("position", "relative");
+                if (input) {
+                    container.css('left', this.inputFields[field].x);
+                    container.css('top', this.inputFields[field].y);
+                    container.css('position', 'absolute');
+
+                    input.css('width', this.inputFields[field].width);
+                    input.css('height', this.inputFields[field].height);
+
+                    input.css('z-index', this.zIndex + 1);
+                    container.append(input);
+                }
+
+                delete this._inputFields2Update[field];
+            }
+        }
+
+        this.$el.css('position', 'relative');
         this.$el.append(this.$inputFields);
     };
 
     /**** Override from BlockEditorWidgetCore ****/
     SVGDecoratorBlockEditorWidget.prototype._renderContent = function () {
-        var client = this._control._client;
 
-        this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
-        this.zIndex = this._metaInfo[CONSTANTS.GME_ID].split("/").length;
+        this.$el.attr({'data-id': this._metaInfo[CONSTANTS.GME_ID]});
+        this.zIndex = this._metaInfo[CONSTANTS.GME_ID].split('/').length;
 
         //Set z-index
         this.$el[0].style.zIndex = this.zIndex;
 
         /* BUILD UI*/
         //find placeholders
-        this.$name = this.$el.find("." + BLOCK_CONSTANTS.NAME);
-        this.$svgContent = this.$el.find(".svg-content");
+        this.$name = this.$el.find('.' + BLOCK_CONSTANTS.NAME);
+        this.$svgContent = this.$el.find('.svg-content');
 
         this._updateSVGFile();
 
@@ -295,34 +302,34 @@ define(['js/Constants',
         //Update the displayed input areas based on newest data
         this.updateInputFields();
 
-        //If it has a "name" text id in the svg, use that instead of $name
+        //If it has a 'name' text id in the svg, use that instead of $name
         //This allows for the svg to fall back to a separate name div if
         //no spot for it in the svg
         this.$name.remove();
-        var name = this.$svgContent.find("#" + BLOCK_CONSTANTS.NAME);
-        if(name[0] !== undefined && name[0].tagName === "text"){
+        var name = this.$svgContent.find('#' + BLOCK_CONSTANTS.NAME);
+        if (name[0] !== undefined && name[0].tagName === 'text') {
             this.$name = name;
         }
 
         var attributes = this.hostDesignerItem.attributes,
             attrList = Object.keys(attributes),
-            textFields = this.$el.find("text"),
+            textFields = this.$el.find('text'),
             editFields,
             attr,
             fields,
             self = this,
             editText,
-            getEditText = function(id){//get edit fn for given attribute
+            getEditText = function (id) {//get edit fn for given attribute
                 return function (event) {
                     if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                         var element = self.$el.find('#' + id),
                             box,
                             width,
                             fontSize = $(element).css('font-size'),
-                            text = "",
-                            tempName = $('<div/>', { id: id + '-edit' });
+                            text = '',
+                            tempName = $('<div/>', {id: id + '-edit'});
 
-                        if (element[0].getAttribute('style') !== EMPTY_STYLE){
+                        if (element[0].getAttribute('style') !== EMPTY_STYLE) {
                             text = element.text();
                         }
 
@@ -338,14 +345,15 @@ define(['js/Constants',
                         tempName.css('width', width);
                         tempName.css('font-size', fontSize);
 
-                        $(tempName).editInPlace({"class": id + "-edit",
-                            "enableEmpty": true,
-                            "value": text,
-                            "css": { 'z-index': 10000, 'font-size': fontSize },
-                            "onChange": function (oldValue, newValue) {
+                        $(tempName).editInPlace({
+                            class: id + '-edit',
+                            enableEmpty: true,
+                            value: text,
+                            css: {'z-index': 10000, 'font-size': fontSize},
+                            onChange: function (oldValue, newValue) {
                                 self._saveAttributeChange(id, newValue);
                             },
-                            "onFinish": function () {
+                            onFinish: function () {
                                 $(this).remove();
                             }
                         });
@@ -355,24 +363,24 @@ define(['js/Constants',
                 };
             };
 
-        for (var i = 0; i < attrList.length; i++){
+        for (var i = 0; i < attrList.length; i++) {
             attr = attrList[i];
-            this._attributes[ attr ] = { enabled: true, value: attributes[attr].value+"" };
-            fields = textFields.filter("#" + attr);
+            this._attributes[attr] = {enabled: true, value: attributes[attr].value + ''};
+            fields = textFields.filter('#' + attr);
 
-            if (attr !== "name"){//name requires double click to edit
+            if (attr !== 'name') {//name requires double click to edit
                 //Make the fields editable
                 editText = getEditText(attr);
-                fields.on("click", null, editText);
+                fields.on('click', null, editText);
 
                 //Add support for clicking on a box around the text to edit the text
-                editFields = this.$el.find(".edit-" + attr);
-                editFields.on("click", null, editText);
+                editFields = this.$el.find('.edit-' + attr);
+                editFields.on('click', null, editText);
 
                 //Record the initial styles of every field
                 this._textFieldStyles[attr] = [];
-                for (var j = 0; j <= fields.length-1; j++){
-                    this._textFieldStyles[attr].push(fields[j].getAttribute("style"));
+                for (var j = 0; j <= fields.length - 1; j++) {
+                    this._textFieldStyles[attr].push(fields[j].getAttribute('style'));
                 }
             }
 
@@ -387,8 +395,8 @@ define(['js/Constants',
      *@this {SVGDecoratorBlockEditorWidget}
      *@return {Object|null}  Dictionary of input content indexed by target pointer name
      */
-    SVGDecoratorBlockEditorWidget.prototype.getInputFieldUpdates = function(){
-        if (this.inputFieldUpdates){
+    SVGDecoratorBlockEditorWidget.prototype.getInputFieldUpdates = function () {
+        if (this.inputFieldUpdates) {
             return _.extend({}, this.inputFieldUpdates);
         }
         return null;
@@ -403,21 +411,21 @@ define(['js/Constants',
      * @param {Array} [options] Only required for dropdown menus
      * @return {Boolean} return true if changed
      */
-    SVGDecoratorBlockEditorWidget.prototype.updateInputField = function(id, content, options){
+    SVGDecoratorBlockEditorWidget.prototype.updateInputField = function (id, content, options) {
         var changed = false;
 
-        if (this.inputFields[id].content !== content){
+        if (this.inputFields[id].content !== content) {
             this.inputFields[id].content = content;
             changed = this._inputFields2Update[id] = true;
         }
 
-            if (options && this.inputFields[id].type === BLOCK_CONSTANTS.DROPDOWN.NAME){
-                assert(options.indexOf(content) !== -1, "Selected option must be one of the available dropdown options");
-                if (this.inputFields[id].options !== options){
-                    this.inputFields[id].options = options;
-                    changed = this._inputFields2Update[id] = true;
-                }
+        if (options && this.inputFields[id].type === BLOCK_CONSTANTS.DROPDOWN.NAME) {
+            assert(options.indexOf(content) !== -1, 'Selected option must be one of the available dropdown options');
+            if (this.inputFields[id].options !== options) {
+                this.inputFields[id].options = options;
+                changed = this._inputFields2Update[id] = true;
             }
+        }
 
         return changed;
     };
@@ -430,7 +438,7 @@ define(['js/Constants',
      * @param {Boolean} visible
      * @return {undefined}
      */
-    SVGDecoratorBlockEditorWidget.prototype.setInputFieldVisibility = function(id, visible){
+    SVGDecoratorBlockEditorWidget.prototype.setInputFieldVisibility = function (id, visible) {
         this.inputFields[id].visible = visible;
     };
 
@@ -442,10 +450,10 @@ define(['js/Constants',
      */
     SVGDecoratorBlockEditorWidget.prototype.setGmeId = function (newId) {
         this._metaInfo[CONSTANTS.GME_ID] = newId;
-        this.$el.attr("data-id", newId);
+        this.$el.attr('data-id', newId);
 
         //Update the z-index
-        this.zIndex = newId.split("/").length;
+        this.zIndex = newId.split('/').length;
         this.$el[0].style.zIndex = this.zIndex;
     };
 
@@ -457,25 +465,26 @@ define(['js/Constants',
      * @return {undefined}
      */
     SVGDecoratorBlockEditorWidget.prototype.initializeColors = function () {
-        var colorGroup = this.$svgElement.find("#" + SVG_COLOR_ID);
+        var colorGroup = this.$svgElement.find('#' + SVG_COLOR_ID);
 
         this._colorInfo = {};
-        
+
         //Primary or secondary
         this._colorInfo.currentColor = BLOCK_CONSTANTS.COLOR_PRIMARY;
         this._colorInfo.supportsMultiColors = false;
         this._colorInfo.needsUpdate = false;
 
         //actual color
-        if (colorGroup.length){
-            if (colorGroup[0].hasAttribute("style")){
+        if (colorGroup.length) {
+            if (colorGroup[0].hasAttribute('style')) {
 
                 this._colorInfo.colors = {};
-                this._colorInfo.colors[BLOCK_CONSTANTS.COLOR_PRIMARY] = colorGroup[0].getAttribute("style");
+                this._colorInfo.colors[BLOCK_CONSTANTS.COLOR_PRIMARY] = colorGroup[0].getAttribute('style');
 
-                if (colorGroup[0].hasAttribute("data-" + BLOCK_CONSTANTS.COLOR_SECONDARY)){
+                if (colorGroup[0].hasAttribute('data-' + BLOCK_CONSTANTS.COLOR_SECONDARY)) {
                     this._colorInfo.supportsMultiColors = true;
-                    this._colorInfo.colors[BLOCK_CONSTANTS.COLOR_SECONDARY] = colorGroup[0].getAttribute("data-" + BLOCK_CONSTANTS.COLOR_SECONDARY);
+                    this._colorInfo.colors[BLOCK_CONSTANTS.COLOR_SECONDARY] =
+                        colorGroup[0].getAttribute('data-' + BLOCK_CONSTANTS.COLOR_SECONDARY);
 
                     this._colorInfo.$el = colorGroup[0];
                 }
@@ -486,15 +495,16 @@ define(['js/Constants',
     SVGDecoratorBlockEditorWidget.prototype._updateColor = function () {
         var newColor = this._colorInfo.colors[this._colorInfo.currentColor];
 
-        if (this._colorInfo.supportsMultiColors){//Change the color
-            this._colorInfo.$el.setAttribute("style", newColor);
+        if (this._colorInfo.supportsMultiColors) {//Change the color
+            this._colorInfo.$el.setAttribute('style', newColor);
         }
 
         this._colorInfo.needsUpdate = false;
     };
 
     /**
-     * Set the color of the current item to it's primary or secondary coloring depending upon the item it is attached to.
+     * Set the color of the current item to it's primary or secondary coloring depending upon the
+     * item it is attached to.
      *
      * @param {SVGDecoratorBlockEditorWidget} otherDecorator
      * @return {String} returns the item's color (primary/secondary)
@@ -504,13 +514,13 @@ define(['js/Constants',
             currentColor,
             newColorType;
 
-        if (this._colorInfo.supportsMultiColors){
+        if (this._colorInfo.supportsMultiColors) {
             currentColor = this.getColor();
 
-            if (otherColor === currentColor){
+            if (otherColor === currentColor) {
                 newColorType = BLOCK_CONSTANTS.COLOR_PRIMARY;
 
-                if (this._colorInfo.currentColor === BLOCK_CONSTANTS.COLOR_PRIMARY){
+                if (this._colorInfo.currentColor === BLOCK_CONSTANTS.COLOR_PRIMARY) {
                     newColorType = BLOCK_CONSTANTS.COLOR_SECONDARY;
                 }
 
@@ -524,9 +534,9 @@ define(['js/Constants',
 
         return changed;
     };
-    
+
     SVGDecoratorBlockEditorWidget.prototype.getColor = function () {
-        if (this._colorInfo.colors){
+        if (this._colorInfo.colors) {
             return this._colorInfo.colors[this._colorInfo.currentColor];
         }
 
@@ -564,14 +574,14 @@ define(['js/Constants',
             connectors = this.$el.find('> .' + BLOCK_CONSTANTS.CONNECTOR_CLASS);
 
         connectors.css('transform', 'translateX(' + xShift + 'px)');
-        
+
         //Update the displayed input areas based on newest data
         this.updateInputFields();
 
         //Apply stretching
         this._applyTransforms();
 
-        if (this._colorInfo.needsUpdate){
+        if (this._colorInfo.needsUpdate) {
             this._updateColor();
         }
 
@@ -589,7 +599,7 @@ define(['js/Constants',
             result = $.extend(true, [], this._customConnectionAreas);
             var i = result.length;
             while (i--) {
-                if(result[i].role === BLOCK_CONSTANTS.CONN_INCOMING){
+                if (result[i].role === BLOCK_CONSTANTS.CONN_INCOMING) {
                     //Incoming connection areas don't specify ptr
                     result[i].ptr = null;
                 }
@@ -598,24 +608,30 @@ define(['js/Constants',
                 result[i].x2 += xShift;
             }
         } else {
-            //no custom connection area defined in the SVG
-            //by default return the bounding box N, S, edges with a little bit of padding (variable 'edge') from the sides
+            // No custom connection area defined in the SVG.
+            // By default return the bounding box N, S, edges with a little bit of padding (variable 'edge')
+            // from the sides.
+
             //North side
-            result.push( {"id": "N",
-                "x1": edge + xShift,
-                "y1": 0,
-                "x2": this.svgWidth - edge + xShift,
-                "y2": 0,
-                "role": BLOCK_CONSTANTS.CONN_INCOMING} );
+            result.push({
+                id: 'N',
+                x1: edge + xShift,
+                y1: 0,
+                x2: this.svgWidth - edge + xShift,
+                y2: 0,
+                role: BLOCK_CONSTANTS.CONN_INCOMING
+            });
 
             //South side
-            result.push( {"id": "S",
-                "x1": edge + xShift,
-                "y1": this.svgHeight,
-                "x2": this.svgWidth - edge + xShift,
-                "y2": this.svgHeight,
-                "role": BLOCK_CONSTANTS.CONN_OUTGOING,
-                "ptr": BLOCK_CONSTANTS.PTR_NEXT} );
+            result.push({
+                id: 'S',
+                x1: edge + xShift,
+                y1: this.svgHeight,
+                x2: this.svgWidth - edge + xShift,
+                y2: this.svgHeight,
+                role: BLOCK_CONSTANTS.CONN_OUTGOING,
+                ptr: BLOCK_CONSTANTS.PTR_NEXT
+            });
         }
 
         return result;
@@ -627,14 +643,16 @@ define(['js/Constants',
      * @param {Array} ptrs
      */
     SVGDecoratorBlockEditorWidget.prototype.cleanConnections = function (ptrs) {
-        if (this._customConnectionAreas){
+        if (this._customConnectionAreas) {
             var i = this._customConnectionAreas.length;
-            while (i--){
-                if (this._customConnectionAreas[i].role === BLOCK_CONSTANTS.CONN_OUTGOING && ptrs.indexOf(this._customConnectionAreas[i].ptr) === -1){
-                        this._customConnectionAreas.splice(i, 1);
-                    }
+            while (i--) {
+                if (this._customConnectionAreas[i].role === BLOCK_CONSTANTS.CONN_OUTGOING &&
+                    ptrs.indexOf(this._customConnectionAreas[i].ptr) === -1) {
+
+                    this._customConnectionAreas.splice(i, 1);
+                }
             }
-        } 
+        }
     };
 
     /**
@@ -665,24 +683,24 @@ define(['js/Constants',
             area,
             j = areas.length;
 
-        while(j--){
+        while (j--) {
             area = areas[j];
             matchCount = 0;
-            for (var i = 0; i < attributes.length; i++){
+            for (var i = 0; i < attributes.length; i++) {
 
                 criteria = params[attributes[i]];
-                if (_.isFunction(criteria)){
-                    if (criteria(area[attributes[i]])){
+                if (_.isFunction(criteria)) {
+                    if (criteria(area[attributes[i]])) {
                         matchCount++;
                     }
                 } else {
-                    if (area[attributes[i]] === criteria){
+                    if (area[attributes[i]] === criteria) {
                         matchCount++;
                     }
                 }
             }
 
-            if (matchCount === attributes.length){
+            if (matchCount === attributes.length) {
                 return area;
             }
         }
@@ -692,25 +710,25 @@ define(['js/Constants',
 
 
     /**** Override from BlockEditorWidgetDecoratorBase ****/
-    //Shows the 'connectors' - appends them to the DOM
+        //Shows the 'connectors' - appends them to the DOM
     SVGDecoratorBlockEditorWidget.prototype.showSourceConnectors = function (/*params*/) {
     };
 
     /**** Override from BlockEditorWidgetDecoratorBase ****/
-    //Hides the 'connectors' - detaches them from the DOM
+        //Hides the 'connectors' - detaches them from the DOM
     SVGDecoratorBlockEditorWidget.prototype.hideSourceConnectors = function () {
     };
 
 
     /**** Override from BlockEditorWidgetDecoratorBase ****/
-    //should highlight the connectors for the given elements
+        //should highlight the connectors for the given elements
     SVGDecoratorBlockEditorWidget.prototype.showEndConnectors = function (params) {
-       this.showSourceConnectors(params);
+        this.showSourceConnectors(params);
     };
 
 
     /**** Override from BlockEditorWidgetDecoratorBase ****/
-    //Hides the 'connectors' - detaches them from the DOM
+        //Hides the 'connectors' - detaches them from the DOM
     SVGDecoratorBlockEditorWidget.prototype.hideEndConnectors = function () {
         this.hideSourceConnectors();
     };
@@ -729,8 +747,8 @@ define(['js/Constants',
         var width,
             height;
 
-        if (this.hostDesignerItem){
-            if (this._svgSize){
+        if (this.hostDesignerItem) {
+            if (this._svgSize) {
                 width = this._svgSize.width;
                 height = this._svgSize.height;
             } else {

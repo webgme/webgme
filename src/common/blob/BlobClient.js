@@ -1,6 +1,9 @@
-/*globals define*/
+/*globals define, escape*/
 /*jshint browser: true, node:true*/
-/*
+
+/**
+ * Client module for accessing the blob.
+ *
  * @author lattmann / https://github.com/lattmann
  * @author ksmyth / https://github.com/ksmyth
  */
@@ -74,6 +77,7 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
     BlobClient.prototype.putFile = function (name, data, callback) {
         var contentLength,
             req;
+
         function toArrayBuffer(buffer) {
             var ab = new ArrayBuffer(buffer.length);
             var view = new Uint8Array(ab);
@@ -82,7 +86,9 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             }
             return ab;
         }
-        // on node-webkit, we use XMLHttpRequest, but xhr.send thinks a Buffer is a string and encodes it in utf-8. Send an ArrayBuffer instead
+
+        // On node-webkit, we use XMLHttpRequest, but xhr.send thinks a Buffer is a string and encodes it in utf-8 -
+        // send an ArrayBuffer instead.
         if (typeof window !== 'undefined' && typeof Buffer !== 'undefined' && data instanceof Buffer) {
             data = toArrayBuffer(data); // FIXME will this have performance problems
         }
@@ -166,7 +172,7 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
         if (remaining === 0) {
             callback(null, hashes);
         }
-        putFile = function(filename, data) {
+        putFile = function (filename, data) {
             self.putFile(filename, data, function (err, hash) {
                 remaining -= 1;
 
@@ -221,7 +227,7 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             };
             require('util').inherits(BuffersWritable, Writable);
 
-            BuffersWritable.prototype._write = function(chunk, encoding, callback) {
+            BuffersWritable.prototype._write = function (chunk, encoding, callback) {
                 this.buffers.push(chunk);
                 callback();
             };
@@ -245,7 +251,7 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
                 }
             });
             // req.on('error', callback);
-            req.on('end', function() {
+            req.on('end', function () {
                 if (req.xhr.status > 399) {
                     callback(req.xhr.status);
                 } else {
@@ -325,7 +331,7 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             callback(null, hashes);
         }
 
-        saveCallback = function(err, hash) {
+        saveCallback = function (err, hash) {
             remaining -= 1;
 
             hashes.push(hash);

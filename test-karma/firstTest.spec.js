@@ -1,4 +1,5 @@
-/* jshint browser: true */
+/* jshint browser: true, mocha: true */
+/*globals expect*/
 /**
  * @author lattmann / https://github.com/lattmann
  */

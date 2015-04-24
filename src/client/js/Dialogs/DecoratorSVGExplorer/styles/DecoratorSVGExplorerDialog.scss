@@ -11,7 +11,6 @@ $img-margin: 3px;
 $desc-line-height: 20px;
 $desc-margin: 3px;
 
-
 .decorator-svg-dialog {
   div.img {
     margin: $item-margin;
@@ -29,7 +28,7 @@ $desc-margin: 3px;
       margin: 0;
       padding: $img-margin;
       max-width: 100%;
-      max-height:  $item-height - 2 * $img-margin - 2 * $desc-margin - $desc-line-height;
+      max-height: $item-height - 2 * $img-margin - 2 * $desc-margin - $desc-line-height;
     }
 
     div.desc {
@@ -54,9 +53,9 @@ $desc-margin: 3px;
     &.selected {
       border-color: #52a8ec;
       background-color: #dbeafc;
-      -webkit-box-shadow: 0px 0px 15px 0px #1276d4 !important;
-      -moz-box-shadow: 0px 0px 15px 0px #1276d4 !important;
-      box-shadow: 0px 0px 15px 0px #1276d4 !important;
+      -webkit-box-shadow: 0 0 15px 0 #1276d4 !important;
+      -moz-box-shadow: 0 0 15px 0 #1276d4 !important;
+      box-shadow: 0 0 15px 0 #1276d4 !important;
     }
   }
 }

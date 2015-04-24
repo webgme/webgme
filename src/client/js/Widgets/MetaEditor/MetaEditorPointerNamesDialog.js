@@ -1,29 +1,33 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
+/*globals define, $*/
+/*jshint browser: true*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/util',
-        'js/Constants',
-        'text!./templates/MetaEditorPointerNamesDialog.html',
-        'css!./styles/MetaEditorPointerNamesDialog.css'], function ( util,
-                                                                                CONSTANTS,
-                                                               metaEditorPointerNamesDialogTemplate) {
+define([
+    'js/util',
+    'js/Constants',
+    'text!./templates/MetaEditorPointerNamesDialog.html',
+    'css!./styles/MetaEditorPointerNamesDialog.css'
+], function (util,
+             CONSTANTS,
+             metaEditorPointerNamesDialogTemplate) {
 
-    "use strict";
+    'use strict';
 
     var MetaEditorPointerNamesDialog,
         POPULAR_POINTER_NAMES = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
 
     MetaEditorPointerNamesDialog = function () {
-      
+
     };
 
-    MetaEditorPointerNamesDialog.prototype.show = function (existingPointerNames, notAllowedPointerNames, isSet, callBack) {
+    MetaEditorPointerNamesDialog.prototype.show = function (existingPointerNames, notAllowedPointerNames,
+                                                            isSet, callback) {
         var self = this;
 
-        this._initDialog(existingPointerNames, notAllowedPointerNames, isSet, callBack);
+        this._initDialog(existingPointerNames, notAllowedPointerNames, isSet, callback);
 
         this._dialog.modal('show');
 
@@ -40,7 +44,8 @@ define(['js/util',
         });
     };
 
-    MetaEditorPointerNamesDialog.prototype._initDialog = function (existingPointerNames, notAllowedPointerNames, isSet, callBack) {
+    MetaEditorPointerNamesDialog.prototype._initDialog = function (existingPointerNames, notAllowedPointerNames,
+                                                                   isSet, callback) {
         var self = this,
             i,
             len = existingPointerNames.length,
@@ -51,13 +56,14 @@ define(['js/util',
         closeAndCallback = function (selectedName) {
             self._dialog.modal('hide');
 
-            if (callBack) {
-                callBack.call(self, selectedName);
+            if (callback) {
+                callback.call(self, selectedName);
             }
         };
 
         isValidPointerName = function (name) {
-            return !(name === "" || existingPointerNames.indexOf(name) !== -1 || notAllowedPointerNames.indexOf(name) !== -1);
+            return !(name === '' || existingPointerNames.indexOf(name) !== -1 ||
+            notAllowedPointerNames.indexOf(name) !== -1);
         };
 
         this._dialog = $(metaEditorPointerNamesDialogTemplate);
@@ -76,15 +82,16 @@ define(['js/util',
         this._btnGroup = this._el.find('.btn-group-existing').first();
         this._btnGroupPopular = this._dialog.find('.btn-group-popular').first();
 
-		//fill pointer names
+        //fill pointer names
         existingPointerNames.sort();
 
         if (len) {
 
             this._btnGroup.empty();
 
-            for (i = 0; i < len ; i += 1) {
-                this._btnGroup.append($('<button class="btn btn-default">' + util.toSafeString(existingPointerNames[i]) + '</button>'));
+            for (i = 0; i < len; i += 1) {
+                this._btnGroup.append($('<button class="btn btn-default">' +
+                util.toSafeString(existingPointerNames[i]) + '</button>'));
             }
 
         } else {
@@ -101,9 +108,10 @@ define(['js/util',
         if (isSet !== true) {
             len = POPULAR_POINTER_NAMES.length;
 
-            for (i = 0; i < len ; i += 1) {
+            for (i = 0; i < len; i += 1) {
                 if (existingPointerNames.indexOf(POPULAR_POINTER_NAMES[i]) === -1) {
-                    this._btnGroupPopular.append($('<button class="btn btn-default">' + POPULAR_POINTER_NAMES[i] + '</button>'));
+                    this._btnGroupPopular.append($('<button class="btn btn-default">' +
+                    POPULAR_POINTER_NAMES[i] + '</button>'));
                     popularsAdded = true;
                 }
             }
@@ -115,14 +123,14 @@ define(['js/util',
         }
 
         //create UI for new pointer name
-        this._txtNewPointerName =  this._dialog.find('.txt-pointer-name');
+        this._txtNewPointerName = this._dialog.find('.txt-pointer-name');
         this._btnCreateNew = this._dialog.find('.btn-create').disable(true);
         this._panelCreateNew = this._dialog.find('.panel-create-new');
 
         //hook up event handlers
         this._btnGroup.on('click', '.btn', function (event) {
-        var selectedPointerName = $(this).text();
-            
+            var selectedPointerName = $(this).text();
+
             event.stopPropagation();
             event.preventDefault();
 
@@ -143,10 +151,10 @@ define(['js/util',
             var val = self._txtNewPointerName.val();
 
             if (!isValidPointerName(val)) {
-                self._panelCreateNew.addClass("has-error");
+                self._panelCreateNew.addClass('has-error');
                 self._btnCreateNew.disable(true);
             } else {
-                self._panelCreateNew.removeClass("has-error");
+                self._panelCreateNew.removeClass('has-error');
                 self._btnCreateNew.disable(false);
             }
         });
@@ -165,7 +173,7 @@ define(['js/util',
 
         this._btnCreateNew.on('click', function (event) {
             var selectedPointerName = self._txtNewPointerName.val();
-            
+
             event.stopPropagation();
             event.preventDefault();
 

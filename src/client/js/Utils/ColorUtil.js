@@ -1,16 +1,24 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define */
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define([], function () {
 
-    "use strict";
+    'use strict';
 
-    var _getHexColor = function(color) {
+    function getHexColor(color) {
         var result,
             pattern6HEX = /^#[0-9A-F]{6}$/,
             pattern3HEX = /^#[0-9A-F]{3}$/,
             patternRGB = /rgb\(\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\s*\)$/,
             patternRGBA = /rgba\(\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d+(.\d*))\s*\)$/,
-            c;
+            c,
+            r,
+            g,
+            b;
 
         //non-string value can not be color
         if (typeof color === 'string') {
@@ -29,17 +37,17 @@ define([], function () {
                     c = color.match(patternRGB) || color.match(patternRGBA);
                     if (c) {
                         //r = c[1]
-                        var r = parseInt(c[1], 10).toString(16);
+                        r = parseInt(c[1], 10).toString(16);
                         if (r.length === 1) {
                             r = '0' + r;
                         }
                         //g = c[2]
-                        var g = parseInt(c[2], 10).toString(16);
+                        g = parseInt(c[2], 10).toString(16);
                         if (g.length === 1) {
                             g = '0' + g;
                         }
                         //b = c[3]
-                        var b = parseInt(c[3], 10).toString(16);
+                        b = parseInt(c[3], 10).toString(16);
                         if (b.length === 1) {
                             b = '0' + b;
                         }
@@ -50,16 +58,14 @@ define([], function () {
         }
 
         return result;
-    };
+    }
 
     //return utility functions
     return {
-        getHexColor : function(color) {
-            return _getHexColor(color);
-        },
+        getHexColor: getHexColor,
 
-        isColor : function(color) {
-            return (_getHexColor(color) !== undefined);
+        isColor: function (color) {
+            return (getHexColor(color) !== undefined);
         }
     };
 

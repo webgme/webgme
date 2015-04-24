@@ -1,21 +1,21 @@
 /*globals define, _, WebGMEGlobal*/
+/*jshint browser: true*/
 
-/*
+/**
  * @author brollb / https://github/brollb
  */
 
 define(['js/logger',
-        './BlockEditorWidget.Constants',
-        './ItemBase'], function (Logger,
-                                 BLOCK_CONSTANTS,
-                                 ItemBase) {
+    './BlockEditorWidget.Constants',
+    './ItemBase'
+], function (Logger, BLOCK_CONSTANTS, ItemBase) {
 
     "use strict";
 
     var LinkableItem,
         DEBUG = false,
         NAME = "linkable-item";
-    
+
     /**
      * LinkableItem
      *
@@ -24,7 +24,7 @@ define(['js/logger',
      * @param {BlockWidget} canvas
      * @return {undefined}
      */
-    LinkableItem = function(objId, canvas){
+    LinkableItem = function (objId, canvas) {
         ItemBase.prototype.initialize.call(this, NAME, objId, canvas);
 
         //Logger
@@ -47,7 +47,7 @@ define(['js/logger',
         //Input field info
         this.inputFieldsToUpdate = {};
         this.updatedAttributes = [];
-        
+
         //Coloring
         this._color = BLOCK_CONSTANTS.COLOR_PRIMARY;
 
@@ -58,9 +58,9 @@ define(['js/logger',
 
     _.extend(LinkableItem.prototype, ItemBase.prototype);
 
-    LinkableItem.prototype.$_DOMBase = $('<div/>').attr({ "class": BLOCK_CONSTANTS.DESIGNER_ITEM_CLASS });
+    LinkableItem.prototype.$_DOMBase = $('<div/>').attr({"class": BLOCK_CONSTANTS.DESIGNER_ITEM_CLASS});
 
-    /* * * * * * * * * * * * * ATTRIBUTES * * * * * * * * * * * * */ 
+    /* * * * * * * * * * * * * ATTRIBUTES * * * * * * * * * * * * */
     /**
      * Update attributes of this object
      *
@@ -74,21 +74,21 @@ define(['js/logger',
             i,
             changed = null;
 
-        while (newAttributeNames.length){
+        while (newAttributeNames.length) {
             attr = newAttributeNames.pop();
-            if (!_.isEqual(this.attributes[attr], attrInfo[attr])){
+            if (!_.isEqual(this.attributes[attr], attrInfo[attr])) {
                 this.attributes[attr] = attrInfo[attr];
                 changed = "set attribute";
                 this.updatedAttributes.push(attr);
             }
 
             i = oldAttributeNames.indexOf(attr);
-            if (i !== -1){
-                oldAttributeNames.splice(i,1);
+            if (i !== -1) {
+                oldAttributeNames.splice(i, 1);
             }
         }
 
-        while (oldAttributeNames.length){
+        while (oldAttributeNames.length) {
             attr = newAttributeNames.pop();
             delete this.attributes[attr];
             changed = "removed attr";
@@ -99,7 +99,7 @@ define(['js/logger',
     };
 
     /**
-     * Notify SVG of updated attributes 
+     * Notify SVG of updated attributes
      *
      * @return {undefined}
      */
@@ -107,10 +107,10 @@ define(['js/logger',
         var attributeName,
             value;
 
-        while (this.updatedAttributes.length){
+        while (this.updatedAttributes.length) {
             attributeName = this.updatedAttributes.pop();
             value = this.getAttribute(attributeName);
-            if ( value !== null){
+            if (value !== null) {
                 this._decoratorInstance.updateAttributeContent(attributeName, value);
             } else {
                 this._decoratorInstance.removeAttributeText(attributeName);
@@ -126,7 +126,7 @@ define(['js/logger',
      * @return {String|null} attribute
      */
     LinkableItem.prototype.getAttribute = function (attributeName) {
-        if (this.attributes[attributeName]){
+        if (this.attributes[attributeName]) {
             return this.attributes[attributeName].value;
         }
         return null;
@@ -152,9 +152,9 @@ define(['js/logger',
         return this.attributes[attributeName].options || null;
     };
 
-    /* * * * * * * * * * * * * END ATTRIBUTES * * * * * * * * * * * * */ 
+    /* * * * * * * * * * * * * END ATTRIBUTES * * * * * * * * * * * * */
 
-    /* * * * * * * * * * * * * POINTERS * * * * * * * * * * * * */ 
+    /* * * * * * * * * * * * * POINTERS * * * * * * * * * * * * */
     /**
      * Update the items pointers
      *
@@ -173,18 +173,18 @@ define(['js/logger',
             k,
             ptr;
 
-        while (i--){
+        while (i--) {
             ptr = ptrs[i];
             k = oldPtrs.indexOf(ptr);
 
-            if (ptrInfo[ptr]){//If pointer is set
-                if (k === -1){//didn't have the pointer
+            if (ptrInfo[ptr]) {//If pointer is set
+                if (k === -1) {//didn't have the pointer
                     //Add pointer
                     this.setPtr(ptr, ptrInfo[ptr]);
                     changed = "added ptr";
                 } else {
                     //Check that the pointer is correct
-                    if (this.ptrs[ptr].id !== ptrInfo[ptr].id){
+                    if (this.ptrs[ptr].id !== ptrInfo[ptr].id) {
                         this.removePtr(ptr);
 
                         this.setPtr(ptr, ptrInfo[ptr]);
@@ -197,13 +197,13 @@ define(['js/logger',
 
         //Remove old pointers
         i = oldPtrs.length;
-        while (i--){
+        while (i--) {
             ptr = oldPtrs[i];
             this.removePtr(ptr);
             changed = "removed ptr";
         }
 
-        if (changed === "removed ptr"){
+        if (changed === "removed ptr") {
             this.cleanConnectionAreas(ptrs);
         }
 
@@ -213,7 +213,7 @@ define(['js/logger',
     /**
      * Check if this item's position is dependent on another
      *
-     * @return {Boolean} 
+     * @return {Boolean}
      */
     LinkableItem.prototype.isPositionDependent = function () {
         return this.parent !== null;
@@ -230,7 +230,7 @@ define(['js/logger',
             incomingConn = item.getConnectionArea({role: BLOCK_CONSTANTS.CONN_INCOMING});
 
         //Make sure it is a valid 'move'
-        if (item === this){
+        if (item === this) {
             this.logger.error("Should never set a pointer to itself");
         }
 
@@ -245,7 +245,7 @@ define(['js/logger',
         this._decoratorInstance.setAttributeEnabled(ptr, false);
 
         //Record the connections used
-        if (outgoingConn && incomingConn){
+        if (outgoingConn && incomingConn) {
             item.conn2Item[incomingConn.id] = this;
             this.conn2Item[outgoingConn.id] = item;
 
@@ -264,7 +264,7 @@ define(['js/logger',
         var areas = this.getConnectionAreas(),
             ptrs = [];
 
-        for (var i = areas.length-1; i >= 0; i--) {
+        for (var i = areas.length - 1; i >= 0; i--) {
             if (areas[i].role === BLOCK_CONSTANTS.CONN_OUTGOING) {
                 ptrs.push(areas[i].ptr);
             }
@@ -296,17 +296,17 @@ define(['js/logger',
         //remove pointers and resize
         var item = this.ptrs[ptr];
 
-        if (!item){//If the ptr is empty, ignore
+        if (!item) {//If the ptr is empty, ignore
             return;
         }
 
-        if(resize === true){
+        if (resize === true) {
             this._updateSize(ptr, null);
         }
-        
+
         //Update decorator to show attributes with given name
         this._decoratorInstance.setAttributeEnabled(ptr, true);
-        
+
         delete this.ptrs[ptr];
 
         //free the connections
@@ -325,8 +325,10 @@ define(['js/logger',
      * @return {Boolean} True if the item is still connected to "this"
      */
     LinkableItem.prototype._freeConnRecord = function (ptr) {
-        var connId = this.getConnectionArea({ptr: ptr, 
-                                             role: BLOCK_CONSTANTS.CONN_OUTGOING}).id,
+        var connId = this.getConnectionArea({
+                ptr: ptr,
+                role: BLOCK_CONSTANTS.CONN_OUTGOING
+            }).id,
             item = this.conn2Item[connId],
             stillConnected = connId !== this.item2Conn[item.id];
 
@@ -352,7 +354,7 @@ define(['js/logger',
             conn = this._decoratorInstance.getConnectionArea({id: connId}),
             ptr = null;
 
-        if (conn){
+        if (conn) {
             ptr = conn.ptr;
         }
 
@@ -369,8 +371,8 @@ define(['js/logger',
         this._decoratorInstance.cleanConnections(ptrs);
     };
 
-    /* * * * * * * * * * * * * END POINTERS * * * * * * * * * * * * */ 
-    /* * * * * * * * * * * * * INPUT FIELDS * * * * * * * * * * * * */ 
+    /* * * * * * * * * * * * * END POINTERS * * * * * * * * * * * * */
+    /* * * * * * * * * * * * * INPUT FIELDS * * * * * * * * * * * * */
     /**
      * Update the input fields that need to be updated
      *
@@ -397,9 +399,9 @@ define(['js/logger',
             options,
             changed = false;
 
-        for (var i = fields.length - 1; i >= 0; i--){
+        for (var i = fields.length - 1; i >= 0; i--) {
             field = fields[i];
-            if (this.isOccupied(field)){
+            if (this.isOccupied(field)) {
                 visible = false;
             } else {//Update info for input field
                 content = this.getAttribute[field];
@@ -408,30 +410,33 @@ define(['js/logger',
                 targetPointer = this.inputFieldsToUpdate[field].target;
 
                 //Get additional options
-                if (this.inputFieldsToUpdate[field].type === BLOCK_CONSTANTS.DROPDOWN.NAME){
+                if (this.inputFieldsToUpdate[field].type === BLOCK_CONSTANTS.DROPDOWN.NAME) {
 
-                    if (this.inputFieldsToUpdate[field].content === BLOCK_CONSTANTS.DROPDOWN.CONTENT.META_ENUM){
+                    if (this.inputFieldsToUpdate[field].content === BLOCK_CONSTANTS.DROPDOWN.CONTENT.META_ENUM) {
                         //dropdown contains enumeration defined in the meta
                         options = this._getAttributeOptions(field);
                     } else {
-                        targetItem = this.getItemAtConnId(this.getConnectionArea({ptr: targetPointer, role:  BLOCK_CONSTANTS.CONN_OUTGOING}).id);
+                        targetItem = this.getItemAtConnId(this.getConnectionArea({
+                            ptr: targetPointer,
+                            role: BLOCK_CONSTANTS.CONN_OUTGOING
+                        }).id);
 
-                        if (targetItem){
+                        if (targetItem) {
 
-                            if (this.inputFieldsToUpdate[field].content === BLOCK_CONSTANTS.DROPDOWN.CONTENT.POINTERS){
+                            if (this.inputFieldsToUpdate[field].content === BLOCK_CONSTANTS.DROPDOWN.CONTENT.POINTERS) {
                                 options = targetItem.getPtrNames();
-                            } else if (this.inputFieldsToUpdate[field].content === BLOCK_CONSTANTS.DROPDOWN.CONTENT.ATTRIBUTES){
+                            } else if (this.inputFieldsToUpdate[field].content === BLOCK_CONSTANTS.DROPDOWN.CONTENT.ATTRIBUTES) {
                                 options = targetItem.getAttributeNames();
                             }
                         } else {
-                            options = [ "N/A" ];
+                            options = ["N/A"];
                         }
 
                     }
 
-                    if (!content){
+                    if (!content) {
                         content = '--' + this.inputFieldsToUpdate[field].content + '--';
-                        options.splice(0,0, content);//prepend empty string
+                        options.splice(0, 0, content);//prepend empty string
                     }
                 }
                 changed = this._decoratorInstance.updateInputField(field, content, options) || changed;
@@ -444,8 +449,8 @@ define(['js/logger',
         this._decoratorInstance.updateInputFields();
     };
 
-    /* * * * * * * * * * * * * END INPUT FIELDS * * * * * * * * * * * * */ 
-    /* * * * * * * * * * * * * COLORING * * * * * * * * * * * * */ 
+    /* * * * * * * * * * * * * END INPUT FIELDS * * * * * * * * * * * * */
+    /* * * * * * * * * * * * * COLORING * * * * * * * * * * * * */
     /**
      * Set the color of the given item based on the item it is attached to
      * @return {undefined}
@@ -454,8 +459,8 @@ define(['js/logger',
     LinkableItem.prototype.setColor = function () {
         var changed = false;
 
-        if (this.parent){
-            if (this.parent.getColor()){
+        if (this.parent) {
+            if (this.parent.getColor()) {
                 //Need to check if they have the same svg or svg color. If so, check whether
                 //the item is set to it's PRIMARY or SECONDARY color and set this one accordingly
                 changed = this._decoratorInstance.setColor(this.parent.getColor());
@@ -474,17 +479,17 @@ define(['js/logger',
      *
      */
     LinkableItem.prototype.updateColors = function () {
-        if(this.setColor()){
+        if (this.setColor()) {
             //update the colors of dependents
             var dependentKeys = Object.keys(this.ptrs),
                 i = dependentKeys.length;
-            while (i--){
+            while (i--) {
                 this.ptrs[dependentKeys[i]].updateColors();
             }
         }
     };
 
-    /* * * * * * * * * * * * * CONNECTIONS * * * * * * * * * * * * */ 
+    /* * * * * * * * * * * * * CONNECTIONS * * * * * * * * * * * * */
 
     /**
      * Check if the connection with the given id is occupied
@@ -510,18 +515,18 @@ define(['js/logger',
      * Get the LinkableItems dependent on this item sorted by "children"
      * and "sibling" pointers
      *
-     * @return {Object} 
+     * @return {Object}
      */
     LinkableItem.prototype.getDependentsByType = function () {
         //Return sibling/non-sibling dependents
-        var result = { siblings: [], children: [] },
+        var result = {siblings: [], children: []},
             ptrs = Object.keys(this.ptrs),
             ptr;
 
-        for (var i = ptrs.length-1; i >= 0; i--) {
+        for (var i = ptrs.length - 1; i >= 0; i--) {
             ptr = ptrs[i];
 
-            if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
+            if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1) {
                 result.children.push(this.ptrs[ptr].id);
             } else {
                 result.siblings.push(this.ptrs[ptr].id);
@@ -540,7 +545,7 @@ define(['js/logger',
         var deps = [],
             keys = Object.keys(this.ptrs);
 
-        for (var i = keys.length-1; i >= 0; i--) {
+        for (var i = keys.length - 1; i >= 0; i--) {
             deps.push(this.ptrs[keys[i]]);
         }
 
@@ -559,7 +564,7 @@ define(['js/logger',
             box,
             dependent;
 
-        while (deps.length){
+        while (deps.length) {
             dependent = this.canvas.items[deps.pop()];
             box = dependent.getBoundingBox();
 
@@ -571,7 +576,7 @@ define(['js/logger',
 
             //Add all siblings of the dependent -- BFS
             siblings = dependent.getDependentsByType().siblings;
-            if (siblings){
+            if (siblings) {
                 deps = deps.concat(siblings);
             }
         }
@@ -593,16 +598,18 @@ define(['js/logger',
         var box;
 
         //Update the decorator if needed
-        if (this._decoratorInstance.updateSize){
+        if (this._decoratorInstance.updateSize) {
             this._decoratorInstance.updateSize();
         }
 
-        box = {"x": this.positionX,
-               "y": this.positionY,
-               "width": this._width,
-               "height": this._height};
+        box = {
+            "x": this.positionX,
+            "y": this.positionY,
+            "width": this._width,
+            "height": this._height
+        };
 
-        if(box.width === 0 && box.height === 0){
+        if (box.width === 0 && box.height === 0) {
             //Try to get width and height from the svg
             var svg = this._decoratorInstance.$svgElement[0],
                 width = svg.width.baseVal.value,
@@ -621,11 +628,11 @@ define(['js/logger',
         return box;
     };
 
-    
+
     /**
-     * Update the size of the item. 
+     * Update the size of the item.
      *
-     * Includes fix for the jquery zoom bug caused by incorrect 
+     * Includes fix for the jquery zoom bug caused by incorrect
      * handling of "transform: scale" css in jquery
      *
      * @return {undefined}
@@ -646,9 +653,11 @@ define(['js/logger',
             }
 
             if (changed === true) {
-                this.canvas.dispatchEvent(this.canvas.events.ITEM_SIZE_ChANGED, {"ID": this.id,
+                this.canvas.dispatchEvent(this.canvas.events.ITEM_SIZE_ChANGED, {
+                    "ID": this.id,
                     "w": this._width,
-                    "h": this._height});
+                    "h": this._height
+                });
             }
         }
 
@@ -661,12 +670,12 @@ define(['js/logger',
      * @param {Number} zoom
      * @return {boolean} changed
      */
-    LinkableItem.prototype.updateZoom = function(zoom) {
+    LinkableItem.prototype.updateZoom = function (zoom) {
         var oldWidth = this._actualWidth,
             oldHeight = this._actualHeight;
 
-        this._actualWidth = this._width*zoom;
-        this._actualHeight = this._height*zoom;
+        this._actualWidth = this._width * zoom;
+        this._actualHeight = this._height * zoom;
 
         return oldWidth !== this._actualWidth || oldHeight !== this._actualHeight;  // true if it changed
     };
@@ -674,7 +683,7 @@ define(['js/logger',
 
     /******************** ALTER SVG  *********************/
     /**
-     * Update size based on all 'out' pointers 
+     * Update size based on all 'out' pointers
      *
      * @return {Boolean} return true if the item changed size
      */
@@ -687,18 +696,18 @@ define(['js/logger',
             changed = false,
             i;
 
-        for (i = ptrs.length-1; i >= 0; i--) {
+        for (i = ptrs.length - 1; i >= 0; i--) {
             combinedNames[ptrs[i]] = true;
         }
 
-        for (i = attrs.length-1; i >= 0; i--) {
+        for (i = attrs.length - 1; i >= 0; i--) {
             combinedNames[attrs[i]] = true;
         }
 
         names = Object.keys(combinedNames);
-        if(names.length){
+        if (names.length) {
             i = names.length;
-            while(i--){
+            while (i--) {
                 changed = this._updateSize(names[i], this.ptrs[names[i]]) || changed;
             }
         }
@@ -720,14 +729,14 @@ define(['js/logger',
         var box = item ? item.getTotalSize() : null,
             changed = false;
 
-        if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptrName) === -1){
+        if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptrName) === -1) {
             //stretch the decorator 
-            if (box === null){
-                box = { width: 0, height: 0 };//set the box to 0,0 so the decorator has a valid object to resize
+            if (box === null) {
+                box = {width: 0, height: 0};//set the box to 0,0 so the decorator has a valid object to resize
 
-            } 
+            }
 
-            changed = this._decoratorInstance.stretchTo(ptrName, { x: box.width, y: box.height });
+            changed = this._decoratorInstance.stretchTo(ptrName, {x: box.width, y: box.height});
         }
         return changed;
     };
@@ -738,7 +747,7 @@ define(['js/logger',
      * @return {undefined}
      */
     LinkableItem.prototype.updatePosition = function () {
-        var params = { ignoreDependents: true, resize: false },
+        var params = {ignoreDependents: true, resize: false},
             ptr;
 
         if (this.isPositionDependent()) {
@@ -756,9 +765,9 @@ define(['js/logger',
         var ptrs = Object.keys(this.ptrs),
             i = ptrs.length;
 
-        while (i--){
-            if (params.hasOwnProperty("propogate")){
-                if (params.propogate === true){
+        while (i--) {
+            if (params.hasOwnProperty("propogate")) {
+                if (params.propogate === true) {
                     this.ptrs[ptrs[i]].updateDependents(params);
                 }
 
@@ -778,20 +787,22 @@ define(['js/logger',
      * @param {Boolean} resize
      */
     LinkableItem.prototype.connectByPointerName = function (otherItem, ptr, extraParams) {
-        
+
         var incomingConn = otherItem.getConnectionArea({role: BLOCK_CONSTANTS.CONN_INCOMING}),
             outgoingConn = this.getConnectionArea({ptr: ptr, role: BLOCK_CONSTANTS.CONN_OUTGOING}),
-            params = { ptr: ptr,
-                       incomingConn: incomingConn,
-                       outgoingConn: outgoingConn,
-                       otherItem: otherItem };
-                        
+            params = {
+                ptr: ptr,
+                incomingConn: incomingConn,
+                outgoingConn: outgoingConn,
+                otherItem: otherItem
+            };
 
-        if (_.isObject(extraParams)){
+
+        if (_.isObject(extraParams)) {
             _.extend(params, extraParams);
         }
 
-        if (incomingConn && outgoingConn){
+        if (incomingConn && outgoingConn) {
             this._connect(params);
         }
 
@@ -807,21 +818,23 @@ define(['js/logger',
         var distance = this._getDistance(options.incomingConn, options.outgoingConn),
             item = options.otherItem,
             ptr = options.ptr,
-            params = { resize: true,
-                       ignoreDependents: false };
+            params = {
+                resize: true,
+                ignoreDependents: false
+            };
 
         _.extend(params, options);
 
-        if (!(params.incomingConn && params.outgoingConn)){
+        if (!(params.incomingConn && params.outgoingConn)) {
             this.logger.error("Connection Areas must both be defined");
         }
 
         //resize as necessary. May need to resize after connecting
-        if (params.resize){
+        if (params.resize) {
             this._updateSize(ptr, item);
         }
 
-        if (params.ignoreDependents){
+        if (params.ignoreDependents) {
             item.moveBy(distance.dx, distance.dy);
         } else {
             item.moveByWithDependents(distance.dx, distance.dy);
@@ -842,10 +855,12 @@ define(['js/logger',
             otherItem = this.parent,
             ptr = this.parent.item2Conn[this.id].ptr;
 
-        this._connect({ ptr: ptr,
-                        incomingConn: connArea,
-                        outgoingConn: otherItem.getConnectionArea({ptr: ptr, role: BLOCK_CONSTANTS.CONN_OUTGOING}),
-                        otherItem: otherItem });
+        this._connect({
+            ptr: ptr,
+            incomingConn: connArea,
+            outgoingConn: otherItem.getConnectionArea({ptr: ptr, role: BLOCK_CONSTANTS.CONN_OUTGOING}),
+            otherItem: otherItem
+        });
 
     };
 
@@ -858,14 +873,18 @@ define(['js/logger',
      * @return {Number} distance
      */
     LinkableItem.prototype._getDistance = function (connArea1, connArea2) {//Move first to second
-        var c1 = { x: (connArea1.x2 + connArea1.x1)/2,//center of first area
-            y: (connArea1.y2 + connArea1.y1)/2 },
-            c2 = { x: (connArea2.x2 + connArea2.x1)/2,//center of second area
-                y: (connArea2.y2 + connArea2.y1)/2 },
+        var c1 = {
+                x: (connArea1.x2 + connArea1.x1) / 2,//center of first area
+                y: (connArea1.y2 + connArea1.y1) / 2
+            },
+            c2 = {
+                x: (connArea2.x2 + connArea2.x1) / 2,//center of second area
+                y: (connArea2.y2 + connArea2.y1) / 2
+            },
             dx = c2.x - c1.x,
             dy = c2.y - c1.y;
 
-        return { dx: dx, dy: dy };
+        return {dx: dx, dy: dy};
     };
 
     /**
@@ -875,7 +894,7 @@ define(['js/logger',
      */
     LinkableItem.prototype.getRelativeConnectionAreas = function () {
         var areas = this._decoratorInstance.getConnectionAreas();
-        for (var i = areas.length-1; i >= 0; i--) {
+        for (var i = areas.length - 1; i >= 0; i--) {
             areas[i].parentId = this.id;
         }
 
@@ -886,11 +905,11 @@ define(['js/logger',
         var result = [],
             areas = this.getRelativeConnectionAreas();
 
-            for (var i = areas.length-1; i >= 0; i--) {
-                if (!this.conn2Item[areas[i].id]) {
-                    result.push(areas[i]);
-                }
+        for (var i = areas.length - 1; i >= 0; i--) {
+            if (!this.conn2Item[areas[i].id]) {
+                result.push(areas[i]);
             }
+        }
 
         return result;
     };
@@ -944,9 +963,9 @@ define(['js/logger',
 
         //Make sure it is inside the box
         var box = this.getBoundingBox();
-        if(box.height > 0 && box.width > 0){//If the box has been rendered
-            if(area.x1 >= box.x && area.x2 <= box.x2 && area.y1 >= box.y && area.y2 <= box.y2){
-               this.logger.debug("Connection Area is outside the linkable item's bounding box");
+        if (box.height > 0 && box.width > 0) {//If the box has been rendered
+            if (area.x1 >= box.x && area.x2 <= box.x2 && area.y1 >= box.y && area.y2 <= box.y2) {
+                this.logger.debug("Connection Area is outside the linkable item's bounding box");
             }
         }
 
@@ -955,7 +974,7 @@ define(['js/logger',
 
     // Convenience method
     LinkableItem.prototype._makeConnAreasAbsolute = function (areas) {
-        for (var i = areas.length-1; i >= 0; i--) {
+        for (var i = areas.length - 1; i >= 0; i--) {
             areas[i] = this._makeConnAreaAbsolute(areas[i]);
         }
         return areas;
@@ -969,7 +988,7 @@ define(['js/logger',
      * @return {Object} distance (dx, dy)
      */
     LinkableItem.prototype.getConnectionDistance = function (options) {
-        var connArea = this.getConnectionArea({ptr: options.ptr, role:  BLOCK_CONSTANTS.CONN_OUTGOING}),
+        var connArea = this.getConnectionArea({ptr: options.ptr, role: BLOCK_CONSTANTS.CONN_OUTGOING}),
             item = options.dst,
             otherArea = item.getConnectionArea({role: BLOCK_CONSTANTS.CONN_INCOMING});
 
@@ -985,10 +1004,10 @@ define(['js/logger',
      * @return {Number} distance between connection areas
      */
     LinkableItem.prototype.__getDistanceBetweenConnections = function (area1, area2) {
-        var x1 = (area1.x2 + area1.x1)/2,
-            x2 = (area2.x2 + area2.x1)/2,
-            y1 = (area1.y2 + area1.y1)/2,
-            y2 = (area2.y2 + area2.y1)/2;
+        var x1 = (area1.x2 + area1.x1) / 2,
+            x2 = (area2.x2 + area2.x1) / 2,
+            y1 = (area1.y2 + area1.y1) / 2,
+            y2 = (area2.y2 + area2.y1) / 2;
 
         return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
     };
@@ -1016,7 +1035,7 @@ define(['js/logger',
         var dependents = Object.keys(this.ptrs),
             i = dependents.length;
 
-        while (i--){
+        while (i--) {
             this.ptrs[dependents[i]].moveByWithDependents(dX, dY);
         }
     };
@@ -1031,7 +1050,7 @@ define(['js/logger',
     LinkableItem.prototype.moveBy = function (dX, dY) {
         this.moveTo(this.positionX + dX, this.positionY + dY);
     };
-    
+
     /**
      * Move the item to the given x,y position.
      *
@@ -1056,14 +1075,18 @@ define(['js/logger',
             }
 
             if (positionChanged) {
-                this.$el.css({"left": this.positionX,
-                    "top": this.positionY });
+                this.$el.css({
+                    "left": this.positionX,
+                    "top": this.positionY
+                });
 
                 if (!this.isPositionDependent()) {//Only update database if position is independent
 
-                    this.canvas.dispatchEvent(this.canvas.events.ITEM_POSITION_CHANGED, {"ID": this.id,
+                    this.canvas.dispatchEvent(this.canvas.events.ITEM_POSITION_CHANGED, {
+                        "ID": this.id,
                         "x": this.positionX,
-                        "y": this.positionY});
+                        "y": this.positionY
+                    });
                 }
             }
         }
@@ -1110,14 +1133,14 @@ define(['js/logger',
     LinkableItem.prototype.update = function (objDescriptor) {
         var needToUpdateDependents = null,
             self = this,
-            positionShouldChange = function (newPos){
+            positionShouldChange = function (newPos) {
                 if (!self.isPositionDependent() && //If the item cares about it's stored position
                     newPos &&
-                    _.isNumber(newPos.x) && 
+                    _.isNumber(newPos.x) &&
                     _.isNumber(newPos.y)) {
 
                     //Check if the position is different from current
-                    if (newPos.x !== self.positionX || newPos.y !== self.positionY){
+                    if (newPos.x !== self.positionX || newPos.y !== self.positionY) {
                         return true;
                     }
                 }
@@ -1127,7 +1150,7 @@ define(['js/logger',
 
         //check what might have changed
         //update position
-        if (positionShouldChange(objDescriptor.position)){
+        if (positionShouldChange(objDescriptor.position)) {
             this.moveTo(objDescriptor.position.x, objDescriptor.position.y);
             needToUpdateDependents = "move";
         }
@@ -1139,7 +1162,7 @@ define(['js/logger',
         var oldMetaInfo = this._decoratorInstance.getMetaInfo();
 
         //update gmeId if needed
-        if(objDescriptor.id && oldMetaInfo[BLOCK_CONSTANTS.GME_ID] && oldMetaInfo[BLOCK_CONSTANTS.GME_ID] !== objDescriptor.id){
+        if (objDescriptor.id && oldMetaInfo[BLOCK_CONSTANTS.GME_ID] && oldMetaInfo[BLOCK_CONSTANTS.GME_ID] !== objDescriptor.id) {
             this.logger.debug("Changing " + oldMetaInfo[BLOCK_CONSTANTS.GME_ID] + " to " + objDescriptor.id);
             this._decoratorInstance.setGmeId(objDescriptor.id);
             this.$el.html(this._decoratorInstance.$el);
@@ -1169,7 +1192,7 @@ define(['js/logger',
             if (objDescriptor.metaInfo) {
                 this._decoratorInstance.setMetaInfo(objDescriptor.metaInfo);
             }
-            if (this._decoratorInstance.update()){
+            if (this._decoratorInstance.update()) {
                 needToUpdateDependents = "decorator resized";
             }
         }

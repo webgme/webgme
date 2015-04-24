@@ -1,19 +1,26 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, $, document*/
+/*jshint browser: true*/
 
-define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-    'raphaeljs'], function (DiagramDesignerWidgetConstants) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
-    "use strict";
+define([
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
+    'raphaeljs'
+], function (DiagramDesignerWidgetConstants) {
+
+    'use strict';
 
     var ConnectionSegmentPoint,
         MIN_WIDTH = 5,
         EVENTPOSTFIX = 'ConnectionSegmentPoint',
         MOUSEMOVE = 'mousemove.' + EVENTPOSTFIX,
         MOUSEUP = 'mouseup.' + EVENTPOSTFIX,
-        MOVE_TYPE_SEGMENT_POINT = "segment-point",
-        MOVE_TYPE_BEZIER_CONTROL_POINT = "control-point",
+        MOVE_TYPE_SEGMENT_POINT = 'segment-point',
+        MOVE_TYPE_BEZIER_CONTROL_POINT = 'control-point',
         MIN_DELTA = 10,
-        IN_DRAW_LINETYPE = "-",
+        IN_DRAW_LINETYPE = '-',
         SNAP_DISTANCE = 10,
         BEZIER_CONTROL_POINT_WIDTH_DIFF = 1;
 
@@ -21,7 +28,7 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
         this.id = params.id;
         this.connection = params.connection;
         this.point = params.point;
-        this.pointAfter= params.pointAfter;
+        this.pointAfter = params.pointAfter;
         this.pointBefore = params.pointBefore;
         this.svgPaper = this.connection.paper;
         this.isBezier = this.connection.isBezier;
@@ -59,7 +66,9 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     ConnectionSegmentPoint.prototype._render = function () {
         //add bezier control point
         if (this.isBezier) {
-            this.cpLine = this.svgPaper.path("M" + (this.point[0] - this.point[2]) + "," + (this.point[1] - this.point[3]) + " L" + (this.point[0] + this.point[2]) + "," + (this.point[1] + this.point[3]));
+            this.cpLine = this.svgPaper.path('M' + (this.point[0] - this.point[2]) + ',' +
+            (this.point[1] - this.point[3]) + ' L' + (this.point[0] + this.point[2]) + ',' +
+            (this.point[1] + this.point[3]));
         }
 
         //add segment point marker
@@ -67,11 +76,15 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
         this.circle.node.setAttribute('class', DiagramDesignerWidgetConstants.CONNECTION_SEGMENT_POINT_CLASS);
 
         if (this.isBezier) {
-            this.cpBeforeCircle = this.svgPaper.circle(this.point[0] - this.point[2], this.point[1] - this.point[3], this.width - BEZIER_CONTROL_POINT_WIDTH_DIFF);
-            this.cpAfterCircle = this.svgPaper.circle(this.point[0] + this.point[2], this.point[1] + this.point[3], this.width - BEZIER_CONTROL_POINT_WIDTH_DIFF);
+            this.cpBeforeCircle = this.svgPaper.circle(this.point[0] - this.point[2], this.point[1] - this.point[3],
+                this.width - BEZIER_CONTROL_POINT_WIDTH_DIFF);
+            this.cpAfterCircle = this.svgPaper.circle(this.point[0] + this.point[2], this.point[1] + this.point[3],
+                this.width - BEZIER_CONTROL_POINT_WIDTH_DIFF);
 
-            this.cpBeforeCircle.node.setAttribute('class', DiagramDesignerWidgetConstants.CONNECTION_SEGMENT_POINT_BEZIER_CONTROL_CLASS);
-            this.cpAfterCircle.node.setAttribute('class', DiagramDesignerWidgetConstants.CONNECTION_SEGMENT_POINT_BEZIER_CONTROL_CLASS);
+            this.cpBeforeCircle.node.setAttribute('class',
+                DiagramDesignerWidgetConstants.CONNECTION_SEGMENT_POINT_BEZIER_CONTROL_CLASS);
+            this.cpAfterCircle.node.setAttribute('class',
+                DiagramDesignerWidgetConstants.CONNECTION_SEGMENT_POINT_BEZIER_CONTROL_CLASS);
         }
 
         this._initMouseHandlers();
@@ -160,7 +173,7 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
             point;
 
         if (this._moving !== true) {
-            if (Math.abs(dx) >= MIN_DELTA || Math.abs(dy) >= MIN_DELTA ) {
+            if (Math.abs(dx) >= MIN_DELTA || Math.abs(dy) >= MIN_DELTA) {
                 this._moving = true;
             }
         }
@@ -172,16 +185,24 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
             this.point[0] = point[0];
             this.point[1] = point[1];
 
-            this.circle.attr({'cx': this.point[0],
-                              'cy': this.point[1]});
+            this.circle.attr({
+                cx: this.point[0],
+                cy: this.point[1]
+            });
 
             if (this.isBezier) {
-                this.cpLine.attr({'path': "M" + (this.point[0] - this.point[2]) + "," + (this.point[1] - this.point[3]) + " L" + (this.point[0] + this.point[2]) + "," + (this.point[1] + this.point[3])});
+                this.cpLine.attr({'path': 'M' + (this.point[0] - this.point[2]) + ',' +
+                (this.point[1] - this.point[3]) + ' L' + (this.point[0] + this.point[2]) + ',' +
+                (this.point[1] + this.point[3])});
 
-                this.cpBeforeCircle.attr({'cx': this.point[0] - this.point[2],
-                    'cy': this.point[1] - this.point[3]});
-                this.cpAfterCircle.attr({'cx': this.point[0] + this.point[2],
-                    'cy': this.point[1] + this.point[3]});
+                this.cpBeforeCircle.attr({
+                    'cx': this.point[0] - this.point[2],
+                    'cy': this.point[1] - this.point[3]
+                });
+                this.cpAfterCircle.attr({
+                    'cx': this.point[0] + this.point[2],
+                    'cy': this.point[1] + this.point[3]
+                });
             }
 
             this._redrawMovePath();
@@ -269,7 +290,7 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
 
 
         if (this._moving !== true) {
-            if (Math.abs(dx) >= MIN_DELTA || Math.abs(dy) >= MIN_DELTA ) {
+            if (Math.abs(dx) >= MIN_DELTA || Math.abs(dy) >= MIN_DELTA) {
                 this._moving = true;
             }
         }
@@ -291,12 +312,17 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
                 this.point[3] = 0;
             }
 
-            this.cpLine.attr({'path': "M" + (this.point[0] - this.point[2]) + "," + (this.point[1] - this.point[3]) + " L" + (this.point[0] + this.point[2]) + "," + (this.point[1] + this.point[3])});
+            this.cpLine.attr({'path': 'M' + (this.point[0] - this.point[2]) + ',' + (this.point[1] - this.point[3]) +
+            ' L' + (this.point[0] + this.point[2]) + ',' + (this.point[1] + this.point[3])});
 
-            this.cpBeforeCircle.attr({'cx': this.point[0] - this.point[2],
-                                      'cy': this.point[1] - this.point[3]});
-            this.cpAfterCircle.attr({'cx': this.point[0] + this.point[2],
-                'cy': this.point[1] + this.point[3]});
+            this.cpBeforeCircle.attr({
+                'cx': this.point[0] - this.point[2],
+                'cy': this.point[1] - this.point[3]
+            });
+            this.cpAfterCircle.attr({
+                'cx': this.point[0] + this.point[2],
+                'cy': this.point[1] + this.point[3]
+            });
 
             this._redrawMovePath();
         }
@@ -306,26 +332,34 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
         var pathDef = [];
 
         if (this.isBezier) {
-            pathDef.push("M" + this.pointBefore[0] + "," + this.pointBefore[1]);
-            pathDef.push("C" + (this.pointBefore[0] + this.pointBefore[2]) + "," + (this.pointBefore[1] + this.pointBefore[3]) + " " + (this.point[0] - this.point[2]) + "," + (this.point[1] - this.point[3]) + " " + this.point[0] + "," + this.point[1]);
-            pathDef.push("C" + (this.point[0] + this.point[2]) + "," + (this.point[1] + this.point[3]) + " " + (this.pointAfter[0] - this.pointAfter[2]) + "," + (this.pointAfter[1] - this.pointAfter[3]) + " " + this.pointAfter[0] + "," + this.pointAfter[1]);
+            pathDef.push('M' + this.pointBefore[0] + ',' + this.pointBefore[1]);
+            pathDef.push('C' + (this.pointBefore[0] + this.pointBefore[2]) + ',' + (this.pointBefore[1] +
+            this.pointBefore[3]) + ' ' + (this.point[0] - this.point[2]) + ',' + (this.point[1] - this.point[3]) +
+            ' ' + this.point[0] + ',' + this.point[1]);
+            pathDef.push('C' + (this.point[0] + this.point[2]) + ',' + (this.point[1] + this.point[3]) + ' ' +
+            (this.pointAfter[0] - this.pointAfter[2]) + ',' + (this.pointAfter[1] - this.pointAfter[3]) + ' ' +
+            this.pointAfter[0] + ',' + this.pointAfter[1]);
         } else {
-            pathDef.push("M" + this.pointBefore[0] + "," + this.pointBefore[1]);
-            pathDef.push("L" + this.point[0] + "," + this.point[1]);
-            pathDef.push("L" + this.pointAfter[0] + "," + this.pointAfter[1]);
+            pathDef.push('M' + this.pointBefore[0] + ',' + this.pointBefore[1]);
+            pathDef.push('L' + this.point[0] + ',' + this.point[1]);
+            pathDef.push('L' + this.pointAfter[0] + ',' + this.pointAfter[1]);
         }
 
-        pathDef = pathDef.join(" ");
+        pathDef = pathDef.join(' ');
         if (this._movePath) {
-            this._movePath.attr({ "path": pathDef});
+            this._movePath.attr({path: pathDef});
         } else {
             this._movePath = this.svgPaper.path(this.pathDef);
-            this._movePath.attr({"stroke-width": this.connection.designerAttributes.width,
-                "stroke-dasharray": IN_DRAW_LINETYPE});
+            this._movePath.attr({
+                'stroke-width': this.connection.designerAttributes.width,
+                'stroke-dasharray': IN_DRAW_LINETYPE
+            });
             this._movePath.node.setAttribute('class', DiagramDesignerWidgetConstants.SEGMENT_POINT_MOVE_PATH_CLASS);
 
             //insert behind the segment-points
-            this._movePath.node.parentNode.insertBefore(this._movePath.node, $(this.svgPaper.canvas).find('circle.' + DiagramDesignerWidgetConstants.CONNECTION_SEGMENT_POINT_CLASS).first()[0]);
+            this._movePath.node.parentNode.insertBefore(this._movePath.node,
+                $(this.svgPaper.canvas).find('circle.' + DiagramDesignerWidgetConstants.CONNECTION_SEGMENT_POINT_CLASS)
+                    .first()[0]);
         }
     };
 

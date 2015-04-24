@@ -1,16 +1,16 @@
-/*globals define, _*/
+/*globals define, $*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-
-
-define(['js/util',
+define([
+    'js/util',
     'text!./templates/AttributeDetailsDialog.html',
-    'css!./styles/AttributeDetailsDialog.css'], function ( util,
-                                                attributeDetailsDialogTemplate) {
-    "use strict";
+    'css!./styles/AttributeDetailsDialog.css'
+], function (util, attributeDetailsDialogTemplate) {
+
+    'use strict';
 
     var AttributeDetailsDialog,
         ASSET_TYPE = 'asset';
@@ -37,7 +37,8 @@ define(['js/util',
         });
     };
 
-    AttributeDetailsDialog.prototype._initDialog = function (attributeDesc, attributeNames, saveCallBack, deleteCallBack) {
+    AttributeDetailsDialog.prototype._initDialog = function (attributeDesc, attributeNames, saveCallBack,
+                                                             deleteCallBack) {
         var self = this,
             closeSave,
             closeDelete,
@@ -49,10 +50,12 @@ define(['js/util',
             var i,
                 len,
                 eValues,
-                attrDesc = {'name': self._inputName.val(),
-                            'type': self._inputType.val(),
-                            'defaultValue': self._inputDefaultValue.val(),
-                            'isEnum': self._cbEnum.is(':checked')},
+                attrDesc = {
+                    'name': self._inputName.val(),
+                    'type': self._inputType.val(),
+                    'defaultValue': self._inputDefaultValue.val(),
+                    'isEnum': self._cbEnum.is(':checked')
+                },
                 cValue;
 
             if (attrDesc.isEnum) {
@@ -154,7 +157,7 @@ define(['js/util',
         };
 
         isValidAttributeName = function (name) {
-            return !(name === "" || attributeNames.indexOf(name) !== -1);
+            return !(name === '' || attributeNames.indexOf(name) !== -1);
         };
 
         this._dialog = $(attributeDetailsDialogTemplate);
@@ -188,10 +191,10 @@ define(['js/util',
             var val = self._inputName.val();
 
             if (!isValidAttributeName(val)) {
-                self._pName.addClass("error");
+                self._pName.addClass('error');
                 self._btnSave.disable(true);
             } else {
-                self._pName.removeClass("error");
+                self._pName.removeClass('error');
                 self._btnSave.disable(false);
             }
         });

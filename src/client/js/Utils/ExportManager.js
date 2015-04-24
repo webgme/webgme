@@ -1,27 +1,36 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _ */
+/*jshint browser: true*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['jquery',
-        'js/Constants',
-        'js/NodePropertyNames'], function (_jquery,
-                                           CONSTANTS,
-                                           nodePropertyNames) {
-    "use strict";
+    'js/Constants',
+    'js/NodePropertyNames'
+], function (_jquery,
+             CONSTANTS,
+             nodePropertyNames) {
 
-    var _client;
+    'use strict';
 
-    var _initialize = function (c) {
+    var client;
+
+    function initialize(c) {
         //if already initialized, just return
-        if (!_client) {
-            _client = c;
+        if (!client) {
+            client = c;
         }
-    };
+    }
 
-    var _export = function (objID) {
-        var fileName =  _client.getActiveProjectName() + "_" + _client.getActualBranch(),
-            objName,url;
+    function exportSingle(objID) {
+        var fileName = client.getActiveProjectName() + '_' + client.getActualBranch(),
+            objName,
+            url,
+            obj;
 
         if (objID !== CONSTANTS.PROJECT_ROOT_ID) {
-            var obj = _client.getNode(objID);
+            obj = client.getNode(objID);
 
             if (obj) {
                 objName = obj.getAttribute(nodePropertyNames.Attributes.name);
@@ -34,56 +43,62 @@ define(['jquery',
             fileName += '_' + objName;
         }
 
-        url = _client.getDumpURL({path:objID, output:fileName});
-        if(url){
+        url = client.getDumpURL({path: objID, output: fileName});
+        if (url) {
             window.location = url;
         }
-    };
+    }
 
-    var _exportMultiple = function (objIDs) {
-        var fileName =  _client.getActiveProjectName() + "_" + _client.getActualBranch() + "_multiple";
+    function exportMultiple(objIDs) {
+        var fileName = client.getActiveProjectName() + '_' + client.getActualBranch() + '_multiple';
 
         if (_.isArray(objIDs) &&
             objIDs.length > 0) {
-            _client.getExportItemsUrlAsync(objIDs, fileName, function (err, url) {
+            client.getExportItemsUrlAsync(objIDs, fileName, function (err, url) {
                 if (!err) {
                     window.location = url;
                 }
             });
         }
-    };
+    }
 
-    var _exIntConf = function(objIDs) {
-        var fileName = _client.getActiveProjectName() + "_" + _client.getActualBranch() + "_conf";
+    function exIntConf(objIDs) {
+        var fileName = client.getActiveProjectName() + '_' + client.getActualBranch() + '_conf';
 
-        if(_.isArray(objIDs) &&
-           objIDs.length > 0) {
-            _client.getExternalInterpreterConfigUrlAsync(objIDs,fileName,function(err,url){
-                if(!err){
+        if (_.isArray(objIDs) &&
+            objIDs.length > 0) {
+            client.getExternalInterpreterConfigUrlAsync(objIDs, fileName, function (err, url) {
+                if (!err) {
                     window.location = url;
                 }
             });
         }
-    };
-    var _expLib = function(objID) {
-        if(typeof objID === 'string'){
-            var object = _client.getNode(objID),
-                fileName = _client.getActiveProjectName() + "_" + _client.getActualBranch() + "_" + object.getAttribute('name') + "_lib";
+    }
 
-            _client.getExportLibraryUrlAsync(objID,fileName,function(err,url){
-                if(!err){
+    function exportLib(objID) {
+        var object,
+            fileName;
+
+        if (typeof objID === 'string') {
+            object = client.getNode(objID);
+            fileName = client.getActiveProjectName() + '_' + client.getActualBranch() + '_' +
+                           object.getAttribute('name') + '_lib';
+
+            client.getExportLibraryUrlAsync(objID, fileName, function (err, url) {
+                if (!err) {
                     window.location = url;
                 }
             });
         }
 
-    };
+    }
 
     //return utility functions
-    return { initialize: _initialize,
-        export: _export,
-        exportMultiple: _exportMultiple,
-        exIntConf : _exIntConf,
-        expLib : _expLib
+    return {
+        initialize: initialize,
+        export: exportSingle,
+        exportMultiple: exportMultiple,
+        exIntConf: exIntConf,
+        expLib: exportLib
     };
 });

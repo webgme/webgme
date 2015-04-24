@@ -1,3 +1,4 @@
+//jshint ignore: start
 //Copyright (c) Isaac Z. Schlueter ("Author")
 //All rights reserved.
 //

@@ -1,5 +1,9 @@
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 $block-editor-selection-outline-background-color: rgba(255, 255, 0, 0.05);
-$block-editor-selection-outline-border: rgba(0,0,0,0.5) dashed 1px;
+$block-editor-selection-outline-border: rgba(0, 0, 0, 0.5) dashed 1px;
 $block-editor-selection-outline-shadow-start: rgba(0, 0, 0, 0.075);
 $block-editor-selection-outline-shadow-end: rgba(0, 0, 0, 0.3);
 $block-editor-selection-outline-s-btn-background-color: #FFFFFF;
@@ -12,7 +16,7 @@ $error-decorator-background-color: #F2DEDE;
 $accept-droppable-background-color: rgba(0, 255, 0, 0.1);
 $reject-droppable-background-color: rgba(255, 0, 0, 0.1);
 
-$path-edit-segment-color: rgba(0,0,0,0);
+$path-edit-segment-color: rgba(0, 0, 0, 0);
 $new-segment-point-marker-background-color: #FFFF00;
 $new-segment-point-marker-border-color: #FF0000;
 $segment-point-marker-background-color: #FFFF00;
@@ -28,7 +32,7 @@ $segment-point-bezier-control-marker-border-color: #000000;
   .items {
     position: absolute;
 
-    .linkable-item{
+    .linkable-item {
       cursor: pointer;
     }
 
@@ -126,10 +130,9 @@ $segment-point-bezier-control-marker-border-color: #000000;
 
     &.highlight-mode {
       .linkable-item,
-      .linkable-item.highlighted
-      {
-          opacity: 0.1;
-          cursor: pointer;
+      .linkable-item.highlighted {
+        opacity: 0.1;
+        cursor: pointer;
       }
     }
 
