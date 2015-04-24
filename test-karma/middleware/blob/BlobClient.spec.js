@@ -18,7 +18,7 @@ describe('Browser BlobClient', function () {
         });
     });
 
-    it.only('should have putFile', function () {
+    it('should have putFile', function () {
         var bc = new BlobClient();
         expect(bc.putFile).to.exist;
     });
