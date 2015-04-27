@@ -197,6 +197,7 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
                 if (path === prefix || path.substr(0, prefix2.length) === prefix2) {
                     var node = coretree.getChild(overlays, path);
                     var names = coretree.getKeys(node);
+                    
                     for (var j = 0; j < names.length; ++j) {
                         var name = names[j];
                         if (isPointerName(name)) {

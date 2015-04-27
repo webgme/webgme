@@ -106,6 +106,8 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                             child = core.getChild(n, r);
                             core.setHashed(child, true, true);
                             child.base = b;
+                            n.children.push(child);
+                            n.data[r] = child.data; //FIXME there should be a proper way to do this
                             return child;
                         }
                     }, basechild, child, node, relid);
