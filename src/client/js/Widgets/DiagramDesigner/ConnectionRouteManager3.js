@@ -1,4 +1,4 @@
-/*globals DEBUG,define, _, WebGMEGlobal*/
+/*globals DEBUG,define, WebGMEGlobal*/
 /*jshint browser: true*/
 
 /**
@@ -7,19 +7,46 @@
 
 define([
     'js/logger',
-    './AutoRouter',
-    './AutoRouter.ActionApplier'
+    'module',
+    'text!./AutoRouter.Worker.js', 
 ], function (Logger,
-             AutoRouter,
-             ActionApplier) {
+             module,
+             AutoRouterWorker) {
 
     'use strict';
 
     var ConnectionRouteManager3,
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = '_x_',
+        WORKER = true,
         ASYNC = false;
 
     ConnectionRouteManager3 = function (options) {
+
+        if (window.Worker && WORKER) {
+            this.workerQueue = [];
+
+            var currentDir = module.id.split('/');
+                currentDir.pop();
+                currentDir = currentDir.join('/');
+            console.log('creating worker with', currentDir+'/AutoRouter.Worker.js');
+            this.worker = new Worker(currentDir+'/AutoRouter.Worker.js');
+
+            this.worker.onmessage = function(e) {
+                if (e.data === 'READY') {
+                    this._processQueue();
+                } else {  // Plot points?
+                    // TODO
+                }
+                console.log('RECEIVED message FROM worker:', e.data);
+                console.log('Posting "heelllo"');
+                //this.worker.postMessage('hello');
+            }.bind(this);
+
+        } else {
+            this._recordActions = DEBUG;
+            ActionApplier.prototype.init.call(this);
+        }
+
         var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:ConnectionRouteManager3';
         this.logger = (options && options.logger) || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
@@ -32,9 +59,6 @@ define([
 
         this.logger.debug('ConnectionRouteManager3 ctor finished');
         this._portSeparator = DESIGNERITEM_SUBCOMPONENT_SEPARATOR;
-
-        this._recordActions = DEBUG;
-        ActionApplier.prototype.init.call(this);
     };
 
     ConnectionRouteManager3.prototype.initialize = function () {
@@ -184,8 +208,8 @@ define([
 
     ConnectionRouteManager3.prototype._clearGraph = function () {
         this._invokeAutoRouterMethod('clear', []);
-        this._autorouterBoxRotation = {};//Define container that will map obj+subID -> rotation
-        this._clearRecords();
+        this._autorouterBoxRotation = {};  // Define container that will map obj+subID -> rotation
+        //this._clearRecords();
         this.endpointConnectionAreaInfo = {};
         this.initialized = false;
         this.readyToDownload = true;
@@ -212,6 +236,21 @@ define([
 
         this._initialized = true;
 
+    };
+
+    ConnectionRouteManager3.prototype._invokeAutoRouterMethod = function() {
+        if (this.workerReady) {
+            this.worker.postMessage(arguments);
+        } else {
+            this.workerQueue.push(arguments);
+        }
+    };
+
+    ConnectionRouteManager3.prototype._processQueue = function() {
+        for (var i = 0; i < this.workerQueue.length; i++) {
+            this.worker.postMessage(this.workerQueue[i]);
+        }
+        this.workerQueue = [];
     };
 
     ConnectionRouteManager3.prototype.insertConnection = function (connId) {
@@ -466,8 +505,6 @@ define([
 
         return newBox;
     };
-
-    _.extend(ConnectionRouteManager3.prototype, ActionApplier.prototype);
 
     return ConnectionRouteManager3;
 });
