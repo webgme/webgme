@@ -838,6 +838,21 @@ define([
         return ((a - 0.1) < b) && (b < (a + 0.1));
     };
 
+    /**
+     * Convert an object with increasing integer keys to an array.
+     *
+     * @param {Object} obj
+     * @return {Array}
+     */
+    var toArray = function (obj) {
+        var result = [],
+            i = 0;
+        while (obj[i] !== undefined) {
+            result.push(obj[i]);
+        }
+        return result;
+    };
+
     return {
         onWhichEdge: _onWhichEdge,
         isCoordInDirFrom: _isCoordInDirFrom,
@@ -878,7 +893,8 @@ define([
         removeFromArrays: removeFromArrays,
         stringify: stringify,
         floatEquals: floatEquals,
-        roundTrunc: roundTrunc
+        roundTrunc: roundTrunc,
+        toArray: toArray 
     };
 
 });

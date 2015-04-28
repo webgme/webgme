@@ -8,10 +8,12 @@
 define([
     'js/logger',
     'module',
-    'text!./AutoRouter.Worker.js', 
+    './AutoRouter.ActionApplier',
+    './AutoRouter.Utils'
 ], function (Logger,
              module,
-             AutoRouterWorker) {
+             ActionApplier,
+             Utils) {
 
     'use strict';
 
@@ -31,20 +33,23 @@ define([
             console.log('creating worker with', currentDir+'/AutoRouter.Worker.js');
             this.worker = new Worker(currentDir+'/AutoRouter.Worker.js');
 
+            this.worker.postMessage(WebGMEGlobal.gmeConfig.client);
+
             this.worker.onmessage = function(e) {
                 if (e.data === 'READY') {
                     this._processQueue();
+                    this.workerReady = true;
                 } else {  // Plot points?
                     // TODO
                 }
                 console.log('RECEIVED message FROM worker:', e.data);
-                console.log('Posting "heelllo"');
-                //this.worker.postMessage('hello');
             }.bind(this);
 
         } else {
             this._recordActions = DEBUG;
             ActionApplier.prototype.init.call(this);
+            // inherit from the ActionApplier
+            // TODO
         }
 
         var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:ConnectionRouteManager3';
@@ -239,10 +244,11 @@ define([
     };
 
     ConnectionRouteManager3.prototype._invokeAutoRouterMethod = function() {
+        var array = Utils.toArray(arguments);
         if (this.workerReady) {
-            this.worker.postMessage(arguments);
+            this.worker.postMessage(array);
         } else {
-            this.workerQueue.push(arguments);
+            this.workerQueue.push(array);
         }
     };
 
