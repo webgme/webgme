@@ -237,6 +237,9 @@ var server = function (_database, options) {
             //first we connect our socket id to the session
 
             socket.on('error', function (err) {
+                if (err instanceof Error) {
+                    err = err.stack;
+                }
                 logger.error('error raised by socket: ' + err);
             });
 
