@@ -45,13 +45,14 @@ RUN echo smallfiles = true >> /etc/mongodb.conf
 
 RUN mkdir -p /project
 ADD package.json /project/package.json
-RUN cd /project
 
 # mount the current project workspace under /project inside the container
 ADD . /project
 
 VOLUME ["/project"]
 WORKDIR /project
+
+RUN npm install
 
 RUN echo '#!/bin/bash -ex' >> /root/run.sh &&\
   echo '/etc/init.d/mongodb start' >> /root/run.sh &&\
