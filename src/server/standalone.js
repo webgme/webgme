@@ -530,9 +530,11 @@ function StandAloneServer(gmeConfig) {
     function expressFileSending(httpResult, path) {
         httpResult.sendFile(path, function (err) {
             //TODO we should check for all kind of error that should be handled differently
-            if (err && err.code !== 'ECONNRESET') {
-                logger.warn('expressFileSending failed for: ' + path);
-                httpResult.sendStatus(404);
+            if (err) {
+                logger.warn('expressFileSending failed for: ' + path + ': ' + (err.stack ? err.stack : err));
+                if (httpResult.headersSent === false) {
+                    httpResult.sendStatus(500);
+                }
             }
         });
     }
