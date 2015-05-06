@@ -531,6 +531,10 @@ function StandAloneServer(gmeConfig) {
         httpResult.sendFile(path, function (err) {
             //TODO we should check for all kind of error that should be handled differently
             if (err) {
+                if (err.code === 'EISDIR') {
+                    // NOTE: on Linux status is 404 on Windows status is not set
+                    err.status = err.status || 404;
+                }
                 logger.warn('expressFileSending failed for: ' + path + ': ' + (err.stack ? err.stack : err));
                 if (httpResult.headersSent === false) {
                     httpResult.sendStatus(err.status || 500);
