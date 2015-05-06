@@ -274,7 +274,7 @@ function Database(options) {
             if (typeof beginning !== 'string') {
                 return callback('Invalid findHash "' + beginning + '"');
             }
-            ASSERT(callback === 'function');
+            ASSERT(typeof callback === 'function');
 
             if (!REGEXP.HASH.test(beginning)) {
                 callback('hash ' + beginning + ' not valid');
