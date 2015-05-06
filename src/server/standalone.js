@@ -533,7 +533,7 @@ function StandAloneServer(gmeConfig) {
             if (err) {
                 logger.warn('expressFileSending failed for: ' + path + ': ' + (err.stack ? err.stack : err));
                 if (httpResult.headersSent === false) {
-                    httpResult.sendStatus(500);
+                    httpResult.sendStatus(err.status || 500);
                 }
             }
         });

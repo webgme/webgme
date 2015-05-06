@@ -94,7 +94,6 @@ describe('standalone server', function () {
             {code: 404, url: '/rest/etf'},
             {code: 404, url: '/worker/simpleResult'},
             {code: 404, url: '/login/client'},
-            {code: 404, url: '/docs/'},
             {code: 404, url: '/index2.html'},
             {code: 404, url: '/does_not_exist'},
             {code: 404, url: '/does_not_exist.js'},
@@ -103,6 +102,7 @@ describe('standalone server', function () {
             {code: 410, url: '/getToken'},
             {code: 410, url: '/checktoken/does_not_exist'},
 
+            {code: 500, url: '/docs/'},
             {code: 500, url: '/worker/simpleResult/bad_parameter'}
         ]
     }, {
