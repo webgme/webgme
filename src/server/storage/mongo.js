@@ -107,7 +107,9 @@ function Database(options) {
     }
 
     function getDatabaseStatus(oldstatus, callback) {
-        ASSERT(oldstatus === null || typeof oldstatus === 'string');
+        if (oldstatus !== null && typeof oldstatus !== 'string') {
+            return callback('Invalid status "' + oldstatus + '"');
+        }
         ASSERT(typeof callback === 'function');
 
         if (mongo === null) {
@@ -158,7 +160,9 @@ function Database(options) {
     }
 
     function deleteProject(name, callback) {
-        ASSERT(typeof name === 'string' && REGEXP.PROJECT.test(name));
+        if (typeof name !== 'string' || REGEXP.PROJECT.test(name) === false) {
+            return callback('Invalid project name "' + name + '"');
+        }
         ASSERT(typeof callback === 'function');
 
         mongo.dropCollection(name, function (err) {
@@ -170,8 +174,10 @@ function Database(options) {
     }
 
     function openProject(name, callback) {
+        if (typeof name !== 'string' || REGEXP.PROJECT.test(name) === false) {
+            return callback('Invalid project name "' + name + '"');
+        }
         ASSERT(mongo !== null && typeof callback === 'function');
-        ASSERT(typeof name === 'string' && REGEXP.PROJECT.test(name));
 
         var collection = null;
 
@@ -208,7 +214,9 @@ function Database(options) {
         }
 
         function loadObject(hash, callback) {
-            ASSERT(typeof hash === 'string' && REGEXP.HASH.test(hash));
+            if (typeof hash !== 'string' || REGEXP.HASH.test(hash) === false) {
+                return callback('Invalid hash "' + hash + '"');
+            }
 
             collection.findOne({
                 _id: hash
@@ -216,8 +224,12 @@ function Database(options) {
         }
 
         function insertObject(object, callback) {
-            ASSERT(object !== null && typeof object === 'object');
-            ASSERT(typeof object._id === 'string' && REGEXP.HASH.test(object._id));
+            if (object === null || typeof object !== 'object') {
+                return callback('Invalid object in insertObject');
+            }
+            if (typeof object._id !== 'string' || REGEXP.HASH.test(object._id) === false) {
+                return callback('Invalid hash "' + object._id + '"');
+            }
 
             collection.insert(object, function (err) {
                 // manually check duplicate keys
@@ -250,13 +262,19 @@ function Database(options) {
         }
 
         function setInfo(info, callback) {
-            ASSERT(typeof info === 'object' && typeof callback === 'function');
+            if (typeof info !== 'object') {
+                return callback('Invalid info ' + typeof info);
+            }
+            ASSERT(typeof callback === 'function');
             info['_id'] = PROJECT_INFO_ID;
             collection.update({_id: PROJECT_INFO_ID}, info, {upsert: true}, callback);
         }
 
         function findHash(beginning, callback) {
-            ASSERT(typeof beginning === 'string' && typeof callback === 'function');
+            if (typeof beginning !== 'string') {
+                return callback('Invalid findHash "' + beginning + '"');
+            }
+            ASSERT(typeof callback === 'function');
 
             if (!REGEXP.HASH.test(beginning)) {
                 callback('hash ' + beginning + ' not valid');
@@ -315,8 +333,12 @@ function Database(options) {
 
         function getBranchHash(branch, oldhash, callback) {
             branch = '*' + branch;
-            ASSERT(typeof branch === 'string' && REGEXP.RAW_BRANCH.test(branch));
-            ASSERT(oldhash === null || (typeof oldhash === 'string' && (oldhash === '' || REGEXP.HASH.test(oldhash))));
+            if (typeof branch !== 'string' || REGEXP.RAW_BRANCH.test(branch) === false) {
+                return callback('Invalid branch "' + branch + '"');
+            }
+            if (oldhash !== null && (typeof oldhash !== 'string' || (oldhash !== '' && REGEXP.HASH.test(oldhash) === false))) {
+                return callback('Invalid hash "' + oldhash + '"');
+            }
             ASSERT(typeof callback === 'function');
 
             collection.findOne({
@@ -337,9 +359,15 @@ function Database(options) {
 
         function setBranchHash(branch, oldhash, newhash, callback) {
             branch = '*' + branch;
-            ASSERT(typeof branch === 'string' && REGEXP.RAW_BRANCH.test(branch));
-            ASSERT(typeof oldhash === 'string' && (oldhash === '' || REGEXP.HASH.test(oldhash)));
-            ASSERT(typeof newhash === 'string' && (newhash === '' || REGEXP.HASH.test(newhash)));
+            if (typeof branch !== 'string' || REGEXP.RAW_BRANCH.test(branch) === false) {
+                return callback('Invalid branch "' + branch + '"');
+            }
+            if (typeof oldhash !== 'string' || (oldhash !== '' && REGEXP.HASH.test(oldhash) === false)) {
+                return callback('Invalid hash "' + oldhash + '"');
+            }
+            if (typeof newhash !== 'string' || (newhash !== '' && REGEXP.HASH.test(newhash) === false)) {
+                return callback('Invalid hash "' + newhash + '"');
+            }
             ASSERT(typeof callback === 'function');
 
             if (oldhash === newhash) {
