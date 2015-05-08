@@ -23,32 +23,6 @@ define(['jquery',
         }
     }
 
-    function exportSingle(objID) {
-        var fileName = client.getActiveProjectName() + '_' + client.getActualBranch(),
-            objName,
-            url,
-            obj;
-
-        if (objID !== CONSTANTS.PROJECT_ROOT_ID) {
-            obj = client.getNode(objID);
-
-            if (obj) {
-                objName = obj.getAttribute(nodePropertyNames.Attributes.name);
-            }
-
-            if (!objName || objName === '') {
-                objName = objID;
-            }
-
-            fileName += '_' + objName;
-        }
-
-        url = client.getDumpURL({path: objID, output: fileName});
-        if (url) {
-            window.location = url;
-        }
-    }
-
     function exportMultiple(objIDs) {
         var fileName = client.getActiveProjectName() + '_' + client.getActualBranch() + '_multiple';
 
@@ -96,7 +70,6 @@ define(['jquery',
     //return utility functions
     return {
         initialize: initialize,
-        export: exportSingle,
         exportMultiple: exportMultiple,
         exIntConf: exIntConf,
         expLib: exportLib

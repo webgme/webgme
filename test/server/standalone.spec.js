@@ -70,9 +70,9 @@ describe('standalone server', function () {
                 code: 200,
                 url: '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.js'
             },
-            {code: 200, url: '/rest/unknown'},
-            {code: 200, url: '/rest/does_not_exist'},
-            {code: 200, url: '/rest/help'},
+            //{code: 200, url: '/rest/unknown'},
+            //{code: 200, url: '/rest/does_not_exist'},
+            //{code: 200, url: '/rest/help'},
             {code: 200, url: '/listAllDecorators'},
             {code: 200, url: '/listAllPlugins'},
             {code: 200, url: '/listAllVisualizerDescriptors'},

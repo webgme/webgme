@@ -196,7 +196,8 @@ function ServerWorkerManager(_parameters) {
         if (_idToPid[id]) {
             worker = _workers[_idToPid[id]];
             if (worker) {
-                ASSERT(worker.state === CONSTANTS.workerStates.waiting);
+                //FIXME it is ok for now to ignore the assert, but how could we get here in a wrong state?
+                //ASSERT(worker.state === CONSTANTS.workerStates.waiting);
                 worker.state = CONSTANTS.workerStates.working;
                 worker.cb = callback;
                 worker.resid = null;

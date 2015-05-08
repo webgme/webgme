@@ -320,10 +320,10 @@ define([
             updateProjectList;
 
         rights = rights || {
-            delete: true,
-            read: true,
-            write: true
-        };
+                delete: true,
+                read: true,
+                write: true
+            };
 
         if (self.gmeClient) {
             showHistory = function (data) {
@@ -502,17 +502,26 @@ define([
 
         if (self.gmeClient) {
             exportBranch = function (data) {
-                var url = self.gmeClient.getDumpURL({
-                    project: data.projectId,
-                    branch: data.branchId,
-                    output: data.projectId + '_' + data.branchId
-                });
-
-                if (url) {
-                    window.location = url;
-                } else {
-                    self.logger.error('Failed to get project dump url for ', data);
-                }
+                //var url = self.gmeClient.getDumpURL({
+                //    project: data.projectId,
+                //    branch: data.branchId,
+                //    output: data.projectId + '_' + data.branchId
+                //});
+                //
+                //if (url) {
+                //    window.location = url;
+                //} else {
+                //    self.logger.error('Failed to get project dump url for ', data);
+                //}
+                self.gmeClient.getExportProjectBranchUrlAsync(data.projectId,
+                    data.branchId, '', data.projectId + '_' + data.branchId, function (err, url) {
+                        if (!err && url) {
+                            window.location = url;
+                        } else {
+                            self.logger.error('Failed to get project export url for', data);
+                        }
+                    }
+                );
             };
 
             createBranch = function (/*data*/) {
@@ -777,7 +786,7 @@ define([
             currentBranch = self.$scope.navigator.items[self.navIdBranch];
 
         callback = callback || function () {
-        };
+            };
 
         // clear current selection
         if (currentProject) {
@@ -792,7 +801,7 @@ define([
         if (projectId || projectId === '') {
             if (self.projects.hasOwnProperty(projectId) === false) {
                 self.logger.warn(projectId +
-                ' does not exist yet in the navigation bar, requesting selection to be loaded.');
+                    ' does not exist yet in the navigation bar, requesting selection to be loaded.');
                 self.requestedSelection = data;
                 // let's update the project list, in case the server did not notify us.
                 this.updateProjectList();

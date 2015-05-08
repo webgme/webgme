@@ -27,7 +27,6 @@ var Path = require('path'),
 // Middleware
     BlobServer = require('./middleware/blob/BlobServer'),
     ExecutorServer = require('./middleware/executor/ExecutorServer'),
-    RestServer = require('./middleware/rest/RestServer'),
     api = require('./api'),
 
     Storage = require('./storage/serverstorage'),
@@ -891,10 +890,6 @@ function StandAloneServer(gmeConfig) {
             res.sendStatus(410); //special error for the interpreters to know there is no need for token
         }
     });
-
-    //TODO: needs to refactor for the /rest/... format
-    logger.debug('creating REST related routing rules');
-    RestServer.createExpressRest(__app, '/rest', middlewareOpts);
 
     logger.debug('creating API related routing rules');
 
