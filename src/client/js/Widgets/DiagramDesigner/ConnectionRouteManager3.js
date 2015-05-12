@@ -1,4 +1,4 @@
-/*globals DEBUG,define, WebGMEGlobal*/
+/*globals DEBUG,console,define,WebGMEGlobal*/
 /*jshint browser: true*/
 
 /**
@@ -9,10 +9,12 @@ define([
     'js/logger',
     'module',
     './AutoRouter.ActionApplier',
+    './AutoRouter.WorkerManager',
     './AutoRouter.Utils'
 ], function (Logger,
              module,
              ActionApplier,
+             getWorker,
              Utils) {
 
     'use strict';
@@ -25,14 +27,9 @@ define([
     ConnectionRouteManager3 = function (options) {
 
         if (window.Worker && WORKER) {
+            
             this.workerQueue = [];
-
-            var currentDir = module.id.split('/');
-                currentDir.pop();
-                currentDir = currentDir.join('/');
-            console.log('creating worker with', currentDir+'/AutoRouter.Worker.js');
-            this.worker = new Worker(currentDir+'/AutoRouter.Worker.js');
-
+            this.worker = getWorker();
             this.worker.postMessage(WebGMEGlobal.gmeConfig.client);
 
             this.worker.onmessage = function(e) {
@@ -40,17 +37,31 @@ define([
                     this._processQueue();
                     this.workerReady = true;
                 } else {  // Plot points?
+                    // e.data = [cmd, args, result]
+                    console.log('Received response', e.data);
+                    ActionApplier.prototype._updateRecords.apply(this, e.data);
+                    // Render connections?
                     // TODO
+                    if (e.data[0] === 'getPathPoints') {
+                        var id = e.data[1][0],  // first arg from request
+                            points = e.data[2],  // result
+                            realPathPoints = points.map(function (point) {
+                            return {x: point[0], y: point[1]};
+                        });
+
+                        this.diagramDesigner.items[id].setConnectionRenderData(realPathPoints);
+                    }
                 }
                 console.log('RECEIVED message FROM worker:', e.data);
             }.bind(this);
 
         } else {
             this._recordActions = DEBUG;
-            ActionApplier.prototype.init.call(this);
             // inherit from the ActionApplier
-            // TODO
+            window._.extend(this.prototype, ActionApplier.prototype);
         }
+
+        this.init();
 
         var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:ConnectionRouteManager3';
         this.logger = (options && options.logger) || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
@@ -66,7 +77,24 @@ define([
         this._portSeparator = DESIGNERITEM_SUBCOMPONENT_SEPARATOR;
     };
 
+    ConnectionRouteManager3.prototype.init = ActionApplier.prototype._clearRecords;
+
+    // These next 2 methods are only used if a web worker is used; otherwise, 
+    // they are overridden by ActionApplier
+    ConnectionRouteManager3.prototype._invokeAutoRouterMethod = function() {
+        console.log('Calling _invokeAutoRouterMethod');
+        var array = Utils.toArray(arguments);
+        if (this.workerReady) {
+            this.worker.postMessage(array);
+        } else {
+            this.workerQueue.push(array);
+        }
+
+        // Update some record keeping
+    };
+
     ConnectionRouteManager3.prototype.initialize = function () {
+        console.log('Calling initialize');
         this._clearGraph();
 
         //Adding event listeners
@@ -133,6 +161,7 @@ define([
     };
 
     ConnectionRouteManager3.prototype.destroy = function () {
+        console.log('Calling destroy');
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE,
             this._onComponentCreate);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE,
@@ -149,6 +178,7 @@ define([
     };
 
     ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
+        console.log('Calling redrawConnections');
 
         if (!this._initialized) {
             this._initializeGraph();
@@ -173,6 +203,7 @@ define([
     };
 
     ConnectionRouteManager3.prototype.renderConnections = function (ids) {
+        console.log('Calling renderConnections');
         //2 - Get the path points and redraw
         //no matter what, we want the id's of all the connections
         //not just the ones that explicitly needs rerouting
@@ -189,11 +220,13 @@ define([
                 pathPoints = [];
             }
 
-            realPathPoints = pathPoints.map(function (point) {
-                return {'x': point[0], 'y': point[1]};
-            });
+            if (!WORKER || !window.Worker) {  // Not using a web worker
+                realPathPoints = pathPoints.map(function (point) {
+                    return {'x': point[0], 'y': point[1]};
+                });
 
-            this.diagramDesigner.items[idList[i]].setConnectionRenderData(realPathPoints);
+                this.diagramDesigner.items[idList[i]].setConnectionRenderData(realPathPoints);
+            }
         }
 
         return idList;
@@ -201,6 +234,7 @@ define([
 
 
     ConnectionRouteManager3.prototype._refreshConnData = function (idList) {
+        console.log('Calling _refreshConnData');
         // Clear connection data and paths then re-add them
         var i = idList.length;
 
@@ -212,6 +246,7 @@ define([
     };
 
     ConnectionRouteManager3.prototype._clearGraph = function () {
+        console.log('Calling _clearGraph');
         this._invokeAutoRouterMethod('clear', []);
         this._autorouterBoxRotation = {};  // Define container that will map obj+subID -> rotation
         //this._clearRecords();
@@ -221,6 +256,7 @@ define([
     };
 
     ConnectionRouteManager3.prototype._initializeGraph = function () {
+        console.log('Calling _initializeGraph');
         /*
          * In this method, we will update the boxes using the canvas.itemIds list and
          * add any ports as needed (from the canvas.connectionIds)
@@ -243,16 +279,8 @@ define([
 
     };
 
-    ConnectionRouteManager3.prototype._invokeAutoRouterMethod = function() {
-        var array = Utils.toArray(arguments);
-        if (this.workerReady) {
-            this.worker.postMessage(array);
-        } else {
-            this.workerQueue.push(array);
-        }
-    };
-
     ConnectionRouteManager3.prototype._processQueue = function() {
+        console.log('Calling _processQueue');
         for (var i = 0; i < this.workerQueue.length; i++) {
             this.worker.postMessage(this.workerQueue[i]);
         }
@@ -260,6 +288,7 @@ define([
     };
 
     ConnectionRouteManager3.prototype.insertConnection = function (connId) {
+        console.log('Calling insertConnection');
         var canvas = this.diagramDesigner,
             srcObjId = canvas.connectionEndIDs[connId].srcObjId,
             srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId,
@@ -305,6 +334,7 @@ define([
     };
 
     ConnectionRouteManager3.prototype.insertBox = function (objId) {
+        console.log('Calling insertBox');
         var canvas = this.diagramDesigner,
             designerItem,
             areas,
@@ -342,12 +372,14 @@ define([
     };
 
     ConnectionRouteManager3.prototype.deleteItem = function (objId) {
+        console.log('Calling deleteItem');
         //If I can query them from the objId, I can clear the entries with that info
         this._invokeAutoRouterMethod('remove', [objId]);
 
     };
 
     ConnectionRouteManager3.prototype._resizeItem = function (objId) {
+        console.log('Calling _resizeItem');
         var canvas = this.diagramDesigner,
             isEnd = true,
             connectionMetaInfo,
@@ -385,6 +417,7 @@ define([
     };
 
     ConnectionRouteManager3.prototype._updatePort = function (objId, subCompId) {
+        console.log('Calling _updatePort');
         var longid = objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId,
             canvas = this.diagramDesigner;
 
@@ -429,6 +462,7 @@ define([
     };
 
     ConnectionRouteManager3.prototype._createPort = function (objId, subCompId) {
+        console.log('Calling _createPort');
         var longid = objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId,
             newBox = this._createPortInfo(objId, subCompId);
 
@@ -437,6 +471,7 @@ define([
     };
 
     ConnectionRouteManager3.prototype._createPortInfo = function (objId, subCompId) {
+        console.log('Calling _createPortInfo');
         //Ports will now be a subcomponent
         //We will do the following: 
         //  - Create a box for the port
@@ -510,6 +545,13 @@ define([
         }
 
         return newBox;
+    };
+
+    ConnectionRouteManager3.prototype.finalize = function() {
+        console.log('GC-ing the CR3');
+        if (this.worker) {
+            this.worker.terminate();
+        }
     };
 
     return ConnectionRouteManager3;
