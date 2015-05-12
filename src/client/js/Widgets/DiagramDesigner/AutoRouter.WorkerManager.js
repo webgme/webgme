@@ -7,7 +7,7 @@ define(['module'], function (module){
     'use strict';
     
     var worker = null;
-    var getWorker = function() {
+    var getWorker = function(config) {
         if (!worker) {
             var currentDir = module.id.split('/'),
                 workerFile;
@@ -18,6 +18,7 @@ define(['module'], function (module){
 
             console.log('creating worker with', workerFile);
             worker = new Worker(workerFile);
+            worker.postMessage(config);
         }
 
         return worker;

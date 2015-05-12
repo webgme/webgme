@@ -29,8 +29,7 @@ define([
         if (window.Worker && WORKER) {
             
             this.workerQueue = [];
-            this.worker = getWorker();
-            this.worker.postMessage(WebGMEGlobal.gmeConfig.client);
+            this.worker = getWorker(WebGMEGlobal.gmeConfig.client);
 
             this.worker.onmessage = function(e) {
                 if (e.data === 'READY') {
