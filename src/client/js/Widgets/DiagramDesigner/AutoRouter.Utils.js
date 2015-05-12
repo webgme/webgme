@@ -848,7 +848,7 @@ define([
         var result = [],
             i = 0;
         while (obj[i] !== undefined) {
-            result.push(obj[i]);
+            result.push(obj[i++]);
         }
         return result;
     };
