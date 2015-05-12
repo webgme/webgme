@@ -54,8 +54,8 @@
     "process": "=0.10.1",
     "q": "=1.2.0",
     "requirejs": "=2.1.16",
-    "socket.io": "lattmann/socket.io#3dc6e73bfad4fcd2a11462744bb50b53f8cd03a7",
-    "socket.io-client": "lattmann/socket.io-client#44adc25cb5597a80ba76d9d070f457815d0f34bf",
+    "socket.io": "lattmann/socket.io#a80238dba8e132570b85257a57ad0b9ee22f70d3",
+    "socket.io-client": "lattmann/socket.io-client#7f46360ff2ba2f32f405289d953862d52386823f",
     "superagent": "=1.1.0",
     "unzip": "=0.1.11",
     "winston": "=0.9.0"
