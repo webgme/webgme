@@ -1,7 +1,6 @@
-/*globals console,require,importScripts*/
+/*globals require,importScripts*/
 // This is the code for using the autorouter as a web worker.
 
-console.log('Starting to read ARWorker.js...');
 importScripts('../../../lib/require/require.min.js');
 
 var worker = this,
@@ -16,7 +15,6 @@ var worker = this,
 var startWorker = function() {
     'use strict';
 
-    console.log('Starting the worker...');
     require({
         baseUrl: '.',
         paths: {
@@ -77,5 +75,3 @@ worker.onmessage = function(msg) {
     WebGMEGlobal.gmeConfig.client = msg.data;
     startWorker();
 };
-
-console.log('Finished reading ARWorker.js...');
