@@ -66,7 +66,9 @@ define([
             this.boxes[ids[i]].destroy();
             delete this.boxes[ids[i]];
         }
+        // Clean up the bufferBoxes
         this.bufferBoxes = [];
+        this.box2bufferBox = {};
     };
 
     AutoRouterGraph.prototype._getBoxAt = function (point, nearness) {
