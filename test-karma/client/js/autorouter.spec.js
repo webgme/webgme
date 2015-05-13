@@ -1,4 +1,4 @@
-/*globals WebGMEGlobal,requirejs, describe*/
+/*globals expect,WebGMEGlobal,requirejs, describe*/
 /*jshint node:true, mocha:true*/
 /**
  * @author brollb / https://github.com/brollb
@@ -68,7 +68,9 @@ describe('AutoRouter', function () {
                 router.routeSync();
 
                 // Check the points
-                var finalPoints = router.getPathPoints(path);
+                var finalPoints = router.getPathPoints(path).map(function(pt) {
+                    return [pt.x, pt.y];
+                });
                 assert(finalPoints.length === points.length + 2, 'Path missing points: ' + finalPoints);
                 for (var i = 1; i < finalPoints.length - 1; i++) {
                     for (var j = 0; j < 2; j++) {
@@ -99,7 +101,9 @@ describe('AutoRouter', function () {
                 router.routeSync();
 
                 // Check the points
-                var finalPoints = router.getPathPoints(path);
+                var finalPoints = router.getPathPoints(path).map(function(pt) {
+                    return [pt.x, pt.y];
+                });
                 assert(finalPoints.length === points.length + 2, 'Path missing points: ' + finalPoints);
                 for (var i = 1; i < finalPoints.length - 1; i++) {
                     for (var j = 0; j < 2; j++) {
@@ -962,7 +966,19 @@ describe('AutoRouter', function () {
                     done();
                 });
             });
+
+            it('should not move box that doesn\'t exist', function (done) {
+                requirejs(['text!aRtestCases/finding_correct_buffer_box.json'], function (actions) {
+                    expect(bugPlayer.test.bind(bugPlayer, JSON.parse(actions))).to.throw(/Box does not exist/);
+                    done();
+                });
+            });
         });
+    });
+
+    describe('Web Worker tests', function () {
+        // Set up the Autorouter as a web worker
+        // TODO
     });
 
     describe('Utility Fn tests', function () {

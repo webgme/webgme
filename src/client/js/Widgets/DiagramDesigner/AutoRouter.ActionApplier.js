@@ -200,8 +200,10 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
         return result;
     };
 
-    AutoRouterActionApplier.prototype._updateRecords = function (command, args, result) {
+    AutoRouterActionApplier.prototype._updateRecords = function (command, input, result) {
+        assert (input instanceof Array);
         var id,
+            args = input.slice(),
             i;
 
         switch (command) {

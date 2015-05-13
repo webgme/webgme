@@ -1898,9 +1898,7 @@ define([
 
     AutoRouterGraph.prototype.shiftBoxBy = function (box, offset) {
         assert(box !== null, 'ARGraph.shiftBoxBy: box !== null FAILED');
-        if (box === null) {
-            return;
-        }
+        assert(!!this.boxes[box.id], 'ARGraph.shiftBoxBy: Box does not exist!');
 
         var rect = this.box2bufferBox[box.id].box,
             children = box.childBoxes;
@@ -2151,7 +2149,7 @@ define([
         path.destroy();
     };
 
-    AutoRouterGraph.prototype.deleteAll = function (addBackSelfEdges) {
+    AutoRouterGraph.prototype.clear = function (addBackSelfEdges) {
         this._deleteAllPaths();
         this._deleteAllBoxes();
         this._deleteAllEdges();

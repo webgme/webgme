@@ -48,7 +48,7 @@ define([
     };
 
     AutoRouter.prototype.clear = function () {
-        this.graph.deleteAll(true);
+        this.graph.clear(true);
         this.paths = {};
         this.portId2Path = {};
         this.ports = {};
@@ -467,11 +467,10 @@ define([
     AutoRouter.prototype.getPathPoints = function (pathId) {
         assert(this.paths[pathId] !== undefined,
             'AutoRouter:getPath requested path does not match any current paths');
-        var path = this.paths[pathId],
-            points = path.getPointList();
+        var path = this.paths[pathId];
 
-        return points.map(function (point) {
-            return [point.x, point.y];
+        return path.points.map(function (point) {
+            return {x: point.x, y: point.y};
         });
     };
 
