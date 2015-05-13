@@ -30,6 +30,7 @@ require.config({
     paths: {
 
         domReady: 'lib/require/require-domready/domReady',
+        Q: 'lib/q/q',
 
         //jQuery and stuff
         jquery: 'lib/jquery/jquery-' + _jqueryVersion + ( DEBUG ? '.min' : '' ),
