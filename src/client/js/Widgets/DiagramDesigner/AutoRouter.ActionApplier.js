@@ -283,7 +283,7 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
 
     AutoRouterActionApplier.prototype._getActionSequence = function () {
         var index = this.debugActionSequence.lastIndexOf(','),
-            result = this.debugActionSequence.substring(0, index) + '];';
+            result = this.debugActionSequence.substring(0, index) + ']';
 
         return result;
     };
