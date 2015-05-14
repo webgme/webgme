@@ -51,10 +51,12 @@ var startWorker = function() {
         };
 
         AutoRouterWorker.prototype.handleMessage = function(msg) {
+            this.logger.debug('Received:', msg.data);
             var response = Utils.deepCopy(msg.data),
                 result = this._invokeAutoRouterMethod.apply(this, msg.data.slice());
 
             response.push(result);
+            this.logger.debug('Response:', response);
             worker.postMessage(response);
         };
 
@@ -62,9 +64,9 @@ var startWorker = function() {
 
         var autorouterWorker = new AutoRouterWorker();
 
-        worker.postMessage('READY');
-
         worker.onmessage = autorouterWorker.handleMessage.bind(autorouterWorker);
+        this.logger.debug('Ready for requests!');
+        worker.postMessage('READY');
     }.bind(this));
 };
 
