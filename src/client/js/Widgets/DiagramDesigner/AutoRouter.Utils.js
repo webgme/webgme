@@ -840,12 +840,13 @@ define([
 
     /**
      * Convert an object with increasing integer keys to an array.
+     * Using method from http://jsperf.com/arguments-performance/6
      *
      * @param {Object} obj
      * @return {Array}
      */
     var toArray = function (obj) {
-        var result = [],
+        var result = new Array(obj.length),
             i = 0;
         while (obj[i] !== undefined) {
             result.push(obj[i++]);
