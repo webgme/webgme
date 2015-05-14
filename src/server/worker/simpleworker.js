@@ -138,12 +138,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         }
     },
 
-    exportLibrary = function (name, hash, libraryRootPath, callback) {
-
-        storage.openProject(name, function (err, project) {
-            if (err) {
-                return callback(err);
-            }
+    exportLibrary = function (name, hash, branch, libraryRootPath, callback) {
+        var project,
+            haveRootHash = function () {
             var core = new Core(project, {globConf: gmeConfig, logger: logger.fork('exportLibrary:core')});
             core.loadRoot(hash, function (err, root) {
                 if (err) {
@@ -158,6 +155,39 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     Serialization.export(core, libraryRoot, callback);
                 });
             });
+        };
+        storage.openProject(name, function (err, p) {
+            if (err) {
+                return callback(err);
+            }
+
+            project = p;
+            if (typeof branch !== 'string') {
+                haveRootHash();
+            } else {
+                project.getBranchNames(function (err, names) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    if (names[branch]) {
+                        project.loadObject(names[branch], function (err, commitObject) {
+                            if (err) {
+                                return callback(err);
+                            }
+
+                            if (commitObject) {
+                                hash = commitObject.root;
+                                haveRootHash();
+                            } else {
+                                callback('invalid commit was found under branch [' + branch + ']');
+                            }
+                        });
+                    } else {
+                        callback('branch [' + branch + '] doesn\'t exist');
+                    }
+                });
+            }
         });
 
     },
@@ -361,10 +391,10 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     completeInfo[projectName].rights = {read: true, write: true, delete: true};
                 } else {
                     completeInfo[projectName].rights = userAuthInfo[projectName] || {
-                        read: false,
-                        write: false,
-                        delete: false
-                    };
+                            read: false,
+                            write: false,
+                            delete: false
+                        };
                 }
             },
             getProjectInfo = function (name, cb) {
@@ -820,7 +850,8 @@ process.on('message', function (parameters) {
     parameters.command = parameters.command || CONSTANT.workerCommands.getResult; //default command
 
     if (!initialized && parameters.command !== CONSTANT.workerCommands.initialize) {
-        return safeSend({pid: process.pid,
+        return safeSend({
+            pid: process.pid,
             type: CONSTANT.msgTypes.request,
             error: 'worker has not been initialized yet',
             resid: null
@@ -833,11 +864,12 @@ process.on('message', function (parameters) {
 
     storage.openDatabase(function (err) {
         if (err) {
-            return safeSend({pid: process.pid,
+            return safeSend({
+                pid: process.pid,
                 type: CONSTANT.msgTypes.request,
                 error: 'unable to initiate database connection',
                 resid: null
-        });
+            });
         }
 
         resultId = GUID();
@@ -876,7 +908,8 @@ process.on('message', function (parameters) {
                         });
                 } else {
                     initResult();
-                    safeSend({pid: process.pid,
+                    safeSend({
+                        pid: process.pid,
                         type: CONSTANT.msgTypes.result,
                         error: 'invalid parameters',
                         result: {}
@@ -894,7 +927,8 @@ process.on('message', function (parameters) {
                 pluginResult.setStartTime((new Date()).toISOString());
                 pluginResult.setFinishTime((new Date()).toISOString());
                 pluginResult.setError(pluginMessage.message);
-                safeSend({pid: process.pid,
+                safeSend({
+                    pid: process.pid,
                     type: CONSTANT.msgTypes.result,
                     error: null,
                     result: pluginResult.serialize()
@@ -902,10 +936,10 @@ process.on('message', function (parameters) {
             }
         } else if (parameters.command === CONSTANT.workerCommands.exportLibrary) {
             if (typeof parameters.name === 'string' &&
-                typeof parameters.hash === 'string' &&
+                (typeof parameters.hash === 'string' || typeof parameters.branch === 'string') &&
                 typeof parameters.path === 'string') {
                 safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-                exportLibrary(parameters.name, parameters.hash, parameters.path, resultHandling);
+                exportLibrary(parameters.name, parameters.hash, parameters.branch, parameters.path, resultHandling);
             } else {
                 initResult();
                 safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
@@ -953,7 +987,8 @@ process.on('message', function (parameters) {
                         if (err) {
                             safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: err, resid: null});
                         } else {
-                            safeSend({pid: process.pid,
+                            safeSend({
+                                pid: process.pid,
                                 type: CONSTANT.msgTypes.request,
                                 error: null,
                                 resid: process.pid
@@ -961,7 +996,8 @@ process.on('message', function (parameters) {
                         }
                     });
             } else {
-                safeSend({pid: process.pid,
+                safeSend({
+                    pid: process.pid,
                     type: CONSTANT.msgTypes.request,
                     error: 'addOn functionality not enabled',
                     resid: null
@@ -973,7 +1009,8 @@ process.on('message', function (parameters) {
                     safeSend({pid: process.pid, type: CONSTANT.msgTypes.query, error: err, result: result});
                 });
             } else {
-                safeSend({pid: process.pid,
+                safeSend({
+                    pid: process.pid,
                     type: CONSTANT.msgTypes.request,
                     error: 'addOn functionality not enabled',
                     resid: null
@@ -985,14 +1022,16 @@ process.on('message', function (parameters) {
                     safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
                 });
             } else {
-                safeSend({pid: process.pid,
+                safeSend({
+                    pid: process.pid,
                     type: CONSTANT.msgTypes.request,
                     error: 'addOn functionality not enabled',
                     resid: null
                 });
             }
         } else {
-            safeSend({pid: process.pid,
+            safeSend({
+                pid: process.pid,
                 type: CONSTANT.msgTypes.request,
                 error: 'unknown command',
                 resid: null

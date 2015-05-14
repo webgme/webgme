@@ -306,7 +306,7 @@ function GMEAuth(session, gmeConfig) {
         query['projects.' + projectName + '.read'] = true;
         return collection.findOne(query)
             .then(function (userData) {
-                return new Q(userData ? userData.projects[projectName].read : false);
+                return Q(userData ? userData.projects[projectName].read : false);
             })
             .nodeify(callback);
     }
@@ -332,7 +332,7 @@ function GMEAuth(session, gmeConfig) {
         return Q.ninvoke(_session, 'getSessionUser', sessionId)
             .then(function (userId) {
                 if (!userId) {
-                    return new Q(null);
+                    return Q(null);
                 }
                 return collection.findOne({_id: userId})
                     .then(function (userData) {

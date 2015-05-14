@@ -196,7 +196,7 @@ describe('GME client', function () {
                 'importNodeAsync',
                 'mergeNodeAsync',
                 'createProjectFromFileAsync',
-                'getDumpURL',
+                'getExportProjectBranchUrlAsync',
                 'getExportLibraryUrlAsync',
                 'updateLibraryAsync',
                 'addLibraryAsync'
@@ -3258,7 +3258,8 @@ describe('GME client', function () {
             });
         });
 
-        it('should return a url for dumping the whole project', function () {
+        //TODO modify this test to use the getExportProjectBranchUrlAsync function
+        it.skip('should return a url for dumping the whole project', function () {
             expect(client.getDumpURL({})).to.contain('dump_url.out');
         });
     });
@@ -3558,26 +3559,24 @@ describe('GME client', function () {
                 seedConfig = {
                     seedName: 'projectSeedSingleMaster',
                     projectName: projectName
-                },
-                url;
+                };
             client.deleteProjectAsync(projectName, function (err) {
                 expect(err).to.equal(null);
 
                 client.seedProjectAsync(seedConfig, function (err) {
                     expect(err).to.equal(null);
 
-                    url = client.getDumpURL({
-                        project: projectName,
-                        branch: 'master',
-                        output: 'seedTestOutput'
-                    });
+                    client.getExportProjectBranchUrlAsync(projectName,
+                        'master', '', 'seedTestOutPut', function (err, url) {
+                            expect(err).to.equal(null);
+                            superagent.get(url, function (err, result) {
+                                expect(err).to.equal(null);
+                                expect(result.body).to.deep.equal(refNodeProj);
 
-                    superagent.get(url, function (err, result) {
-                        expect(err).to.equal(null);
-                        expect(result.body).to.deep.equal(refNodeProj);
-
-                        done();
-                    });
+                                done();
+                            });
+                        }
+                    );
                 });
             });
         });
@@ -3597,18 +3596,18 @@ describe('GME client', function () {
                 client.seedProjectAsync(seedConfig, function (err) {
                     expect(err).to.equal(null);
 
-                    url = client.getDumpURL({
-                        project: projectName,
-                        branch: 'master',
-                        output: 'seedTestOutput'
-                    });
+                    client.getExportProjectBranchUrlAsync(projectName,
+                        'master', '', 'seedTestOutPut', function (err, url) {
+                            expect(err).to.equal(null);
 
-                    superagent.get(url, function (err, result) {
-                        expect(err).to.equal(null);
-                        expect(result.body).to.deep.equal(refSFSProj);
+                            superagent.get(url, function (err, result) {
+                                expect(err).to.equal(null);
+                                expect(result.body).to.deep.equal(refSFSProj);
 
-                        done();
-                    });
+                                done();
+                            });
+                        }
+                    );
                 });
             });
         });
@@ -3628,21 +3627,21 @@ describe('GME client', function () {
                 client.seedProjectAsync(seedConfig, function (err) {
                     expect(err).to.equal(null);
 
-                    url = client.getDumpURL({
-                        project: projectName,
-                        branch: 'other',
-                        output: 'seedTestOutput'
-                    });
+                    client.getExportProjectBranchUrlAsync(projectName,
+                        'other', '', 'seedTestOutPut', function (err, url) {
+                            expect(err).to.equal(null);
 
-                    console.warn(url);
-                    done();
-                    //superagent.get(url, function (err, result) {
-                    //    console.warn('whaaat');
-                    //    expect(err).to.equal(null);
-                    //    //expect(result.body).to.deep.equal(refNodeProj);
-                    //
-                    //    done();
-                    //});
+                            console.warn(url);
+                            done();
+                            //superagent.get(url, function (err, result) {
+                            //    console.warn('whaaat');
+                            //    expect(err).to.equal(null);
+                            //    //expect(result.body).to.deep.equal(refNodeProj);
+                            //
+                            //    done();
+                            //});
+                        }
+                    );
                 });
             });
         });

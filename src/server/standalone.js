@@ -27,7 +27,6 @@ var Path = require('path'),
 // Middleware
     BlobServer = require('./middleware/blob/BlobServer'),
     ExecutorServer = require('./middleware/executor/ExecutorServer'),
-    RestServer = require('./middleware/rest/RestServer'),
     api = require('./api'),
 
     Storage = require('./storage/serverstorage'),
@@ -530,9 +529,15 @@ function StandAloneServer(gmeConfig) {
     function expressFileSending(httpResult, path) {
         httpResult.sendFile(path, function (err) {
             //TODO we should check for all kind of error that should be handled differently
-            if (err && err.code !== 'ECONNRESET') {
-                logger.warn('expressFileSending failed for: ' + path);
-                httpResult.sendStatus(404);
+            if (err) {
+                if (err.code === 'EISDIR') {
+                    // NOTE: on Linux status is 404 on Windows status is not set
+                    err.status = err.status || 404;
+                }
+                logger.warn('expressFileSending failed for: ' + path + ': ' + (err.stack ? err.stack : err));
+                if (httpResult.headersSent === false) {
+                    httpResult.sendStatus(err.status || 500);
+                }
             }
         });
     }
@@ -885,10 +890,6 @@ function StandAloneServer(gmeConfig) {
             res.sendStatus(410); //special error for the interpreters to know there is no need for token
         }
     });
-
-    //TODO: needs to refactor for the /rest/... format
-    logger.debug('creating REST related routing rules');
-    RestServer.createExpressRest(__app, '/rest', middlewareOpts);
 
     logger.debug('creating API related routing rules');
 
