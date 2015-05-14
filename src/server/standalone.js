@@ -837,7 +837,7 @@ function StandAloneServer(gmeConfig) {
     });
 
 
-    BlobServer.createExpressBlob(__app, '/rest/blob', middlewareOpts);
+    __app.use('/rest/blob', BlobServer.createExpressBlob(middlewareOpts));
 
     //client contents - js/html/css
     //stuff that considered not protected
