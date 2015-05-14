@@ -5,7 +5,12 @@
  * @author ksmyth / https://github.com/ksmyth
  */
 
-var nodeRequire = require;
+var nodeRequire = require,
+    log = function() {
+        var args = Array.prototype.slice.call(arguments);
+        args.splice(0, 0, new Date().toISOString());
+        console.log.apply(console, args);
+    };
 
 if (typeof define !== 'undefined') {
 
@@ -34,17 +39,17 @@ if (typeof define !== 'undefined') {
                 executorNonce: parameters.executorNonce
             });
 
-            console.log('Connecting to ' + webGMEUrl);
+            log('Connecting to ' + webGMEUrl);
 
             var callback;
             worker.queryWorkerAPI(function (err, response) {
                 if (!err) {
-                    console.log('Connected to ' + webGMEUrl);
+                    log('Connected to ' + webGMEUrl);
                 }
                 var refreshPeriod = 60 * 1000;
                 callback = callback || function (err, response) {
                     if (err) {
-                        console.log('Error connecting to ' + webGMEUrl + ' ' + err);
+                        log('Error connecting to ' + webGMEUrl + ' ' + err);
                     } else {
                     }
                     if (response && response.refreshPeriod) {
@@ -88,7 +93,7 @@ if (nodeRequire.main === module) {
         'use strict';
         var filename = path.resolve(__dirname, file);
         if ((filename.indexOf('.pem') === filename.length - 4) || (filename.indexOf('.crt') === filename.length - 4)) {
-            console.log('Adding ' + file + ' to trusted CAs');
+            log('Adding ' + file + ' to trusted CAs');
             cas.addFile(filename);
         }
     });
@@ -168,13 +173,13 @@ if (nodeRequire.main === module) {
                     availableProcessesContainer.availableProcesses += config[maxConcurrentJobs] - maxConcurrentJobs;
                     maxConcurrentJobs = config[maxConcurrentJobs];
                 } else {
-                    console.log('Unknown configuration key ' + key);
+                    log('Unknown configuration key ' + key);
                 }
             });
             // remove webGMEUrls no longer in config
             Object.getOwnPropertyNames(webGMEUrls).forEach(function (webGMEUrl) {
                 if (Object.prototype.hasOwnProperty.call(config, webGMEUrl) === false) {
-                    console.log('Removing ' + webGMEUrl);
+                    log('Removing ' + webGMEUrl);
                     webGMEUrls[webGMEUrl]();
                     delete webGMEUrls[webGMEUrl];
                 }
@@ -185,7 +190,7 @@ if (nodeRequire.main === module) {
         var rimraf = nodeRequire('rimraf');
         rimraf(workingDirectory, function (err) {
             if (err) {
-                console.log('Could not delete working directory (' + workingDirectory + '), err: ' + err);
+                log('Could not delete working directory (' + workingDirectory + '), err: ' + err);
                 process.exit(2);
             }
             if (!fs.existsSync(workingDirectory)) {

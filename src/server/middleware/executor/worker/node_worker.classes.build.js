@@ -1,5 +1,5 @@
 /** vim: et:ts=4:sw=4:sts=4
- * @license RequireJS 2.1.16 Copyright (c) 2010-2015, The Dojo Foundation All Rights Reserved.
+ * @license RequireJS 2.1.17 Copyright (c) 2010-2015, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
@@ -12,7 +12,7 @@ var requirejs, require, define;
 (function (global) {
     var req, s, head, baseElement, dataMain, src,
         interactiveScript, currentlyAddingScript, mainScript, subPath,
-        version = '2.1.16',
+        version = '2.1.17',
         commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg,
         cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
         jsSuffixRegExp = /\.js$/,
@@ -244,7 +244,7 @@ var requirejs, require, define;
                     // still work when converted to a path, even though
                     // as an ID it is less than ideal. In larger point
                     // releases, may be better to just kick out an error.
-                    if (i === 0 || (i == 1 && ary[2] === '..') || ary[i - 1] === '..') {
+                    if (i === 0 || (i === 1 && ary[2] === '..') || ary[i - 1] === '..') {
                         continue;
                     } else if (i > 0) {
                         ary.splice(i - 1, 2);
@@ -2084,18 +2084,16 @@ var requirejs, require, define;
 
 define("node_modules/requirejs/require", function(){});
 
-/*
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
+/*globals define*/
+/*jshint node: true, browser: true*/
 
-
-/*
- * -------- EVENT DIASPATCHER -------
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 define('common/eventDispatcher',[], function () {
+    'use strict';
+
     var EventDispatcher = function () {
         this._eventList = {};
     };
@@ -2194,28 +2192,49 @@ define('common/eventDispatcher',[], function () {
 
     return EventDispatcher;
 });
-define('blob/BlobConfig',[], function(){
+/*globals define*/
+/*jshint browser: true, node:true*/
 
+/**
+ * Client module for accessing the blob.
+ *
+ * @author lattmann / https://github.com/lattmann
+ */
+
+define('blob/BlobConfig',[], function () {
+    'use strict';
     var BlobConfig = {
         hashMethod: 'sha1', // TODO: in the future we may switch to sha512
         hashRegex: new RegExp('^[0-9a-f]{40}$')
     };
+
     return BlobConfig;
 });
-/*
- * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+/*globals define*/
+/*jshint browser: true, node:true*/
+
+/**
+ * Client module for accessing the blob.
  *
- * Author: Zsolt Lattmann
+ * @author lattmann / https://github.com/lattmann
  */
 
-define('blob/BlobMetadata',['blob/BlobConfig'], function(BlobConfig){
+define('blob/BlobMetadata',['blob/BlobConfig'], function (BlobConfig) {
+    'use strict';
 
     /**
      * Initializes a new instance of BlobMetadata
-     * @param {Object<string, string|number|Object>} metadata A serialized metadata object. Name and content must be defined.
+     * @param {object} metadata - A serialized metadata object.
+     * @param {string} metadata.name
+     * @param {string|Object} metadata.content
+     * @param {number} [metadata.size=0]
+     * @param {BlobMetadata.CONTENT_TYPES} [metadata.contentType=BlobMetadata.CONTENT_TYPES.OBJECT]
+     * @param {string} [metadata.mime='']
+     * @param {boolean} [metadata.isPublic=false]
+     * @param {string[]} [metadata.tags=[]]
      * @constructor
      */
-    var BlobMetadata = function(metadata) {
+    var BlobMetadata = function (metadata) {
         var key;
         if (metadata) {
             this.name = metadata.name;
@@ -2229,7 +2248,7 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function(BlobConfig){
                 for (key in this.content) {
                     if (this.content.hasOwnProperty(key)) {
                         if (BlobConfig.hashRegex.test(this.content[key].content) === false) {
-                            throw Error("BlobMetadata is malformed: hash is invalid");
+                            throw Error('BlobMetadata is malformed: hash is invalid');
                         }
                     }
                 }
@@ -2251,7 +2270,13 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function(BlobConfig){
 
     /**
      * Serializes the metadata to a JSON object.
-     * @returns {{name: string, size: number, mime: string, tags: Array.<string>, content: (string|Object}, contentType: string}}
+     * @returns {{
+     *  name: string,
+     *  size: number,
+     *  mime: string,
+     *  tags: Array.<string>,
+     *  content: (string|Object},
+     *  contentType: string}}
      */
     BlobMetadata.prototype.serialize = function () {
         var metadata = {
@@ -2280,757 +2305,760 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function(BlobConfig){
         return metadata;
     };
 
-    return BlobMetadata
+    return BlobMetadata;
 });
+/*globals define*/
+/*jshint node: true, browser: true, camelcase: false*/
+
 /**
- * The MIT License (MIT)
- * Copyright (c) 2013, Miklos Maroti
+ * @author mmaroti / https://github.com/mmaroti
  */
 
 (function () {
-	
+    'use strict';
 
-	// ------- assert -------
+    // ------- assert -------
 
-	var TASYNC_TRACE_ENABLE = true;
+    var TASYNC_TRACE_ENABLE = true;
 
-	function setTrace (value) {
-		TASYNC_TRACE_ENABLE = value;
-	}
+    function setTrace(value) {
+        TASYNC_TRACE_ENABLE = value;
+    }
 
-	function assert (cond) {
-		if (!cond) {
-			throw new Error("tasync internal error");
-		}
-	}
+    function assert(cond) {
+        if (!cond) {
+            throw new Error('tasync internal error');
+        }
+    }
 
-	// ------- Future -------
-
-	var STATE_LISTEN = 0;
-	var STATE_REJECTED = 1;
-	var STATE_RESOLVED = 2;
-
-	var Future = function () {
-		this.state = STATE_LISTEN;
-		this.value = [];
-	};
-
-	Future.prototype.register = function (target) {
-		assert(this.state === STATE_LISTEN);
-		assert(typeof target === "object" && target !== null);
-
-		this.value.push(target);
-	};
-
-	Future.prototype.resolve = function (value) {
-		assert(this.state === STATE_LISTEN && !(value instanceof Future));
-
-		var listeners = this.value;
-
-		this.state = STATE_RESOLVED;
-		this.value = value;
-
-		var i;
-		for (i = 0; i < listeners.length; ++i) {
-			listeners[i].onResolved(value);
-		}
-	};
-
-	Future.prototype.reject = function (error) {
-		assert(this.state === STATE_LISTEN && error instanceof Error);
-
-		var listeners = this.value;
-
-		this.state = STATE_REJECTED;
-		this.value = error;
-
-		var i;
-		for (i = 0; i < listeners.length; ++i) {
-			listeners[i].onRejected(error);
-		}
-	};
-
-	// ------- Delay -------
-
-	function delay (timeout, value) {
-		if (timeout < 0) {
-			return value;
-		}
-
-		var future = new Future();
-		setTimeout(function () {
-			future.resolve(value);
-		}, timeout);
-		return future;
-	}
-
-	// ------- Lift -------
-
-	var FutureLift = function (array, index) {
-		Future.call(this);
-
-		this.array = array;
-		this.index = index;
-	};
-
-	FutureLift.prototype = Object.create(Future.prototype);
-
-	FutureLift.prototype.onResolved = function (value) {
-		assert(this.state === STATE_LISTEN);
-
-		var array = this.array;
-		array[this.index] = value;
-
-		while (++this.index < array.length) {
-			value = array[this.index];
-			if (value instanceof Future) {
-				if (value.state === STATE_RESOLVED) {
-					array[this.index] = value.value;
-				} else if (value.state === STATE_LISTEN) {
-					value.register(this);
-					return;
-				} else {
-					assert(value.state === STATE_REJECTED);
-					this.reject(value.value);
-					return;
-				}
-			}
-		}
-
-		this.array = null;
-		this.resolve(array);
-	};
-
-	FutureLift.prototype.onRejected = function (error) {
-		this.array = null;
-		this.reject(error);
-	};
-
-	var lift = function (array) {
-		if (!(array instanceof Array)) {
-			throw new Error("array argument is expected");
-		}
-
-		var index;
-		for (index = 0; index < array.length; ++index) {
-			var value = array[index];
-			if (value instanceof Future) {
-				if (value.state === STATE_RESOLVED) {
-					array[index] = value.value;
-				} else if (value.state === STATE_LISTEN) {
-					var future = new FutureLift(array, index);
-					value.register(future);
-					return future;
-				} else {
-					assert(value.state === STATE_REJECTED);
-					return value;
-				}
-			}
-		}
-
-		return array;
-	};
-
-	// ------- Apply -------
-
-	var ROOT = {
-		subframes: 0
-	};
-
-	var FRAME = ROOT;
-
-	var FutureApply = function tasync_trace_end (func, that, args, index) {
-		Future.call(this);
-
-		this.caller = FRAME;
-		this.position = ++FRAME.subframes;
-		this.subframes = 0;
-
-		if (TASYNC_TRACE_ENABLE) {
-			this.trace = new Error();
-		}
-
-		this.func = func;
-		this.that = that;
-		this.args = args;
-		this.index = index;
-	};
-
-	FutureApply.prototype = Object.create(Future.prototype);
-
-	FutureApply.prototype.getPath = function () {
-		var future = this.caller, path = [ this.position ];
-
-		while (future !== ROOT) {
-			path.push(future.position);
-			future = future.caller;
-		}
-
-		return path;
-	};
-
-	function getSlice (trace) {
-		assert(typeof trace === "string");
-
-		var end = trace.indexOf("tasync_trace_start");
-		if (end >= 0) {
-			end = trace.lastIndexOf("\n", end) + 1;
-		} else {
-			if (trace.charAt(trace.length - 1) !== "\n") {
-				// trace += "\n";
-			}
-			end = undefined;
-		}
-
-		var start = trace.indexOf("tasync_trace_end");
-		if (start >= 0) {
-			start = trace.indexOf("\n", start) + 1;
-			if (start >= 0) {
-				start = trace.indexOf("\n", start) + 1;
-			}
-		} else {
-			start = 0;
-		}
-
-		return trace.substring(start, end);
-	}
-
-	function createError (error, future) {
-		if (!(error instanceof Error)) {
-			error = new Error(error);
-		}
-
-		if (TASYNC_TRACE_ENABLE) {
-			error.trace = getSlice(error.stack);
-			do {
-				error.trace += "*** callback ***\n";
-				error.trace += getSlice(future.trace.stack);
-				future = future.caller;
-			} while (future !== ROOT);
-		}
-
-		return error;
-	}
-
-	FutureApply.prototype.onRejected = function (error) {
-		this.args = null;
-		this.reject(error);
-	};
-
-	FutureApply.prototype.onResolved = function tasync_trace_start (value) {
-		assert(this.state === STATE_LISTEN);
-
-		var args = this.args;
-		args[this.index] = value;
-
-		while (--this.index >= 0) {
-			value = args[this.index];
-			if (value instanceof Future) {
-				if (value.state === STATE_RESOLVED) {
-					args[this.index] = value.value;
-				} else if (value.state === STATE_LISTEN) {
-					value.register(this);
-					return;
-				} else {
-					assert(value.state === STATE_REJECTED);
-					this.reject(value.value);
-					return;
-				}
-			}
-		}
-
-		assert(FRAME === ROOT);
-		FRAME = this;
-
-		this.args = null;
-		try {
-			value = this.func.apply(this.that, args);
-		} catch (error) {
-			FRAME = ROOT;
-
-			this.reject(createError(error, this));
-			return;
-		}
-
-		FRAME = ROOT;
-
-		if (value instanceof Future) {
-			assert(value.state === STATE_LISTEN);
-
-			this.onResolved = this.resolve;
-			value.register(this);
-		} else {
-			this.resolve(value);
-		}
-	};
-
-	var apply = function (func, args, that) {
-		if (typeof func !== "function") {
-			throw new Error("function argument is expected");
-		} else if (!(args instanceof Array)) {
-			throw new Error("array argument is expected");
-		}
-
-		var index = args.length;
-		while (--index >= 0) {
-			var value = args[index];
-			if (value instanceof Future) {
-				if (value.state === STATE_LISTEN) {
-					var future = new FutureApply(func, that, args, index);
-					value.register(future);
-					return future;
-				} else if (value.state === STATE_RESOLVED) {
-					args[index] = value.value;
-				} else {
-					assert(value.state === STATE_REJECTED);
-					return value;
-				}
-			}
-		}
-
-		return func.apply(that, args);
-	};
-
-	// ------- Call -------
-
-	var FutureCall = function tasync_trace_end (args, index) {
-		Future.call(this);
-
-		this.caller = FRAME;
-		this.position = ++FRAME.subframes;
-		this.subframes = 0;
-
-		if (TASYNC_TRACE_ENABLE) {
-			this.trace = new Error();
-		}
-
-		this.args = args;
-		this.index = index;
-	};
-
-	FutureCall.prototype = Object.create(Future.prototype);
-
-	FutureCall.prototype.getPath = FutureApply.prototype.getPath;
-	FutureCall.prototype.onRejected = FutureApply.prototype.onRejected;
-
-	var FUNCTION_CALL = Function.call;
-
-	FutureCall.prototype.onResolved = function tasync_trace_start (value) {
-		assert(this.state === STATE_LISTEN);
-
-		var args = this.args;
-		args[this.index] = value;
-
-		while (--this.index >= 0) {
-			value = args[this.index];
-			if (value instanceof Future) {
-				if (value.state === STATE_RESOLVED) {
-					args[this.index] = value.value;
-				} else if (value.state === STATE_LISTEN) {
-					value.register(this);
-					return;
-				} else {
-					assert(value.state === STATE_REJECTED);
-					this.reject(value.value);
-					return;
-				}
-			}
-		}
-
-		assert(FRAME === ROOT);
-		FRAME = this;
-
-		this.args = null;
-		try {
-			var func = args[0];
-			args[0] = null;
-			value = FUNCTION_CALL.apply(func, args);
-		} catch (error) {
-			FRAME = ROOT;
-
-			this.reject(createError(error, this));
-			return;
-		}
-
-		FRAME = ROOT;
-
-		if (value instanceof Future) {
-			assert(value.state === STATE_LISTEN);
-
-			this.onResolved = this.resolve;
-			value.register(this);
-		} else {
-			this.resolve(value);
-		}
-	};
-
-	var call = function () {
-		var index = arguments.length;
-		while (--index >= 0) {
-			var value = arguments[index];
-			if (value instanceof Future) {
-				if (value.state === STATE_LISTEN) {
-					var future = new FutureCall(arguments, index);
-					value.register(future);
-					return future;
-				} else if (value.state === STATE_RESOLVED) {
-					arguments[index] = value.value;
-				} else {
-					assert(value.state === STATE_REJECTED);
-					return value;
-				}
-			}
-		}
-
-		var func = arguments[0];
-		return FUNCTION_CALL.apply(func, arguments);
-	};
-
-	// ------- TryCatch -------
-
-	function FutureTryCatch (handler) {
-		Future.call(this);
-
-		this.handler = handler;
-	}
-
-	FutureTryCatch.prototype = Object.create(Future.prototype);
-
-	FutureTryCatch.prototype.onRejected = function (error) {
-		try {
-			var value = this.handler(error);
-
-			if (value instanceof Future) {
-				this.onRejected = Future.prorotype.reject;
-				value.register(this);
-			} else {
-				this.resolve(value);
-			}
-		} catch (err) {
-			this.reject(err);
-		}
-	};
-
-	FutureTryCatch.prototype.onResolved = Future.prototype.resolve;
-
-	function trycatch (func, handler) {
-		if (typeof func !== "function" || typeof handler !== "function") {
-			throw new Error("function arguments are expected");
-		}
-
-		try {
-			var value = func();
-
-			if (value instanceof Future) {
-				var future = new FutureTryCatch(handler);
-				value.register(future);
-
-				return future;
-			} else {
-				return value;
-			}
-		} catch (error) {
-			return handler(error);
-		}
-	}
-
-	// ------- Wrap -------
-
-	function wrap (func) {
-		if (typeof func !== "function") {
-			throw new Error("function argument is expected");
-		}
-
-		if (typeof func.tasync_wraped === "undefined") {
-			func.tasync_wraped = function () {
-				var args = arguments;
-				var future = new Future();
-
-				args[args.length++] = function (error, value) {
-					if (error) {
-						future.reject(error instanceof Error ? error : new Error(error));
-					} else {
-						future.resolve(value);
-					}
-				};
-
-				func.apply(this, args);
-
-				if (future.state === STATE_LISTEN) {
-					return future;
-				} else if (future.state === STATE_RESOLVED) {
-					return future.value;
-				} else {
-					assert(future.state === STATE_REJECTED);
-					throw future.value;
-				}
-			};
-
-			func.tasync_wraped.tasync_unwraped = func;
-		}
-
-		return func.tasync_wraped;
-	}
-
-	// ------- Unwrap -------
-
-	function UnwrapListener (callback) {
-		this.callback = callback;
-	}
-
-	UnwrapListener.prototype.onRejected = function (error) {
-		this.callback(error);
-	};
-
-	UnwrapListener.prototype.onResolved = function (value) {
-		this.callback(null, value);
-	};
-
-	function unwrap (func) {
-		if (typeof func !== "function") {
-			throw new Error("function argument is expected");
-		}
-
-		if (typeof func.tasync_unwraped === "undefined") {
-			func.tasync_unwraped = function () {
-				var args = arguments;
-
-				var callback = args[--args.length];
-				assert(typeof callback === "function");
-
-				var value;
-				try {
-					value = func.apply(this, args);
-				} catch (error) {
-					callback(error);
-					return;
-				}
-
-				if (value instanceof Future) {
-					assert(value.state === STATE_LISTEN);
-
-					var listener = new UnwrapListener(callback);
-					value.register(listener);
-				} else {
-					callback(null, value);
-				}
-			};
-
-			func.tasync_unwraped.tasync_wraped = func;
-		}
-
-		return func.tasync_unwraped;
-	}
-
-	// ------- Throttle -------
-
-	function FutureThrottle (func, that, args) {
-		Future.call(this);
-
-		this.func = func;
-		this.that = that;
-		this.args = args;
-
-		this.caller = FRAME;
-		this.position = ++FRAME.subframes;
-
-		this.path = this.getPath();
-	}
-
-	FutureThrottle.prototype = Object.create(Future.prototype);
-
-	FutureThrottle.prototype.execute = function () {
-		var value;
-		try {
-			assert(FRAME === ROOT);
-			FRAME = this;
-
-			value = this.func.apply(this.that, this.args);
-
-			FRAME = ROOT;
-		} catch (error) {
-			FRAME = ROOT;
-
-			this.reject(error);
-			return;
-		}
-
-		if (value instanceof Future) {
-			assert(value.state === STATE_LISTEN);
-			value.register(this);
-		} else {
-			this.resolve(value);
-		}
-	};
-
-	FutureThrottle.prototype.getPath = FutureApply.prototype.getPath;
-	FutureThrottle.prototype.onResolved = Future.prototype.resolve;
-	FutureThrottle.prototype.onRejected = Future.prototype.reject;
-
-	FutureThrottle.prototype.compare = function (second) {
-		var first = this.path;
-		second = second.path;
-
-		var i, limit = first.length < second.length ? first.length : second.length;
-		for (i = 0; i < limit; ++i) {
-			if (first[i] !== second[i]) {
-				return first[i] - second[i];
-			}
-		}
-
-		return first.length - second.length;
-	};
-
-	function ThrottleListener (limit) {
-		this.running = 0;
-		this.limit = limit;
-		this.queue = [];
-	}
-
-	function priorityQueueInsert (queue, elem) {
-		var low = 0;
-		var high = queue.length;
-
-		while (low < high) {
-			var mid = Math.floor((low + high) / 2);
-			assert(low <= mid && mid < high);
-
-			if (elem.compare(queue[mid]) < 0) {
-				low = mid + 1;
-			} else {
-				high = mid;
-			}
-		}
-
-		queue.splice(low, 0, elem);
-	}
-
-	ThrottleListener.prototype.execute = function (func, that, args) {
-		if (this.running < this.limit) {
-			var value = func.apply(that, args);
-
-			if (value instanceof Future) {
-				assert(value.state === STATE_LISTEN);
-
-				++this.running;
-				value.register(this);
-			}
-
-			return value;
-		} else {
-			var future = new FutureThrottle(func, that, args);
-			priorityQueueInsert(this.queue, future);
-
-			return future;
-		}
-	};
-
-	ThrottleListener.prototype.onResolved = function () {
-		if (this.queue.length > 0) {
-			var future = this.queue.pop();
-			future.register(this);
-
-			future.execute();
-		} else {
-			--this.running;
-		}
-	};
-
-	ThrottleListener.prototype.onRejected = ThrottleListener.prototype.onResolved;
-
-	// TODO: prevent recursion, otheriwise throttle will not work
-	function throttle (func, limit) {
-		if (typeof func !== "function") {
-			throw new Error("function argument is expected");
-		} else if (typeof limit !== "number") {
-			throw new Error("number argument is expected");
-		}
-
-		var listener = new ThrottleListener(limit);
-
-		return function () {
-			return listener.execute(func, this, arguments);
-		};
-	}
-
-	// ------- Join -------
-
-	function FutureJoin (first) {
-		Future.call(this);
-
-		this.first = first;
-		this.missing = first instanceof Future && first.state === STATE_LISTEN ? 1 : 0;
-	}
-
-	FutureJoin.prototype = Object.create(Future.prototype);
-
-	FutureJoin.prototype.onResolved = function (value) {
-		if (--this.missing === 0) {
-			assert(this.state !== STATE_RESOLVED);
-
-			if (this.state === STATE_LISTEN) {
-				if (this.first instanceof Future) {
-					assert(this.first.state === STATE_RESOLVED);
-
-					this.resolve(this.first.value);
-				} else {
-					this.resolve(this.first);
-				}
-			}
-		}
-	};
-
-	FutureJoin.prototype.onRejected = function (error) {
-		if (this.state === STATE_LISTEN) {
-			this.reject(error);
-		}
-	};
-
-	function join (first, second) {
-		if (first instanceof Future && first.state === STATE_REJECTED) {
-			return first;
-		} else if (second instanceof Future) {
-			if (second.state === STATE_RESOLVED) {
-				return first;
-			} else if (second.state === STATE_REJECTED) {
-				return second;
-			}
-		} else {
-			return first;
-		}
-
-		if (!(first instanceof FutureJoin)) {
-			first = new FutureJoin(first);
-		}
-
-		first.missing += 1;
-		second.register(first);
-
-		return first;
-	}
-
-	// ------- TASYNC -------
-
-	var TASYNC = {
-		setTrace: setTrace,
-		delay: delay,
-		lift: lift,
-		apply: apply,
-		call: call,
-		trycatch: trycatch,
-		wrap: wrap,
-		unwrap: unwrap,
-		throttle: throttle,
-		join: join
-	};
-
-	if (typeof define === "function" && define.amd) {
-		define('common/core/tasync',[], function () {
-			return TASYNC;
-		});
-	} else {
-		module.exports = TASYNC;
-	}
+    // ------- Future -------
+
+    var STATE_LISTEN = 0;
+    var STATE_REJECTED = 1;
+    var STATE_RESOLVED = 2;
+
+    var Future = function () {
+        this.state = STATE_LISTEN;
+        this.value = [];
+    };
+
+    Future.prototype.register = function (target) {
+        assert(this.state === STATE_LISTEN);
+        assert(typeof target === 'object' && target !== null);
+
+        this.value.push(target);
+    };
+
+    Future.prototype.resolve = function (value) {
+        assert(this.state === STATE_LISTEN && !(value instanceof Future));
+
+        var listeners = this.value;
+
+        this.state = STATE_RESOLVED;
+        this.value = value;
+
+        var i;
+        for (i = 0; i < listeners.length; ++i) {
+            listeners[i].onResolved(value);
+        }
+    };
+
+    Future.prototype.reject = function (error) {
+        assert(this.state === STATE_LISTEN && error instanceof Error);
+
+        var listeners = this.value;
+
+        this.state = STATE_REJECTED;
+        this.value = error;
+
+        var i;
+        for (i = 0; i < listeners.length; ++i) {
+            listeners[i].onRejected(error);
+        }
+    };
+
+    // ------- Delay -------
+
+    function delay(timeout, value) {
+        if (timeout < 0) {
+            return value;
+        }
+
+        var future = new Future();
+        setTimeout(function () {
+            future.resolve(value);
+        }, timeout);
+        return future;
+    }
+
+    // ------- Lift -------
+
+    var FutureLift = function (array, index) {
+        Future.call(this);
+
+        this.array = array;
+        this.index = index;
+    };
+
+    FutureLift.prototype = Object.create(Future.prototype);
+
+    FutureLift.prototype.onResolved = function (value) {
+        assert(this.state === STATE_LISTEN);
+
+        var array = this.array;
+        array[this.index] = value;
+
+        while (++this.index < array.length) {
+            value = array[this.index];
+            if (value instanceof Future) {
+                if (value.state === STATE_RESOLVED) {
+                    array[this.index] = value.value;
+                } else if (value.state === STATE_LISTEN) {
+                    value.register(this);
+                    return;
+                } else {
+                    assert(value.state === STATE_REJECTED);
+                    this.reject(value.value);
+                    return;
+                }
+            }
+        }
+
+        this.array = null;
+        this.resolve(array);
+    };
+
+    FutureLift.prototype.onRejected = function (error) {
+        this.array = null;
+        this.reject(error);
+    };
+
+    var lift = function (array) {
+        if (!(array instanceof Array)) {
+            throw new Error('array argument is expected');
+        }
+
+        var index;
+        for (index = 0; index < array.length; ++index) {
+            var value = array[index];
+            if (value instanceof Future) {
+                if (value.state === STATE_RESOLVED) {
+                    array[index] = value.value;
+                } else if (value.state === STATE_LISTEN) {
+                    var future = new FutureLift(array, index);
+                    value.register(future);
+                    return future;
+                } else {
+                    assert(value.state === STATE_REJECTED);
+                    return value;
+                }
+            }
+        }
+
+        return array;
+    };
+
+    // ------- Apply -------
+
+    var ROOT = {
+        subframes: 0
+    };
+
+    var FRAME = ROOT;
+
+    var FutureApply = function tasync_trace_end(func, that, args, index) {
+        Future.call(this);
+
+        this.caller = FRAME;
+        this.position = ++FRAME.subframes;
+        this.subframes = 0;
+
+        if (TASYNC_TRACE_ENABLE) {
+            this.trace = new Error();
+        }
+
+        this.func = func;
+        this.that = that;
+        this.args = args;
+        this.index = index;
+    };
+
+    FutureApply.prototype = Object.create(Future.prototype);
+
+    FutureApply.prototype.getPath = function () {
+        var future = this.caller,
+            path = [this.position];
+
+        while (future !== ROOT) {
+            path.push(future.position);
+            future = future.caller;
+        }
+
+        return path;
+    };
+
+    function getSlice(trace) {
+        assert(typeof trace === 'string');
+
+        var end = trace.indexOf('tasync_trace_start');
+        if (end >= 0) {
+            end = trace.lastIndexOf('\n', end) + 1;
+        } else {
+            if (trace.charAt(trace.length - 1) !== '\n') {
+                // trace += '\n';
+            }
+            end = undefined;
+        }
+
+        var start = trace.indexOf('tasync_trace_end');
+        if (start >= 0) {
+            start = trace.indexOf('\n', start) + 1;
+            if (start >= 0) {
+                start = trace.indexOf('\n', start) + 1;
+            }
+        } else {
+            start = 0;
+        }
+
+        return trace.substring(start, end);
+    }
+
+    function createError(error, future) {
+        if (!(error instanceof Error)) {
+            error = new Error(error);
+        }
+
+        if (TASYNC_TRACE_ENABLE) {
+            error.trace = getSlice(error.stack);
+            do {
+                error.trace += '*** callback ***\n';
+                error.trace += getSlice(future.trace.stack);
+                future = future.caller;
+            } while (future !== ROOT);
+        }
+
+        return error;
+    }
+
+    FutureApply.prototype.onRejected = function (error) {
+        this.args = null;
+        this.reject(error);
+    };
+
+    FutureApply.prototype.onResolved = function tasync_trace_start(value) {
+        assert(this.state === STATE_LISTEN);
+
+        var args = this.args;
+        args[this.index] = value;
+
+        while (--this.index >= 0) {
+            value = args[this.index];
+            if (value instanceof Future) {
+                if (value.state === STATE_RESOLVED) {
+                    args[this.index] = value.value;
+                } else if (value.state === STATE_LISTEN) {
+                    value.register(this);
+                    return;
+                } else {
+                    assert(value.state === STATE_REJECTED);
+                    this.reject(value.value);
+                    return;
+                }
+            }
+        }
+
+        assert(FRAME === ROOT);
+        FRAME = this;
+
+        this.args = null;
+        try {
+            value = this.func.apply(this.that, args);
+        } catch (error) {
+            FRAME = ROOT;
+
+            this.reject(createError(error, this));
+            return;
+        }
+
+        FRAME = ROOT;
+
+        if (value instanceof Future) {
+            assert(value.state === STATE_LISTEN);
+
+            this.onResolved = this.resolve;
+            value.register(this);
+        } else {
+            this.resolve(value);
+        }
+    };
+
+    var apply = function (func, args, that) {
+        if (typeof func !== 'function') {
+            throw new Error('function argument is expected');
+        } else if (!(args instanceof Array)) {
+            throw new Error('array argument is expected');
+        }
+
+        var index = args.length;
+        while (--index >= 0) {
+            var value = args[index];
+            if (value instanceof Future) {
+                if (value.state === STATE_LISTEN) {
+                    var future = new FutureApply(func, that, args, index);
+                    value.register(future);
+                    return future;
+                } else if (value.state === STATE_RESOLVED) {
+                    args[index] = value.value;
+                } else {
+                    assert(value.state === STATE_REJECTED);
+                    return value;
+                }
+            }
+        }
+
+        return func.apply(that, args);
+    };
+
+    // ------- Call -------
+
+    var FutureCall = function tasync_trace_end(args, index) {
+        Future.call(this);
+
+        this.caller = FRAME;
+        this.position = ++FRAME.subframes;
+        this.subframes = 0;
+
+        if (TASYNC_TRACE_ENABLE) {
+            this.trace = new Error();
+        }
+
+        this.args = args;
+        this.index = index;
+    };
+
+    FutureCall.prototype = Object.create(Future.prototype);
+
+    FutureCall.prototype.getPath = FutureApply.prototype.getPath;
+    FutureCall.prototype.onRejected = FutureApply.prototype.onRejected;
+
+    var FUNCTION_CALL = Function.call;
+
+    FutureCall.prototype.onResolved = function tasync_trace_start(value) {
+        assert(this.state === STATE_LISTEN);
+
+        var args = this.args;
+        args[this.index] = value;
+
+        while (--this.index >= 0) {
+            value = args[this.index];
+            if (value instanceof Future) {
+                if (value.state === STATE_RESOLVED) {
+                    args[this.index] = value.value;
+                } else if (value.state === STATE_LISTEN) {
+                    value.register(this);
+                    return;
+                } else {
+                    assert(value.state === STATE_REJECTED);
+                    this.reject(value.value);
+                    return;
+                }
+            }
+        }
+
+        assert(FRAME === ROOT);
+        FRAME = this;
+
+        this.args = null;
+        try {
+            var func = args[0];
+            args[0] = null;
+            value = FUNCTION_CALL.apply(func, args);
+        } catch (error) {
+            FRAME = ROOT;
+
+            this.reject(createError(error, this));
+            return;
+        }
+
+        FRAME = ROOT;
+
+        if (value instanceof Future) {
+            assert(value.state === STATE_LISTEN);
+
+            this.onResolved = this.resolve;
+            value.register(this);
+        } else {
+            this.resolve(value);
+        }
+    };
+
+    var call = function () {
+        var index = arguments.length;
+        while (--index >= 0) {
+            var value = arguments[index];
+            if (value instanceof Future) {
+                if (value.state === STATE_LISTEN) {
+                    var future = new FutureCall(arguments, index);
+                    value.register(future);
+                    return future;
+                } else if (value.state === STATE_RESOLVED) {
+                    arguments[index] = value.value;
+                } else {
+                    assert(value.state === STATE_REJECTED);
+                    return value;
+                }
+            }
+        }
+
+        var func = arguments[0];
+        return FUNCTION_CALL.apply(func, arguments);
+    };
+
+    // ------- TryCatch -------
+
+    function FutureTryCatch(handler) {
+        Future.call(this);
+
+        this.handler = handler;
+    }
+
+    FutureTryCatch.prototype = Object.create(Future.prototype);
+
+    FutureTryCatch.prototype.onRejected = function (error) {
+        try {
+            var value = this.handler(error);
+
+            if (value instanceof Future) {
+                this.onRejected = Future.prorotype.reject;
+                value.register(this);
+            } else {
+                this.resolve(value);
+            }
+        } catch (err) {
+            this.reject(err);
+        }
+    };
+
+    FutureTryCatch.prototype.onResolved = Future.prototype.resolve;
+
+    function trycatch(func, handler) {
+        if (typeof func !== 'function' || typeof handler !== 'function') {
+            throw new Error('function arguments are expected');
+        }
+
+        try {
+            var value = func();
+
+            if (value instanceof Future) {
+                var future = new FutureTryCatch(handler);
+                value.register(future);
+
+                return future;
+            } else {
+                return value;
+            }
+        } catch (error) {
+            return handler(error);
+        }
+    }
+
+    // ------- Wrap -------
+
+    function wrap(func) {
+        if (typeof func !== 'function') {
+            throw new Error('function argument is expected');
+        }
+
+        if (typeof func.tasync_wraped === 'undefined') {
+            func.tasync_wraped = function () {
+                var args = arguments;
+                var future = new Future();
+
+                args[args.length++] = function (error, value) {
+                    if (error) {
+                        future.reject(error instanceof Error ? error : new Error(error));
+                    } else {
+                        future.resolve(value);
+                    }
+                };
+
+                func.apply(this, args);
+
+                if (future.state === STATE_LISTEN) {
+                    return future;
+                } else if (future.state === STATE_RESOLVED) {
+                    return future.value;
+                } else {
+                    assert(future.state === STATE_REJECTED);
+                    throw future.value;
+                }
+            };
+
+            func.tasync_wraped.tasync_unwraped = func;
+        }
+
+        return func.tasync_wraped;
+    }
+
+    // ------- Unwrap -------
+
+    function UnwrapListener(callback) {
+        this.callback = callback;
+    }
+
+    UnwrapListener.prototype.onRejected = function (error) {
+        this.callback(error);
+    };
+
+    UnwrapListener.prototype.onResolved = function (value) {
+        this.callback(null, value);
+    };
+
+    function unwrap(func) {
+        if (typeof func !== 'function') {
+            throw new Error('function argument is expected');
+        }
+
+        if (typeof func.tasync_unwraped === 'undefined') {
+            func.tasync_unwraped = function () {
+                var args = arguments;
+
+                var callback = args[--args.length];
+                assert(typeof callback === 'function');
+
+                var value;
+                try {
+                    value = func.apply(this, args);
+                } catch (error) {
+                    callback(error);
+                    return;
+                }
+
+                if (value instanceof Future) {
+                    assert(value.state === STATE_LISTEN);
+
+                    var listener = new UnwrapListener(callback);
+                    value.register(listener);
+                } else {
+                    callback(null, value);
+                }
+            };
+
+            func.tasync_unwraped.tasync_wraped = func;
+        }
+
+        return func.tasync_unwraped;
+    }
+
+    // ------- Throttle -------
+
+    function FutureThrottle(func, that, args) {
+        Future.call(this);
+
+        this.func = func;
+        this.that = that;
+        this.args = args;
+
+        this.caller = FRAME;
+        this.position = ++FRAME.subframes;
+
+        this.path = this.getPath();
+    }
+
+    FutureThrottle.prototype = Object.create(Future.prototype);
+
+    FutureThrottle.prototype.execute = function () {
+        var value;
+        try {
+            assert(FRAME === ROOT);
+            FRAME = this;
+
+            value = this.func.apply(this.that, this.args);
+
+            FRAME = ROOT;
+        } catch (error) {
+            FRAME = ROOT;
+
+            this.reject(error);
+            return;
+        }
+
+        if (value instanceof Future) {
+            assert(value.state === STATE_LISTEN);
+            value.register(this);
+        } else {
+            this.resolve(value);
+        }
+    };
+
+    FutureThrottle.prototype.getPath = FutureApply.prototype.getPath;
+    FutureThrottle.prototype.onResolved = Future.prototype.resolve;
+    FutureThrottle.prototype.onRejected = Future.prototype.reject;
+
+    FutureThrottle.prototype.compare = function (second) {
+        var first = this.path;
+        second = second.path;
+
+        var i, limit = first.length < second.length ? first.length : second.length;
+        for (i = 0; i < limit; ++i) {
+            if (first[i] !== second[i]) {
+                return first[i] - second[i];
+            }
+        }
+
+        return first.length - second.length;
+    };
+
+    function ThrottleListener(limit) {
+        this.running = 0;
+        this.limit = limit;
+        this.queue = [];
+    }
+
+    function priorityQueueInsert(queue, elem) {
+        var low = 0;
+        var high = queue.length;
+
+        while (low < high) {
+            var mid = Math.floor((low + high) / 2);
+            assert(low <= mid && mid < high);
+
+            if (elem.compare(queue[mid]) < 0) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+
+        queue.splice(low, 0, elem);
+    }
+
+    ThrottleListener.prototype.execute = function (func, that, args) {
+        if (this.running < this.limit) {
+            var value = func.apply(that, args);
+
+            if (value instanceof Future) {
+                assert(value.state === STATE_LISTEN);
+
+                ++this.running;
+                value.register(this);
+            }
+
+            return value;
+        } else {
+            var future = new FutureThrottle(func, that, args);
+            priorityQueueInsert(this.queue, future);
+
+            return future;
+        }
+    };
+
+    ThrottleListener.prototype.onResolved = function () {
+        if (this.queue.length > 0) {
+            var future = this.queue.pop();
+            future.register(this);
+
+            future.execute();
+        } else {
+            --this.running;
+        }
+    };
+
+    ThrottleListener.prototype.onRejected = ThrottleListener.prototype.onResolved;
+
+    // TODO: prevent recursion, otheriwise throttle will not work
+    function throttle(func, limit) {
+        if (typeof func !== 'function') {
+            throw new Error('function argument is expected');
+        } else if (typeof limit !== 'number') {
+            throw new Error('number argument is expected');
+        }
+
+        var listener = new ThrottleListener(limit);
+
+        return function () {
+            return listener.execute(func, this, arguments);
+        };
+    }
+
+    // ------- Join -------
+
+    function FutureJoin(first) {
+        Future.call(this);
+
+        this.first = first;
+        this.missing = first instanceof Future && first.state === STATE_LISTEN ? 1 : 0;
+    }
+
+    FutureJoin.prototype = Object.create(Future.prototype);
+
+    FutureJoin.prototype.onResolved = function (/*value*/) {
+        if (--this.missing === 0) {
+            assert(this.state !== STATE_RESOLVED);
+
+            if (this.state === STATE_LISTEN) {
+                if (this.first instanceof Future) {
+                    assert(this.first.state === STATE_RESOLVED);
+
+                    this.resolve(this.first.value);
+                } else {
+                    this.resolve(this.first);
+                }
+            }
+        }
+    };
+
+    FutureJoin.prototype.onRejected = function (error) {
+        if (this.state === STATE_LISTEN) {
+            this.reject(error);
+        }
+    };
+
+    function join(first, second) {
+        if (first instanceof Future && first.state === STATE_REJECTED) {
+            return first;
+        } else if (second instanceof Future) {
+            if (second.state === STATE_RESOLVED) {
+                return first;
+            } else if (second.state === STATE_REJECTED) {
+                return second;
+            }
+        } else {
+            return first;
+        }
+
+        if (!(first instanceof FutureJoin)) {
+            first = new FutureJoin(first);
+        }
+
+        first.missing += 1;
+        second.register(first);
+
+        return first;
+    }
+
+    // ------- TASYNC -------
+
+    var TASYNC = {
+        setTrace: setTrace,
+        delay: delay,
+        lift: lift,
+        apply: apply,
+        call: call,
+        trycatch: trycatch,
+        wrap: wrap,
+        unwrap: unwrap,
+        throttle: throttle,
+        join: join
+    };
+
+    if (typeof define === 'function' && define.amd) {
+        define('common/core/tasync',[], function () {
+            return TASYNC;
+        });
+    } else {
+        module.exports = TASYNC;
+    }
 }());
 
 /*globals define*/
@@ -3041,7 +3069,7 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function(BlobConfig){
  */
 
 define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function (BlobMetadata, BlobConfig, tasync) {
-    
+    'use strict';
     /**
      * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.
      * @param {string} name Artifact's name without extension
@@ -3131,7 +3159,8 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
             }
 
             if (self.descriptor.content.hasOwnProperty(name)) {
-                callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
+                callback('Another content with the same name was already added. ' +
+                JSON.stringify(self.descriptor.content[name]));
 
             } else {
                 self.descriptor.size += metadata.size;
@@ -3149,7 +3178,8 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
         var self = this,
             addMetadata = function (size) {
                 if (self.descriptor.content.hasOwnProperty(name)) {
-                    callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
+                    callback('Another content with the same name was already added. ' +
+                    JSON.stringify(self.descriptor.content[name]));
 
                 } else {
                     self.descriptor.size += size;
@@ -3331,15 +3361,18 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
     return Artifact;
 });
 
-/*globals define*/
+/*globals define, escape*/
 /*jshint browser: true, node:true*/
-/*
+
+/**
+ * Client module for accessing the blob.
+ *
  * @author lattmann / https://github.com/lattmann
  * @author ksmyth / https://github.com/ksmyth
  */
 
 define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, BlobMetadata, superagent) {
-    
+    'use strict';
 
     var BlobClient = function (parameters) {
         this.artifacts = [];
@@ -3349,12 +3382,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
             this.serverPort = parameters.serverPort || this.serverPort;
             this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
             this.webgmeclientsession = parameters.webgmeclientsession;
-            this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || {
-                maxSockets: 100,
-                maxFreeSockets: 10,
-                timeout: 60000,
-                keepAliveTimeout: 30000 // free socket keep alive for 30 seconds
-            };
+            this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || { /* use defaults */ };
         }
         this.blobUrl = '';
         if (this.httpsecure !== undefined && this.server && this.serverPort) {
@@ -3412,6 +3440,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
     BlobClient.prototype.putFile = function (name, data, callback) {
         var contentLength,
             req;
+
         function toArrayBuffer(buffer) {
             var ab = new ArrayBuffer(buffer.length);
             var view = new Uint8Array(ab);
@@ -3420,7 +3449,9 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
             }
             return ab;
         }
-        // on node-webkit, we use XMLHttpRequest, but xhr.send thinks a Buffer is a string and encodes it in utf-8. Send an ArrayBuffer instead
+
+        // On node-webkit, we use XMLHttpRequest, but xhr.send thinks a Buffer is a string and encodes it in utf-8 -
+        // send an ArrayBuffer instead.
         if (typeof window !== 'undefined' && typeof Buffer !== 'undefined' && data instanceof Buffer) {
             data = toArrayBuffer(data); // FIXME will this have performance problems
         }
@@ -3504,7 +3535,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
         if (remaining === 0) {
             callback(null, hashes);
         }
-        putFile = function(filename, data) {
+        putFile = function (filename, data) {
             self.putFile(filename, data, function (err, hash) {
                 remaining -= 1;
 
@@ -3559,7 +3590,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
             };
             require('util').inherits(BuffersWritable, Writable);
 
-            BuffersWritable.prototype._write = function(chunk, encoding, callback) {
+            BuffersWritable.prototype._write = function (chunk, encoding, callback) {
                 this.buffers.push(chunk);
                 callback();
             };
@@ -3583,7 +3614,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
                 }
             });
             // req.on('error', callback);
-            req.on('end', function() {
+            req.on('end', function () {
                 if (req.xhr.status > 399) {
                     callback(req.xhr.status);
                 } else {
@@ -3663,7 +3694,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
             callback(null, hashes);
         }
 
-        saveCallback = function(err, hash) {
+        saveCallback = function (err, hash) {
             remaining -= 1;
 
             hashes.push(hash);
@@ -3685,20 +3716,24 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
     return BlobClient;
 });
 
-/*globals define, WebGMEGlobal, require*/
+/*globals define*/
+/*jshint browser: true, node:true*/
+
 /**
+ * Client module for creating, monitoring executor jobs.
+ *
  * @author lattmann / https://github.com/lattmann
  * @author ksmyth / https://github.com/ksmyth
  */
 
 
 define('executor/ExecutorClient',['superagent'], function (superagent) {
-    
+    'use strict';
 
     var ExecutorClient = function (parameters) {
         parameters = parameters || {};
-        this.isNodeJS = (typeof window === 'undefined') && (typeof process === "object");
-        this.isNodeWebkit = (typeof window === 'object') && (typeof process === "object");
+        this.isNodeJS = (typeof window === 'undefined') && (typeof process === 'object');
+        this.isNodeWebkit = (typeof window === 'object') && (typeof process === 'object');
         //console.log(isNode);
         if (this.isNodeJS) {
             this.server = '127.0.0.1';
@@ -3715,7 +3750,8 @@ define('executor/ExecutorClient',['superagent'], function (superagent) {
             this.executorUrl = (this.httpsecure ? 'https://' : 'http://') + this.server + ':' + this.serverPort;
         }
         // TODO: TOKEN???
-        this.executorUrl = this.executorUrl + '/rest/executor/'; // TODO: any ways to ask for this or get it from the configuration?
+        // TODO: any ways to ask for this or get it from the configuration?
+        this.executorUrl = this.executorUrl + '/rest/executor/';
         if (parameters.executorNonce) {
             this.executorNonce = parameters.executorNonce;
         }
@@ -3755,14 +3791,16 @@ define('executor/ExecutorClient',['superagent'], function (superagent) {
     };
 
     ExecutorClient.prototype.updateJob = function (jobInfo, callback) {
-        this.sendHttpRequestWithData('POST', this.executorUrl + 'update/' + jobInfo.hash, jobInfo, function (err, response) {
-            if (err) {
-                callback(err);
-                return;
-            }
+        this.sendHttpRequestWithData('POST', this.executorUrl + 'update/' + jobInfo.hash, jobInfo,
+            function (err, response) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-            callback(null, response);
-        });
+                callback(null, response);
+            }
+        );
     };
 
     ExecutorClient.prototype.getInfo = function (hash, callback) {
@@ -3853,24 +3891,45 @@ define('executor/ExecutorClient',['superagent'], function (superagent) {
     return ExecutorClient;
 });
 
+/*globals define*/
+/*jshint node:true*/
+
+/**
+ * @author ksmyth / https://github.com/ksmyth
+ */
+
 define('executor/WorkerInfo',[], function () {
-    var ClientRequest = function(parameters) {
+    'use strict';
+
+    var ClientRequest = function (parameters) {
         this.clientId = parameters.clientId || undefined;
         this.availableProcesses = parameters.availableProcesses || 0;
         this.labels = parameters.labels || [];
-    }
+    };
 
-    var ServerResponse = function(parameters) {
+    var ServerResponse = function (parameters) {
         this.jobsToStart = parameters.jobsToStart || [];
         this.refreshPeriod = parameters.refreshPeriod || 30 * 1000;
         this.labelJobs = parameters.labelJobs;
     };
 
-    return { ClientRequest: ClientRequest, ServerResponse: ServerResponse };
+    return {
+        ClientRequest: ClientRequest,
+        ServerResponse: ServerResponse
+    };
 });
 
 
-define('executor/JobInfo',[], function() {
+/*globals define*/
+/*jshint node:true*/
+
+/**
+ * @author lattmann / https://github.com/lattmann
+ */
+
+define('executor/JobInfo',[], function () {
+    'use strict';
+
     var JobInfo = function (parameters) {
         this.hash = parameters.hash;
         this.resultHashes = parameters.resultHashes || [];
@@ -3884,9 +3943,19 @@ define('executor/JobInfo',[], function() {
         this.labels = parameters.labels || [];
     };
 
-    JobInfo.finishedStatuses = [ 'SUCCESS', 'FAILED_TO_EXECUTE', 'FAILED_TO_GET_SOURCE_METADATA', 'FAILED_SOURCE_COULD_NOT_BE_OBTAINED',
-        'FAILED_CREATING_SOURCE_ZIP', 'FAILED_UNZIP', 'FAILED_EXECUTOR_CONFIG', 'FAILED_TO_ARCHIVE_FILE', 'FAILED_TO_SAVE_JOINT_ARTIFACT', 'FAILED_TO_ADD_OBJECT_HASHES',
+    JobInfo.finishedStatuses = [
+        'SUCCESS',
+        'FAILED_TO_EXECUTE',
+        'FAILED_TO_GET_SOURCE_METADATA',
+        'FAILED_SOURCE_COULD_NOT_BE_OBTAINED',
+        'FAILED_CREATING_SOURCE_ZIP',
+        'FAILED_UNZIP',
+        'FAILED_EXECUTOR_CONFIG',
+        'FAILED_TO_ARCHIVE_FILE',
+        'FAILED_TO_SAVE_JOINT_ARTIFACT',
+        'FAILED_TO_ADD_OBJECT_HASHES',
         'FAILED_TO_SAVE_ARTIFACT'];
+
     JobInfo.isFinishedStatus = function (status) {
         return JobInfo.finishedStatuses.indexOf(status) !== -1;
     };
@@ -3897,54 +3966,79 @@ define('executor/JobInfo',[], function() {
 
     return JobInfo;
 });
-/*globals require, nodeRequire, process, console*/
+/*globals define, File, alert*/
+/*jshint node:true*/
+
 /**
- * Created by Zsolt on 5/16/2014.
- *
+ * @author lattmann / https://github.com/lattmann
+ * @author ksmyth / https://github.com/ksmyth
  */
 
-// eb.executorClient.createJob('1092dd2b135af5d164b9d157b5360391246064db', function (err, res) { console.log(require('util').inspect(res)); })
-// eb.executorClient.getInfoByStatus('CREATED', function(err, res) { console.log("xxx " + require('util').inspect(res)); })
+// eb.executorClient.createJob('1092dd2b135af5d164b9d157b5360391246064db',
+//  function (err, res) { console.log(require('util').inspect(res)); })
 
-define('executor/ExecutorWorker',['blob/BlobClient',
-        'blob/BlobMetadata',
-        'fs',
-        'util',
-        'events',
-        'path',
-        'child_process',
-        'minimatch',
-        'executor/ExecutorClient',
-        'executor/WorkerInfo',
-        'executor/JobInfo',
-        'superagent',
-        'rimraf'
-    ],
-    function (BlobClient, BlobMetadata, fs, util, events, path, child_process, minimatch, ExecutorClient, WorkerInfo, JobInfo, superagent, rimraf) {
-        var UNZIP_EXE;
-        var UNZIP_ARGS;
-        if (process.platform === "win32") {
-            UNZIP_EXE = "c:\\Program Files\\7-Zip\\7z.exe";
-            UNZIP_ARGS = ["x", "-y"];
-        } else if (process.platform === "linux" || process.platform === 'darwin') {
-            UNZIP_EXE = "/usr/bin/unzip";
-            UNZIP_ARGS = ["-o"];
-        } else {
-            UNZIP_EXE = "unknown";
-        }
+// eb.executorClient.getInfoByStatus('CREATED',
+// function(err, res) { console.log('xxx ' + require('util').inspect(res)); })
 
-        var walk = function(dir, done) {
+define('executor/ExecutorWorker',[
+    'blob/BlobClient',
+    'blob/BlobMetadata',
+    'fs',
+    'util',
+    'events',
+    'path',
+    'child_process',
+    'minimatch',
+    'executor/ExecutorClient',
+    'executor/WorkerInfo',
+    'executor/JobInfo',
+    'superagent',
+    'rimraf'
+], function (BlobClient,
+             BlobMetadata,
+             fs,
+             util,
+             events,
+             path,
+             childProcess,
+             minimatch,
+             ExecutorClient,
+             WorkerInfo,
+             JobInfo,
+             superagent,
+             rimraf) {
+    'use strict';
+
+    var UNZIP_EXE,
+        UNZIP_ARGS;
+    if (process.platform === 'win32') {
+        UNZIP_EXE = 'c:\\Program Files\\7-Zip\\7z.exe';
+        UNZIP_ARGS = ['x', '-y'];
+    } else if (process.platform === 'linux' || process.platform === 'darwin') {
+        UNZIP_EXE = '/usr/bin/unzip';
+        UNZIP_ARGS = ['-o'];
+    } else {
+        UNZIP_EXE = 'unknown';
+    }
+
+    var walk = function (dir, done) {
         var results = [];
-        fs.readdir(dir, function(err, list) {
-            if (err) return done(err);
+        fs.readdir(dir, function (err, list) {
+            if (err) {
+                done(err);
+                return;
+            }
             var i = 0;
             (function next() {
                 var file = list[i++];
-                if (!file) return done(null, results);
+                if (!file) {
+                    done(null, results);
+                    return;
+                }
                 file = dir + '/' + file;
-                fs.stat(file, function(err, stat) {
+                fs.stat(file, function (err, stat) {
                     if (stat && stat.isDirectory()) {
-                        walk(file, function(err, res) {
+                        walk(file, function (err, res) {
                             results = results.concat(res);
                             next();
                         });
@@ -3960,9 +4054,17 @@ define('executor/ExecutorWorker',['blob/BlobClient',
     //here you can define global variables for your middleware
 
     var ExecutorWorker = function (parameters) {
-        this.blobClient = new BlobClient({server: parameters.server, serverPort: parameters.serverPort, httpsecure: parameters.httpsecure });
+        this.blobClient = new BlobClient({
+            server: parameters.server,
+            serverPort: parameters.serverPort,
+            httpsecure: parameters.httpsecure
+        });
 
-        this.executorClient = new ExecutorClient({server: parameters.server, serverPort: parameters.serverPort, httpsecure: parameters.httpsecure });
+        this.executorClient = new ExecutorClient({
+            server: parameters.server,
+            serverPort: parameters.serverPort,
+            httpsecure: parameters.httpsecure
+        });
         if (parameters.executorNonce) {
             this.executorClient.executorNonce = parameters.executorNonce;
         }
@@ -3977,8 +4079,8 @@ define('executor/ExecutorWorker',['blob/BlobClient',
         if (!fs.existsSync(this.workingDirectory)) {
             fs.mkdirSync(this.workingDirectory);
         }
-        this.availableProcessesContainer = parameters.availableProcessesContainer || { availableProcesses: 1 };
-        this.clientRequest = new WorkerInfo.ClientRequest({ clientId: null });
+        this.availableProcessesContainer = parameters.availableProcessesContainer || {availableProcesses: 1};
+        this.clientRequest = new WorkerInfo.ClientRequest({clientId: null});
         this.labelJobs = {};
     };
     util.inherits(ExecutorWorker, events.EventEmitter);
@@ -3990,7 +4092,7 @@ define('executor/ExecutorWorker',['blob/BlobClient',
         // TODO: what if job is already running?
 
         // get metadata for hash
-        self.blobClient.getMetadata(jobInfo.hash, function (err, metadata) {
+        self.blobClient.getMetadata(jobInfo.hash, function (err/*, metadata*/) {
             if (err) {
                 jobInfo.status = 'FAILED_TO_GET_SOURCE_METADATA';
                 errorCallback(err);
@@ -4026,43 +4128,52 @@ define('executor/ExecutorWorker',['blob/BlobClient',
 
                     var args = [path.basename(zipPath)];
                     args.unshift.apply(args, UNZIP_ARGS);
-                    var child = child_process.execFile(UNZIP_EXE, args, {cwd: jobDir},
+                    childProcess.execFile(UNZIP_EXE, args, {cwd: jobDir},
                         function (err, stdout, stderr) {
-                        if (err) {
-                            jobInfo.status = 'FAILED_UNZIP';
-                            console.error(stderr);
-                            errorCallback(err);
-                            return;
-                        }
-
-                        // delete downloaded file
-                        fs.unlinkSync(zipPath);
-
-                        jobInfo.startTime = new Date().toISOString();
-
-                        // get cmd file dynamically from the this.executorConfigFilename file
-                        fs.readFile(path.join(jobDir, self.executorConfigFilename), 'utf8', function (err, data) {
                             if (err) {
-                                jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
-                                errorCallback('Could not read ' + self.executorConfigFilename + ' err:' + err);
+                                jobInfo.status = 'FAILED_UNZIP';
+                                console.error(stderr);
+                                errorCallback(err);
                                 return;
                             }
-                            var executorConfig = JSON.parse(data);
-                            if (typeof executorConfig.cmd !== 'string' || typeof executorConfig.resultArtifacts !== 'object') {
-                                jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
-                                errorCallback(self.executorConfigFilename +
+
+                            // delete downloaded file
+                            fs.unlinkSync(zipPath);
+
+                            jobInfo.startTime = new Date().toISOString();
+
+                            // get cmd file dynamically from the this.executorConfigFilename file
+                            fs.readFile(path.join(jobDir, self.executorConfigFilename), 'utf8', function (err, data) {
+                                if (err) {
+                                    jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
+                                    errorCallback('Could not read ' + self.executorConfigFilename + ' err:' + err);
+                                    return;
+                                }
+                                var executorConfig = JSON.parse(data);
+                                if (typeof executorConfig.cmd !== 'string' ||
+                                    typeof executorConfig.resultArtifacts !== 'object') {
+
+                                    jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
+                                    errorCallback(self.executorConfigFilename +
                                     ' is missing or wrong type for cmd and/or resultArtifacts.');
-                                return;
-                            }
-                            var cmd = executorConfig.cmd;
-                            var args = executorConfig.args || [];
-                            console.log('working directory: ' + jobDir + ' executing: ' + cmd + ' with args: ' + args.toString());
-                            var child = child_process.spawn(cmd, args, {cwd: jobDir, stdio: ['ignore', 'pipe', 'pipe']});
-                            var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
-                            child.stdout.pipe(outlog);
-                            child.stdout.pipe(fs.createWriteStream(path.join(self.workingDirectory, jobInfo.hash.substr(0, 6) + '_stdout.txt')));
-                            child.stderr.pipe(fs.createWriteStream(path.join(jobDir, 'job_stderr.txt'))); // TODO: maybe put in the same file as stdout
-                            child.on('close', function (code, signal) {
+                                    return;
+                                }
+                                var cmd = executorConfig.cmd;
+                                var args = executorConfig.args || [];
+                                console.log('working directory: ' + jobDir + ' executing: ' + cmd + ' with args: ' +
+                                args.toString());
+
+                                var child = childProcess.spawn(cmd, args, {
+                                    cwd: jobDir,
+                                    stdio: ['ignore', 'pipe', 'pipe']
+                                });
+                                var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
+                                child.stdout.pipe(outlog);
+                                child.stdout.pipe(fs.createWriteStream(path.join(self.workingDirectory,
+                                    jobInfo.hash.substr(0, 6) + '_stdout.txt')));
+                                // TODO: maybe put in the same file as stdout
+                                child.stderr.pipe(fs.createWriteStream(path.join(jobDir, 'job_stderr.txt')));
+                                child.on('close', function (code/*, signal*/) {
 
                                     jobInfo.finishTime = new Date().toISOString();
 
@@ -4073,10 +4184,11 @@ define('executor/ExecutorWorker',['blob/BlobClient',
 
                                     // TODO: save stderr and stdout to files.
 
-                                    successCallback(jobInfo, jobDir, executorConfig); // normally self.saveJobResults(jobInfo, jobDir, executorConfig);
+                                    successCallback(jobInfo, jobDir, executorConfig);
+                                    // normally self.saveJobResults(jobInfo, jobDir, executorConfig);
                                 });
+                            });
                         });
-                    });
 
                 });
             });
@@ -4149,8 +4261,8 @@ define('executor/ExecutorWorker',['blob/BlobClient',
                         for (j = 0; j < resultsArtifacts.length; j += 1) {
                             if (resultsArtifacts[j].files[filename] === true) {
                                 resultsArtifacts[j].files[filename] = hash;
-                                //console.log('Replaced! filename: "' + filename + '", artifact "' + resultsArtifacts[j].name
-                                //    + '" with hash: ' + hash);
+                                //console.log('Replaced! filename: "' + filename + '", artifact "'
+                                // + resultsArtifacts[j].name + '" with hash: ' + hash);
                             }
                         }
                         callback(null);
@@ -4160,7 +4272,8 @@ define('executor/ExecutorWorker',['blob/BlobClient',
             if (typeof File === 'undefined') { // nodejs doesn't have File
                 fs.readFile(filePath, function (err, data) {
                     if (err) {
-                        console.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' + filePath + '", err: ' + err);
+                        console.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' + filePath +
+                        '", err: ' + err);
                         return callback('FAILED_TO_ARCHIVE_FILE');
                     }
                     archiveData(null, data);
@@ -4177,7 +4290,7 @@ define('executor/ExecutorWorker',['blob/BlobClient',
                     i,
                     counterCallback;
                 if (err) {
-                    console.error(jobInfo.hash + " " + err);
+                    console.error(jobInfo.hash + ' ' + err);
                     jobInfo.status = 'FAILED_TO_SAVE_JOINT_ARTIFACT';
                     self.sendJobUpdate(jobInfo);
                 } else {
@@ -4215,14 +4328,14 @@ define('executor/ExecutorWorker',['blob/BlobClient',
         };
 
         addObjectHashesAndSaveArtifact = function (resultArtifact, callback) {
-            resultArtifact.artifact.addMetadataHashes(resultArtifact.files, function (err, hashes) {
+            resultArtifact.artifact.addMetadataHashes(resultArtifact.files, function (err/*, hashes*/) {
                 if (err) {
-                    console.error(jobInfo.hash + " " + err);
+                    console.error(jobInfo.hash + ' ' + err);
                     return callback('FAILED_TO_ADD_OBJECT_HASHES');
                 }
                 resultArtifact.artifact.save(function (err, resultHash) {
                     if (err) {
-                        console.error(jobInfo.hash + " " + err);
+                        console.error(jobInfo.hash + ' ' + err);
                         return callback('FAILED_TO_SAVE_ARTIFACT');
                     }
                     jobInfo.resultHashes[resultArtifact.name] = resultHash;
@@ -4239,18 +4352,20 @@ define('executor/ExecutorWorker',['blob/BlobClient',
                 matched;
             //console.log('Walking the walk..');
             for (i = 0; i < results.length; i += 1) {
-                filename = path.relative(directory, results[i]).replace(/\\/g,'/');
+                filename = path.relative(directory, results[i]).replace(/\\/g, '/');
                 archive = false;
                 for (a = 0; a < resultsArtifacts.length; a += 1) {
                     if (resultsArtifacts[a].patterns.length === 0) {
-                        //console.log('Matched! filename: "' + filename + '", artifact "' + resultsArtifacts[a].name + '"');
+                        //console.log('Matched! filename: "' + filename + '", artifact "' +
+                        // resultsArtifacts[a].name + '"');
                         resultsArtifacts[a].files[filename] = true;
                         archive = true;
                     } else {
                         for (j = 0; j < resultsArtifacts[a].patterns.length; j += 1) {
                             matched = minimatch(filename, resultsArtifacts[a].patterns[j]);
                             if (matched) {
-                                //console.log('Matched! filename: "' + filename + '", artifact "' + resultsArtifacts[a].name + '"');
+                                //console.log('Matched! filename: "' + filename + '", artifact "' +
+                                // resultsArtifacts[a].name + '"');
                                 resultsArtifacts[a].files[filename] = true;
                                 archive = true;
                                 break;
@@ -4259,14 +4374,14 @@ define('executor/ExecutorWorker',['blob/BlobClient',
                     }
                 }
                 if (archive) {
-                    filesToArchive.push({ filename: filename, filePath: results[i]});
+                    filesToArchive.push({filename: filename, filePath: results[i]});
                 }
             }
             afterWalk(filesToArchive);
         });
     };
 
-    ExecutorWorker.prototype.sendJobUpdate = function(jobInfo) {
+    ExecutorWorker.prototype.sendJobUpdate = function (jobInfo) {
         if (JobInfo.isFinishedStatus(jobInfo.status)) {
             this.availableProcessesContainer.availableProcesses += 1;
         }
@@ -4282,12 +4397,13 @@ define('executor/ExecutorWorker',['blob/BlobClient',
 
     };
 
-    ExecutorWorker.prototype.checkForUnzipExe = function() {
-        this.checkForUnzipExe = function() { };
+    ExecutorWorker.prototype.checkForUnzipExe = function () {
+        this.checkForUnzipExe = function () {
+        };
         fs.exists(UNZIP_EXE, function (exists) {
             if (exists) {
             } else {
-                alert("Unzip exe \"" + UNZIP_EXE + "\" does not exist. Please install it.");
+                alert('Unzip exe "' + UNZIP_EXE + '" does not exist. Please install it.');
             }
         });
     };
@@ -4296,7 +4412,7 @@ define('executor/ExecutorWorker',['blob/BlobClient',
         var self = this;
         self.checkForUnzipExe();
 
-        var _queryWorkerAPI = function() {
+        var _queryWorkerAPI = function () {
 
             this.clientRequest.availableProcesses = Math.max(0, this.availableProcessesContainer.availableProcesses);
             var req = superagent.post(self.executorClient.executorUrl + 'worker');
@@ -4330,9 +4446,9 @@ define('executor/ExecutorWorker',['blob/BlobClient',
                                 self.availableProcessesContainer.availableProcesses -= 1;
                                 self.emit('jobUpdate', info);
                                 self.startJob(info, function (err) {
-                                    console.error(info.hash + " failed to run: " + err + ". Status: " + info.status);
+                                    console.error(info.hash + ' failed to run: ' + err + '. Status: ' + info.status);
                                     self.sendJobUpdate(info);
-                                }, function(jobInfo, jobDir, executorConfig) {
+                                }, function (jobInfo, jobDir, executorConfig) {
                                     self.saveJobResults(jobInfo, jobDir, executorConfig);
                                 });
                             });
@@ -4343,17 +4459,20 @@ define('executor/ExecutorWorker',['blob/BlobClient',
                                     self.labelJobs[label] = response.labelJobs[label];
                                     self.availableProcessesContainer.availableProcesses -= 1;
                                     (function (label) {
-                                        var info = { hash: response.labelJobs[label] };
+                                        var info = {hash: response.labelJobs[label]};
                                         self.startJob(info, function (err) {
                                             this.availableProcessesContainer.availableProcesses += 1;
-                                            console.error("Label job " + label + "(" + info.hash + ") failed to run: " + err + ". Status: " + info.status);
-                                        }, function(jobInfo, jobDir, executorConfig) {
+                                            console.error('Label job ' + label + '(' + info.hash + ') failed to run: ' +
+                                            err + '. Status: ' + info.status);
+                                        }, function (jobInfo/*, jobDir, executorConfig*/) {
                                             this.availableProcessesContainer.availableProcesses += 1;
                                             if (jobInfo.status !== 'FAILED_TO_EXECUTE') {
                                                 self.clientRequest.labels.push(label);
-                                                console.info("Label job " + label + " succeeded. Labels are " + JSON.stringify(self.clientRequest.labels));
+                                                console.info('Label job ' + label + ' succeeded. Labels are ' +
+                                                JSON.stringify(self.clientRequest.labels));
                                             } else {
-                                                console.error("Label job " + label + "(" + info.hash + ") run failed: " + err + ". Status: " + info.status);
+                                                console.error('Label job ' + label + '(' + info.hash +
+                                                ') run failed: ' + err + '. Status: ' + info.status);
                                             }
                                         });
                                     })(label);
@@ -4369,8 +4488,8 @@ define('executor/ExecutorWorker',['blob/BlobClient',
         if (self.clientRequest.clientId) {
             _queryWorkerAPI.call(self);
         } else {
-            var child = child_process.execFile("hostname", [], {}, function (err, stdout, stderr) {
-                self.clientRequest.clientId = (stdout.trim() || "unknown") + "_" + process.pid;
+            childProcess.execFile('hostname', [], {}, function (err, stdout/*, stderr*/) {
+                self.clientRequest.clientId = (stdout.trim() || 'unknown') + '_' + process.pid;
                 _queryWorkerAPI.call(self);
             });
         }
@@ -4379,11 +4498,15 @@ define('executor/ExecutorWorker',['blob/BlobClient',
     return ExecutorWorker;
 });
 
+/*globals define*/
+/*jshint node:true*/
+
 /**
- * Created by kevin on 7/14/2014.
+ * @author ksmyth / https://github.com/ksmyth
  */
 
 define('executor/ExecutorWorkerController',[], function () {
+    'use strict';
     var ExecutorWorkerController = function ($scope, worker) {
         this.$scope = $scope;
         this.$scope.jobs = { };
@@ -4413,8 +4536,18 @@ define('executor/ExecutorWorkerController',[], function () {
     ExecutorWorkerController.prototype.initTestData = function () {
         var self = this,
             i,
-            statuses = [ 'CREATED', 'SUCCESS', 'FAILED_TO_EXECUTE', 'FAILED_TO_GET_SOURCE_METADATA', 'FAILED_SOURCE_COULD_NOT_BE_OBTAINED',
-                'FAILED_CREATING_SOURCE_ZIP', 'FAILED_UNZIP', 'FAILED_EXECUTOR_CONFIG', 'FAILED_TO_ARCHIVE_FILE', 'FAILED_TO_SAVE_JOINT_ARTIFACT', 'FAILED_TO_ADD_OBJECT_HASHES',
+            statuses = [
+                'CREATED',
+                'SUCCESS',
+                'FAILED_TO_EXECUTE',
+                'FAILED_TO_GET_SOURCE_METADATA',
+                'FAILED_SOURCE_COULD_NOT_BE_OBTAINED',
+                'FAILED_CREATING_SOURCE_ZIP',
+                'FAILED_UNZIP',
+                'FAILED_EXECUTOR_CONFIG',
+                'FAILED_TO_ARCHIVE_FILE',
+                'FAILED_TO_SAVE_JOINT_ARTIFACT',
+                'FAILED_TO_ADD_OBJECT_HASHES',
                 'FAILED_TO_SAVE_ARTIFACT'];
 
         self.$scope.jobs = { };
@@ -4435,8 +4568,19 @@ define('executor/ExecutorWorkerController',[], function () {
     return ExecutorWorkerController;
 });
 
+/*globals define*/
 /*jshint node:true*/
-var nodeRequire = require;
+/**
+ * @author lattmann / https://github.com/lattmann
+ * @author ksmyth / https://github.com/ksmyth
+ */
+
+var nodeRequire = require,
+    log = function() {
+        var args = Array.prototype.slice.call(arguments);
+        args.splice(0, 0, new Date().toISOString());
+        console.log.apply(console, args);
+    };
 
 if (typeof define !== 'undefined') {
 
@@ -4448,9 +4592,13 @@ if (typeof define !== 'undefined') {
         'executor/ExecutorWorkerController',
         'url'
     ], function (eventDispatcher, BlobClient, ExecutorWorker, JobInfo, ExecutorWorkerController, url) {
+        'use strict';
+
         return function (webGMEUrl, tempPath, parameters) {
-            var worker;
-            var webGMEPort = url.parse(webGMEUrl).port || (url.parse(webGMEUrl).protocol === 'https:' ? 443 : 80);
+            var worker,
+                webGMEPort = url.parse(webGMEUrl).port || (url.parse(webGMEUrl).protocol === 'https:' ? 443 : 80);
+
+
             worker = new ExecutorWorker({
                 server: url.parse(webGMEUrl).hostname,
                 serverPort: webGMEPort,
@@ -4461,29 +4609,32 @@ if (typeof define !== 'undefined') {
                 executorNonce: parameters.executorNonce
             });
 
-            console.log("Connecting to " + webGMEUrl);
+            log('Connecting to ' + webGMEUrl);
 
             var callback;
             worker.queryWorkerAPI(function (err, response) {
                 if (!err) {
-                    console.log("Connected to " + webGMEUrl);
+                    log('Connected to ' + webGMEUrl);
                 }
                 var refreshPeriod = 60 * 1000;
                 callback = callback || function (err, response) {
                     if (err) {
-                        console.log("Error connecting to " + webGMEUrl + " " + err);
-                    } else {}
+                        log('Error connecting to ' + webGMEUrl + ' ' + err);
+                    } else {
+                    }
                     if (response && response.refreshPeriod) {
                         refreshPeriod = response.refreshPeriod;
                     }
-                    var timeoutID = setTimeout(function () {
+                    /*var timeoutID = */
+                    setTimeout(function () {
                         worker.queryWorkerAPI(callback);
                     }, refreshPeriod);
                 };
                 callback(err, response);
             });
-            var cancel = function() {
-                callback = function() {};
+            var cancel = function () {
+                callback = function () {
+                };
             };
             return cancel;
         };
@@ -4496,8 +4647,8 @@ if (nodeRequire.main === module) {
         cas = nodeRequire('ssl-root-cas/latest'),
         superagent = nodeRequire('superagent'),
         configFileName = 'config.json',
-        workingDirectory = 'executor-temp',
-        https = nodeRequire('https');
+        workingDirectory = 'executor-temp';
+    //https = nodeRequire('https'); FIXME take into use or remove it
 
     // This is used for tests
     if (process.argv.length > 2) {
@@ -4509,9 +4660,10 @@ if (nodeRequire.main === module) {
 
     cas.inject();
     fs.readdirSync(__dirname).forEach(function (file) {
+        'use strict';
         var filename = path.resolve(__dirname, file);
-        if ((filename.indexOf('.pem') == filename.length - 4) || (filename.indexOf('.crt') == filename.length - 4)) {
-            console.log('Adding ' + file + ' to trusted CAs');
+        if ((filename.indexOf('.pem') === filename.length - 4) || (filename.indexOf('.crt') === filename.length - 4)) {
+            log('Adding ' + file + ' to trusted CAs');
             cas.addFile(filename);
         }
     });
@@ -4529,24 +4681,27 @@ if (nodeRequire.main === module) {
         'rimraf',
         'url'
     ].forEach(function (name) {
-        requirejs.s.contexts._.defined[name] = nodeRequire(name);
-    });
+            'use strict';
+            requirejs.s.contexts._.defined[name] = nodeRequire(name);
+        });
 
     GLOBAL.WebGMEGlobal = {
         getConfig: function () {
+            'use strict';
             return {};
         }
-    } // server: config.server, serverPort: config.port, httpsecure: config.protocol==='https' }; } };
+    }; // server: config.server, serverPort: config.port, httpsecure: config.protocol==='https' }; } };
 
-    var webGMEUrls = Object.create(null);
-    var maxConcurrentJobs = 1;
-    var availableProcessesContainer = {
-        availableProcesses: maxConcurrentJobs
-    }; // shared among all ExecutorWorkers
+    var webGMEUrls = Object.create(null),
+        maxConcurrentJobs = 1,
+        availableProcessesContainer = { //FIXME check why the definition cannot be moved to global namespace
+            availableProcesses: maxConcurrentJobs
+        }; // shared among all ExecutorWorkers
 
     requirejs(['node_worker'], function (addWebGMEConnection) {
-        var fs = nodeRequire('fs');
-        var path = nodeRequire('path');
+        'use strict';
+        var fs = nodeRequire('fs'),
+            path = nodeRequire('path');
 
         function readConfig() {
             var config = {
@@ -4563,46 +4718,49 @@ if (nodeRequire.main === module) {
                     oldConfig.forEach(function (webGMEUrl) {
                         config[webGMEUrl] = {};
                     });
-                } else if (typeof (config) === "string") {
+                } else if (typeof (config) === 'string') {
                     config = {
                         config: {}
                     };
-                } else {}
+                } else {
+                }
             } catch (e) {
-                if (e.code !== "ENOENT") {
+                if (e.code !== 'ENOENT') {
                     throw e;
                 }
             }
             Object.getOwnPropertyNames(config).forEach(function (key) {
                 var webGMEUrl;
-                if (key.indexOf("http") === 0) {
+                if (key.indexOf('http') === 0) {
                     webGMEUrl = key;
                     if (Object.prototype.hasOwnProperty.call(webGMEUrls, webGMEUrl)) {
                     } else {
-                        webGMEUrls[webGMEUrl] = addWebGMEConnection(webGMEUrl, path.join(workingDirectory, '' + workingDirectoryCount++), config[webGMEUrl]);
+                        webGMEUrls[webGMEUrl] = addWebGMEConnection(webGMEUrl,
+                            path.join(workingDirectory, '' + workingDirectoryCount++),
+                            config[webGMEUrl]);
                     }
-                } else if (key === "maxConcurrentJobs") {
+                } else if (key === 'maxConcurrentJobs') {
                     availableProcessesContainer.availableProcesses += config[maxConcurrentJobs] - maxConcurrentJobs;
                     maxConcurrentJobs = config[maxConcurrentJobs];
                 } else {
-                    console.log("Unknown configuration key " + key);
+                    log('Unknown configuration key ' + key);
                 }
             });
             // remove webGMEUrls no longer in config
             Object.getOwnPropertyNames(webGMEUrls).forEach(function (webGMEUrl) {
                 if (Object.prototype.hasOwnProperty.call(config, webGMEUrl) === false) {
-                    console.log("Removing " + webGMEUrl);
+                    log('Removing ' + webGMEUrl);
                     webGMEUrls[webGMEUrl]();
                     delete webGMEUrls[webGMEUrl];
                 }
-                });
+            });
         }
 
         var workingDirectoryCount = 0;
         var rimraf = nodeRequire('rimraf');
         rimraf(workingDirectory, function (err) {
             if (err) {
-                console.log('Could not delete working directory (' + workingDirectory + '), err: ' + err);
+                log('Could not delete working directory (' + workingDirectory + '), err: ' + err);
                 process.exit(2);
             }
             if (!fs.existsSync(workingDirectory)) {
@@ -4612,11 +4770,13 @@ if (nodeRequire.main === module) {
             readConfig();
             fs.watch(configFileName, function () {
                 setTimeout(readConfig, 200);
-            }); // setTimeout: likely handle O_TRUNC of config.json (though `move config.json.tmp config.json` is preferred)
+            }); // setTimeout: likely handle O_TRUNC of config.json
+            // (though `move config.json.tmp config.json` is preferred)
         });
     });
 
-};
+}
+;
 module.exports.require = require;
 module.exports.requirejs = requirejs;
 module.exports.define = define;
