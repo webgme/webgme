@@ -52,9 +52,23 @@ describe('BlobServer', function () {
         });
     });
 
-    it('should return 500 at /rest/blob/metadata/non-existing-hash', function (done) {
+    it('should return 404 at /rest/blob/metadata/non-existing-hash', function (done) {
         agent.get(serverBaseUrl + '/rest/blob/metadata/non-existing-hash').end(function (err, res) {
-            should.equal(res.status, 500, err);
+            should.equal(res.status, 404, err);
+            done();
+        });
+    });
+
+    it('should return 404 at /rest/blob/download/non-existing-hash', function (done) {
+        agent.get(serverBaseUrl + '/rest/blob/download/non-existing-hash').end(function (err, res) {
+            should.equal(res.status, 404, err);
+            done();
+        });
+    });
+
+    it('should return 404 at /rest/blob/view/non-existing-hash', function (done) {
+        agent.get(serverBaseUrl + '/rest/blob/view/non-existing-hash').end(function (err, res) {
+            should.equal(res.status, 404, err);
             done();
         });
     });

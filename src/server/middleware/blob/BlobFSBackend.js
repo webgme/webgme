@@ -14,7 +14,8 @@ var fs = require('fs'),
     GUID = requireJS('common/util/guid'),
 
     ensureDir = require('../../util/ensureDir'),
-    BlobBackendBase = require('./BlobBackendBase');
+    BlobBackendBase = require('./BlobBackendBase'),
+    BlobError = require('./BlobError');
 
 var BlobFSBackend = function (gmeConfig) {
     BlobBackendBase.call(this);
@@ -101,7 +102,7 @@ BlobFSBackend.prototype.getObject = function (hash, writeStream, bucket, callbac
 
     fs.lstat(filename, function (err, stat) {
         if ((err && err.code === 'ENOENT') || !stat.isFile()) {
-            return callback('Requested object does not exist: ' + hash); // FIXME: make the request have status 404
+            return callback(new BlobError('Requested object does not exist: ' + hash, 404));
         } else if (err) {
             return callback('getObject error: ' + err.code || 'unknown');
         }
