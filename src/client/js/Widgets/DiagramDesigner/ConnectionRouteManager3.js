@@ -93,6 +93,10 @@ define([
                 this._deferredItems[id] = deferred;
                 this[collection][id] = deferred.promise;
                 break;
+
+            case 'clear':
+                this.init();  // Clear the records
+                break;
         }
     };
 
