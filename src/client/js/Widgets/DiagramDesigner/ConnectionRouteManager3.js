@@ -37,7 +37,6 @@ define([
             currentDir.pop();
             currentDir = currentDir.join('/');
             workerFile = currentDir+'/AutoRouter.Worker.js';
-            console.log('workerFile:', workerFile );
 
             this.worker = new Worker(workerFile);
             this.worker.postMessage(WebGMEGlobal.gmeConfig.client);
