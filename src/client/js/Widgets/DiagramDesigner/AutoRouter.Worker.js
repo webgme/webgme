@@ -54,6 +54,13 @@ var startWorker = function() {
             this.logger = Logger.create('gme:Widgets:DiagramDesigner:AutoRouter:Worker', WebGMEGlobal.gmeConfig.client.log);
             this._recordActions = true;
             this.init();
+
+            this.respondTo = {
+                getPathPoints: true,
+                routePaths: true,
+                addBox: true,
+                addPath: true
+            };
         };
 
         AutoRouterWorker.prototype.handleMessage = function(msg) {
@@ -77,8 +84,10 @@ var startWorker = function() {
             result = this._invokeAutoRouterMethod.apply(this, msg.slice());
 
             response.push(result);
-            this.logger.debug('Response:', response);
-            worker.postMessage(response);
+            if (this.respondTo[msg[0]]) {
+                this.logger.debug('Response:', response);
+                worker.postMessage(response);
+            }
         };
 
         /**
@@ -87,11 +96,19 @@ var startWorker = function() {
          * @return {undefined}
          */
         AutoRouterWorker.prototype._updatePaths = function(paths) {
-            var msg = ['getPathPoints', null];
+            this.logger.debug('Updating paths');
+            var id,
+                points,
+                content = [],
+                msg = ['routePaths', null];
+
             for (var i = paths.length; i--;) {
-                msg[1] = [this._arPathId2Original[paths[i].id]];
-                this._handleMessage(msg);
+                id = this._arPathId2Original[paths[i].id];
+                points = this._invokeAutoRouterMethod('getPathPoints', [id]);
+                content.push([id, points]);
             }
+            msg[1] = content;
+            worker.postMessage(msg);
         };
 
         _.extend(AutoRouterWorker.prototype, ActionApplier.prototype);

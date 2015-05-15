@@ -124,6 +124,13 @@ define([
                     this._renderConnection(id, points);
                     break;
 
+                case 'routePaths':
+                    var paths = response[1];
+                    for (var i = paths.length; i--;) {
+                        this._renderConnection.apply(this, paths[i]);
+                    }
+                    break;
+
                 case 'addBox':
                 case 'addPath':
                     // Resolve the promise
