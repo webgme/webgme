@@ -1,4 +1,4 @@
-/*globals expect,WebGMEGlobal,requirejs, describe*/
+/*globals WebGMEGlobal,requirejs, describe*/
 /*jshint node:true, mocha:true*/
 /**
  * @author brollb / https://github.com/brollb
@@ -20,27 +20,229 @@ describe('AutoRouter', function () {
 
     this.timeout(20000);
 
-    describe('Synchronous tests', function () {
+    before(function (done) {
+        //WebGMEGlobal.gmeConfig
+        requirejs(['text!gmeConfig.json'], function (configTxt) {
+            gmeConfig = JSON.parse(configTxt);
+            WebGMEGlobal.gmeConfig = gmeConfig;
 
-        before(function (done) {
-            //WebGMEGlobal.gmeConfig
-            requirejs(['text!gmeConfig.json'], function (configTxt) {
-                gmeConfig = JSON.parse(configTxt);
-                WebGMEGlobal.gmeConfig = gmeConfig;
+            requirejs(['karmatest/client/js/AutoRouter/autorouter.common.inc',
+                    'karmatest/client/js/AutoRouter/autorouter.replay.inc'],
+                function (common, replay) {
+                    utils = common;
+                    assert = utils.assert;
+                    ARBugPlayer = replay;
+                    boxUtils = utils.webgme;
+                    bugPlayer = new ARBugPlayer();
+                    done();
+                }
+            );
+        });
+    });
 
-                requirejs(['karmatest/client/js/AutoRouter/autorouter.common.inc',
-                        'karmatest/client/js/AutoRouter/autorouter.replay.inc'],
-                    function (common, replay) {
-                        utils = common;
-                        assert = utils.assert;
-                        ARBugPlayer = replay;
-                        boxUtils = utils.webgme;
-                        bugPlayer = new ARBugPlayer();
-                        done();
+    var replayTests = function () {
+        /* jshint ignore:start */
+        // These are used for in-depth debugging
+        var options =
+            {
+                after: function (router) {
+                    var j;
+
+                    // Call assertValid on every path
+                    for (j = router.graph.paths.length; j--;) {
+                        router.graph.paths[j].assertValid();
                     }
-                );
+                    router.graph.assertValid();
+                }
+            },
+            debug = {
+                verbose: true,
+                before: function (router) {
+                    router._assertPortId2PathIsValid();
+                    router.graph.paths.forEach(function (path) {
+                        assert(path.hasOwner());
+                    });
+                },
+                after: function (router) {
+                    // Call assertValid on every path
+                    router._assertPortId2PathIsValid();
+                    options.after(router);
+                }
+            };
+        /* jshint ignore:end */
+
+        it('basic model with ports', function (done) {
+            requirejs(['text!aRtestCases/basic.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
             });
         });
+
+        it.skip('bug report 1', function (done) {
+            requirejs(['text!aRtestCases/AR_bug_report1422640675165.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
+        // Changed CR3
+        it.skip('bug report 2', function (done) {
+            requirejs(['text!aRtestCases/AR_bug_report_2.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+
+        });
+
+        it.skip('bug report 3', function (done) {
+            requirejs(['text!aRtestCases/AR_bug_report1422974690643.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
+        it.skip('bug report 4', function (done) {
+            requirejs(['text!aRtestCases/AR_bug_report1423074120283.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
+        it.skip('bug report 5', function (done) {
+            requirejs(['text!aRtestCases/AR_bug_report1423077073008.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
+        it.skip('bug report 6', function (done) {
+            requirejs(['text!aRtestCases/AR_bug_report1423157583206.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
+        it('issue/153_overlapping_lines', function (done) {
+            // Connection 4 and 6 are about stacked
+            requirejs(['text!aRtestCases/issue153.json'], function (actions) {
+                var pathIds = ['C_000006', 'C_000004'],
+                    startpoints = [],
+                    storeFirstPt = function(points) {
+                        startpoints.push(points.shift());
+                        if (startpoints.length === 2) {
+                            assert(startpoints[1].y - startpoints[0].y > 1, 
+                                'Paths are virtually overlapping:\n' +
+                                startpoints[1] + ' and ' + startpoints[0]);
+
+                            done();
+                        }
+                    };
+
+                bugPlayer.test(JSON.parse(actions), {}, function() {
+                    // Check that the paths are not overlapping
+                    bugPlayer.getPathPoints(pathIds[1], function(points) {
+                        storeFirstPt(points);
+                        bugPlayer.getPathPoints(pathIds[0], storeFirstPt);
+                    });
+                });
+            });
+        });
+
+        it('issue/169_autorouter_section_HasBlockedEdge_assert_failure', function (done) {
+            requirejs(['text!aRtestCases/issue169.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
+        it('issue/186_cannot_read_property_id_of_undefined', function (done) {
+            requirejs(['text!aRtestCases/issue186.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
+        it('issue/187_short_path_should_be_a_straight_line', function (done) {
+            requirejs(['text!aRtestCases/issue187.json'], function (actions) {
+
+                var startpoint,
+                    endpoint;
+
+                bugPlayer.test(JSON.parse(actions), {}, function() {
+                    bugPlayer.getPathPoints('C_000003', function(points) {
+                        startpoint = points.shift();
+                        endpoint = points.pop();
+                        // Check that the y values of the start/end point of the path are equal
+                        assert(startpoint.y === endpoint.y,
+                            'Start/end points\' y values should match but are ' + startpoint.y + ' and ' + endpoint.y);
+
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('issue/190_box_size_too_small', function (done) {
+            requirejs(['text!aRtestCases/issue190.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
+        it('issue/288_double_click_on_connection', function (done) {
+            requirejs(['text!aRtestCases/issue288.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
+        it('creating extra connection segments', function (done) {
+            requirejs(['text!aRtestCases/creating_new_custom_points.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
+        it('creating extra connection segments (2)', function (done) {
+            requirejs(['text!aRtestCases/custom_points2.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
+        it('issue/297_custom_points_port_selection', function (done) {
+            requirejs(['text!aRtestCases/issue297.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions), {}, function() {
+                    // Check that both boxes are connected on their
+                    // left side (as it is closest to their next next
+                    // point on the custom path)
+
+                    bugPlayer.getPathPoints('C_000002', function(points) {
+                        var startpoint = points.shift(),
+                            endpoint = points.pop();
+
+                        bugPlayer.getBoxRect('I_000000', function(startbox) {
+                            bugPlayer.getBoxRect('I_000001', function(endbox) {
+                                assert(Math.abs(startbox.left - startpoint.x) < 2);
+                                assert(Math.abs(endbox.left - endpoint.x) < 2);
+                                done();
+                            });
+                        });
+                    });
+                });
+
+            });
+        });
+
+        it('should not move box that doesn\'t exist', function (done) {
+            requirejs(['text!aRtestCases/finding_correct_buffer_box.json'], function (actions) {
+                bugPlayer.expectedErrors.push(/Box does not exist/);
+                bugPlayer.test(JSON.parse(actions), {}, done);
+            });
+        });
+    };
+
+    describe('Synchronous tests', function () {
 
         beforeEach(function () {
             router = utils.getNewGraph();
@@ -777,208 +979,24 @@ describe('AutoRouter', function () {
             });
         });
 
-        describe('replay tests', function () {
-            /* jshint ignore:start */
-            // These are used for in-depth debugging
-            var options =
-                {
-                    after: function (router) {
-                        var j;
-
-                        // Call assertValid on every path
-                        for (j = router.graph.paths.length; j--;) {
-                            router.graph.paths[j].assertValid();
-                        }
-                        router.graph.assertValid();
-                    }
-                },
-                debug = {
-                    verbose: true,
-                    before: function (router) {
-                        router._assertPortId2PathIsValid();
-                        router.graph.paths.forEach(function (path) {
-                            assert(path.hasOwner());
-                        });
-                    },
-                    after: function (router) {
-                        // Call assertValid on every path
-                        router._assertPortId2PathIsValid();
-                        options.after(router);
-                    }
-                };
-            /* jshint ignore:end */
-
-            it('basic model with ports', function (done) {
-                requirejs(['text!aRtestCases/basic.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-            });
-
-            it.skip('bug report 1', function (done) {
-                requirejs(['text!aRtestCases/AR_bug_report1422640675165.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-            });
-
-            // Changed CR3
-            it.skip('bug report 2', function (done) {
-                requirejs(['text!aRtestCases/AR_bug_report_2.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-
-            });
-
-            it.skip('bug report 3', function (done) {
-                requirejs(['text!aRtestCases/AR_bug_report1422974690643.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-            });
-
-            it.skip('bug report 4', function (done) {
-                requirejs(['text!aRtestCases/AR_bug_report1423074120283.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-            });
-
-            it.skip('bug report 5', function (done) {
-                requirejs(['text!aRtestCases/AR_bug_report1423077073008.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-            });
-
-            it.skip('bug report 6', function (done) {
-                requirejs(['text!aRtestCases/AR_bug_report1423157583206.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-            });
-
-            it('issue/153_overlapping_lines', function (done) {
-                // Connection 4 and 6 are about stacked
-                requirejs(['text!aRtestCases/issue153.json'], function (actions) {
-                    var pathIds = ['C_000006', 'C_000004'],
-                        startpoints = [],
-                        id,
-                        i;
-
-                    bugPlayer.test(JSON.parse(actions));
-
-                    // Check that they are not overlapping
-                    for (i = pathIds.length; i--;) {
-                        id = bugPlayer._autorouterPaths[pathIds[i]];
-                        startpoints.push(bugPlayer.autorouter.paths[id].startpoint);
-                    }
-
-                    assert(startpoints[1].y - startpoints[0].y > 1, 'Paths are virtually overlapping:\n' +
-                    startpoints[1] + ' and ' + startpoints[0]);
-
-                    done();
-                });
-            });
-
-            it('issue/169_autorouter_section_HasBlockedEdge_assert_failure', function (done) {
-                requirejs(['text!aRtestCases/issue169.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-            });
-
-            it('issue/186_cannot_read_property_id_of_undefined', function (done) {
-                requirejs(['text!aRtestCases/issue186.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-            });
-
-            it('issue/187_short_path_should_be_a_straight_line', function (done) {
-                requirejs(['text!aRtestCases/issue187.json'], function (actions) {
-
-                    var pathId,
-                        path,
-                        startpoint,
-                        endpoint;
-
-                    bugPlayer.test(JSON.parse(actions));
-
-                    // Check that the y values of the start/end point of the path are equal
-                    pathId = bugPlayer._autorouterPaths.C_000003;
-                    path = bugPlayer.autorouter.paths[pathId];
-                    startpoint = path.startpoint;
-                    endpoint = path.endpoint;
-
-                    assert(startpoint.y === endpoint.y,
-                        'Start/end points\' y values should match but are ' + startpoint.y + ' and ' + endpoint.y);
-
-                    done();
-                });
-            });
-
-            it('issue/190_box_size_too_small', function (done) {
-                requirejs(['text!aRtestCases/issue190.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-            });
-
-            it('issue/288_double_click_on_connection', function (done) {
-                requirejs(['text!aRtestCases/issue288.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-            });
-
-            it('creating extra connection segments', function (done) {
-                requirejs(['text!aRtestCases/creating_new_custom_points.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-            });
-
-            it('creating extra connection segments (2)', function (done) {
-                requirejs(['text!aRtestCases/custom_points2.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-                    done();
-                });
-            });
-
-            it('issue/297_custom_points_port_selection', function (done) {
-                requirejs(['text!aRtestCases/issue297.json'], function (actions) {
-                    bugPlayer.test(JSON.parse(actions));
-
-                    // Check that both boxes are connected on their
-                    // left side (as it is closest to their next next
-                    // point on the custom path)
-                    var path = bugPlayer.autorouter.graph.paths[0],
-                        startport = path.startport,
-                        endport = path.endport,
-                        startbox = startport.owner.getRootBox().rect,
-                        endbox = endport.owner.getRootBox().rect;
-
-                    assert(Math.abs(startbox.left - path.startpoint.x) < 2);
-                    assert(Math.abs(endbox.left - path.endpoint.x) < 2);
-
-                    done();
-                });
-            });
-
-            it('should not move box that doesn\'t exist', function (done) {
-                requirejs(['text!aRtestCases/finding_correct_buffer_box.json'], function (actions) {
-                    expect(bugPlayer.test.bind(bugPlayer, JSON.parse(actions))).to.throw(/Box does not exist/);
-                    done();
-                });
-            });
-        });
     });
 
-    describe('Web Worker tests', function () {
-        // Set up the Autorouter as a web worker
-        // TODO
+    describe('Replay tests', function() {
+        describe('Standard', function () {
+            // Set up the Autorouter as a web worker
+            before(function() {
+                bugPlayer.useWebWorker(false);
+            });
+            describe('Tests', replayTests);
+        });
+
+        describe('Web Worker', function () {
+            // Set up the Autorouter as a web worker
+            before(function() {
+                bugPlayer.useWebWorker(true);
+            });
+            describe('Tests', replayTests);
+        });
     });
 
     describe('Utility Fn tests', function () {
@@ -992,11 +1010,11 @@ describe('AutoRouter', function () {
         });
         describe('toArray tests', function () {
             it('should convert array like objects to array', function() {
-                var obj = {0: 'd', 1: 'a', 2: 'b', 3: 'c'},
+                var obj = {0: 'd', 1: 'a', 2: 'b', 3: 'c', length: 4},
                     array = arUtils.toArray(obj);
 
                 assert(array instanceof Array);
-                assert(array.length === 4);
+                assert(array.length === 4, 'Array length should be 4 but is '+array.length);
 
                 for (var i = array.length; i--;) {
                     assert(obj[i] === array[i]);
@@ -1004,7 +1022,7 @@ describe('AutoRouter', function () {
             });
 
             it('should stop conversion when index is missing', function() {
-                var obj = {0: 'd', 1: 'a', 2: 'b', 7: 'c'},
+                var obj = {0: 'd', 1: 'a', 2: 'b', 7: 'c', length: 3},
                     array = arUtils.toArray(obj);
 
                 assert(array instanceof Array);
