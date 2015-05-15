@@ -41,35 +41,6 @@ describe('AutoRouter', function () {
     });
 
     var replayTests = function () {
-        /* jshint ignore:start */
-        // These are used for in-depth debugging
-        var options =
-            {
-                after: function (router) {
-                    var j;
-
-                    // Call assertValid on every path
-                    for (j = router.graph.paths.length; j--;) {
-                        router.graph.paths[j].assertValid();
-                    }
-                    router.graph.assertValid();
-                }
-            },
-            debug = {
-                verbose: true,
-                before: function (router) {
-                    router._assertPortId2PathIsValid();
-                    router.graph.paths.forEach(function (path) {
-                        assert(path.hasOwner());
-                    });
-                },
-                after: function (router) {
-                    // Call assertValid on every path
-                    router._assertPortId2PathIsValid();
-                    options.after(router);
-                }
-            };
-        /* jshint ignore:end */
 
         it('basic model with ports', function (done) {
             requirejs(['text!aRtestCases/basic.json'], function (actions) {
@@ -238,6 +209,18 @@ describe('AutoRouter', function () {
             requirejs(['text!aRtestCases/finding_correct_buffer_box.json'], function (actions) {
                 bugPlayer.expectedErrors.push(/Box does not exist/);
                 bugPlayer.test(JSON.parse(actions), {}, done);
+            });
+        });
+
+        it('should not contain skew edge w/ async routing', function (done) {
+            requirejs(['text!aRtestCases/simplifyPathsbug.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions), {}, function() {
+                    bugPlayer.getPathPoints('C_000032', function(points) {
+                        // TODO: Add API for executing stuff after routeAsync is done...
+                        // utils.validatePoints(points);
+                        done();
+                    });
+                });
             });
         });
     };

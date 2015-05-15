@@ -64,6 +64,7 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
         this._autorouterBoxes = {};  // Define container that will map obj+subID -> box
         this._autorouterPorts = {};  // Maps boxIds to an array of port ids that have been mapped
         this._autorouterPaths = {};
+        this._arPathId2Original = {};
     };
 
     /**
@@ -217,6 +218,7 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
             case 'addPath':
                 id = args.pop();
                 this._autorouterPaths[id] = result;
+                this._arPathId2Original[result] = id;
                 break;
 
             case 'addBox':
@@ -237,14 +239,16 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
                     i = this._autorouterPorts[id] ? this._autorouterPorts[id].length : 0;
                     while (i--) {
                         var portId = id + this._portSeparator + this._autorouterPorts[id][i]; //ID of child port
-                        this._autorouterBoxes[portId] = undefined;
+                        delete this._autorouterBoxes[portId];
                     }
 
-                    this._autorouterBoxes[id] = undefined;
-                    this._autorouterPorts[id] = undefined;
+                    delete this._autorouterBoxes[id];
+                    delete this._autorouterPorts[id];
 
                 } else if (this._autorouterPaths[id]) {
-                    this._autorouterPaths[id] = undefined;  // If objId is a connection
+                    var arId = this._autorouterPaths[id];
+                    delete this._autorouterPaths[id];
+                    delete this._arPathId2Original[arId];
                 }
                 break;
 
@@ -278,7 +282,7 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
 
         var action = {action: command, args: args},
             circularFixer = function (key, value) {
-                if (value.owner) {
+                if (value && value.owner) {
                     return value.id;
                 }
 

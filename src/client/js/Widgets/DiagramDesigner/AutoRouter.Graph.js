@@ -1944,15 +1944,14 @@ define([
 
     AutoRouterGraph.prototype.routeAsync = function (options) {
         var self = this,
-            updateFn = options.update || function () {
-                },
-            callbackFn = options.callback || function () {
-                },
+            updateFn = options.update || Utils.nop,
+            firstFn = options.first || Utils.nop,
+            callbackFn = options.callback || Utils.nop,
             time = options.time || 5,
             optimizeFn = function (state) {
 
                 updateFn(self.paths);
-                if (state.finished || self.completelyConnected) {
+                if (state.finished || !self.completelyConnected) {
                     return callbackFn(self.paths);
                 } else {
                     state = self._optimize(state);
@@ -1968,15 +1967,18 @@ define([
             };
 
         // Connect all disconnected paths with a straight line
-        var path;
+        var path,
+            disconnected = [];
         for (var i = this.paths.length; i--;) {
             path = this.paths[i];
             if (!path.isConnected()) {
                 path.calculateStartEndPorts();
-                path.points.push(path.startpoint);
-                path.points.push(path.endpoint);
+                path.points = new ArPointListPath(path.startpoint, path.endpoint);
+                disconnected.push(path);
             }
         }
+
+        firstFn(disconnected);
 
         setTimeout(startRouting, time);
     };

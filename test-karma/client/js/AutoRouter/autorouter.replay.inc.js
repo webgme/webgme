@@ -171,7 +171,7 @@ define(['js/Widgets/DiagramDesigner/AutoRouter.ActionApplier',
             this._worker.postMessage(['getPathPoints', [pathId]]);
         } else {
             var id = this._autorouterPaths[pathId];
-            callback(this.autorouter.paths[id].points);
+            callback(this.autorouter.getPathPoints(id));
         }
     };
 

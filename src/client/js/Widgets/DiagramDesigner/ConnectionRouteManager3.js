@@ -21,14 +21,12 @@ define([
 
     var ConnectionRouteManager3,
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = '_x_',
-        WORKER = true,
-        ASYNC = false;
+        WORKER = true;
 
     ConnectionRouteManager3 = function (options) {
         if (window.Worker && WORKER) {
             this._deferredItems = {};
             this.workerQueue = [];
-            //this.worker = getWorker(WebGMEGlobal.gmeConfig.client);
 
             // TODO: If merging into one js file, this may break
             var currentDir = module.id.split('/'),
@@ -222,31 +220,13 @@ define([
         }
     };
 
-    ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
+    ConnectionRouteManager3.prototype.redrawConnections = function () {
 
         if (!this._initialized) {
             this._initializeGraph();
-        } else {
-            //this._refreshConnData(idList);
         }
 
-        //1 - autoroute
-        if (ASYNC) {
-            // Create callback function
-            var self = this;
-            var callback = function () {
-                self.renderConnections();
-            };
-            this._invokeAutoRouterMethod('routeAsync', [{callback: callback}]);
-            return this.renderConnections(idList);
-        } else if (WORKER && window.Worker) {
-            this._invokeAutoRouterMethod('routeSync', []);
-            return this.renderConnections();
-        } else {
-            this._invokeAutoRouterMethod('routeSync', []);
-            return this.renderConnections();
-        }
-
+        this._invokeAutoRouterMethod('routeAsync', []);
     };
 
     /**

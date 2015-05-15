@@ -880,6 +880,10 @@ define([
         return res;
     };
 
+    var nop = function() {
+        // nop
+    };
+
     return {
         onWhichEdge: _onWhichEdge,
         isCoordInDirFrom: _isCoordInDirFrom,
@@ -923,6 +927,7 @@ define([
         roundTrunc: roundTrunc,
         deepCopy: deepCopy,
         toArray: toArray,
+        nop: nop,
         pick: pick 
     };
 

@@ -19,7 +19,11 @@ define([
 
     var _logger = Logger.create('gme:Widgets:DiagramDesigner:AutoRouter.PointList', WebGMEGlobal.gmeConfig.client.log);
     var array = [];
+
     var ArPointListPath = function () {
+        for (var i = arguments.length; i--;) {
+            this.unshift(arguments[i]);
+        }
     };
 
     ArPointListPath.prototype = array;

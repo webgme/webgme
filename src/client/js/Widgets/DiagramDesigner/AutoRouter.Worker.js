@@ -58,12 +58,40 @@ var startWorker = function() {
 
         AutoRouterWorker.prototype.handleMessage = function(msg) {
             this.logger.debug('Received:', msg.data);
-            var response = Utils.deepCopy(msg.data),
-                result = this._invokeAutoRouterMethod.apply(this, msg.data.slice());
+
+            this._handleMessage(msg.data);
+        };
+
+        AutoRouterWorker.prototype._handleMessage = function(msg) {
+            var response,
+                result;
+
+            response = Utils.deepCopy(msg);
+            // If routing async, decorate the request
+            if (msg[0] === 'routeAsync') {
+                // Send getPathPoints response for each path on each update
+                msg[1] = [{callback: this._updatePaths.bind(this),
+                           first: this._updatePaths.bind(this)}];
+            }
+
+            result = this._invokeAutoRouterMethod.apply(this, msg.slice());
 
             response.push(result);
             this.logger.debug('Response:', response);
             worker.postMessage(response);
+        };
+
+        /**
+         * Update all the paths on the graph.
+         *
+         * @return {undefined}
+         */
+        AutoRouterWorker.prototype._updatePaths = function(paths) {
+            var msg = ['getPathPoints', null];
+            for (var i = paths.length; i--;) {
+                msg[1] = [this._arPathId2Original[paths[i].id]];
+                this._handleMessage(msg);
+            }
         };
 
         _.extend(AutoRouterWorker.prototype, ActionApplier.prototype);
