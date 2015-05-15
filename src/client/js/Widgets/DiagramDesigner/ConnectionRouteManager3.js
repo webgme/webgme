@@ -30,12 +30,14 @@ define([
             this.workerQueue = [];
             //this.worker = getWorker(WebGMEGlobal.gmeConfig.client);
 
+            // TODO: If merging into one js file, this may break
             var currentDir = module.id.split('/'),
                 workerFile;
 
             currentDir.pop();
             currentDir = currentDir.join('/');
             workerFile = currentDir+'/AutoRouter.Worker.js';
+            console.log('workerFile:', workerFile );
 
             this.worker = new Worker(workerFile);
             this.worker.postMessage(WebGMEGlobal.gmeConfig.client);
@@ -70,9 +72,9 @@ define([
     ConnectionRouteManager3.prototype.init = ActionApplier.prototype._clearRecords;
 
     ConnectionRouteManager3.prototype._invokeAutoRouterMethod = function() {
-        var array = Utils.toArray(arguments);
+        var array = Utils.toArray(arguments);  // Remove the extra 'arguments' stuff
         if (this.workerReady) {
-            this.worker.postMessage(array.slice());
+            this.worker.postMessage(array);
         } else {
             this.workerQueue.push(array);
         }
