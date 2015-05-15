@@ -101,7 +101,7 @@ define(['js/Widgets/DiagramDesigner/AutoRouter.ActionApplier',
         }
         this._worker = new Worker(workerFile);
         this.log('Sending:',WebGMEGlobal.gmeConfig.client || {});
-        this._worker.postMessage(WebGMEGlobal.gmeConfig.client|| {});
+        this._worker.postMessage([WebGMEGlobal.gmeConfig.client|| {}, true]);
 
         this._worker.onmessage = function(response) {
             this.log('Created web worker');
