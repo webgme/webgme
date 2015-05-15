@@ -846,10 +846,10 @@ define([
      * @return {Array}
      */
     var toArray = function (obj) {
-        var result = new Array(obj.length),
+        var result = new Array(obj.length||0),
             i = 0;
         while (obj[i] !== undefined) {
-            result.push(obj[i++]);
+            result[i] = obj[i++];
         }
         return result;
     };
@@ -868,6 +868,14 @@ define([
             } else {
                 res[k] = obj[k];
             }
+        }
+        return res;
+    };
+
+    var pick = function(keys, obj) {
+        var res = {};
+        for (var i = keys.length; i--;) {
+            res[keys[i]] = obj[keys[i]];
         }
         return res;
     };
@@ -914,7 +922,8 @@ define([
         floatEquals: floatEquals,
         roundTrunc: roundTrunc,
         deepCopy: deepCopy,
-        toArray: toArray 
+        toArray: toArray,
+        pick: pick 
     };
 
 });

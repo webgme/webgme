@@ -65,12 +65,13 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
         this._autorouterPorts = {};  // Maps boxIds to an array of port ids that have been mapped
         this._autorouterPaths = {};
     };
+
     /**
      * Replace id stored at the given indices of the array with the item from the dictionary.
      *
-     * @param dictionary
-     * @param array
-     * @param indices
+     * @param {Dictionary} dictionary
+     * @param {Array} array
+     * @param {Array<Number>} indices
      * @return {undefined}
      */
     AutoRouterActionApplier.prototype._lookupItem = function (dictionary, array, indices) {//jshint ignore:line
@@ -104,6 +105,11 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
 
             case 'setBoxRect':
                 this._lookupItem(this._autorouterBoxes, args, 0);
+                break;
+
+            case 'getBoxRect':
+                this._lookupItem(this._autorouterBoxes, args, 0);
+                args[0] = args[0].box.id;
                 break;
 
             case 'updatePort':
@@ -181,6 +187,7 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
                 var filename = 'AR_bug_report' + new Date().getTime() + '.js';
                 console.save(this._getActionSequence(), filename);
             }
+            return 'Error: '+e.message;
         }
     };
 

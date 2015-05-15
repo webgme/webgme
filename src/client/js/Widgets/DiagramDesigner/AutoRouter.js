@@ -474,6 +474,14 @@ define([
         });
     };
 
+    AutoRouter.prototype.getBoxRect = function (boxId) {
+        assert(this.graph.boxes[boxId] !== undefined,
+            'AutoRouter:getBoxRect requested box does not match any current boxes');
+        var rect = this.graph.boxes[boxId].rect;
+
+        return Utils.pick(['left', 'right', 'ceil', 'floor'], rect);
+    };
+
     AutoRouter.prototype.setBoxRect = function (boxObject, size) {
         var box = boxObject.box,
             x1 = size.x1 !== undefined ? size.x1 : (size.x2 - size.width),

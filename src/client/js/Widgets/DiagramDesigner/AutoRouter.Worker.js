@@ -1,11 +1,12 @@
 /*globals require,importScripts*/
 // This is the code for using the autorouter as a web worker.
 
-importScripts('../../../lib/require/require.min.js');
+importScripts('../../../lib/require/require.js');
 
 var worker = this,
     window = {},  //jshint ignore: line
-    WebGMEGlobal = {gmeConfig: {}};
+    WebGMEGlobal = {gmeConfig: {}},
+    msgQueue = [];
 
 /**
  * Start the worker. This is done after the relevant config has been received.
@@ -14,6 +15,11 @@ var worker = this,
  */
 var startWorker = function() {
     'use strict';
+
+    // Queue any messages received while loading the dependencies
+    worker.onmessage = function(msg) {
+        msgQueue.push(msg);
+    };
 
     require({
         baseUrl: '.',
@@ -64,8 +70,15 @@ var startWorker = function() {
 
         var autorouterWorker = new AutoRouterWorker();
 
+        autorouterWorker.logger.debug('AR Worker is now listening...');
+
+        // Handle the queued messages
+        while (msgQueue.length) {
+            autorouterWorker.handleMessage(msgQueue.shift());
+        }
+
         worker.onmessage = autorouterWorker.handleMessage.bind(autorouterWorker);
-        this.logger.debug('Ready for requests!');
+        autorouterWorker.logger.debug('Ready for requests!');
         worker.postMessage('READY');
     }.bind(this));
 };
