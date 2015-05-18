@@ -45,6 +45,17 @@ define([
         this.logger = Logger.create('gme:Widgets:DiagramDesigner:Connection_' + this.id,
             WebGMEGlobal.gmeConfig.client.log);
         this.logger.debug('Created');
+
+        this.sourceCoordinates = {
+            x: -1,
+            y: -1
+        };
+
+        this.endCoordinates = {
+            x: -1,
+            y: -1
+        };
+
     };
 
     Connection.prototype._initialize = function (objDescriptor) {

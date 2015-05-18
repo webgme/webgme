@@ -4,7 +4,13 @@
  * @author brollb / https://github.com/brollb
  */
 
-define(['js/Widgets/DiagramDesigner/AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
+define(['js/Widgets/DiagramDesigner/AutoRouter', 
+        'js/Widgets/DiagramDesigner/AutoRouter.PointList',
+        'js/Widgets/DiagramDesigner/AutoRouter.Point',
+        'common/util/assert'], function (AutoRouter, 
+                                         PointList,
+                                         Point,
+                                         assert) {
     'use strict';
     var router;
 
@@ -166,6 +172,14 @@ define(['js/Widgets/DiagramDesigner/AutoRouter', 'common/util/assert'], function
 
     })();
 
+    var validatePoints = function(points) {
+        points = points.map(function(pt) {
+            return new Point(pt);
+        });
+
+        PointList.prototype.assertValid.call(points);
+    };
+
     return {
         getNewGraph: getNewGraph,
         addBox: addBox,
@@ -174,6 +188,8 @@ define(['js/Widgets/DiagramDesigner/AutoRouter', 'common/util/assert'], function
         getBoxCount: getBoxCount,
         evaluateEdges: evaluateEdges,
         assert: assert,
-        webgme: webgmeHelper
+        webgme: webgmeHelper,
+
+        validatePoints: validatePoints
     };
 });

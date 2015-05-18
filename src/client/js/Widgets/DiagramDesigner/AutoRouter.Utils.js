@@ -838,6 +838,52 @@ define([
         return ((a - 0.1) < b) && (b < (a + 0.1));
     };
 
+    /**
+     * Convert an object with increasing integer keys to an array.
+     * Using method from http://jsperf.com/arguments-performance/6
+     *
+     * @param {Object} obj
+     * @return {Array}
+     */
+    var toArray = function (obj) {
+        var result = new Array(obj.length||0),
+            i = 0;
+        while (obj[i] !== undefined) {
+            result[i] = obj[i++];
+        }
+        return result;
+    };
+
+    /**
+     * Perform a deep copy of an object
+     *
+     * @param {Object} obj
+     * @return {undefined}
+     */
+    var deepCopy = function (obj) {
+        var res = obj instanceof Array ? [] : {};
+        for (var k in obj) {
+            if (typeof obj[k] === 'object') {
+                res[k] = deepCopy(obj[k]);
+            } else {
+                res[k] = obj[k];
+            }
+        }
+        return res;
+    };
+
+    var pick = function(keys, obj) {
+        var res = {};
+        for (var i = keys.length; i--;) {
+            res[keys[i]] = obj[keys[i]];
+        }
+        return res;
+    };
+
+    var nop = function() {
+        // nop
+    };
+
     return {
         onWhichEdge: _onWhichEdge,
         isCoordInDirFrom: _isCoordInDirFrom,
@@ -878,7 +924,11 @@ define([
         removeFromArrays: removeFromArrays,
         stringify: stringify,
         floatEquals: floatEquals,
-        roundTrunc: roundTrunc
+        roundTrunc: roundTrunc,
+        deepCopy: deepCopy,
+        toArray: toArray,
+        nop: nop,
+        pick: pick 
     };
 
 });

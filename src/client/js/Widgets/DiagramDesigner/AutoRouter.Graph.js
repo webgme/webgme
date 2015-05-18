@@ -66,7 +66,9 @@ define([
             this.boxes[ids[i]].destroy();
             delete this.boxes[ids[i]];
         }
+        // Clean up the bufferBoxes
         this.bufferBoxes = [];
+        this.box2bufferBox = {};
     };
 
     AutoRouterGraph.prototype._getBoxAt = function (point, nearness) {
@@ -1896,9 +1898,7 @@ define([
 
     AutoRouterGraph.prototype.shiftBoxBy = function (box, offset) {
         assert(box !== null, 'ARGraph.shiftBoxBy: box !== null FAILED');
-        if (box === null) {
-            return;
-        }
+        assert(!!this.boxes[box.id], 'ARGraph.shiftBoxBy: Box does not exist!');
 
         var rect = this.box2bufferBox[box.id].box,
             children = box.childBoxes;
@@ -1944,15 +1944,14 @@ define([
 
     AutoRouterGraph.prototype.routeAsync = function (options) {
         var self = this,
-            updateFn = options.update || function () {
-                },
-            callbackFn = options.callback || function () {
-                },
+            updateFn = options.update || Utils.nop,
+            firstFn = options.first || Utils.nop,
+            callbackFn = options.callback || Utils.nop,
             time = options.time || 5,
             optimizeFn = function (state) {
 
                 updateFn(self.paths);
-                if (state.finished || self.completelyConnected) {
+                if (state.finished || !self.completelyConnected) {
                     return callbackFn(self.paths);
                 } else {
                     state = self._optimize(state);
@@ -1968,15 +1967,18 @@ define([
             };
 
         // Connect all disconnected paths with a straight line
-        var path;
+        var path,
+            disconnected = [];
         for (var i = this.paths.length; i--;) {
             path = this.paths[i];
             if (!path.isConnected()) {
                 path.calculateStartEndPorts();
-                path.points.push(path.startpoint);
-                path.points.push(path.endpoint);
+                path.points = new ArPointListPath(path.startpoint, path.endpoint);
+                disconnected.push(path);
             }
         }
+
+        firstFn(disconnected);
 
         setTimeout(startRouting, time);
     };
@@ -2149,7 +2151,7 @@ define([
         path.destroy();
     };
 
-    AutoRouterGraph.prototype.deleteAll = function (addBackSelfEdges) {
+    AutoRouterGraph.prototype.clear = function (addBackSelfEdges) {
         this._deleteAllPaths();
         this._deleteAllBoxes();
         this._deleteAllEdges();

@@ -64,13 +64,15 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
         this._autorouterBoxes = {};  // Define container that will map obj+subID -> box
         this._autorouterPorts = {};  // Maps boxIds to an array of port ids that have been mapped
         this._autorouterPaths = {};
+        this._arPathId2Original = {};
     };
+
     /**
      * Replace id stored at the given indices of the array with the item from the dictionary.
      *
-     * @param dictionary
-     * @param array
-     * @param indices
+     * @param {Dictionary} dictionary
+     * @param {Array} array
+     * @param {Array<Number>} indices
      * @return {undefined}
      */
     AutoRouterActionApplier.prototype._lookupItem = function (dictionary, array, indices) {//jshint ignore:line
@@ -104,6 +106,11 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
 
             case 'setBoxRect':
                 this._lookupItem(this._autorouterBoxes, args, 0);
+                break;
+
+            case 'getBoxRect':
+                this._lookupItem(this._autorouterBoxes, args, 0);
+                args[0] = args[0].box.id;
                 break;
 
             case 'updatePort':
@@ -181,6 +188,7 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
                 var filename = 'AR_bug_report' + new Date().getTime() + '.js';
                 console.save(this._getActionSequence(), filename);
             }
+            return 'Error: '+e.message;
         }
     };
 
@@ -200,14 +208,17 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
         return result;
     };
 
-    AutoRouterActionApplier.prototype._updateRecords = function (command, args, result) {
+    AutoRouterActionApplier.prototype._updateRecords = function (command, input, result) {
+        assert (input instanceof Array);
         var id,
+            args = input.slice(),
             i;
 
         switch (command) {
             case 'addPath':
                 id = args.pop();
                 this._autorouterPaths[id] = result;
+                this._arPathId2Original[result] = id;
                 break;
 
             case 'addBox':
@@ -228,14 +239,16 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
                     i = this._autorouterPorts[id] ? this._autorouterPorts[id].length : 0;
                     while (i--) {
                         var portId = id + this._portSeparator + this._autorouterPorts[id][i]; //ID of child port
-                        this._autorouterBoxes[portId] = undefined;
+                        delete this._autorouterBoxes[portId];
                     }
 
-                    this._autorouterBoxes[id] = undefined;
-                    this._autorouterPorts[id] = undefined;
+                    delete this._autorouterBoxes[id];
+                    delete this._autorouterPorts[id];
 
                 } else if (this._autorouterPaths[id]) {
-                    this._autorouterPaths[id] = undefined;  // If objId is a connection
+                    var arId = this._autorouterPaths[id];
+                    delete this._autorouterPaths[id];
+                    delete this._arPathId2Original[arId];
                 }
                 break;
 
@@ -269,7 +282,7 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
 
         var action = {action: command, args: args},
             circularFixer = function (key, value) {
-                if (value.owner) {
+                if (value && value.owner) {
                     return value.id;
                 }
 
@@ -281,7 +294,7 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
 
     AutoRouterActionApplier.prototype._getActionSequence = function () {
         var index = this.debugActionSequence.lastIndexOf(','),
-            result = this.debugActionSequence.substring(0, index) + '];';
+            result = this.debugActionSequence.substring(0, index) + ']';
 
         return result;
     };
