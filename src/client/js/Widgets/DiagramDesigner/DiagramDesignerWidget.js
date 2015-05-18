@@ -359,6 +359,7 @@ define([
     DiagramDesignerWidget.prototype.destroy = function () {
         this.__loader.destroy();
         this._removeToolbarItems();
+        this.connectionRouteManager.destroy();
         //TODO: what about item and connection destroys????
     };
 
