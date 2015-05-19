@@ -103,12 +103,13 @@ define([
                                 });
                             });
                         };
-                        var commitHandler = function (commitData, result, callback) {
-                            logger.debug('commitHandler', result, commitData);
+                        var commitHandler = function (commitQueue, result, callback) {
+                            logger.debug('commitHandler', result);
                             if (result.status === CONSTANTS.SYNCH) {
                                 callback(true); // All is fine, continue with the commitQueue..
                             } else if (result.status === CONSTANTS.FORKED) {
-                                logger.debug('You got forked');
+                                logger.debug('You got forked, queued commits', commitQueue);
+                                callback(false);
                             } else {
                                 throw new Error('Unexpected result', result);
                             }

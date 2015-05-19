@@ -246,7 +246,7 @@ define([
                 if (typeof callback === 'function') {
                     callback(err, result);
                 }
-                branch.commitHandler(commitData, result, function (push) {
+                branch.commitHandler(branch.getCommitQueue(), result, function (push) {
                     if (push) {
                         self._pushCommit(projectName, branchName);
                         //TODO: Make sure the stack doesn't grow too big.
