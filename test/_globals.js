@@ -4,6 +4,7 @@
 /**
  * @author kecso / https://github.com/kecso
  */
+'use strict';
 
 global.TESTING = true;
 global.WebGMEGlobal = {};
@@ -14,7 +15,6 @@ process.env.NODE_ENV = 'test';
 var WebGME = require('../webgme'),
     gmeConfig = require('../config'),
     getGmeConfig = function () {
-        'use strict';
         // makes sure that for each request it returns with a unique object and tests will not interfere
         if (!gmeConfig) {
             // if some tests are deleting or unloading the config
@@ -26,6 +26,7 @@ var WebGME = require('../webgme'),
     Commit = requireJS('common/storage/commit'),
     Local = requireJS('common/storage/local'),
     Cache = requireJS('common/storage/cache'),
+    Core = requireJS('common/core/core'),
     Logger = require('../src/server/logger'),
     logger = Logger.create('gme:test', {
         //patterns: ['gme:test:*cache'],
@@ -44,12 +45,10 @@ var WebGME = require('../webgme'),
         }]
     }, false),
     Storage = function (options) {
-        'use strict';
         options.logger = options.logger || logger.fork('storage');
         return new Commit(new Local(options || {}), options || {});
     },
     StorageWithCache = function (options) {
-        'use strict';
         options.logger = options.logger || logger.fork('storage');
         return new Commit(new Cache(new Local(options || {}), options || {}), options || {});
     },
@@ -74,12 +73,69 @@ var WebGME = require('../webgme'),
 
 //TODO globally used functions to implement
 function loadJsonFile(path) {
-    'use strict';
     //TODO decide if throwing an exception is fine or we should handle it
     return JSON.parse(fs.readFileSync(path, 'utf8'));
 }
-function importProject(parameters, done) {
-    'use strict';
+
+function importProject(storage, parameters, done) {
+    var projectJson,
+        result;
+
+    expect(typeof storage).to.equal('object');
+    expect(typeof parameters).to.equal('object');
+    expect(typeof parameters.projectName).to.equal('string');
+
+    if (typeof parameters.projectSeed === 'string') {
+        projectJson = loadJsonFile(parameters.projectSeed);
+    } else if (typeof parameters.projectSeed === 'object') {
+        projectJson = parameters.projectSeed;
+    } else {
+        done(new Error('parameters.projectSeed must be filePath or object!'));
+    }
+    result.branchName = parameters.branchName || 'master';
+
+    storage.createProject({projectName: parameters.projectName})
+        .then(function (project) {
+            var projectCache = storage.getProjectCache(project),
+                core = new Core(projectCache, {
+                    globConf: parameters.gmeConfig,
+                    logger: parameters.logger.fork('core')
+                }),
+                root = core.createNode({parent: null, base: null});
+
+            WebGME.serializer.import(core, root, parameters.projectSeed, function (err) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+                //    core.persist(rootNode, function (err, coreObjects) {
+                //        if (err) {
+                //            throw new Error(err);
+                //        }
+                //        logger.debug('cb persist data', coreObjects);
+                //        currCommitObject = storage.makeCommit(PROJECT_NAME, BRANCH_NAME,
+                //            [commitObject._id],
+                //            coreObjects.root,
+                //            coreObjects.objects,
+                //            'First commit from new storage'
+                //        );
+                //
+                //    });
+                //    var rhash = core.getHash(root),
+                //        chash = project.makeCommit([], rhash, 'project imported', function (/*err*/) {
+                //        });
+                //    project.getBranchHash('master', '#hack', function (err, oldhash) {
+                //        if (err) {
+                //            return callback('' + err);
+                //        }
+                //        project.setBranchHash('master', oldhash, chash, callback);
+                //    });
+                //});
+            });
+        });
+}
+
+function importProjectOld(parameters, done) {
     //TODO should return a result object with storage + project + core + root + commitHash + branchName objects }
     //TODO by default it should create a localStorage and put the project there
 
