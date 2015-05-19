@@ -15,7 +15,8 @@
             branchName = document.getElementById('branchName').value;
             console.log('projectName, branchName', projectName, branchName);
             var client = new GME.classes.Client(GME.gmeConfig, projectName, branchName);
-            alert('Check console - refresh to try with a different project or branch.');
+            alert('Check console for debug messages (localStorage.debug = "gme:*") \n ' +
+            'Refresh to try with a different project or branch.');
         }
 
     </script>
