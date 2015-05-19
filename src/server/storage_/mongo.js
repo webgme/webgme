@@ -11,8 +11,7 @@
 var mongodb = require('mongodb'),
     Q = require('Q'),
 
-    CONSTANTS = requireJS('common/storage_/constants'),
-    ASSERT = requireJS('common/util/assert'),
+    //CONSTANTS = requireJS('common/storage_/constants'),
     CANON = requireJS('common/util/canon'),
     REGEXP = requireJS('common/regexp');
 
@@ -90,12 +89,12 @@ function Mongo(mainLogger, gmeConfig) {
         var collection = null;
         logger.debug('openProject', name);
 
-        function closeProject(callback) {
-            collection = null;
-            if (typeof callback === 'function') {
-                callback(null);
-            }
-        }
+        //function closeProject(callback) {
+        //    collection = null;
+        //    if (typeof callback === 'function') {
+        //        callback(null);
+        //    }
+        //}
 
         function loadObject(hash, callback) {
             var deferred = Q.defer();
@@ -148,36 +147,36 @@ function Mongo(mainLogger, gmeConfig) {
             return deferred.promise.nodeify(callback);
         }
 
-        function getInfo(callback) {
-            return Q.ninvoke(collection, 'findOne', {_id: CONSTANTS.PROJECT_INFO_ID})
-                .then(function (info) {
-                    if (info) {
-                        delete info._id;
-                    }
-                    return Q(info);
-                })
-                .nodeify(callback);
-        }
-
-        function setInfo(info, callback) {
-            ASSERT(typeof info === 'object' && typeof callback === 'function');
-            info._id = CONSTANTS.PROJECT_INFO_ID;
-
-            return Q.ninvoke(collection, 'update', {_id: CONSTANTS.PROJECT_INFO_ID}, info, {upsert: true})
-                .nodeify(callback);
-        }
-
-        function dumpObjects(callback) {
-            ASSERT(typeof callback === 'function');
-
-            collection.find().each(function (err, item) {
-                if (err || item === null) {
-                    callback(err);
-                } else {
-                    logger.debug(item);
-                }
-            });
-        }
+        //function getInfo(callback) {
+        //    return Q.ninvoke(collection, 'findOne', {_id: CONSTANTS.PROJECT_INFO_ID})
+        //        .then(function (info) {
+        //            if (info) {
+        //                delete info._id;
+        //            }
+        //            return Q(info);
+        //        })
+        //        .nodeify(callback);
+        //}
+        //
+        //function setInfo(info, callback) {
+        //    ASSERT(typeof info === 'object' && typeof callback === 'function');
+        //    info._id = CONSTANTS.PROJECT_INFO_ID;
+        //
+        //    return Q.ninvoke(collection, 'update', {_id: CONSTANTS.PROJECT_INFO_ID}, info, {upsert: true})
+        //        .nodeify(callback);
+        //}
+        //
+        //function dumpObjects(callback) {
+        //    ASSERT(typeof callback === 'function');
+        //
+        //    collection.find().each(function (err, item) {
+        //        if (err || item === null) {
+        //            callback(err);
+        //        } else {
+        //            logger.debug(item);
+        //        }
+        //    });
+        //}
 
         function getBranches(callback) {
             var mongoFind = collection.find({
@@ -292,93 +291,93 @@ function Mongo(mainLogger, gmeConfig) {
                 .nodeify(callback);
         }
 
-        function getCommonAncestorCommit(commitA, commitB, callback) {
-            var deferred = Q.defer(),
-                ancestorsA = {},
-                ancestorsB = {},
-                newAncestorsA = [],
-                newAncestorsB = [],
-                getAncestors = function (commits, ancestorsSoFar, next) {
-                    var needed = commits.length,
-                        i, newCommits = [],
-                        commitLoaded = function (err, commit) {
-                            var i;
-                            if (!err && commit) {
-                                for (i = 0; i < commit.parents.length; i++) {
-                                    if (newCommits.indexOf(commit.parents[i]) === -1) {
-                                        newCommits.push(commit.parents[i]);
-                                    }
-                                    ancestorsSoFar[commit.parents[i]] = true;
-                                }
-                            }
-                            if (--needed === 0) {
-                                next(newCommits);
-                            }
-                        };
-
-                    if (needed === 0) {
-                        next(newCommits);
-                    } else {
-                        for (i = 0; i < commits.length; i++) {
-                            collection.findOne({
-                                _id: commits[i]
-                            }, commitLoaded);
-                        }
-                    }
-                },
-                checkForCommon = function () {
-                    var i;
-                    for (i = 0; i < newAncestorsA.length; i++) {
-                        if (ancestorsB[newAncestorsA[i]]) {
-                            //we got a common parent so let's go with it
-                            return newAncestorsA[i];
-                        }
-                    }
-                    for (i = 0; i < newAncestorsB.length; i++) {
-                        if (ancestorsA[newAncestorsB[i]]) {
-                            //we got a common parent so let's go with it
-                            return newAncestorsB[i];
-                        }
-                    }
-                    return null;
-                },
-                loadStep = function () {
-                    var candidate = checkForCommon(),
-                        needed = 2,
-                        bothLoaded = function () {
-                            if (newAncestorsA.length > 0 || newAncestorsB.length > 0) {
-                                loadStep();
-                            } else {
-                                deferred.reject('unable to find common ancestor commit');
-                            }
-                        };
-                    if (candidate) {
-                        deferred.resolve(candidate);
-                        return;
-                    }
-                    getAncestors(newAncestorsA, ancestorsA, function (nCommits) {
-                        newAncestorsA = nCommits || [];
-                        if (--needed === 0) {
-                            bothLoaded();
-                        }
-                    });
-                    getAncestors(newAncestorsB, ancestorsB, function (nCommits) {
-                        newAncestorsB = nCommits || [];
-                        if (--needed === 0) {
-                            bothLoaded();
-                        }
-                    });
-                };
-
-            //initializing
-            ancestorsA[commitA] = true;
-            newAncestorsA = [commitA];
-            ancestorsB[commitB] = true;
-            newAncestorsB = [commitB];
-            loadStep();
-
-            return deferred.promise.nodeify(callback);
-        }
+        //function getCommonAncestorCommit(commitA, commitB, callback) {
+        //    var deferred = Q.defer(),
+        //        ancestorsA = {},
+        //        ancestorsB = {},
+        //        newAncestorsA = [],
+        //        newAncestorsB = [],
+        //        getAncestors = function (commits, ancestorsSoFar, next) {
+        //            var needed = commits.length,
+        //                i, newCommits = [],
+        //                commitLoaded = function (err, commit) {
+        //                    var i;
+        //                    if (!err && commit) {
+        //                        for (i = 0; i < commit.parents.length; i++) {
+        //                            if (newCommits.indexOf(commit.parents[i]) === -1) {
+        //                                newCommits.push(commit.parents[i]);
+        //                            }
+        //                            ancestorsSoFar[commit.parents[i]] = true;
+        //                        }
+        //                    }
+        //                    if (--needed === 0) {
+        //                        next(newCommits);
+        //                    }
+        //                };
+        //
+        //            if (needed === 0) {
+        //                next(newCommits);
+        //            } else {
+        //                for (i = 0; i < commits.length; i++) {
+        //                    collection.findOne({
+        //                        _id: commits[i]
+        //                    }, commitLoaded);
+        //                }
+        //            }
+        //        },
+        //        checkForCommon = function () {
+        //            var i;
+        //            for (i = 0; i < newAncestorsA.length; i++) {
+        //                if (ancestorsB[newAncestorsA[i]]) {
+        //                    //we got a common parent so let's go with it
+        //                    return newAncestorsA[i];
+        //                }
+        //            }
+        //            for (i = 0; i < newAncestorsB.length; i++) {
+        //                if (ancestorsA[newAncestorsB[i]]) {
+        //                    //we got a common parent so let's go with it
+        //                    return newAncestorsB[i];
+        //                }
+        //            }
+        //            return null;
+        //        },
+        //        loadStep = function () {
+        //            var candidate = checkForCommon(),
+        //                needed = 2,
+        //                bothLoaded = function () {
+        //                    if (newAncestorsA.length > 0 || newAncestorsB.length > 0) {
+        //                        loadStep();
+        //                    } else {
+        //                        deferred.reject('unable to find common ancestor commit');
+        //                    }
+        //                };
+        //            if (candidate) {
+        //                deferred.resolve(candidate);
+        //                return;
+        //            }
+        //            getAncestors(newAncestorsA, ancestorsA, function (nCommits) {
+        //                newAncestorsA = nCommits || [];
+        //                if (--needed === 0) {
+        //                    bothLoaded();
+        //                }
+        //            });
+        //            getAncestors(newAncestorsB, ancestorsB, function (nCommits) {
+        //                newAncestorsB = nCommits || [];
+        //                if (--needed === 0) {
+        //                    bothLoaded();
+        //                }
+        //            });
+        //        };
+        //
+        //    //initializing
+        //    ancestorsA[commitA] = true;
+        //    newAncestorsA = [commitA];
+        //    ancestorsB[commitB] = true;
+        //    newAncestorsB = [commitB];
+        //    loadStep();
+        //
+        //    return deferred.promise.nodeify(callback);
+        //}
 
         return Q.ninvoke(mongo, 'collection', name)
             .then(function (result) {
@@ -391,17 +390,17 @@ function Mongo(mainLogger, gmeConfig) {
                     deferred.reject('Project does not exist ' + name);
                 } else {
                     deferred.resolve({
-                        closeProject: closeProject,
+                        //closeProject: closeProject,
                         loadObject: loadObject,
                         insertObject: insertObject,
-                        getInfo: getInfo,
-                        setInfo: setInfo,
-                        dumpObjects: dumpObjects,
+                        //getInfo: getInfo,
+                        //setInfo: setInfo,
+                        //dumpObjects: dumpObjects,
                         getBranches: getBranches,
                         getBranchHash: getBranchHash,
                         setBranchHash: setBranchHash,
                         getCommits: getCommits,
-                        getCommonAncestorCommit: getCommonAncestorCommit
+                        //getCommonAncestorCommit: getCommonAncestorCommit
                     });
                 }
                 return deferred.promise;

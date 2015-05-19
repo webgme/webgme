@@ -157,7 +157,7 @@ var path = require('path'),
         },
 
         socketIO: {
-            reconnection: false,
+            reconnection: true,
             'connect timeout': 10,
             'reconnection delay': 1,
             'force new connection': true,

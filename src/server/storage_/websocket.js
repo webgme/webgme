@@ -18,7 +18,7 @@ function WebSocket(storage, mainLogger, gmeConfig) {
     function getEmitter(data) {
         var emitter;
         if (data.socket) {
-            logger.debug('socket provided - will broadcast.');
+            logger.debug('socket provided - will broadcast from ', data.socket.id);
             emitter = data.socket.broadcast;
             delete data.socket;
         } else {
@@ -137,6 +137,7 @@ function WebSocket(storage, mainLogger, gmeConfig) {
             });
 
             socket.on('closeBranch', function (data, callback) {
+                logger.debug('closeBranch', data.projectName, data.branchName, socket.id);
                 socket.leave(data.projectName + ROOM_DIV + data.branchName);
                 callback();
             });

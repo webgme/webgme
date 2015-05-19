@@ -17,7 +17,6 @@
 
 var Q = require('Q'),
 
-//ASSERT = requireJS('common/util/assert'),
     REGEXP = requireJS('common/regexp'),
     Storage = require('./storage');
 
