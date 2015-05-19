@@ -6,36 +6,17 @@
 
             // you can use GME.classes.Client from this point
             console.log(GME);
-//            var gmeConfig = {
-//                socketIO: {
-//                    reconnection: false,
-//                    'connect timeout': 10,
-//                    'reconnection delay': 1,
-//                    'force new connection': true,
-//                    transports: ['websocket']
-//                },
-//                storage: {
-//                    autoPersist: true, // core setting
-//                    cache: 2000,
-//                    loadBucketSize: 100,
-//                    loadBucketTimer: 10,
-//                    clientCacheSize: 2000, // overwrites cache on client
-//                    keyType: 'plainSHA1', // 'rand160Bits', 'ZSSHA', 'plainSHA1',
-//                    failSafe: 'memory',
-//                    failSafeFrequency: 10000,
-//                    timeout: 10000
-//                },
-//                client: {
-//                    log: {
-//                        level: 'debug' // To see log messages in the browser inspector set:
-//                                       // localStorage.debug = '*' (or 'gme*', 'gme:core*')
-//                    }
-//                }
-//            }
 
-            var client = new GME.classes.Client(GME.gmeConfig);
 
         };
+        function onClickEventHandler () {
+            var projectName, branchName;
+            projectName = document.getElementById('projectName').value;
+            branchName = document.getElementById('branchName').value;
+            console.log('projectName, branchName', projectName, branchName);
+            var client = new GME.classes.Client(GME.gmeConfig, projectName, branchName);
+            alert('Check console - refresh to try with a different project or branch.');
+        }
 
     </script>
 
@@ -47,6 +28,12 @@
 
 Test page.
 See console for messages.
-
+<div>
+    <label aria-label="projectName">Project Name:</label>
+    <input id="projectName" type="text" name="projectName"  value="Test"/>
+    <label>Branch Name:</label>
+    <input id="branchName" type="text" name="branchName" value="master"/>
+    <button onclick="onClickEventHandler()">Start Client</button>
+</div>
 </body>
 </html>

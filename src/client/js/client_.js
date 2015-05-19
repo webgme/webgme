@@ -3,10 +3,10 @@
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
-var CREATE_BRANCH = false,
-    PROJECT_NAME = 'IBug',
-    BRANCH_NAME = 'master',
-    NEW_BRANCH_HASH = '#d2d00cdd50a1ca144666a52a471af59d280ac751';
+var CREATE_BRANCH = false;
+//PROJECT_NAME = 'IBug',
+//BRANCH_NAME = 'master',
+//NEW_BRANCH_HASH = '#d2d00cdd50a1ca144666a52a471af59d280ac751';
 
 define([
     'js/logger',
@@ -15,13 +15,16 @@ define([
     'common/storage/constants'
 ], function (Logger, Storage, Core, CONSTANTS) {
     'use strict';
-    function Client(gmeConfig) {
+    function Client(gmeConfig, projectName, branchName) {
         var logger = Logger.create('gme:client', gmeConfig.client.log),
             storage = Storage.getStorage(logger, gmeConfig),
             currRootNode,
             currCommitObject,
             intervalId,
-            core;
+            core,
+            PROJECT_NAME = projectName,
+            BRANCH_NAME = branchName;
+
         logger.debug('ctor');
         function loadChildrenAndSetAttribute(rootNode, commitObject) {
             core.loadChildren(rootNode, function (err, children) {
@@ -29,15 +32,15 @@ define([
                     throw new Error(err);
                 }
                 logger.debug('children loaded', children);
-                children.map(function (child) {
-                    var newPos;
-                    logger.debug('child name', core.getAttribute(child, 'name'));
-                    if (core.getAttribute(child, 'name') === 'newName') {
-                        newPos = {x: 70 + getRandomInt(0, 100), y: 70 + getRandomInt(0, 100)};
-                        core.setRegistry(child, 'position', newPos);
-                        logger.debug('setting new position', newPos);
-                    }
-                });
+                //children.map(function (child) {
+                var newPos;
+                logger.debug('child name', core.getAttribute(children[0], 'name'));
+                //if (core.getAttribute(children[0], 'name') === 'newName') {
+                newPos = {x: 70 + getRandomInt(0, 100), y: 70 + getRandomInt(0, 100)};
+                core.setRegistry(children[0], 'position', newPos);
+                logger.debug('setting new position', newPos);
+                //}
+                //});
                 currRootNode = rootNode;
                 core.persist(rootNode, function (err, coreObjects) {
                     if (err) {
@@ -61,6 +64,7 @@ define([
                 //});
             });
         }
+
         storage.connect(function (err, status) {
             if (err) {
                 logger.error(err);
@@ -70,6 +74,9 @@ define([
                 storage.getProjectNames({}, function (err, projectNames) {
                     if (err) {
                         throw new Error(err);
+                    }
+                    if (projectNames.indexOf(projectName) < 0) {
+                        throw new Error('Project does not exist');
                     }
                     logger.debug(projectNames);
                     storage.watchProject(PROJECT_NAME, function (_ws, data) {
