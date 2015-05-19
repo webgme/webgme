@@ -106,6 +106,7 @@ module.exports = {
     serverStorage: require('./src/server/storage/serverstorage'),
     serverUserStorage: require('./src/server/storage/serveruserstorage'),
     standaloneServer: require('./src/server/standalone.js'),
+    //standaloneServer_: require('./src/server/standalone_.js'),
     runPlugin: require('./src/server/runplugin'),
 
     requirejs: requirejs,

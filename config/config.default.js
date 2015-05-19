@@ -167,6 +167,8 @@ var path = require('path'),
         storage: {
             autoPersist: true, // core setting
             cache: 2000,
+            loadBucketSize: 100,
+            loadBucketTimer: 10,
             clientCacheSize: 2000, // overwrites cache on client
             keyType: 'plainSHA1', // 'rand160Bits', 'ZSSHA', 'plainSHA1',
             failSafe: 'memory',

@@ -29,6 +29,7 @@ function createAPI(app, mountPath, middlewareOpts) {
 
         logger = middlewareOpts.logger.fork('api'),
         gmeAuth = middlewareOpts.gmeAuth,
+        safeStorage = middlewareOpts.safeStorage,
         ensureAuthenticated = middlewareOpts.ensureAuthenticated,
 
         versionedAPIPath = mountPath + '/v1',
@@ -465,12 +466,17 @@ function createAPI(app, mountPath, middlewareOpts) {
 
 // PROJECTS
 
-    //router.get('/projects', function (req, res) {
-    //
-    //    res.json({
-    //        message: 'Not implemented yet ' + req.params.owner
-    //    });
-    //});
+    router.get('/projects', function (req, res, next) {
+
+        safeStorage.getProjectNames({})
+            .then(function (result) {
+                res.json(result);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
     //
     //router.get('/projects/:owner/:project', function (req, res) {
     //
@@ -485,13 +491,107 @@ function createAPI(app, mountPath, middlewareOpts) {
     //        message: 'Not implemented yet ' + req.params.owner
     //    });
     //});
-    //
-    //router.delete('/projects/:owner/:project', function (req, res) {
-    //
-    //    res.json({
-    //        message: 'Not implemented yet ' + req.params.owner
-    //    });
-    //});
+
+    router.delete('/projects/:projectId', function (req, res, next) {
+
+        safeStorage.deleteProject({projectName: req.params.projectId})
+            .then(function () {
+                res.sendStatus(204);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.get('/projects/:projectId/commits', function (req, res, next) {
+        var data = {
+            projectName: req.params.projectId,
+            before: (new Date()).getTime(), // current time
+            number: 100 // asks for the last 100 commits from the time specified above
+        };
+
+        safeStorage.getCommits(data)
+            .then(function (result) {
+                res.json(result);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.get('/projects/:projectId/branches', function (req, res, next) {
+
+        safeStorage.getBranches({projectName: req.params.projectId})
+            .then(function (result) {
+                res.json(result);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+
+    router.get('/projects/:projectId/branches/:branchId', function (req, res, next) {
+        var data = {
+            projectName: req.params.projectId,
+            branchName: req.params.branchId
+        };
+
+        safeStorage.getLatestCommitData(data)
+            .then(function (result) {
+                res.json(result);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.patch('/projects/:projectId/branches/:branchId', function (req, res, next) {
+        var data = {
+            projectName: req.params.projectId,
+            branchName: req.params.branchId,
+            hash: req.body.hash
+        };
+
+        safeStorage.createBranch(data)
+            .then(function () {
+                res.sendStatus(200);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.put('/projects/:projectId/branches/:branchId', function (req, res, next) {
+        var data = {
+            projectName: req.params.projectId,
+            branchName: req.params.branchId,
+            hash: req.body.hash
+        };
+
+        safeStorage.createBranch(data)
+            .then(function () {
+                res.sendStatus(201);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.delete('/projects/:projectId/branches/:branchId', function (req, res, next) {
+        var data = {
+            projectName: req.params.projectId,
+            branchName: req.params.branchId
+        };
+
+        safeStorage.deleteBranch(data)
+            .then(function () {
+                res.sendStatus(204);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
 
 //// FIXME: requires auth
 //    router.get('/projects/:owner/:project/collaborators', function (req, res) {
@@ -541,7 +641,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     // error handling
-    router.use(function (err, req, res/*, next*/) {
+    router.use(function (err, req, res, next) { // NOTE: it is important to have this function signature with 4 arguments!
         var errorMessage = {
                 401: 'Authentication required',
                 403: 'No sufficient role',
