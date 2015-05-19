@@ -1,0 +1,52 @@
+<html>
+<head>
+    <script type="text/javascript">
+        var myInit = function () {
+            console.log('myInit function was called');
+
+            // you can use GME.classes.Client from this point
+            console.log(GME);
+//            var gmeConfig = {
+//                socketIO: {
+//                    reconnection: false,
+//                    'connect timeout': 10,
+//                    'reconnection delay': 1,
+//                    'force new connection': true,
+//                    transports: ['websocket']
+//                },
+//                storage: {
+//                    autoPersist: true, // core setting
+//                    cache: 2000,
+//                    loadBucketSize: 100,
+//                    loadBucketTimer: 10,
+//                    clientCacheSize: 2000, // overwrites cache on client
+//                    keyType: 'plainSHA1', // 'rand160Bits', 'ZSSHA', 'plainSHA1',
+//                    failSafe: 'memory',
+//                    failSafeFrequency: 10000,
+//                    timeout: 10000
+//                },
+//                client: {
+//                    log: {
+//                        level: 'debug' // To see log messages in the browser inspector set:
+//                                       // localStorage.debug = '*' (or 'gme*', 'gme:core*')
+//                    }
+//                }
+//            }
+
+            var client = new GME.classes.Client(GME.gmeConfig);
+
+        };
+
+    </script>
+
+    <script type="text/javascript" src="/extlib/dist/webgme.classes.build.js"></script>
+
+</head>
+
+<body on-gme-init="myInit()">
+
+Test page.
+See console for messages.
+
+</body>
+</html>
