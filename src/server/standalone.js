@@ -24,12 +24,16 @@ var Path = require('path'),
     Https = require('https'),
     URL = require('url'),
 
+    Mongo = require('./storage/mongo'),
+    Storage = require('./storage/safestorage'),
+    WebSocket = require('./storage/websocket'),
+
 // Middleware
     BlobServer = require('./middleware/blob/BlobServer'),
     ExecutorServer = require('./middleware/executor/ExecutorServer'),
     api = require('./api'),
 
-    Storage = require('./storage/serverstorage'),
+    //Storage = require('./storage/serverstorage'),
     getClientConfig = require('../../config/getclientconfig'),
     GMEAUTH = require('./middleware/auth/gmeauth'),
     SSTORE = require('./middleware/auth/sessionstore'),
@@ -189,32 +193,43 @@ function StandAloneServer(gmeConfig) {
             });
         });
 
+
+
         //creating the proper storage for the standalone server
-        __storageOptions = {
-            combined: __httpServer,
-            logger: logger.fork('storage')
-        };
-        if (true === gmeConfig.authentication.enable) {
-            __storageOptions.sessioncheck = __sessionStore.check;
-            __storageOptions.authorization = globalAuthorization;
-            __storageOptions.authDeleteProject = __gmeAuth.deleteProject;
-            __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
-        }
+        //__storageOptions = {
+        //    combined: __httpServer,
+        //    logger: logger.fork('storage')
+        //};
+        //if (true === gmeConfig.authentication.enable) {
+        //    __storageOptions.sessioncheck = __sessionStore.check;
+        //    __storageOptions.authorization = globalAuthorization;
+        //    __storageOptions.authDeleteProject = __gmeAuth.deleteProject;
+        //    __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
+        //}
+        //
+        //
+        //__storageOptions.getToken = __gmeAuth.getToken;
+        //
+        //__storageOptions.sessionToUser = __sessionStore.getSessionUser;
+        //
+        //__storageOptions.workerManager = __workerManager;
+        //
+        //__storageOptions.globConf = gmeConfig;
+        //__storage = new Storage(__storageOptions);
+        ////end of storage creation
+        //__storage.open(function (err) {
+        //    if (err) {
+        //        storageDeferred.reject(err);
+        //    } else {
+        //        storageDeferred.resolve();
+        //    }
+        //});
 
-
-        __storageOptions.getToken = __gmeAuth.getToken;
-
-        __storageOptions.sessionToUser = __sessionStore.getSessionUser;
-
-        __storageOptions.workerManager = __workerManager;
-
-        __storageOptions.globConf = gmeConfig;
-        __storage = new Storage(__storageOptions);
-        //end of storage creation
-        __storage.open(function (err) {
+        __storage.openDatabase(function (err) {
             if (err) {
                 storageDeferred.reject(err);
             } else {
+                __webSocket.start(__httpServer);
                 storageDeferred.resolve();
             }
         });
@@ -547,6 +562,8 @@ function StandAloneServer(gmeConfig) {
     var logger = null,
         __storage = null,
         __storageOptions = {},
+        __database = null,
+        __webSocket = null,
         __gmeAuth = null,
         apiReady,
         __secureSiteInfo = {},
@@ -605,11 +622,16 @@ function StandAloneServer(gmeConfig) {
     logger.debug('initializing static server');
     __app = new Express();
 
+    __database = new Mongo(logger, gmeConfig);
+    __storage = new Storage(__database, logger, gmeConfig);
+    __webSocket = new WebSocket(__storage, logger, gmeConfig);
+
     middlewareOpts = {  //TODO: Pass this to every middleware They must not modify the options!
         gmeConfig: gmeConfig,
         logger: logger,
         ensureAuthenticated: ensureAuthenticated,
         gmeAuth: __gmeAuth,
+        safeStorage: __storage,
         workerManager: __workerManager
     };
 

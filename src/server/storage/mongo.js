@@ -11,7 +11,7 @@
 var mongodb = require('mongodb'),
     Q = require('Q'),
 
-    //CONSTANTS = requireJS('common/storage_/constants'),
+    //CONSTANTS = requireJS('common/storage/constants'),
     CANON = requireJS('common/util/canon'),
     REGEXP = requireJS('common/regexp');
 

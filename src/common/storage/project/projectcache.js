@@ -8,7 +8,7 @@
  * @author mmaroti / https://github.com/mmaroti
  */
 
-define(['common/util/assert', 'common/storage_/constants'], function (ASSERT, CONSTANTS) {
+define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CONSTANTS) {
     'use strict';
     function ProjectCache(storage, projectName, mainLogger, gmeConfig) {
         var missing = {},

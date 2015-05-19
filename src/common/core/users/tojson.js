@@ -5,7 +5,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/core_/users/meta', 'common/util/url'], function (BaseMeta, URL) {
+define(['common/core/users/meta', 'common/util/url'], function (BaseMeta, URL) {
     'use strict';
 
     var META = new BaseMeta(),

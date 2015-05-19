@@ -10,9 +10,9 @@ var CREATE_BRANCH = false,
 
 define([
     'js/logger',
-    'common/storage_/browserstorage',
-    'common/core_/core',
-    'common/storage_/constants'
+    'common/storage/browserstorage',
+    'common/core/core',
+    'common/storage/constants'
 ], function (Logger, Storage, Core, CONSTANTS) {
     'use strict';
     function Client(gmeConfig) {

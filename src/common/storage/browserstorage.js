@@ -6,9 +6,9 @@
  */
 
 define([
-    'common/storage_/storageclasses/editorstorage',
-    'common/storage_/socketio/browserclient',
-    'common/storage_/socketio/websocket',
+    'common/storage/storageclasses/editorstorage',
+    'common/storage/socketio/browserclient',
+    'common/storage/socketio/websocket',
 ], function (EditorStorage, BrowserIoClient, WebSocket) {
     'use strict';
 

@@ -16,9 +16,9 @@
  */
 
 define([
-    'common/storage_/storageclasses/objectloaders',
-    'common/storage_/constants',
-    'common/storage_/project/project',
+    'common/storage/storageclasses/objectloaders',
+    'common/storage/constants',
+    'common/storage/project/project',
     'common/util/assert',
     'common/util/key'
 ], function (StorageObjectLoaders, CONSTANTS, Project, ASSERT, GENKEY) {

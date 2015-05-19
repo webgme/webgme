@@ -7,7 +7,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['common/storage_/constants'], function (CONSTANTS) {
+define(['common/storage/constants'], function (CONSTANTS) {
     'use strict';
 
     function StorageWatcher(webSocket, logger, gmeConfig) {

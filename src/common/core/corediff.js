@@ -7,7 +7,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/canon', 'common/core_/tasync', 'common/util/assert'], function (CANON, TASYNC, ASSERT) {
+define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], function (CANON, TASYNC, ASSERT) {
     'use strict';
 
     function diffCore(_innerCore, options) {

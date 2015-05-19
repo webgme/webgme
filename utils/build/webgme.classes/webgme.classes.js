@@ -10,12 +10,12 @@
  */
 
 define('webgme.classes', [
-    'client/js/client',
+    'client/js/client_',
     'blob/BlobClient',
     'executor/ExecutorClient',
     'js/Utils/InterpreterManager',
     'common/core/core',
-    'common/storage/clientstorage',
+    'common/storage/browserstorage',
     'js/logger',
     'lib/superagent/superagent-1.1.0'
 ], function (Client, BlobClient, ExecutorClient, InterpreterManager, Core, Storage, Logger, superagent) {

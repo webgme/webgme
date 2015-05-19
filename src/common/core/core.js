@@ -6,17 +6,17 @@
  */
 
 define([
-    'common/core_/corerel',
-    'common/core_/setcore',
-    'common/core_/guidcore',
-    'common/core_/nullpointercore',
-    'common/core_/coreunwrap',
-    'common/core_/coretype',
-    'common/core_/constraintcore',
-    'common/core_/coretree',
-    'common/core_/metacore',
-    'common/core_/coretreeloader',
-    'common/core_/corediff'
+    'common/core/corerel',
+    'common/core/setcore',
+    'common/core/guidcore',
+    'common/core/nullpointercore',
+    'common/core/coreunwrap',
+    'common/core/coretype',
+    'common/core/constraintcore',
+    'common/core/coretree',
+    'common/core/metacore',
+    'common/core/coretreeloader',
+    'common/core/corediff'
 ], function (CoreRel, Set, Guid, NullPtr, UnWrap, Type, Constraint, CoreTree, MetaCore, TreeLoader, CoreDiff) {
     'use strict';
 

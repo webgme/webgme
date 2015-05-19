@@ -6,7 +6,7 @@
 'use strict';
 
 var io = require('socket.io'),
-    CONSTANTS = requireJS('common/storage_/constants'),
+    CONSTANTS = requireJS('common/storage/constants'),
     ROOM_DIV = CONSTANTS.ROOM_DIVIDER, // TODO: Add prefixes
     DATABASE_ROOM = CONSTANTS.DATABASE_ROOM;
 

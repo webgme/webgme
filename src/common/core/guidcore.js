@@ -7,7 +7,7 @@
 define([
     'common/util/assert',
     'common/util/guid',
-    'common/core_/tasync',
+    'common/core/tasync',
     'common/regexp'
 ], function (ASSERT, GUID, TASYNC, REGEXP) {
 

@@ -5,9 +5,9 @@
  */
 
 define([
-    'common/storage_/project/projectCache',
-    'common/storage_/project/branch',
-    'common/storage_/constants',
+    'common/storage/project/projectCache',
+    'common/storage/project/branch',
+    'common/storage/constants',
     'common/util/assert'
 ], function (ProjectCache, Branch, CONSTANTS, ASSERT) {
     'use strict';

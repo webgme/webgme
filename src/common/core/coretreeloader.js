@@ -5,7 +5,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/assert', 'common/core_/core', 'common/core_/tasync'], function (ASSERT, Core, TASYNC) {
+define(['common/util/assert', 'common/core/core', 'common/core/tasync'], function (ASSERT, Core, TASYNC) {
     'use strict';
 
     // ----------------- CoreTreeLoader -----------------

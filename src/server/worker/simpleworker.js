@@ -30,7 +30,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     Core = requireJS('common/core/core'),
     GUID = requireJS('common/util/guid'),
     DUMP = requireJS('common/core/users/dumpmore'),
-    ConnectedStorage = requireJS('common/storage/clientstorage'),
+    //ConnectedStorage = requireJS('common/storage/clientstorage'),
     Serialization = requireJS('common/core/users/serialization'),
     BlobClient = requireJS('common/blob/BlobClient'),
     PluginManagerBase = requireJS('plugin/PluginManagerBase'),
@@ -42,7 +42,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
     GMEAUTH = require('../middleware/auth/gmeauth'),
     CONSTANT = require('./constants'),
-    Storage = require('../storage/serveruserstorage'),
+    //Storage = require('../storage/serveruserstorage'),
     Logger = require('../logger'),
 
     storage = null,
@@ -88,7 +88,8 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     },
 
     initialize = function (parameters) {
-        if (initialized !== true) {
+        //if (initialized !== true) {
+        if (false) {
             initialized = true;
             gmeConfig = parameters.gmeConfig;
             WEBGME.addToRequireJsPaths(gmeConfig);

@@ -9,7 +9,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['common/storage_/storageclasses/watchers'], function (StorageWatcher) {
+define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     'use strict';
 
     function StorageSimpleAPI(webSocket, logger, gmeConfig) {

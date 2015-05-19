@@ -10,7 +10,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['common/storage_/storageclasses/simpleapi'], function (SimpleAPI) {
+define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
     'use strict';
 
     function StorageObjectLoaders(webSocket, logger, gmeConfig) {

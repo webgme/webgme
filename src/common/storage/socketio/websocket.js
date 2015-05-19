@@ -8,7 +8,7 @@
 //
 define([
     'common/EventDispatcher',
-    'common/storage_/constants'
+    'common/storage/constants'
 ], function (EventDispatcher, CONSTANTS) {
 
     'use strict';

@@ -8,8 +8,8 @@
 define([
     'common/util/assert',
     'common/util/key',
-    'common/core_/future',
-    'common/core_/tasync'
+    'common/core/future',
+    'common/core/tasync'
 ], function (ASSERT, GENKEY, FUTURE, TASYNC) {
 
     'use strict';

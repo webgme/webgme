@@ -5,7 +5,7 @@
  * @author mmaroti / https://github.com/mmaroti
  */
 
-define(['common/util/assert', 'common/core_/coretree', 'common/core_/tasync'], function (ASSERT, CoreTree, TASYNC) {
+define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], function (ASSERT, CoreTree, TASYNC) {
 
     'use strict';
 

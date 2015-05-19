@@ -5,7 +5,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/core_/users/tojson', 'common/util/url'], function (toJson, URL) {
+define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
     'use strict';
 
     var _refTypes = {

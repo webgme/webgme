@@ -9,7 +9,7 @@
 var Q = require('Q'),
 
     EventDispatcher = requireJS('common/EventDispatcher'),
-    CONSTANTS = requireJS('common/storage_/constants');
+    CONSTANTS = requireJS('common/storage/constants');
 
 function Storage(mongo, logger, gmeConfig) {
     EventDispatcher.call(this);

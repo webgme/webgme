@@ -11,7 +11,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/core_/users/meta'], function (BaseMeta) {
+define(['common/core/users/meta'], function (BaseMeta) {
     'use strict';
     var _core = null,
         _root = null,
