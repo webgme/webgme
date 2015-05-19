@@ -5,6 +5,7 @@ bin
 */.settings
 */.idea
 *.class
+*csproj.user
 
 node_modules
 
@@ -32,6 +33,7 @@ blob-local-storage
 config/config.dev*.js
 
 *.swp
+*~
 
 webgme-*.tgz
 
