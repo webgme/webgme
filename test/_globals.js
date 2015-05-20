@@ -24,7 +24,7 @@ var WebGME = require('../webgme'),
     },
     Core = requireJS('common/core/core'),
     Mongo = require('../src/server/storage/mongo'),
-    //Memory = require('../src/server/storage/memory'),
+    Memory = require('../src/server/storage/memory'),
     SafeStorage = require('../src/server/storage/safestorage'),
     Logger = require('../src/server/logger'),
     logger = Logger.create('gme:test', {
@@ -43,11 +43,11 @@ var WebGME = require('../webgme'),
             }
         }]
     }, false),
-    MongoStorage = function (logger, gmeConfig) {
+    getMongoStorage = function (logger, gmeConfig) {
         var mongo = new Mongo(logger, gmeConfig);
         return new SafeStorage(mongo, logger, gmeConfig);
     },
-    MemoryStorage = function (logger, gmeConfig) {
+    getMemoryStorage = function (logger, gmeConfig) {
         var memory = new Memory(logger, gmeConfig);
         return new SafeStorage(memory, logger, gmeConfig);
     },
@@ -354,8 +354,8 @@ module.exports = {
     getGmeConfig: getGmeConfig,
 
     WebGME: WebGME,
-    MongoStorage: MongoStorage,
-    MemoryStorage: MemoryStorage,
+    getMongoStorage: getMongoStorage,
+    getMemoryStorage: getMemoryStorage,
     Project: Project,
     Logger: Logger,
     // test logger instance, used by all tests and only tests

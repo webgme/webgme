@@ -8,7 +8,7 @@ describe('core.intrapersist', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('core.intrapersist'),
-        storage = new testFixture.MongoStorage(logger, gmeConfig),
+        storage = testFixture.getMemoryStorage(logger, gmeConfig),
         CANON = testFixture.requirejs('../src/common/util/canon');
 
     function loadNodes(paths, next) {

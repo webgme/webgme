@@ -16,7 +16,7 @@ describe('corediff apply', function () {
         commit,
         expect = testFixture.expect,
         logger = testFixture.logger.fork('corediff.spec.apply'),
-        storage = new testFixture.MongoStorage(logger, gmeConfig),
+        storage = testFixture.getMongoStorage(logger, gmeConfig),
         getJsonProject = testFixture.loadJsonFile,
         jsonProject;
 
@@ -40,11 +40,8 @@ describe('corediff apply', function () {
                 core = result.core;
                 rootNode = result.rootNode;
                 commit = result.commitHash;
-                done();
-            }).
-            catch(function (err) {
-                done(err);
-            });
+            })
+            .finally(done);
     });
 
     after(function (done) {

@@ -9,7 +9,7 @@ describe('constraint.core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('constraint.core:storage'),
-        storage = new testFixture.MongoStorage(logger, gmeConfig),
+        storage = testFixture.getMemoryStorage(logger, gmeConfig),
         TASYNC = testFixture.requirejs('common/core/tasync'),
         project,
         projectName = 'coreConstraintTesting',

@@ -42,7 +42,7 @@ function Memory(mainLogger, gmeConfig) {
                 return this.data[key];
             },
             setItem: function (key, object) {
-                ASSERT(typeof key === 'string' && typeof object === 'string');
+                ASSERT(typeof key === 'string');
                 this.data[key] = object;
                 if (this.keys.indexOf(key) === -1) {
                     this.keys.push(key);
@@ -69,7 +69,7 @@ function Memory(mainLogger, gmeConfig) {
 
 
         if (storage.connected) {
-            storage.setItem(database + SEPARATOR + name, this);
+            storage.setItem(database + SEPARATOR + name + SEPARATOR, this);
         } else {
             // TODO: error handling
         }
@@ -308,7 +308,7 @@ function Memory(mainLogger, gmeConfig) {
             loadStep();
 
             return deferred.promise.nodeify(callback);
-        }
+        };
     }
 
     function openDatabase(callback) {
@@ -380,7 +380,7 @@ function Memory(mainLogger, gmeConfig) {
 
         if (storage.connected) {
 
-            project = storage.getItem(database + SEPARATOR + name);
+            project = storage.getItem(database + SEPARATOR + name + SEPARATOR);
             if (project) {
                 deferred.reject(new Error('Project already exists ' + name));
             } else {
@@ -436,7 +436,7 @@ function Memory(mainLogger, gmeConfig) {
 
         if (storage.connected) {
 
-            project = storage.getItem(database + SEPARATOR + name);
+            project = storage.getItem(database + SEPARATOR + name + SEPARATOR);
             if (project) {
                 deferred.resolve(project);
             } else {
