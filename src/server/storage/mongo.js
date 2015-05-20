@@ -11,7 +11,7 @@
 var mongodb = require('mongodb'),
     Q = require('Q'),
 
-    //CONSTANTS = requireJS('common/storage/constants'),
+    CONSTANTS = requireJS('common/storage/constants'),
     CANON = requireJS('common/util/canon'),
     REGEXP = requireJS('common/regexp');
 
@@ -437,7 +437,13 @@ function Mongo(mainLogger, gmeConfig) {
                 if (something) {
                     deferred.reject('Project already exist ' + name);
                 } else {
-                    deferred.resolve(new Project(name, collection));
+                    Q.ninvoke(collection, 'insert', {_id: CONSTANTS.EMPTY_PROJECT_DATA})
+                    .then(function () {
+                        deferred.resolve(new Project(name, collection));
+                    })
+                    .catch(function (err) {
+                        deferred.reject(err);
+                    });
                 }
 
                 return deferred.promise;

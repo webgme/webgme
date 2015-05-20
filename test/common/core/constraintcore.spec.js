@@ -5,13 +5,10 @@
  */
 var testFixture = require('../../_globals.js');
 
-describe('constraint core', function () {
+describe('constraint.core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = new testFixture.Storage({
-            globConf: gmeConfig,
-            logger: testFixture.logger.fork('constraint_core:storage')
-        }),
+        storage = new testFixture.MongoStorage(testFixture.logger.fork('constraint.core:storage'), gmeConfig),
         TASYNC = testFixture.requirejs('common/core/tasync'),
         project,
         core,
@@ -23,7 +20,7 @@ describe('constraint core', function () {
                 done(err);
                 return;
             }
-            storage.openProject('coreConstraintTesting', function (err, p) {
+            storage.createProject({projectName: 'coreConstraintTesting'}, function (err, p) {
                 var base, instance;
                 if (err) {
                     done(err);
@@ -57,7 +54,7 @@ describe('constraint core', function () {
         });
     });
     afterEach(function (done) {
-        storage.deleteProject('coreConstraintTesting', function (err) {
+        storage.deleteProject({projectName: 'coreConstraintTesting'}, function (err) {
             if (err) {
                 done(err);
                 return;

@@ -1,13 +1,14 @@
 /*jshint node:true, mocha:true*/
 /**
- * @author kecso / https://github.com/kecso
- */
+* @author kecso / https://github.com/kecso
+*/
 var testFixture = require('../../_globals.js');
 
-describe('Core IntraPersist', function () {
+describe('core.intrapersist', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = null,
+        logger = testFixture.logger.fork('core.intrapersist'),
+        storage = new testFixture.MongoStorage(logger, gmeConfig),
         CANON = testFixture.requirejs('../src/common/util/canon');
 
     function loadNodes(paths, next) {
@@ -37,26 +38,32 @@ describe('Core IntraPersist', function () {
         core = null,
         project = null;
 
-
     before(function (done) {
-        testFixture.importProject({
-            filePath: 'test/common/core/core/intraPersist.json',
-            projectName: 'coreIntrapersistTest',
-            gmeConfig: gmeConfig
-        }, function (err, result) {
-            if (err) {
+        storage.openDatabase()
+            .then(function () {
+                return testFixture.importProject(storage, {
+                    projectSeed: 'test/common/core/core/intraPersist.json',
+                    projectName: 'coreIntrapersistTest',
+                    gmeConfig: gmeConfig,
+                    logger: logger
+                });
+            })
+            .then(function (result) {
+                project = result.project;
+                core = result.core;
+                root = result.root;
+                commit = result.commitHash;
+                baseCommit = result.commitHash;
+                rootHash = result.rootHash;
+                done();
+            }).
+            catch(function (err) {
                 done(err);
-                return;
-            }
-            storage = result.storage;
-            project = result.project;
-            core = result.core;
-            root = result.root;
-            commit = result.commitHash;
-            baseCommit = result.commitHash;
-            rootHash = core.getHash(root);
-            done();
-        });
+            });
+    });
+
+    after(function (done) {
+        storage.closeDatabase(done);
     });
 
     describe('SimpleChanges', function () {

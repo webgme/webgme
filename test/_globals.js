@@ -24,7 +24,7 @@ var WebGME = require('../webgme'),
     },
     Core = requireJS('common/core/core'),
     Mongo = require('../src/server/storage/mongo'),
-    Memory = require('../src/server/storage/memory'),
+    //Memory = require('../src/server/storage/memory'),
     SafeStorage = require('../src/server/storage/safestorage'),
     Logger = require('../src/server/logger'),
     logger = Logger.create('gme:test', {

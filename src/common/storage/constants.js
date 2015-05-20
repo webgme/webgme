@@ -11,6 +11,7 @@ define([], function () {
         // Database related
         MONGO_ID: '_id',
         PROJECT_INFO_ID: '*info*',
+        EMPTY_PROJECT_DATA: 'empty',
 
         // Socket IO
         DATABASE_ROOM: 'database',
