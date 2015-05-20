@@ -26,7 +26,55 @@ describe('Memory storage', function () {
 
     });
 
-    
+    it('should open and close', function (done) {
+        var memoryStorage = new MemoryStorage(logger);
 
+        memoryStorage.openDatabase()
+            .then(memoryStorage.closeDatabase)
+            .finally(done);
+    });
+
+    it('should open, close, open, and close', function (done) {
+        var memoryStorage = new MemoryStorage(logger);
+
+        memoryStorage.openDatabase()
+            .then(memoryStorage.closeDatabase)
+            .then(memoryStorage.openDatabase)
+            .then(memoryStorage.closeDatabase)
+            .finally(done);
+    });
+
+
+    it('should allow multiple open calls', function (done) {
+        var memoryStorage = new MemoryStorage(logger);
+
+        memoryStorage.openDatabase()
+            .then(memoryStorage.openDatabase)
+            .then(memoryStorage.openDatabase)
+            .then(memoryStorage.openDatabase)
+            .finally(done);
+    });
+
+
+    it('should allow multiple close calls', function (done) {
+        var memoryStorage = new MemoryStorage(logger);
+
+        memoryStorage.closeDatabase()
+            .then(memoryStorage.closeDatabase)
+            .then(memoryStorage.closeDatabase)
+            .then(memoryStorage.closeDatabase)
+            .finally(done);
+    });
+
+
+    it('should get project names', function (done) {
+        var memoryStorage = new MemoryStorage(logger);
+
+        memoryStorage.getProjectNames()
+            .then(function (projectNames) {
+                expect(projectNames).deep.equal([]);
+            })
+            .finally(done);
+    });
 
 });
