@@ -22,11 +22,10 @@ var WebGME = require('../webgme'),
         }
         return JSON.parse(JSON.stringify(gmeConfig));
     },
-
-    Commit = requireJS('common/storage/commit'),
-    Local = requireJS('common/storage/local'),
-    Cache = requireJS('common/storage/cache'),
     Core = requireJS('common/core/core'),
+    Mongo = require('../src/server/storage/mongo'),
+    Memory = require('../src/server/storage/memory'),
+    SafeStorage = require('../src/server/storage/safestorage'),
     Logger = require('../src/server/logger'),
     logger = Logger.create('gme:test', {
         //patterns: ['gme:test:*cache'],
@@ -44,13 +43,13 @@ var WebGME = require('../webgme'),
             }
         }]
     }, false),
-    Storage = function (options) {
-        options.logger = options.logger || logger.fork('storage');
-        return new Commit(new Local(options || {}), options || {});
+    MongoStorage = function (logger, gmeConfig) {
+        var mongo = new Mongo(logger, gmeConfig);
+        return new SafeStorage(mongo, logger, gmeConfig);
     },
-    StorageWithCache = function (options) {
-        options.logger = options.logger || logger.fork('storage');
-        return new Commit(new Cache(new Local(options || {}), options || {}), options || {});
+    MemoryStorage = function (logger, gmeConfig) {
+        var memory = new Memory(logger, gmeConfig);
+        return new SafeStorage(memory, logger, gmeConfig);
     },
     generateKey = requireJS('common/util/key'),
 
@@ -60,6 +59,7 @@ var WebGME = require('../webgme'),
     ExecutorClient = requireJS('common/executor/ExecutorClient'),
     BlobClient = requireJS('blob/BlobClient'),
     openContext = requireJS('common/util/opencontext'),
+    Project = require('../src/server/storage/userproject'),
 
     should = require('chai').should(),
     expect = require('chai').expect,
@@ -77,9 +77,10 @@ function loadJsonFile(path) {
     return JSON.parse(fs.readFileSync(path, 'utf8'));
 }
 
-function importProject(storage, parameters, done) {
-    var projectJson,
-        result;
+function importProject(storage, parameters, callback) {
+    var deferred = Q.defer(),
+        projectJson,
+        branchName;
 
     expect(typeof storage).to.equal('object');
     expect(typeof parameters).to.equal('object');
@@ -90,49 +91,61 @@ function importProject(storage, parameters, done) {
     } else if (typeof parameters.projectSeed === 'object') {
         projectJson = parameters.projectSeed;
     } else {
-        done(new Error('parameters.projectSeed must be filePath or object!'));
+        deferred.reject('parameters.projectSeed must be filePath or object!');
     }
-    result.branchName = parameters.branchName || 'master';
+    branchName = parameters.branchName || 'master';
 
     storage.createProject({projectName: parameters.projectName})
-        .then(function (project) {
-            var projectCache = storage.getProjectCache(project),
-                core = new Core(projectCache, {
+        .then(function (dbProject) {
+            var project = new Project(dbProject, parameters.logger, parameters.gmeConfig),
+                core = new Core(project, {
                     globConf: parameters.gmeConfig,
-                    logger: parameters.logger.fork('core')
+                    logger: parameters.logger
                 }),
                 root = core.createNode({parent: null, base: null});
 
-            WebGME.serializer.import(core, root, parameters.projectSeed, function (err) {
+            WebGME.serializer.import(core, root, projectJson, function (err) {
                 if (err) {
-                    done(new Error(err));
+                    deferred.reject(err);
                     return;
                 }
-                //    core.persist(rootNode, function (err, coreObjects) {
-                //        if (err) {
-                //            throw new Error(err);
-                //        }
-                //        logger.debug('cb persist data', coreObjects);
-                //        currCommitObject = storage.makeCommit(PROJECT_NAME, BRANCH_NAME,
-                //            [commitObject._id],
-                //            coreObjects.root,
-                //            coreObjects.objects,
-                //            'First commit from new storage'
-                //        );
-                //
-                //    });
-                //    var rhash = core.getHash(root),
-                //        chash = project.makeCommit([], rhash, 'project imported', function (/*err*/) {
-                //        });
-                //    project.getBranchHash('master', '#hack', function (err, oldhash) {
-                //        if (err) {
-                //            return callback('' + err);
-                //        }
-                //        project.setBranchHash('master', oldhash, chash, callback);
-                //    });
-                //});
+                core.persist(root, function (err, res) {
+                    if (err) {
+                        deferred.reject(err);
+                        return;
+                    }
+
+                    var commitObject = project.createCommitObject([''], res.root, 'test', 'project imported'),
+                        commitData = {
+                            projectName: parameters.projectName,
+                            branchName: branchName,
+                            commitObject: commitObject,
+                            coreObjects: res.objects
+                        };
+                    storage.makeCommit(commitData)
+                        .then(function (result) {
+                            deferred.resolve({
+                                status: result.status,
+                                branchName: branchName,
+                                commitHash: commitObject._id,
+                                project: project,
+                                core: core,
+                                jsonProject: projectJson,
+                                root: root,
+                                rootHash: res.root
+                            });
+                        })
+                        .catch(function (err) {
+                            deferred.reject(err);
+                        });
+                });
             });
+        })
+        .catch(function (err) {
+            deferred.reject(err);
         });
+
+    return deferred.promise.nodeify(callback);
 }
 
 function importProjectOld(parameters, done) {
@@ -341,8 +354,8 @@ module.exports = {
     getGmeConfig: getGmeConfig,
 
     WebGME: WebGME,
-    Storage: Storage,
-    StorageWithCache: StorageWithCache,
+    MongoStorage: MongoStorage,
+    MemoryStorage: MemoryStorage,
     Logger: Logger,
     // test logger instance, used by all tests and only tests
     logger: logger,

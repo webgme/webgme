@@ -5,7 +5,7 @@
  */
 
 define([
-    'common/storage/project/projectCache',
+    'common/storage/project/cache',
     'common/storage/project/branch',
     'common/storage/constants',
     'common/util/assert'

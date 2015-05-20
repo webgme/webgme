@@ -46,11 +46,11 @@ Storage.prototype.deleteProject = function (data, callback) {
 };
 
 Storage.prototype.createProject = function (data, callback) {
-    // Simplest case
+    var self = this;
     return this.mongo.createProject(data.projectName)
         .then(function (project) {
             // FIXME: At this point the project is not a valid gme-project, it is not even in the data-base.
-            EventDispatcher.dispatchEvent(CONSTANTS.PROJECT_CREATED, data);
+            self.dispatchEvent(CONSTANTS.PROJECT_CREATED, data);
             return Q(project);
         })
         .nodeify(callback);
@@ -184,6 +184,9 @@ Storage.prototype.makeCommit = function (data, callback) {
                             });
                     }
                 });
+        })
+        .catch(function (err) {
+            deferred.reject(err);
         });
 
     return deferred.promise.nodeify(callback);
@@ -262,15 +265,8 @@ Storage.prototype.setBranchHash = function (data, callback) {
         .nodeify(callback);
 };
 
-Storage.prototype.getProjectCache = function (project) {
-    // FIXME: Not sure if this should be here...
-    var ProjectCache = requireJS('common/storage/ProjectCache'),
-        objectLoader = {
-            loadObject: function (projectName, key, callback) {
-                project.loadObject(key, callback);
-            }
-        };
-    return new ProjectCache(objectLoader, project.name, this.logger, this.gmeConfig);
+Storage.prototype.getProject = function (data, callback) {
+    return this.mongo.openProject(data.projectName).nodeify(callback);
 };
 
 module.exports = Storage;

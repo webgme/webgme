@@ -384,7 +384,22 @@ function Mongo(mainLogger, gmeConfig) {
     }
 
     function deleteProject(name, callback) {
-        return Q.ninvoke(mongo, 'dropCollection', name).nodeify(callback);
+        var deferred = Q.defer();
+        Q.ninvoke(mongo, 'dropCollection', name)
+            .then(function () {
+                deferred.resolve();
+            })
+            .catch(function (err) {
+                if (err.ok === 0) {
+                    logger.debug('deleteProject, project does not exist', name);
+                    // http://docs.mongodb.org/manual/reference/method/db.collection.drop/
+                    deferred.resolve();
+                } else {
+                    deferred.reject(err);
+                }
+            });
+
+        return deferred.promise.nodeify(callback);
     }
 
     function openProject(name, callback) {
