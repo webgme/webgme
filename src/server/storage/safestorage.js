@@ -80,6 +80,27 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+SafeStorage.prototype.createProject = function (data, callback) {
+    var deferred = Q.defer(),
+        rejected = false;
+
+    rejected = check(typeof data === 'object', deferred, 'data is not an object.') ||
+    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
+
+    if (rejected === false) {
+        Storage.prototype.createProject.call(this, data)
+            .then(function (project) {
+                deferred.resolve(project);
+            })
+            .catch(function (err) {
+                deferred.reject(new Error(err));
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
 SafeStorage.prototype.getBranches = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;

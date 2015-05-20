@@ -36,14 +36,18 @@ describe('core.intrapersist', function () {
         root = null,
         rootHash = '',
         core = null,
+        projectName = 'coreIntrapersistTest',
         project = null;
 
     before(function (done) {
         storage.openDatabase()
             .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
                 return testFixture.importProject(storage, {
                     projectSeed: 'test/common/core/core/intraPersist.json',
-                    projectName: 'coreIntrapersistTest',
+                    projectName: projectName,
                     gmeConfig: gmeConfig,
                     logger: logger
                 });
@@ -51,7 +55,7 @@ describe('core.intrapersist', function () {
             .then(function (result) {
                 project = result.project;
                 core = result.core;
-                root = result.root;
+                root = result.rootNode;
                 commit = result.commitHash;
                 baseCommit = result.commitHash;
                 rootHash = result.rootHash;

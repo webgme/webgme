@@ -102,14 +102,14 @@ function importProject(storage, parameters, callback) {
                     globConf: parameters.gmeConfig,
                     logger: parameters.logger
                 }),
-                root = core.createNode({parent: null, base: null});
+                rootNode = core.createNode({parent: null, base: null});
 
-            WebGME.serializer.import(core, root, projectJson, function (err) {
+            WebGME.serializer.import(core, rootNode, projectJson, function (err) {
                 if (err) {
                     deferred.reject(err);
                     return;
                 }
-                core.persist(root, function (err, res) {
+                core.persist(rootNode, function (err, res) {
                     if (err) {
                         deferred.reject(err);
                         return;
@@ -131,7 +131,7 @@ function importProject(storage, parameters, callback) {
                                 project: project,
                                 core: core,
                                 jsonProject: projectJson,
-                                root: root,
+                                rootNode: rootNode,
                                 rootHash: res.root
                             });
                         })
@@ -356,6 +356,7 @@ module.exports = {
     WebGME: WebGME,
     MongoStorage: MongoStorage,
     MemoryStorage: MemoryStorage,
+    Project: Project,
     Logger: Logger,
     // test logger instance, used by all tests and only tests
     logger: logger,
