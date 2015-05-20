@@ -36,7 +36,7 @@ function Memory(mainLogger, gmeConfig) {
             },
             close: function () {
                 this.connected = false;
-            }
+            },
             getItem: function (key) {
                 ASSERT(typeof key === 'string');
                 return this.data[key];
