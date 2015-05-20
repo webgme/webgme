@@ -8,24 +8,23 @@
 var Q = require('Q'),
 
     ASSERT = requireJS('common/util/assert'),
-    CANON = requireJS('common/util/canon'),
+    //CANON = requireJS('common/util/canon'),
     REGEXP = requireJS('common/regexp'),
 
-    SEPARATOR = '$', // MAGIC CONSTANT
+    SEPARATOR = '$'; // MAGIC CONSTANT
 //STATUS_UNREACHABLE = 'storage unreachable', // MAGIC CONSTANT
 //STATUS_CONNECTED = 'connected', // MAGIC CONSTANT
-    PROJECT_INFO_ID = '*info*'; // MAGIC CONSTANT
+    //PROJECT_INFO_ID = '*info*'; // MAGIC CONSTANT
 
 /**
  * An in-memory implementation of backing the data for webgme.
  *
  * @param mainLogger
- * @param gmeConfig
  * @constructor
  */
-function Memory(mainLogger, gmeConfig) {
+function Memory(mainLogger /*, gmeConfig*/) {
     var logger = mainLogger.fork('memory'),
-        database = 'webgme', // is this constant or coming from the GME config?
+        database = 'memory', // is this constant or coming from the GME config?
         storage = {
             length: 0,
             keys: [],
@@ -65,14 +64,17 @@ function Memory(mainLogger, gmeConfig) {
 
 
     function Project(name) {
+        var self = this;
+
         this.name = name;
 
 
         if (storage.connected) {
             storage.setItem(database + SEPARATOR + name + SEPARATOR, this);
-        } else {
-            // TODO: error handling
         }
+        //else {
+            // TODO: error handling
+        //}
 
         this.closeProject = function (callback) {
             var deferred = Q.defer();
@@ -116,7 +118,7 @@ function Memory(mainLogger, gmeConfig) {
                 branchNames = {},
                 pending = 0,
                 updateBranchEntry = function (branchName) {
-                    getBranchHash(branchName, '', function (err, hash) {
+                    self.getBranchHash(branchName, '', function (err, hash) {
                         pending -= 1;
                         branchNames[branchName] = hash;
                         done();
