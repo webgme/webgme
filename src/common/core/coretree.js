@@ -776,9 +776,9 @@ define([
                 result = {};
                 result.objects = stackedObjects;
                 stackedObjects = {};
-                result.root = node.data[ID_NAME];
+                result.rootHash = node.data[ID_NAME];
             } else {
-                result = {root: node.data[ID_NAME], objects: {}};
+                result = {rootHash: node.data[ID_NAME], objects: {}};
             }
 
             return result;

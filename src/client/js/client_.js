@@ -42,15 +42,15 @@ define([
                 //}
                 //});
                 currRootNode = rootNode;
-                core.persist(rootNode, function (err, coreObjects) {
+                core.persist(rootNode, function (err, persisted) {
                     if (err) {
                         throw new Error(err);
                     }
-                    logger.debug('cb persist data', coreObjects);
+                    logger.debug('cb persist data', persisted);
                     currCommitObject = storage.makeCommit(PROJECT_NAME, BRANCH_NAME,
                         [commitObject._id],
-                        coreObjects.root,
-                        coreObjects.objects,
+                        persisted.rootHash,
+                        persisted.objects,
                         'First commit from new storage'
                     );
 

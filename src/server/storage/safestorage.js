@@ -42,7 +42,7 @@ SafeStorage.prototype.getProjectNames = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
 
-    rejected = check(typeof data === 'object', deferred, 'data is not an object.');
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.');
 
     if (rejected === false) {
         Storage.prototype.getProjectNames.call(this, data)
@@ -62,7 +62,7 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
 
-    rejected = check(typeof data === 'object', deferred, 'data is not an object.') ||
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
 
@@ -84,7 +84,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
 
-    rejected = check(typeof data === 'object', deferred, 'data is not an object.') ||
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
 
@@ -105,7 +105,7 @@ SafeStorage.prototype.getBranches = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
 
-    rejected = check(typeof data === 'object', deferred, 'data is not an object.') ||
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
 
@@ -127,7 +127,7 @@ SafeStorage.prototype.getCommits = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
 
-    rejected = check(typeof data === 'object', deferred, 'data is not an object.') ||
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
     check(typeof data.before === 'number', deferred, 'data.before is not a number') ||
@@ -151,7 +151,7 @@ SafeStorage.prototype.getLatestCommitData = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
 
-    rejected = check(typeof data === 'object', deferred, 'data is not an object.') ||
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
     check(typeof data.branchName === 'string', deferred, 'data.branchName is not a string.') ||
@@ -175,27 +175,34 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
 
-    rejected = check(typeof data === 'object', deferred, 'data is not an object.') ||
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
 
-    check(typeof data.commitObject === 'object', deferred, 'data.commitObject not an object.') ||
-    check(typeof data.coreObjects === 'object', deferred, 'data.coreObjects not an object.');
+    check(data.commitObject !== null && typeof data.commitObject === 'object', deferred,
+        'data.commitObject not an object.') ||
+    check(data.coreObjects !== null && typeof data.coreObjects === 'object', deferred,
+        'data.coreObjects not an object.');
 
     // Checks when branchName is given and the branch will be updated
     if (rejected === false || typeof data.branchName !== 'undefined') {
         rejected = check(typeof data.branchName === 'string', deferred, 'data.branchName is not a string.') ||
         check(REGEXP.BRANCH.test(data.branchName), deferred, 'data.branchName failed regexp: ' + data.branchName) ||
         check(typeof data.commitObject._id === 'string', deferred, 'data.commitObject._id is not a string.') ||
-        check(data.commitObject._id === '' || REGEXP.HASH.test(data.commitObject._id), deferred,
+        check(typeof data.commitObject.root === 'string', deferred, 'data.commitObject.root is not a string.') ||
+        check(REGEXP.HASH.test(data.commitObject._id), deferred,
             'data.commitObject._id is not a valid hash: ' + data.commitObject._id) ||
         check(data.commitObject.parents instanceof Array, deferred,
             'data.commitObject.parents is not an array.') ||
         check(typeof data.commitObject.parents[0] === 'string', deferred,
             'data.commitObject.parents[0] is not a string.') ||
         check(data.commitObject.parents[0] === '' || REGEXP.HASH.test(data.commitObject.parents[0]), deferred,
-            'data.commitObject.parents[0] is not a valid hash: ' + data.commitObject.parents[0]);
+            'data.commitObject.parents[0] is not a valid hash: ' + data.commitObject.parents[0]) ||
+        check(REGEXP.HASH.test(data.commitObject.root), deferred,
+            'data.commitObject.root is not a valid hash: ' + data.commitObject.root) ||
+        check(typeof data.coreObjects[data.commitObject.root] === 'object', deferred,
+            'data.coreObjects[data.commitObject.root] is not an object');
     }
 
     if (rejected === false) {
@@ -216,7 +223,7 @@ SafeStorage.prototype.getBranchHash = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
 
-    rejected = check(typeof data === 'object', deferred, 'data is not an object.') ||
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
@@ -242,7 +249,7 @@ SafeStorage.prototype.setBranchHash = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
 
-    rejected = check(typeof data === 'object', deferred, 'data is not an object.') ||
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
@@ -275,7 +282,7 @@ SafeStorage.prototype.createBranch = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
 
-    rejected = check(typeof data === 'object', deferred, 'data is not an object.') ||
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
@@ -309,7 +316,7 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
         rejected = false,
         self = this;
 
-    rejected = check(typeof data === 'object', deferred, 'data is not an object.') ||
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||

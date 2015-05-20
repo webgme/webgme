@@ -19,11 +19,9 @@ describe('constraint.core', function () {
     before(function (done) {
         storage.openDatabase()
             .then(function () {
-                storage.deleteProject({projectName: projectName}, done);
+                return storage.deleteProject({projectName: projectName});
             })
-            .catch(function (err) {
-                done(err);
-            });
+            .finally(done);
     });
 
     after(function (done) {
@@ -59,11 +57,8 @@ describe('constraint.core', function () {
                     info: 'just another info text',
                     script: 'script text for local constraint'
                 });
-                done();
             })
-            .catch(function (err) {
-                done(err);
-            });
+            .finally(done);
     });
 
     afterEach(function (done) {

@@ -109,18 +109,18 @@ function importProject(storage, parameters, callback) {
                     deferred.reject(err);
                     return;
                 }
-                core.persist(rootNode, function (err, res) {
+                core.persist(rootNode, function (err, persisted) {
                     if (err) {
                         deferred.reject(err);
                         return;
                     }
 
-                    var commitObject = project.createCommitObject([''], res.root, 'test', 'project imported'),
+                    var commitObject = project.createCommitObject([''], persisted.rootHash, 'test', 'project imported'),
                         commitData = {
                             projectName: parameters.projectName,
                             branchName: branchName,
                             commitObject: commitObject,
-                            coreObjects: res.objects
+                            coreObjects: persisted.objects
                         };
                     storage.makeCommit(commitData)
                         .then(function (result) {
@@ -132,7 +132,7 @@ function importProject(storage, parameters, callback) {
                                 core: core,
                                 jsonProject: projectJson,
                                 rootNode: rootNode,
-                                rootHash: res.root
+                                rootHash: persisted.rootHash
                             });
                         })
                         .catch(function (err) {
