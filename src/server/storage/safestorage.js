@@ -483,7 +483,7 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
 };
 
 /**
- * Authorization: read access for data.projectName
+ * Authorization: TODO: read or write access for data.projectName
  * @param data
  * @param callback
  * @returns {*}

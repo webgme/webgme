@@ -85,6 +85,8 @@ function importProject(storage, parameters, callback) {
     expect(typeof storage).to.equal('object');
     expect(typeof parameters).to.equal('object');
     expect(typeof parameters.projectName).to.equal('string');
+    expect(typeof parameters.gmeConfig).to.equal('object');
+    expect(typeof parameters.logger).to.equal('object');
 
     if (typeof parameters.projectSeed === 'string') {
         projectJson = loadJsonFile(parameters.projectSeed);
