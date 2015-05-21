@@ -31,18 +31,28 @@ describe('Memory storage', function () {
         var memoryStorage = getMemoryStorage(logger);
 
         memoryStorage.openDatabase()
-            .then(memoryStorage.closeDatabase)
-            .finally(done);
+            .then(function () {
+                return memoryStorage.closeDatabase();
+            })
+            .then(done)
+            .catch(done);
     });
 
     it('should open, close, open, and close', function (done) {
         var memoryStorage = getMemoryStorage(logger);
 
         memoryStorage.openDatabase()
-            .then(memoryStorage.closeDatabase)
-            .then(memoryStorage.openDatabase)
-            .then(memoryStorage.closeDatabase)
-            .finally(done);
+            .then(function () {
+                return memoryStorage.closeDatabase();
+            })
+            .then(function () {
+                return memoryStorage.openDatabase();
+            })
+            .then(function () {
+                return memoryStorage.closeDatabase();
+            })
+            .then(done)
+            .catch(done);
     });
 
 
@@ -50,10 +60,17 @@ describe('Memory storage', function () {
         var memoryStorage = getMemoryStorage(logger);
 
         memoryStorage.openDatabase()
-            .then(memoryStorage.openDatabase)
-            .then(memoryStorage.openDatabase)
-            .then(memoryStorage.openDatabase)
-            .finally(done);
+            .then(function () {
+                return memoryStorage.openDatabase();
+            })
+            .then(function () {
+                return memoryStorage.openDatabase();
+            })
+            .then(function () {
+                return memoryStorage.openDatabase();
+            })
+            .then(done)
+            .catch(done);
     });
 
 
@@ -61,10 +78,17 @@ describe('Memory storage', function () {
         var memoryStorage = getMemoryStorage(logger);
 
         memoryStorage.closeDatabase()
-            .then(memoryStorage.closeDatabase)
-            .then(memoryStorage.closeDatabase)
-            .then(memoryStorage.closeDatabase)
-            .finally(done);
+            .then(function () {
+                return memoryStorage.closeDatabase();
+            })
+            .then(function () {
+                return memoryStorage.closeDatabase();
+            })
+            .then(function () {
+                return memoryStorage.closeDatabase();
+            })
+            .then(done)
+            .catch(done);
     });
 
 
@@ -73,47 +97,65 @@ describe('Memory storage', function () {
         it('should get project names', function (done) {
             var memoryStorage = getMemoryStorage(logger);
 
-            memoryStorage.getProjectNames()
+            memoryStorage.openDatabase()
+                .then(function () {
+                    return memoryStorage.getProjectNames({});
+                })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal([]);
+                    done();
                 })
-                .finally(done);
+                .catch(done);
         });
 
 
         it('should create a project', function (done) {
             var memoryStorage = getMemoryStorage(logger);
 
-            memoryStorage.getProjectNames()
+            memoryStorage.openDatabase()
+                .then(function () {
+                    return memoryStorage.getProjectNames({});
+                })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal([]);
-                    return memoryStorage.createProject('newProject');
+                    return memoryStorage.createProject({projectName: 'newProject'});
                 })
-                .then(memoryStorage.getProjectNames)
+                .then(function () {
+                    return memoryStorage.getProjectNames({});
+                })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal(['newProject']);
+                    done();
                 })
-                .finally(done);
+                .catch(done);
         });
 
         it('should create and delete a project', function (done) {
             var memoryStorage = getMemoryStorage(logger);
 
-            memoryStorage.getProjectNames()
+            memoryStorage.openDatabase()
+                .then(function () {
+                    return memoryStorage.getProjectNames({});
+                })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal([]);
-                    return memoryStorage.createProject('newProject');
+                    return memoryStorage.createProject({projectName: 'newProject'});
                 })
-                .then(memoryStorage.getProjectNames)
+                .then(function () {
+                    return memoryStorage.getProjectNames({});
+                })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal(['newProject']);
-                    return memoryStorage.deleteProject('newProject');
+                    return memoryStorage.deleteProject({projectName: 'newProject'});
                 })
-                .then(memoryStorage.getProjectNames)
+                .then(function () {
+                    return memoryStorage.getProjectNames({});
+                })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal([]);
+                    done();
                 })
-                .finally(done);
+                .catch(done);
         });
 
         it('should open an existing project', function (done) {
@@ -135,11 +177,11 @@ describe('Memory storage', function () {
                     return memoryStorage.openProject({projectName: 'newProject'});
                 })
                 .then(function (branches) {
+                    // expect names of branches
                     expect(branches).deep.equal({});
                     done();
                 })
                 .catch(done);
-
         });
     });
 
