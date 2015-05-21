@@ -13,7 +13,8 @@ describe('Memory storage', function () {
         logger = testFixture.logger,
         Q = testFixture.Q,
 
-        getMemoryStorage = testFixture.getMemoryStorage;
+        getMemoryStorage = testFixture.getMemoryStorage,
+        newProjectName = 'newProject';
 
     it('should create an instance of getMemoryStorage', function () {
         var memoryStorage = getMemoryStorage(logger);
@@ -118,13 +119,13 @@ describe('Memory storage', function () {
                 })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal([]);
-                    return memoryStorage.createProject({projectName: 'newProject'});
+                    return memoryStorage.createProject({projectName: newProjectName});
                 })
                 .then(function () {
                     return memoryStorage.getProjectNames({});
                 })
                 .then(function (projectNames) {
-                    expect(projectNames).deep.equal(['newProject']);
+                    expect(projectNames).deep.equal([newProjectName]);
                     done();
                 })
                 .catch(done);
@@ -139,14 +140,14 @@ describe('Memory storage', function () {
                 })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal([]);
-                    return memoryStorage.createProject({projectName: 'newProject'});
+                    return memoryStorage.createProject({projectName: newProjectName});
                 })
                 .then(function () {
                     return memoryStorage.getProjectNames({});
                 })
                 .then(function (projectNames) {
-                    expect(projectNames).deep.equal(['newProject']);
-                    return memoryStorage.deleteProject({projectName: 'newProject'});
+                    expect(projectNames).deep.equal([newProjectName]);
+                    return memoryStorage.deleteProject({projectName: newProjectName});
                 })
                 .then(function () {
                     return memoryStorage.getProjectNames({});
@@ -167,14 +168,14 @@ describe('Memory storage', function () {
                 })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal([]);
-                    return memoryStorage.createProject({projectName: 'newProject'});
+                    return memoryStorage.createProject({projectName: newProjectName});
                 })
                 .then(function () {
                     return memoryStorage.getProjectNames({});
                 })
                 .then(function (projectNames) {
-                    expect(projectNames).deep.equal(['newProject']);
-                    return memoryStorage.openProject({projectName: 'newProject'});
+                    expect(projectNames).deep.equal([newProjectName]);
+                    return memoryStorage.openProject({projectName: newProjectName});
                 })
                 .then(function (branches) {
                     // expect names of branches
@@ -183,6 +184,43 @@ describe('Memory storage', function () {
                 })
                 .catch(done);
         });
+
+        it('should get an existing project', function (done) {
+            var memoryStorage = getMemoryStorage(logger, gmeConfig);
+
+            memoryStorage.openDatabase()
+                .then(function () {
+                    return memoryStorage.getProjectNames({});
+                })
+                .then(function (projectNames) {
+                    expect(projectNames).deep.equal([]);
+                    return memoryStorage.createProject({projectName: newProjectName});
+                })
+                .then(function () {
+                    return memoryStorage.getProjectNames({});
+                })
+                .then(function (projectNames) {
+                    expect(projectNames).deep.equal([newProjectName]);
+                    return memoryStorage.getProject({projectName: newProjectName});
+                })
+                .then(function (project) {
+                    
+                    expect(project.name).equal(newProjectName);
+
+                    expect(project).to.have.property('closeProject');
+                    expect(project).to.have.property('loadObject');
+                    expect(project).to.have.property('insertObject');
+                    expect(project).to.have.property('getBranches');
+                    expect(project).to.have.property('getBranchHash');
+                    expect(project).to.have.property('setBranchHash');
+                    expect(project).to.have.property('getCommits');
+                    expect(project).to.have.property('getCommonAncestorCommit');
+
+                    done();
+                })
+                .catch(done);
+        });
+
     });
 
 });
