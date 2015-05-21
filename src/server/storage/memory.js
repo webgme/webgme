@@ -191,9 +191,9 @@ function Memory(mainLogger /*, gmeConfig*/) {
 
             if (oldhash === newhash) {
                 if (oldhash === hash) {
-                    callback(null);
+                    deferred.resolve();
                 } else {
-                    callback('branch has mismatch');
+                    deferred.reject(new Error('branch has mismatch'));
                 }
             } else {
                 if (oldhash === hash) {
@@ -216,15 +216,21 @@ function Memory(mainLogger /*, gmeConfig*/) {
 
         this.getCommits = function (before, number, callback) {
             var deferred = Q.defer(),
-                finds = [];
+                finds = [],
+                i,
+                item,
+                object;
 
-            for (var i = 0; i < storage.length; i += 1) {
+            for (i = 0; i < storage.length; i += 1) {
                 if (storage.key(i).indexOf(database + SEPARATOR + name + SEPARATOR) === 0) {
-                    var object = JSON.parse(storage.getItem(storage.key(i)));
-                    if (object.type === 'commit' && object.time < before) {
-                        finds.push(object);
-                        if (finds.length === number) {
-                            break;
+                    item = storage.getItem(storage.key(i));
+                    if (typeof item === 'string') {
+                        object = JSON.parse(item);
+                        if (object.type === 'commit' && object.time < before) {
+                            finds.push(object);
+                            if (finds.length === number) {
+                                break;
+                            }
                         }
                     }
                 }

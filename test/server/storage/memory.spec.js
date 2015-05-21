@@ -371,4 +371,217 @@ describe('Memory storage', function () {
                 .catch(done);
         });
     });
+
+
+    describe('project specific functions', function () {
+        var project;
+
+        before(function (done) {
+            var storage = getMemoryStorage(logger, gmeConfig);
+
+            storage.openDatabase()
+                .then(function () {
+                    return storage.deleteProject({projectName: projectName});
+                })
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: 'seeds/EmptyProject.json',
+                        projectName: projectName,
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (result) {
+                    //console.log(result);
+                    return storage.openProject({projectName: projectName});
+                })
+                .then(function (p) {
+                    project = p;
+                })
+                .then(done)
+                .catch(done);
+        });
+
+        it('should getBranches', function (done) {
+            project.getBranches()
+                .then(function (branches) {
+                    expect(branches).to.have.property('master');
+                    done();
+                })
+                .catch(done);
+        });
+
+
+        it('should getCommits', function (done) {
+            project.getCommits((new Date()).getTime() + 1, 10)
+                .then(function (commits) {
+                    expect(commits.length).equal(1);
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should get one commit', function (done) {
+            project.getCommits((new Date()).getTime() + 1, 1)
+                .then(function (commits) {
+                    expect(commits.length).equal(1);
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should load root object', function (done) {
+            var commit;
+            project.getCommits((new Date()).getTime() + 1, 1)
+                .then(function (commits) {
+                    expect(commits.length).equal(1);
+                    commit = commits[0];
+                    return project.loadObject(commit.root);
+                })
+                .then(function (rootNode) {
+                    expect(rootNode._id).deep.equal(commit.root);
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should getBranchHash', function (done) {
+            project.getBranchHash('master', '')
+                .then(function (hash) {
+                    return project.getBranchHash('master', hash);
+                })
+                .then(function (hash) {
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should setBranchHash - create a new branch', function (done) {
+            project.getBranchHash('master', '')
+                .then(function (hash) {
+                    return project.setBranchHash('new_branch', '', hash);
+                })
+                .then(function () {
+                    return project.getBranches();
+                })
+                .then(function (branches) {
+                    expect(branches).to.have.property('master');
+                    expect(branches).to.have.property('new_branch');
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should setBranchHash - delete a branch', function (done) {
+            project.getBranchHash('master', '')
+                .then(function (hash) {
+                    return project.setBranchHash('toBeDeletedBranch', '', hash);
+                })
+                .then(function () {
+                    return project.getBranches();
+                })
+                .then(function (branches) {
+                    expect(branches).to.have.property('master');
+                    expect(branches).to.have.property('toBeDeletedBranch');
+                    return project.setBranchHash('toBeDeletedBranch', branches.toBeDeletedBranch, '');
+                })
+                .then(function () {
+                    return project.getBranches();
+                })
+                .then(function (branches) {
+                    expect(branches).to.have.property('master');
+                    expect(branches).to.not.have.property('toBeDeletedBranch');
+                    done();
+                })
+                .catch(done);
+        });
+
+
+        it('should not change branch hash if old hash is the same as new hash', function (done) {
+            project.getBranchHash('master', '')
+                .then(function (hash) {
+                    return project.setBranchHash('stable', '', hash);
+                })
+                .then(function () {
+                    return project.getBranches();
+                })
+                .then(function (branches) {
+                    expect(branches).to.have.property('master');
+                    expect(branches).to.have.property('stable');
+                    return project.setBranchHash('stable', branches.stable, branches.stable);
+                })
+                .then(function () {
+                    return project.getBranches();
+                })
+                .then(function (branches) {
+                    expect(branches).to.have.property('master');
+                    expect(branches).to.have.property('stable');
+                    expect(branches.master).deep.equal(branches.stable);
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should fail to set branch hash if oldhash does not match', function (done) {
+            project.getBranchHash('master', '')
+                .then(function (hash) {
+                    return project.setBranchHash('dummy', '', hash);
+                })
+                .then(function () {
+                    return project.getBranches();
+                })
+                .then(function (branches) {
+                    expect(branches).to.have.property('master');
+                    expect(branches).to.have.property('dummy');
+                    return project.setBranchHash('dummy', '', '');
+                })
+                .then(function () {
+                    done(new Error('should have failed'));
+                })
+                .catch(function (err) {
+                    if (err instanceof Error) {
+                        // TODO: check error message
+                        done();
+                    } else {
+                        done(new Error('should have failed to openProject'));
+                    }
+                });
+        });
+
+        it('should fail to set new branch hash if oldhash does not match', function (done) {
+            project.getBranchHash('master', '')
+                .then(function (hash) {
+                    return project.setBranchHash('dummy', '', hash);
+                })
+                .then(function () {
+                    return project.getBranches();
+                })
+                .then(function (branches) {
+                    expect(branches).to.have.property('master');
+                    expect(branches).to.have.property('dummy');
+                    return project.setBranchHash('dummy', '', '#0123456789012345678901234567890123456789');
+                })
+                .then(function () {
+                    done(new Error('should have failed'));
+                })
+                .catch(function (err) {
+                    if (err instanceof Error) {
+                        // TODO: check error message
+                        done();
+                    } else {
+                        done(new Error('should have failed to openProject'));
+                    }
+                });
+        });
+
+        it.skip('should getCommonAncestorCommit', function (done) {
+            project.getCommits((new Date()).getTime() + 1, 10)
+                .then(function (commits) {
+                    expect(commits.length).equal(1);
+                    return project.getCommonAncestorCommit(commits._id, commits._id);
+                })
+                .then(done)
+                .catch(done);
+        });
+    });
 });
