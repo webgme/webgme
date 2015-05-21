@@ -38,6 +38,12 @@ function SafeStorage(mongo, logger, gmeConfig) {
 SafeStorage.prototype = Object.create(Storage.prototype);
 SafeStorage.prototype.constructor = SafeStorage;
 
+/**
+ * Authorization: filter results based on read access for each projectName.
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.getProjectNames = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
@@ -58,6 +64,48 @@ SafeStorage.prototype.getProjectNames = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Authorization: result contains this information
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
+SafeStorage.prototype.getProjects = function (data, callback) {
+    var deferred = Q.defer(),
+        rejected = false;
+
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.');
+
+    if (rejected === false) {
+        Storage.prototype.getProjectNames.call(this, data)
+            .then(function (result) {
+                var i,
+                    projects = [];
+                for (i = 0; i < result.length; i += 1) {
+                    projects.push({
+                        name: result[i],
+                        read: true, //TODO: get the access level via gmeAuth.
+                                    //FIXME: Currently we need to respond with all projects (although read=false).
+                        write: true,
+                        delete: true
+                    });
+                }
+                deferred.resolve(projects);
+            })
+            .catch(function (err) {
+                deferred.reject(new Error(err));
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
+/**
+ * Authorization: delete access for data.projectName
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.deleteProject = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
@@ -67,7 +115,7 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
 
     if (rejected === false) {
-        //TODO: Check authorization here - if user not authorized reject.
+        //TODO: Check if authorization here - if user not authorized reject.
         Storage.prototype.deleteProject.call(this, data)
             .then(function () {
                 deferred.resolve();
@@ -80,6 +128,12 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Authorization: canCreate
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.createProject = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
@@ -101,6 +155,12 @@ SafeStorage.prototype.createProject = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Authorization: read access for data.projectName
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.getBranches = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
@@ -123,6 +183,12 @@ SafeStorage.prototype.getBranches = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Authorization: read access for data.projectName
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.getCommits = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
@@ -147,6 +213,12 @@ SafeStorage.prototype.getCommits = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Authorization: read access for data.projectName
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.getLatestCommitData = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
@@ -171,6 +243,12 @@ SafeStorage.prototype.getLatestCommitData = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Authorization: write access for data.projectName
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.makeCommit = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
@@ -219,6 +297,12 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Authorization: read access for data.projectName
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.getBranchHash = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
@@ -245,6 +329,12 @@ SafeStorage.prototype.getBranchHash = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Authorization: write access for data.projectName
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.setBranchHash = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
@@ -278,6 +368,12 @@ SafeStorage.prototype.setBranchHash = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Authorization: read access for data.projectName
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.getCommonAncestorCommit = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
@@ -308,6 +404,12 @@ SafeStorage.prototype.getCommonAncestorCommit = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Authorization: write access for data.projectName
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.createBranch = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
@@ -341,6 +443,12 @@ SafeStorage.prototype.createBranch = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Authorization: write access for data.projectName
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.deleteBranch = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false,
@@ -374,6 +482,12 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Authorization: read access for data.projectName
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
 SafeStorage.prototype.openProject = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
