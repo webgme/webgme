@@ -175,7 +175,7 @@ describe('Memory storage', function () {
                 })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal([newProjectName]);
-                    return memoryStorage.openProject({projectName: newProjectName});
+                    return memoryStorage.getBranches({projectName: newProjectName});
                 })
                 .then(function (branches) {
                     // expect names of branches
@@ -201,7 +201,7 @@ describe('Memory storage', function () {
                 })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal([newProjectName]);
-                    return memoryStorage.getProject({projectName: newProjectName});
+                    return memoryStorage.openProject({projectName: newProjectName});
                 })
                 .then(function (project) {
                     

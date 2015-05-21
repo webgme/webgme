@@ -49,7 +49,7 @@ Storage.prototype.createProject = function (data, callback) {
     var self = this;
     return this.mongo.createProject(data.projectName)
         .then(function (project) {
-            // FIXME: At this point the project is not a valid gme-project, it is not even in the data-base.
+            // FIXME: At this point the project is not a valid gme-project.
             self.dispatchEvent(CONSTANTS.PROJECT_CREATED, data);
             return Q(project);
         })
@@ -63,14 +63,6 @@ Storage.prototype.createProject = function (data, callback) {
 };
 
 Storage.prototype.getBranches = function (data, callback) {
-    return this.mongo.openProject(data.projectName)
-        .then(function (project) {
-            return project.getBranches();
-        })
-        .nodeify(callback);
-};
-
-Storage.prototype.openProject = function (data, callback) {
     return this.mongo.openProject(data.projectName)
         .then(function (project) {
             return project.getBranches();
@@ -265,7 +257,14 @@ Storage.prototype.setBranchHash = function (data, callback) {
         .nodeify(callback);
 };
 
-Storage.prototype.getProject = function (data, callback) {
+Storage.prototype.getCommonAncestorCommit = function (data, callback) {
+    return this.mongo.openProject(data.projectName)
+        .then(function (project) {
+            return project.getCommonAncestorCommit(data.commitA, data.commitB);
+        }).nodeify(callback);
+};
+
+Storage.prototype.openProject = function (data, callback) {
     return this.mongo.openProject(data.projectName).nodeify(callback);
 };
 

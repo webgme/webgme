@@ -278,6 +278,36 @@ SafeStorage.prototype.setBranchHash = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+SafeStorage.prototype.getCommonAncestorCommit = function (data, callback) {
+    var deferred = Q.defer(),
+        rejected = false;
+
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+
+    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
+
+    check(typeof data.commitA === 'string', deferred, 'data.commitA is not a string.') ||
+    check(data.commitA === '' || REGEXP.HASH.test(data.commitA), deferred,
+        'data.commitA is not a valid hash: ' + data.commitA) ||
+    check(typeof data.commitB === 'string', deferred, 'data.commitA is not a string.') ||
+    check(data.commitA === '' || REGEXP.HASH.test(data.commitA), deferred,
+        'data.commitA is not a valid hash: ' + data.commitA);
+
+    if (rejected === false) {
+        //TODO: Check authorization here - if user not authorized reject.
+        Storage.prototype.getCommonAncestorCommit.call(this, data)
+            .then(function () {
+                deferred.resolve();
+            })
+            .catch(function (err) {
+                deferred.reject(new Error(err));
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
 SafeStorage.prototype.createBranch = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false;
@@ -335,6 +365,27 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
             })
             .then (function () {
                 deferred.resolve();
+            })
+            .catch(function (err) {
+                deferred.reject(new Error(err));
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
+SafeStorage.prototype.openProject = function (data, callback) {
+    var deferred = Q.defer(),
+        rejected = false;
+
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
+
+    if (rejected === false) {
+        Storage.prototype.openProject.call(this, data)
+            .then(function (project) {
+                deferred.resolve(project);
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));

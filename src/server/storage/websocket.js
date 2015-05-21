@@ -100,7 +100,7 @@ function WebSocket(storage, mainLogger, gmeConfig) {
 
             // model editing functions
             socket.on('openProject', function (data, callback) {
-                storage.openProject(data)
+                storage.getBranches(data)
                     .then(function (branches) {
                         callback(null, branches);
                     })
