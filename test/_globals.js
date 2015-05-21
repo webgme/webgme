@@ -82,6 +82,7 @@ function importProject(storage, parameters, callback) {
         projectJson,
         branchName;
 
+    // Parameters check.
     expect(typeof storage).to.equal('object');
     expect(typeof parameters).to.equal('object');
     expect(typeof parameters.projectName).to.equal('string');
@@ -96,6 +97,7 @@ function importProject(storage, parameters, callback) {
         deferred.reject('parameters.projectSeed must be filePath or object!');
     }
     branchName = parameters.branchName || 'master';
+    // Parameters check end.
 
     storage.createProject({projectName: parameters.projectName})
         .then(function (dbProject) {

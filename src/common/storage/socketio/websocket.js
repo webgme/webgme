@@ -22,11 +22,11 @@ define([
         logger.debug('ctor');
         EventDispatcher.call(this);
 
-        this.connect = function (callback) {
+        this.connect = function (networkHandler) {
             logger.debug('Connecting via ioClient.');
             ioClient.connect(function (err, socket_) {
                 if (err) {
-                    callback(err);
+                    networkHandler(err);
                     return;
                 }
                 socket = socket_;
@@ -34,17 +34,17 @@ define([
                 socket.on('connect', function () {
                     if (beenConnected) {
                         logger.debug('Socket got reconnected.');
-                        callback(null, CONSTANTS.RECONNECTED);
+                        networkHandler(null, CONSTANTS.RECONNECTED);
                     } else {
                         logger.debug('Socket got connected for the first time.');
                         beenConnected = true;
-                        callback(null, CONSTANTS.CONNECTED);
+                        networkHandler(null, CONSTANTS.CONNECTED);
                     }
                 });
 
                 socket.on('disconnect', function () {
                     logger.debug('Socket got disconnected!');
-                    callback(null, CONSTANTS.DISCONNECTED);
+                    networkHandler(null, CONSTANTS.DISCONNECTED);
                 });
 
                 socket.on(CONSTANTS.PROJECT_DELETED, function (data) {

@@ -103,15 +103,17 @@ function addToRequireJsPaths(gmeConfig) {
 }
 
 module.exports = {
-    //serverStorage: require('./src/server/storage/serverstorage'),
-    //serverUserStorage: require('./src/server/storage/serveruserstorage'),
     standaloneServer: require('./src/server/standalone.js'),
-    //runPlugin: require('./src/server/runplugin'),
 
     requirejs: requirejs,
     addToRequireJsPaths: addToRequireJsPaths,
-    //clientStorage: requirejs('common/storage/clientstorage'),
-    //localStorage: requirejs('common/storage/localstorage'),
+    getStorage: function (logger, gmeConfig) {
+        var Mongo = require('./src/server/storage/mongo'),
+            SafeStorage = require('./src/server/storage/safestorage'),
+            mongo = new Mongo(logger, gmeConfig);
+
+        return new SafeStorage(mongo, logger, gmeConfig);
+    },
     core: requirejs('common/core/core'),
     serializer: requirejs('common/core/users/serialization'),
     canon: requirejs('common/util/canon'),

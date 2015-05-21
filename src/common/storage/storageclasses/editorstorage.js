@@ -33,23 +33,32 @@ define([
         this.logger = logger;
         StorageObjectLoaders.call(this, webSocket, mainLogger, gmeConfig);
 
-        this.connect = function (callback) {
+        this.open = function (networkHandler) {
             webSocket.connect(function (err, connectionState) {
-                if (connectionState === CONSTANTS.CONNECTED) {
+                if (err) {
+                    logger.error(err);
+                    networkHandler(CONSTANTS.ERROR);
+                } else if (connectionState === CONSTANTS.CONNECTED) {
                     connected = true;
-                    callback(null, connectionState);
+                    networkHandler(connectionState);
                 } else if (connectionState === CONSTANTS.RECONNECTED) {
                     self._rejoinWatcherRooms();
                     self._rejoinBranchRooms();
                     connected = true;
-                    callback(null, connectionState);
+                    networkHandler(connectionState);
                 } else if (connectionState === CONSTANTS.DISCONNECTED) {
                     connected = false;
-                    callback(null, connectionState);
+                    networkHandler(connectionState);
                 } else {
-                    callback('Unexpected connection state', connectionState);
+                    logger.error('unexpected connection state');
+                    networkHandler(CONSTANTS.ERROR);
                 }
             });
+        };
+
+        this.close = function () {
+            webSocket.disconnect();
+            webSocket.removeAllEventListeners();
         };
 
         this.openProject = function (projectName, callback) {

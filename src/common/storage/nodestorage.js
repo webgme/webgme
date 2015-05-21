@@ -12,24 +12,15 @@ define([
 ], function (EditorStorage, NodeIoClient, WebSocket) {
     'use strict';
 
-    var _storage;
-
-    function _createStorage(hostAddress, sessionId, logger, gmeConfig) {
-        var ioClient = new NodeIoClient(hostAddress, sessionId, gmeConfig),
+    function createStorage(host, sessionId, logger, gmeConfig) {
+        var ioClient = new NodeIoClient(host, sessionId, gmeConfig),
             webSocket = new WebSocket(ioClient, logger),
             storage = new EditorStorage(webSocket, logger, gmeConfig);
 
         return storage;
     }
 
-    function getStorage (hostAddress, sessionId, logger, gmeConfig) {
-        if (!_storage) {
-            _storage = _createStorage(hostAddress, sessionId, logger, gmeConfig);
-        }
-        return _storage;
-    }
-
     return {
-        getStorage: getStorage
+        createStorage: createStorage
     };
 });

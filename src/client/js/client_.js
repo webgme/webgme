@@ -65,11 +65,8 @@ define([
             });
         }
 
-        storage.connect(function (err, status) {
-            if (err) {
-                logger.error(err);
-                return;
-            }
+        storage.open(function (status) {
+            logger.debug('storage is open');
             if (status === CONSTANTS.CONNECTED) {
                 storage.getProjectNames({}, function (err, projectNames) {
                     if (err) {
@@ -183,6 +180,8 @@ define([
                 intervalId = setInterval(function () {
                     loadChildrenAndSetAttribute(currRootNode, currCommitObject);
                 }, 2000);
+            } else if (status === CONSTANTS.ERROR) {
+                throw new Error('Could not connect');
             }
         });
 

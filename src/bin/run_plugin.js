@@ -13,6 +13,9 @@ main = function (argv, callback) {
         Command = require('commander').Command,
         logger = webgme.Logger.create('gme:bin:import', gmeConfig.bin.log),
         program = new Command(),
+        storage = webgme.getStorage(logger, gmeConfig),
+        PluginCliManager = require('../../src/common/plugin/climanager'),
+        Project = require('../../src/common/plugin/userproject'),
         pluginConfigFilename,
         resolvedPluginConfigFilename,
         pluginConfigJson,
@@ -57,6 +60,14 @@ main = function (argv, callback) {
         pluginConfigJson = {};
     }
 
+    storage.openProject({projectName: projectName})
+        .then(function(dbProject) {
+            var project = new Project(dbProject, logger, gmeConfig);
+
+        })
+        .catch(function (err) {
+
+        });
     //setting plugin config
     managerConfig.projectName = projectName;
     managerConfig.branch = branch;
