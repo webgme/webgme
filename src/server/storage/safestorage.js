@@ -264,7 +264,7 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
         'data.coreObjects not an object.');
 
     // Checks when branchName is given and the branch will be updated
-    if (rejected === false || typeof data.branchName !== 'undefined') {
+    if (rejected === false && typeof data.branchName !== 'undefined') {
         rejected = check(typeof data.branchName === 'string', deferred, 'data.branchName is not a string.') ||
         check(REGEXP.BRANCH.test(data.branchName), deferred, 'data.branchName failed regexp: ' + data.branchName) ||
         check(typeof data.commitObject._id === 'string', deferred, 'data.commitObject._id is not a string.') ||

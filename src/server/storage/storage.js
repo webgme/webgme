@@ -127,7 +127,8 @@ Storage.prototype.makeCommit = function (data, callback) {
                                     var newHash = data.commitObject[CONSTANTS.MONGO_ID],
                                         oldHash = data.commitObject.parents[0],
                                         result = {
-                                            status: null // SYNCH, FORKED, (MERGED)
+                                            status: null, // SYNCH, FORKED, (MERGED)
+                                            hash: newHash
                                         };
                                     project.setBranchHash(data.branchName, oldHash, newHash)
                                         .then(function () {
@@ -166,7 +167,7 @@ Storage.prototype.makeCommit = function (data, callback) {
                                             }
                                         });
                                 } else {
-                                    deferred.resolve(data.commitObject[CONSTANTS.MONGO_ID]);
+                                    deferred.resolve({hash: data.commitObject[CONSTANTS.MONGO_ID]});
                                 }
                             })
                             .catch(function (err) {

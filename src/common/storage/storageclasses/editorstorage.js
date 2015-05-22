@@ -190,7 +190,7 @@ define([
             webSocket.setBranchHash(setBranchHashData, callback);
         };
 
-        this.makeCommit = function (projectName, branchName, parents, rootHash, stageBucket, msg, callback) {
+        this.makeCommit = function (projectName, branchName, parents, rootHash, coreObjects, msg, callback) {
             ASSERT(projects.hasOwnProperty(projectName), 'Project not opened: ' + projectName);
             var project = projects[projectName],
                 branch,
@@ -199,7 +199,7 @@ define([
                 };
 
             commitData.commitObject = self._getCommitObject(projectName, parents, rootHash, msg);
-            commitData.coreObjects = stageBucket;
+            commitData.coreObjects = coreObjects;
             if (typeof branchName === 'string') {
                 commitData.branchName = branchName;
                 branch = project.getBranch(branchName, true);

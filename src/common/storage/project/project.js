@@ -52,8 +52,8 @@ define([
             storage.createBranch(branchName, newHash, callback);
         };
 
-        this.makeCommit = function (branchName, parents, rootHash, stageBucket, msg, callback) {
-            storage.makeCommit(name, branchName, parents, rootHash, stageBucket, msg, callback);
+        this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
+            storage.makeCommit(name, branchName, parents, rootHash, coreObjects, msg, callback);
         };
 
         // Functions forwarded to project cache.

@@ -1,6 +1,7 @@
 /*jshint node: true*/
 /**
  * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 var main;
@@ -8,23 +9,16 @@ var main;
 main = function (argv, callback) {
     'use strict';
     var path = require('path'),
-        gmeConfig = require(path.join(process.cwd(), 'config')),
-        webgme = require('../../webgme'),
+        gmeConfig = require(path.join(process.cwd(), 'config'));
+    var webgme = require('../../webgme'),
         Command = require('commander').Command,
         logger = webgme.Logger.create('gme:bin:import', gmeConfig.bin.log),
-        program = new Command(),
-        storage = webgme.getStorage(logger, gmeConfig),
-        PluginCliManager = require('../../src/common/plugin/climanager'),
-        Project = require('../../src/common/plugin/userproject'),
-        pluginConfigFilename,
-        resolvedPluginConfigFilename,
-        pluginConfigJson,
-        projectName,
-        branch,
-        pluginName,
-        activeNode,
-        activeSelection = [], // TODO: get this as a list of IDs from command line
-        managerConfig = {};
+        program = new Command();
+    var storage = webgme.getStorage(logger, gmeConfig),
+        PluginCliManager = require('../../src/plugin/climanager'),
+        Project = require('../../src/server/storage/userproject'),
+        project,
+        pluginConfig;
 
     callback = callback || function () {};
 
@@ -44,48 +38,57 @@ main = function (argv, callback) {
         logger.error('A project and pluginName must be specified.');
     }
 
-    //getting program options
-    projectName = program.project;
-    branch = program.branch;
-    pluginName = program.pluginName;
-    activeNode = program.selectedObjID;
-    pluginConfigFilename = program.pluginConfigPath;
+    logger.info('Executing ' + program.pluginName + ' plugin on ' + program.project + ' in branch ' +
+    program.branch + '.');
 
-    logger.info('Executing ' + pluginName + ' plugin');
-
-    if (pluginConfigFilename) {
-        resolvedPluginConfigFilename = path.resolve(pluginConfigFilename);
-        pluginConfigJson = require(resolvedPluginConfigFilename);
+    if (program.pluginConfigPath) {
+        pluginConfig = require(path.resolve(program.pluginConfigPath));
     } else {
-        pluginConfigJson = {};
+        pluginConfig = {};
     }
 
-    storage.openProject({projectName: projectName})
-        .then(function(dbProject) {
-            var project = new Project(dbProject, logger, gmeConfig);
+    storage.openDatabase()
+        .then(function () {
+            logger.info('Database is opened.');
+            return storage.openProject({projectName: program.project});
+        })
+        .then(function (dbProject) {
+            logger.info('Project is opened.');
+            project = new Project(dbProject, storage, logger, gmeConfig);
+            return storage.getBranchHash({
+                projectName: program.project,
+                branchName: program.branch
+            });
+        })
+        .then(function (commitHash) {
+            logger.info('CommitHash obtained ', commitHash);
+            var pluginManager = new PluginCliManager(project, logger, gmeConfig),
+                context = {
+                    activeNode: program.selectedObjID,
+                    activeSelection: [], //TODO: Enable passing this from command line.
+                    branchName: program.branch,
+                    commitHash: commitHash,
+                };
 
+            pluginManager.executePlugin(program.pluginName, pluginConfig, context,
+                function (err, pluginResult) {
+                    if (err) {
+                        logger.error('execution stopped:', err, pluginResult);
+                        callback(err, pluginResult);
+                        process.exit(1);
+                    } else {
+                        logger.info('execution was successful:', err, pluginResult);
+                        callback(err, pluginResult);
+                        process.exit(0);
+                    }
+                }
+            );
         })
         .catch(function (err) {
-
-        });
-    //setting plugin config
-    managerConfig.projectName = projectName;
-    managerConfig.branch = branch;
-    managerConfig.pluginName = pluginName;
-    managerConfig.activeNode = activeNode;
-    managerConfig.activeSelection = activeSelection;
-
-    webgme.runPlugin.main(null, gmeConfig, managerConfig, pluginConfigJson, function (err, result) {
-        if (err) {
-            logger.error('execution stopped:', err, result);
-            callback(err, result);
+            logger.error('Could not open the project or branch', err);
+            callback(err);
             process.exit(1);
-        } else {
-            logger.info('execution was successful:', err, result);
-            callback(err, result);
-            process.exit(0);
-        }
-    });
+        });
 };
 
 module.exports = {

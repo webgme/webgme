@@ -5,18 +5,20 @@
  */
 'use strict';
 
-var PluginManagerBase = requireJS('plugin/PluginManagerBase'),
-    Core = requireJS('common/core/core'),
+var PluginNodeManagerBase = require('./nodemanagerbase'),
 
-    BlobFSBackend = require('./middleware/blob/BlobFSBackend'),
-    BlobRunPluginClient = require('./middleware/blob/BlobRunPluginClient');
+    BlobFSBackend = require('../server/middleware/blob/BlobFSBackend'),
+    BlobRunPluginClient = require('../server/middleware/blob/BlobRunPluginClient');
 
-function PluginCliManager(storage, mainLogger, gmeConfig) {
+function PluginCliManager(project, mainLogger, gmeConfig) {
     var blobBackend = new BlobFSBackend(gmeConfig),
         blobClient = new BlobRunPluginClient(blobBackend);
 
+    PluginNodeManagerBase.call(this, blobClient, project, mainLogger, gmeConfig);
 }
 
-// Inherit from PluginManagerBase
-PluginCliManager.prototype = Object.create(PluginManagerBase.prototype);
+// Inherit from PluginNodeManagerBase
+PluginCliManager.prototype = Object.create(PluginNodeManagerBase.prototype);
 PluginCliManager.prototype.constructor = PluginCliManager;
+
+module.exports = PluginCliManager;
