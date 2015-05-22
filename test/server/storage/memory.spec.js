@@ -303,7 +303,7 @@ describe('Memory storage', function () {
                     return memoryStorage.openProject({projectName: projectName});
                 })
                 .then(function (project) {
-                    
+
                     expect(project.name).equal(projectName);
 
                     expect(project).to.have.property('closeProject');
@@ -582,6 +582,127 @@ describe('Memory storage', function () {
                 })
                 .then(done)
                 .catch(done);
+        });
+    });
+
+    describe.skip('complex chain', function () {
+        var project,
+            commitChain = [],
+            storage = getMemoryStorage(logger, gmeConfig);
+
+        before(function (done) {
+            storage.openDatabase()
+                .then(function () {
+                    return storage.createProject({projectName: 'complexChainTest'});
+                })
+                .then(function (p) {
+                    project = p;
+                    //finally we create the commit chain
+                    //           o -- o           8,9
+                    //          /      \
+                    //         o        o         7,12
+                    //        / \      /
+                    //       /   o -- o           10,11
+                    // o -- o -- o -- o -- o -- o 1,2,3,4,5,6
+
+                    var deferred = Q.defer(),
+                        error = null,
+                        needed = 12,
+                        addCommit = function (ancestors) {
+                            var rootHash = '#' + Math.round((Math.random() * 100000000));
+                            commitChain.push(project.makeCommit(ancestors, rootHash, '_commit_', finalCheck));
+                        },
+                        finalCheck = function (err) {
+                            error = error || err;
+                            if (--needed === 0) {
+                                if (error) {
+                                    deferred.reject(new Error(error));
+                                } else {
+                                    deferred.resolve();
+                                }
+                            }
+                        };
+
+                    commitChain = [];
+
+                    addCommit([]);
+                    addCommit([commitChain[0]]);
+                    addCommit([commitChain[1]]);
+                    addCommit([commitChain[2]]);
+                    addCommit([commitChain[3]]);
+                    addCommit([commitChain[4]]);
+                    addCommit([commitChain[5]]);
+                    addCommit([commitChain[2]]);
+                    addCommit([commitChain[7]]);
+                    addCommit([commitChain[8]]);
+                    addCommit([commitChain[7]]);
+                    addCommit([commitChain[10]]);
+                    addCommit([commitChain[9], commitChain[11]]);
+
+                    return deferred.promise;
+                })
+                .then(done)
+                .catch(done);
+        });
+
+        after(function (done) {
+            storage.deleteProject('complexChainTest')
+                .then(function () {
+                    return storage.closeDatabase();
+                })
+                .then(done)
+                .catch(done);
+        });
+
+        it('12 vs 6 -> 2', function (done) {
+            project.getCommonAncestorCommit(commitChain[12], commitChain[6], function (err, c) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                c.should.be.equal(commitChain[2]);
+                done();
+            });
+        });
+        it('9 vs 11 -> 7', function (done) {
+            project.getCommonAncestorCommit(commitChain[9], commitChain[11], function (err, c) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                c.should.be.equal(commitChain[7]);
+                done();
+            });
+        });
+        it('10 vs 4 -> 2', function (done) {
+            project.getCommonAncestorCommit(commitChain[10], commitChain[4], function (err, c) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                c.should.be.equal(commitChain[2]);
+                done();
+            });
+        });
+        it('12 vs 8 -> 8', function (done) {
+            project.getCommonAncestorCommit(commitChain[12], commitChain[8], function (err, c) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                c.should.be.equal(commitChain[8]);
+                done();
+            });
+        });
+        it('9 vs 5 -> 2', function (done) {
+            project.getCommonAncestorCommit(commitChain[9], commitChain[5], function (err, c) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                c.should.be.equal(commitChain[2]);
+                done();
+            });
         });
     });
 });

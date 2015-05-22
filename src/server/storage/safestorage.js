@@ -386,9 +386,9 @@ SafeStorage.prototype.getCommonAncestorCommit = function (data, callback) {
     check(typeof data.commitA === 'string', deferred, 'data.commitA is not a string.') ||
     check(data.commitA === '' || REGEXP.HASH.test(data.commitA), deferred,
         'data.commitA is not a valid hash: ' + data.commitA) ||
-    check(typeof data.commitB === 'string', deferred, 'data.commitA is not a string.') ||
-    check(data.commitA === '' || REGEXP.HASH.test(data.commitA), deferred,
-        'data.commitA is not a valid hash: ' + data.commitA);
+    check(typeof data.commitB === 'string', deferred, 'data.commitB is not a string.') ||
+    check(data.commitB === '' || REGEXP.HASH.test(data.commitB), deferred,
+        'data.commitA is not a valid hash: ' + data.commitB);
 
     if (rejected === false) {
         //TODO: Check authorization here - if user not authorized reject.
