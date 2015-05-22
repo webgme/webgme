@@ -48,7 +48,7 @@ describe('corediff-base', function () {
                                 } else {
                                     project.makeCommit(null,
                                         [commitResult.hash],
-                                        '#roothash',
+                                        importResult.rootHash,
                                         [], // no core-objects
                                         '_' + (chainLength - needed).toString() + '_',
                                         nextCommit);
@@ -58,7 +58,7 @@ describe('corediff-base', function () {
                         project = importResult.project;
                         project.makeCommit(null,
                             [importResult.commitHash],
-                            '#roothash',
+                            importResult.rootHash,
                             [],
                             '_' + 0 + '_',
                             nextCommit);

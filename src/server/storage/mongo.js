@@ -242,13 +242,13 @@ function Mongo(mainLogger, gmeConfig) {
                     var needed = commits.length,
                         i, newCommits = [],
                         commitLoaded = function (err, commit) {
-                            var i;
+                            var j;
                             if (!err && commit) {
-                                for (i = 0; i < commit.parents.length; i++) {
-                                    if (newCommits.indexOf(commit.parents[i]) === -1) {
-                                        newCommits.push(commit.parents[i]);
+                                for (j = 0; j < commit.parents.length; j++) {
+                                    if (newCommits.indexOf(commit.parents[j]) === -1) {
+                                        newCommits.push(commit.parents[j]);
                                     }
-                                    ancestorsSoFar[commit.parents[i]] = true;
+                                    ancestorsSoFar[commit.parents[j]] = true;
                                 }
                             }
                             if (--needed === 0) {
