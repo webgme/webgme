@@ -30,7 +30,7 @@ function PluginNodeManager(webGMESessionId, project, mainLogger, gmeConfig) {
         try {
             getPlugin(pluginName);
         } catch (err) {
-            callback(err.toString(), getPluginErrorResult(pluginName, 'Failed to load plugin.'));
+            callback(err.toString(), self.getPluginErrorResult(pluginName, 'Failed to load plugin.'));
             return;
         }
 
@@ -222,3 +222,5 @@ function PluginNodeManager(webGMESessionId, project, mainLogger, gmeConfig) {
         return deferred.promise;
     };
 }
+
+module.exports = PluginNodeManager;

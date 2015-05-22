@@ -284,7 +284,7 @@ define([
                 return;
             }
             if (typeof self.branch === 'object') {
-                self._commitWithClient(persisted, commitMesage, callback);
+                self._commitWithClient(persisted, commitMessage, callback);
             } else {
                 // Make commit w/o depending on a client.
                 self._makeCommit(persisted, commitMessage, callback);
