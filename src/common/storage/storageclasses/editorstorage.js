@@ -119,7 +119,7 @@ define([
                         branch.updateHashes(originHash, originHash);
                         // TODO: Updating the localHash before the update in the client has
                         // TODO: taken place might not be correct.
-                        updateHandler(updateData);
+                        branch.localUpdateHandler(updateData);
                     } else {
                         logger.debug('commitQueue is not empty, only updating originHash.');
                         branch.updateHashes(null, originHash);
@@ -135,7 +135,7 @@ define([
                     project.insertObject(latestCommit.coreObjects[i]);
                 }
 
-                self._pushCommit(projectName, branchName); // This only has an effect after a fork with pending commits.
+                self._pushNextQueuedCommit(projectName, branchName); // This only has an effect after a fork with pending commits.
                 callback(err, latestCommit);
             });
         };
@@ -206,7 +206,7 @@ define([
                 branch.updateHashes(commitData.commitObject[CONSTANTS.MONGO_ID], null);
                 branch.queueCommit(commitData);
                 if (branch.getCommitQueue().length === 1) {
-                    self._pushCommit(projectName, branchName, commitData, callback);
+                    self._pushNextQueuedCommit(projectName, branchName, commitData, callback);
                 }
             } else {
                 ASSERT(typeof callback === 'function', 'Making commit without updating branch requires a callback.');
@@ -233,7 +233,7 @@ define([
             return commitObj;
         };
 
-        this._pushCommit = function (projectName, branchName, callback) {
+        this._pushNextQueuedCommit = function (projectName, branchName, callback) {
             ASSERT(projects.hasOwnProperty(projectName), 'Project not opened: ' + projectName);
             var project = projects[projectName],
                 branch = project.getBranch(branchName, true),
@@ -257,7 +257,7 @@ define([
                 }
                 branch.commitHandler(branch.getCommitQueue(), result, function (push) {
                     if (push) {
-                        self._pushCommit(projectName, branchName);
+                        self._pushNextQueuedCommit(projectName, branchName);
                         //TODO: Make sure the stack doesn't grow too big.
                     }
                 });

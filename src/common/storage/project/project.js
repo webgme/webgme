@@ -44,8 +44,12 @@ define([
         };
 
         // Functions forwarded to storage.
-        this.setBranchHash = function (branchName, newHash, parents, callback) {
-            storage.setBranchHash(name, newHash, parents, callback);
+        this.setBranchHash = function (branchName, newHash, oldHash, callback) {
+            storage.setBranchHash(name, newHash, oldHash, callback);
+        };
+
+        this.createBranch = function (branchName, newHash, callback) {
+            storage.createBranch(branchName, newHash, callback);
         };
 
         this.makeCommit = function (branchName, parents, rootHash, stageBucket, msg, callback) {

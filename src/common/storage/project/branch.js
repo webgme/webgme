@@ -22,6 +22,14 @@ define(['common/storage/constants'], function (CONSTANTS) {
 
         this.localUpdateHandler = null;
 
+        this.getLocalHash = function () {
+            return localHash;
+        };
+
+        this.getOriginHash = function () {
+            return originHash;
+        };
+
         this.updateHashes = function (newLocal, newOrigin) {
             logger.debug('updatingHashes');
             if (newLocal !== null) {

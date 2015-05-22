@@ -11,8 +11,7 @@ var PluginManagerBase = requireJS('plugin/PluginManagerBase'),
     BlobFSBackend = require('./middleware/blob/BlobFSBackend'),
     BlobRunPluginClient = require('./middleware/blob/BlobRunPluginClient');
 
-function PluginCliManager(storage, project, plugins, mainLogger, gmeConfig) {
-    PluginManagerBase.call(this, storage, Core, mainLogger, plugins, gmeConfig);
+function PluginCliManager(storage, mainLogger, gmeConfig) {
     var blobBackend = new BlobFSBackend(gmeConfig),
         blobClient = new BlobRunPluginClient(blobBackend);
 

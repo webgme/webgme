@@ -110,9 +110,9 @@ Storage.prototype.makeCommit = function (data, callback) {
             }
 
             Q.allSettled(objectHashes.map(insertObj))
-                .then(function (results) {
+                .then(function (insertResults) {
                     var failedInserts = [];
-                    results.map(function (res) {
+                    insertResults.map(function (res) {
                         if (res.state === 'rejected') {
                             failedInserts.push(res);
                         }
@@ -127,7 +127,7 @@ Storage.prototype.makeCommit = function (data, callback) {
                                     var newHash = data.commitObject[CONSTANTS.MONGO_ID],
                                         oldHash = data.commitObject.parents[0],
                                         result = {
-                                            status: null // synch, forked, merged
+                                            status: null // SYNCH, FORKED, (MERGED)
                                         };
                                     project.setBranchHash(data.branchName, oldHash, newHash)
                                         .then(function () {
@@ -166,7 +166,7 @@ Storage.prototype.makeCommit = function (data, callback) {
                                             }
                                         });
                                 } else {
-                                    deferred.resolve();
+                                    deferred.resolve(data.commitObject[CONSTANTS.MONGO_ID]);
                                 }
                             })
                             .catch(function (err) {
@@ -226,35 +226,48 @@ Storage.prototype.getBranchHash = function (data, callback) {
 };
 
 Storage.prototype.setBranchHash = function (data, callback) {
-    var self = this;
-    return this.mongo.openProject(data.projectName)
+    var self = this,
+        deferred = Q.defer();
+    this.mongo.openProject(data.projectName)
         .then(function (project) {
             return project.setBranchHash(data.branchName, data.oldHash, data.newHash)
-        })
-        .then(function () {
-            var eventData = {
-                projectName: data.projectName,
-                branchName: data.branchName,
-                newHash: data.newHash,
-                oldHash: data.oldHash
-            };
+                .then(function () {
+                    var eventData = {
+                        projectName: data.projectName,
+                        branchName: data.branchName,
+                        newHash: data.newHash,
+                        oldHash: data.oldHash
+                    };
 
-            if (data.hasOwnProperty('socket')) {
-                eventData.socket = data.socket;
-            }
-            if (data.oldHash === '' && data.newHash !== '') {
-                self.dispatchEvent(CONSTANTS.BRANCH_CREATED, eventData);
-            } else if (data.newHash === '' && data.oldHash !== '') {
-                self.dispatchEvent(CONSTANTS.BRANCH_DELETED, eventData);
-            } else if (data.newHash !== '' && data.oldHash !== '') {
-                self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
-                // TODO: This should dispatch a BRANCH_UPDATED event too with the necessary data.
-                // TODO: However this case should only happen when a plugin created a branch and
-                // TODO: saves to it more than once.
-            }
-            return Q();
-        })
-        .nodeify(callback);
+                    if (data.hasOwnProperty('socket')) {
+                        eventData.socket = data.socket;
+                    }
+                    if (data.oldHash === '' && data.newHash !== '') {
+                        self.dispatchEvent(CONSTANTS.BRANCH_CREATED, eventData);
+                    } else if (data.newHash === '' && data.oldHash !== '') {
+                        self.dispatchEvent(CONSTANTS.BRANCH_DELETED, eventData);
+                    } else if (data.newHash !== '' && data.oldHash !== '') {
+                        self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
+                        // TODO: This should dispatch a BRANCH_UPDATED event too with the necessary data.
+                        // TODO: However this case should only happen when a plugin created a branch and
+                        // TODO: saves to it more than once.
+                    }
+                    deferred.resolve({status: CONSTANTS.SYNCH});
+                })
+                .catch(function (err) {
+                    if (err === 'branch hash mismatch') {
+                        // TODO: Need to check error better here..
+                        self.logger.debug('user got forked');
+                        deferred.resolve({status: CONSTANTS.FORKED});
+                    } else {
+                        self.logger.error('Failed updating hash', err);
+                        // TODO: How to add meta data to error and decide on error codes.
+                        deferred.reject(new Error(err));
+                    }
+                });
+        });
+
+    return deferred.promise.nodeify(callback);
 };
 
 Storage.prototype.getCommonAncestorCommit = function (data, callback) {

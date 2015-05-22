@@ -357,8 +357,8 @@ SafeStorage.prototype.setBranchHash = function (data, callback) {
     if (rejected === false) {
         //TODO: Check authorization here - if user not authorized reject.
         Storage.prototype.setBranchHash.call(this, data)
-            .then(function () {
-                deferred.resolve();
+            .then(function (result) {
+                deferred.resolve(result);
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));

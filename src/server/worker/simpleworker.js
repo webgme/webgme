@@ -151,7 +151,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         });
     },
 
-
 // Export and node-dumping functions
     exportLibrary = function (webGMESessionId, name, hash, libraryRootPath, callback) {
 
@@ -241,11 +240,11 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         storage.open(function (status) {
             logger.debug('storage is open');
             if (status === STORAGE_CONSTANTS.CONNECTED) {
-                storage.openProject(context.managerConfig.project, function(err, project, branches) {
+                storage.openProject(context.managerConfig.project, function (err, project, branches) {
                     if (err) {
                         throw new Error(err);
                     }
-                    logger.debug('Opened project, got branches:', project, branches);
+                    logger.debug('Opened project, got branches:', context.managerConfig.project, branches);
 
                 });
             } else if (status === STORAGE_CONSTANTS.RECONNECTED) {

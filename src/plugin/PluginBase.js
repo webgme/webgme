@@ -12,8 +12,9 @@ define([
     'plugin/PluginConfig',
     'plugin/PluginResult',
     'plugin/PluginMessage',
-    'plugin/PluginNodeDescription'
-], function (PluginConfig, PluginResult, PluginMessage, PluginNodeDescription) {
+    'plugin/PluginNodeDescription',
+    'common/storage/constants',
+], function (PluginConfig, PluginResult, PluginMessage, PluginNodeDescription, STORAGE_CONSTANTS) {
     'use strict';
 
     /**
@@ -272,6 +273,136 @@ define([
      * @param callback
      */
     PluginBase.prototype.save = function (message, callback) {
+        var self = this,
+            commitMessage = '[Plugin] ' + self.getName() + ' (v' + self.getVersion() + ') updated the model.';
+
+        self.logger.debug('Saving project');
+        self.core.persist(self.rootNode, function (err, persisted) {
+            if (err) {
+                self.logger.error('core.persist failed');
+                callback(err);
+                return;
+            }
+            if (typeof self.branch === 'object') {
+                self._commitWithClient(persisted, commitMesage, callback);
+            } else {
+                // Make commit w/o depending on a client.
+                self._makeCommit(persisted, commitMessage, callback);
+            }
+        });
+    };
+
+    PluginBase.prototype._commitWithClient = function (persisted, commitMessage, callback) {
+        var self = this;
+        if (self.currentHash !== self.branch.getLocalHash()) {
+            // If the client has made local change since the plugin started - create a new branch.
+            var forkName = self.forkName || self.branchName + '_' + (new Date()).getTime();
+            self.logger.warning('Client has made local change since the plugin started in "' + self.branchName + '". ' +
+            'Trying to create a new branch "' + forkName + '".');
+            self.branchName = forkName;
+            self.branch = null; // Set the branch to null - from now on the plugin is detached from the client branch.
+            self._makeCommit(persisted, commitMessage, callback);
+        } else {
+            var commitObject,
+                updateData;
+
+            commitObject = self.project.makeCommit(self.branch.name,
+                [self.currentHash],
+                persisted.rootHash,
+                persisted.objects,
+                commitMessage,
+                function (err, commmitResult) {
+                    if (err) {
+                        self.logger.error('project.makeCommit failed in _commitWithClient.');
+                        callback(err);
+                        return;
+                    }
+                    if (commmitResult.status === STORAGE_CONSTANTS.SYNCH) {
+                        self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+                        callback(null);
+                    } else if (commmitResult.status === STORAGE_CONSTANTS.FORKED) {
+                        var forkName = self.forkName || self.branchName + '_' + (new Date()).getTime();
+                        self.logger.warning('Plugin and client are forked from "' + self.branchName + '". ' +
+                        'Trying to create a new branch "' + forkName + '".');
+                        self.branchName = forkName;
+                        self.branch = null; // Set the branch to null - from now on the plugin is detached
+                                            // from the client branch.
+                        self._makeCommit(persisted, commitMessage, callback);
+                    } else {
+                        callback('makeCommit returned unexpected status' + commmitResult.status);
+                    }
+                }
+            );
+
+            // Locally update the client with the new data.
+            updateData = {
+                projectName: self.projectName,
+                branchName: self.branchName,
+                commitObject: commitObject,
+                coreObjects: persisted.objects
+            };
+
+            self.branch.localUpdateHandler(updateData);
+        }
+    };
+
+    PluginBase.prototype._makeCommit = function (persisted, commitMessage, callback) {
+        var self = this;
+        self.project.makeCommit(null,
+            [self.currentHash],
+            persisted.rootHash,
+            persisted.objects,
+            commitMessage,
+            function (err, newHash) {
+                if (err) {
+                    self.logger.error('project.makeCommit failed.');
+                    callback(err);
+                    return;
+                }
+                var oldHash = self.currentHash;
+                self.currentHash = newHash;
+                self.project.setBranchHash(self.branchName, newHash, oldHash, function (err, updateResult) {
+                    if (err) {
+                        self.logger.error('setBranchHash failed with error.');
+                        callback(err);
+                        return;
+                    }
+
+                    if (updateResult.status === STORAGE_CONSTANTS.SYNCH) {
+                        self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+                        callback(null);
+                    } else if (updateResult.status === STORAGE_CONSTANTS.FORKED) {
+                        // User can set self.forkName, but must make sure it is unique.
+                        var forkName = self.forkName || self.branchName + '_' + (new Date()).getTime();
+                        self.logger.warning('Plugin got forked from "' + self.branchName + '". ' +
+                        'Trying to create a new branch "' + forkName + '".');
+                        self.project.createBranch(forkName, newHash, function (err, forkResult) {
+                            if (err) {
+                                self.logger.error('createBranch failed with error.');
+                                callback(err);
+                                return;
+                            }
+                            if (forkResult.status === STORAGE_CONSTANTS.SYNCH) {
+                                self.branchName = forkName;
+                                self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
+                                '(Successive saves will try to save to this new branch.)');
+                                callback(null);
+                            } else if (updateResult.status === STORAGE_CONSTANTS.FORKED) {
+                                callback('Plugin got forked from "' + self.branchName + '". ' +
+                                'And got forked from name "' + forkName + '" too.');
+                            } else {
+                                callback('createBranch returned unexpected status' + forkResult.status);
+                            }
+                        });
+                    } else {
+                        callback('setBranchHash returned unexpected status' + updateResult.status);
+                    }
+                });
+            }
+        );
+    };
+
+    PluginBase.prototype.saveOld = function (message, callback) {
         var self = this;
 
         this.logger.debug('Saving project');
@@ -396,7 +527,6 @@ define([
 
          });*/
     };
-
     //--------------------------------------------------------------------------------------------------------------
     //---------- Methods that are used by the Plugin Manager. Derived classes should not use these methods
 
@@ -437,11 +567,14 @@ define([
     PluginBase.prototype.configure = function (config) {
         this.core = config.core;
         this.project = config.project;
+        this.branch = config.branch;  // This is only for client side.
         this.projectName = config.projectName;
         this.branchName = config.branchName;
         this.branchHash = config.branchName ? config.commitHash : null;
+
         this.commitHash = config.commitHash;
         this.currentHash = config.commitHash;
+
         this.rootNode = config.rootNode;
         this.activeNode = config.activeNode;
         this.activeSelection = config.activeSelection;
