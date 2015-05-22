@@ -10,8 +10,9 @@ describe('Memory storage', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
-        logger = testFixture.logger,
+        logger = testFixture.logger.fork('memory'),
         Q = testFixture.Q,
+        Project = testFixture.Project,
 
         getMemoryStorage = testFixture.getMemoryStorage,
         projectName = 'newProject';
@@ -573,16 +574,6 @@ describe('Memory storage', function () {
                     }
                 });
         });
-
-        it.skip('should getCommonAncestorCommit', function (done) {
-            project.getCommits((new Date()).getTime() + 1, 10)
-                .then(function (commits) {
-                    expect(commits.length).equal(1);
-                    return project.getCommonAncestorCommit(commits._id, commits._id);
-                })
-                .then(done)
-                .catch(done);
-        });
     });
 
     describe.skip('complex chain', function () {
@@ -591,12 +582,28 @@ describe('Memory storage', function () {
             storage = getMemoryStorage(logger, gmeConfig);
 
         before(function (done) {
+            var rootHash = '';
+
             storage.openDatabase()
                 .then(function () {
-                    return storage.createProject({projectName: 'complexChainTest'});
+                    return storage.deleteProject({projectName: projectName});
                 })
-                .then(function (p) {
-                    project = p;
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: 'seeds/EmptyProject.json',
+                        projectName: 'complexChainTest',
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (result) {
+                    //console.log(result);
+                    var core = result.core,
+                        rootNode = result.rootNode;
+                    rootHash = result.rootHash;
+                    project = result.project;
+
+                    //persited[rootHash] = result.rootNode;
                     //finally we create the commit chain
                     //           o -- o           8,9
                     //          /      \
@@ -608,14 +615,50 @@ describe('Memory storage', function () {
                     var deferred = Q.defer(),
                         error = null,
                         needed = 12,
+                        id = 0,
                         addCommit = function (ancestors) {
-                            var rootHash = '#' + Math.round((Math.random() * 100000000));
-                            commitChain.push(project.makeCommit(ancestors, rootHash, '_commit_', finalCheck));
+                            // FIXME: we should avoid changing the root
+                            // FIXME: how to create new commit objects and reuse the root from the imported model???
+                            core.setAttribute(rootNode, 'name', (new Date()).toISOString());
+                            core.persist(rootNode, function (err, persisted) {
+                                if (err) {
+                                    finalCheck(err);
+                                    return;
+                                }
+                                var commitObject = project.createCommitObject(ancestors, persisted.rootHash, 'test', 'commit ' + id),
+                                    commitData = {
+                                        projectName: 'complexChainTest',
+                                        branchName: 'master',
+                                        commitObject: commitObject,
+                                        coreObjects: persisted.objects
+                                    };
+
+                                id += 1;
+
+                                storage.makeCommit(commitData)
+                                    .then(function (result) {
+                                        //deferred.resolve({
+                                        //    status: result.status,
+                                        //    branchName: 'master',
+                                        //    commitHash: commitObject._id,
+                                        //    project: project,
+                                        //    rootHash: rootHash
+                                        //});
+                                        commitChain.push(commitData);
+                                        finalCheck();
+                                    })
+                                    .catch(function (err) {
+                                        //deferred.reject(err);
+                                        finalCheck(err);
+                                    });
+                            });
                         },
                         finalCheck = function (err) {
                             error = error || err;
                             if (--needed === 0) {
-                                if (error) {
+                                if (error instanceof Error) {
+                                    deferred.reject(error);
+                                } else if (error) {
                                     deferred.reject(new Error(error));
                                 } else {
                                     deferred.resolve();
@@ -625,7 +668,7 @@ describe('Memory storage', function () {
 
                     commitChain = [];
 
-                    addCommit([]);
+                    addCommit(['']);
                     addCommit([commitChain[0]]);
                     addCommit([commitChain[1]]);
                     addCommit([commitChain[2]]);
