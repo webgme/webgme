@@ -253,13 +253,13 @@ function Memory(mainLogger /*, gmeConfig*/) {
                         commit;
                     for (i = 0; i < commits.length; i++) {
                         commit = storage.getItem(database + SEPARATOR + name + SEPARATOR + commits[i]);
-                        if (commit) {
+                        if (commit && typeof commit === 'string') {
                             commit = JSON.parse(commit);
                             for (j = 0; j < commit.parents.length; j++) {
-                                if (newCommits.indexOf(commit.parents[i]) === -1) {
-                                    newCommits.push(commit.parents[i]);
+                                if (newCommits.indexOf(commit.parents[j]) === -1) {
+                                    newCommits.push(commit.parents[j]);
                                 }
-                                ancestorsSoFar[commit.parents[i]] = true;
+                                ancestorsSoFar[commit.parents[j]] = true;
                             }
                         }
                     }
