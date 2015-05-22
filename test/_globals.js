@@ -101,7 +101,7 @@ function importProject(storage, parameters, callback) {
 
     storage.createProject({projectName: parameters.projectName})
         .then(function (dbProject) {
-            var project = new Project(dbProject, parameters.logger, parameters.gmeConfig),
+            var project = new Project(dbProject, storage, parameters.logger, parameters.gmeConfig),
                 core = new Core(project, {
                     globConf: parameters.gmeConfig,
                     logger: parameters.logger

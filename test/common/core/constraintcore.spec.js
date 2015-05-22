@@ -34,7 +34,7 @@ describe('constraint.core', function () {
                 var base,
                     instance;
 
-                project = new testFixture.Project(dbProject, logger, gmeConfig);
+                project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
                 core = new testFixture.WebGME.core(project, {
                     usertype: 'tasync',
                     globConf: gmeConfig,
@@ -57,8 +57,9 @@ describe('constraint.core', function () {
                     info: 'just another info text',
                     script: 'script text for local constraint'
                 });
+                done();
             })
-            .finally(done);
+            .catch(done);
     });
 
     afterEach(function (done) {

@@ -1,108 +1,120 @@
 /* jshint node:true, mocha: true, expr:true*/
 
 /**
-* @author kecso / https://github.com/kecso
-*/
+ * @author kecso / https://github.com/kecso
+ */
 
 var testFixture = require('../../_globals.js');
 
-describe.skip('corediff-base', function () {
+describe('corediff-base', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('corediff-base'),
-        storage = new testFixture.getMongoStorage(logger, gmeConfig);
+        storage = new testFixture.getMongoStorage(logger, gmeConfig),
+        expect = testFixture.expect;
 
     describe('commitAncestor', function () {
         describe('straight line', function () {
             var project,
+                projectName = 'straightLineTest',
                 commitChain = [],
                 chainLength = 1000;
 
             before(function (done) {
-                storage.openDatabase
+                storage.openDatabase()
                     .then(function () {
-                        storage.createProject('straightLineTest', function (err, p) {
-                            if (err) {
-                                done(err);
-                                return;
-                            }
-
-                            project = p;
-                            //finally we create the commit chain
-                            var needed = chainLength,
-                                ancestors = [],
-                                i,
-                                error = null,
-                                finalCheck = function (err) {
-                                    error = error || err;
-                                    if (--needed === 0) {
-                                        done(error);
-                                    }
-                                };
-                            for (i = 0; i < chainLength; i++) {
-                                commitChain.push(project.makeCommit(ancestors, '#roothash', '_' + i + '_', finalCheck));
-                                ancestors = [commitChain[commitChain.length - 1]];
-                            }
+                        return storage.deleteProject({projectName: projectName});
+                    })
+                    .then(function () {
+                        return testFixture.importProject(storage, {
+                            projectSeed: 'seeds/EmptyProject.json',
+                            projectName: projectName,
+                            gmeConfig: gmeConfig,
+                            logger: logger
                         });
-                    });
+                    })
+                    .then(function (importResult) {
+                        //finally we create the commit chain
+                        var needed = chainLength,
+                            nextCommit = function (err, commitResult) {
+                                if (err) {
+                                    done(err);
+                                    return;
+                                }
+                                needed -= 1;
+                                commitChain.push(commitResult.hash);
+                                if (needed === 0) {
+                                    done();
+                                } else {
+                                    project.makeCommit(null,
+                                        [commitResult.hash],
+                                        '#roothash',
+                                        [], // no core-objects
+                                        '_' + (chainLength - needed).toString() + '_',
+                                        nextCommit);
+                                }
+                            };
+
+                        project = importResult.project;
+                        project.makeCommit(null,
+                            [importResult.commitHash],
+                            '#roothash',
+                            [],
+                            '_' + 0 + '_',
+                            nextCommit);
+                    })
+                    .catch(done);
             });
 
             after(function (done) {
-                storage.deleteProject('straightLineTest', function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    storage.closeDatabase(done);
-                });
+                storage.deleteProject({projectName: projectName})
+                    .then(function () {
+                        storage.closeDatabase(done);
+                    })
+                    .catch(function (err) {
+                        logger.error(err);
+                        storage.closeDatabase(done);
+                    });
             });
 
             it('single chain 0 vs 1', function (done) {
-                project.getCommonAncestorCommit(commitChain[0], commitChain[1], function (err, c) {
-                    if (err) {
-                        done(new Error(err));
-                        return;
-                    }
-                    c.should.be.equal(commitChain[0]);
-                    done();
-                });
+                project.getCommonAncestorCommit(commitChain[0], commitChain[1])
+                    .then(function (commonHash) {
+                        expect(commonHash).to.equal(commitChain[0]);
+                        done();
+                    })
+                    .catch(done);
             });
+
             it('single chain 1 vs 0', function (done) {
-                project.getCommonAncestorCommit(commitChain[1], commitChain[0], function (err, c) {
-                    if (err) {
-                        done(new Error(err));
-                        return;
-                    }
-
-                    c.should.be.equal(commitChain[0]);
-                    done();
-                });
+                project.getCommonAncestorCommit(commitChain[1], commitChain[0])
+                    .then(function (commonHash) {
+                        expect(commonHash).to.equal(commitChain[0]);
+                        done();
+                    })
+                    .catch(done);
             });
+
             it('single chain 1 vs 1', function (done) {
-                project.getCommonAncestorCommit(commitChain[1], commitChain[1], function (err, c) {
-                    if (err) {
-                        done(new Error(err));
-                        return;
-                    }
-
-                    c.should.be.equal(commitChain[1]);
-                    done();
-                });
+                project.getCommonAncestorCommit(commitChain[1], commitChain[1])
+                    .then(function (commonHash) {
+                        expect(commonHash).to.equal(commitChain[1]);
+                        done();
+                    })
+                    .catch(done);
             });
-            it('single chain 0 vs 999', function (done) {
-                project.getCommonAncestorCommit(commitChain[0], commitChain[999], function (err, c) {
-                    if (err) {
-                        done(new Error(err));
-                        return;
-                    }
 
-                    c.should.be.equal(commitChain[0]);
-                    done();
-                });
+            it('single chain 0 vs 999', function (done) {
+                project.getCommonAncestorCommit(commitChain[0], commitChain[999])
+                    .then(function (commonHash) {
+                        expect(commonHash).to.equal(commitChain[0]);
+                        done();
+                    })
+                    .catch(done);
             });
         });
 
-        describe('complex chain', function () {
+        describe.skip('complex chain', function () {
             var project, commitChain = [];
             before(function (done) {
                 storage.openDatabase(function (err) {

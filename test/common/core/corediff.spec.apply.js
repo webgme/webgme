@@ -50,7 +50,8 @@ describe('corediff apply', function () {
                 storage.closeDatabase(done);
             })
             .catch(function (err) {
-                done(err);
+                logger.error(err);
+                storage.closeDatabase(done);
             });
     });
 

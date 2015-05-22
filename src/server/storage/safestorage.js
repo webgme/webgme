@@ -393,8 +393,8 @@ SafeStorage.prototype.getCommonAncestorCommit = function (data, callback) {
     if (rejected === false) {
         //TODO: Check authorization here - if user not authorized reject.
         Storage.prototype.getCommonAncestorCommit.call(this, data)
-            .then(function () {
-                deferred.resolve();
+            .then(function (commonHash) {
+                deferred.resolve(commonHash);
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));

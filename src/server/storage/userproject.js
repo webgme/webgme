@@ -13,53 +13,71 @@ var ProjectCache = requireJS('common/storage/project/cache'),
     CONSTANTS = requireJS('common/storage/constants');
 
 function UserProject(dbProject, storage, mainLogger, gmeConfig) {
-    var logger = mainLogger.fork('UserProject:' + dbProject.name),
+    var self = this,
+        logger = mainLogger.fork('UserProject:' + dbProject.name),
         projectCache,
-    objectLoader = {
-        loadObject: function (projectName, key, callback) {
-            dbProject.loadObject(key, callback);
-        }
-    };
+        objectLoader = {
+            loadObject: function (projectName, key, callback) {
+                dbProject.loadObject(key, callback);
+            }
+        };
 
-    projectCache = new ProjectCache(objectLoader, dbProject.name, logger, gmeConfig);
+    this.name = dbProject.name;
+
+    projectCache = new ProjectCache(objectLoader, this.name, logger, gmeConfig);
 
     this.insertObject = projectCache.insertObject;
     this.loadObject = projectCache.loadObject;
     this.ID_NAME = CONSTANTS.MONGO_ID;
 
-    // Functions forwarded to storage.
+    // Functions forwarded to storage TODO: This should return promises!
     this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
         var self = this,
             data = {
-                projectName: dbProject.name,
+                projectName: self.name,
                 commitObject: self.createCommitObject(parents, rootHash, null, msg),
                 coreObjects: coreObjects
             };
+
         if (branchName) {
             data.branchName = branchName;
         }
-        storage.makeCommit(data, callback);
+
+        return storage.makeCommit(data)
+            .nodeify(callback);
     };
 
     this.setBranchHash = function (branchName, newHash, oldHash, callback) {
         var data = {
-            projectName: dbProject.name,
+            projectName: self.name,
             branchName: branchName,
             newHash: newHash,
             oldHash: oldHash
         };
 
-        storage.setBranchHash(data, callback);
+        return storage.setBranchHash(data)
+            .nodeify(callback);
     };
 
-    this.createBranch = function (branchName, newHash, callback) {
+    this.createBranch = function (branchName, hash, callback) {
         var data = {
-            projectName: dbProject.name,
+            projectName: self.name,
             branchName: branchName,
             hash: hash
         };
 
-        storage.setBranchHash(data, callback);
+        return storage.setBranchHash(data)
+            .nodeify(callback);
+    };
+
+    this.getCommonAncestorCommit = function (commitA, commitB, callback) {
+        var data = {
+            projectName: self.name,
+            commitA: commitA,
+            commitB: commitB
+        };
+        return storage.getCommonAncestorCommit(data)
+            .nodeify(callback);
     };
 
     // Helper functions
