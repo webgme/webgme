@@ -11,6 +11,7 @@ describe('corediff-base', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('corediff-base'),
         storage = new testFixture.getMongoStorage(logger, gmeConfig),
+        Q = testFixture.Q,
         expect = testFixture.expect;
 
     describe('commitAncestor', function () {
@@ -18,7 +19,7 @@ describe('corediff-base', function () {
             var project,
                 projectName = 'straightLineTest',
                 commitChain = [],
-                chainLength = 1000;
+                chainLength = 1000; // FIXME: Do we really need 1000 commits?
 
             before(function (done) {
                 storage.openDatabase()
@@ -114,21 +115,26 @@ describe('corediff-base', function () {
             });
         });
 
-        describe.skip('complex chain', function () {
-            var project, commitChain = [];
+        describe('complex chain', function () {
+            var project,
+                projectName = 'complexChainTest',
+                commitChain = [];
             before(function (done) {
-                storage.openDatabase(function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    storage.openProject('complexChainTest', function (err, p) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-
-                        project = p;
+                storage.openDatabase()
+                    .then(function () {
+                        return storage.deleteProject({projectName: projectName});
+                    })
+                    .then(function () {
+                        return testFixture.importProject(storage, {
+                            projectSeed: 'seeds/EmptyProject.json',
+                            projectName: projectName,
+                            gmeConfig: gmeConfig,
+                            logger: logger
+                        });
+                    })
+                    .then(function (importResult) {
+                        var commitDatas = [],
+                            id = 0;
                         //finally we create the commit chain
                         //           o -- o           8,9
                         //          /      \
@@ -136,44 +142,58 @@ describe('corediff-base', function () {
                         //        / \      /
                         //       /   o -- o           10,11
                         // o -- o -- o -- o -- o -- o 1,2,3,4,5,6
+                        project = importResult.project;
+                        function addCommitObject(parents) {
+                            var commitObject = project.createCommitObject(parents,
+                                importResult.rootHash,
+                                'tester',
+                                id.toString());
 
-                        var error = null,
-                            needed = 12,
-                            addCommit = function (ancestors) {
-                                var rootHash = '#' + Math.round((Math.random() * 100000000));
-                                commitChain.push(project.makeCommit(ancestors, rootHash, '_commit_', finalCheck));
-                            },
-                            finalCheck = function (err) {
-                                error = error || err;
-                                if (--needed === 0) {
-                                    done(error);
-                                }
-                            };
-                        commitChain = [];
-                        addCommit([]);
-                        addCommit([commitChain[0]]);
-                        addCommit([commitChain[1]]);
-                        addCommit([commitChain[2]]);
-                        addCommit([commitChain[3]]);
-                        addCommit([commitChain[4]]);
-                        addCommit([commitChain[5]]);
-                        addCommit([commitChain[2]]);
-                        addCommit([commitChain[7]]);
-                        addCommit([commitChain[8]]);
-                        addCommit([commitChain[7]]);
-                        addCommit([commitChain[10]]);
-                        addCommit([commitChain[9], commitChain[11]]);
-                    });
-                });
+                            commitDatas.push({
+                                projectName: 'complexChainTest',
+                                commitObject: commitObject,
+                                coreObjects: []
+                            });
+
+                            id += 1;
+                            commitChain.push(commitObject._id);
+                        }
+
+                        addCommitObject([importResult.commitHash]);
+                        addCommitObject([commitChain[0]]);
+                        addCommitObject([commitChain[1]]);
+                        addCommitObject([commitChain[2]]);
+                        addCommitObject([commitChain[3]]);
+                        addCommitObject([commitChain[4]]);
+                        addCommitObject([commitChain[5]]);
+                        addCommitObject([commitChain[2]]);
+                        addCommitObject([commitChain[7]]);
+                        addCommitObject([commitChain[8]]);
+                        addCommitObject([commitChain[7]]);
+                        addCommitObject([commitChain[10]]);
+                        addCommitObject([commitChain[9], commitChain[11]]);
+
+                        function makeCommit (commitData) {
+                            return storage.makeCommit(commitData);
+                        }
+
+                        return Q.all(commitDatas.map(makeCommit));
+                    })
+                    .then(function (/*commitResults*/) {
+                        done();
+                    })
+                    .catch(done);
             });
+
             after(function (done) {
-                storage.deleteProject('complexChainTest', function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    storage.closeDatabase(done);
-                });
+                storage.deleteProject({projectName: projectName})
+                    .then(function () {
+                        storage.closeDatabase(done);
+                    })
+                    .catch(function (err) {
+                        logger.error(err);
+                        storage.closeDatabase(done);
+                    });
             });
 
             it('12 vs 6 -> 2', function (done) {

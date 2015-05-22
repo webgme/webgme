@@ -576,14 +576,13 @@ describe('Memory storage', function () {
         });
     });
 
-    describe.skip('complex chain', function () {
+    describe('complex chain', function () {
         var project,
-            commitChain = [],
-            storage = getMemoryStorage(logger, gmeConfig);
+            projectName = 'complexChainTest',
+            storage = testFixture.getMemoryStorage(logger, gmeConfig),
+            commitChain = [];
 
         before(function (done) {
-            var rootHash = '';
-
             storage.openDatabase()
                 .then(function () {
                     return storage.deleteProject({projectName: projectName});
@@ -591,19 +590,14 @@ describe('Memory storage', function () {
                 .then(function () {
                     return testFixture.importProject(storage, {
                         projectSeed: 'seeds/EmptyProject.json',
-                        projectName: 'complexChainTest',
+                        projectName: projectName,
                         gmeConfig: gmeConfig,
                         logger: logger
                     });
                 })
-                .then(function (result) {
-                    //console.log(result);
-                    var core = result.core,
-                        rootNode = result.rootNode;
-                    rootHash = result.rootHash;
-                    project = result.project;
-
-                    //persited[rootHash] = result.rootNode;
+                .then(function (importResult) {
+                    var commitDatas = [],
+                        id = 0;
                     //finally we create the commit chain
                     //           o -- o           8,9
                     //          /      \
@@ -611,90 +605,58 @@ describe('Memory storage', function () {
                     //        / \      /
                     //       /   o -- o           10,11
                     // o -- o -- o -- o -- o -- o 1,2,3,4,5,6
+                    project = importResult.project;
+                    function addCommitObject(parents) {
+                        var commitObject = project.createCommitObject(parents,
+                            importResult.rootHash,
+                            'tester',
+                            id.toString());
 
-                    var deferred = Q.defer(),
-                        error = null,
-                        needed = 12,
-                        id = 0,
-                        addCommit = function (ancestors) {
-                            // FIXME: we should avoid changing the root
-                            // FIXME: how to create new commit objects and reuse the root from the imported model???
-                            core.setAttribute(rootNode, 'name', (new Date()).toISOString());
-                            core.persist(rootNode, function (err, persisted) {
-                                if (err) {
-                                    finalCheck(err);
-                                    return;
-                                }
-                                var commitObject = project.createCommitObject(ancestors, persisted.rootHash, 'test', 'commit ' + id),
-                                    commitData = {
-                                        projectName: 'complexChainTest',
-                                        branchName: 'master',
-                                        commitObject: commitObject,
-                                        coreObjects: persisted.objects
-                                    };
+                        commitDatas.push({
+                            projectName: 'complexChainTest',
+                            commitObject: commitObject,
+                            coreObjects: []
+                        });
 
-                                id += 1;
+                        id += 1;
+                        commitChain.push(commitObject._id);
+                    }
 
-                                storage.makeCommit(commitData)
-                                    .then(function (result) {
-                                        //deferred.resolve({
-                                        //    status: result.status,
-                                        //    branchName: 'master',
-                                        //    commitHash: commitObject._id,
-                                        //    project: project,
-                                        //    rootHash: rootHash
-                                        //});
-                                        commitChain.push(commitData);
-                                        finalCheck();
-                                    })
-                                    .catch(function (err) {
-                                        //deferred.reject(err);
-                                        finalCheck(err);
-                                    });
-                            });
-                        },
-                        finalCheck = function (err) {
-                            error = error || err;
-                            if (--needed === 0) {
-                                if (error instanceof Error) {
-                                    deferred.reject(error);
-                                } else if (error) {
-                                    deferred.reject(new Error(error));
-                                } else {
-                                    deferred.resolve();
-                                }
-                            }
-                        };
+                    addCommitObject([importResult.commitHash]);
+                    addCommitObject([commitChain[0]]);
+                    addCommitObject([commitChain[1]]);
+                    addCommitObject([commitChain[2]]);
+                    addCommitObject([commitChain[3]]);
+                    addCommitObject([commitChain[4]]);
+                    addCommitObject([commitChain[5]]);
+                    addCommitObject([commitChain[2]]);
+                    addCommitObject([commitChain[7]]);
+                    addCommitObject([commitChain[8]]);
+                    addCommitObject([commitChain[7]]);
+                    addCommitObject([commitChain[10]]);
+                    addCommitObject([commitChain[9], commitChain[11]]);
 
-                    commitChain = [];
+                    function makeCommit (commitData) {
+                        return storage.makeCommit(commitData);
+                    }
 
-                    addCommit(['']);
-                    addCommit([commitChain[0]]);
-                    addCommit([commitChain[1]]);
-                    addCommit([commitChain[2]]);
-                    addCommit([commitChain[3]]);
-                    addCommit([commitChain[4]]);
-                    addCommit([commitChain[5]]);
-                    addCommit([commitChain[2]]);
-                    addCommit([commitChain[7]]);
-                    addCommit([commitChain[8]]);
-                    addCommit([commitChain[7]]);
-                    addCommit([commitChain[10]]);
-                    addCommit([commitChain[9], commitChain[11]]);
-
-                    return deferred.promise;
+                    return Q.all(commitDatas.map(makeCommit));
                 })
-                .then(done)
+                .then(function (/*commitResults*/) {
+                    done();
+                })
                 .catch(done);
         });
 
         after(function (done) {
-            storage.deleteProject('complexChainTest')
+            storage.deleteProject({projectName: projectName})
                 .then(function () {
-                    return storage.closeDatabase();
+                    storage.closeDatabase(done);
                 })
-                .then(done)
-                .catch(done);
+                .catch(function (err) {
+                    logger.error(err);
+                    storage.closeDatabase(done);
+                });
         });
 
         it('12 vs 6 -> 2', function (done) {
