@@ -12,7 +12,7 @@ describe('Run plugin CLI', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         should = testFixture.should,
         spawn = testFixture.childProcess.spawn,
-        Storage = testFixture.WebGME.serverUserStorage,
+        Storage = testFixture.WebGME.getMongoStorage,
         mongodb = require('mongodb'),
         mongoConn,
         importCLI = require('../../src/bin/import'),

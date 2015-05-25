@@ -272,7 +272,7 @@ function StandAloneServer(gmeConfig) {
                 var numDestroyedSockets = 0;
 
                 // close storage
-                __storage.close(function (err1) {
+                __storage.closeDatabase(function (err1) {
                     __gmeAuth.unload(function (err2) {
                         logger.debug('gmeAuth unloaded');
                         // request server close - do not accept any new connections.

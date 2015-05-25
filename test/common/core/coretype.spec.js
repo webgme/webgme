@@ -8,7 +8,8 @@ var testFixture = require('../../_globals.js');
 describe('coretype', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = new testFixture.Storage({globConf: gmeConfig, logger: testFixture.logger.fork('coretype:storage')}),
+        logger = testFixture.logger.fork('coretype.spec'),
+        storage = testFixture.getMongoStorage(logger, gmeConfig),
         Type = testFixture.requirejs('common/core/coretype'),
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),

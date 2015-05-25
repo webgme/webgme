@@ -11,8 +11,10 @@ describe('local', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
-        storage = new testFixture.Storage({globConf: gmeConfig}),
-        storageWithCache = new testFixture.StorageWithCache({globConf: gmeConfig});
+        logger = testFixture.logger.fork('storage.local'),
+        storage = new testFixture.getMemoryStorage(logger, gmeConfig),
+        storageWithCache = new testFixture.getMemoryStorage(logger, gmeConfig);
+        //storageWithCache = new testFixture.StorageWithCache({globConf: gmeConfig});
 
     describe('Database', function () {
         it('should be empty initially', function (done) {

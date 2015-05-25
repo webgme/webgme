@@ -9,11 +9,8 @@ describe('merge CLI test', function () {
     'use strict';
     var filename = require('path').normalize('src/bin/merge.js'),
         mergeCli = require('../../src/bin/merge'),
-        storageParams = {
-            globConf: gmeConfig,
-            logger: testFixture.logger.fork('merge CLI test:storage')
-        },
-        database = new testFixture.WebGME.serverUserStorage(storageParams),
+        logger = testFixture.logger.fork('merge.CLI'),
+        database = new testFixture.getMongoStorage(logger, gmeConfig),
         projectName = 'mergeCliTest',
         oldProcessExit = process.exit,
         oldConsoleLog = console.log,
