@@ -12,7 +12,7 @@ describe('CoreTree', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         should = require('chai').should(),
         requirejs = require('requirejs'),
-
+        projectName = 'CoreTreeTest',
         CoreTree = requirejs('common/core/coretree'),
 
     // TODO: replace with in memory storage
@@ -23,25 +23,32 @@ describe('CoreTree', function () {
         coreTree;
 
     before(function (done) {
-        storage.openDatabase(function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-
-            storage.openProject('CoreTreeTest', function (err, project) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-
+        storage.openDatabase()
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
+                return storage.createProject({projectName: projectName});
+            })
+            .then(function (project) {
                 coreTree = new CoreTree(project, {
                     globConf: gmeConfig,
                     logger: testFixture.logger.fork('CoreTree:core')
                 });
-                done();
+            })
+            .then(done)
+            .catch(done);
+    });
+
+    after(function (done) {
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+                storage.closeDatabase(done);
+            })
+            .catch(function (err) {
+                logger.error(err);
+                storage.closeDatabase(done);
             });
-        });
     });
 
     describe('core.getParent', function () {
