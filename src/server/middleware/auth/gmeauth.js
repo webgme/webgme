@@ -100,12 +100,12 @@ function GMEAuth(session, gmeConfig) {
     addMongoOpsToPromize(projectCollection);
 
     function connect(callback) {
-        Q.ninvoke(Mongodb.MongoClient, 'connect', gmeConfig.mongo.uri,
-            gmeConfig.mongo.options
-        ).then(function (db_) {
+        return Q.ninvoke(Mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
+            .then(function (db_) {
                 db = db_;
                 return Q.ninvoke(db, 'collection', _collectionName);
-            }).then(function (collection_) {
+            })
+            .then(function (collection_) {
                 collectionDeferred.resolve(collection_);
                 if (gmeConfig.authentication.allowGuests) {
                     collection.findOne({_id: gmeConfig.authentication.guestAccount})
@@ -119,10 +119,12 @@ function GMEAuth(session, gmeConfig) {
                         });
                 }
                 return Q.ninvoke(db, 'collection', _organizationCollectionName);
-            }).then(function (organizationCollection_) {
+            })
+            .then(function (organizationCollection_) {
                 organizationCollectionDeferred.resolve(organizationCollection_);
                 return Q.ninvoke(db, 'collection', _projectCollectionName);
-            }).then(function (projectCollection_) {
+            })
+            .then(function (projectCollection_) {
                 projectCollectionDeferred.resolve(projectCollection_);
             })
             .catch(function (err) {
@@ -301,6 +303,11 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    function getUserIdBySession(sessionId, callback) {
+        return Q.ninvoke(_session, 'getSessionUser', sessionId)
+            .nodeify(callback);
+    }
+
     function tokenAuthorization(tokenId, projectName, callback) { //TODO currently we expect only reads via token usage
         var query = {tokenId: tokenId};
         query['projects.' + projectName + '.read'] = true;
@@ -372,7 +379,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: userId})
             .then(function (userData) {
                 if (!userData) {
-                    return Q.reject('no such user');
+                    return Q.reject('no such user ' + userId);
                 }
                 return userData.projects;
             })
@@ -645,6 +652,7 @@ function GMEAuth(session, gmeConfig) {
         authenticateUserById: authenticateUserById,
         authorize: authorizeBySession,
         deleteProject: deleteProject,
+        getUserIdBySession: getUserIdBySession,
         getProjectAuthorizationBySession: getProjectAuthorizationBySession,
         getProjectAuthorizationByUserId: getProjectAuthorizationByUserId,
         tokenAuthorization: tokenAuthorization,

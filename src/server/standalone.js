@@ -446,6 +446,11 @@ function StandAloneServer(gmeConfig) {
 
             }
         } else {
+            // if authentication is turned off we treat everybody as a guest user
+            req.session.authenticated = true;
+            req.session.udmId = gmeConfig.authentication.guestAccount;
+            req.session.userType = 'GME';
+            res.cookie('webgme', req.session.udmId);
             return next();
         }
     }
@@ -623,8 +628,8 @@ function StandAloneServer(gmeConfig) {
     __app = new Express();
 
     __database = new Mongo(logger, gmeConfig);
-    __storage = new Storage(__database, logger, gmeConfig);
-    __webSocket = new WebSocket(__storage, logger, gmeConfig);
+    __storage = new Storage(__database, logger, gmeConfig, __gmeAuth); // FIXME: how should we deal with gmeAuth???
+    __webSocket = new WebSocket(__storage, logger, gmeConfig, __gmeAuth);
 
     middlewareOpts = {  //TODO: Pass this to every middleware They must not modify the options!
         gmeConfig: gmeConfig,

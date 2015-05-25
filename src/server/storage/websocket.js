@@ -6,14 +6,45 @@
 'use strict';
 
 var io = require('socket.io'),
+    COOKIE = require('cookie-parser'),
+    URL = requireJS('common/util/url'),
     CONSTANTS = requireJS('common/storage/constants'),
     ROOM_DIV = CONSTANTS.ROOM_DIVIDER, // TODO: Add prefixes
     DATABASE_ROOM = CONSTANTS.DATABASE_ROOM;
 
-function WebSocket(storage, mainLogger, gmeConfig) {
+function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
     var logger = mainLogger.fork('WebSocket'),
         webSocket;
     logger.debug('ctor');
+
+    function getUserIdFromSocket(socket, callback) {
+        var sessionId,
+            handshakeData = socket.handshake;
+
+        if (handshakeData) {
+            if (handshakeData.query &&
+                handshakeData.query.webGMESessionId &&
+                handshakeData.query.webGMESessionId !== 'undefined') {
+                // TODO: Isn't this branch deprecated?
+                sessionId = handshakeData.query.webGMESessionId;
+            } else if (handshakeData.query &&
+                       handshakeData.query[gmeConfig.server.sessionCookieId] &&
+                       handshakeData.query[gmeConfig.server.sessionCookieId] !== 'undefined') {
+                sessionId = COOKIE.signedCookie(handshakeData.query[gmeConfig.server.sessionCookieId],
+                    gmeConfig.server.sessionCookieSecret);
+            } else if (gmeConfig.server.sessionCookieId &&
+                       gmeConfig.server.sessionCookieSecret &&
+                       handshakeData.headers && handshakeData.headers.cookie) {
+                //we try to dig it from the signed cookie
+                sessionId = COOKIE.signedCookie(
+                    URL.parseCookie(handshakeData.headers.cookie)[gmeConfig.server.sessionCookieId],
+                    gmeConfig.server.sessionCookieSecret);
+            }
+        }
+
+        return gmeAuth.getUserIdBySession(sessionId)
+            .nodeify(callback);
+    }
 
     function getEmitter(data) {
         var emitter;
@@ -168,7 +199,11 @@ function WebSocket(storage, mainLogger, gmeConfig) {
 
             // REST like functions
             socket.on('getProjectNames', function (data, callback) {
-                storage.getProjectNames(data)
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getProjectNames(data);
+                    })
                     .then(function (projectNames) {
                         callback(null, projectNames);
                     })
@@ -193,6 +228,7 @@ function WebSocket(storage, mainLogger, gmeConfig) {
                             callback(err.toString());
                         }
                     });
+
             });
 
             socket.on('deleteProject', function (data, callback) {

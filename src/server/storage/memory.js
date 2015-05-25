@@ -22,7 +22,7 @@ var Q = require('Q'),
  * @param mainLogger
  * @constructor
  */
-function Memory(mainLogger /*, gmeConfig*/) {
+function Memory(mainLogger, gmeConfig) {
     var logger = mainLogger.fork('memory'),
         database = 'memory', // is this constant or coming from the GME config?
         storage = {
@@ -62,6 +62,7 @@ function Memory(mainLogger /*, gmeConfig*/) {
             }
         };
 
+    this.gmeConfig = gmeConfig;
 
     function Project(name) {
         var self = this;

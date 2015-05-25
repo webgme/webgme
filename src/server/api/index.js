@@ -467,8 +467,8 @@ function createAPI(app, mountPath, middlewareOpts) {
 // PROJECTS
 
     router.get('/projects', function (req, res, next) {
-
-        safeStorage.getProjectNames({})
+        var userId = getUserId(req);
+        safeStorage.getProjectNames({username: userId})
             .then(function (result) {
                 res.json(result);
             })
@@ -493,8 +493,13 @@ function createAPI(app, mountPath, middlewareOpts) {
     //});
 
     router.delete('/projects/:projectId', function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId
+            };
 
-        safeStorage.deleteProject({projectName: req.params.projectId})
+        safeStorage.deleteProject(data)
             .then(function () {
                 res.sendStatus(204);
             })
@@ -504,11 +509,13 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.get('/projects/:projectId/commits', function (req, res, next) {
-        var data = {
-            projectName: req.params.projectId,
-            before: (new Date()).getTime(), // current time
-            number: 100 // asks for the last 100 commits from the time specified above
-        };
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId,
+                before: (new Date()).getTime(), // current time
+                number: 100 // asks for the last 100 commits from the time specified above
+            };
 
         safeStorage.getCommits(data)
             .then(function (result) {
@@ -520,8 +527,13 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.get('/projects/:projectId/branches', function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId
+            };
 
-        safeStorage.getBranches({projectName: req.params.projectId})
+        safeStorage.getBranches(data)
             .then(function (result) {
                 res.json(result);
             })
@@ -532,10 +544,12 @@ function createAPI(app, mountPath, middlewareOpts) {
 
 
     router.get('/projects/:projectId/branches/:branchId', function (req, res, next) {
-        var data = {
-            projectName: req.params.projectId,
-            branchName: req.params.branchId
-        };
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId,
+                branchName: req.params.branchId
+            };
 
         safeStorage.getLatestCommitData(data)
             .then(function (result) {
@@ -547,11 +561,13 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.patch('/projects/:projectId/branches/:branchId', function (req, res, next) {
-        var data = {
-            projectName: req.params.projectId,
-            branchName: req.params.branchId,
-            hash: req.body.hash
-        };
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId,
+                branchName: req.params.branchId,
+                hash: req.body.hash
+            };
 
         safeStorage.createBranch(data)
             .then(function () {
@@ -563,11 +579,13 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.put('/projects/:projectId/branches/:branchId', function (req, res, next) {
-        var data = {
-            projectName: req.params.projectId,
-            branchName: req.params.branchId,
-            hash: req.body.hash
-        };
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId,
+                branchName: req.params.branchId,
+                hash: req.body.hash
+            };
 
         safeStorage.createBranch(data)
             .then(function () {
@@ -579,10 +597,12 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.delete('/projects/:projectId/branches/:branchId', function (req, res, next) {
-        var data = {
-            projectName: req.params.projectId,
-            branchName: req.params.branchId
-        };
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId,
+                branchName: req.params.branchId
+            };
 
         safeStorage.deleteBranch(data)
             .then(function () {

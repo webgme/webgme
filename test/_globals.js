@@ -43,13 +43,13 @@ var WebGME = require('../webgme'),
             }
         }]
     }, false),
-    getMongoStorage = function (logger, gmeConfig) {
+    getMongoStorage = function (logger, gmeConfig, gmeAuth) {
         var mongo = new Mongo(logger, gmeConfig);
-        return new SafeStorage(mongo, logger, gmeConfig);
+        return new SafeStorage(mongo, logger, gmeConfig, gmeAuth);
     },
-    getMemoryStorage = function (logger, gmeConfig) {
+    getMemoryStorage = function (logger, gmeConfig, gmeAuth) {
         var memory = new Memory(logger, gmeConfig);
-        return new SafeStorage(memory, logger, gmeConfig);
+        return new SafeStorage(memory, logger, gmeConfig, gmeAuth);
     },
     generateKey = requireJS('common/util/key'),
 

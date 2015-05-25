@@ -30,8 +30,9 @@ function check(cond, deferred, msg) {
     return rejected;
 }
 
-function SafeStorage(mongo, logger, gmeConfig) {
+function SafeStorage(mongo, logger, gmeConfig, gmeAuth) {
     Storage.call(this, mongo, logger, gmeConfig);
+    this.gmeAuth = gmeAuth;
 }
 
 // Inherit from Storage
@@ -46,15 +47,37 @@ SafeStorage.prototype.constructor = SafeStorage;
  */
 SafeStorage.prototype.getProjectNames = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false;
+        rejected = false,
+        userAuthInfo,
+        self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.');
 
+    if (data.hasOwnProperty('username')) {
+        rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
+    } else {
+        data.username = this.gmeConfig.authentication.guestAccount;
+    }
+
     if (rejected === false) {
-        Storage.prototype.getProjectNames.call(this, data)
+        this.gmeAuth.getUserAuthInfo(data.username)
+            .then(function (userAuthInfo_) {
+                userAuthInfo = userAuthInfo_;
+                return Storage.prototype.getProjectNames.call(self, data);
+            })
             .then(function (result) {
-                //TODO: For each projectName in result check if user has read access.
-                deferred.resolve(result);
+                var filteredResult = [],
+                    i,
+                    projectName;
+
+                for (i = 0; i < result.length; i += 1) {
+                    //For each projectName in result check if user has read access.
+                    projectName = result[i];
+                    if (userAuthInfo.hasOwnProperty(projectName) && userAuthInfo[projectName].read) {
+                        filteredResult.push(result[i]);
+                    }
+                }
+                deferred.resolve(filteredResult);
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));
