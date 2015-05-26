@@ -18,6 +18,7 @@
 var Q = require('Q'),
 
     REGEXP = requireJS('common/regexp'),
+    ASSERT = requireJS('common/util/assert'),
     Storage = require('./storage');
 
 function check(cond, deferred, msg) {
@@ -31,6 +32,7 @@ function check(cond, deferred, msg) {
 }
 
 function SafeStorage(mongo, logger, gmeConfig, gmeAuth) {
+    ASSERT(gmeAuth !== null && typeof gmeAuth === 'object', 'gmeAuth is a mandatory parameter');
     Storage.call(this, mongo, logger, gmeConfig);
     this.gmeAuth = gmeAuth;
 }
@@ -73,7 +75,7 @@ SafeStorage.prototype.getProjectNames = function (data, callback) {
                 for (i = 0; i < result.length; i += 1) {
                     //For each projectName in result check if user has read access.
                     projectName = result[i];
-                    if (userAuthInfo.hasOwnProperty(projectName) && userAuthInfo[projectName].read) {
+                    if (userAuthInfo.hasOwnProperty(projectName) && userAuthInfo[projectName].read === true) {
                         filteredResult.push(result[i]);
                     }
                 }

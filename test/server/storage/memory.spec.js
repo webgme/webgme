@@ -312,14 +312,17 @@ describe('Memory storage', function () {
 
             memoryStorage.openDatabase()
                 .then(function () {
-                    return memoryStorage.getProjectNames({});
+                    return memoryStorage.getProjectNames({username: guestAccount});
                 })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal([]);
-                    return memoryStorage.createProject({projectName: projectName + '_does_not_have_access'});
+                    return memoryStorage.createProject({
+                        username: guestAccount,
+                        projectName: projectName + '_does_not_have_access'
+                    });
                 })
                 .then(function () {
-                    return memoryStorage.getProjectNames({});
+                    return memoryStorage.getProjectNames({username: 'admin'});
                 })
                 .then(function (projectNames) {
                     expect(projectNames).deep.equal([]);
