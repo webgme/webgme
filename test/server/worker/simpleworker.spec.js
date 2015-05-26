@@ -18,8 +18,8 @@ describe('Simple worker', function () {
         CONSTANTS = require('./../../../src/server/worker/constants'),
         server,
 
-        logger = testFixture.logger,
-        MongoStorage = require('./../../../src/server/storage/serveruserstorage'),
+        logger = testFixture.logger.fork('simpleworker.spec'),
+        storage = testFixture.getMongoStorage(logger, gmeConfig),
         baseProjectContext = {
             name: 'WorkerProject',
             commitHash: '',
@@ -29,10 +29,6 @@ describe('Simple worker', function () {
         baseProjectJson = JSON.parse(
             testFixture.fs.readFileSync('test/server/worker/simpleworker/baseProject.json', 'utf8')
         ),
-        storage = new MongoStorage({
-            logger: logger.fork('mongoStorage'),
-            globConf: gmeConfig
-        }),
         deleteProject = function (projectName, next) {
             testFixture.deleteProject({
                 storage: storage,
@@ -56,24 +52,44 @@ describe('Simple worker', function () {
         server = WebGME.standaloneServer(gmeConfig);
         server.start(function (err) {
             expect(err).to.equal(null);
-            testFixture.importProject({
-                storage: storage,
-                filePath: 'test/server/worker/simpleworker/baseProject.json',
-                projectName: baseProjectContext.name,
-                branchName: baseProjectContext.branch,
-                gmeConfig: gmeConfig
-            }, function (err, result) {
-                expect(err).to.equal(null);
-                baseProjectContext.commitHash = result.commitHash;
-                baseProjectContext.rootHash = result.core.getHash(result.root);
+            storage.openDatabase()
+                .then(function () {
+                    return storage.deleteProject({projectName: baseProjectContext.name});
+                })
+                .then(function () {
+                    return testFixture.importProject(storage,
+                        {
+                            projectSeed: 'test/server/worker/simpleworker/baseProject.json',
+                            projectName: baseProjectContext.name,
+                            branchName: baseProjectContext.branch,
+                            gmeConfig: gmeConfig,
+                            logger: logger
+                        });
+                })
+                .then(function (result) {
+                    baseProjectContext.commitHash = result.commitHash;
+                    baseProjectContext.rootHash = result.core.getHash(result.rootNode);
+                })
+                .then(done)
+                .catch(done);
 
-                done();
-            });
         });
     });
 
     after(function (done) {
-        server.stop(done);
+        server.stop(function (err) {
+            if (err) {
+                logger.error(err);
+            }
+            storage.deleteProject({projectName: baseProjectContext.name})
+                .then(function () {
+                    storage.closeDatabase(done);
+                })
+                .catch(function (err1) {
+                    logger.error(err1);
+                    storage.closeDatabase(done);
+                });
+        });
     });
 
     function unloadSimpleWorker() {

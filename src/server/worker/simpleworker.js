@@ -438,7 +438,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                 return;
             }
 
-            storage.getProjectNames(function (err, projectlist) {
+            storage.getProjectNames({}, function (err, projectlist) {
                 if (err) {
                     return callback(new Error('cannot get project name list'));
                 }

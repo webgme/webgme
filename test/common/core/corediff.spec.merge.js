@@ -85,7 +85,8 @@ describe('corediff-merge', function () {
                     commit = result.commitHash;
                     baseRootHash = result.rootHash;
                 })
-                .finally(done);
+                .then(done)
+                .catch(done);
         });
 
         after(function (done) {

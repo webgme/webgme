@@ -12,10 +12,10 @@ describe('ServerWorkerManager', function () {
     }
 
     var WebGME = testFixture.WebGME,
-        logger = testFixture.logger,
+        logger = testFixture.logger.fork('workermanager.spec'),
         expect = testFixture.expect,
         gmeConfig = testFixture.getGmeConfig(),
-        MongoStorage = require('../../../src/server/storage/serveruserstorage'),
+        storage = testFixture.getMongoStorage(logger, gmeConfig),
         workerConstants = require('../../../src/server/worker/constants'),
         ServerWorkerManager = require('../../../src/server/worker/serverworkermanager'),
         workerManagerParameters = {
@@ -27,10 +27,6 @@ describe('ServerWorkerManager', function () {
 
     before(function (done) {
         //adding some project to the database
-        var storage = new MongoStorage({
-            logger: logger.fork('mongoStorage'),
-            globConf: gmeConfig
-        });
         testFixture.importProject({
             storage: storage,
             filePath: 'test/server/worker/workermanager/basicProject.json',
