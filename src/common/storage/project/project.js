@@ -50,7 +50,7 @@ define([
         };
 
         this.createBranch = function (branchName, newHash, callback) {
-            storage.createBranch(branchName, newHash, callback);
+            storage.createBranch(self.name, branchName, newHash, callback);
         };
 
         this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {

@@ -16,8 +16,9 @@ define([
     function WebSocket(ioClient, mainLogger) {
         var self = this,
             logger = mainLogger.fork('WebSocket'),
-            beenConnected = false,
-            socket;
+            beenConnected = false;
+
+        self.socket = null;
 
         logger.debug('ctor');
         EventDispatcher.call(this);
@@ -29,9 +30,9 @@ define([
                     networkHandler(err);
                     return;
                 }
-                socket = socket_;
+                self.socket = socket_;
 
-                socket.on('connect', function () {
+                self.socket.on('connect', function () {
                     if (beenConnected) {
                         logger.debug('Socket got reconnected.');
                         networkHandler(null, CONSTANTS.RECONNECTED);
@@ -42,107 +43,107 @@ define([
                     }
                 });
 
-                socket.on('disconnect', function () {
+                self.socket.on('disconnect', function () {
                     logger.debug('Socket got disconnected!');
                     networkHandler(null, CONSTANTS.DISCONNECTED);
                 });
 
-                socket.on(CONSTANTS.PROJECT_DELETED, function (data) {
+                self.socket.on(CONSTANTS.PROJECT_DELETED, function (data) {
                     self.dispatchEvent(CONSTANTS.PROJECT_DELETED, data);
                 });
 
-                socket.on(CONSTANTS.PROJECT_CREATED, function (data) {
+                self.socket.on(CONSTANTS.PROJECT_CREATED, function (data) {
                     self.dispatchEvent(CONSTANTS.PROJECT_CREATED, data);
                 });
 
-                socket.on(CONSTANTS.BRANCH_CREATED, function (data) {
+                self.socket.on(CONSTANTS.BRANCH_CREATED, function (data) {
                     data.etype = CONSTANTS.BRANCH_CREATED;
                     self.dispatchEvent(CONSTANTS.BRANCH_CREATED + data.projectName, data);
                 });
 
-                socket.on(CONSTANTS.BRANCH_DELETED, function (data) {
+                self.socket.on(CONSTANTS.BRANCH_DELETED, function (data) {
                     self.dispatchEvent(CONSTANTS.BRANCH_DELETED + data.projectName, data);
                 });
 
-                socket.on(CONSTANTS.BRANCH_HASH_UPDATED, function (data) {
+                self.socket.on(CONSTANTS.BRANCH_HASH_UPDATED, function (data) {
                     self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED + data.projectName, data);
                 });
 
-                socket.on(CONSTANTS.BRANCH_UPDATED, function (data) {
+                self.socket.on(CONSTANTS.BRANCH_UPDATED, function (data) {
                     self.dispatchEvent(self.getBranchUpdateEventName(data.projectName, data.branchName), data);
                 });
             });
         };
 
         this.disconnect = function () {
-            socket.disconnect();
+            self.socket.disconnect();
         };
 
         // watcher functions
         this.watchDatabase = function (data) {
-            socket.emit('watchDatabase', data);
+            self.socket.emit('watchDatabase', data);
         };
 
         this.watchProject = function (data) {
-            socket.emit('watchProject', data);
+            self.socket.emit('watchProject', data);
         };
 
         this.watchBranch = function (data) {
-            socket.emit('watchBranch', data);
+            self.socket.emit('watchBranch', data);
         };
 
         // model editing functions
         this.openProject = function (data, callback) {
-            socket.emit('openProject', data, callback);
+            self.socket.emit('openProject', data, callback);
         };
 
         this.closeProject = function (data, callback) {
-            socket.emit('closeProject', data, callback);
+            self.socket.emit('closeProject', data, callback);
         };
 
         this.openBranch = function (data, callback) {
-            socket.emit('openBranch', data, callback);
+            self.socket.emit('openBranch', data, callback);
         };
 
         this.closeBranch = function (data, callback) {
-            socket.emit('closeBranch', data, callback);
+            self.socket.emit('closeBranch', data, callback);
         };
 
         this.makeCommit = function (data, callback) {
-            socket.emit('makeCommit', data, callback);
+            self.socket.emit('makeCommit', data, callback);
         };
 
         this.loadObjects = function (data, callback) {
-            socket.emit('loadObjects', data, callback);
+            self.socket.emit('loadObjects', data, callback);
         };
 
         this.setBranchHash = function (data, callback) {
-            socket.emit('setBranchHash', data, callback);
+            self.socket.emit('setBranchHash', data, callback);
         };
 
         // REST like functions
         this.getProjectNames = function (data, callback) {
-            socket.emit('getProjectNames', data, callback);
+            self.socket.emit('getProjectNames', data, callback);
         };
 
         this.deleteProject = function (data, callback) {
-            socket.emit('deleteProject', data, callback);
+            self.socket.emit('deleteProject', data, callback);
         };
 
         this.createProject = function (data, callback) {
-            socket.emit('createProject', data, callback);
+            self.socket.emit('createProject', data, callback);
         };
 
         this.getBranches = function (data, callback) {
-            socket.emit('getBranches', data, callback);
+            self.socket.emit('getBranches', data, callback);
         };
 
         this.getCommits = function (data, callback) {
-            socket.emit('getCommits', data, callback);
+            self.socket.emit('getCommits', data, callback);
         };
 
         this.getLatestCommitData = function (data, callback) {
-            socket.emit('getLatestCommitData', data, callback);
+            self.socket.emit('getLatestCommitData', data, callback);
         };
 
         // Helper functions

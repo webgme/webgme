@@ -30,7 +30,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     this.loadObject = projectCache.loadObject;
     this.ID_NAME = CONSTANTS.MONGO_ID;
 
-    // Functions forwarded to storage TODO: This should return promises!
+    // Functions forwarded to storage
     this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
         var self = this,
             data = {

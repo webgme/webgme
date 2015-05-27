@@ -57,7 +57,12 @@ define([
         };
 
         this.close = function () {
+            // Remove the handler for the socket.io events 'connect' and 'disconnect'.
+            webSocket.socket.removeAllListeners('connect');
+            webSocket.socket.removeAllListeners('disconnect');
+            // Disconnect from the server.
             webSocket.disconnect();
+            // Remove all local event-listeners.
             webSocket.removeAllEventListeners();
         };
 
