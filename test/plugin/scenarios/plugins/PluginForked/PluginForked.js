@@ -66,6 +66,14 @@ if (typeof define === 'undefined') {
                     value: false,
                     valueType: 'boolean',
                     readOnly: false
+                },
+                {
+                    name: 'forkName',
+                    displayName: 'forkName',
+                    description: 'Name to save fork to.',
+                    value: '',
+                    valueType: 'string',
+                    readOnly: false
                 }
             ];
         };
@@ -97,6 +105,9 @@ if (typeof define === 'undefined') {
                 });
             }
 
+            if (config.forkName) {
+                self.forkName = config.forkName;
+            }
 
             if (config.fork === true) {
                 self.core.setAttribute(self.activeNode, 'name', 'FCO_Fork_Name');

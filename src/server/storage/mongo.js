@@ -187,7 +187,11 @@ function Mongo(mainLogger, gmeConfig) {
                     hash: newhash
                 }, function (err) {
                     if (err) {
-                        deferred.reject(err);
+                        if (err.code === 11000) { // insertDocument :: caused by :: 11000 E11000 duplicate key error...
+                            deferred.reject('branch hash mismatch');
+                        } else {
+                            deferred.reject(err);
+                        }
                     } else {
                         deferred.resolve();
                     }

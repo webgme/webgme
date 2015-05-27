@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals');
 
-describe('PluginForked', function () {
+describe('Run PluginForked', function () {
     'use strict';
 
     var pluginName = 'PluginForked',
@@ -17,7 +17,6 @@ describe('PluginForked', function () {
         PluginCliManager = require('../../../src/plugin/climanager'),
         project,
         projectName = 'plugin_forked',
-        branchName = 'master',
         commitHash;
 
     before(function (done) {
@@ -32,7 +31,6 @@ describe('PluginForked', function () {
         var importParam = {
             projectSeed: './test/plugin/scenarios/plugins/MultipleMainCallbackCalls/project.json',
             projectName: projectName,
-            branchName: branchName,
             logger: logger,
             gmeConfig: gmeConfig
         };
@@ -50,11 +48,11 @@ describe('PluginForked', function () {
     });
 
 
-    it('should run PluginForked without forking and succeed to save', function (done) {
+    it('without external commit should succeed to save to master.', function (done) {
         var pluginContext = {
                 commitHash: commitHash,
-                branchName: branchName,
-                activeNode: '/1'
+                activeNode: '/1',
+                branchName: 'master'
             },
             pluginConfig = {
                 fork: false
@@ -66,15 +64,24 @@ describe('PluginForked', function () {
             expect(result.commits.length).to.equal(2);
             expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
             expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
-            expect(result.commits[1].branchName).to.equal(branchName);
-            done();
+            expect(result.commits[1].branchName).to.equal('master');
+
+            storage.getBranches({projectName: projectName})
+                .then(function (branches) {
+                    expect(typeof branches).to.equal('object');
+
+                    expect(branches.master).to.equal(result.commits[1].commitHash);
+
+                    done();
+                })
+                .catch(done);
         });
     });
 
-    it('should run PluginForked with forking and fork', function (done) {
+    it('with external forking commit should save to random fork branch.', function (done) {
         var pluginContext = {
                 commitHash: commitHash,
-                branchName: branchName,
+                branchName: 'master',
                 activeNode: '/1'
             },
             pluginConfig = {
@@ -87,8 +94,87 @@ describe('PluginForked', function () {
             expect(result.commits.length).to.equal(2);
             expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
             expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.FORKED);
-            expect(result.commits[1].branchName).not.to.equal(branchName);
-            done();
+            expect(result.commits[1].branchName).not.to.equal('master');
+            storage.getBranches({projectName: projectName})
+                .then(function (branches) {
+                    expect(typeof branches).to.equal('object');
+
+                    var index,
+                        branchNames = Object.keys(branches);
+                    expect(branchNames.length).to.equal(2);
+
+                    index = branchNames.indexOf('master');
+                    if (index === 0) {
+                        expect(branches[branchNames[1]]).to.equal(result.commits[1].commitHash);
+                    } else if (index === 1) {
+                        expect(branches[branchNames[0]]).to.equal(result.commits[1].commitHash);
+                    } else {
+                        throw new Error('master was not among branches');
+                    }
+
+                    done();
+                })
+                .catch(done);
         });
+    });
+
+    it('with external forking commit and given forkName should fork to forkName branch.', function (done) {
+        var pluginContext = {
+                commitHash: commitHash,
+                branchName: 'master',
+                activeNode: '/1'
+            },
+            pluginConfig = {
+                fork: true,
+                forkName: 'fork'
+            },
+            pluginManager = new PluginCliManager(project, logger, gmeConfig);
+
+        pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
+            expect(err).to.equal(null);
+            expect(result.commits.length).to.equal(2);
+            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+            expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.FORKED);
+            expect(result.commits[1].branchName).to.equal('fork');
+
+            storage.getBranches({projectName: projectName})
+                .then(function (branches) {
+                    expect(typeof branches).to.equal('object');
+                    expect(branches.fork).to.equal(result.commits[1].commitHash);
+
+                    done();
+                })
+                .catch(done);
+        });
+    });
+
+    it('with external forking commit and given forkName already exist should return error.', function (done) {
+        var pluginContext = {
+                commitHash: commitHash,
+                branchName: 'master',
+                activeNode: '/1'
+            },
+            pluginConfig = {
+                fork: true,
+                forkName: 'fork'
+            },
+            pluginManager = new PluginCliManager(project, logger, gmeConfig);
+
+        storage.createBranch({projectName: projectName, branchName: 'fork', hash: commitHash})
+            .then(function (result) {
+                expect(typeof result).to.equal('object');
+                expect(result.status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+
+                pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
+                    expect(err).to.equal('Plugin got forked from "master". And got forked from "fork" too.');
+                    expect(result.commits.length).to.equal(2);
+                    expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+                    expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.FORKED);
+                    expect(result.commits[1].branchName).to.equal(null);
+                    done();
+                });
+            })
+            .catch(done);
+
     });
 });
