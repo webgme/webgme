@@ -88,21 +88,21 @@ describe('Memory storage', function () {
             })
             .then(function () {
                 return Q.all([
-                    gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
-                        read: true,
-                        write: true,
-                        delete: true
-                    }),
-                    gmeAuth.authorizeByUserId(guestAccount, 'project', 'create', {
-                        read: true,
-                        write: true,
-                        delete: false
-                    }),
-                    gmeAuth.authorizeByUserId(guestAccount, 'unauthorized_project', 'create', {
-                        read: false,
-                        write: false,
-                        delete: false
-                    })
+                    //gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
+                    //    read: true,
+                    //    write: true,
+                    //    delete: true
+                    //}),
+                    //gmeAuth.authorizeByUserId(guestAccount, 'complexChainTest', 'create', {
+                    //    read: true,
+                    //    write: true,
+                    //    delete: true
+                    //}),
+                    //gmeAuth.authorizeByUserId(guestAccount, 'something', 'create', {
+                    //    read: true,
+                    //    write: true,
+                    //    delete: true
+                    //})
                 ]);
             })
             .nodeify(done);
@@ -710,14 +710,12 @@ describe('Memory storage', function () {
     describe('complex chain', function () {
         var project,
             projectName = 'complexChainTest',
-            storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
+            storage,
             commitChain = [];
 
         before(function (done) {
+            storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
             storage.openDatabase()
-                .then(function () {
-                    return storage.deleteProject({projectName: projectName});
-                })
                 .then(function () {
                     return testFixture.importProject(storage, {
                         projectSeed: 'seeds/EmptyProject.json',
