@@ -33,7 +33,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     Storage = requireJS('common/storage/nodestorage'),
     Serialization = requireJS('common/core/users/serialization'),
     BlobClient = requireJS('common/blob/BlobClient'),
-    PluginManagerBase = requireJS('plugin/PluginManagerBase'),
+    PluginNodeManager = requireJS('plugin/nodemanager'),
     PluginResult = requireJS('plugin/PluginResult'),
     PluginMessage = requireJS('plugin/PluginMessage'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
@@ -224,8 +224,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     },
 
     runPlugin = function (webGMESessionId, userId, name, context, callback) {
-        var Plugin = getPlugin(name),
-            storage = getConnectedStorage(webGMESessionId);
+        var storage = getConnectedStorage(webGMESessionId);
         //context.managerConfig: {
         //    project: self._client.getActiveProjectName(),
         //    token: '',
@@ -233,7 +232,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         //    activeSelection: activeSelection || [],
         //    commit: self._client.getActualCommit(), //#668b3babcdf2ddcd7ba38b51acb62d63da859d90,
         //
-        //    // this has priority over the commit if not null
         //    branchName: self._client.getActualBranch()
         //};
         // context.pluginConfig
@@ -241,11 +239,31 @@ var WEBGME = require(__dirname + '/../../../webgme'),
             logger.debug('storage is open');
             if (status === STORAGE_CONSTANTS.CONNECTED) {
                 storage.openProject(context.managerConfig.project, function (err, project, branches) {
+                    var pluginManager,
+                        pluginContext;
                     if (err) {
                         throw new Error(err);
                     }
                     logger.debug('Opened project, got branches:', context.managerConfig.project, branches);
+                    pluginManager = new PluginNodeManager(webGMESessionId, project, logger, gmeConfig);
 
+                    pluginContext = {
+                        activeNode: context.activeNode,
+                        activeSelection: context.activeSelection,
+                        commitHash: context.commit,
+                        branchName: context.branchName
+                    };
+
+                    pluginManager.executePlugin(name, context.pluginConfig, pluginContext, function (err, result) {
+                        callback(err, result.serialize());
+                        //FIXME: We should not have to wait for this disconnect
+                        storage.closeProject(context.managerConfig.project, function (err) {
+                            if (err) {
+                                logger.error('Closing project after plugin execution returned error', err);
+                            }
+                            logger.debug('Closed project after plugin execution.');
+                        });
+                    });
                 });
             } else if (status === STORAGE_CONSTANTS.RECONNECTED) {
                 //TODO: handle
@@ -257,38 +275,38 @@ var WEBGME = require(__dirname + '/../../../webgme'),
             }
         });
 
-        if (interpreter) {
-            getProject(context.managerConfig.project, webGMESessionId, function (err, project) {
-                if (!err) {
-                    project.setUser(userId);
-                    var plugins = {};
-                    plugins[name] = interpreter;
-                    var manager = new PluginManagerBase(project, Core, logger, plugins, gmeConfig);
-
-                    manager.initialize(null, function (pluginConfigs, configSaveCallback) {
-                        if (configSaveCallback) {
-                            configSaveCallback(context.pluginConfigs);
-                        }
-                        manager.executePlugin(name, context.managerConfig, function (err, result) {
-                            if (!err && result) {
-                                callback(null, result.serialize());
-                            } else {
-                                var newErrorPluginResult = new PluginResult();
-                                callback(err, newErrorPluginResult.serialize());
-                            }
-                        });
-
-                    });
-                } else {
-                    var newErrorPluginResult = new PluginResult();
-                    logger.error('unable to get project');
-                    callback(new Error('unable to get project'), newErrorPluginResult.serialize());
-                }
-            });
-        } else {
-            var newErrorPluginResult = new PluginResult();
-            callback(new Error('unable to load plugin'), newErrorPluginResult.serialize());
-        }
+        //if (interpreter) {
+        //    getProject(context.managerConfig.project, webGMESessionId, function (err, project) {
+        //        if (!err) {
+        //            project.setUser(userId);
+        //            var plugins = {};
+        //            plugins[name] = interpreter;
+        //            var manager = new PluginManagerBase(project, Core, logger, plugins, gmeConfig);
+        //
+        //            manager.initialize(null, function (pluginConfigs, configSaveCallback) {
+        //                if (configSaveCallback) {
+        //                    configSaveCallback(context.pluginConfigs);
+        //                }
+        //                manager.executePlugin(name, context.managerConfig, function (err, result) {
+        //                    if (!err && result) {
+        //                        callback(null, result.serialize());
+        //                    } else {
+        //                        var newErrorPluginResult = new PluginResult();
+        //                        callback(err, newErrorPluginResult.serialize());
+        //                    }
+        //                });
+        //
+        //            });
+        //        } else {
+        //            var newErrorPluginResult = new PluginResult();
+        //            logger.error('unable to get project');
+        //            callback(new Error('unable to get project'), newErrorPluginResult.serialize());
+        //        }
+        //    });
+        //} else {
+        //    var newErrorPluginResult = new PluginResult();
+        //    callback(new Error('unable to load plugin'), newErrorPluginResult.serialize());
+        //}
     },
 
     executePlugin = function (webGMESessionId, userId, name, context, callback) {

@@ -10,6 +10,15 @@ var Core = requireJS('common/core/core'),
     PluginMessage = requireJS('plugin/PluginMessage'),
     Q = require('Q');
 
+/**
+ * TODO: A single instance should be able to run on different projects (and cores)..
+ *
+ * @param blobClient
+ * @param project
+ * @param mainLogger
+ * @param gmeConfig
+ * @constructor
+ */
 function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
     var self = this;
 
@@ -21,10 +30,10 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
      * @param {string} pluginName
      * @param {object} pluginConfig - configuration for the plugin.
      * @param {object} context
-     * @param {string} context.activeNode - path to active node
-     * @param {string[]} context.activeSelection - paths to selected nodes.
      * @param {string} context.commitHash - commit from which to start the plugin.
      * @param {string} context.branchName - name of branch that should be updated
+     * @param {string} [context.activeNode=''] - path to active node
+     * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
      * @param callback
      */
     this.executePlugin = function (pluginName, pluginConfig, context, callback) {
@@ -40,6 +49,12 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
         }
         plugin = new Plugin();
         plugin.initialize(pluginLogger, blobClient, gmeConfig);
+
+        if (!pluginConfig) {
+            pluginConfig = plugin.getDefaultConfig();
+        }
+        //TODO: Check that a passed config is consistent with the structure..
+        plugin.setCurrentConfig(pluginConfig);
 
         this.core = new Core(project, {
             globConf: gmeConfig,
@@ -116,10 +131,10 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
     /**
      *
      * @param {object} context
-     * @param {string} context.activeNode - path to active node
-     * @param {string[]} context.activeSelection - paths to selected nodes.
      * @param {string} context.commitHash - commit from which to start the plugin.
      * @param {string} context.branchName - name of branch that should be updated
+     * @param {string} [context.activeNode=''] - path to active node
+     * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
      */
     this.loadContext = function (context) {
         var deferred = Q.defer(),

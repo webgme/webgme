@@ -4,7 +4,8 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-var config = require('./config.default');
+var path = require('path'),
+    config = require('./config.default');
 
 config.server.port = 9001;
 
@@ -15,6 +16,9 @@ config.blob.fsDir = './test-tmp/blob-storage';
 
 config.executor.outputDir = './test-tmp/executor';
 config.executor.workerRefreshInterval = 100;
+
+//FIXME: Have a common dir for this..
+config.plugin.basePaths.push(path.join(__dirname, '../test/plugin'));
 
 config.server.log = {
     transports: [{

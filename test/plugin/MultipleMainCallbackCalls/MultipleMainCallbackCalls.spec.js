@@ -9,39 +9,56 @@ var testFixture = require('../../_globals');
 describe('MultipleMainCallbackCalls', function () {
     'use strict';
 
-    var runPlugin = require('../../../src/server/runplugin'),
-        storage,
-        gmeConfig,
-        expect = testFixture.expect;
+    var pluginName = 'MultipleMainCallbackCalls',
+        logger = testFixture.logger.fork(pluginName),
+        gmeConfig = testFixture.getGmeConfig(),
+        storage = testFixture.getMemoryStorage(logger, gmeConfig),
+        expect = testFixture.expect,
+        PluginCliManager = require('../../../src/plugin/climanager'),
+        project,
+        projectName = 'plugin_mmcc',
+        branchName = 'master',
+        commitHash;
 
     before(function (done) {
         var importParam = {
-            filePath: './test/plugin/MultipleMainCallbackCalls/project.json',
-            projectName: 'plugin_mmcc',
-            branchName: 'master'
+            projectSeed: './test/plugin/MultipleMainCallbackCalls/project.json',
+            projectName: projectName,
+            branchName: branchName,
+            logger: logger,
+            gmeConfig: gmeConfig
         };
-        gmeConfig = testFixture.getGmeConfig();
-        gmeConfig.plugin.basePaths.push('./test/plugin');
-        testFixture.WebGME.addToRequireJsPaths(gmeConfig);
-        storage = new testFixture.Storage({globConf: gmeConfig});
-        importParam.storage = storage;
-        importParam.gmeConfig = gmeConfig;
-        testFixture.importProject(importParam, function (err/*, result*/) {
-            expect(err).to.equal(null);
-            done();
-        });
+        storage.openDatabase()
+            .then(function () {
+                logger.info('Database is opened.');
+                return testFixture.importProject(storage, importParam);
+            })
+            .then(function (importResult) {
+                project = importResult.project;
+                commitHash = importResult.commitHash;
+                done();
+            })
+            .catch(done);
+    });
+
+    after(function (done) {
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+                return storage.closeDatabase();
+            })
+            .then(done)
+            .catch(done);
     });
 
     it('should run MultipleMainCallbackCalls and return error at second cb', function (done) {
-        var managerConfig = {
-                pluginName: 'MultipleMainCallbackCalls',
-                projectName: 'plugin_mmcc',
-                branch: 'master'
+        var pluginContext = {
+                commitHash: commitHash,
+                branchName: branchName
             },
-            pluginConfig = {},
-            cnt = 0;
+            cnt = 0,
+            pluginManager = new PluginCliManager(project, logger, gmeConfig);
 
-        runPlugin.main(storage, gmeConfig, managerConfig, pluginConfig, function (err, result) {
+        pluginManager.executePlugin(pluginName, null, pluginContext, function (err, result) {
             if (cnt === 0) {
                 expect(err).to.equal(null);
                 expect(result.success).to.equal(true);
@@ -49,7 +66,7 @@ describe('MultipleMainCallbackCalls', function () {
                 expect(err).to.equal('The main callback is being called more than once!');
                 expect(result.success).to.equal(false);
             } else {
-                done(new Error('Main callback should only be called at most twice from PluginManagerBase'));
+                done(new Error('Main callback should only be called at most twice from pluginManager'));
                 return;
             }
             cnt += 1;
