@@ -22,7 +22,7 @@ describe('MultipleMainCallbackCalls', function () {
 
     before(function (done) {
         var importParam = {
-            projectSeed: './test/plugin/MultipleMainCallbackCalls/project.json',
+            projectSeed: './test/plugin/scenarios/plugins/MultipleMainCallbackCalls/project.json',
             projectName: projectName,
             branchName: branchName,
             logger: logger,
@@ -31,6 +31,9 @@ describe('MultipleMainCallbackCalls', function () {
         storage.openDatabase()
             .then(function () {
                 logger.info('Database is opened.');
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
                 return testFixture.importProject(storage, importParam);
             })
             .then(function (importResult) {
@@ -42,12 +45,7 @@ describe('MultipleMainCallbackCalls', function () {
     });
 
     after(function (done) {
-        storage.deleteProject({projectName: projectName})
-            .then(function () {
-                return storage.closeDatabase();
-            })
-            .then(done)
-            .catch(done);
+        storage.closeDatabase(done);
     });
 
     it('should run MultipleMainCallbackCalls and return error at second cb', function (done) {

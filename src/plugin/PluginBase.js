@@ -320,7 +320,7 @@ define([
                     self.currentHash = commmitResult.hash;
                     if (commmitResult.status === STORAGE_CONSTANTS.SYNCH) {
                         self.logger.info('"' + self.branchName + '" was updated to the new commit.');
-                        callback(null);
+                        callback(null, {status: STORAGE_CONSTANTS.SYNCH});
                     } else if (commmitResult.status === STORAGE_CONSTANTS.FORKED) {
                         var forkName = self.forkName || self.branchName + '_' + (new Date()).getTime();
                         self.logger.warn('Plugin and client are forked from "' + self.branchName + '". ' +
@@ -371,7 +371,7 @@ define([
 
                     if (updateResult.status === STORAGE_CONSTANTS.SYNCH) {
                         self.logger.info('"' + self.branchName + '" was updated to the new commit.');
-                        callback(null);
+                        callback(null, {status: STORAGE_CONSTANTS.SYNCH});
                     } else if (updateResult.status === STORAGE_CONSTANTS.FORKED) {
                         self._createFork(self.currentHash, callback);
                     } else {
@@ -398,7 +398,7 @@ define([
                 self.branchName = forkName;
                 self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
                 '(Successive saves will try to save to this new branch.)');
-                callback(null);
+                callback(null, {status: STORAGE_CONSTANTS.FORKED, forkName: forkName});
             } else if (forkResult.status === STORAGE_CONSTANTS.FORKED) {
                 callback('Plugin got forked from "' + self.branchName + '". ' +
                 'And got forked from name "' + forkName + '" too.');

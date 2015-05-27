@@ -67,6 +67,7 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
                     mainCallbackCalls = 0,
                     multiCallbackHandled = false;
 
+                self.logger.debug('context loaded');
                 pluginContext.project = project;
                 pluginContext.branch = null; // Branch is only applicable on client side.
                 pluginContext.projectName = project.name;
@@ -74,9 +75,10 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
 
                 plugin.configure(pluginContext); // (This does not modify pluginContext.)
 
+                self.logger.debug('plugin configured, invoking main');
                 plugin.main(function (err, result) {
                     var stackTrace;
-
+                    self.logger.debug('plugin main callback called', {result: result});
                     mainCallbackCalls += 1;
                     // set common information (meta info) about the plugin and measured execution times
                     result.setFinishTime((new Date()).toISOString());
@@ -147,14 +149,16 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
                 activeSelection: null,
                 META: null
             };
-
+        self.logger.debug('loading context');
         Q.ninvoke(project, 'loadObject', context.commitHash)
             .then(function (commitObject) {
                 var rootDeferred = Q.defer();
+                self.logger.debug('commitObject loaded', {metadata: commitObject});
                 self.core.loadRoot(commitObject.root, function (err, rootNode) {
                     if (err) {
                         rootDeferred.reject(err);
                     } else {
+                        self.logger.debug('rootNode loaded');
                         rootDeferred.resolve(rootNode);
                     }
                 });
@@ -168,17 +172,20 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
             })
             .then(function (activeNode) {
                 pluginContext.activeNode = activeNode;
+                self.logger.debug('activeNode loaded');
                 // Load active selection
                 return self.loadNodesByPath(pluginContext.rootNode, context.activeSelection || []);
             })
             .then(function (activeSelection) {
                 pluginContext.activeSelection = activeSelection;
+                self.logger.debug('activeSelection loaded');
                 // Load meta nodes
                 var metaIds = self.core.getMemberPaths(pluginContext.rootNode, 'MetaAspectSet');
                 return self.loadNodesByPath(pluginContext.rootNode, metaIds, true);
             })
             .then(function (metaNodes) {
                 pluginContext.META = metaNodes;
+                self.logger.debug('metaNodes loaded');
                 deferred.resolve(pluginContext);
             });
 

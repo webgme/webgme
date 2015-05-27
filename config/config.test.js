@@ -18,7 +18,7 @@ config.executor.outputDir = './test-tmp/executor';
 config.executor.workerRefreshInterval = 100;
 
 //FIXME: Have a common dir for this..
-config.plugin.basePaths.push(path.join(__dirname, '../test/plugin'));
+config.plugin.basePaths.push(path.join(__dirname, '../test/plugin/scenarios/plugins'));
 
 config.server.log = {
     transports: [{
