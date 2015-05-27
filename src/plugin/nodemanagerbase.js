@@ -78,7 +78,9 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
                 self.logger.debug('plugin configured, invoking main');
                 plugin.main(function (err, result) {
                     var stackTrace;
-                    self.logger.debug('plugin main callback called', {result: result});
+                    if (result) {
+                        self.logger.debug('plugin main callback called', {result: result.serialize()});
+                    }
                     mainCallbackCalls += 1;
                     // set common information (meta info) about the plugin and measured execution times
                     result.setFinishTime((new Date()).toISOString());

@@ -256,7 +256,7 @@ Storage.prototype.setBranchHash = function (data, callback) {
                     deferred.resolve({status: CONSTANTS.SYNCH});
                 })
                 .catch(function (err) {
-                    if (err === 'branch hash mismatch') {
+                    if (err === 'branch hash mismatch' || err.message === 'branch has mismatch') {
                         // TODO: Need to check error better here..
                         self.logger.debug('user got forked');
                         deferred.resolve({status: CONSTANTS.FORKED});

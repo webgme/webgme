@@ -432,8 +432,8 @@ SafeStorage.prototype.createBranch = function (data, callback) {
     if (rejected === false) {
         //TODO: Check authorization here - if user not authorized reject.
         Storage.prototype.setBranchHash.call(this, data)
-            .then(function () {
-                deferred.resolve();
+            .then(function (result) {
+                deferred.resolve(result);
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));
@@ -471,8 +471,8 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
                 data.oldHash = branchHash;
                 return Storage.prototype.setBranchHash.call(self, data);
             })
-            .then (function () {
-                deferred.resolve();
+            .then (function (result) {
+                deferred.resolve(result);
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));

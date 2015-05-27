@@ -301,7 +301,40 @@ define([
             'Trying to create a new branch "' + forkName + '".');
             self.branchName = forkName;
             self.branch = null; // Set the branch to null - from now on the plugin is detached from the client branch.
-            self._makeCommit(persisted, commitMessage, callback);
+            self.project.makeCommit(self.branchName,
+                [self.currentHash],
+                persisted.rootHash,
+                persisted.objects,
+                commitMessage,
+                function (err, commitResult) {
+                    if (err) {
+                        self.logger.error('project.makeCommit failed.');
+                        callback(err);
+                        return;
+                    }
+                    if (commitResult.status === STORAGE_CONSTANTS.SYNCH) {
+                        self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
+                        '(Successive saves will try to save to this new branch.)');
+
+                        self.result.addCommit({
+                            commitHash: commitResult.hash,
+                            status: STORAGE_CONSTANTS.FORKED,
+                            branchName: self.branchName
+                        });
+
+                        callback(null, {status: STORAGE_CONSTANTS.FORKED, forkName: forkName});
+
+                    } else if (commitResult.status === STORAGE_CONSTANTS.FORKED) {
+                        self.result.addCommit({
+                            commitHash: commitResult.hash,
+                            status: STORAGE_CONSTANTS.FORKED,
+                            branchName: null
+                        });
+                        callback('Plugin got forked from "' + self.branchName + '". ' +
+                        'And got forked from name "' + forkName + '" too.');
+                    }
+                }
+            );
         } else {
             var commitObject,
                 updateData;
@@ -320,6 +353,12 @@ define([
                     self.currentHash = commmitResult.hash;
                     if (commmitResult.status === STORAGE_CONSTANTS.SYNCH) {
                         self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+
+                        self.result.addCommit({
+                            commitHash: self.currentHash,
+                            status: STORAGE_CONSTANTS.SYNCH,
+                            branchName: self.branchName});
+
                         callback(null, {status: STORAGE_CONSTANTS.SYNCH});
                     } else if (commmitResult.status === STORAGE_CONSTANTS.FORKED) {
                         var forkName = self.forkName || self.branchName + '_' + (new Date()).getTime();
@@ -371,7 +410,14 @@ define([
 
                     if (updateResult.status === STORAGE_CONSTANTS.SYNCH) {
                         self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+
+                        self.result.addCommit({
+                            commitHash: commitResult.hash,
+                            status: STORAGE_CONSTANTS.SYNCH,
+                            branchName: self.branchName});
+
                         callback(null, {status: STORAGE_CONSTANTS.SYNCH});
+
                     } else if (updateResult.status === STORAGE_CONSTANTS.FORKED) {
                         self._createFork(self.currentHash, callback);
                     } else {
@@ -398,8 +444,20 @@ define([
                 self.branchName = forkName;
                 self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
                 '(Successive saves will try to save to this new branch.)');
+                self.result.addCommit({
+                    commitHash: newHash,
+                    status: STORAGE_CONSTANTS.FORKED,
+                    branchName: self.branchName});
+
                 callback(null, {status: STORAGE_CONSTANTS.FORKED, forkName: forkName});
+
             } else if (forkResult.status === STORAGE_CONSTANTS.FORKED) {
+
+                self.result.addCommit({
+                    commitHash: newHash,
+                    status: STORAGE_CONSTANTS.FORKED,
+                    branchName: null});
+
                 callback('Plugin got forked from "' + self.branchName + '". ' +
                 'And got forked from name "' + forkName + '" too.');
             } else {
@@ -587,6 +645,11 @@ define([
         this.META = config.META;
 
         this.result = new PluginResult();
+
+        this.result.addCommit({
+            commitHash: this.commitHash,
+            status: STORAGE_CONSTANTS.SYNCH,
+            branchName: this.branchName});
 
 
         this.isConfigured = true;

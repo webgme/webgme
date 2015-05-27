@@ -66,7 +66,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
             hash: hash
         };
 
-        return storage.setBranchHash(data)
+        return storage.createBranch(data)
             .nodeify(callback);
     };
 

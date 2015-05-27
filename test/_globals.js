@@ -60,6 +60,7 @@ var WebGME = require('../webgme'),
     BlobClient = requireJS('blob/BlobClient'),
     openContext = requireJS('common/util/opencontext'),
     Project = require('../src/server/storage/userproject'),
+    STORAGE_CONSTANTS = requireJS('common/storage/constants'),
 
     should = require('chai').should(),
     expect = require('chai').expect,
@@ -389,5 +390,7 @@ module.exports = {
     exportProject: exportProject,
     deleteProject: deleteProject,
     saveChanges: saveChanges,
+
+    STORAGE_CONSTANTS: STORAGE_CONSTANTS,
     openContext: openContext
 };

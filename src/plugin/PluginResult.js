@@ -27,6 +27,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             this.messages = [];
             this.artifacts = config.artifacts;
             this.error = config.error;
+            this.commits = [];
 
             for (i = 0; i < config.messages.length; i += 1) {
                 if (config.messages[i] instanceof PluginMessage) {
@@ -44,6 +45,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             this.startTime = null;
             this.finishTime = null;
             this.error = null;
+            this.commits = [];
         }
     };
 
@@ -89,6 +91,17 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
 
     PluginResult.prototype.addArtifact = function (hash) {
         this.artifacts.push(hash);
+    };
+
+    /**
+     *
+     * @param {object} commitData
+     * @param {string} commitData.commitHash - hash of the commit.
+     * @param {string} commitData.status - storage.constants./SYNCH/FORKED.
+     * @param {string} commitData.branchName - name of branch that got updated with the commitHash.
+     */
+    PluginResult.prototype.addCommit = function (commitData) {
+        this.commits.push(commitData);
     };
 
     /**
@@ -175,6 +188,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
         var result = {
             success: this.success,
             messages: [],
+            commits: [],
             artifacts: this.artifacts,
             pluginName: this.pluginName,
             startTime: this.startTime,
@@ -185,6 +199,10 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
 
         for (i = 0; i < this.messages.length; i += 1) {
             result.messages.push(this.messages[i].serialize());
+        }
+
+        for (i = 0; i < this.commits.length; i += 1) {
+            result.commits.push(JSON.stringify(this.commits[i]));
         }
 
         return result;

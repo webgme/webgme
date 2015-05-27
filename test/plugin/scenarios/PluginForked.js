@@ -63,12 +63,15 @@ describe('PluginForked', function () {
 
         pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
             expect(err).to.equal(null);
-            console.log(result);
+            expect(result.commits.length).to.equal(2);
+            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+            expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+            expect(result.commits[1].branchName).to.equal(branchName);
             done();
         });
     });
 
-    it.skip('should run PluginForked with forking and fork', function (done) {
+    it('should run PluginForked with forking and fork', function (done) {
         var pluginContext = {
                 commitHash: commitHash,
                 branchName: branchName,
@@ -81,7 +84,10 @@ describe('PluginForked', function () {
 
         pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
             expect(err).to.equal(null);
-            console.log(result);
+            expect(result.commits.length).to.equal(2);
+            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+            expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.FORKED);
+            expect(result.commits[1].branchName).not.to.equal(branchName);
             done();
         });
     });
