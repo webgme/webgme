@@ -72,6 +72,57 @@ var WebGME = require('../webgme'),
     rimraf = require('rimraf'),
     childProcess = require('child_process');
 
+function clearDatabase(gmeConfigParameter, callback) {
+    var deferred = Q.defer(),
+        db;
+
+    Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfigParameter.mongo.uri, gmeConfigParameter.mongo.options)
+        .then(function (db_) {
+            db = db_;
+            return Q.all([
+                Q.ninvoke(db, 'collection', '_users')
+                    .then(function (collection_) {
+                        return Q.ninvoke(collection_, 'remove');
+                    }),
+                Q.ninvoke(db, 'collection', '_organizations')
+                    .then(function (orgs_) {
+                        return Q.ninvoke(orgs_, 'remove');
+                    }),
+                Q.ninvoke(db, 'collection', '_projects')
+                    .then(function (projects_) {
+                        return Q.ninvoke(projects_, 'remove');
+                    })
+            ]);
+        })
+        .then(function () {
+            return Q.ninvoke(db, 'close');
+        })
+        .then(function () {
+            deferred.resolve();
+        })
+        .catch(function (err) {
+            deferred.reject(err);
+        });
+
+    return deferred.promise.nodeify(callback);
+}
+
+function getGMEAuth(gmeConfigParameter, callback) {
+    var deferred = Q.defer(),
+        gmeAuth;
+
+    gmeAuth = new testFixture.GMEAuth(null, gmeConfigParameter);
+    gmeAuth.connect(function (err) {
+        if (err) {
+            deferred.reject(err);
+        } else {
+            deferred.resolve(gmeAuth);
+        }
+    });
+
+    return deferred.promise.nodeify(callback);
+}
+
 //TODO globally used functions to implement
 function loadJsonFile(path) {
     //TODO decide if throwing an exception is fine or we should handle it
@@ -90,6 +141,10 @@ function importProject(storage, parameters, callback) {
     expect(typeof parameters.gmeConfig).to.equal('object');
     expect(typeof parameters.logger).to.equal('object');
 
+    if (parameters.hasOwnProperty('username')) {
+        expect(typeof parameters.username).to.equal('string');
+    }
+
     if (typeof parameters.projectSeed === 'string') {
         projectJson = loadJsonFile(parameters.projectSeed);
     } else if (typeof parameters.projectSeed === 'object') {
@@ -100,7 +155,7 @@ function importProject(storage, parameters, callback) {
     branchName = parameters.branchName || 'master';
     // Parameters check end.
 
-    storage.createProject({projectName: parameters.projectName})
+    storage.createProject({username: parameters.username, projectName: parameters.projectName})
         .then(function (dbProject) {
             var project = new Project(dbProject, storage, parameters.logger, parameters.gmeConfig),
                 core = new Core(project, {
@@ -383,6 +438,9 @@ module.exports = {
 
     should: should,
     expect: expect,
+
+    clearDatabase: clearDatabase,
+    getGMEAuth: getGMEAuth,
 
     loadJsonFile: loadJsonFile,
     importProject: importProject,

@@ -16,43 +16,77 @@ describe('corediff apply', function () {
         commit,
         expect = testFixture.expect,
         logger = testFixture.logger.fork('corediff.spec.apply'),
-        storage = testFixture.getMongoStorage(logger, gmeConfig),
+        storage,
         getJsonProject = testFixture.loadJsonFile,
-        jsonProject;
+        jsonProject,
+
+        gmeAuth,
+
+        guestAccount = gmeConfig.authentication.guestAccount;
 
     before(function (done) {
-        jsonProject = getJsonProject('./test/common/core/corediff/base001.json');
-        storage.openDatabase()
+        var clearDB = testFixture.clearDatabase(gmeConfig),
+            gmeAuthPromise;
+
+        gmeAuthPromise = testFixture.getGMEAuth(gmeConfig)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+            });
+
+
+        Q.all([clearDB, gmeAuthPromise])
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
+                return Q.all([
+                    gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
+                    gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
+                ]);
             })
             .then(function () {
-                return testFixture.importProject(storage, {
-                    projectSeed: 'test/common/core/core/intraPersist.json',
-                    projectName: projectName,
-                    branchName: 'base',
-                    gmeConfig: gmeConfig,
-                    logger: logger
-                });
+                return Q.all([
+                    gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
+                        read: true,
+                        write: true,
+                        delete: true
+                    })
+                ]);
             })
-            .then(function (result) {
-                project = result.project;
-                core = result.core;
-                rootNode = result.rootNode;
-                commit = result.commitHash;
-            })
-            .finally(done);
+            .then(function () {
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                jsonProject = getJsonProject('./test/common/core/corediff/base001.json');
+                storage.openDatabase()
+                    .then(function () {
+                        return storage.deleteProject({projectName: projectName});
+                    })
+                    .then(function () {
+                        return testFixture.importProject(storage, {
+                            projectSeed: 'test/common/core/core/intraPersist.json',
+                            projectName: projectName,
+                            branchName: 'base',
+                            gmeConfig: gmeConfig,
+                            logger: logger
+                        });
+                    })
+                    .then(function (result) {
+                        project = result.project;
+                        core = result.core;
+                        rootNode = result.rootNode;
+                        commit = result.commitHash;
+                    })
+                    .finally(done);
+            });
     });
 
     after(function (done) {
         storage.deleteProject({projectName: projectName})
             .then(function () {
-                storage.closeDatabase(done);
+
+                return Q.all([
+                    storage.closeDatabase(),
+                    gmeAuth.unload()
+                ])
             })
-            .catch(function (err) {
-                logger.error(err);
-                storage.closeDatabase(done);
-            });
+            .then(done)
+            .catch(done);
     });
 
     describe('apply', function () {
