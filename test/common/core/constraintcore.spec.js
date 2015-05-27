@@ -9,23 +9,94 @@ describe('constraint.core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('constraint.core:storage'),
-        storage = testFixture.getMemoryStorage(logger, gmeConfig),
+        storage,
         TASYNC = testFixture.requirejs('common/core/tasync'),
         project,
         projectName = 'coreConstraintTesting',
         core,
-        rootNode;
+        rootNode,
+
+        gmeAuth,
+        dbConn,
+        db,
+
+        guestAccount = gmeConfig.authentication.guestAccount;
 
     before(function (done) {
-        storage.openDatabase()
+        var gmeauthDeferred = Q.defer();
+
+        gmeAuth = new testFixture.GMEAuth(null, gmeConfig);
+        gmeAuth.connect(function (err) {
+            if (err) {
+                gmeauthDeferred.reject(err);
+            } else {
+                gmeauthDeferred.resolve(gmeAuth);
+            }
+        });
+
+        dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
+            .then(function (db_) {
+                db = db_;
+                return Q.all([
+                    Q.ninvoke(db, 'collection', '_users')
+                        .then(function (collection_) {
+                            return Q.ninvoke(collection_, 'remove');
+                        }),
+                    Q.ninvoke(db, 'collection', '_organizations')
+                        .then(function (orgs_) {
+                            return Q.ninvoke(orgs_, 'remove');
+                        }),
+                    Q.ninvoke(db, 'collection', '_projects')
+                        .then(function (projects_) {
+                            return Q.ninvoke(projects_, 'remove');
+                        })
+                ]);
+            });
+
+        Q.all([dbConn, gmeauthDeferred.promise])
+            .then(function () {
+                return Q.all([
+                    gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
+                    gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
+                ]);
+            })
+            .then(function () {
+                return Q.all([
+                    gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
+                        read: true,
+                        write: true,
+                        delete: true
+                    })
+                ]);
+            })
+            .then(function() {
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
             .then(function () {
                 return storage.deleteProject({projectName: projectName});
             })
-            .finally(done);
+            .nodeify(done);
     });
 
     after(function (done) {
-        storage.closeDatabase(done);
+        storage.closeDatabase()
+            //.catch() ???
+            .finally(function () {
+                db.close(true, function (err) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    gmeAuth.unload(function (err) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        done();
+                    });
+                });
+            });
     });
 
     beforeEach(function (done) {
