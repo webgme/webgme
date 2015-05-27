@@ -161,8 +161,8 @@ function WebSocket(storage, mainLogger, gmeConfig) {
                 if (socket.rooms.indexOf(data.projectName) > -1) {
                     data.socket = socket;
                 }
-                storage.setBranchHash(data, function (err) {
-                    callback(err);
+                storage.setBranchHash(data, function (err, result) {
+                    callback(err, result);
                 });
             });
 

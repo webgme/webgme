@@ -17,8 +17,9 @@ define([
         this.branches = {};
         this.ID_NAME = CONSTANTS.MONGO_ID;
 
-        var logger = mainLogger.fork('Project:' + name),
-            projectCache = new ProjectCache(storage, name, logger, gmeConfig);
+        var self = this,
+            logger = mainLogger.fork('Project:' + self.name),
+            projectCache = new ProjectCache(storage, self.name, logger, gmeConfig);
 
         logger.debug('ctor');
         this.getBranch = function (branchName, shouldExist) {
@@ -45,7 +46,7 @@ define([
 
         // Functions forwarded to storage.
         this.setBranchHash = function (branchName, newHash, oldHash, callback) {
-            storage.setBranchHash(name, newHash, oldHash, callback);
+            storage.setBranchHash(self.name, branchName, newHash, oldHash, callback);
         };
 
         this.createBranch = function (branchName, newHash, callback) {
@@ -53,7 +54,7 @@ define([
         };
 
         this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
-            storage.makeCommit(name, branchName, parents, rootHash, coreObjects, msg, callback);
+            storage.makeCommit(self.name, branchName, parents, rootHash, coreObjects, msg, callback);
         };
 
         // Functions forwarded to project cache.

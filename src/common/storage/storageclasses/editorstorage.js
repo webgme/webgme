@@ -77,7 +77,7 @@ define([
                 branches;
             logger.debug('closeProject', projectName);
             if (project) {
-                branches = Object.keys(project[projectName].branches);
+                branches = Object.keys(project.branches);
                 if (branches.length > 0) {
                     //TODO: Determine the behaviour here.. Currently will raise errors and not close branches.
                     logger.error('Branches still open for project', projectName, branches);

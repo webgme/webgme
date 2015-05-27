@@ -757,7 +757,7 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should execute a plugin', function (done) {
+    it.only('should execute a plugin', function (done) {
         var worker = getSimpleWorker(),
             projectName = 'workerSeedFromFile',
             pluginContext = {
@@ -774,8 +774,8 @@ describe('Simple worker', function () {
                 }
             };
 
-        deleteProject(projectName, function (err) {
-            expect(err).equal(null);
+        //deleteProject(projectName, function (err) {
+        //    expect(err).equal(null);
 
             worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
                 .then(function (msg) {
@@ -801,7 +801,7 @@ describe('Simple worker', function () {
                 })
                 .finally(restoreProcessFunctions)
                 .nodeify(done);
-        });
+//        });
     });
 
     it('should fail to execute a plugin if the server execution is not allowed', function (done) {

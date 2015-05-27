@@ -33,13 +33,13 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     Storage = requireJS('common/storage/nodestorage'),
     Serialization = requireJS('common/core/users/serialization'),
     BlobClient = requireJS('common/blob/BlobClient'),
-    PluginNodeManager = requireJS('plugin/nodemanager'),
     PluginResult = requireJS('plugin/PluginResult'),
     PluginMessage = requireJS('plugin/PluginMessage'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
 
     FS = require('fs'),
 
+    PluginNodeManager = require('../../plugin/nodemanager'),
     GMEAUTH = require('../middleware/auth/gmeauth'),
     CONSTANT = require('./constants'),
     Logger = require('../logger'),
@@ -128,10 +128,11 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     },
 
 // Helper functions
-    getConnectedStorage = function (webGMESessionId, callback) {
+    getConnectedStorage = function (webGMESessionId) {
         var host = '127.0.0.1', //TODO: this should come from gmeConfig
             storage = Storage.createStorage(host, webGMESessionId, logger, gmeConfig);
-        callback(null, storage);
+
+        return storage;
     },
 
     getProject = function (projectName, webGMESessionId, callback) {
@@ -223,7 +224,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         return requireJS('plugin/' + name + '/' + name + '/' + name);
     },
 
-    runPlugin = function (webGMESessionId, userId, name, context, callback) {
+    executePlugin = function (webGMESessionId, userId, name, context, callback) {
         var storage = getConnectedStorage(webGMESessionId);
         //context.managerConfig: {
         //    project: self._client.getActiveProjectName(),
@@ -248,10 +249,10 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     pluginManager = new PluginNodeManager(webGMESessionId, project, logger, gmeConfig);
 
                     pluginContext = {
-                        activeNode: context.activeNode,
-                        activeSelection: context.activeSelection,
-                        commitHash: context.commit,
-                        branchName: context.branchName
+                        activeNode: context.managerConfig.activeNode,
+                        activeSelection: context.managerConfig.activeSelection,
+                        commitHash: context.managerConfig.commit,
+                        branchName: context.managerConfig.branchName
                     };
 
                     pluginManager.executePlugin(name, context.pluginConfig, pluginContext, function (err, result) {
@@ -274,42 +275,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                 throw new Error('Could not connect');
             }
         });
-
-        //if (interpreter) {
-        //    getProject(context.managerConfig.project, webGMESessionId, function (err, project) {
-        //        if (!err) {
-        //            project.setUser(userId);
-        //            var plugins = {};
-        //            plugins[name] = interpreter;
-        //            var manager = new PluginManagerBase(project, Core, logger, plugins, gmeConfig);
-        //
-        //            manager.initialize(null, function (pluginConfigs, configSaveCallback) {
-        //                if (configSaveCallback) {
-        //                    configSaveCallback(context.pluginConfigs);
-        //                }
-        //                manager.executePlugin(name, context.managerConfig, function (err, result) {
-        //                    if (!err && result) {
-        //                        callback(null, result.serialize());
-        //                    } else {
-        //                        var newErrorPluginResult = new PluginResult();
-        //                        callback(err, newErrorPluginResult.serialize());
-        //                    }
-        //                });
-        //
-        //            });
-        //        } else {
-        //            var newErrorPluginResult = new PluginResult();
-        //            logger.error('unable to get project');
-        //            callback(new Error('unable to get project'), newErrorPluginResult.serialize());
-        //        }
-        //    });
-        //} else {
-        //    var newErrorPluginResult = new PluginResult();
-        //    callback(new Error('unable to load plugin'), newErrorPluginResult.serialize());
-        //}
     },
 
-    executePlugin = function (webGMESessionId, userId, name, context, callback) {
+    executePluginOld = function (webGMESessionId, userId, name, context, callback) {
         var interpreter = getPlugin(name);
         if (interpreter) {
             getProject(context.managerConfig.project, webGMESessionId, function (err, project) {

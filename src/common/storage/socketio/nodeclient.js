@@ -12,11 +12,12 @@ define(['socket.io-client'], function (io) {
     function IoClient (host, webGMESessionId, gmeConfig) {
         this.connect = function (callback) {
             var socketIoOptions = JSON.parse(JSON.stringify(gmeConfig.socketIO)),
-                protocol = gmeConfig.server.https.enable ? 'https' : 'http';
+                protocol = gmeConfig.server.https.enable ? 'https' : 'http',
+                hostUrl = protocol + '://' + host + ':' + gmeConfig.server.port;
 
             socketIoOptions.query = webGMESessionId;
 
-            callback(null, io.connect(protocol + '://' + host, socketIoOptions));
+            callback(null, io.connect(hostUrl, socketIoOptions));
         };
     }
 
