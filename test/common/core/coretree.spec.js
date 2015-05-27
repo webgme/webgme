@@ -10,6 +10,7 @@ describe('CoreTree', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
+        Q = testFixture.Q,
         should = require('chai').should(),
         requirejs = require('requirejs'),
         projectName = 'CoreTreeTest',
@@ -18,12 +19,44 @@ describe('CoreTree', function () {
     // TODO: replace with in memory storage
 
         logger = testFixture.logger.fork('coretree.spec'),
-        storage = testFixture.getMongoStorage(logger, gmeConfig),
+        storage,
 
-        coreTree;
+        coreTree,
+
+        gmeAuth,
+
+        guestAccount = gmeConfig.authentication.guestAccount;
 
     before(function (done) {
-        storage.openDatabase()
+        var clearDB = testFixture.clearDatabase(gmeConfig),
+            gmeAuthPromise;
+
+        gmeAuthPromise = testFixture.getGMEAuth(gmeConfig)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+            });
+
+
+        Q.all([clearDB, gmeAuthPromise])
+            .then(function () {
+                return Q.all([
+                    gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
+                    gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
+                ]);
+            })
+            .then(function () {
+                return Q.all([
+                    gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
+                        read: true,
+                        write: true,
+                        delete: true
+                    })
+                ]);
+            })
+            .then(function () {
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
             .then(function () {
                 return storage.deleteProject({projectName: projectName});
             })
@@ -43,12 +76,14 @@ describe('CoreTree', function () {
     after(function (done) {
         storage.deleteProject({projectName: projectName})
             .then(function () {
-                storage.closeDatabase(done);
+
+                return Q.all([
+                    storage.closeDatabase(),
+                    gmeAuth.unload()
+                ]);
             })
-            .catch(function (err) {
-                logger.error(err);
-                storage.closeDatabase(done);
-            });
+            .then(done)
+            .catch(done);
     });
 
     describe('core.getParent', function () {

@@ -8,8 +8,9 @@ var testFixture = require('../../_globals.js');
 describe('coretype', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
+        Q = testFixture.Q,
         logger = testFixture.logger.fork('coretype.spec'),
-        storage = testFixture.getMongoStorage(logger, gmeConfig),
+        storage,
         Type = testFixture.requirejs('common/core/coretype'),
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),
@@ -20,7 +21,58 @@ describe('coretype', function () {
         projectName = 'coreTypeTesting',
         project,
         core,
-        root;
+        root,
+
+        gmeAuth,
+
+        guestAccount = gmeConfig.authentication.guestAccount;
+
+    before(function (done) {
+        var clearDB = testFixture.clearDatabase(gmeConfig),
+            gmeAuthPromise;
+
+        gmeAuthPromise = testFixture.getGMEAuth(gmeConfig)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+            });
+
+
+        Q.all([clearDB, gmeAuthPromise])
+            .then(function () {
+                return Q.all([
+                    gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
+                    gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
+                ]);
+            })
+            .then(function () {
+                return Q.all([
+                    gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
+                        read: true,
+                        write: true,
+                        delete: true
+                    })
+                ]);
+            })
+            .then(function () {
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(done)
+            .catch(done);
+    });
+
+    after(function (done) {
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+
+                return Q.all([
+                    storage.closeDatabase(),
+                    gmeAuth.unload()
+                ]);
+            })
+            .then(done)
+            .catch(done);
+    });
 
     beforeEach(function (done) {
         storage.openDatabase()

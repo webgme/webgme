@@ -9,6 +9,7 @@ describe('constraint.core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('constraint.core:storage'),
+        Q = testFixture.Q,
         storage,
         TASYNC = testFixture.requirejs('common/core/tasync'),
         project,

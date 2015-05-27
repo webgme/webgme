@@ -111,7 +111,7 @@ function getGMEAuth(gmeConfigParameter, callback) {
     var deferred = Q.defer(),
         gmeAuth;
 
-    gmeAuth = new testFixture.GMEAuth(null, gmeConfigParameter);
+    gmeAuth = new GMEAuth(null, gmeConfigParameter);
     gmeAuth.connect(function (err) {
         if (err) {
             deferred.reject(err);

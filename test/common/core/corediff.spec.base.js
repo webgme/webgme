@@ -10,9 +10,60 @@ describe('corediff-base', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('corediff-base'),
-        storage = new testFixture.getMongoStorage(logger, gmeConfig),
+        storage,
         Q = testFixture.Q,
-        expect = testFixture.expect;
+        expect = testFixture.expect,
+
+        gmeAuth,
+
+        guestAccount = gmeConfig.authentication.guestAccount;
+
+    before(function (done) {
+        var clearDB = testFixture.clearDatabase(gmeConfig),
+            gmeAuthPromise;
+
+        gmeAuthPromise = testFixture.getGMEAuth(gmeConfig)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+            });
+
+
+        Q.all([clearDB, gmeAuthPromise])
+            .then(function () {
+                return Q.all([
+                    gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
+                    gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
+                ]);
+            })
+            .then(function () {
+                return Q.all([
+                    gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
+                        read: true,
+                        write: true,
+                        delete: true
+                    })
+                ]);
+            })
+            .then(function () {
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(done)
+            .catch(done);
+    });
+
+    after(function (done) {
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+
+                return Q.all([
+                    storage.closeDatabase(),
+                    gmeAuth.unload()
+                ]);
+            })
+            .then(done)
+            .catch(done);
+    });
 
     describe('commitAncestor', function () {
         describe('straight line', function () {
@@ -173,7 +224,7 @@ describe('corediff-base', function () {
                         addCommitObject([commitChain[10]]);
                         addCommitObject([commitChain[9], commitChain[11]]);
 
-                        function makeCommit (commitData) {
+                        function makeCommit(commitData) {
                             return storage.makeCommit(commitData);
                         }
 

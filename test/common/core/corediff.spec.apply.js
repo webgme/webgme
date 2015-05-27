@@ -14,6 +14,7 @@ describe('corediff apply', function () {
         core,
         rootNode,
         commit,
+        Q = testFixture.Q,
         expect = testFixture.expect,
         logger = testFixture.logger.fork('corediff.spec.apply'),
         storage,
@@ -53,27 +54,28 @@ describe('corediff apply', function () {
             .then(function () {
                 storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
                 jsonProject = getJsonProject('./test/common/core/corediff/base001.json');
-                storage.openDatabase()
-                    .then(function () {
-                        return storage.deleteProject({projectName: projectName});
-                    })
-                    .then(function () {
-                        return testFixture.importProject(storage, {
-                            projectSeed: 'test/common/core/core/intraPersist.json',
-                            projectName: projectName,
-                            branchName: 'base',
-                            gmeConfig: gmeConfig,
-                            logger: logger
-                        });
-                    })
-                    .then(function (result) {
-                        project = result.project;
-                        core = result.core;
-                        rootNode = result.rootNode;
-                        commit = result.commitHash;
-                    })
-                    .finally(done);
-            });
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
+                return testFixture.importProject(storage, {
+                    projectSeed: 'test/common/core/core/intraPersist.json',
+                    projectName: projectName,
+                    branchName: 'base',
+                    gmeConfig: gmeConfig,
+                    logger: logger
+                });
+            })
+            .then(function (result) {
+                project = result.project;
+                core = result.core;
+                rootNode = result.rootNode;
+                commit = result.commitHash;
+            })
+            .then(done)
+            .catch(done);
     });
 
     after(function (done) {
@@ -83,7 +85,7 @@ describe('corediff apply', function () {
                 return Q.all([
                     storage.closeDatabase(),
                     gmeAuth.unload()
-                ])
+                ]);
             })
             .then(done)
             .catch(done);

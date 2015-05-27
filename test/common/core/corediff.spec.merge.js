@@ -11,9 +11,10 @@ describe('corediff-merge', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         FS = testFixture.fs,
+        Q = testFixture.Q,
         WebGME = testFixture.WebGME,
         logger = testFixture.logger.fork('corediff.spec.merge'),
-        storage = testFixture.getMongoStorage(logger, gmeConfig),
+        storage,
         getJsonProject = testFixture.loadJsonFile,
         jsonProject,
         projectName = 'corediffMergeTesting',
@@ -21,7 +22,58 @@ describe('corediff-merge', function () {
         core,
         rootNode,
         commit,
-        baseRootHash;
+        baseRootHash,
+
+        gmeAuth,
+
+        guestAccount = gmeConfig.authentication.guestAccount;
+
+    before(function (done) {
+        var clearDB = testFixture.clearDatabase(gmeConfig),
+            gmeAuthPromise;
+
+        gmeAuthPromise = testFixture.getGMEAuth(gmeConfig)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+            });
+
+
+        Q.all([clearDB, gmeAuthPromise])
+            .then(function () {
+                return Q.all([
+                    gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
+                    gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
+                ]);
+            })
+            .then(function () {
+                return Q.all([
+                    gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
+                        read: true,
+                        write: true,
+                        delete: true
+                    })
+                ]);
+            })
+            .then(function () {
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(done)
+            .catch(done);
+    });
+
+    after(function (done) {
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+
+                return Q.all([
+                    storage.closeDatabase(),
+                    gmeAuth.unload()
+                ]);
+            })
+            .then(done)
+            .catch(done);
+    });
 
     describe('merge', function () {
         var applyChange = function (changeObject, next) {

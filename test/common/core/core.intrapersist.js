@@ -8,6 +8,7 @@ describe('core.intrapersist', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('core.intrapersist'),
+        Q = testFixture.Q,
         storage,
         CANON = testFixture.requirejs('../src/common/util/canon');
 
