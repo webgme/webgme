@@ -14,9 +14,9 @@
             projectName = document.getElementById('projectName').value;
             branchName = document.getElementById('branchName').value;
             console.log('projectName, branchName', projectName, branchName);
-            var client = new GME.classes.Client(GME.gmeConfig, projectName, branchName);
-            alert('Check console for debug messages (localStorage.debug = "gme:*") \n ' +
-            'Refresh to try with a different project or branch.');
+            var client = new GME.classes.TestStorage(GME.gmeConfig, projectName, branchName);
+//            alert('Check console for debug messages (localStorage.debug = "gme:*") \n ' +
+//            'Refresh to try with a different project or branch.');
         }
 
     </script>
@@ -34,7 +34,7 @@ See console for messages.
     <input id="projectName" type="text" name="projectName"  value="Test"/>
     <label>Branch Name:</label>
     <input id="branchName" type="text" name="branchName" value="master"/>
-    <button onclick="onClickEventHandler()">Start Client</button>
+    <button onclick="onClickEventHandler()">Start Test</button>
 </div>
 </body>
 </html>

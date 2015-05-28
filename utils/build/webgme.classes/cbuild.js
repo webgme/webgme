@@ -10,7 +10,8 @@
     debug: './client/lib/debug/debug',
     js: './client/js/',
     lib: './client/lib/',
-    'js/Dialogs/PluginConfig/PluginConfigDialog': '../utils/build/empty/empty'
+    'js/Dialogs/PluginConfig/PluginConfigDialog': '../utils/build/empty/empty',
+    teststorage: '../teststorage'
   },
   optimize: 'none',
   generateSourceMaps: true,

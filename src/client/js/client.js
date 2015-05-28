@@ -3,7 +3,17 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-define(['./client/index'], function (Client) {
+define([
+    'js/logger',
+    'common/storage/browserstorage',
+    'common/core/core',
+    'common/storage/constants'
+], function (Logger, Storage, Core, CONSTANTS) {
     'use strict';
+
+    function Client() {
+
+    }
+
     return Client;
 });
