@@ -8,8 +8,9 @@
 define([
     'js/logger',
     'js/Controls/DropDownMenu',
-    'js/Controls/PopoverBox'
-], function (Logger, DropDownMenu, PopoverBox) {
+    'js/Controls/PopoverBox',
+    'js/Constants'
+], function (Logger, DropDownMenu, PopoverBox, CONSTANTS) {
 
     'use strict';
 
@@ -50,7 +51,7 @@ define([
             }
         };
 
-        this._client.addEventListener(this._client.events.BRANCHSTATUS_CHANGED, function (/*__project, state*/) {
+        this._client.addEventListener(CONSTANTS.CLIENT.BRANCH_STATUS_CHANGED, function (/*__project, state*/) {
             self._refreshBranchStatus();
         });
 
@@ -58,13 +59,13 @@ define([
     };
 
     BranchStatusWidget.prototype._refreshBranchStatus = function () {
-        var status = this._client.getActualBranchStatus();
+        var status = this._client.getBranchStatus();
 
         switch (status) {
-            case this._client.branchStates.SYNC:
+            case CONSTANTS.CLIENT.STORAGE.SYNC:
                 this._branchInSync();
                 break;
-            case this._client.branchStates.FORKED:
+            case CONSTANTS.CLIENT.STORAGE.FORKED:
                 this._branchForked();
                 break;
         }
@@ -82,6 +83,7 @@ define([
     };
 
     BranchStatusWidget.prototype._branchForked = function () {
+        alert('Brach is forked! TODO: Handle this!'); //TODO: Handle this!!
         this._ddBranchStatus.clear();
         this._ddBranchStatus.setTitle('OUT OF SYNC');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);

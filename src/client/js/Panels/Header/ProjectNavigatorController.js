@@ -7,13 +7,21 @@
 
 define([
     'js/logger',
+    'js/Constants',
     'angular',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
     'isis-ui-components/simpleDialog/simpleDialog',
     'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html'
-], function (Logger, ng, ProjectsDialog, CommitDialog, ProjectRepositoryDialog, ConfirmDialog, DeleteDialogTemplate) {
+], function (Logger,
+             CONSTANTS,
+             ng,
+             ProjectsDialog,
+             CommitDialog,
+             ProjectRepositoryDialog,
+             ConfirmDialog,
+             DeleteDialogTemplate) {
     'use strict';
 
 
@@ -152,64 +160,66 @@ define([
 
         // register all event listeners on gmeClient
 
-        self.gmeClient.addEventListener(self.gmeClient.events.NETWORKSTATUS_CHANGED, function (/*client*/) {
-            if (self.gmeClient.getActualNetworkStatus() === self.gmeClient.networkStates.CONNECTED) {
+        self.gmeClient.addEventListener(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, function (/*client*/) {
+            if (self.gmeClient.getNetworkStatus() === CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED) {
                 // get project list
                 self.updateProjectList();
             } else {
                 // get project list
-                self.logger.warn(self.gmeClient.getActualNetworkStatus() + ' network status is not handled yet.');
+                self.logger.warn(self.gmeClient.getNetworkStatus() + ' network status is not handled yet.');
             }
 
         });
 
-        self.gmeClient.addEventListener(self.gmeClient.events.PROJECT_OPENED, function (client, projectId) {
-            self.logger.debug(self.gmeClient.events.PROJECT_OPENED, projectId);
+        self.gmeClient.addEventListener(CONSTANTS.CLIENT.PROJECT_OPENED, function (client, projectId) {
+            self.logger.debug(CONSTANTS.CLIENT.PROJECT_OPENED, projectId);
             self.selectProject({projectId: projectId});
         });
 
-        self.gmeClient.addEventListener(self.gmeClient.events.PROJECT_CLOSED, function (client, projectId) {
-            self.logger.debug(self.gmeClient.events.PROJECT_CLOSED, projectId);
+        self.gmeClient.addEventListener(CONSTANTS.CLIENT.PROJECT_CLOSED, function (client, projectId) {
+            self.logger.debug(CONSTANTS.CLIENT.PROJECT_CLOSED, projectId);
             self.selectProject({});
         });
 
-        self.gmeClient.addEventListener(self.gmeClient.events.SERVER_PROJECT_CREATED, function (client, projectId) {
-            self.logger.debug(self.gmeClient.events.SERVER_PROJECT_CREATED, projectId);
-            self.addProject(projectId);
-        });
+        //TODO: Plug these in using watchers
+        //self.gmeClient.addEventListener(self.gmeClient.events.SERVER_PROJECT_CREATED, function (client, projectId) {
+        //    self.logger.debug(self.gmeClient.events.SERVER_PROJECT_CREATED, projectId);
+        //    self.addProject(projectId);
+        //});
+        //
+        //self.gmeClient.addEventListener(self.gmeClient.events.SERVER_PROJECT_DELETED, function (client, projectId) {
+        //    self.logger.debug(self.gmeClient.events.SERVER_PROJECT_DELETED, projectId);
+        //    self.removeProject(projectId);
+        //});
 
-        self.gmeClient.addEventListener(self.gmeClient.events.SERVER_PROJECT_DELETED, function (client, projectId) {
-            self.logger.debug(self.gmeClient.events.SERVER_PROJECT_DELETED, projectId);
-            self.removeProject(projectId);
-        });
-
-        self.gmeClient.addEventListener(self.gmeClient.events.BRANCH_CHANGED, function (client, branchId) {
-            self.logger.debug(self.gmeClient.events.BRANCH_CHANGED, branchId);
+        self.gmeClient.addEventListener(CONSTANTS.CLIENT.BRANCH_CHANGED, function (client, branchId) {
+            self.logger.debug(CONSTANTS.CLIENT.BRANCH_CHANGED, branchId);
             self.selectBranch({projectId: self.gmeClient.getActiveProjectName(), branchId: branchId});
         });
 
-        self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_CREATED, function (client, parameters) {
-            self.logger.debug(self.gmeClient.events.SERVER_BRANCH_CREATED, parameters);
-            self.addBranch(parameters.project, parameters.branch, parameters.commit);
-        });
-
-        self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_UPDATED, function (client, parameters) {
-            self.logger.debug(self.gmeClient.events.SERVER_BRANCH_UPDATED, parameters);
-            self.updateBranch(parameters.project, parameters.branch, parameters.commit);
-        });
-
-        self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_DELETED, function (client, parameters) {
-            var currentProject = self.$scope.navigator.items[self.navIdProject],
-                currentBranch = self.$scope.navigator.items[self.navIdBranch];
-            self.logger.debug(self.gmeClient.events.SERVER_BRANCH_DELETED, parameters);
-
-            self.removeBranch(parameters.project, parameters.branch);
-
-            if (currentBranch === parameters.branch && currentProject === parameters.project) {
-                self.selectProject(parameters.project);
-            }
-
-        });
+        //TODO: Plug these in using watchers
+        //self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_CREATED, function (client, parameters) {
+        //    self.logger.debug(self.gmeClient.events.SERVER_BRANCH_CREATED, parameters);
+        //    self.addBranch(parameters.project, parameters.branch, parameters.commit);
+        //});
+        //
+        //self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_UPDATED, function (client, parameters) {
+        //    self.logger.debug(self.gmeClient.events.SERVER_BRANCH_UPDATED, parameters);
+        //    self.updateBranch(parameters.project, parameters.branch, parameters.commit);
+        //});
+        //
+        //self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_DELETED, function (client, parameters) {
+        //    var currentProject = self.$scope.navigator.items[self.navIdProject],
+        //        currentBranch = self.$scope.navigator.items[self.navIdBranch];
+        //    self.logger.debug(self.gmeClient.events.SERVER_BRANCH_DELETED, parameters);
+        //
+        //    self.removeBranch(parameters.project, parameters.branch);
+        //
+        //    if (currentBranch === parameters.branch && currentProject === parameters.project) {
+        //        self.selectProject(parameters.project);
+        //    }
+        //
+        //});
 
         angular.element(self.$window).on('keydown', function (e) {
 
@@ -235,8 +245,8 @@ define([
             }
         });
 
-        self.gmeClient.addEventListener(self.gmeClient.events.UNDO_AVAILABLE, function (client, parameters) {
-            self.logger.debug(self.gmeClient.events.UNDO_AVAILABLE, parameters);
+        self.gmeClient.addEventListener(CONSTANTS.CLIENT.UNDO_AVAILABLE, function (client, parameters) {
+            self.logger.debug(CONSTANTS.CLIENT.UNDO_AVAILABLE, parameters);
             self.$timeout(function () {
 
                 if (self.$scope.navigator &&
@@ -252,7 +262,7 @@ define([
 
             });
         });
-        self.gmeClient.addEventListener(self.gmeClient.events.REDO_AVAILABLE, function (client, parameters) {
+        self.gmeClient.addEventListener(CONSTANTS.CLIENT.REDO_AVAILABLE, function (client, parameters) {
             self.logger.debug(self.gmeClient.events.REDO_AVAILABLE, parameters);
             self.$timeout(function () {
 
@@ -275,6 +285,8 @@ define([
         var self = this;
         self.logger.debug('updateProjectList');
         // FIXME: get read=only/viewable/available project?!
+        self.projects = {};
+        return;
         self.gmeClient.getFullProjectsInfoAsync(function (err, projectList) {
             var projectId,
                 branchId;

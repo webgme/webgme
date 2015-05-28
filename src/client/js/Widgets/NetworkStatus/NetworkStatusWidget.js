@@ -9,8 +9,9 @@
 define([
     'js/logger',
     'js/Controls/DropDownMenu',
-    'js/Controls/PopoverBox'
-], function (Logger, DropDownMenu, PopoverBox) {
+    'js/Controls/PopoverBox',
+    'js/Constants'
+], function (Logger, DropDownMenu, PopoverBox, CONSTANTS) {
 
     'use strict';
 
@@ -51,7 +52,7 @@ define([
             }
         };
 
-        this._client.addEventListener(this._client.events.NETWORKSTATUS_CHANGED, function (/*__project, state*/) {
+        this._client.addEventListener(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, function (/*__project, state*/) {
             self._refreshNetworkStatus();
         });
 
@@ -59,13 +60,13 @@ define([
     };
 
     NetworkStatusWidget.prototype._refreshNetworkStatus = function () {
-        var status = this._client.getActualNetworkStatus();
+        var status = this._client.getNetworkStatus();
 
         switch (status) {
-            case this._client.networkStates.CONNECTED:
+            case CONSTANTS.CLIENT.STORAGE.CONNECTED:
                 this._modeConnected();
                 break;
-            case this._client.networkStates.DISCONNECTED:
+            case CONSTANTS.CLIENT.STORAGE.DISCONNECTED:
                 this._modeDisconnected();
                 break;
         }

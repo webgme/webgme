@@ -6,7 +6,11 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANTS) {
+define([
+    'underscore',
+    'common/Constants',
+    'js/client/constants'
+], function (underscore, COMMON_CONSTANTS, CLIENT_CONSTANTS) {
 
     'use strict';
 
@@ -90,6 +94,7 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
         PROPERTY_GROUP_POINTERS: 'Pointers'
     });
 
+    clientConstants.CLIENT = CLIENT_CONSTANTS;
 
     return clientConstants;
 });

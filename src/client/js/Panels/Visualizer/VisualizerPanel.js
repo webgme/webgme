@@ -97,17 +97,17 @@ define(['js/logger',
             self.selectedObjectChanged(activeObjectId);
         });
 
-        this._client.addEventListener(this._client.events.PROJECT_CLOSED, function (/* __project, nodeId */) {
+        this._client.addEventListener(CONSTANTS.CLIENT.PROJECT_CLOSED, function (/* __project, nodeId */) {
             self._p2Editor(false);
             self._validVisualizers = null;
         });
 
-        this._client.addEventListener(this._client.events.PROJECT_OPENED, function (/* __project, nodeId */) {
+        this._client.addEventListener(CONSTANTS.CLIENT.PROJECT_OPENED, function (/* __project, nodeId */) {
             self._p2Editor(false);
             self._validVisualizers = null;
         });
 
-        this._client.addEventListener(this._client.events.BRANCH_CHANGED, function (/* __project, nodeId */) {
+        this._client.addEventListener(CONSTANTS.CLIENT.BRANCH_CHANGED, function (/* __project, nodeId */) {
             self._p2Editor(false);
             self._validVisualizers = null;
         });

@@ -47,6 +47,7 @@ define([
 
     var ROOT_PATH = '';
 
+    // DONE
     function COPY(object) {
         if (object) {
             return JSON.parse(JSON.stringify(object));
@@ -721,6 +722,7 @@ define([
         }
 
         //internal functions
+        // DONE.
         function cleanUsersTerritories() {
             //look out as the user can remove itself at any time!!!
             var userIds = Object.keys(_users),
@@ -742,7 +744,7 @@ define([
                 }
             }
         }
-
+        // DONE.
         function connectToDatabaseAsync(options, callback) {
             var oldcallback = callback;
             callback = function (err) {
@@ -802,6 +804,8 @@ define([
         }
 
         //loading functions
+
+        // DONE
         function getStringHash(/* node */) {
             //TODO there is a memory issue with the huge strings so we have to replace it with something
             _gHash += 1;
@@ -860,6 +864,7 @@ define([
         //    return false;
         //}
 
+        // DONE
         function getModifiedNodes(newerNodes) {
             var modifiedNodes = [],
                 i;
@@ -876,8 +881,8 @@ define([
             return modifiedNodes;
         }
 
-
         //this is just a first brute implementation it needs serious optimization!!!
+        // DONE
         function fitsInPatternTypes(path, pattern) {
             var i;
 
@@ -893,6 +898,7 @@ define([
             }
         }
 
+        // DONE
         function patternToPaths(patternId, pattern, pathsSoFar) {
             var children,
                 subPattern,
@@ -916,6 +922,7 @@ define([
 
         }
 
+        // DONE
         function userEvents(userId, modifiedNodes) {
             var newPaths = {},
                 startErrorLevel = _loadError,
@@ -972,6 +979,7 @@ define([
 
 
         //partially optimized
+        // DONE
         function loadChildrenPattern(core, nodesSoFar, node, level, callback) {
             var path = core.getPath(node),
                 childrenPaths = core.getChildrenPaths(node),
@@ -1021,6 +1029,7 @@ define([
             }
         }
 
+        // DONE
         function loadPattern(core, id, pattern, nodesSoFar, callback) {
             var base = null,
                 baseLoaded = function () {
@@ -1064,6 +1073,7 @@ define([
             }
         }
 
+        // DONE
         function orderStringArrayByElementLength(strArray) {
             var ordered = [],
                 i, j, index;
@@ -1120,6 +1130,7 @@ define([
         //    loadRoot(newRootHash, tRoot);
         //}
 
+        //DONE
         function loadRoot(newRootHash, callback) {
             //with the newer approach we try to optimize a bit the mechanism of the loading and
             // try to get rid of the parallelism behind it
@@ -1195,6 +1206,7 @@ define([
         }
 
         //this is just a first brute implementation it needs serious optimization!!!
+        // DONE
         function loading(newRootHash, callback) {
             var finalEvents = function () {
                 var modifiedPaths,
