@@ -181,6 +181,20 @@ function WebSocket(storage, mainLogger, gmeConfig) {
                     });
             });
 
+            socket.on('getProjects', function (data, callback) {
+                storage.getProjects(data)
+                    .then(function (projects) {
+                        callback(null, projects);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.toString());
+                        }
+                    });
+            });
+
             socket.on('deleteProject', function (data, callback) {
                 if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
                     data.socket = socket;

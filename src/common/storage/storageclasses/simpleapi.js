@@ -12,6 +12,14 @@
 define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     'use strict';
 
+    /**
+     *
+     * @param webSocket
+     * @param logger
+     * @param gmeConfig
+     * @constructor
+     * @class
+     */
     function StorageSimpleAPI(webSocket, logger, gmeConfig) {
         // watcher counters determining when to join/leave a room on the sever
         this.logger = this.logger || logger.fork('storage');
@@ -24,11 +32,47 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     StorageSimpleAPI.prototype = Object.create(StorageWatcher.prototype);
     StorageSimpleAPI.prototype.constructor = StorageSimpleAPI;
 
-    // Getters
-    StorageSimpleAPI.prototype.getProjectNames = function (data, callback) {
-        this.logger.debug('getProjectNames');
+    /**
+     * Callback for getProjectNames.
+     *
+     * @callback StorageSimpleAPI~getProjectNamesCallback
+     * @param {string} err - error string.
+     * @param {string[]} projectNames - Names of all projects the user has at least read-access to.
+     */
+
+    /**
+     * Retrieves all the project names where the user has at least read access.
+     *
+     * @param {StorageSimpleAPI~getProjectNamesCallback} callback - The callback that handles the response.
+     */
+    StorageSimpleAPI.prototype.getProjectNames = function (callback) {
+        var data = {};
+        this.logger.debug('getProjectNames', data);
         this.webSocket.getProjectNames(data, callback);
     };
+
+    /**
+     * Callback for getProjects.
+     *
+     * @callback StorageSimpleAPI~getProjectsCallback
+     * @param {string} err - error string.
+     * @param {{object[]} projects - Names of all projects the user has at least read-access to.
+     * @example
+     * // projects is of the form
+     * // [{ name: 'ProjectName', read: true, write: false, delete: false} ]
+     */
+
+    /**
+     * Retrieves all the access info for all projects.
+     *
+     * @param {StorageSimpleAPI~getProjectsCallback} callback - The callback that handles the response.
+     */
+    StorageSimpleAPI.prototype.getProjects = function (callback) {
+        var data = {};
+        this.logger.debug('getProjects', data);
+        this.webSocket.getProjects(data, callback);
+    };
+
 
     StorageSimpleAPI.prototype.getBranches = function (projectName, callback) {
         var data = {

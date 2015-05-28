@@ -16,6 +16,7 @@ define([
     'text!/package.json',
     'js/client',
     'js/Constants',
+    'js/client/constants',
     'js/Panels/MetaEditor/MetaEditorConstants',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts',
@@ -38,6 +39,7 @@ define([
              Client,
              CONSTANTS,
              METACONSTANTS,
+             CLIENT_CONSTANTS,
              GMEConcepts,
              GMEVisualConcepts,
              ExportManager,
@@ -99,7 +101,8 @@ define([
             client = new Client(gmeConfig);
             WebGMEGlobal.Client = client;
 
-            WebGMEGlobal.InterpreterManager = new InterpreterManager(client, gmeConfig);
+            //TODO: Add this back
+            //WebGMEGlobal.InterpreterManager = new InterpreterManager(client, gmeConfig);
 
             Object.defineProperty(WebGMEGlobal, 'State', {
                     value: StateManager.initialize(),
@@ -111,62 +114,66 @@ define([
 
             WebGMEGlobal.State.setIsInitPhase(true);
             logger.info('init-phase true');
-            WebGMEHistory.initialize();
+            //WebGMEHistory.initialize();
 
-            GMEConcepts.initialize(client);
-            GMEVisualConcepts.initialize(client);
+            //GMEConcepts.initialize(client);
+            //GMEVisualConcepts.initialize(client);
 
-            METAAspectHelper.initialize(client);
-            PreferencesHelper.initialize(client);
+            //METAAspectHelper.initialize(client);
+            //PreferencesHelper.initialize(client);
 
-            ExportManager.initialize(client);
-            ImportManager.initialize(client);
+            //ExportManager.initialize(client);
+            //ImportManager.initialize(client);
 
-            WebGMEGlobal.ExportManager = ExportManager;
-            WebGMEGlobal.ImportManager = ImportManager;
+            //WebGMEGlobal.ExportManager = ExportManager;
+            //WebGMEGlobal.ImportManager = ImportManager;
 
             //hook up branch changed to set read-only mode on panels
-            client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {
+            client.addEventListener(CLIENT_CONSTANTS.BRANCH_CHANGED, function (__project, branchName) {
                 layoutManager.setPanelReadOnly(client.isCommitReadOnly() || client.isProjectReadOnly());
                 WebGMEGlobal.State.registerActiveBranchName(branchName);
             });
-            client.addEventListener(client.events.PROJECT_OPENED, function (__project, projectName) {
+            client.addEventListener(CLIENT_CONSTANTS.PROJECT_OPENED, function (__project, projectName) {
                 layoutManager.setPanelReadOnly(client.isProjectReadOnly());
                 WebGMEGlobal.State.registerActiveProjectName(projectName);
             });
 
             //on project close clear the current state
-            client.addEventListener(client.events.PROJECT_CLOSED, function (/* __project, projectName */) {
+            client.addEventListener(CLIENT_CONSTANTS.PROJECT_CLOSED, function (/* __project, projectName */) {
                 WebGMEGlobal.State.clear();
             });
 
-            client.decoratorManager = new DecoratorManager();
-            client.decoratorManager.downloadAll(gmeConfig.client.usedDecorators, function (err) {
-                if (err) {
-                    logger.error(err);
-                }
-                for (i = 0; i < len; i += 1) {
-                    panels.push({
-                        panel: layoutPanels[i].panel,
-                        container: layoutPanels[i].container,
-                        control: layoutPanels[i].control,
-                        params: {client: client}
-                    });
-                }
-
-                //load the panels
-                loadPanels(panels);
-
-                //as of now it's a global variable just to make access to it easier
-                //TODO: might need to be changed
-                WebGMEGlobal.KeyboardManager = KeyboardManager;
-                WebGMEGlobal.KeyboardManager.setEnabled(true);
-                WebGMEGlobal.PanelManager = new PanelManager(client);
-            });
+            //TODO: Add this back
+            loadPanels([]);
+            //client.decoratorManager = new DecoratorManager();
+            //client.decoratorManager.downloadAll(gmeConfig.client.usedDecorators, function (err) {
+            //    if (err) {
+            //        logger.error(err);
+            //    }
+            //    for (i = 0; i < len; i += 1) {
+            //        panels.push({
+            //            panel: layoutPanels[i].panel,
+            //            container: layoutPanels[i].container,
+            //            control: layoutPanels[i].control,
+            //            params: {client: client}
+            //        });
+            //    }
+            //
+            //    //load the panels
+            //    loadPanels(panels);
+            //
+            //    //as of now it's a global variable just to make access to it easier
+            //    //TODO: might need to be changed
+            //    WebGMEGlobal.KeyboardManager = KeyboardManager;
+            //    WebGMEGlobal.KeyboardManager.setEnabled(true);
+            //    WebGMEGlobal.PanelManager = new PanelManager(client);
+            //});
         });
 
         loadPanels = function (panels) {
             var p = panels.splice(0, 1)[0];
+            openProjectLoadDialog();
+            return;
 
             layoutManager.loadPanel(p, function () {
                 if (panels.length > 0) {
@@ -175,7 +182,9 @@ define([
                     if (_.isFunction(afterPanelsLoaded)) {
                         afterPanelsLoaded(client);
                     }
-
+                    openProjectLoadDialog();
+                    return;
+                    //TODO: Handle these
                     if (initialThingsToDo.createNewProject) {
                         client.connectToDatabaseAsync({}, function (err) {
                             if (err) {
@@ -283,15 +292,15 @@ define([
             //if initial project openings failed we show the project opening dialog
             WebGMEGlobal.State.setIsInitPhase(false);
             logger.info('init-phase false');
-            client.connectToDatabaseAsync({}, function (err) {
+            client.connectToDatabase(function (err) {
                 if (err) {
                     logger.error(err);
                     return;
                 }
-                client.getAvailableProjectsAsync(function (/*err, projectArray*/) {
-                    projectOpenDialog = new ProjectsDialog(client);
-                    projectOpenDialog.show();
-                });
+                //client.getAvailableProjectsAsync(function (/*err, projectArray*/) {
+                projectOpenDialog = new ProjectsDialog(client);
+                projectOpenDialog.show();
+                //});
             });
         };
 

@@ -126,6 +126,10 @@ define([
             self.socket.emit('getProjectNames', data, callback);
         };
 
+        this.getProjects = function (data, callback) {
+            self.socket.emit('getProjects', data, callback);
+        };
+
         this.deleteProject = function (data, callback) {
             self.socket.emit('deleteProject', data, callback);
         };

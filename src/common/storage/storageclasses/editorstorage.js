@@ -27,10 +27,11 @@ define([
     function EditorStorage(webSocket, mainLogger, gmeConfig) {
         var self = this,
             logger = mainLogger.fork('storage'),
-            connected = false,
             projects = {};
 
-        this.logger = logger;
+        self.logger = logger;
+        self.connected = false;
+
         StorageObjectLoaders.call(this, webSocket, mainLogger, gmeConfig);
 
         this.open = function (networkHandler) {
@@ -39,15 +40,15 @@ define([
                     logger.error(err);
                     networkHandler(CONSTANTS.ERROR);
                 } else if (connectionState === CONSTANTS.CONNECTED) {
-                    connected = true;
+                    self.connected = true;
                     networkHandler(connectionState);
                 } else if (connectionState === CONSTANTS.RECONNECTED) {
                     self._rejoinWatcherRooms();
                     self._rejoinBranchRooms();
-                    connected = true;
+                    self.connected = true;
                     networkHandler(connectionState);
                 } else if (connectionState === CONSTANTS.DISCONNECTED) {
-                    connected = false;
+                    self.connected = false;
                     networkHandler(connectionState);
                 } else {
                     logger.error('unexpected connection state');
@@ -62,8 +63,11 @@ define([
             webSocket.socket.removeAllListeners('disconnect');
             // Disconnect from the server.
             webSocket.disconnect();
+            self.connected = false;
             // Remove all local event-listeners.
             webSocket.removeAllEventListeners();
+            // Remove project references
+            projects = {};
         };
 
         this.openProject = function (projectName, callback) {
