@@ -12,19 +12,32 @@ describe('Run PluginForked', function () {
     var pluginName = 'PluginForked',
         logger = testFixture.logger.fork(pluginName),
         gmeConfig = testFixture.getGmeConfig(),
-        storage = testFixture.getMemoryStorage(logger, gmeConfig),
+        storage,
         expect = testFixture.expect,
+        Q = testFixture.Q,
         PluginCliManager = require('../../../src/plugin/climanager'),
         project,
         projectName = 'plugin_forked',
-        commitHash;
+        commitHash,
+
+        gmeAuth;
 
     before(function (done) {
-        storage.openDatabase(done);
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .nodeify(done);
     });
 
     after(function (done) {
-        storage.closeDatabase(done);
+        Q.all([
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
+            .nodeify(done);
     });
 
     beforeEach(function (done) {

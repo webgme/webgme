@@ -12,13 +12,15 @@ describe('MultipleMainCallbackCalls', function () {
     var pluginName = 'MultipleMainCallbackCalls',
         logger = testFixture.logger.fork(pluginName),
         gmeConfig = testFixture.getGmeConfig(),
-        storage = testFixture.getMemoryStorage(logger, gmeConfig),
+        storage,
         expect = testFixture.expect,
+        Q = testFixture.Q,
         PluginCliManager = require('../../../src/plugin/climanager'),
         project,
         projectName = 'plugin_mmcc',
         branchName = 'master',
-        commitHash;
+        commitHash,
+        gmeAuth;
 
     before(function (done) {
         var importParam = {
@@ -28,7 +30,12 @@ describe('MultipleMainCallbackCalls', function () {
             logger: logger,
             gmeConfig: gmeConfig
         };
-        storage.openDatabase()
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
             .then(function () {
                 logger.info('Database is opened.');
                 return storage.deleteProject({projectName: projectName});
@@ -45,7 +52,11 @@ describe('MultipleMainCallbackCalls', function () {
     });
 
     after(function (done) {
-        storage.closeDatabase(done);
+        Q.all([
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
+            .nodeify(done);
     });
 
     it('should run MultipleMainCallbackCalls and return error at second cb', function (done) {
