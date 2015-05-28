@@ -12,116 +12,27 @@ describe('Memory storage', function () {
         expect = testFixture.expect,
         logger = testFixture.logger.fork('memory'),
         Q = testFixture.Q,
-        mongodb = testFixture.mongodb,
-        //Project = testFixture.Project,
 
         projectName = 'newProject',
 
         gmeAuth,
-        dbConn,
-        db,
 
         guestAccount = gmeConfig.authentication.guestAccount;
 
 
     before(function (done) {
-        var gmeauthDeferred = Q.defer();
-
-        gmeAuth = new testFixture.GMEAuth(null, gmeConfig);
-        gmeAuth.connect(function (err) {
-            if (err) {
-                gmeauthDeferred.reject(err);
-            } else {
-                gmeauthDeferred.resolve(gmeAuth);
-            }
-        });
-
-        dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
-            .then(function (db_) {
-                db = db_;
-                return Q.all([
-                    Q.ninvoke(db, 'collection', '_users')
-                        .then(function (collection_) {
-                            return Q.ninvoke(collection_, 'remove');
-                        }),
-                    Q.ninvoke(db, 'collection', '_organizations')
-                        .then(function (orgs_) {
-                            return Q.ninvoke(orgs_, 'remove');
-                        }),
-                    Q.ninvoke(db, 'collection', '_projects')
-                        .then(function (projects_) {
-                            return Q.ninvoke(projects_, 'remove');
-                        }),
-                    //Q.ninvoke(db, 'collection', 'ClientCreateProject')
-                    //    .then(function (createdProject) {
-                    //        return Q.ninvoke(createdProject, 'remove');
-                    //    }),
-                    Q.ninvoke(db, 'collection', 'project')
-                        .then(function (project) {
-                            return Q.ninvoke(project, 'remove')
-                                .then(function () {
-                                    return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
-                                });
-                        }),
-                    Q.ninvoke(db, 'collection', 'unauthorized_project')
-                        .then(function (project) {
-                            return Q.ninvoke(project, 'remove')
-                                .then(function () {
-                                    return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
-                                });
-                        })
-                ]);
-            });
-
-        Q.all([dbConn, gmeauthDeferred.promise])
-            .then(function () {
-                return Q.all([
-                    gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
-                    gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
-                    //gmeAuth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true}),
-                    //gmeAuth.addUser('user_to_delete', 'user@example.com', 'plaintext', true, {overwrite: true}),
-                    //gmeAuth.addUser('self_delete_1', 'user@example.com', 'plaintext', true, {overwrite: true}),
-                    //gmeAuth.addUser('self_delete_2', 'user@example.com', 'plaintext', true, {overwrite: true}),
-                    //gmeAuth.addUser('user_to_modify', 'user@example.com', 'plaintext', true, {overwrite: true}),
-                    //gmeAuth.addUser('user_without_create', 'user@example.com', 'plaintext', false, {overwrite: true})
-                ]);
-            })
-            .then(function () {
-                return Q.all([
-                    //gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
-                    //    read: true,
-                    //    write: true,
-                    //    delete: true
-                    //}),
-                    //gmeAuth.authorizeByUserId(guestAccount, 'complexChainTest', 'create', {
-                    //    read: true,
-                    //    write: true,
-                    //    delete: true
-                    //}),
-                    //gmeAuth.authorizeByUserId(guestAccount, 'something', 'create', {
-                    //    read: true,
-                    //    write: true,
-                    //    delete: true
-                    //})
-                ]);
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
             })
             .nodeify(done);
     });
 
     after(function (done) {
-        db.close(true, function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            gmeAuth.unload(function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                done();
-            });
-        });
+        Q.all([
+            gmeAuth.unload()
+        ])
+            .nodeify(done);
     });
 
     it('should create an instance of getMemoryStorage', function () {

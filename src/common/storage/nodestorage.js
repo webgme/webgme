@@ -8,7 +8,7 @@
 define([
     'common/storage/storageclasses/editorstorage',
     'common/storage/socketio/nodeclient',
-    'common/storage/socketio/websocket',
+    'common/storage/socketio/websocket'
 ], function (EditorStorage, NodeIoClient, WebSocket) {
     'use strict';
 
