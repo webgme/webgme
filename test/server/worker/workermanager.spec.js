@@ -14,26 +14,52 @@ describe('ServerWorkerManager', function () {
     var WebGME = testFixture.WebGME,
         logger = testFixture.logger.fork('workermanager.spec'),
         expect = testFixture.expect,
+        Q = testFixture.Q,
         gmeConfig = testFixture.getGmeConfig(),
-        storage = testFixture.getMongoStorage(logger, gmeConfig),
+        storage,
         workerConstants = require('../../../src/server/worker/constants'),
         ServerWorkerManager = require('../../../src/server/worker/serverworkermanager'),
         workerManagerParameters = {
             sessionToUser: sessionToUser,
             globConf: gmeConfig
-        };
+        },
+        projectName = 'SWMProject',
+        gmeAuth;
 
     gmeConfig.server.maxWorkers = 5;
 
     before(function (done) {
         //adding some project to the database
-        testFixture.importProject({
-            storage: storage,
-            filePath: 'test/server/worker/workermanager/basicProject.json',
-            projectName: 'SWMProject',
-            branchName: 'master',
-            gmeConfig: gmeConfig
-        }, done);
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
+                return testFixture.importProject(storage, {
+                    projectSeed: 'test/server/worker/workermanager/basicProject.json',
+                    projectName: projectName,
+                    branchName: 'master',
+                    gmeConfig: gmeConfig,
+                    logger: logger
+                });
+            })
+            .nodeify(done);
+    });
+
+    after(function (done) {
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+                return Q.all([
+                    storage.closeDatabase(),
+                    gmeAuth.unload()
+                ]);
+            })
+            .nodeify(done);
     });
 
     describe('open-close handling', function () {

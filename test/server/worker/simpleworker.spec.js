@@ -18,8 +18,10 @@ describe('Simple worker', function () {
         CONSTANTS = require('./../../../src/server/worker/constants'),
         server,
 
+        gmeAuth,
+
         logger = testFixture.logger.fork('simpleworker.spec'),
-        storage = testFixture.getMongoStorage(logger, gmeConfig),
+        storage,
         baseProjectContext = {
             name: 'WorkerProject',
             commitHash: '',
@@ -52,7 +54,12 @@ describe('Simple worker', function () {
         server = WebGME.standaloneServer(gmeConfig);
         server.start(function (err) {
             expect(err).to.equal(null);
-            storage.openDatabase()
+            testFixture.clearDBAndGetGMEAuth(gmeConfig, baseProjectContext.name)
+                .then(function (gmeAuth_) {
+                    gmeAuth = gmeAuth_;
+                    storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                    return storage.openDatabase();
+                })
                 .then(function () {
                     return storage.deleteProject({projectName: baseProjectContext.name});
                 })
@@ -70,9 +77,7 @@ describe('Simple worker', function () {
                     baseProjectContext.commitHash = result.commitHash;
                     baseProjectContext.rootHash = result.core.getHash(result.rootNode);
                 })
-                .then(done)
-                .catch(done);
-
+                .nodeify(done);
         });
     });
 
@@ -83,12 +88,12 @@ describe('Simple worker', function () {
             }
             storage.deleteProject({projectName: baseProjectContext.name})
                 .then(function () {
-                    storage.closeDatabase(done);
+                    return Q.all([
+                        storage.closeDatabase(),
+                        gmeAuth.unload()
+                    ]);
                 })
-                .catch(function (err1) {
-                    logger.error(err1);
-                    storage.closeDatabase(done);
-                });
+                .nodeify(done);
         });
     });
 
@@ -757,7 +762,7 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
-    it.only('should execute a plugin', function (done) {
+    it('should execute a plugin', function (done) {
         var worker = getSimpleWorker(),
             projectName = 'workerSeedFromFile',
             pluginContext = {
