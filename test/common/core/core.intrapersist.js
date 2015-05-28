@@ -40,37 +40,12 @@ describe('core.intrapersist', function () {
         projectName = 'coreIntrapersistTest',
         project = null,
 
-        gmeAuth,
-
-        guestAccount = gmeConfig.authentication.guestAccount;
+        gmeAuth;
 
     before(function (done) {
-        var clearDB = testFixture.clearDatabase(gmeConfig),
-            gmeAuthPromise;
-
-        gmeAuthPromise = testFixture.getGMEAuth(gmeConfig)
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
-            });
-
-
-        Q.all([clearDB, gmeAuthPromise])
-            .then(function () {
-                return Q.all([
-                    gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
-                    gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
-                ]);
-            })
-            .then(function () {
-                return Q.all([
-                    gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
-                        read: true,
-                        write: true,
-                        delete: true
-                    })
-                ]);
-            })
-            .then(function() {
                 storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
             })
@@ -101,8 +76,7 @@ describe('core.intrapersist', function () {
             storage.closeDatabase(),
             gmeAuth.unload()
         ])
-            .then(done)
-            .catch(done);
+            .nodeify(done);
     });
 
     describe('SimpleChanges', function () {

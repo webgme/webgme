@@ -123,6 +123,55 @@ function getGMEAuth(gmeConfigParameter, callback) {
     return deferred.promise.nodeify(callback);
 }
 
+function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) {
+    var deferred = Q.defer(),
+        gmeAuth,
+
+        clearDB = clearDatabase(gmeConfigParameter),
+        guestAccount = gmeConfigParameter.authentication.guestAccount,
+        gmeAuthPromise;
+
+    gmeAuthPromise = getGMEAuth(gmeConfigParameter)
+        .then(function (gmeAuth_) {
+            gmeAuth = gmeAuth_;
+        })
+        .catch(deferred.reject);
+
+
+    Q.all([clearDB, gmeAuthPromise])
+        .then(function () {
+            return Q.all([
+                gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
+                gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
+            ]);
+        })
+        .then(function () {
+            var projectsToAuthorize = [],
+                projectName,
+                i;
+
+            if (projectNameOrNames) {
+                // TODO: do this in a for loop
+                projectName = projectNameOrNames;
+                projectsToAuthorize.push(
+                    gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
+                        read: true,
+                        write: true,
+                        delete: true
+                    })
+                );
+            }
+
+            return Q.all(projectsToAuthorize);
+        })
+        .then(function () {
+            deferred.resolve(gmeAuth);
+        })
+        .catch(deferred.reject);
+
+    return deferred.promise.nodeify(callback);
+}
+
 //TODO globally used functions to implement
 function loadJsonFile(path) {
     //TODO decide if throwing an exception is fine or we should handle it
@@ -132,7 +181,8 @@ function loadJsonFile(path) {
 function importProject(storage, parameters, callback) {
     var deferred = Q.defer(),
         projectJson,
-        branchName;
+        branchName,
+        data = {};
 
     // Parameters check.
     expect(typeof storage).to.equal('object');
@@ -143,6 +193,7 @@ function importProject(storage, parameters, callback) {
 
     if (parameters.hasOwnProperty('username')) {
         expect(typeof parameters.username).to.equal('string');
+        data.username = parameters.username;
     }
 
     if (typeof parameters.projectSeed === 'string') {
@@ -154,8 +205,9 @@ function importProject(storage, parameters, callback) {
     }
     branchName = parameters.branchName || 'master';
     // Parameters check end.
+    data.projectName = parameters.projectName;
 
-    storage.createProject({username: parameters.username, projectName: parameters.projectName})
+    storage.createProject(data)
         .then(function (dbProject) {
             var project = new Project(dbProject, storage, parameters.logger, parameters.gmeConfig),
                 core = new Core(project, {
@@ -441,6 +493,7 @@ module.exports = {
 
     clearDatabase: clearDatabase,
     getGMEAuth: getGMEAuth,
+    clearDBAndGetGMEAuth: clearDBAndGetGMEAuth,
 
     loadJsonFile: loadJsonFile,
     importProject: importProject,
