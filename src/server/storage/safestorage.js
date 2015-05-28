@@ -135,7 +135,7 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                         projectAuthInfo.read = userAuthInfo[projectName].read;
                         projectAuthInfo.write = userAuthInfo[projectName].write;
                         projectAuthInfo.delete = userAuthInfo[projectName].delete;
-                }
+                    }
 
                     projects.push(projectAuthInfo);
                 }
@@ -531,7 +531,7 @@ SafeStorage.prototype.setBranchHash = function (data, callback) {
             .then(function (user) {
                 userAuthInfo = user.projects;
                 if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].write) {
-                    return Storage.prototype.getBranchHash.call(self, data);
+                    return Storage.prototype.setBranchHash.call(self, data);
                 } else {
                     throw new Error('Not authorized to write project. ' + data.projectName);
                 }
@@ -683,7 +683,7 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
-        data.newHash = '';
+                data.newHash = '';
                 if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].read) {
                     return Storage.prototype.getBranchHash.call(self, data);
                 } else {
@@ -693,7 +693,7 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
             .then(function (branchHash) {
                 data.oldHash = branchHash;
                 if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].write) {
-                return Storage.prototype.setBranchHash.call(self, data);
+                    return Storage.prototype.setBranchHash.call(self, data);
                 } else {
                     throw new Error('Not authorized to write project. ' + data.projectName);
                 }
