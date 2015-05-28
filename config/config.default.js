@@ -13,8 +13,8 @@ var path = require('path'),
 
         authentication: {
             enable: false,
-            allowGuests: false,
-            guestAccount: 'anonymous',
+            allowGuests: true,
+            guestAccount: 'guest',
             logOutUrl: '/',
             salts: 10
         },

@@ -9,9 +9,11 @@ define([], function () {
 
     function IoClient (gmeConfig) {
         this.connect = function (callback) {
-            var protocol = gmeConfig.server.https.enable ? 'https' : 'http';
-            require([protocol + '://' + window.location.host + '/socket.io/socket.io.js'], function () {
-                var socket = window.io.connect(window.location.host, gmeConfig.socketIO);
+            var protocol = gmeConfig.server.https.enable ? 'https' : 'http',
+                socketIoUrl = protocol + '://' + window.location.host + '/socket.io/socket.io.js';
+            require([socketIoUrl], function (io_) {
+                var io = io_ || window.io,
+                    socket = io.connect(window.location.host, gmeConfig.socketIO);
                 callback(null, socket);
             });
         };
