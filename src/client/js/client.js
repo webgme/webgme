@@ -31,12 +31,13 @@ define([
             meta = new META(), // TODO: do meta.initialize after new core after storage.openProject/Branch
             core, // TODO: create new after storage.openProject/Branch
             state = {
-                project: null,
-                branchName: null,
-                branchStatus: null,
                 isConnected: function () {
                     return storage.connected;
                 },
+                project: null,
+                readOnlyProject: false,
+                branchName: null,
+                branchStatus: null,
                 users: {},
                 patterns: {},
                 gHash: 0,
@@ -48,7 +49,8 @@ define([
                     current: null,
                     previous: null,
                     object: null
-                }
+                },
+                inTransaction: false
             };
 
 
@@ -75,6 +77,55 @@ define([
             });
         };
 
+        this.selectProject = function (projectName, callback) {
+            var prevProjectName;
+
+            function projectOpened(err, project, branches) {
+                if (err) {
+                    throw new Error(err);
+                }
+                state.project = project;
+                state.readOnlyProject = false; //TODO: this should be returned from the storage
+                state.branchName = null;
+            }
+            if (state.project) {
+                prevProjectName = state.project.name;
+                if (state.branchName) {
+                    self.dispatchEvent(_self.events.BRANCH_CHANGED, null);
+                }
+                storage.closeProject(prevProjectName, function (err) {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    state.project = null;
+                    core = null;
+                    state.branchName = null;
+                    state.branchStatus = null;
+                    state.branchStatus = null;
+                    //state.users = {};
+                    state.patterns = {};
+                    //state.gHash = 0;
+                    state.nodes = {};
+                    state.metaNodes = {};
+                    state.loadNodes = {};
+                    state.loadError = 0;
+                    state.root.current = null;
+                    state.root.previous = null;
+                    //state.root.object = null;
+                    state.inTransaction = false;
+
+                    cleanUsersTerritories();
+
+                    self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, prevProjectName);
+
+                    storage.openProject(projectName, projectOpened);
+                });
+            } else {
+                storage.openProject(projectName, projectOpened);
+            }
+        };
+
         // State getters.
         this.getNetworkStatus = function () {
             if (state.isConnected()) {
@@ -90,12 +141,6 @@ define([
 
         this.getBranchStatus = function () {
             return state.branchStatus;
-        };
-
-        // Node handling
-        this.getNode = function (nodePath) {
-            logger.error('TODO: cannot get node', nodePath);
-            return null;
         };
 
 
@@ -125,7 +170,6 @@ define([
         };
 
         // Internal functions
-
         var ROOT_PATH = ''; //FIXME: This should come from constants..
 
         function COPY(object) {
@@ -134,6 +178,12 @@ define([
             }
             return null;
         }
+
+        // Node handling
+        this.getNode = function (nodePath) {
+            logger.error('TODO: cannot get node', nodePath);
+            return null;
+        };
 
         function cleanUsersTerritories() {
             //look out as the user can remove itself at any time!!!

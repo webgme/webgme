@@ -70,6 +70,23 @@ define([
             projects = {};
         };
 
+        /**
+         * Callback for openProject.
+         *
+         * @callback EditorStorage~openProjectCallback
+         * @param {string} err - error string.
+         * @param {Project} project - the newly opened project.
+         * @param {object} branches - the newly opened project.
+         * @example
+         * // branches is of the form
+         * // { master: '#somevalidhash', b1: '#someothervalidhash' }
+         */
+
+        /**
+         *
+         * @param {string} projectName - name of project to open.
+         * @param {EditorStorage~openProjectCallback} - callback
+         */
         this.openProject = function (projectName, callback) {
             var data = {
                 projectName: projectName
@@ -88,7 +105,7 @@ define([
             if (project) {
                 branches = Object.keys(project.branches);
                 if (branches.length > 0) {
-                    //TODO: Determine the behaviour here.. Currently will raise errors and not close branches.
+                    //TODO: It should close all branches here..
                     logger.error('Branches still open for project', projectName, branches);
                     callback('Branches still open for project');
                 }

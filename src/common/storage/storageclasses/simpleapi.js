@@ -43,7 +43,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     /**
      * Retrieves all the project names where the user has at least read access.
      *
-     * @param {StorageSimpleAPI~getProjectNamesCallback} callback - The callback that handles the response.
+     * @param {StorageSimpleAPI~getProjectNamesCallback} callback
      */
     StorageSimpleAPI.prototype.getProjectNames = function (callback) {
         var data = {};
@@ -65,7 +65,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     /**
      * Retrieves all the access info for all projects.
      *
-     * @param {StorageSimpleAPI~getProjectsCallback} callback - The callback that handles the response.
+     * @param {StorageSimpleAPI~getProjectsCallback} callback
      */
     StorageSimpleAPI.prototype.getProjects = function (callback) {
         var data = {};
