@@ -382,32 +382,27 @@ function importProjectOld(parameters, done) {
 }
 
 function saveChanges(parameters, done) {
-    'use strict';
+    var persisted,
+        newRootHash;
     expect(typeof parameters.project).to.equal('object');
     expect(typeof parameters.core).to.equal('object');
     expect(typeof parameters.rootNode).to.equal('object');
 
-    parameters.core.persist(parameters.rootNode, function (err) {
-        var newRootHash;
+    persisted = parameters.core.persist(parameters.rootNode);
+
+    newRootHash = parameters.core.getHash(parameters.rootNode);
+    parameters.project.makeCommit([], newRootHash, 'create empty project', function (err, commitHash) {
         if (err) {
             done(err);
             return;
         }
 
-        newRootHash = parameters.core.getHash(parameters.rootNode);
-        parameters.project.makeCommit([], newRootHash, 'create empty project', function (err, commitHash) {
+        parameters.project.setBranchHash(parameters.branchName || 'master', '', commitHash, function (err) {
             if (err) {
                 done(err);
                 return;
             }
-
-            parameters.project.setBranchHash(parameters.branchName || 'master', '', commitHash, function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                done(null, newRootHash, commitHash);
-            });
+            done(null, newRootHash, commitHash);
         });
     });
 }

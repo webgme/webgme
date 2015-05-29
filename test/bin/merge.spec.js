@@ -156,33 +156,29 @@ describe('merge CLI test', function () {
                         commitHash;
 
                     testFixture.WebGME.serializer.import(core, root, jsonProject, function (err) {
+                        var persisted;
                         if (err) {
                             done(err);
                             return;
                         }
                         //now creating the start commit and make it the basis of two branches -master- and -other-
-                        core.persist(root, function (err) {
+                        persisted = core.persist(root);
+                        commitHash = project.makeCommit([], core.getHash(root), 'initial commit', function (err) {
                             if (err) {
                                 done(err);
                                 return;
                             }
-                            commitHash = project.makeCommit([], core.getHash(root), 'initial commit', function (err) {
+                            project.setBranchHash('master', '', commitHash, function (err) {
                                 if (err) {
                                     done(err);
                                     return;
                                 }
-                                project.setBranchHash('master', '', commitHash, function (err) {
+                                project.setBranchHash('other', '', commitHash, function (err) {
                                     if (err) {
                                         done(err);
                                         return;
                                     }
-                                    project.setBranchHash('other', '', commitHash, function (err) {
-                                        if (err) {
-                                            done(err);
-                                            return;
-                                        }
-                                        applyChanges();
-                                    });
+                                    applyChanges();
                                 });
                             });
                         });
