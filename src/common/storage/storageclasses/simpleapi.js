@@ -47,7 +47,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
      */
     StorageSimpleAPI.prototype.getProjectNames = function (callback) {
         var data = {};
-        this.logger.debug('getProjectNames', data);
+        this.logger.debug('invoking getProjectNames', data);
         this.webSocket.getProjectNames(data, callback);
     };
 
@@ -69,8 +69,39 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
      */
     StorageSimpleAPI.prototype.getProjects = function (callback) {
         var data = {};
-        this.logger.debug('getProjects', data);
+        this.logger.debug('invoking getProjects', data);
         this.webSocket.getProjects(data, callback);
+    };
+
+    /**
+     * Callback for getProjectsAndBranches.
+     *
+     * @callback StorageSimpleAPI~getProjectsAndBranches
+     * @param {string} err - error string.
+     * @param {{object[]} projectsWithBranches - Names of all projects the user has at least read-access to.
+     * @example
+     * // projectsWithBranches is of the form
+     * // [{
+     * //    name: 'ProjectName',
+     * //    read: true,
+     * //    write: false,
+     * //    delete: false
+     * //    branches: {
+     * //      master: '#validHash',
+     * //      b1: '#validHashtoo'
+     * //    }
+     * // }]
+     */
+
+    /**
+     * Retrieves all the access info for all projects.
+     *
+     * @param {StorageSimpleAPI~getProjectsAndBranches} callback
+     */
+    StorageSimpleAPI.prototype.getProjectsAndBranches = function (callback) {
+        var data = {};
+        this.logger.debug('invoking getProjectsAndBranches', data);
+        this.webSocket.getProjectsAndBranches(data, callback);
     };
 
 
@@ -78,7 +109,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         var data = {
             projectName: projectName
         };
-        this.logger.debug('getBranches', data);
+        this.logger.debug('invoking getBranches', data);
         this.webSocket.getBranches(data, callback);
     };
 
@@ -88,7 +119,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
             before: before,
             number: number
         };
-        this.logger.debug('getCommits', data);
+        this.logger.debug('invoking getCommits', data);
         this.webSocket.getCommits(data, callback);
     };
 
@@ -97,13 +128,13 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
             projectName: projectName,
             branchName: branchName
         };
-        this.logger.debug('getLatestCommitData', data);
+        this.logger.debug('invoking getLatestCommitData', data);
         this.webSocket.getLatestCommitData(data, callback);
     };
 
     // Setters
     StorageSimpleAPI.prototype.createProject = function (projectName, data, callback) {
-        this.logger.debug('createProject');
+        this.logger.debug('invoking createProject');
         this.webSocket.createProject(data, callback);
     };
 
@@ -111,7 +142,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         var data = {
             projectName: projectName
         };
-        this.logger.debug('deleteProject', data);
+        this.logger.debug('invoking deleteProject', data);
         this.webSocket.deleteProject(data, callback);
     };
 
@@ -122,7 +153,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
             newHash: newHash,
             oldHash: ''
         };
-        this.logger.debug('createBranch', data);
+        this.logger.debug('invoking createBranch', data);
         this.webSocket.setBranchHash(data, callback);
     };
 
@@ -133,7 +164,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
             newHash: '',
             oldHash: oldHash
         };
-        this.logger.debug('deleteBranch', data);
+        this.logger.debug('invoking deleteBranch', data);
         this.webSocket.setBranchHash(data, callback);
     };
 

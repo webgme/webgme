@@ -161,7 +161,7 @@ define([
         // register all event listeners on gmeClient
 
         self.gmeClient.addEventListener(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, function (/*client*/) {
-            if (self.gmeClient.getNetworkStatus() === CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED) {
+            if (self.gmeClient.getNetworkStatus() === CONSTANTS.CLIENT.STORAGE.CONNECTED) {
                 // get project list
                 self.updateProjectList();
             } else {
@@ -230,12 +230,12 @@ define([
                     //TODO we should block UI until undo/redo is done
                     if (e.shiftKey) {
                         self.$timeout(function () {
-                            self.gmeClient.redo(self.gmeClient.getActualBranch(), function (/*err*/) {
+                            self.gmeClient.redo(self.gmeClient.getActiveBranchName(), function (/*err*/) {
                             });
                         });
                     } else {
                         self.$timeout(function () {
-                            self.gmeClient.undo(self.gmeClient.getActualBranch(), function (/*err*/) {
+                            self.gmeClient.undo(self.gmeClient.getActiveBranchName(), function (/*err*/) {
                             });
 
                         });
@@ -286,8 +286,7 @@ define([
         self.logger.debug('updateProjectList');
         // FIXME: get read=only/viewable/available project?!
         self.projects = {};
-        return;
-        self.gmeClient.getFullProjectsInfoAsync(function (err, projectList) {
+        self.gmeClient.getProjectsAndBranches(function (err, projectList) {
             var projectId,
                 branchId;
 
@@ -843,15 +842,15 @@ define([
 
             if (self.gmeClient) {
                 if (projectId !== self.gmeClient.getActiveProjectName()) {
-                    self.gmeClient.selectProjectAsync(projectId, function (err) {
+                    self.gmeClient.selectProject(projectId, function (err) {
                         if (err) {
                             self.logger.error(err);
                             callback(err);
                             return;
                         }
 
-                        if (branchId && branchId !== self.gmeClient.getActualBranch()) {
-                            self.gmeClient.selectBranchAsync(branchId, function (err) {
+                        if (branchId && branchId !== self.gmeClient.getActiveBranchName()) {
+                            self.gmeClient.selectBranch(branchId, null, function (err) {
                                 if (err) {
                                     self.logger.error(err);
                                     callback(err);
@@ -888,8 +887,8 @@ define([
                 self.projects[projectId].branches[branchId].deleteBranchItem.disabled = true;
 
                 if (self.gmeClient) {
-                    if (branchId !== self.gmeClient.getActualBranch()) {
-                        self.gmeClient.selectBranchAsync(branchId, function (err) {
+                    if (branchId !== self.gmeClient.getActiveBranchName()) {
+                        self.gmeClient.selectBranch(branchId, null, function (err) {
                             if (err) {
                                 self.logger.error(err);
                                 callback(err);

@@ -136,7 +136,6 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                         projectAuthInfo.write = userAuthInfo[projectName].write;
                         projectAuthInfo.delete = userAuthInfo[projectName].delete;
                     }
-
                     projects.push(projectAuthInfo);
                 }
                 deferred.resolve(projects);
@@ -145,6 +144,52 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                 deferred.reject(new Error(err));
             });
     }
+
+    return deferred.promise.nodeify(callback);
+};
+
+/**
+ * Calls getProjects and if it had read access appends the data with the branches.
+ * @param data
+ * @param callback
+ */
+SafeStorage.prototype.getProjectsAndBranches = function (data, callback) {
+    var self = this,
+        deferred = Q.defer();
+    self.logger.debug('getProjectsAndBranches invoked');
+    this.getProjects(data)
+        .then(function (projects) {
+            self.logger.debug('getProjectsAndBranches: getProjects returned');
+            function getBranches(project) {
+                if (project.read === true) {
+                    // (project.name is coming from safe storage.)
+                    return Storage.prototype.getBranches.call(self, {projectName: project.name})
+                        .then(function (branches) {
+                            project.branches = branches;
+                            return Q(project);
+                        });
+                }
+            }
+            Q.all(projects.map(getBranches))
+                .then(function (branchResult) {
+                    var i,
+                        result = [];
+                    self.logger.debug('getProjectsAndBranches: branches were obtained');
+                    for (i = 0; i < branchResult.length; i += 1) {
+                        if (branchResult[i]) {
+                            result.push(branchResult[i]);
+                        }
+                    }
+
+                    deferred.resolve(result);
+                })
+                .catch(function (err) {
+                    deferred.reject(err);
+                });
+        })
+        .catch(function (err) {
+            deferred.reject(err);
+        });
 
     return deferred.promise.nodeify(callback);
 };

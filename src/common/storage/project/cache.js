@@ -44,6 +44,7 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
                     if (typeof obj === 'undefined') {
                         obj = [callback];
                         missing[key] = obj;
+                        logger.debug('object set to be loaded from storage');
                         storage.loadObject(projectName, key, function (err, obj2) {
                             ASSERT(typeof obj2 === 'object' || typeof obj2 === 'undefined');
 
@@ -62,12 +63,16 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
                             }
                         });
                     } else {
+                        logger.debug('object was already queued to be loaded');
                         obj.push(callback);
                     }
                     return;
                 } else {
+                    logger.debug('object was in backup');
                     cacheInsert(key, obj);
                 }
+            } else {
+                logger.debug('object was in cache');
             }
 
             ASSERT(typeof obj === 'object' && obj !== null && obj[CONSTANTS.MONGO_ID] === key);

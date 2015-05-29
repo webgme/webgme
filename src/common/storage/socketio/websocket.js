@@ -130,6 +130,10 @@ define([
             self.socket.emit('getProjects', data, callback);
         };
 
+        this.getProjectsAndBranches = function (data, callback) {
+            self.socket.emit('getProjectsAndBranches', data, callback);
+        };
+
         this.deleteProject = function (data, callback) {
             self.socket.emit('deleteProject', data, callback);
         };

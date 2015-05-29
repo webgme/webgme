@@ -205,7 +205,12 @@ define([
             logger.debug('commitQueue', commitQueue);
             //TODO: dispatch an event showing how far off from the origin we are.
             if (result.status === CONSTANTS.STORAGE.SYNCH) {
-                logger.debug('You are in synch, will continue with next queued commit...');
+                logger.debug('You are in synch.');
+                if (commitQueue.length === 0) {
+                    logger.debug('No commits queued.');
+                } else {
+                    logger.debug('Will proceed with next queued commit...');
+                }
                 if (state.branchStatus !== CONSTANTS.STORAGE.SYNCH) {
                     state.branchStatus = CONSTANTS.STORAGE.SYNCH;
                     self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, CONSTANTS.STORAGE.SYNCH);
@@ -257,6 +262,10 @@ define([
             return state.project && state.project.name;
         };
 
+        this.getActiveBranchName = function () {
+            return state.branchName;
+        };
+
         this.getBranchStatus = function () {
             return state.branchStatus;
         };
@@ -273,6 +282,33 @@ define([
         this.getProjects = function (callback) {
             if (state.isConnected()) {
                 storage.getProjects(callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
+        this.getProjectsAndBranches = function (callback) {
+            if (state.isConnected()) {
+                storage.getProjectsAndBranches(function(err, projectsWithBranches) {
+                    var i,
+                        result = {};
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    //Move the result in the same format as before.
+                    for (i = 0; i < projectsWithBranches.length; i += 1) {
+                        result[projectsWithBranches[i].name] = {
+                            branches: projectsWithBranches[i].branches,
+                            rights: {
+                                read: projectsWithBranches[i].read,
+                                write: projectsWithBranches[i].write,
+                                delete: projectsWithBranches[i].delete,
+                            }
+                        };
+                    }
+                    callback(null, result);
+                });
             } else {
                 callback(new Error('There is no open database connection!'));
             }

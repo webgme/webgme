@@ -236,7 +236,20 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                             callback(err.toString());
                         }
                     });
+            });
 
+            socket.on('getProjectsAndBranches', function (data, callback) {
+                storage.getProjectsAndBranches(data)
+                    .then(function (projectsWithBranches) {
+                        callback(null, projectsWithBranches);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.toString());
+                        }
+                    });
             });
 
             socket.on('deleteProject', function (data, callback) {
