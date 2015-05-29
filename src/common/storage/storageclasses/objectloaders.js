@@ -59,7 +59,8 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
     };
 
     StorageObjectLoaders.prototype.loadObjects = function (projectName, hashedObjects) {
-        var hashes = {},
+        var self = this,
+            hashes = {},
             data,
             i;
         for (i = 0; i < hashedObjects.length; i++) {
@@ -72,8 +73,17 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
         };
 
         this.webSocket.loadObjects(data, function (err, result) {
+            if (err) {
+                throw new Error(err);
+            }
+            self.logger.debug('loadObjects returned', result);
             for (i = 0; i < hashedObjects.length; i++) {
-                hashedObjects[i].cb(err, result[hashedObjects[i].hash]);
+                //TODO: This is temporary error handling
+                if (typeof result[hashedObjects[i].hash] === 'string') {
+                    self.logger.error('failed loading object', hashedObjects[i].hash, result[hashedObjects[i].hash]);
+                } else {
+                    hashedObjects[i].cb(err, result[hashedObjects[i].hash]);
+                }
             }
         });
     };

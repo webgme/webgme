@@ -211,7 +211,7 @@ define([
                     self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, CONSTANTS.STORAGE.SYNCH);
                 }
                 callback(true); // All is fine, continue with the commitQueue..
-            } else if (result.status === CONSTANTS.FORKED) {
+            } else if (result.status === CONSTANTS.STORAGE.FORKED) {
                 logger.debug('You got forked');
                 if (state.branchStatus !== CONSTANTS.STORAGE.FORKED) {
                     state.branchStatus = CONSTANTS.STORAGE.FORKED;
@@ -221,6 +221,7 @@ define([
                 alert('You got forked, TODO: \nstep one - automatically create new fork \n' +
                 'step two - add UI piece.');
             } else {
+                callback(false);
                 throw new Error('Unexpected result', result);
             }
         }

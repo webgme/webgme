@@ -186,28 +186,37 @@ Storage.prototype.makeCommit = function (data, callback) {
 };
 
 Storage.prototype.loadObjects = function (data, callback) {
-    this.mongo.openProject(data.projectName, function (err, project) {
-        var i,
-            result = {},
-            counter = data.hashes.length;
+    var self = this,
+        deferred = Q.defer();
 
-        function loadObject(hash) {
-            project.loadObject(hash, function (err, obj) {
-                //TODO: handle err
-                result[hash] = obj;
-                counter -= 1;
-                if (counter <= 0) {
-                    callback(err, result);
-                }
-            });
-        }
+    this.mongo.openProject(data.projectName)
+        .then(function (project) {
 
-        //TODO: Is it ok to send this many loads to the mongo or do
-        //TODO: we need to limit the burst? (old implementation does it one by one).
-        for (i = 0; i < data.hashes.length; i += 1) {
-            loadObject(data.hashes[i]);
-        }
-    });
+            function loadObject(hash) {
+                return project.loadObject(hash);
+            }
+
+            Q.allSettled(data.hashes.map(loadObject))
+                .then(function (loadResults) {
+                    var i,
+                        result = {};
+
+                    for (i = 0; i < loadResults.length; i += 1) {
+                        if (loadResults[i].state === 'rejected') {
+                            self.logger.error('failed loadingObject', {metadata: loadResults[i]});
+                            result[data.hashes[i]] = loadResults[i].reason;
+                        } else {
+                            result[data.hashes[i]] = loadResults[i].value;
+                        }
+                    }
+                    deferred.resolve(result);
+                });
+        })
+        .catch(function (err) {
+            deferred.reject(err);
+        });
+
+    return deferred.promise.nodeify(callback);
 };
 
 Storage.prototype.getCommits = function (data, callback) {

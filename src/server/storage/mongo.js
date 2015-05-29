@@ -42,11 +42,16 @@ function Mongo(mainLogger, gmeConfig) {
             if (typeof hash !== 'string' || !REGEXP.HASH.test(hash)) {
                 deferred.reject('loadObject - invalid hash :' + hash.toString());
             } else {
+                logger.debug('loadObject ' + hash);
                 collection.findOne({_id: hash}, function (err, obj) {
                     if (err) {
+                        logger.error(err);
                         deferred.reject(err);
-                    } else {
+                    } else if (obj) {
                         deferred.resolve(obj);
+                    } else {
+                        logger.error('object does not exist ' + hash);
+                        deferred.reject('object does not exist ' + hash);
                     }
                 });
             }
