@@ -2,6 +2,7 @@
 /*jshint browser: true*/
 /**
  * @author kecso / https://github.com/kecso
+ * @author pmeijer / https://github.com/pmeijer
  */
 define([
     'js/logger',
@@ -25,7 +26,7 @@ define([
              TASYNC,
              GUID,
              getNode,
-             gmeNodeSetter) {
+             getNodeSetters) {
     'use strict';
 
     function Client(gmeConfig) {
@@ -56,8 +57,9 @@ define([
                     object: null
                 },
                 inTransaction: false
-            };
-
+            },
+            monkeyPatchKey,
+            nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode);
 
         EventDispatcher.call(this);
 
@@ -65,9 +67,15 @@ define([
         //TODO: These should be accessed via this.meta.
         //TODO: e.g. client.meta.getMetaAspectNames(id) instead of client.getMetaAspectNames(id)
         //TODO: However that will break a lot since it's used all over the place...
-        for (var key in this.meta) {
-            if (this.meta.hasOwnProperty(key)) {
-                self[key] = this.meta[key];
+        for (monkeyPatchKey in this.meta) {
+            if (this.meta.hasOwnProperty(monkeyPatchKey)) {
+                self[monkeyPatchKey] = this.meta[monkeyPatchKey];
+            }
+        }
+
+        for (monkeyPatchKey in nodeSetterFunctions) {
+            if (nodeSetterFunctions.hasOwnProperty(monkeyPatchKey)) {
+                self[monkeyPatchKey] = nodeSetterFunctions[monkeyPatchKey];
             }
         }
 
@@ -646,7 +654,7 @@ define([
             return null;
         }
 
-        function startTransaction(msg) {
+        this.startTransaction = function (msg) {
             if (state.inTransaction) {
                 logger.error('Already in transaction, will proceed though..');
             }
@@ -657,18 +665,17 @@ define([
             } else {
                 logger.error('Can not start transaction with no core avaliable.');
             }
-        }
+        };
 
-        function completeTransaction(msg, callback) {
+        this.completeTransaction = function (msg, callback) {
             state.inTransaction = false;
             if (state.core) {
                 msg = msg || 'completeTransaction()';
                 saveRoot(msg, callback);
             }
-        }
+        };
 
         function saveRoot(msg, callback) {
-            ASSERT(typeof callback === 'function');
             logger.debug('saveRoot msg', msg);
 
             callback = callback || function () {
