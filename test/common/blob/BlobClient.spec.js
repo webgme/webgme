@@ -153,6 +153,36 @@ describe('BlobClient', function () {
             });
         });
 
+        it('should putFile unicode', function (done) {
+            var bc = new BlobClient(bcParam),
+                input = '1111\nmu \u03BC\n1111\n\\U+10400 DESERET CAPITAL LETTER LONG I \uD801\uDC00';
+
+            bc.putFile('1111\u03BC222\uD801\uDC00.bin', input, function (err, hash) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                bc.getMetadata(hash, function (err, metadata) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    expect(metadata.mime).to.equal('application/octet-stream');
+                    bc.getObject(hash, function (err, res) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        expect(typeof res).to.equal('object');
+                        expect(typeof res.prototype).to.equal('undefined');
+                        expect(res.toString('utf8')).to.equal(input);
+                        //expect(res[1]).to.equal(2);
+                        done();
+                    });
+                });
+            });
+        });
+
         if (typeof global !== 'undefined') {
             it('should create zip', function (done) {
                 var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5ia' +

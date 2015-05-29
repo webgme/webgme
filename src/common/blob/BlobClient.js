@@ -113,8 +113,10 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
+        if (typeof data !== 'string' && !(data instanceof String)) {
+            req.set('Content-Length', contentLength)
+        }
         req.set('Content-Type', 'application/octet-stream')
-            .set('Content-Length', contentLength)
             .send(data)
             .end(function (err, res) {
                 if (err || res.status > 399) {
