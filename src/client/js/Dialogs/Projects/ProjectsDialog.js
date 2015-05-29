@@ -80,7 +80,7 @@ define([
 
         function openProject(projectId) {
             if (self._projectList[projectId].read === true) {
-                self._client.selectProjectAsync(projectId, function () {
+                self._client.selectProject(projectId, function () {
                     self._dialog.modal('hide');
                 });
             }
@@ -540,7 +540,7 @@ define([
                 loader.stop();
             } else {
                 self._logger.debug('Created new project from seed');
-                self._client.selectProjectAsync(projectName, function (err) {
+                self._client.selectProject(projectName, function (err) {
                     if (err) {
                         self._logger.error('Cannot select project', err);
                     } else {

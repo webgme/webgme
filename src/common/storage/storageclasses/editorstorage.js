@@ -161,7 +161,9 @@ define([
                     project.insertObject(latestCommit.coreObjects[i]);
                 }
 
-                self._pushNextQueuedCommit(projectName, branchName); // This only has an effect after a fork with pending commits.
+                // This only has an effect after a fork with pending commits.
+                self._pushNextQueuedCommit(projectName, branchName);
+
                 callback(err, latestCommit);
             });
         };
@@ -285,6 +287,7 @@ define([
                     if (push) {
                         self._pushNextQueuedCommit(projectName, branchName);
                         //TODO: Make sure the stack doesn't grow too big.
+                        //TODO: This should be limited by the number of queued commits though..
                     }
                 });
             });

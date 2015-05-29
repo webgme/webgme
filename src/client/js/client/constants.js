@@ -14,6 +14,7 @@ define(['common/storage/constants'], function (STORAGE_CONSTANTS) {
 
         // Events
         NETWORK_STATUS_CHANGED: 'NETWORK_STATUS_CHANGED',
+        BRANCH_STATUS_CHANGED: 'BRANCH_STATUS_CHANGED',
 
         BRANCH_CHANGED: 'BRANCH_CHANGED',
         PROJECT_CLOSED: 'PROJECT_CLOSED',

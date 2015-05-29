@@ -32,7 +32,8 @@ define([
     'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper',
     'js/Dialogs/Projects/ProjectsDialog',
-    'js/Utils/InterpreterManager'
+    'js/Utils/InterpreterManager',
+    'superagent'
 ], function (Logger,
              gmeConfigJson,
              packagejson,
@@ -54,7 +55,8 @@ define([
              METAAspectHelper,
              PreferencesHelper,
              ProjectsDialog,
-             InterpreterManager) {
+             InterpreterManager,
+             superagent) {
 
     'use strict';
 
@@ -145,6 +147,8 @@ define([
 
 
             client.decoratorManager = new DecoratorManager();
+            getAvaliablePluginsAndDecorators();
+
             client.decoratorManager.downloadAll(gmeConfig.client.usedDecorators, function (err) {
                 if (err) {
                     logger.error(err);
@@ -363,6 +367,30 @@ define([
                 }
             });
         };
+
+        //This is still asychronous but has a better chance to finish here rather than from the client.
+        function getAvaliablePluginsAndDecorators() {
+            superagent.get('/listAllPlugins')
+                .end(function (err, res) {
+                    if (res.status === 200) {
+                        WebGMEGlobal.allPlugins = res.body.allPlugins;
+                        logger.debug('/listAllPlugins', WebGMEGlobal.allPlugins);
+                    } else {
+                        logger.error('/listAllPlugins failed');
+                        WebGMEGlobal.allPlugins = [];
+                    }
+                });
+            superagent.get('/listAllDecorators')
+                .end(function (err, res) {
+                    if (res.status === 200) {
+                        WebGMEGlobal.allDecorators = res.body.allDecorators;
+                        logger.debug('/listAllDecorators', WebGMEGlobal.allDecorators);
+                    } else {
+                        logger.error('/listAllDecorators failed', err);
+                        WebGMEGlobal.allDecorators = [];
+                    }
+                });
+        }
 
     }
 

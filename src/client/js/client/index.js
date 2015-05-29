@@ -326,6 +326,7 @@ define([
             }
         }
 
+        // DONE
         function reLaunchUsers() {
             var i;
             for (i in _users) {

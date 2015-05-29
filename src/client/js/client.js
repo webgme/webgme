@@ -13,6 +13,8 @@ define([
     'common/util/assert',
     'common/core/tasync',
     'common/util/guid',
+    'js/client/gmeNodeGetter',
+    'js/client/gmeNodeSetter'
 ], function (Logger,
              Storage,
              EventDispatcher,
@@ -21,23 +23,26 @@ define([
              META,
              ASSERT,
              TASYNC,
-             GUID) {
+             GUID,
+             getNode,
+             gmeNodeSetter) {
     'use strict';
 
     function Client(gmeConfig) {
         var self = this,
             logger = Logger.create('gme:client', gmeConfig.client.log),
             storage = Storage.getStorage(logger, gmeConfig),
-            meta = new META(), // TODO: do meta.initialize after new core after storage.openProject/Branch
-            core, // TODO: create new after storage.openProject/Branch
             state = {
                 isConnected: function () {
                     return storage.connected;
                 },
                 project: null,
-                readOnlyProject: false,
+                core: null,
                 branchName: null,
                 branchStatus: null,
+                readOnlyProject: false,
+                viewer: false, //TODO: What's the intention of this? Do we still need it?
+                recentCommitHashes: [],
                 users: {},
                 patterns: {},
                 gHash: 0,
@@ -55,6 +60,16 @@ define([
 
 
         EventDispatcher.call(this);
+
+        this.meta = new META();
+        //TODO: These should be accessed via this.meta.
+        //TODO: e.g. client.meta.getMetaAspectNames(id) instead of client.getMetaAspectNames(id)
+        //TODO: However that will break a lot since it's used all over the place...
+        for (var key in this.meta) {
+            if (this.meta.hasOwnProperty(key)) {
+                self[key] = this.meta[key];
+            }
+        }
 
         this.connectToDatabase = function (callback) {
             if (state.isConnected()) {
@@ -78,7 +93,8 @@ define([
         };
 
         this.selectProject = function (projectName, callback) {
-            var prevProjectName;
+            var prevProjectName,
+                branchToOpen = 'master';
 
             function projectOpened(err, project, branches) {
                 if (err) {
@@ -86,24 +102,44 @@ define([
                 }
                 state.project = project;
                 state.readOnlyProject = false; //TODO: this should be returned from the storage
-                state.branchName = null;
+                state.core = new Core(project, {
+                    globConf: gmeConfig,
+                    logger: logger.fork('core')
+                });
+                self.meta.initialize(state.core, state.metaNodes, saveRoot);
+                //TODO: Add these back
+                //if (_clientGlobal.commitCache) {
+                //    _clientGlobal.commitCache.clearCache();
+                //} else {
+                //    createCommitCache(_clientGlobal); //attaches itself to the global
+                //}
+                self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectName);
+
+                if (branches.hasOwnProperty('master') === false) {
+                    branchToOpen = Object.keys(branches)[0] || null;
+                    logger.debug('Project "' + projectName + '" did not have a master branch, picked:', branchToOpen);
+                }
+                ASSERT(branchToOpen, 'No branch avaliable in project'); // TODO: Deal with this
+                self.selectBranch(branchToOpen, null, callback);
             }
+
             if (state.project) {
                 prevProjectName = state.project.name;
                 if (state.branchName) {
-                    self.dispatchEvent(_self.events.BRANCH_CHANGED, null);
+                    state.branchName = null;
+                    self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
                 }
+                //TODO what if for some reason we are in transaction???
                 storage.closeProject(prevProjectName, function (err) {
                     if (err) {
                         throw new Error(err);
                     }
 
                     state.project = null;
-                    core = null;
+                    state.core = null;
                     state.branchName = null;
                     state.branchStatus = null;
-                    state.branchStatus = null;
-                    //state.users = {};
+                    state.recentCommitHashes = [];
                     state.patterns = {};
                     //state.gHash = 0;
                     state.nodes = {};
@@ -126,6 +162,79 @@ define([
             }
         };
 
+        this.selectBranch = function (branchName, commitHandler, callback) {
+            ASSERT(state.project, 'selectBranch invoked without open project');
+            //TODO: Close the other branch.
+            commitHandler = commitHandler || defaultCommitHandler;
+            storage.openBranch(state.project.name, branchName, updateHandler, commitHandler,
+                function (err, latestCommit) {
+                    var commitObject;
+                    if (err) {
+                        throw new Error(err);
+                    }
+                    commitObject = latestCommit.commitObject;
+                    logger.debug('Branch opened latestCommit', latestCommit);
+                    loading(commitObject.root, function (err) {
+                        if (err) {
+                            throw new Error(err);
+                        }
+
+                        state.recentCommitHashes = [];
+                        addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
+                        state.branchName = branchName;
+                        state.branchStatus = CONSTANTS.STORAGE.SYNCH;
+                        self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
+                        self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, state.branchStatus);
+
+                        callback(null);
+                    });
+                }
+            );
+        };
+
+        function defaultCommitHandler(commitQueue, result, callback) {
+            logger.debug('default commitHandler invoked, result: ', result);
+            logger.debug('commitQueue', commitQueue);
+            //TODO: dispatch an event showing how far off from the origin we are.
+            if (result.status === CONSTANTS.STORAGE.SYNCH) {
+                logger.debug('You are in synch, will continue with next queued commit...');
+                if (state.branchStatus !== CONSTANTS.STORAGE.SYNCH) {
+                    state.branchStatus = CONSTANTS.STORAGE.SYNCH;
+                    self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, CONSTANTS.STORAGE.SYNCH);
+                }
+                callback(true); // All is fine, continue with the commitQueue..
+            } else if (result.status === CONSTANTS.FORKED) {
+                logger.debug('You got forked');
+                if (state.branchStatus !== CONSTANTS.STORAGE.FORKED) {
+                    state.branchStatus = CONSTANTS.STORAGE.FORKED;
+                    self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, CONSTANTS.STORAGE.FORKED);
+                }
+                callback(false);
+                alert('You got forked, TODO: \nstep one - automatically create new fork \n' +
+                'step two - add UI piece.');
+            } else {
+                throw new Error('Unexpected result', result);
+            }
+        }
+
+        function updateHandler (eventData) {
+            var commitHash = eventData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
+            //TODO: When updates are loaded from other users,
+            //TODO: local saveRoots must be bundled in e.g. transactions.
+            //TODO: On top of that we must also queue incoming update events.
+            logger.debug('updateHandler invoked. project, branch', eventData.projectName, eventData.branchName);
+            logger.debug('loading commitHash', commitHash);
+            loading(eventData.commitObject.root, function (err) {
+                if (err) {
+                    logger.error('updatehandler invoked loading and it returned error',
+                        eventData.commitObject.root, err);
+                } else {
+                    addCommit(commitHash);
+                    logger.debug('loading complete for incoming rootHash', eventData.commitObject.root);
+                }
+            });
+        }
+
         // State getters.
         this.getNetworkStatus = function () {
             if (state.isConnected()) {
@@ -142,7 +251,6 @@ define([
         this.getBranchStatus = function () {
             return state.branchStatus;
         };
-
 
         // REST-like functions and watchers forwarded to storage TODO: add these to separate base class
         this.getProjectNames = function (callback) {
@@ -181,31 +289,8 @@ define([
 
         // Node handling
         this.getNode = function (nodePath) {
-            logger.error('TODO: cannot get node', nodePath);
-            return null;
+            return getNode(nodePath, logger, state, self.meta, storeNode);
         };
-
-        function cleanUsersTerritories() {
-            //look out as the user can remove itself at any time!!!
-            var userIds = Object.keys(state.users),
-                i,
-                j,
-                events;
-
-            for (i = 0; i < userIds.length; i++) {
-                if (state.users[userIds[i]]) {
-                    events = [{eid: null, etype: 'complete'}];
-                    for (j in state.users[userIds[i]].PATHS
-                        ) {
-                        events.push({etype: 'unload', eid: j});
-                    }
-                    state.users[userIds[i]].PATTERNS = {};
-                    state.users[userIds[i]].PATHS = {};
-                    state.users[userIds[i]].SENDEVENTS = true;
-                    state.users[userIds[i]].FN(events);
-                }
-            }
-        }
 
         function getStringHash(/* node */) {
             //TODO there is a memory issue with the huge strings so we have to replace it with something
@@ -235,7 +320,7 @@ define([
 
             if (pattern.items && pattern.items.length > 0) {
                 for (i = 0; i < pattern.items.length; i += 1) {
-                    if (meta.isTypeOf(path, pattern.items[i])) {
+                    if (self.meta.isTypeOf(path, pattern.items[i])) {
                         return true;
                     }
                 }
@@ -253,7 +338,7 @@ define([
             if (state.nodes[patternId]) {
                 pathsSoFar[patternId] = true;
                 if (pattern.children && pattern.children > 0) {
-                    children = core.getChildrenPaths(state.nodes[patternId].node);
+                    children = state.core.getChildrenPaths(state.nodes[patternId].node);
                     subPattern = COPY(pattern);
                     subPattern.children -= 1;
                     for (i = 0; i < children.length; i += 1) {
@@ -471,7 +556,7 @@ define([
 
 
             //and now the one-by-one loading
-            core.loadRoot(newRootHash, function (err, root) {
+            state.core.loadRoot(newRootHash, function (err, root) {
                 var fut,
                     _loadPattern;
 
@@ -481,13 +566,13 @@ define([
                 error = error || err;
                 if (!err) {
                     //_clientGlobal.addOn.updateRunningAddOns(root); //FIXME: ADD ME BACK!!
-                    state.loadNodes[core.getPath(root)] = {
+                    state.loadNodes[state.core.getPath(root)] = {
                         node: root,
                         incomplete: true,
                         basic: true,
                         hash: getStringHash(root)
                     };
-                    state.metaNodes[core.getPath(root)] = root;
+                    state.metaNodes[state.core.getPath(root)] = root;
                     if (orderedPatternIds.length === 0 && Object.keys(state.users) > 0) {
                         //we have user, but they do not interested in any object -> let's relaunch them :D
                         callback(null);
@@ -497,7 +582,7 @@ define([
                         fut = TASYNC.lift(
                             orderedPatternIds.map(function (pattern /*, index */) {
                                 return TASYNC.apply(_loadPattern,
-                                    [core, pattern, patterns[pattern], state.loadNodes],
+                                    [state.core, pattern, patterns[pattern], state.loadNodes],
                                     this);
                             }));
                         TASYNC.unwrap(function () {
@@ -526,6 +611,7 @@ define([
                 }
                 callback(null);
             };
+            logger.debug('loading newRootHash', newRootHash);
 
             callback = callback || function (/*err*/) {
             };
@@ -540,6 +626,102 @@ define([
                     finalEvents();
                 }
             });
+        }
+
+        function storeNode(node /*, basic */) {
+            var path;
+            //basic = basic || true;
+            if (node) {
+                path = state.core.getPath(node);
+                state.metaNodes[path] = node;
+                if (state.nodes[path]) {
+                    //TODO we try to avoid this
+                } else {
+                    state.nodes[path] = {node: node, hash: ''/*,incomplete:true,basic:basic*/};
+                    //TODO this only needed when real eventing will be reintroduced
+                    //_inheritanceHash[path] = getInheritanceChain(node);
+                }
+                return path;
+            }
+            return null;
+        }
+
+        function startTransaction(msg) {
+            if (state.inTransaction) {
+                logger.error('Already in transaction, will proceed though..');
+            }
+            if (state.core) {
+                state.inTransaction = true;
+                msg = msg || 'startTransaction()';
+                saveRoot(msg);
+            } else {
+                logger.error('Can not start transaction with no core avaliable.');
+            }
+        }
+
+        function completeTransaction(msg, callback) {
+            state.inTransaction = false;
+            if (state.core) {
+                msg = msg || 'completeTransaction()';
+                saveRoot(msg, callback);
+            }
+        }
+
+        function saveRoot(msg, callback) {
+            ASSERT(typeof callback === 'function');
+            logger.debug('saveRoot msg', msg);
+
+            callback = callback || function () {
+            };
+            if (!state.viewer && !state.readOnlyProject) {
+                if (state.msg) {
+                    state.msg += '\n' + msg;
+                } else {
+                    state.msg += msg;
+                }
+                if (!state.inTransaction) {
+                    ASSERT(state.project && state.core && state.branchName);
+                    logger.debug('is NOT in transaction - will persist.');
+                    state.core.persist(state.nodes[ROOT_PATH].node, function (err, persisted) {
+                        var newCommitObject;
+                        if (err) {
+                            throw new Error(err);
+                        }
+                        logger.debug('persisted', persisted);
+
+                        // Calling event-listeners (users)
+                        // N.B. it is no longer waiting for the setBranchHash to return from server.
+                        // Which also was the case before:
+                        // https://github.com/webgme/webgme/commit/48547c33f638aedb60866772ca5638f9e447fa24
+                        loading(persisted.rootHash); // FIXME: Are local updates really guaranteed to be synchronous?
+
+                        newCommitObject = storage.makeCommit(
+                            state.project.name,
+                            state.branchName,
+                            [state.recentCommitHashes[0]],
+                            persisted.rootHash,
+                            persisted.objects,
+                            msg
+                        );
+                        addCommit(newCommitObject._id);
+                        state.msg = '';
+                    });
+                } else {
+                    logger.debug('is in transaction - will NOT persist.');
+                }
+            } else {
+                //TODO: Why is this set to empty here?
+                state.msg = '';
+                callback(null);
+            }
+        }
+
+        function addCommit(commitHash) {
+            //_clientGlobal.commitCache.newCommit(commitHash); //FIXME: Add me back!
+            state.recentCommitHashes.unshift(commitHash);
+            if (state.recentCommitHashes.length > 100) {
+                state.recentCommitHashes.pop();
+            }
         }
 
         //territory functions
@@ -603,7 +785,7 @@ define([
                         if (missing > 0) {
                             for (i in patterns) {
                                 if (patterns.hasOwnProperty(i)) {
-                                    loadPattern(core, i, patterns[i], state.nodes, patternLoaded);
+                                    loadPattern(state.core, i, patterns[i], state.nodes, patternLoaded);
                                 }
                             }
                         } else {
@@ -627,6 +809,28 @@ define([
                 }
             }
         };
+
+        function cleanUsersTerritories() {
+            //look out as the user can remove itself at any time!!!
+            var userIds = Object.keys(state.users),
+                i,
+                j,
+                events;
+
+            for (i = 0; i < userIds.length; i++) {
+                if (state.users[userIds[i]]) {
+                    events = [{eid: null, etype: 'complete'}];
+                    for (j in state.users[userIds[i]].PATHS
+                        ) {
+                        events.push({etype: 'unload', eid: j});
+                    }
+                    state.users[userIds[i]].PATTERNS = {};
+                    state.users[userIds[i]].PATHS = {};
+                    state.users[userIds[i]].SENDEVENTS = true;
+                    state.users[userIds[i]].FN(events);
+                }
+            }
+        }
     }
 
     // Inherit from the EventDispatcher
