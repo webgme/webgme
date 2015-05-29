@@ -19,16 +19,16 @@ describe('Plugin Config', function () {
     });
 
     it('should instantiate PluginConfig with a serialized object', function () {
-        var pluginConfig = new PluginConfig({'key1': 22});
+        var pluginConfig = new PluginConfig({key1: 22});
 
         should.exist(pluginConfig);
         pluginConfig.should.have.property('key1');
     });
 
     it('should serialize a PluginConfig', function () {
-        var pluginConfig = new PluginConfig({'key1': 22});
+        var pluginConfig = new PluginConfig({key1: 22});
 
         should.exist(pluginConfig);
-        pluginConfig.serialize().should.deep.equal({'key1': 22});
+        pluginConfig.serialize().should.deep.equal({key1: 22});
     });
 });

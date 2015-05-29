@@ -81,6 +81,8 @@ describe('Plugin Manager Base', function () {
             bcParam = {},
             blobClient,
 
+            gmeAuth,
+
             gmeConfig = testFixture.getGmeConfig();
 
         gmeConfig.server.https.enable = false;
@@ -95,24 +97,34 @@ describe('Plugin Manager Base', function () {
 
                 blobClient = new BlobClient(bcParam);
 
-                testFixture.importProject({
-                    filePath: './test/plugin/PluginManagerBase/project.json',
-                    projectName: 'PluginManagerBase',
-                    gmeConfig: gmeConfig
-                }, function (err, result) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    storage = result.storage;
-                    project = result.project;
-                    core = result.core;
-                    root = result.root;
-                    commit = result.commitHash;
-                    baseCommit = result.commitHash;
-                    rootHash = core.getHash(root);
-                    done();
-                });
+                testFixture.clearDBAndGetGMEAuth(gmeConfig, 'PluginManagerBase')
+                    .then(function (gmeAuth_) {
+                        gmeAuth = gmeAuth_;
+                        storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                        return storage.openDatabase();
+                    })
+                    .then(function () {
+
+                        testFixture.importProject(storage, {
+                            projectSeed: './test/plugin/PluginManagerBase/project.json',
+                            projectName: 'PluginManagerBase',
+                            gmeConfig: gmeConfig,
+                            logger: logger
+                        }, function (err, result) {
+                            if (err) {
+                                done(err);
+                                return;
+                            }
+                            project = result.project;
+                            core = result.core;
+                            root = result.rootNode;
+                            commit = result.commitHash;
+                            baseCommit = result.commitHash;
+                            rootHash = core.getHash(root);
+                            done();
+                        });
+                    });
+
             });
         });
 
