@@ -217,40 +217,36 @@ function importProject(storage, parameters, callback) {
                 rootNode = core.createNode({parent: null, base: null});
 
             WebGME.serializer.import(core, rootNode, projectJson, function (err) {
+                var persisted;
                 if (err) {
                     deferred.reject(err);
                     return;
                 }
-                core.persist(rootNode, function (err, persisted) {
-                    if (err) {
-                        deferred.reject(err);
-                        return;
-                    }
+                persisted = core.persist(rootNode);
 
-                    var commitObject = project.createCommitObject([''], persisted.rootHash, 'test', 'project imported'),
-                        commitData = {
-                            projectName: parameters.projectName,
+                var commitObject = project.createCommitObject([''], persisted.rootHash, 'test', 'project imported'),
+                    commitData = {
+                        projectName: parameters.projectName,
+                        branchName: branchName,
+                        commitObject: commitObject,
+                        coreObjects: persisted.objects
+                    };
+                storage.makeCommit(commitData)
+                    .then(function (result) {
+                        deferred.resolve({
+                            status: result.status,
                             branchName: branchName,
-                            commitObject: commitObject,
-                            coreObjects: persisted.objects
-                        };
-                    storage.makeCommit(commitData)
-                        .then(function (result) {
-                            deferred.resolve({
-                                status: result.status,
-                                branchName: branchName,
-                                commitHash: commitObject._id,
-                                project: project,
-                                core: core,
-                                jsonProject: projectJson,
-                                rootNode: rootNode,
-                                rootHash: persisted.rootHash
-                            });
-                        })
-                        .catch(function (err) {
-                            deferred.reject(err);
+                            commitHash: commitObject._id,
+                            project: project,
+                            core: core,
+                            jsonProject: projectJson,
+                            rootNode: rootNode,
+                            rootHash: persisted.rootHash
                         });
-                });
+                    })
+                    .catch(function (err) {
+                        deferred.reject(err);
+                    });
             });
         })
         .catch(function (err) {

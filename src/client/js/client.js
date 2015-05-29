@@ -677,6 +677,9 @@ define([
         };
 
         function saveRoot(msg, callback) {
+            var persisted,
+                numberOfPersistedObjects,
+                newCommitObject;
             logger.debug('saveRoot msg', msg);
 
             callback = callback || function () {
@@ -690,30 +693,33 @@ define([
                 if (!state.inTransaction) {
                     ASSERT(state.project && state.core && state.branchName);
                     logger.debug('is NOT in transaction - will persist.');
-                    state.core.persist(state.nodes[ROOT_PATH].node, function (err, persisted) {
-                        var newCommitObject;
-                        if (err) {
-                            throw new Error(err);
-                        }
-                        logger.debug('persisted', persisted);
+                    persisted = state.core.persist(state.nodes[ROOT_PATH].node);
+                    numberOfPersistedObjects = Object.keys(persisted.objects).length;
+                    logger.debug('persisted', persisted);
+                    if (numberOfPersistedObjects === 0) {
+                        logger.warn('No changes after persist will return from saveRoot.');
+                        callback(null);
+                        return;
+                    } else if (numberOfPersistedObjects > 200) {
+                        //This is just for debugging
+                        logger.warn('Lots of persisted objects', numberOfPersistedObjects);
+                    }
+                    // Calling event-listeners (users)
+                    // N.B. it is no longer waiting for the setBranchHash to return from server.
+                    // Which also was the case before:
+                    // https://github.com/webgme/webgme/commit/48547c33f638aedb60866772ca5638f9e447fa24
+                    loading(persisted.rootHash); // FIXME: Are local updates really guaranteed to be synchronous?
 
-                        // Calling event-listeners (users)
-                        // N.B. it is no longer waiting for the setBranchHash to return from server.
-                        // Which also was the case before:
-                        // https://github.com/webgme/webgme/commit/48547c33f638aedb60866772ca5638f9e447fa24
-                        loading(persisted.rootHash); // FIXME: Are local updates really guaranteed to be synchronous?
-
-                        newCommitObject = storage.makeCommit(
-                            state.project.name,
-                            state.branchName,
-                            [state.recentCommitHashes[0]],
-                            persisted.rootHash,
-                            persisted.objects,
-                            msg
-                        );
-                        addCommit(newCommitObject._id);
-                        state.msg = '';
-                    });
+                    newCommitObject = storage.makeCommit(
+                        state.project.name,
+                        state.branchName,
+                        [state.recentCommitHashes[0]],
+                        persisted.rootHash,
+                        persisted.objects,
+                        msg
+                    );
+                    addCommit(newCommitObject._id);
+                    state.msg = '';
                 } else {
                     logger.debug('is in transaction - will NOT persist.');
                 }

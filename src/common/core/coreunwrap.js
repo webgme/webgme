@@ -44,7 +44,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         }
         logger.debug('initialized');
         core.loadRoot = TASYNC.unwrap(oldcore.loadRoot);
-        core.persist = TASYNC.unwrap(oldcore.persist);
+        //core.persist = TASYNC.unwrap(oldcore.persist);
 
         // core.loadChild = TASYNC.unwrap(oldcore.loadChild);
         core.loadChild = TASYNC.unwrap(function (node, relid) {

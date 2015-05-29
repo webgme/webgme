@@ -177,9 +177,17 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                 if (socket.rooms.indexOf(data.projectName + ROOM_DIV + data.branchName) > -1) {
                     data.socket = socket;
                 }
-                storage.makeCommit(data, function (err, status) {
-                    callback(err, status);
-                });
+                storage.makeCommit(data)
+                    .then(function (status) {
+                        callback(null, status);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.toString());
+                        }
+                    });
             });
 
             socket.on('loadObjects', function (data, callback) {

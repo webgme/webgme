@@ -89,6 +89,7 @@ if (typeof define === 'undefined') {
          */
         PluginForked.prototype.main = function (callback) {
             var self = this,
+                persisted,
                 config = self.getCurrentConfig();
 
             function makeAndSaveChanges() {
@@ -111,31 +112,25 @@ if (typeof define === 'undefined') {
 
             if (config.fork === true) {
                 self.core.setAttribute(self.activeNode, 'name', 'FCO_Fork_Name');
-                self.core.persist(self.rootNode, function (err, persisted) {
-                    if (err) {
-                        self.logger.error('core.persist failed');
-                        callback(err);
-                        return;
-                    }
-                    self.project.makeCommit(self.branchName,
-                        [self.currentHash],
-                        persisted.rootHash,
-                        persisted.objects,
-                        'Injected fork commit',
-                        function (err, commitResult) {
-                            if (err) {
-                                self.logger.error('project.makeCommit failed.');
-                                callback(err);
-                                return;
-                            }
-                            if (commitResult.status === STORAGE_CONSTANTS.SYNCH) {
-                                makeAndSaveChanges();
-                            } else {
-                                callback('Injected commit was not in synch, ' + commitResult.status);
-                            }
+                persisted = self.core.persist(self.rootNode);
+                self.project.makeCommit(self.branchName,
+                    [self.currentHash],
+                    persisted.rootHash,
+                    persisted.objects,
+                    'Injected fork commit',
+                    function (err, commitResult) {
+                        if (err) {
+                            self.logger.error('project.makeCommit failed.');
+                            callback(err);
+                            return;
                         }
-                    );
-                });
+                        if (commitResult.status === STORAGE_CONSTANTS.SYNCH) {
+                            makeAndSaveChanges();
+                        } else {
+                            callback('Injected commit was not in synch, ' + commitResult.status);
+                        }
+                    }
+                );
             } else {
                 makeAndSaveChanges();
             }

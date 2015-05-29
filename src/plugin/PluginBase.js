@@ -274,22 +274,20 @@ define([
      */
     PluginBase.prototype.save = function (message, callback) {
         var self = this,
+            persisted,
             commitMessage = '[Plugin] ' + self.getName() + ' (v' + self.getVersion() + ') updated the model.';
 
         self.logger.debug('Saving project');
-        self.core.persist(self.rootNode, function (err, persisted) {
-            if (err) {
-                self.logger.error('core.persist failed');
-                callback(err);
-                return;
-            }
-            if (self.branch) {
-                self._commitWithClient(persisted, commitMessage, callback);
-            } else {
-                // Make commit w/o depending on a client.
-                self._makeCommit(persisted, commitMessage, callback);
-            }
-        });
+        persisted = self.core.persist(self.rootNode);
+        if (Object.keys(persisted.objects).length === 0) {
+            self.logger.warn('save invoked with no changes, will still proceed');
+        }
+        if (self.branch) {
+            self._commitWithClient(persisted, commitMessage, callback);
+        } else {
+            // Make commit w/o depending on a client.
+            self._makeCommit(persisted, commitMessage, callback);
+        }
     };
 
     PluginBase.prototype._commitWithClient = function (persisted, commitMessage, callback) {
