@@ -1,56 +1,3 @@
-///*jshint node:true, mocha:true*/
-///**
-// * @author kecso / https://github.com/kecso
-// */
-//
-//var testFixture = require('../../_globals.js');
-//
-//describe('Core Mongo Coverage', function () {
-//    'use strict';
-//    var gmeConfig = testFixture.getGmeConfig(),
-//        storage = new testFixture.WebGME.serverUserStorage({ //FIXME: Is this necessary??
-//            globConf: gmeConfig,
-//            logger: testFixture.logger.fork('Core Mongo Coverage:storage')
-//        });
-//
-//    it('fails to connect to database', function (done) {
-//        var gmeConfigAltered = testFixture.getGmeConfig();
-//        this.timeout(20000);
-//        gmeConfigAltered.mongo.uri = 'mongodb://127.0.0.1:65535/multi';
-//        storage = new testFixture.WebGME.serverUserStorage({
-//            globConf: gmeConfigAltered,
-//            logger: testFixture.Logger.createWithGmeConfig('Core Mongo Coverage:fails to connect to database:storage',
-//                gmeConfig)
-//        });
-//        storage.openDatabase(function (err) {
-//            if (!err) {
-//                done(new Error('connection should have been failed'));
-//            }
-//            done();
-//        });
-//    });
-//
-//    it('try double database closing', function (done) {
-//        storage = new testFixture.WebGME.serverUserStorage({
-//            globConf: gmeConfig,
-//            logger: testFixture.Logger.createWithGmeConfig('Core Mongo Coverage:try double database closing:storage',
-//                gmeConfig)
-//        });
-//        storage.openDatabase(function (err) {
-//            if (err) {
-//                return done(err);
-//            }
-//            storage.closeDatabase(function (err) {
-//                if (err) {
-//                    return done(err);
-//                }
-//                storage.closeDatabase(done);
-//            });
-//        });
-//    });
-//});
-
-
 /*globals*/
 /*jshint node:true, newcap:false, mocha:true*/
 /**
@@ -120,6 +67,29 @@ describe('Mongo storage', function () {
 
     });
 
+    it('should fail to open', function (done) {
+        var mongoStorage,
+            gmeConfigCustom = testFixture.getGmeConfig();
+
+        this.timeout(5000);
+
+        gmeConfigCustom.mongo.uri = 'mongodb://127.0.0.1:27016/multi';
+
+        mongoStorage = testFixture.getMongoStorage(logger, gmeConfigCustom, gmeAuth);
+
+        mongoStorage.openDatabase()
+            .then(function () {
+                done(new Error('should have failed to connect to mongo'));
+            })
+            .catch(function (err) {
+                if (err && err instanceof Error && err.message.indexOf('failed to connect to') > -1) {
+                    done();
+                } else {
+                    done(err || new Error('should have failed to connect to mongo'));
+                }
+            });
+    });
+
     it('should open and close', function (done) {
         var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
@@ -171,6 +141,23 @@ describe('Mongo storage', function () {
         var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
         mongoStorage.closeDatabase()
+            .then(function () {
+                return mongoStorage.closeDatabase();
+            })
+            .then(function () {
+                return mongoStorage.closeDatabase();
+            })
+            .then(function () {
+                return mongoStorage.closeDatabase();
+            })
+            .then(done)
+            .catch(done);
+    });
+
+    it('should allow open then multiple close calls', function (done) {
+        var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+
+        mongoStorage.openDatabase()
             .then(function () {
                 return mongoStorage.closeDatabase();
             })
