@@ -23,6 +23,7 @@ var WebGME = require('../webgme'),
         return JSON.parse(JSON.stringify(gmeConfig));
     },
     Core = requireJS('common/core/core'),
+    NodeStorage = requireJS('../src/common/storage/nodestorage'),
     Mongo = require('../src/server/storage/mongo'),
     Memory = require('../src/server/storage/memory'),
     SafeStorage = require('../src/server/storage/safestorage'),
@@ -457,6 +458,7 @@ module.exports = {
     getGmeConfig: getGmeConfig,
 
     WebGME: WebGME,
+    NodeStorage: NodeStorage,
     getMongoStorage: getMongoStorage,
     getMemoryStorage: getMemoryStorage,
     Project: Project,

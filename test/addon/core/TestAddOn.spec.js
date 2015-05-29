@@ -11,7 +11,7 @@ describe('TestAddOn', function () {
     var expect = testFixture.expect,
         WebGME = testFixture.WebGME,
         Core = testFixture.WebGME.core,
-        testLogger = testFixture.logger,
+        logger = testFixture.logger.fork('TestAddOn.spec'),
         server,
         storage,
         project,
@@ -24,14 +24,15 @@ describe('TestAddOn', function () {
         server = WebGME.standaloneServer(gmeConfig);
         server.start(function (err) {
             expect(err).to.not.exist;
-            storage = new WebGME.clientStorage({
-                globConf: gmeConfig,
-                type: 'node',
-                host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
-                logger: testLogger.fork(addOnName + ':storage'),
-                webGMESessionId: 'testopencontext'
-            });
-            storage = storage;
+            storage = testFixture.NodeStorage.createStorage(server.getUrl(), 'testopencontext', logger, gmeConfig);
+            //new WebGME.clientStorage({
+            //    globConf: gmeConfig,
+            //    type: 'node',
+            //    host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
+            //    logger: logger.fork(addOnName + ':storage'),
+            //    webGMESessionId: 'testopencontext'
+            //});
+            //storage = storage;
             done();
         });
     });
@@ -43,25 +44,24 @@ describe('TestAddOn', function () {
     });
 
     after(function (done) {
-        storage.closeDatabase(function (err1) {
-            server.stop(function (err2) {
-                done(err1 || err2 || null);
-            });
+
+        server.stop(function (err2) {
+            done(err2 || null);
         });
     });
 
     it('should start, update and stop', function (done) {
         importParam = {
-            filePath: './test/addon/core/TestAddOn/project.json',
+            projectSeed: './test/addon/core/TestAddOn/project.json',
             projectName: 'TestAddOn',
             branchName: 'master',
             gmeConfig: gmeConfig,
-            storage: storage
+            logger: logger
         };
-        testFixture.importProject(importParam, function (err, result) {
+        testFixture.importProject(storage, importParam, function (err, result) {
             var startParam,
                 logMessages = [],
-                logger = testLogger.fork(addOnName),
+                logger = logger.fork(addOnName),
                 addOn;
             expect(err).equal(null);
 
@@ -87,13 +87,13 @@ describe('TestAddOn', function () {
                 testFixture.saveChanges({project: project, core: result.core, rootNode: result.root},
                     function (err, rootHash, commitHash) {
                         expect(err).equal(null);
-                        testLogger.debug(rootHash);
-                        testLogger.debug(commitHash);
+                        logger.debug(rootHash);
+                        logger.debug(commitHash);
 
-                        testLogger.debug(logMessages);
+                        logger.debug(logMessages);
                         addOn.stop(function (err) {
                             expect(err).equal(null);
-                            testLogger.debug(logMessages);
+                            logger.debug(logMessages);
                             expect(logMessages.length).to.equal(3);
                             expect(logMessages[0][2]).to.equal('start');
                             expect(logMessages[1][2]).to.equal('update');

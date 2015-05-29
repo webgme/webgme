@@ -10,7 +10,7 @@ describe('merge CLI test', function () {
     var filename = require('path').normalize('src/bin/merge.js'),
         mergeCli = require('../../src/bin/merge'),
         logger = testFixture.logger.fork('merge.CLI'),
-        database = new testFixture.getMongoStorage(logger, gmeConfig),
+        database,
         projectName = 'mergeCliTest',
         oldProcessExit = process.exit,
         oldConsoleLog = console.log,
@@ -125,68 +125,79 @@ describe('merge CLI test', function () {
                     next(code ? new Error('error during patch application: ' + (err || code)) : null);
                 });
             };
-        database.openDatabase(function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
 
-            done = function (error) {
-                database.closeDatabase(function (err) {
-                    oldDone(error || err);
-                });
-            };
-            database.deleteProject(projectName, function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                database.openProject(projectName, function (err, project) {
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, 'PluginManagerBase')
+            .then(function (gmeAuth_) {
+                var gmeAuth;
+                gmeAuth = gmeAuth_;
+                database = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                database.openDatabase(function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
 
-                    var core = new testFixture.WebGME.core(project, {
-                            globConf: gmeConfig,
-                            logger: testFixture.logger.fork('core')
-                        }),
-                        root = core.createNode(),
-                        jsonProject = JSON.parse(testFixture.fs.readFileSync('./test/bin/merge/base.json')),
-                        commitHash;
-
-                    testFixture.WebGME.serializer.import(core, root, jsonProject, function (err) {
-                        var persisted;
+                    done = function (error) {
+                        database.closeDatabase(function (err) {
+                            oldDone(error || err);
+                        });
+                    };
+                    database.deleteProject({projectName: projectName}, function (err) {
                         if (err) {
                             done(err);
                             return;
                         }
-                        //now creating the start commit and make it the basis of two branches -master- and -other-
-                        persisted = core.persist(root);
-                        commitHash = project.makeCommit([], core.getHash(root), 'initial commit', function (err) {
+                        database.openProject({projectName: projectName}, function (err, project) {
                             if (err) {
                                 done(err);
                                 return;
                             }
-                            project.setBranchHash('master', '', commitHash, function (err) {
+
+                            var core = new testFixture.WebGME.core(project, {
+                                    globConf: gmeConfig,
+                                    logger: testFixture.logger.fork('core')
+                                }),
+                                root = core.createNode(),
+                                jsonProject = JSON.parse(testFixture.fs.readFileSync('./test/bin/merge/base.json')),
+                                commitHash;
+
+                            testFixture.WebGME.serializer.import(core, root, jsonProject, function (err) {
+                                var persisted;
                                 if (err) {
                                     done(err);
                                     return;
                                 }
-                                project.setBranchHash('other', '', commitHash, function (err) {
-                                    if (err) {
-                                        done(err);
-                                        return;
-                                    }
-                                    applyChanges();
-                                });
+                                //now creating the start commit and make it the basis of two branches -master- and -other-
+                                persisted = core.persist(root);
+                                commitHash = project.makeCommit([],
+                                    core.getHash(root),
+                                    'initial commit',
+                                    function (err) {
+                                        if (err) {
+                                            done(err);
+                                            return;
+                                        }
+                                        project.setBranchHash('master', '', commitHash, function (err) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
+                                            project.setBranchHash('other', '', commitHash, function (err) {
+                                                if (err) {
+                                                    done(err);
+                                                    return;
+                                                }
+                                                applyChanges();
+                                            });
+                                        });
+                                    });
                             });
                         });
                     });
                 });
             });
-        });
     });
+
     after(function (done) {
         database.openDatabase(function (err) {
             if (err) {
