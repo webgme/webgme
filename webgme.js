@@ -107,12 +107,29 @@ module.exports = {
 
     requirejs: requirejs,
     addToRequireJsPaths: addToRequireJsPaths,
-    getStorage: function (logger, gmeConfig) {
+    getStorage: function (logger, gmeConfig, gmeAuth) {
         var Mongo = require('./src/server/storage/mongo'),
             SafeStorage = require('./src/server/storage/safestorage'),
             mongo = new Mongo(logger, gmeConfig);
 
-        return new SafeStorage(mongo, logger, gmeConfig);
+        return new SafeStorage(mongo, logger, gmeConfig, gmeAuth);
+    },
+    getGmeAuth: function (gmeConfig, callback) {
+        var Q = require('Q'),
+            GMEAuth = require('./src/server/middleware/auth/gmeauth'),
+            deferred = Q.defer(),
+            gmeAuth;
+
+        gmeAuth = new GMEAuth(null, gmeConfig);
+        gmeAuth.connect(function (err) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve(gmeAuth);
+            }
+        });
+
+        return deferred.promise.nodeify(callback);
     },
     core: requirejs('common/core/core'),
     serializer: requirejs('common/core/users/serialization'),

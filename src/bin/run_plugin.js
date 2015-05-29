@@ -14,7 +14,7 @@ main = function (argv, callback) {
         Command = require('commander').Command,
         logger = webgme.Logger.create('gme:bin:import', gmeConfig.bin.log),
         program = new Command();
-    var storage = webgme.getStorage(logger, gmeConfig),
+    var storage,
         PluginCliManager = require('../../src/plugin/climanager'),
         Project = require('../../src/server/storage/userproject'),
         project,
@@ -47,7 +47,11 @@ main = function (argv, callback) {
         pluginConfig = {};
     }
 
-    storage.openDatabase()
+    webgme.getGmeAuth(gmeConfig)
+        .then(function (gmeAuth) {
+            storage = webgme.getStorage(logger, gmeConfig, gmeAuth);
+            return storage.openDatabase();
+        })
         .then(function () {
             logger.info('Database is opened.');
             return storage.openProject({projectName: program.project});
