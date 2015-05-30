@@ -56,12 +56,52 @@ define([
                     previous: null,
                     object: null
                 },
-                inTransaction: false
+                inTransaction: false,
+                msg: ''
             },
             monkeyPatchKey,
             nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode);
 
         EventDispatcher.call(this);
+
+        function logState(level) {
+            function replacer(key, value) {
+                if (key === 'project') {
+                    if (value) {
+                        return value.name;
+                    } else {
+                        return null;
+                    }
+
+                } else if (key === 'core') {
+                    if (value) {
+                        return 'instantiated';
+                    } else {
+                        return 'notInstantiated';
+                    }
+                } else if (key === 'isConnected') {
+                    return storage.connected;
+                } else if (key === 'metaNodes') {
+                    return Object.keys(value);
+                } else if (key === 'nodes') {
+                    return Object.keys(value);
+                } else if (key === 'loadNodes') {
+                    return Object.keys(value);
+                } else if (key === 'users') {
+                    return Object.keys(value);
+                } else if (key === 'root') {
+                    return {
+                        current: value.current,
+                        previous: value.previous
+                    };
+                }
+
+                return value;
+            }
+
+            logger[level]('state', JSON.stringify(state, replacer, 2));
+            //logger[level]('state', state);
+        }
 
         this.meta = new META();
         //TODO: These should be accessed via this.meta.
@@ -128,17 +168,29 @@ define([
                     logger.debug('Project "' + projectName + '" did not have a master branch, picked:', branchToOpen);
                 }
                 ASSERT(branchToOpen, 'No branch avaliable in project'); // TODO: Deal with this
-                self.selectBranch(branchToOpen, null, callback);
+                self.selectBranch(branchToOpen, null, function (err) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    reLaunchUsers();
+                    callback();
+                });
             }
 
             if (state.project) {
                 prevProjectName = state.project.name;
+                if (prevProjectName === projectName) {
+                    logger.warn('projectName is already opened', projectName);
+                    callback(null);
+                    return;
+                }
+                state.project = null;
                 //TODO what if for some reason we are in transaction?
                 storage.closeProject(prevProjectName, function (err) {
                     if (err) {
                         throw new Error(err);
                     }
-                    state.project = null;
                     state.core = null;
                     state.branchName = null;
                     state.branchStatus = null;
@@ -153,16 +205,11 @@ define([
                     state.root.previous = null;
                     //state.root.object = null;
                     state.inTransaction = false;
+                    state.msg = '';
 
                     cleanUsersTerritories();
                     //TODO: Does it matter if we dispatch these before or after the storage.closeProject?
                     self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, prevProjectName);
-                    if (state.branchName) {
-                        state.branchName = null;
-                        state.branchStatus = null;
-                        //self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
-                        //self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, null);
-                    }
                     storage.openProject(projectName, projectOpened);
                 });
             } else {
@@ -174,6 +221,12 @@ define([
             ASSERT(state.project, 'selectBranch invoked without open project');
             logger.debug('selectBranch', branchName);
             var prevBranchName;
+
+            if (prevBranchName === branchName) {
+                logger.warn('branchName is already opened', branchName);
+                callback(null);
+                return;
+            }
 
             function openBranch(err) {
                 if (err) {
@@ -192,17 +245,20 @@ define([
                         }
                         commitObject = latestCommit.commitObject;
                         logger.debug('Branch opened latestCommit', latestCommit);
+
+                        state.recentCommitHashes = [];
+                        addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
+
+                        state.branchName = branchName;
+                        state.branchStatus = CONSTANTS.STORAGE.SYNCH;
+                        logState('info');
+                        self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
+                        self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, state.branchStatus);
+
                         loading(commitObject.root, function (err) {
                             if (err) {
                                 throw new Error(err);
                             }
-
-                            state.recentCommitHashes = [];
-                            addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
-                            state.branchName = branchName;
-                            state.branchStatus = CONSTANTS.STORAGE.SYNCH;
-                            self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
-                            self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, state.branchStatus);
 
                             callback(null);
                         });
@@ -314,7 +370,7 @@ define([
 
         this.getProjectsAndBranches = function (callback) {
             if (state.isConnected()) {
-                storage.getProjectsAndBranches(function(err, projectsWithBranches) {
+                storage.getProjectsAndBranches(function (err, projectsWithBranches) {
                     var i,
                         result = {};
                     if (err) {
