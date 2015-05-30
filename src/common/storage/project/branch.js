@@ -8,7 +8,8 @@ define(['common/storage/constants'], function (CONSTANTS) {
     'use strict';
 
     function Branch(name, mainLogger) {
-        var logger = mainLogger.fork('Branch:' + name),
+        var self = this,
+            logger = mainLogger.fork('Branch:' + name),
             originHash = '',
             localHash = '',
             commitQueue = [],
@@ -16,11 +17,22 @@ define(['common/storage/constants'], function (CONSTANTS) {
 
         logger.debug('ctor');
         this.name = name;
+        this.isOpen = true;
 
         this.updateHandler = null;
         this.commitHandler = null;
 
         this.localUpdateHandler = null;
+
+        this.cleanUp = function () {
+            self.isOpen = false;
+            self.updateHandler = null;
+            self.commitHandler = null;
+            self.localUpdateHandler = null;
+
+            commitQueue = [];
+            updateQueue = [];
+        };
 
         this.getLocalHash = function () {
             return localHash;

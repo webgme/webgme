@@ -97,6 +97,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
             logger.debug('New socket connected', socket.id);
             // watcher functions
             socket.on('watchDatabase', function (data) {
+                logger.debug('watchDatabase', {metadata: data});
                 if (data.join) {
                     socket.join(DATABASE_ROOM);
                 } else {
@@ -105,7 +106,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
             });
 
             socket.on('watchProject', function (data) {
-                logger.debug('watchProject', data.projectName);
+                logger.debug('watchProject', {metadata: data});
                 if (data.join) {
                     //TODO: Check if user is authorized to read the project.
                     socket.join(data.projectName);
@@ -118,7 +119,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
 
             socket.on('watchBranch', function (data) {
                 var roomName = data.projectName + ROOM_DIV + data.branchName;
-                logger.debug('watchBranch', data.projectName, data.branchName);
+                logger.debug('watchBranch', {metadata: data});
                 if (data.join) {
                     //TODO: Check if user is authorized to read the project.
                     socket.join(roomName);
@@ -131,6 +132,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
 
             // model editing functions
             socket.on('openProject', function (data, callback) {
+                logger.debug('openProject', {metadata: data});
                 storage.getBranches(data)
                     .then(function (branches) {
                         callback(null, branches);
@@ -145,7 +147,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
             });
 
             socket.on('closeProject', function (data, callback) {
-                socket.leave(data.projectName);
+                logger.debug('closeProject', {metadata: data});
+                //socket.leave(data.projectName);
                 //if (data.branchName) {
                 //    socket.leave(data.projectName + ROOM_DIV + data.branchName);
                 //}
@@ -153,6 +156,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
             });
 
             socket.on('openBranch', function (data, callback) {
+                logger.debug('openBranch', {metadata: data});
                 storage.getLatestCommitData(data)
                     .then(function (commitData) {
                         socket.join(data.projectName + ROOM_DIV + data.branchName);
@@ -168,7 +172,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
             });
 
             socket.on('closeBranch', function (data, callback) {
-                logger.debug('closeBranch', data.projectName, data.branchName, socket.id);
+                logger.debug('closeBranch', {metadata: data});
                 socket.leave(data.projectName + ROOM_DIV + data.branchName);
                 callback();
             });

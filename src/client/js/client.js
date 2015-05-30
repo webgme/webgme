@@ -133,16 +133,11 @@ define([
 
             if (state.project) {
                 prevProjectName = state.project.name;
-                if (state.branchName) {
-                    state.branchName = null;
-                    self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
-                }
-                //TODO what if for some reason we are in transaction???
+                //TODO what if for some reason we are in transaction?
                 storage.closeProject(prevProjectName, function (err) {
                     if (err) {
                         throw new Error(err);
                     }
-
                     state.project = null;
                     state.core = null;
                     state.branchName = null;
@@ -160,9 +155,14 @@ define([
                     state.inTransaction = false;
 
                     cleanUsersTerritories();
-
+                    //TODO: Does it matter if we dispatch these before or after the storage.closeProject?
                     self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, prevProjectName);
-
+                    if (state.branchName) {
+                        state.branchName = null;
+                        state.branchStatus = null;
+                        //self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
+                        //self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, null);
+                    }
                     storage.openProject(projectName, projectOpened);
                 });
             } else {
@@ -172,81 +172,106 @@ define([
 
         this.selectBranch = function (branchName, commitHandler, callback) {
             ASSERT(state.project, 'selectBranch invoked without open project');
-            //TODO: Close the other branch.
-            commitHandler = commitHandler || defaultCommitHandler;
-            storage.openBranch(state.project.name, branchName, updateHandler, commitHandler,
-                function (err, latestCommit) {
-                    var commitObject;
-                    if (err) {
-                        throw new Error(err);
-                    }
-                    commitObject = latestCommit.commitObject;
-                    logger.debug('Branch opened latestCommit', latestCommit);
-                    loading(commitObject.root, function (err) {
-                        if (err) {
-                            throw new Error(err);
-                        }
+            logger.debug('selectBranch', branchName);
+            var prevBranchName;
 
-                        state.recentCommitHashes = [];
-                        addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
-                        state.branchName = branchName;
-                        state.branchStatus = CONSTANTS.STORAGE.SYNCH;
-                        self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
-                        self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, state.branchStatus);
-
-                        callback(null);
-                    });
+            function openBranch(err) {
+                if (err) {
+                    logger.error('Problems closing existing branch', err);
+                    callback(err);
+                    return;
                 }
-            );
+                commitHandler = commitHandler || getDefaultCommitHandler();
+                storage.openBranch(state.project.name, branchName, getUpdateHandler(), commitHandler,
+                    function (err, latestCommit) {
+                        var commitObject;
+                        if (err) {
+                            logger.error('storage.openBranch returned with error', err);
+                            callback(err);
+                            return;
+                        }
+                        commitObject = latestCommit.commitObject;
+                        logger.debug('Branch opened latestCommit', latestCommit);
+                        loading(commitObject.root, function (err) {
+                            if (err) {
+                                throw new Error(err);
+                            }
+
+                            state.recentCommitHashes = [];
+                            addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
+                            state.branchName = branchName;
+                            state.branchStatus = CONSTANTS.STORAGE.SYNCH;
+                            self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
+                            self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, state.branchStatus);
+
+                            callback(null);
+                        });
+                    }
+                );
+            }
+
+            if (state.branchName !== null) {
+                logger.debug('Branch was open, closing it first', state.branchName);
+                prevBranchName = state.branchName;
+                state.branchName = null;
+                state.branchStatus = null;
+                storage.closeBranch(state.project.name, prevBranchName, openBranch);
+            } else {
+                openBranch(null);
+            }
         };
 
-        function defaultCommitHandler(commitQueue, result, callback) {
-            logger.debug('default commitHandler invoked, result: ', result);
-            logger.debug('commitQueue', commitQueue);
-            //TODO: dispatch an event showing how far off from the origin we are.
-            if (result.status === CONSTANTS.STORAGE.SYNCH) {
-                logger.debug('You are in synch.');
-                if (commitQueue.length === 0) {
-                    logger.debug('No commits queued.');
+        function getDefaultCommitHandler() {
+            return function (commitQueue, result, callback) {
+                logger.debug('default commitHandler invoked, result: ', result);
+                logger.debug('commitQueue', commitQueue);
+                //TODO: dispatch an event showing how far off from the origin we are.
+                if (result.status === CONSTANTS.STORAGE.SYNCH) {
+                    logger.debug('You are in synch.');
+                    if (commitQueue.length === 0) {
+                        logger.debug('No commits queued.');
+                    } else {
+                        logger.debug('Will proceed with next queued commit...');
+                    }
+                    if (state.branchStatus !== CONSTANTS.STORAGE.SYNCH) {
+                        state.branchStatus = CONSTANTS.STORAGE.SYNCH;
+                        self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, CONSTANTS.STORAGE.SYNCH);
+                    }
+                    callback(true); // All is fine, continue with the commitQueue..
+                } else if (result.status === CONSTANTS.STORAGE.FORKED) {
+                    logger.debug('You got forked');
+                    if (state.branchStatus !== CONSTANTS.STORAGE.FORKED) {
+                        state.branchStatus = CONSTANTS.STORAGE.FORKED;
+                        self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, CONSTANTS.STORAGE.FORKED);
+                    }
+                    callback(false);
+                    alert('You got forked, TODO: \nstep one - automatically create new fork \n' +
+                    'step two - add UI piece.');
                 } else {
-                    logger.debug('Will proceed with next queued commit...');
+                    callback(false);
+                    throw new Error('Unexpected result', result);
                 }
-                if (state.branchStatus !== CONSTANTS.STORAGE.SYNCH) {
-                    state.branchStatus = CONSTANTS.STORAGE.SYNCH;
-                    self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, CONSTANTS.STORAGE.SYNCH);
-                }
-                callback(true); // All is fine, continue with the commitQueue..
-            } else if (result.status === CONSTANTS.STORAGE.FORKED) {
-                logger.debug('You got forked');
-                if (state.branchStatus !== CONSTANTS.STORAGE.FORKED) {
-                    state.branchStatus = CONSTANTS.STORAGE.FORKED;
-                    self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, CONSTANTS.STORAGE.FORKED);
-                }
-                callback(false);
-                alert('You got forked, TODO: \nstep one - automatically create new fork \n' +
-                'step two - add UI piece.');
-            } else {
-                callback(false);
-                throw new Error('Unexpected result', result);
-            }
+            };
         }
 
-        function updateHandler (eventData) {
-            var commitHash = eventData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
-            //TODO: When updates are loaded from other users,
-            //TODO: local saveRoots must be bundled in e.g. transactions.
-            //TODO: On top of that we must also queue incoming update events.
-            logger.debug('updateHandler invoked. project, branch', eventData.projectName, eventData.branchName);
-            logger.debug('loading commitHash', commitHash);
-            loading(eventData.commitObject.root, function (err) {
-                if (err) {
-                    logger.error('updatehandler invoked loading and it returned error',
-                        eventData.commitObject.root, err);
-                } else {
-                    addCommit(commitHash);
-                    logger.debug('loading complete for incoming rootHash', eventData.commitObject.root);
-                }
-            });
+        function getUpdateHandler() {
+            return function (eventData) {
+                var commitHash = eventData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
+                //TODO: When updates are loaded from other users,
+                //TODO: local saveRoots must be bundled in e.g. transactions.
+                //TODO: On top of that we must also queue incoming update events.
+                logger.debug('updateHandler invoked. project, branch', eventData.projectName, eventData.branchName);
+                logger.debug('loading commitHash', commitHash);
+                loading(eventData.commitObject.root, function (err) {
+                    if (err) {
+                        logger.error('updatehandler invoked loading and it returned error',
+                            eventData.commitObject.root, err);
+                    } else {
+                        addCommit(commitHash);
+                        logger.debug('loading complete for incoming rootHash', eventData.commitObject.root);
+                    }
+                });
+            };
         }
 
         // State getters.

@@ -100,20 +100,44 @@ define([
 
         this.closeProject = function (projectName, callback) {
             var project = projects[projectName],
-                branches;
+                error = '',
+                branchCnt,
+                branchNames;
             logger.debug('closeProject', projectName);
+
+            function closeAndDelete(err) {
+                if (err) {
+                    logger.error(err);
+                    error += err;
+                }
+                logger.debug('inside closeAndDelete branchCnt', branchCnt);
+                if (branchCnt === 0) {
+                    delete projects[projectName];
+                    logger.debug('project reference deleted, sending close to server.');
+                    webSocket.closeProject({projectName: projectName}, function (err) {
+                        logger.debug('project closed on server.');
+                        callback(err || error);
+                    });
+                }
+            }
+
             if (project) {
-                branches = Object.keys(project.branches);
-                if (branches.length > 0) {
-                    //TODO: It should close all branches here..
-                    logger.error('Branches still open for project', projectName, branches);
-                    callback('Branches still open for project');
+                branchNames = Object.keys(project.branches);
+                branchCnt = branchNames.length;
+                if (branchCnt > 0) {
+                    logger.warn('Branches still open for project, will be closed.', projectName, branchNames);
+                    while (branchCnt) {
+                        branchCnt -= 1;
+                        this.closeBranch(projectName, branchNames[branchCnt], closeAndDelete);
+                    }
+                } else {
+                    closeAndDelete(null);
                 }
             } else {
-                logger.error('Project is not open ', projectName);
+                logger.warn('Project is not open ', projectName);
+                callback(null);
             }
-            delete projects[projectName];
-            webSocket.closeProject({projectName: projectName}, callback);
+
         };
 
         this.openBranch = function (projectName, branchName, updateHandler, commitHandler, callback) {
@@ -172,16 +196,24 @@ define([
             ASSERT(projects.hasOwnProperty(projectName), 'Project not opened: ' + projectName);
             logger.debug('closeBranch', projectName, branchName);
 
-            var project = project[projectName],
-                branch = project.getBranch(branchName);
+            var project = projects[projectName],
+                branch = project.branches[branchName];
+
             if (branch) {
+                // This will prevent memory leaks and expose if a commit is being
+                // processed at the server this time (see last error in _pushNextQueuedCommit).
+                branch.cleanUp();
+
+                // Stop listening to events from the sever
                 webSocket.removeEventListener(webSocket.getBranchUpdateEventName(projectName, branchName),
                     branch.updateHandler);
             } else {
-                logger.error('Branch is not open', projectName, branchName);
+                logger.warn('Branch is not open', projectName, branchName);
+                callback(null);
+                return;
             }
 
-            project[projectName].removeBranch(branchName);
+            project.removeBranch(branchName);
             webSocket.closeBranch({projectName: projectName, branchName: branchName}, callback);
         };
 
@@ -244,23 +276,6 @@ define([
             return commitData.commitObject; //commitHash
         };
 
-        this._getCommitObject = function (projectName, parents, rootHash, msg) {
-            msg = msg || 'n/a';
-            var commitObj = {
-                    root: rootHash,
-                    parents: parents,
-                    updater: ['dummy'], //TODO: use session to get user
-                    time: (new Date()).getTime(),
-                    message: msg,
-                    type: 'commit'
-                },
-                commitHash = '#' + GENKEY(commitObj, gmeConfig);
-
-            commitObj[CONSTANTS.MONGO_ID] = commitHash;
-
-            return commitObj;
-        };
-
         this._pushNextQueuedCommit = function (projectName, branchName, callback) {
             ASSERT(projects.hasOwnProperty(projectName), 'Project not opened: ' + projectName);
             var project = projects[projectName],
@@ -283,14 +298,35 @@ define([
                 if (typeof callback === 'function') {
                     callback(err, result);
                 }
-                branch.commitHandler(branch.getCommitQueue(), result, function (push) {
-                    if (push) {
-                        self._pushNextQueuedCommit(projectName, branchName);
-                        //TODO: Make sure the stack doesn't grow too big.
-                        //TODO: This should be limited by the number of queued commits though..
-                    }
-                });
+
+                if (branch.isOpen) {
+                    branch.commitHandler(branch.getCommitQueue(), result, function (push) {
+                        if (push) {
+                            self._pushNextQueuedCommit(projectName, branchName);
+                        }
+                    });
+                } else {
+                    logger.error('_pushNextQueuedCommit returned from server but the branch was close, ' +
+                    'the branch has probably been closed while waiting for the response.');
+                }
             });
+        };
+
+        this._getCommitObject = function (projectName, parents, rootHash, msg) {
+            msg = msg || 'n/a';
+            var commitObj = {
+                    root: rootHash,
+                    parents: parents,
+                    updater: ['dummy'], //TODO: use session to get user
+                    time: (new Date()).getTime(),
+                    message: msg,
+                    type: 'commit'
+                },
+                commitHash = '#' + GENKEY(commitObj, gmeConfig);
+
+            commitObj[CONSTANTS.MONGO_ID] = commitHash;
+
+            return commitObj;
         };
 
         this._rejoinBranchRooms = function () {
