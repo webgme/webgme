@@ -27,7 +27,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             this.messages = [];
             this.artifacts = config.artifacts;
             this.error = config.error;
-            this.commits = [];
+            this.commits = config.commits;
 
             for (i = 0; i < config.messages.length; i += 1) {
                 if (config.messages[i] instanceof PluginMessage) {
@@ -188,7 +188,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
         var result = {
             success: this.success,
             messages: [],
-            commits: [],
+            commits: this.commits,
             artifacts: this.artifacts,
             pluginName: this.pluginName,
             startTime: this.startTime,
@@ -199,10 +199,6 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
 
         for (i = 0; i < this.messages.length; i += 1) {
             result.messages.push(this.messages[i].serialize());
-        }
-
-        for (i = 0; i < this.commits.length; i += 1) {
-            result.commits.push(JSON.stringify(this.commits[i]));
         }
 
         return result;

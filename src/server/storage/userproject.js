@@ -47,6 +47,16 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
             .nodeify(callback);
     };
 
+    // FIXME: NOTE: this method calls getBranches, but we need it because of the PluginManagerBase
+    this.getBranchNames = function (callback) {
+        var data = {
+            projectName: self.name
+        };
+
+        return storage.getBranches(data)
+            .nodeify(callback);
+    };
+
     this.setBranchHash = function (branchName, newHash, oldHash, callback) {
         var data = {
             projectName: self.name,
