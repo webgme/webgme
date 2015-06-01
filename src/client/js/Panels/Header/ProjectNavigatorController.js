@@ -283,7 +283,7 @@ define([
             });
         });
         self.gmeClient.addEventListener(CONSTANTS.CLIENT.REDO_AVAILABLE, function (client, parameters) {
-            self.logger.debug(self.gmeClient.events.REDO_AVAILABLE, parameters);
+            self.logger.debug(CONSTANTS.CLIENT.REDO_AVAILABLE, parameters);
             self.$timeout(function () {
 
                 if (self.$scope.navigator &&

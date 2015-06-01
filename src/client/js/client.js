@@ -56,6 +56,62 @@ define([
                     previous: null,
                     object: null
                 },
+                commit: {
+                    current: null,
+                    previous: null
+                },
+                undoRedoChain: {
+                    chain: null,
+                    canUndo: function () {
+                        if (state.undoRedoChain.chain && state.undoRedoChain.chain.previous) {
+                            return true;
+                        }
+
+                        return false;
+                    },
+                    undo: function () {
+                        if (state.undoRedoChain.chain && state.undoRedoChain.chain.previous) {
+                            state.undoRedoChain.chain = state.undoRedoChain.chain.previous;
+                            return true;
+                        }
+
+                        return false;
+                    },
+                    canRedo: function () {
+                        if (state.undoRedoChain.chain && state.undoRedoChain.chain.next) {
+                            return true;
+                        }
+                        return false;
+                    },
+                    redo: function () {
+                        if (state.undoRedoChain.chain && state.undoRedoChain.chain.next) {
+                            state.undoRedoChain.chain = state.undoRedoChain.chain.next;
+                            return true;
+                        }
+                        return false;
+                    },
+                    addModification: function (commitObject, clear) {
+                        var newItem;
+                        if (clear) {
+                            state.undoRedoChain.chain = {
+                                commit: commitObject[CONSTANTS.STORAGE.MONGO_ID],
+                                root: commitObject.root,
+                                previous: null,
+                                next: null
+                            };
+                            return;
+                        }
+
+                        newItem = {
+                            commit: commitObject[CONSTANTS.STORAGE.MONGO_ID],
+                            root: commitObject.root,
+                            previous: state.undoRedoChain.chain,
+                            next: null
+                        };
+                        state.undoRedoChain.chain.next = newItem;
+                        state.undoRedoChain.chain = newItem;
+                    }
+                },
                 inTransaction: false,
                 msg: ''
             },
@@ -249,6 +305,13 @@ define([
                         state.recentCommitHashes = [];
                         addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
 
+                        //undo-redo
+                        logger.debug('changing branch - cleaning undo-redo chain');
+                        state.undoRedoChain.addModification(commitObject, true);
+                        self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
+                        self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
+
+
                         state.branchName = branchName;
                         state.branchStatus = CONSTANTS.STORAGE.SYNCH;
                         logState('info');
@@ -276,6 +339,51 @@ define([
             }
         };
 
+        this.undo = function (branchName, callback) {
+            if (!state.undoRedoChain.canUndo()) {
+                callback(new Error('unable to make undo'));
+                return;
+            }
+
+            state.undoRedoChain.undo();
+            loading(state.undoRedoChain.chain.root, function (err) {
+                //TODO do we need to handle this??
+                if (err) {
+                    logger.error(err);
+                }
+            });
+            self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
+            self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
+            storage.setBranchHash(state.project.name,
+                state.branchName, state.undoRedoChain.chain.commit, state.commit.current, function (err) {
+                    //TODO do we need to handle this? How?
+                }
+            );
+
+        };
+
+        this.redo = function (branchName, callback) {
+            if (!state.undoRedoChain.canRedo()) {
+                callback(new Error('unable to make redo'));
+                return;
+            }
+
+            state.undoRedoChain.redo();
+            loading(state.undoRedoChain.chain.root, function (err) {
+                //TODO do we need to handle this??
+                if (err) {
+                    logger.error(err);
+                }
+            });
+            self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
+            self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
+            storage.setBranchHash(state.project.name,
+                state.branchName, state.undoRedoChain.chain.commit, state.commit.current, function (err) {
+                    //TODO do we need to handle this? How?
+                }
+            );
+        };
+
         function getDefaultCommitHandler() {
             return function (commitQueue, result, callback) {
                 logger.debug('default commitHandler invoked, result: ', result);
@@ -301,7 +409,7 @@ define([
                     }
                     callback(false);
                     alert('You got forked, TODO: \nstep one - automatically create new fork \n' +
-                    'step two - add UI piece.');
+                        'step two - add UI piece.');
                 } else {
                     callback(false);
                     throw new Error('Unexpected result', result);
@@ -317,6 +425,13 @@ define([
                 //TODO: On top of that we must also queue incoming update events.
                 logger.debug('updateHandler invoked. project, branch', eventData.projectName, eventData.branchName);
                 logger.debug('loading commitHash', commitHash);
+
+                //undo-redo
+                logger.debug('foreign modification clearing undo-redo chain');
+                state.undoRedoChain.addModification(eventData.commitObject, true);
+                self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
+                self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
+
                 loading(eventData.commitObject.root, function (err) {
                     if (err) {
                         logger.error('updatehandler invoked loading and it returned error',
@@ -779,7 +894,7 @@ define([
             logger.debug('loading newRootHash', newRootHash);
 
             callback = callback || function (/*err*/) {
-            };
+                };
 
             state.root.previous = state.root.current;
             state.root.current = newRootHash;
@@ -839,7 +954,7 @@ define([
             logger.debug('saveRoot msg', msg);
 
             callback = callback || function () {
-            };
+                };
             if (!state.viewer && !state.readOnlyProject) {
                 if (state.msg) {
                     state.msg += '\n' + msg;
@@ -875,6 +990,11 @@ define([
                         msg
                     );
                     addCommit(newCommitObject._id);
+                    //undo-redo
+                    state.undoRedoChain.addModification(newCommitObject, false);
+                    self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
+                    self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
+
                     state.msg = '';
                 } else {
                     logger.debug('is in transaction - will NOT persist.');
@@ -892,6 +1012,9 @@ define([
             if (state.recentCommitHashes.length > 100) {
                 state.recentCommitHashes.pop();
             }
+
+            state.commit.previous = state.commit.current;
+            state.commit.current = commitHash;
         }
 
         //territory functions
