@@ -39,8 +39,8 @@ define([
              packagejson,
              Client,
              CONSTANTS,
-             METACONSTANTS,
              CLIENT_CONSTANTS,
+             METACONSTANTS,
              GMEConcepts,
              GMEVisualConcepts,
              ExportManager,
@@ -203,7 +203,7 @@ define([
                                 }
                                 if (projectArray.indexOf(initialThingsToDo.projectToLoad) !== -1) {
                                     //we fallback to loading
-                                    client.selectProjectAsync(initialThingsToDo.projectToLoad, function (err) {
+                                    client.selectProject(initialThingsToDo.projectToLoad, function (err) {
                                         if (err) {
                                             logger.error(err);
                                             openProjectLoadDialog();
@@ -213,7 +213,7 @@ define([
                                             loadBranch(initialThingsToDo.branchToLoad);
                                         } else if (initialThingsToDo.commitToLoad &&
                                                    initialThingsToDo.commitToLoad !== '') {
-                                            client.selectCommitAsync(initialThingsToDo.commitToLoad, function (err) {
+                                            client.selectCommit(initialThingsToDo.commitToLoad, function (err) {
                                                 if (err) {
                                                     logger.error(err);
                                                     WebGMEGlobal.State.setIsInitPhase(false);
@@ -271,7 +271,7 @@ define([
                                 if (initialThingsToDo.branchToLoad) {
                                     loadBranch(initialThingsToDo.branchToLoad);
                                 } else if (initialThingsToDo.commitToLoad) {
-                                    client.selectCommitAsync(initialThingsToDo.commitToLoad, function (err) {
+                                    client.selectCommit(initialThingsToDo.commitToLoad, function (err) {
                                         if (err) {
                                             logger.error(err);
                                             openProjectLoadDialog();

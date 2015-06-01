@@ -42,8 +42,7 @@ define([
                 branchName: null,
                 branchStatus: null,
                 readOnlyProject: false,
-                viewer: false, //TODO: What's the intention of this? Do we still need it?
-                recentCommitHashes: [],
+                viewer: false, // This means that a specific commit is selected w/o regards to any branch.
                 users: {},
                 patterns: {},
                 gHash: 0,
@@ -155,7 +154,7 @@ define([
                 return value;
             }
 
-            logger[level]('state', JSON.stringify(state, replacer, 2));
+            //logger[level]('state', JSON.stringify(state, replacer, 2));
             //logger[level]('state', state);
         }
 
@@ -211,7 +210,7 @@ define([
                     logger: logger.fork('core')
                 });
                 self.meta.initialize(state.core, state.metaNodes, saveRoot);
-                //TODO: Add these back
+                //TODO: Add these back, maybe not..
                 //if (_clientGlobal.commitCache) {
                 //    _clientGlobal.commitCache.clearCache();
                 //} else {
@@ -250,7 +249,6 @@ define([
                     state.core = null;
                     state.branchName = null;
                     state.branchStatus = null;
-                    state.recentCommitHashes = [];
                     state.patterns = {};
                     //state.gHash = 0;
                     state.nodes = {};
@@ -302,7 +300,6 @@ define([
                         commitObject = latestCommit.commitObject;
                         logger.debug('Branch opened latestCommit', latestCommit);
 
-                        state.recentCommitHashes = [];
                         addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
 
                         //undo-redo
@@ -311,7 +308,7 @@ define([
                         self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
                         self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
 
-
+                        state.viewer = false;
                         state.branchName = branchName;
                         state.branchStatus = CONSTANTS.STORAGE.SYNCH;
                         logState('info');
@@ -336,6 +333,44 @@ define([
                 storage.closeBranch(state.project.name, prevBranchName, openBranch);
             } else {
                 openBranch(null);
+            }
+        };
+
+        this.selectCommit = function (commitHash, callback) {
+            ASSERT(state.project, 'selectCommit invoked without an open project.');
+            logger.debug('selectCommit', commitHash);
+            var prevBranchName;
+
+            function openCommit(err) {
+                if (err) {
+                    logger.error('Problems closing existing branch', err);
+                    callback(err);
+                    return;
+                }
+
+                state.viewer = true;
+                self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
+                state.project.loadObject(commitHash, function (err, commitObj) {
+                    if (!err && commitObj) {
+                        logState('info');
+                        addCommit(commitObj[CONSTANTS.STORAGE.MONGO_ID]);
+                        loading(commitObj.root, callback);
+                    } else {
+                        logger.error('Cannot view given ' + commitHash + ' commit as it\'s root cannot be loaded! [' +
+                        JSON.stringify(err) + ']');
+                        callback(err || new Error('commit object cannot be found!'));
+                    }
+                });
+            }
+
+            if (state.branchName !== null) {
+                logger.debug('Branch was open, closing it first', state.branchName);
+                prevBranchName = state.branchName;
+                state.branchName = null;
+                state.branchStatus = null;
+                storage.closeBranch(state.project.name, prevBranchName, openCommit);
+            } else {
+                openCommit(null);
             }
         };
 
@@ -467,6 +502,15 @@ define([
 
         this.getBranchStatus = function () {
             return state.branchStatus;
+        };
+
+        this.isProjectReadOnly = function () {
+            return state.readOnlyProject;
+        };
+
+        this.isCommitReadOnly = function () {
+            // This means that a specific commit is selected w/o regards to any branch.
+            return state.viewer;
         };
 
         // REST-like functions and forwarded to storage TODO: add these to separate base class
@@ -988,12 +1032,12 @@ define([
                     newCommitObject = storage.makeCommit(
                         state.project.name,
                         state.branchName,
-                        [state.recentCommitHashes[0]],
+                        [state.commit.current],
                         persisted.rootHash,
                         persisted.objects,
                         msg
                     );
-                    addCommit(newCommitObject._id);
+                    addCommit(newCommitObject[CONSTANTS.STORAGE.MONGO_ID]);
                     //undo-redo
                     state.undoRedoChain.addModification(newCommitObject, false);
                     self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
@@ -1011,12 +1055,6 @@ define([
         }
 
         function addCommit(commitHash) {
-            //_clientGlobal.commitCache.newCommit(commitHash); //FIXME: Add me back!
-            state.recentCommitHashes.unshift(commitHash);
-            if (state.recentCommitHashes.length > 100) {
-                state.recentCommitHashes.pop();
-            }
-
             state.commit.previous = state.commit.current;
             state.commit.current = commitHash;
         }

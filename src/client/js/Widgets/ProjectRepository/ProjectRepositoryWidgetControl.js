@@ -21,7 +21,7 @@ define(['js/logger'], function (Logger) {
 
         //override view event handlers
         self._view.onLoadCommit = function (params) {
-            self._client.selectCommitAsync(params.id, function (err) {
+            self._client.selectCommit(params.id, function (err) {
                 if (err) {
                     self._logger.error(err);
                 }
