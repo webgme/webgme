@@ -69,7 +69,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
     });
 
     storage.addEventListener(CONSTANTS.BRANCH_DELETED, function (_s, data) {
-        getEmitter(data).emitter.to(data.projectName).emit(CONSTANTS.BRANCH_DELETED, data);
+        getEmitter(data).to(data.projectName).emit(CONSTANTS.BRANCH_DELETED, data);
     });
 
     storage.addEventListener(CONSTANTS.BRANCH_CREATED, function (_s, data) {

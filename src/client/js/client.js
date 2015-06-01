@@ -128,12 +128,12 @@ define([
             storage.open(function (connectionState) {
                 if (connectionState === CONSTANTS.STORAGE.CONNECTED) {
                     //N.B. this event will only be triggered once.
-                    self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, CONSTANTS.STORAGE.CONNECTED);
+                    self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
                     callback(null);
                 } else if (connectionState === CONSTANTS.STORAGE.DISCONNECTED) {
-                    self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, CONSTANTS.STORAGE.DISCONNECTED);
+                    self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
                 } else if (connectionState === CONSTANTS.STORAGE.RECONNECTED) {
-                    self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, CONSTANTS.STORAGE.CONNECTED);
+                    self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
                 } else { //CONSTANTS.ERROR
                     throw new Error('Connection failed!');
                 }
@@ -257,10 +257,9 @@ define([
 
                         loading(commitObject.root, function (err) {
                             if (err) {
-                                throw new Error(err);
+                                logger.error('loading failed after opening branch', branchName);
                             }
-
-                            callback(null);
+                            callback(err);
                         });
                     }
                 );
@@ -351,7 +350,9 @@ define([
             return state.branchStatus;
         };
 
-        // REST-like functions and watchers forwarded to storage TODO: add these to separate base class
+        // REST-like functions and forwarded to storage TODO: add these to separate base class
+
+        //  Getters
         this.getProjectNames = function (callback) {
             if (state.isConnected()) {
                 storage.getProjectNames(callback);
@@ -366,6 +367,18 @@ define([
             } else {
                 callback(new Error('There is no open database connection!'));
             }
+        };
+
+        this.getBranches = function (projectName, callback) {
+            storage.getBranches(projectName, callback);
+        };
+
+        this.getCommits = function (projectName, before, number, callback) {
+            storage.getCommits(projectName, before, number, callback);
+        };
+
+        this.getLatestCommitData = function (projectName, branchName, callback) {
+            storage.getLatestCommitData(projectName, branchName, callback);
         };
 
         this.getProjectsAndBranches = function (callback) {
@@ -395,12 +408,38 @@ define([
             }
         };
 
+        //  Setters
+        this.createProject = function (projectName, parameters, callback) {
+            storage.createProject(projectName, parameters, callback);
+        };
+
+        this.deleteProject = function (projectName, callback) {
+            storage.deleteProject(projectName, callback);
+        };
+
+        this.createBranch = function (projectName, branchName, newHash, callback) {
+            storage.createBranch(projectName, branchName, newHash, callback);
+        };
+
+        this.deleteBranch = function (projectName, branchName, oldHash, callback) {
+            storage.deleteBranch(projectName, branchName, oldHash, callback);
+        };
+
+        // Watchers (used in e.g. ProjectNavigator).
         this.watchDatabase = function (eventHandler) {
             storage.watchDatabase(eventHandler);
         };
 
         this.unwatchDatabase = function (eventHandler) {
             storage.watchDatabase(eventHandler);
+        };
+
+        this.watchProject = function (projectName, eventHandler) {
+            storage.watchProject(projectName, eventHandler);
+        };
+
+        this.unwatchProject = function (projectName, eventHandler) {
+            storage.unwatchProject(projectName, eventHandler);
         };
 
         // Internal functions

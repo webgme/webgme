@@ -20,6 +20,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.logger = this.logger || logger.fork('storage');
         this.gmeConfig = gmeConfig;
         this.logger.debug('StorageWatcher ctor');
+        this.connected = false;
     }
 
     StorageWatcher.prototype.watchDatabase = function (eventHandler) {
@@ -42,7 +43,9 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.watchers.database -= 1;
         if (this.watchers.database === 0) {
             this.logger.debug('No more watchers will exit database room.');
-            this.webSocket.watchDatabase({join: false});
+            if (this.connected) {
+                this.webSocket.watchDatabase({join: false});
+            }
         } else if (this.watchers.database < 0) {
             this.logger.error('Number of database watchers became negative!');
         }
@@ -76,7 +79,9 @@ define(['common/storage/constants'], function (CONSTANTS) {
         if (this.watchers.projects[projectName] === 0) {
             this.logger.debug('No more watchers will exit project room:', projectName);
             delete this.watchers.projects[projectName];
-            this.webSocket.watchProject({projectName: projectName, join: false});
+            if (this.connected) {
+                this.webSocket.watchProject({projectName: projectName, join: false});
+            }
         } else if (this.watchers.database < 0) {
             this.logger.error('Number of project watchers became negative!:', projectName);
         }

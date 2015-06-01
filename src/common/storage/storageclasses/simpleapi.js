@@ -133,7 +133,12 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     };
 
     // Setters
-    StorageSimpleAPI.prototype.createProject = function (projectName, data, callback) {
+    StorageSimpleAPI.prototype.createProject = function (projectName, parameters, callback) {
+        var data = {
+            projectName: projectName,
+            parameters: parameters
+        };
+
         this.logger.debug('invoking createProject');
         this.webSocket.createProject(data, callback);
     };

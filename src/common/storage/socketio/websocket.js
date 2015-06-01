@@ -49,10 +49,12 @@ define([
                 });
 
                 self.socket.on(CONSTANTS.PROJECT_DELETED, function (data) {
+                    data.etype = CONSTANTS.PROJECT_DELETED;
                     self.dispatchEvent(CONSTANTS.PROJECT_DELETED, data);
                 });
 
                 self.socket.on(CONSTANTS.PROJECT_CREATED, function (data) {
+                    data.etype = CONSTANTS.PROJECT_CREATED;
                     self.dispatchEvent(CONSTANTS.PROJECT_CREATED, data);
                 });
 
@@ -62,10 +64,12 @@ define([
                 });
 
                 self.socket.on(CONSTANTS.BRANCH_DELETED, function (data) {
+                    data.etype = CONSTANTS.BRANCH_DELETED;
                     self.dispatchEvent(CONSTANTS.BRANCH_DELETED + data.projectName, data);
                 });
 
                 self.socket.on(CONSTANTS.BRANCH_HASH_UPDATED, function (data) {
+                    data.etype = CONSTANTS.BRANCH_HASH_UPDATED;
                     self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED + data.projectName, data);
                 });
 

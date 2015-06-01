@@ -160,13 +160,34 @@ define([
 
         // register all event listeners on gmeClient
 
-        self.gmeClient.addEventListener(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, function (/*client*/) {
-            if (self.gmeClient.getNetworkStatus() === CONSTANTS.CLIENT.STORAGE.CONNECTED) {
+        self.gmeClient.addEventListener(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, function (client, networkStatus) {
+            var projectId;
+            self.logger.debug('NETWORK_STATUS_CHANGED', networkStatus);
+            if (networkStatus === CONSTANTS.CLIENT.STORAGE.CONNECTED) {
                 // get project list
                 self.updateProjectList();
+                self.gmeClient.watchDatabase(function (emitter, data) {
+                    self.logger.debug('watchDatabase event', data);
+                    if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_CREATED) {
+                        self.addProject(data.projectName);
+                    } else if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_DELETED) {
+                        self.removeProject(data.projectName);
+                    } else {
+                        self.logger.error('Unexpected event type', data.etype);
+                    }
+                });
+            } else if (networkStatus === CONSTANTS.CLIENT.STORAGE.RECONNECTED) {
+                self.updateProjectList();
+            } else if (networkStatus === CONSTANTS.CLIENT.STORAGE.DISCONNECTED) {
+                if (self.projects) {
+                    for (projectId in self.projects) {
+                        if (self.projects.hasOwnProperty(projectId)) {
+                            self.gmeClient.unwatchProject(self.projects[projectId]._watcher);
+                        }
+                    }
+                }
             } else {
-                // get project list
-                self.logger.warn(self.gmeClient.getNetworkStatus() + ' network status is not handled yet.');
+                self.logger.error('Unexpected network status', networkStatus);
             }
 
         });
@@ -181,7 +202,6 @@ define([
             self.selectProject({});
         });
 
-        //TODO: Plug these in using watchers
         //self.gmeClient.addEventListener(self.gmeClient.events.SERVER_PROJECT_CREATED, function (client, projectId) {
         //    self.logger.debug(self.gmeClient.events.SERVER_PROJECT_CREATED, projectId);
         //    self.addProject(projectId);
@@ -375,13 +395,14 @@ define([
                     onOk: function () {
                         var activeProjectId = self.gmeClient.getActiveProjectName();
 
-                        self.gmeClient.deleteProjectAsync(data.projectId, function (err) {
+                        self.gmeClient.deleteProject(data.projectId, function (err) {
                             if (err) {
-                                self.logger.error(err);
+                                self.logger.error('Failed deleting project', err);
                             } else {
-
                                 if (data.projectId === activeProjectId) {
                                     refreshPage();
+                                } else {
+                                    self.removeProject(data.projectId);
                                 }
 
                             }
@@ -463,10 +484,33 @@ define([
                         showHistory({projectId: projectId});
                     }
                 }
-            ]
+            ],
+            _watcher: function (emitter, data) {
+                var currentProject,
+                    currentBranch;
+                self.logger.debug('watchProject event', projectId, data);
+                if (data.etype === CONSTANTS.CLIENT.STORAGE.BRANCH_CREATED) {
+                    self.addBranch(projectId, data.branchName, data.newHash, true);
+                } else if (data.etype === CONSTANTS.CLIENT.STORAGE.BRANCH_DELETED) {
+                    self.removeBranch(projectId, data.branchName);
+
+                    currentProject = self.$scope.navigator.items[self.navIdProject];
+                    currentBranch = self.$scope.navigator.items[self.navIdBranch];
+                    if (currentBranch === data.branchName && currentProject === projectId) {
+                        //FIXME: This seems wrong, shouldn't it be gmeClient.selectProject??
+                        self.selectProject(projectId);
+                    }
+                } else if (data.etype === CONSTANTS.CLIENT.STORAGE.BRANCH_HASH_UPDATED) {
+                    self.updateBranch(projectId, data.branchName, data.newHash);
+                } else {
+                    self.logger.error('Unexpected event type', data.etype);
+                }
+            }
         };
 
-        if (!self.gmeClient) {
+        if (self.gmeClient) {
+            self.gmeClient.watchProject(projectId, self.projects[projectId]._watcher);
+        } else {
             self.dummyBranchGenerator('Branch', 10, projectId);
         }
 
@@ -549,12 +593,15 @@ define([
                     dialogTitle: 'Confirm delete',
                     dialogContentTemplate: 'DeleteDialogTemplate.html',
                     onOk: function () {
-                        self.gmeClient.deleteGenericBranchAsync(data.projectId,
+                        self.gmeClient.deleteBranch(data.projectId,
                             data.branchId,
                             data.branchInfo,
                             function (err) {
                                 if (err) {
-                                    self.logger.error(err);
+                                    self.logger.error('Failed deleting branch of project.',
+                                        data.projectId, data.branchId, err);
+                                } else {
+                                    self.removeBranch(data.projectId, data.branchId);
                                 }
                             });
                     },
@@ -742,6 +789,7 @@ define([
             i;
 
         if (self.projects.hasOwnProperty(projectId)) {
+            self.gmeClient.unwatchProject(projectId, self.projects[projectId]._watcher);
             delete self.projects[projectId];
 
             for (i = 0; i < self.root.menu.length; i += 1) {

@@ -30,7 +30,6 @@ define([
             projects = {};
 
         self.logger = logger;
-        self.connected = false;
 
         StorageObjectLoaders.call(this, webSocket, mainLogger, gmeConfig);
 

@@ -31,7 +31,8 @@ define([
     };
 
     NetworkStatusWidget.prototype._initializeUI = function () {
-        var self = this;
+        var self = this,
+            initialStatus = this._client.getNetworkStatus();
 
         this._el.empty();
 
@@ -52,19 +53,21 @@ define([
             }
         };
 
-        this._client.addEventListener(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, function (/*__project, state*/) {
-            self._refreshNetworkStatus();
+        this._client.addEventListener(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, function (client, networkStatus) {
+            self._refreshNetworkStatus(networkStatus);
         });
 
-        this._refreshNetworkStatus();
+        this._refreshNetworkStatus(initialStatus);
     };
 
-    NetworkStatusWidget.prototype._refreshNetworkStatus = function () {
-        var status = this._client.getNetworkStatus();
-
+    NetworkStatusWidget.prototype._refreshNetworkStatus = function (status) {
+        this._logger.debug('_refreshNetworkStatus', status);
         switch (status) {
             case CONSTANTS.CLIENT.STORAGE.CONNECTED:
                 this._modeConnected();
+                break;
+            case CONSTANTS.CLIENT.STORAGE.RECONNECTED:
+                this._modeReconnected();
                 break;
             case CONSTANTS.CLIENT.STORAGE.DISCONNECTED:
                 this._modeDisconnected();
@@ -75,6 +78,18 @@ define([
     NetworkStatusWidget.prototype._modeConnected = function () {
         this._ddNetworkStatus.clear();
         this._ddNetworkStatus.setTitle('CONNECTED');
+        this._ddNetworkStatus.setColor(DropDownMenu.prototype.COLORS.GREEN);
+
+        if (this._disconnected === true) {
+            this._popoverBox.show('Connected to the server',
+                this._popoverBox.alertLevels.SUCCESS, true);
+            delete this._disconnected;
+        }
+    };
+
+    NetworkStatusWidget.prototype._modeReconnected = function () {
+        this._ddNetworkStatus.clear();
+        this._ddNetworkStatus.setTitle('RECONNECTED');
         this._ddNetworkStatus.setColor(DropDownMenu.prototype.COLORS.GREEN);
 
         if (this._disconnected === true) {

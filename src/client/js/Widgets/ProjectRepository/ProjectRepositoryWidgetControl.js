@@ -31,7 +31,8 @@ define(['js/logger'], function (Logger) {
         };
 
         self._view.onDeleteBranchClick = function (branch) {
-            self._client.deleteBranchAsync(branch, function (err) {
+            var projectName = self._client.getActiveProjectName();
+            self._client.deleteBranch(projectName, branch, function (err) {
                 if (err) {
                     self._logger.error(err);
                 }
@@ -42,7 +43,9 @@ define(['js/logger'], function (Logger) {
         };
 
         self._view.onCreateBranchFromCommit = function (params) {
-            self._client.createBranchAsync(
+            var projectName = self._client.getActiveProjectName();
+            self._client.createBranch(
+                projectName,
                 params.name,
                 params.commitId,
                 function (err) {
@@ -64,10 +67,10 @@ define(['js/logger'], function (Logger) {
     };
 
     RepositoryLogControl.prototype._loadMoreCommits = function (num) {
-        var commits = null,
+        var self = this,
+            commits = null,
             com,
-            commitsLoaded,
-            self = this;
+            commitsLoaded;
 
         commitsLoaded = function (err, data) {
             var i,
@@ -133,29 +136,28 @@ define(['js/logger'], function (Logger) {
     };
 
     RepositoryLogControl.prototype._refreshBranches = function () {
-        var self = this;
+        var self = this,
+            projectName = self._client.getActiveProjectName();
 
         self._view.clearBranches();
 
-        self._client.getBranchesAsync(function (err, data) {
-            var i;
+        self._client.getBranches(projectName, function (err, data) {
+            var i,
+                branchNames;
 
-            self._logger.debug('branchesLoaded, err: \'' + err + '\', data: ' + data ? data.length : 'null');
+            self._logger.debug('getBranches: err, data: ', err, data);
 
             if (err) {
                 self._logger.error(err);
+                return;
             }
-            if (data && data.length) {
-                //set view's branch info
-                i = data.length;
-
-                while (i--) {
-                    self._view.addBranch({
-                        name: data[i].name,
-                        commitId: data[i].commitId,
-                        sync: data[i].sync
-                    });
-                }
+            branchNames = Object.keys(data);
+            for (i = 0; i < branchNames.length; i += 1) {
+                self._view.addBranch({
+                    name: branchNames[i],
+                    commitId: data[branchNames[i]],
+                    sync: true, //data[i].sync TODO: does this matter?
+                });
             }
         });
     };
