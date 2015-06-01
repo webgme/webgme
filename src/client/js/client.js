@@ -461,6 +461,10 @@ define([
             return state.branchName;
         };
 
+        this.getActiveCommitHash = function () {
+            return state.commit.current;
+        };
+
         this.getBranchStatus = function () {
             return state.branchStatus;
         };

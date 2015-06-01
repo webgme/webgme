@@ -89,7 +89,7 @@ define([
             self = this;
 
         branchesLoaded = function (err, data) {
-            var actualbranch = self._client.getActualBranch(),
+            var actualbranch = self._client.getActiveBranchName(),
                 i;
 
             if (self._timeoutID) {
@@ -124,7 +124,7 @@ define([
     };
 
     BranchSelectorWidget.prototype._refreshActualBranchInfo = function () {
-        var branch = this._client.getActualBranch();
+        var branch = this._client.getActiveBranchName();
 
         if (branch === undefined || branch === null) {
             this._ddBranches.setTitle(NO_BRANCH_TEXT);

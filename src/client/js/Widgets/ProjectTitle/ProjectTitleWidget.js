@@ -44,7 +44,7 @@ define(['js/logger', 'css!./styles/ProjectTitleWidget.css'], function (Logger) {
     ProjectTitleWidget.prototype._refresh = function () {
         var client = this._client,
             actualProject = client.getActiveProjectName(),
-            actualBranch = client.getActualBranch(),
+            actualBranch = client.getActiveBranchName(),
             readOnly = client.isProjectReadOnly() || client.isCommitReadOnly(),
             titleText = actualProject + ' @ ' + actualBranch,
             documentTitle = titleText + (readOnly ? ' [READ-ONLY]' : '');

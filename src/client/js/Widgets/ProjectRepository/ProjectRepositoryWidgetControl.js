@@ -128,11 +128,14 @@ define(['js/logger'], function (Logger) {
 
         self._view.showProgressbar();
 
-        self._client.getCommitsAsync(this._lastCommitID, num, commitsLoaded);
+        self._client.getCommits(self._client.getActiveProjectName(),
+            this._lastCommitID || (new Date()).getTime() + 1,
+            num,
+            commitsLoaded);
     };
 
     RepositoryLogControl.prototype._refreshActualCommit = function () {
-        this._view.setActualCommitId(this._client.getActualCommit());
+        this._view.setActualCommitId(this._client.getActiveCommitHash());
     };
 
     RepositoryLogControl.prototype._refreshBranches = function () {
