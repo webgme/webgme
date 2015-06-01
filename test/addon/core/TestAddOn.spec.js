@@ -15,10 +15,19 @@ describe('TestAddOn', function () {
         server,
         storage,
         project,
-        importParam,
         gmeConfig = testFixture.getGmeConfig(),
+        importParam = {
+            projectSeed: './test/addon/core/TestAddOn/project.json',
+            projectName: 'TestAddOn',
+            branchName: 'master',
+            gmeConfig: gmeConfig,
+            logger: logger
+        },
         addOnName = 'TestAddOn',
-        TestAddOn = testFixture.requirejs('addon/' + addOnName + '/' + addOnName + '/' + addOnName);
+        TestAddOn = testFixture.requirejs('addon/' + addOnName + '/' + addOnName + '/' + addOnName),
+
+        safeStorage,
+        gmeAuth;
 
     before(function (done) {
         server = WebGME.standaloneServer(gmeConfig);
@@ -33,7 +42,20 @@ describe('TestAddOn', function () {
             //    webGMESessionId: 'testopencontext'
             //});
             //storage = storage;
-            done();
+            storage.open(function () {
+                console.log(arguments);
+            });
+
+            testFixture.clearDBAndGetGMEAuth(gmeConfig, importParam.projectName)
+                .then(function (gmeAuth_) {
+                    gmeAuth = gmeAuth_;
+                    safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                    return safeStorage.openDatabase();
+                })
+                .then(function () {
+                    return safeStorage.deleteProject({projectName: importParam.projectName});
+                })
+                .nodeify(done);
         });
     });
 
@@ -51,21 +73,15 @@ describe('TestAddOn', function () {
     });
 
     it('should start, update and stop', function (done) {
-        importParam = {
-            projectSeed: './test/addon/core/TestAddOn/project.json',
-            projectName: 'TestAddOn',
-            branchName: 'master',
-            gmeConfig: gmeConfig,
-            logger: logger
-        };
-        testFixture.importProject(storage, importParam, function (err, result) {
+
+        testFixture.importProject(safeStorage, importParam, function (err, result) {
             var startParam,
                 logMessages = [],
-                logger = logger.fork(addOnName),
+                logger2 = logger.fork(addOnName),
                 addOn;
             expect(err).equal(null);
 
-            logger.info = function () {
+            logger2.info = function () {
                 logMessages.push(arguments);
             };
 
@@ -77,7 +93,7 @@ describe('TestAddOn', function () {
                 projectName: 'TestAddOn',
                 branchName: 'master',
                 project: project,
-                logger: logger
+                logger: logger2
             };
 
             addOn.start(startParam, function (err) {
