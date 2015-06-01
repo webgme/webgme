@@ -220,11 +220,42 @@ Storage.prototype.loadObjects = function (data, callback) {
 };
 
 Storage.prototype.getCommits = function (data, callback) {
-    return this.mongo.openProject(data.projectName)
+    var self = this,
+        deferred = Q.defer(),
+        loadCommit = typeof data.before === 'string';
+
+    self.logger.debug('getCommits input:', {metadata: data});
+
+    this.mongo.openProject(data.projectName)
         .then(function (project) {
-            return project.getCommits(data.before, data.number);
+            if (loadCommit) {
+                self.logger.debug('commitHash was given will load commit', data.before);
+                project.loadObject(data.before)
+                    .then(function (commitObject) {
+                        return project.getCommits(commitObject.time + 1, data.number);
+                    })
+                    .then(function (commits) {
+                        deferred.resolve(commits);
+                    })
+                    .catch(function (err) {
+                        deferred.reject(err);
+                    });
+            } else {
+                self.logger.debug('timestamp was given will call project.getCommits', data.before);
+                project.getCommits(data.before, data.number)
+                    .then(function (commits) {
+                        deferred.resolve(commits);
+                    })
+                    .catch(function (err) {
+                        deferred.reject(err);
+                    });
+            }
         })
-        .nodeify(callback);
+        .catch(function (err) {
+            deferred.reject(err);
+        });
+
+    return deferred.promise.nodeify(callback);
 };
 
 Storage.prototype.getBranchHash = function (data, callback) {
@@ -257,6 +288,7 @@ Storage.prototype.setBranchHash = function (data, callback) {
 
                     if (data.hasOwnProperty('socket')) {
                         eventData.socket = data.socket;
+                        fullEventData.socket = data.socket;
                     }
 
                     if (data.oldHash === '' && data.newHash !== '') {

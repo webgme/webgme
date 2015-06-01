@@ -91,9 +91,10 @@ function Memory(mainLogger, gmeConfig) {
 
             if (object) {
                 object = JSON.parse(object);
+                deferred.resolve(object);
+            } else {
+                deferred.reject('object does not exist ' + hash);
             }
-
-            deferred.resolve(object);
 
             return deferred.promise.nodeify(callback);
         };

@@ -334,7 +334,11 @@ SafeStorage.prototype.getBranches = function (data, callback) {
 
 /**
  * Authorization: read access for data.projectName
- * @param data
+ * @param {object} - data
+ * @param {string} - data.projectName
+ * @param {number} - data.number - Number of commits to load.
+ * @param {string|number} - data.before - Timestamp or commitHash to load history from. When number given it will load
+ *  data.number of commits strictly before data.before, when commitHash given it will return that commit too.
  * @param callback
  * @returns {*}
  */
@@ -347,8 +351,14 @@ SafeStorage.prototype.getCommits = function (data, callback) {
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
-    check(typeof data.before === 'number', deferred, 'data.before is not a number') ||
+    check(typeof data.before === 'number' || typeof data.before === 'string', deferred,
+        'data.before is not a number nor string') ||
     check(typeof data.number === 'number', deferred, 'data.number is not a number');
+
+    if (typeof data.before === 'string') {
+        rejected = rejected || check(REGEXP.HASH.test(data.before), deferred,
+            'data.before is not a number nor a valid hash.');
+    }
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');

@@ -10,7 +10,7 @@ describe('Mongo storage', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
-        logger = testFixture.logger.fork('memory'),
+        logger = testFixture.logger.fork('mongo'),
         Q = testFixture.Q,
         projectName = 'newProject',
         projectDoesNotHaveAccessName = projectName + '_does_not_have_access',
@@ -43,14 +43,6 @@ describe('Mongo storage', function () {
     after(function (done) {
         Q.all([
             gmeAuth.unload()
-        ])
-            .nodeify(done);
-    });
-
-    beforeEach(function (done) {
-        Q.all([
-            storage.deleteProject({projectName: projectName}),
-            storage.deleteProject({projectName: projectDoesNotHaveAccessName})
         ])
             .nodeify(done);
     });
@@ -173,6 +165,14 @@ describe('Mongo storage', function () {
 
 
     describe('project operations', function () {
+
+        beforeEach(function (done) {
+            Q.all([
+                storage.deleteProject({projectName: projectName}),
+                storage.deleteProject({projectName: projectDoesNotHaveAccessName})
+            ])
+                .nodeify(done);
+        });
 
         it('should fail to open a project if not connected to database', function (done) {
             var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
@@ -479,7 +479,7 @@ describe('Mongo storage', function () {
         var project,
             mongoStorage;
 
-        before(function (done) {
+        beforeEach(function (done) {
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
@@ -504,7 +504,7 @@ describe('Mongo storage', function () {
         });
 
         it('should getBranches', function (done) {
-            project.getBranches({projectName: projectName})
+            project.getBranches()
                 .then(function (branches) {
                     expect(branches).to.have.property('master');
                     done();
@@ -640,7 +640,7 @@ describe('Mongo storage', function () {
                     done(new Error('should have failed'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
+                    if (err === "branch hash mismatch") {
                         // TODO: check error message
                         done();
                     } else {
@@ -666,7 +666,7 @@ describe('Mongo storage', function () {
                     done(new Error('should have failed'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
+                    if (err === "branch hash mismatch") {
                         // TODO: check error message
                         done();
                     } else {
