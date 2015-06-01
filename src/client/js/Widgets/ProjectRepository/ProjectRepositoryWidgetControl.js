@@ -30,9 +30,9 @@ define(['js/logger'], function (Logger) {
             });
         };
 
-        self._view.onDeleteBranchClick = function (branch) {
+        self._view.onDeleteBranchClick = function (branchName, oldHash) {
             var projectName = self._client.getActiveProjectName();
-            self._client.deleteBranch(projectName, branch, function (err) {
+            self._client.deleteBranch(projectName, branchName, oldHash, function (err) {
                 if (err) {
                     self._logger.error(err);
                 }

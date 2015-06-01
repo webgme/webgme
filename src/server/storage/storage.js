@@ -146,7 +146,7 @@ Storage.prototype.makeCommit = function (data, callback) {
                                                 };
                                             if (data.hasOwnProperty('socket')) {
                                                 eventData.socket = data.socket;
-                                                hashEventData.socket = data.socket;
+                                                //hashEventData.socket = data.socket;
                                             }
                                             result.status = CONSTANTS.SYNCH;
                                             self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, hashEventData);
@@ -287,7 +287,7 @@ Storage.prototype.setBranchHash = function (data, callback) {
                     };
 
                     if (data.hasOwnProperty('socket')) {
-                        eventData.socket = data.socket;
+                        //eventData.socket = data.socket;
                         fullEventData.socket = data.socket;
                     }
 

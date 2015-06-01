@@ -490,7 +490,7 @@ define([
                     currentBranch;
                 self.logger.debug('watchProject event', projectId, data);
                 if (data.etype === CONSTANTS.CLIENT.STORAGE.BRANCH_CREATED) {
-                    self.addBranch(projectId, data.branchName, data.newHash, true);
+                    self.addBranch(projectId, data.branchName, data.newHash);
                 } else if (data.etype === CONSTANTS.CLIENT.STORAGE.BRANCH_DELETED) {
                     self.removeBranch(projectId, data.branchName);
 
