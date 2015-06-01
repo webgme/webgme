@@ -89,6 +89,7 @@ define(['js/Loader/LoaderCircles',
         // get seed project list
         self._loader.start();
         self._client.getSeedInfoAsync(function (err, data) {
+            //TODO: Client needs this function
             var i,
                 defaultOption;
 
@@ -108,7 +109,7 @@ define(['js/Loader/LoaderCircles',
                     }
                 }
 
-                self._client.getFullProjectsInfoAsync(function (err, projectList) {
+                self._client.getProjectsAndBranches(function (err, projectList) {
                     var projectId,
                         branchId,
                         proojectGroup;

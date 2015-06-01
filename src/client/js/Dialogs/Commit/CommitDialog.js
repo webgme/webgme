@@ -44,7 +44,7 @@ define([
 
     CommitDialog.prototype._initDialog = function () {
         var self = this,
-            actualBranchName = this._client.getActualBranch();
+            actualBranchName = this._client.getActiveBranchName();
 
         this._dialog = $(commitDialogTemplate);
 

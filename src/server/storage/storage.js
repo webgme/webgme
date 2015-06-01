@@ -247,22 +247,41 @@ Storage.prototype.setBranchHash = function (data, callback) {
                         branchName: data.branchName,
                         newHash: data.newHash,
                         oldHash: data.oldHash
+                    },
+                    fullEventData = {
+                        projectName: data.projectName,
+                        branchName: data.branchName,
+                        commitObject: null,
+                        coreObjects: []
                     };
 
                     if (data.hasOwnProperty('socket')) {
                         eventData.socket = data.socket;
                     }
+
                     if (data.oldHash === '' && data.newHash !== '') {
                         self.dispatchEvent(CONSTANTS.BRANCH_CREATED, eventData);
+                        deferred.resolve({status: CONSTANTS.SYNCH});
                     } else if (data.newHash === '' && data.oldHash !== '') {
                         self.dispatchEvent(CONSTANTS.BRANCH_DELETED, eventData);
+                        deferred.resolve({status: CONSTANTS.SYNCH});
                     } else if (data.newHash !== '' && data.oldHash !== '') {
-                        self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
-                        // TODO: This should dispatch a BRANCH_UPDATED event too with the necessary data.
-                        // TODO: However this case should only happen when a plugin created a branch and
-                        // TODO: saves to it more than once.
+                        // Load the necessary objects for BRANCH_UPDATED event.
+                        project.loadObject(data.newHash)
+                            .then(function (commitObject) {
+                                fullEventData.commitObject = commitObject;
+                                return project.loadObject(commitObject.root);
+                            })
+                            .then(function (rootObject) {
+                                fullEventData.coreObjects.push(rootObject);
+                                self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
+                                self.dispatchEvent(CONSTANTS.BRANCH_UPDATED, fullEventData);
+                                deferred.resolve({status: CONSTANTS.SYNCH});
+                            })
+                            .catch(function (err) {
+                                deferred.reject(new Error('Failed loading objects for events' + err));
+                            });
                     }
-                    deferred.resolve({status: CONSTANTS.SYNCH});
                 })
                 .catch(function (err) {
                     if (err === 'branch hash mismatch' || err.message === 'branch has mismatch') {
