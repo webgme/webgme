@@ -546,6 +546,131 @@ describe('Mongo storage', function () {
                 .catch(done);
         });
 
+        it('should fail to load object if hash is not given', function (done) {
+            project.loadObject()
+                .then(function (/* node */) {
+                    done(new Error('should have failed to loadObject'));
+                })
+                .catch(function (err) {
+                    if (err === 'loadObject - given hash is not a string : undefined') {
+                        // TODO: check error message
+                        done();
+                    } else {
+                        done(new Error('should have failed to loadObject'));
+                    }
+                });
+        });
+
+        it('should fail to load object if hash is an object', function (done) {
+            project.loadObject({})
+                .then(function (/* node */) {
+                    done(new Error('should have failed to loadObject'));
+                })
+                .catch(function (err) {
+                    if (err === 'loadObject - given hash is not a string : object') {
+                        // TODO: check error message
+                        done();
+                    } else {
+                        done(new Error('should have failed to loadObject'));
+                    }
+                });
+        });
+
+        it('should fail to load object if hash is invalid', function (done) {
+            project.loadObject('invalid')
+                .then(function (/* node */) {
+                    done(new Error('should have failed to loadObject'));
+                })
+                .catch(function (err) {
+                    if (err === 'loadObject - invalid hash :invalid') {
+                        // TODO: check error message
+                        done();
+                    } else {
+                        done(new Error('should have failed to loadObject'));
+                    }
+                });
+        });
+
+        it('should fail to load object if hash is not found', function (done) {
+            project.loadObject('#123')
+                .then(function (/* node */) {
+                    done(new Error('should have failed to loadObject'));
+                })
+                .catch(function (err) {
+                    if (err === 'object does not exist #123') {
+                        // TODO: check error message
+                        done();
+                    } else {
+                        done(new Error('should have failed to loadObject'));
+                    }
+                });
+        });
+
+        it('should fail to insert object if argument is not an object', function (done) {
+            project.insertObject('blabla')
+                .then(function (/* node */) {
+                    done(new Error('should have failed to insertObject'));
+                })
+                .catch(function (err) {
+                    if (err === 'object is not an object') {
+                        // TODO: check error message
+                        done();
+                    } else {
+                        done(new Error('should have failed to insertObject'));
+                    }
+                });
+        });
+
+        it('should fail to insert object if argument\'s _id is not a valid hash', function (done) {
+            project.insertObject({_id: 'blabla'})
+                .then(function (/* node */) {
+                    done(new Error('should have failed to insertObject'));
+                })
+                .catch(function (err) {
+                    if (err === 'object._id is not a valid hash.') {
+                        // TODO: check error message
+                        done();
+                    } else {
+                        done(new Error('should have failed to insertObject'));
+                    }
+                });
+        });
+
+        it('should insert object', function (done) {
+            project.insertObject({_id: '#blabla', num: 42, str: '35', arr: ['', 'ss']})
+                .then(done)
+                .catch(done);
+        });
+
+        it('should insert object multiple times if the content is the same', function (done) {
+            Q.all([
+                project.insertObject({_id: '#blabla22', num: 42, str: '35', arr: ['', 'ss']}),
+                project.insertObject({_id: '#blabla22', num: 42, str: '35', arr: ['', 'ss']})
+                ])
+                .then(function () {
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should fail to insert object multiple times if the content is different', function (done) {
+            Q.all([
+                project.insertObject({_id: '#blabla223', num: 42, str: '35', arr: ['', 'ss']}),
+                project.insertObject({_id: '#blabla223', num: 4200, str: 'different', arr: ['', 'ss']})
+            ])
+                .then(function () {
+                    done(new Error('should have failed to insertObject'));
+                })
+                .catch(function (err) {
+                    if (err && err.code === 11000) {
+                        // TODO: check error message
+                        done();
+                    } else {
+                        done(new Error('should have failed to insertObject'));
+                    }
+                });
+        });
+
         it('should getBranchHash', function (done) {
             project.getBranchHash('master', '')
                 .then(function (hash) {

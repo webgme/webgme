@@ -30,17 +30,19 @@ function Mongo(mainLogger, gmeConfig) {
         this.name = name;
 
         this.closeProject = function (callback) {
+            var deferred = Q.defer();
             //TODO: Does this really do something?
             collection = null;
-            if (typeof callback === 'function') {
-                callback(null);
-            }
+            deferred.resolve();
+            return deferred.promise.nodeify(callback);
         };
 
         this.loadObject = function (hash, callback) {
             var deferred = Q.defer();
-            if (typeof hash !== 'string' || !REGEXP.HASH.test(hash)) {
-                deferred.reject('loadObject - invalid hash :' + hash.toString());
+            if (typeof hash !== 'string') {
+                deferred.reject('loadObject - given hash is not a string : ' + typeof hash);
+            } else if (!REGEXP.HASH.test(hash)) {
+                deferred.reject('loadObject - invalid hash :' + hash);
             } else {
                 logger.debug('loadObject ' + hash);
                 collection.findOne({_id: hash}, function (err, obj) {
