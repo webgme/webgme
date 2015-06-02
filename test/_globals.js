@@ -59,7 +59,7 @@ var WebGME = require('../webgme'),
 
     ExecutorClient = requireJS('common/executor/ExecutorClient'),
     BlobClient = requireJS('blob/BlobClient'),
-    openContext = requireJS('common/util/opencontext'),
+    openContext = require('../src/server/util/opencontext'),
     Project = require('../src/server/storage/userproject'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
 
@@ -371,5 +371,5 @@ module.exports = {
     saveChanges: saveChanges,
 
     STORAGE_CONSTANTS: STORAGE_CONSTANTS,
-    openContext: openContext
+    openContext: openContext.openContext
 };

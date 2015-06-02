@@ -12,7 +12,7 @@ describe('import CLI tests', function () {
         expect = testFixture.expect,
         WebGME = testFixture.WebGME,
         importCLI = require('../../src/bin/import'),
-        openContext = testFixture.requirejs('common/util/opencontext'),
+        openContext = testFixture.openContext,
         projectName,
         logger = testFixture.logger.fork('import.spec'),
         storage,
@@ -21,17 +21,9 @@ describe('import CLI tests', function () {
         jsonProject;
 
     function closeContext(callback) {
-        try {
-            project.closeProject(function () {
-                storage.closeDatabase(function (err) {
-                    callback(err);
-                });
-            });
-        } catch (err) {
-            storage.closeDatabase(function () {
-                callback(err);
-            });
-        }
+        storage.closeDatabase(function (err) {
+            callback(err);
+        });
     }
 
     before(function (done) {
@@ -48,13 +40,7 @@ describe('import CLI tests', function () {
 
     afterEach(function (done) {
         if (project && projectName) {
-            project.closeProject(function (err1) {
-                storage.deleteProject(projectName, function (err2) {
-                    storage.closeDatabase(function (err3) {
-                        done(err1 || err2 || err3 || null);
-                    });
-                });
-            });
+            storage.deleteProject({projectName: projectName}, done);
         } else {
             done();
         }
@@ -63,17 +49,17 @@ describe('import CLI tests', function () {
     it('should import non-existing project with unspecified branch into master', function (done) {
         var nodePath = '/960660211/1365653822',
             contextParam = {
-            projectName: 'importTestNumber1',
-            branchName: 'master',
-            nodePaths: [nodePath]
-        };
+                projectName: 'importTestNumber1',
+                branchName: 'master',
+                nodePaths: [nodePath]
+            };
         importCLI.import(storage, gmeConfig, contextParam.projectName, jsonProject, null, true, undefined,
             function (err, data) {
                 expect(err).to.equal(null);
 
                 expect(typeof data).to.equal('object');
                 expect(typeof data.commitHash).to.equal('string');
-                /*openContext(storage, gmeConfig, testFixture.logger, contextParam, function (err, context) {
+                openContext(storage, gmeConfig, testFixture.logger, contextParam, function (err, context) {
                     expect(err).to.equal(null);
                     expect(context.commitHash).to.equal(data.commitHash);
                     expect(context.nodes).to.have.keys(nodePath);
@@ -81,8 +67,7 @@ describe('import CLI tests', function () {
                     projectName = contextParam.projectName;
                     project = context.project;
                     done();
-                });*/
-                done();
+                });
             }
         );
     });
@@ -90,10 +75,10 @@ describe('import CLI tests', function () {
     it('should import non-existing project with specified branch', function (done) {
         var nodePath = '/960660211/1365653822',
             contextParam = {
-            projectName: 'importTestNumber2',
-            branchName: 'b1',
-            nodePaths: [nodePath]
-        };
+                projectName: 'importTestNumber2',
+                branchName: 'b1',
+                nodePaths: [nodePath]
+            };
         importCLI.import(storage,
             gmeConfig, contextParam.projectName, jsonProject, contextParam.branchName, true, undefined,
             function (err, data) {
@@ -101,7 +86,7 @@ describe('import CLI tests', function () {
 
                 expect(typeof data).to.equal('object');
                 expect(typeof data.commitHash).to.equal('string');
-                /*openContext(storage, gmeConfig, testFixture.logger, contextParam, function (err, context) {
+                openContext(storage, gmeConfig, testFixture.logger, contextParam, function (err, context) {
                     expect(err).to.equal(null);
                     expect(context.commitHash).to.equal(data.commitHash);
                     expect(context.nodes).to.have.keys(nodePath);
@@ -109,8 +94,7 @@ describe('import CLI tests', function () {
                     projectName = contextParam.projectName;
                     project = context.project;
                     done();
-                });*/
-                done();
+                });
             }
         );
     });
@@ -131,7 +115,7 @@ describe('import CLI tests', function () {
                 expect(typeof data).to.equal('object');
                 expect(typeof data.commitHash).to.equal('string');
 
-                /*openContext(storage, gmeConfig, testFixture.logger, contextParam, function (err, context) {
+                openContext(storage, gmeConfig, testFixture.logger, contextParam, function (err, context) {
                     expect(err).to.equal(null);
 
                     expect(context.commitHash).to.equal(data.commitHash);
@@ -144,7 +128,8 @@ describe('import CLI tests', function () {
                     closeContext(function (err) {
                         expect(err).to.equal(null);
 
-                        importCLI.import(storage, gmeConfig, contextParam.projectName, jsonProject, null, true,
+                        importCLI.import(storage,
+                            gmeConfig, contextParam.projectName, jsonProject, null, true, undefined,
                             function (err, data) {
                                 expect(err).to.equal(null);
 
@@ -169,8 +154,7 @@ describe('import CLI tests', function () {
                             }
                         );
                     });
-                });*/
-                done();
+                });
             }
         );
     });
