@@ -289,7 +289,7 @@ define([
                 branch.updateHashes(commitData.commitObject[CONSTANTS.MONGO_ID], null);
                 branch.queueCommit(commitData);
                 if (branch.getCommitQueue().length === 1) {
-                    self._pushNextQueuedCommit(projectName, branchName, commitData, callback);
+                    self._pushNextQueuedCommit(projectName, branchName, callback);
                 }
             } else {
                 ASSERT(typeof callback === 'function', 'Making commit without updating branch requires a callback.');

@@ -54,7 +54,15 @@ define([
         };
 
         this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
-            storage.makeCommit(self.name, branchName, parents, rootHash, coreObjects, msg, callback);
+            return storage.makeCommit(self.name, branchName, parents, rootHash, coreObjects, msg, callback);
+        };
+
+        this.getBranches = function (callback) {
+            storage.getBranches(self.name, callback);
+        };
+
+        this.getCommits = function (before, number, callback) {
+            storage.getCommits(this.name, before, number, callback);
         };
 
         // Functions forwarded to project cache.

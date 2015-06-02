@@ -286,7 +286,7 @@ define([
                         commitObject = latestCommit.commitObject;
                         logger.debug('Branch opened latestCommit', latestCommit);
 
-                        addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
+                        //addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
 
                         //undo-redo
                         logger.debug('changing branch - cleaning undo-redo chain');
@@ -304,6 +304,8 @@ define([
                         loading(commitObject.root, function (err) {
                             if (err) {
                                 logger.error('loading failed after opening branch', branchName);
+                            } else {
+                                addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
                             }
                             callback(err);
                         });
@@ -338,9 +340,22 @@ define([
                 self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
                 state.project.loadObject(commitHash, function (err, commitObj) {
                     if (!err && commitObj) {
-                        addCommit(commitObj[CONSTANTS.STORAGE.MONGO_ID]);
-                        logState('info', 'selectCommit');
-                        loading(commitObj.root, callback);
+                        logState('info', 'selectCommit loaded commit');
+                        loading(commitObj.root, function (err, aborted) {
+                            if (err) {
+                                logger.error('loading returned error', commitObj.root, err);
+                                logState('error', 'selectCommit loading');
+                                callback(true);
+                            } else if (aborted === true) {
+                                logState('warn', 'selectCommit loading');
+                                callback(true);
+                            } else {
+                                addCommit(commitHash);
+                                logger.debug('loading complete for selectCommit rootHash', commitObj.root);
+                                logState('info', 'selectCommit loading');
+                                callback(false);
+                            }
+                        });
                     } else {
                         logger.error('Cannot view given ' + commitHash + ' commit as it\'s root cannot be loaded! [' +
                         JSON.stringify(err) + ']');
@@ -411,10 +426,10 @@ define([
                     if (err) {
                         logger.error('updatehandler invoked loading and it returned error',
                             eventData.commitObject.root, err);
-                        logState('info', 'updateHandler');
+                        logState('error', 'updateHandler');
                         callback(true);
                     } else if (aborted === true) {
-                        logState('info', 'updateHandler');
+                        logState('warn', 'updateHandler');
                         callback(true);
                     } else {
                         addCommit(commitHash);
@@ -443,6 +458,10 @@ define([
             return state.commit.current;
         };
 
+        this.getActiveRootHash = function () {
+            return state.root.current;
+        };
+
         this.getBranchStatus = function () {
             return state.branchStatus;
         };
@@ -454,6 +473,10 @@ define([
         this.isCommitReadOnly = function () {
             // This means that a specific commit is selected w/o regards to any branch.
             return state.viewer;
+        };
+
+        this.getProjectObject = function () {
+            return state.project;
         };
 
         // Undo/Redo functionality

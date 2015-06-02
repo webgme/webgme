@@ -100,8 +100,7 @@ define([
             client = new Client(gmeConfig);
             WebGMEGlobal.Client = client;
 
-            //TODO: Add this back
-            //WebGMEGlobal.InterpreterManager = new InterpreterManager(client, gmeConfig);
+            WebGMEGlobal.InterpreterManager = new InterpreterManager(client, gmeConfig);
 
             Object.defineProperty(WebGMEGlobal, 'State', {
                     value: StateManager.initialize(),
