@@ -1,4 +1,4 @@
-/*jshint node: true*/
+/* jshint node:true */
 /**
  * @author kecso / https://github.com/kecso
  */
@@ -9,81 +9,163 @@ var webgme = require('../../webgme'),
     program = require('commander'),
     FS = require('fs'),
     path = require('path'),
+    Project = require('../../src/server/storage/userproject'),
+
     openContext,
     Serialization,
     jsonProject,
     gmeConfig = require(path.join(process.cwd(), 'config')),
+    gmeAuth,
+    project,
     logger = webgme.Logger.create('gme:bin:import', gmeConfig.bin.log),
     REGEXP = webgme.REGEXP,
     openContext = webgme.openContext,
-    Serialization = webgme.serializer;
+    Serialization = webgme.serializer,
 
-
-var importProject = function (Storage, _gmeConfig, projectId, jsonProject, branchName, overwrite, callback) {
-    var storage,
-        project,
-        contextParams,
-        closeContext = function (error, data) {
-            try {
-                project.closeProject(function () {
+    importProject = function (storage, _gmeConfig, projectId, jsonProject, branchName, overwrite, callback) {
+        var project,
+            core,
+            oldRoot,
+            username = 'kecso',
+            projectNamesData = {username: 'guest'},
+            oldCommitHash,
+            contextParams,
+            closeContext = function (error, data) {
+                try {
+                    project.closeProject(function () {
+                        storage.closeDatabase(function () {
+                            callback(error, data);
+                        });
+                    });
+                } catch (err) {
                     storage.closeDatabase(function () {
                         callback(error, data);
                     });
-                });
-            } catch (err) {
-                storage.closeDatabase(function () {
-                    callback(error, data);
-                });
-            }
+                }
+            };
+
+
+        branchName = branchName || 'master';
+
+        contextParams = {
+            projectName: projectId,
+            createProject: true,
+            overwriteProject: overwrite,
+            branchName: branchName
         };
+        storage.openDatabase()
+            .then(function () {
+                return storage.getProjectNames({username: username});
+            })
+            .then(function (names) {
+                if (names.indexOf(projectId) !== -1) {
+                    if (!overwrite) {
+                        closeContext(new Error('project already exists'));
+                        return;
+                    }
+                    return storage.openProject({projectName: projectId});
+                }
+                return storage.createProject({username: username, projectName: projectId});
+            })
+            .then(function (dbProject) {
+                project = new Project(dbProject, storage, logger, gmeConfig);
+                project.setUser(username);
+                return storage.getBranchHash({
+                    username: username,
+                    projectName: projectId,
+                    branchName: branchName
+                });
+            })
+            .then(function (commitHash) {
+                //we do not need the commit hash - we start by creating an empty root object,
+                // then calling the serializer
+                var persisted,
+                    root;
 
+                core = new webgme.core(project, {
+                    globConf: gmeConfig,
+                    logger: logger.fork('core')
+                });
 
-    storage = new Storage({globConf: _gmeConfig, logger: logger.fork('storage')});
-    branchName = branchName || 'master';
-
-    contextParams = {
-        projectName: projectId,
-        createProject: true,
-        overwriteProject: overwrite,
-        branchName: branchName
-    };
-
-    openContext(storage, _gmeConfig, logger, contextParams, function (err, context) {
-        if (err) {
-            callback(err);
-            return;
-        }
-        project = context.project;
-        Serialization.import(context.core, context.rootNode, jsonProject, function (err) {
-            if (err) {
-                closeContext(err);
-                return;
-            }
-            context.core.persist(context.rootNode, function () {
-                project.makeCommit([], context.core.getHash(context.rootNode), 'project imported by import.js CLI',
-                    function (err, commitHash) {
-                        project.getBranchHash(branchName, '#hack', function (err, oldBranchHash) {
+                root = core.createNode({parent: null, base: null});
+                Serialization.import(core, root, jsonProject, function (err) {
+                    if (err) {
+                        closeContext(err);
+                        return;
+                    }
+                    persisted = core.persist(root);
+                    project.makeCommit(null,
+                        [],
+                        persisted.rootHash,
+                        persisted.objects,
+                        'project imported by import.js CLI',
+                        function (err, commitResult) {
                             if (err) {
-                                closeContext('project imported to commit: ' + commitHash + ', but branch "' +
-                                    branchName + '" could not be updated.', commitHash);
+                                logger.error('project.makeCommit failed.');
+                                closeContext(err, null);
                                 return;
                             }
-                            project.setBranchHash(branchName, oldBranchHash, commitHash, function (err) {
-                                if (err) {
-                                    closeContext('project imported to commit: ' + commitHash + ', but branch "' +
-                                        branchName + '" could not be updated.', commitHash);
-                                    return;
+                            storage.setBranchHash({
+                                    username: username,
+                                    branchName: branchName,
+                                    projectName: projectId,
+                                    oldHash: commitHash,
+                                    newHash: commitResult.hash
+                                }, function (err, updateResult) {
+                                    if (err) {
+                                        logger.error('setBranchHash failed with error.');
+                                        closeContext('project imported to commit: ' + commitHash + ', but branch "' +
+                                            branchName + '" could not be updated.', commitHash);
+                                        return;
+                                    }
+                                    logger.info('import was done to branch [' + branchName + ']');
+                                    closeContext(null, {commitHash: commitHash, storage: storage});
                                 }
-                                closeContext(null, {commitHash: commitHash, storage: storage});
-                            });
-                        });
-                    }
-                );
+                            );
+                        }
+                    );
+                });
+            })
+            .catch(function (err) {
+                closeContext(err, null);
             });
 
-        });
-    });
-};
+        /*openContext(storage, _gmeConfig, logger, contextParams, function (err, context) {
+         if (err) {
+         callback(err);
+         return;
+         }
+         project = context.project;
+         Serialization.import(context.core, context.rootNode, jsonProject, function (err) {
+         if (err) {
+         closeContext(err);
+         return;
+         }
+         context.core.persist(context.rootNode, function () {
+         project.makeCommit([], context.core.getHash(context.rootNode), 'project imported by import.js CLI',
+         function (err, commitHash) {
+         project.getBranchHash(branchName, '#hack', function (err, oldBranchHash) {
+         if (err) {
+         closeContext('project imported to commit: ' + commitHash + ', but branch "' +
+         branchName + '" could not be updated.', commitHash);
+         return;
+         }
+         project.setBranchHash(branchName, oldBranchHash, commitHash, function (err) {
+         if (err) {
+         closeContext('project imported to commit: ' + commitHash + ', but branch "' +
+         branchName + '" could not be updated.', commitHash);
+         return;
+         }
+         closeContext(null, {commitHash: commitHash, storage: storage});
+         });
+         });
+         }
+         );
+         });
+
+         });
+         });*/
+    };
 
 module.exports.import = importProject;
 
@@ -121,19 +203,29 @@ if (require.main === module) {
     }
 
     webgme.addToRequireJsPaths(gmeConfig);
+
+
     //calling the import function
 
-    importProject(webgme.serverUserStorage, gmeConfig, program.projectIdentifier, jsonProject,
-        program.branch, program.overwrite,
-        function (err, data) {
-            if (err) {
-                logger.error('error during project import: ', err);
-                process.exit(0);
-            } else {
-                logger.info('branch "' + program.branch + '" of project "' + program.projectIdentifier +
-                    '" have been successfully imported at commitHash: ' + data.commitHash + '.');
-                process.exit(0);
-            }
+    webgme.getGmeAuth(gmeConfig, function (err, gmeAuth) {
+        if (err) {
+            logger.error('unable to connect authentication service');
+            process.exit(1);
+        } else {
+            var myStorage = webgme.getStorage(logger, gmeConfig, gmeAuth);
+            importProject(myStorage, gmeConfig, program.projectIdentifier, jsonProject,
+                program.branch, program.overwrite,
+                function (err, data) {
+                    if (err) {
+                        logger.error('error during project import: ', err);
+                        process.exit(0);
+                    } else {
+                        logger.info('branch "' + program.branch + '" of project "' + program.projectIdentifier +
+                            '" have been successfully imported at commitHash: ' + data.commitHash + '.');
+                        process.exit(0);
+                    }
+                }
+            );
         }
-    );
+    });
 }

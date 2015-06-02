@@ -23,6 +23,11 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
         };
 
     this.name = dbProject.name;
+    this.userName = gmeConfig.authentication.guestAccount;
+
+    this.setUser = function (userName) {
+        this.userName = userName;
+    };
 
     projectCache = new ProjectCache(objectLoader, this.name, logger, gmeConfig);
 
@@ -34,6 +39,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
         var self = this,
             data = {
+                username: self.userName,
                 projectName: self.name,
                 commitObject: self.createCommitObject(parents, rootHash, null, msg),
                 coreObjects: coreObjects
@@ -50,6 +56,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     // FIXME: NOTE: this method calls getBranches, but we need it because of the PluginManagerBase
     this.getBranchNames = function (callback) {
         var data = {
+            username: self.userName,
             projectName: self.name
         };
 
@@ -59,6 +66,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
 
     this.setBranchHash = function (branchName, newHash, oldHash, callback) {
         var data = {
+            username: self.userName,
             projectName: self.name,
             branchName: branchName,
             newHash: newHash,
@@ -71,6 +79,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
 
     this.createBranch = function (branchName, hash, callback) {
         var data = {
+            username: self.userName,
             projectName: self.name,
             branchName: branchName,
             hash: hash
@@ -82,6 +91,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
 
     this.getCommonAncestorCommit = function (commitA, commitB, callback) {
         var data = {
+            username: self.userName,
             projectName: self.name,
             commitA: commitA,
             commitB: commitB
@@ -92,7 +102,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
 
     // Helper functions
     this.createCommitObject = function (parents, rootHash, user, msg) {
-        user = user || 'n/a';
+        user = user || self.userName || 'n/a';
         msg = msg || 'n/a';
 
         var commitObj = {
