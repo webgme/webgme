@@ -156,6 +156,30 @@ define([
 
                 branch.commitHandler = commitHandler;
                 branch.localUpdateHandler = updateHandler;
+
+                function callLocalUpdateHandler () {
+                    var updateData;
+
+                    logger.debug('About to update, updateQueue', branch.getUpdateQueue());
+                    if (branch.getUpdateQueue().length === 0) {
+                        logger.debug('No queued updates, returns');
+                        return;
+                    }
+
+                    updateData = branch.getFirstUpdate();
+                    branch.localUpdateHandler(updateData, function (aborted) {
+                        var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
+                        if (aborted === false) {
+                            logger.debug('New commit was successfully loaded, updating localHash.');
+                            branch.updateHashes(originHash, null);
+                            branch.getFirstUpdate(true);
+                            callLocalUpdateHandler();
+                        } else {
+                            logger.warn('Loading of update commit was aborted or failed.', updateData);
+                        }
+                    });
+                }
+
                 branch.updateHandler = function (_ws, updateData) {
                     var j,
                         originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
@@ -163,16 +187,16 @@ define([
                     for (j = 0; j < updateData.coreObjects.length; j += 1) {
                         project.insertObject(updateData.coreObjects[j]);
                     }
+
+                    branch.queueUpdate(updateData);
+                    branch.updateHashes(null, originHash);
+
                     if (branch.getCommitQueue().length === 0) {
-                        logger.debug('commitQueue is empty localHash will point to new originHash.');
-                        branch.updateHashes(originHash, originHash);
-                        // TODO: Updating the localHash before the update in the client has
-                        // TODO: taken place might not be correct.
-                        branch.localUpdateHandler(updateData);
+                        if (branch.getUpdateQueue().length === 1) {
+                            callLocalUpdateHandler();
+                        }
                     } else {
                         logger.debug('commitQueue is not empty, only updating originHash.');
-                        branch.updateHashes(null, originHash);
-                        branch.addToUpdateQueue(updateData);
                     }
                 };
 

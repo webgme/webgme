@@ -102,13 +102,25 @@ define(['common/storage/constants'], function (CONSTANTS) {
             commitQueue = newQueue;
         };
 
-        this.addToUpdateQueue = function (updateData) {
+        this.queueUpdate = function (updateData) {
             updateQueue.push(updateData);
             logger.debug('Adding new update to queue', updateQueue.length);
         };
 
         this.getUpdateQueue = function () {
             return updateQueue;
+        };
+
+        this.getFirstUpdate = function (shift) {
+            var updateData;
+            if (shift) {
+                updateData = updateQueue.shift();
+                logger.debug('Removed update from queue', updateQueue.length);
+            } else {
+                updateData = updateQueue[0];
+            }
+
+            return updateData;
         };
     }
 

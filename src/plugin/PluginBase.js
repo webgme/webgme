@@ -372,7 +372,11 @@ define([
                 coreObjects: persisted.objects
             };
 
-            self.branch.localUpdateHandler(updateData);
+            self.branch.localUpdateHandler(updateData, function (aborted) {
+                if (aborted) {
+                    self.logger.warn('Updates were not loaded in client. Expect a fork..');
+                }
+            });
         }
     };
 

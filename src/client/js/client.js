@@ -453,11 +453,8 @@ define([
         }
 
         function getUpdateHandler() {
-            return function (eventData) {
+            return function (eventData, callback) {
                 var commitHash = eventData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
-                //TODO: When updates are loaded from other users,
-                //TODO: local saveRoots must be bundled in e.g. transactions.
-                //TODO: On top of that we must also queue incoming update events.
                 logger.debug('updateHandler invoked. project, branch', eventData.projectName, eventData.branchName);
                 logger.debug('loading commitHash', commitHash);
 
@@ -467,13 +464,17 @@ define([
                 self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
                 self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
 
-                loading(eventData.commitObject.root, function (err) {
+                loading(eventData.commitObject.root, function (err, aborted) {
                     if (err) {
                         logger.error('updatehandler invoked loading and it returned error',
                             eventData.commitObject.root, err);
+                        callback(true);
+                    } else if (aborted === true) {
+                        callback(true);
                     } else {
                         addCommit(commitHash);
                         logger.debug('loading complete for incoming rootHash', eventData.commitObject.root);
+                        callback(false);
                     }
                 });
             };
@@ -958,7 +959,8 @@ define([
                         state.core.getHash(state.nodes[ROOT_PATH].node) === originatingRootHash) {
                         finalEvents();
                     } else {
-                        logger.warn('user made modification during load');
+                        // This relies on the fact that loading is synchronous for local updates.
+                        logger.warn('Modifications were done during loading - load aborted.');
                         callback(null, true);
                     }
                 }
