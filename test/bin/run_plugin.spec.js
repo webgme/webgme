@@ -6,61 +6,55 @@
 
 var testFixture = require('../_globals');
 
-describe('Run plugin CLI', function () {
+describe.only('Run plugin CLI', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
+        logger = testFixture.logger.fork('run_plugin.spec'),
         should = testFixture.should,
         spawn = testFixture.childProcess.spawn,
-        Storage = testFixture.WebGME.getMongoStorage,
+        storage,
         mongodb = require('mongodb'),
         mongoConn,
         importCLI = require('../../src/bin/import'),
         fs = require('fs'),
         filename = require('path').normalize('src/bin/run_plugin.js'),
-        projectName = 'aaa';
+        projectName = 'aaa',
+        gmeAuth,
+        Q = testFixture.Q;
 
     before(function (done) {
-        // TODO: refactor this into _globals.js
-        var jsonProject,
-            getJsonProject = function (path) {
-                return JSON.parse(fs.readFileSync(path, 'utf-8'));
-            };
-        mongodb.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
-            if (err) {
-                done(err);
-                return;
-            }
-            mongoConn = db;
-            db.dropCollection(projectName, function (err) {
-                // ignores if the collection was not found
-                if (err && err.errmsg !== 'ns not found') {
-                    done(err);
-                    return;
-                }
-
-                try {
-                    jsonProject = getJsonProject('./test/bin/run_plugin/project.json');
-                } catch (err) {
-                    done(err);
-                    return;
-                }
-                importCLI.import(Storage, gmeConfig, projectName, jsonProject, 'master', true,
-                    function (err) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        done();
-                    }
-                );
-            });
-        });
+        //adding some project to the database
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
+                return testFixture.importProject(storage, {
+                    projectSeed: './test/bin/run_plugin/project.json',
+                    projectName: projectName,
+                    branchName: 'master',
+                    gmeConfig: gmeConfig,
+                    logger: logger
+                });
+            })
+            .nodeify(done);
     });
 
     after(function (done) {
-        mongoConn.close();
-        done();
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+                return Q.all([
+                    storage.closeDatabase(),
+                    gmeAuth.unload()
+                ]);
+            })
+            .nodeify(done);
     });
 
     describe('as a child process', function () {
