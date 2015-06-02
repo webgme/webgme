@@ -357,7 +357,7 @@ define([
                         loading(commitObj.root, callback);
                     } else {
                         logger.error('Cannot view given ' + commitHash + ' commit as it\'s root cannot be loaded! [' +
-                        JSON.stringify(err) + ']');
+                            JSON.stringify(err) + ']');
                         callback(err || new Error('commit object cannot be found!'));
                     }
                 });
@@ -925,33 +925,42 @@ define([
 
         //this is just a first brute implementation it needs serious optimization!!!
         function loading(newRootHash, callback) {
-            var finalEvents = function () {
-                var modifiedPaths,
-                    i;
+            var firstRoot = !state.nodes[ROOT_PATH],
+                originatingRootHash = state.nodes[ROOT_PATH] ? state.core.getHash(state.nodes[ROOT_PATH].node) : null,
+                finalEvents = function () {
+                    var modifiedPaths,
+                        i;
 
-                modifiedPaths = getModifiedNodes(state.loadNodes);
-                state.nodes = state.loadNodes;
-                state.loadNodes = {};
-                for (i in state.users) {
-                    if (state.users.hasOwnProperty(i)) {
-                        userEvents(i, modifiedPaths);
+                    modifiedPaths = getModifiedNodes(state.loadNodes);
+                    state.nodes = state.loadNodes;
+                    state.loadNodes = {};
+                    state.root.previous = state.root.current;
+                    state.root.current = newRootHash;
+                    for (i in state.users) {
+                        if (state.users.hasOwnProperty(i)) {
+                            userEvents(i, modifiedPaths);
+                        }
                     }
-                }
-                callback(null);
-            };
+                    callback(null);
+                };
             logger.debug('loading newRootHash', newRootHash);
 
             callback = callback || function (/*err*/) {
                 };
 
-            state.root.previous = state.root.current;
-            state.root.current = newRootHash;
+
             loadRoot(newRootHash, function (err) {
                 if (err) {
                     state.root.current = null;
                     callback(err);
                 } else {
-                    finalEvents();
+                    if (firstRoot ||
+                        state.core.getHash(state.nodes[ROOT_PATH].node) === originatingRootHash) {
+                        finalEvents();
+                    } else {
+                        logger.warn('user made modification during load');
+                        callback(null, true);
+                    }
                 }
             });
         }
