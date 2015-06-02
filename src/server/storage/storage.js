@@ -132,25 +132,27 @@ Storage.prototype.makeCommit = function (data, callback) {
                                         };
                                     project.setBranchHash(data.branchName, oldHash, newHash)
                                         .then(function () {
-                                            var eventData = {
+                                            var fullEventData = {
                                                     projectName: data.projectName,
                                                     branchName: data.branchName,
                                                     commitObject: data.commitObject,
                                                     coreObjects: [data.coreObjects[data.commitObject.root]]
                                                 },
-                                                hashEventData = {
+                                                eventData = {
                                                     projectName: data.projectName,
                                                     branchName: data.branchName,
                                                     newHash: newHash,
                                                     oldHash: oldHash
                                                 };
                                             if (data.hasOwnProperty('socket')) {
-                                                eventData.socket = data.socket;
-                                                //hashEventData.socket = data.socket;
+                                                fullEventData.socket = data.socket;
+                                                if (self.gmeConfig.storage.broadcastProjectEvents) {
+                                                    eventData.socket = data.socket;
+                                                }
                                             }
                                             result.status = CONSTANTS.SYNCH;
-                                            self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, hashEventData);
-                                            self.dispatchEvent(CONSTANTS.BRANCH_UPDATED, eventData);
+                                            self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
+                                            self.dispatchEvent(CONSTANTS.BRANCH_UPDATED, fullEventData);
                                             self.logger.debug('Branch update succeeded.');
                                             deferred.resolve(result);
                                         })
@@ -287,8 +289,10 @@ Storage.prototype.setBranchHash = function (data, callback) {
                     };
 
                     if (data.hasOwnProperty('socket')) {
-                        //eventData.socket = data.socket;
                         fullEventData.socket = data.socket;
+                        if (self.gmeConfig.storage.broadcastProjectEvents) {
+                            eventData.socket = data.socket;
+                        }
                     }
 
                     if (data.oldHash === '' && data.newHash !== '') {

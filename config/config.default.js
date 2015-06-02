@@ -123,7 +123,7 @@ var path = require('path'),
                     transportType: 'Console',
                     //patterns: ['gme:server:*', '-gme:server:worker*'], // ['gme:server:worker:*'], ['gme:server:*', '-gme:server:worker*']
                     options: {
-                        level: 'info',
+                        level: 'debug', // Set this back to info when merged
                         colorize: true,
                         timestamp: true,
                         prettyPrint: true,
@@ -167,6 +167,9 @@ var path = require('path'),
         storage: {
             autoPersist: true, // core setting
             cache: 2000,
+            // If true events such as PROJECT_CREATED and BRANCH_CREATED will only be broadcasted
+            // and not emitted back to the web-socket that triggered the event.
+            broadcastProjectEvents: false,
             loadBucketSize: 100,
             loadBucketTimer: 10,
             clientCacheSize: 2000, // overwrites cache on client
