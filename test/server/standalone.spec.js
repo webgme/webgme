@@ -128,8 +128,8 @@ describe('standalone server', function () {
             // should allow access without auth
             {code: 200, url: '/lib/require/require.min.js'},
             {code: 200, url: '/plugin/PluginResult.js'},
-            {code: 200, url: '/common/storage/cache.js'},
-            {code: 200, url: '/common/storage/client.js'},
+            {code: 200, url: '/common/storage/browserstorage.js'},
+            {code: 200, url: '/common/storage/constants.js'},
             {code: 200, url: '/common/blob/BlobClient.js'}
         ]
     }, {
@@ -363,7 +363,7 @@ describe('standalone server', function () {
             openSocketIo = function () {
                 var io = require('socket.io-client');
                 return Q.nfcall(logIn)
-                    .then(function (/*res*/) {
+                    .then(function (res) {
                         var socket,
                             socketReq = {url: serverBaseUrl},
                             defer = Q.defer();
@@ -372,10 +372,10 @@ describe('standalone server', function () {
 
                         socket = io.connect(serverBaseUrl,
                             {
-                                'query': 'webGMESessionId=' + /webgmeSid=s:([^;]+)\./.exec(
+                                query: 'webGMESessionId=' + /webgmeSid=s:([^;]+)\./.exec(
                                     decodeURIComponent(socketReq.cookies))[1],
-                                'transports': gmeConfig.socketIO.transports,
-                                'multiplex': false
+                                transports: gmeConfig.socketIO.transports,
+                                multiplex: false
                             });
 
                         socket.on('error', function (err) {
@@ -553,7 +553,7 @@ describe('standalone server', function () {
             var projectName = 'project';
             openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'openProject', projectName)
+                    return Q.ninvoke(socket, 'emit', 'openProject', {projectName: projectName})
                         .finally(function () {
                             socket.disconnect();
                         });
@@ -568,7 +568,7 @@ describe('standalone server', function () {
             var projectName = 'unauthorized_project';
             openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'openProject', projectName)
+                    return Q.ninvoke(socket, 'emit', 'openProject', {projectName: projectName})
                         .finally(function () {
                             socket.disconnect();
                         });
@@ -581,7 +581,7 @@ describe('standalone server', function () {
                         done(new Error('should have failed'));
                         return;
                     }
-                    ('' + err).should.contain('missing necessary user rights');
+                    ('' + err).should.contain('Not authorized to read project');
                     done();
                 });
         });
@@ -590,7 +590,7 @@ describe('standalone server', function () {
             var projectName = 'ClientCreateProject';
             openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'openProject', projectName)
+                    return Q.ninvoke(socket, 'emit', 'createProject', {projectName: projectName})
                         .finally(function () {
                             socket.disconnect();
                         });

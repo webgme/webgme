@@ -133,7 +133,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
             // model editing functions
             socket.on('openProject', function (data, callback) {
                 logger.debug('openProject', {metadata: data});
-                storage.getBranches(data)
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getBranches(data);
+                    })
                     .then(function (branches) {
                         callback(null, branches);
                     })
@@ -157,7 +161,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
 
             socket.on('openBranch', function (data, callback) {
                 logger.debug('openBranch', {metadata: data});
-                storage.getLatestCommitData(data)
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getLatestCommitData(data);
+                    })
                     .then(function (commitData) {
                         socket.join(data.projectName + ROOM_DIV + data.branchName);
                         callback(null, commitData);
@@ -181,7 +189,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                 if (socket.rooms.indexOf(data.projectName + ROOM_DIV + data.branchName) > -1) {
                     data.socket = socket;
                 }
-                storage.makeCommit(data)
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.makeCommit(data);
+                    })
                     .then(function (status) {
                         callback(null, status);
                     })
@@ -229,7 +241,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
             });
 
             socket.on('getProjects', function (data, callback) {
-                storage.getProjects(data)
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getProjects(data);
+                    })
                     .then(function (projects) {
                         callback(null, projects);
                     })
@@ -243,7 +259,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
             });
 
             socket.on('getProjectsAndBranches', function (data, callback) {
-                storage.getProjectsAndBranches(data)
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getProjectsAndBranches(data);
+                    })
                     .then(function (projectsWithBranches) {
                         callback(null, projectsWithBranches);
                     })
@@ -260,7 +280,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                 if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
                     data.socket = socket;
                 }
-                storage.deleteProject(data)
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.deleteProject(data);
+                    })
                     .then(function () {
                         callback(null);
                     })
@@ -277,11 +301,20 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                 if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
                     data.socket = socket;
                 }
-                storage.createProject(data, callback);
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.createProject(data);
+                    })
+                    .nodeify(callback);
             });
 
             socket.on('getBranches', function (data, callback) {
-                storage.getBranches(data)
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getBranches(data);
+                    })
                     .then(function (branches) {
                         callback(null, branches);
                     })
@@ -295,7 +328,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
             });
 
             socket.on('getCommits', function (data, callback) {
-                storage.getCommits(data)
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getCommits(data);
+                    })
                     .then(function (commits) {
                         callback(null, commits);
                     })
@@ -309,7 +346,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
             });
 
             socket.on('getLatestCommitData', function (data, callback) {
-                storage.getLatestCommitData(data)
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getLatestCommitData(data);
+                    })
                     .then(function (commitData) {
                         callback(null, commitData);
                     })
