@@ -34,9 +34,7 @@ define([
             logger = Logger.create('gme:client', gmeConfig.client.log),
             storage = Storage.getStorage(logger, gmeConfig),
             state = {
-                isConnected: function () {
-                    return storage.connected;
-                },
+                connection: CONSTANTS.STORAGE.DISCONNECTED, // CONNECTED, RECONNECTED
                 project: null,
                 core: null,
                 branchName: null,
@@ -59,58 +57,7 @@ define([
                     current: null,
                     previous: null
                 },
-                undoRedoChain: {
-                    chain: null,
-                    canUndo: function () {
-                        if (state.undoRedoChain.chain && state.undoRedoChain.chain.previous) {
-                            return true;
-                        }
-
-                        return false;
-                    },
-                    undo: function () {
-                        if (state.undoRedoChain.chain && state.undoRedoChain.chain.previous) {
-                            state.undoRedoChain.chain = state.undoRedoChain.chain.previous;
-                            return true;
-                        }
-
-                        return false;
-                    },
-                    canRedo: function () {
-                        if (state.undoRedoChain.chain && state.undoRedoChain.chain.next) {
-                            return true;
-                        }
-                        return false;
-                    },
-                    redo: function () {
-                        if (state.undoRedoChain.chain && state.undoRedoChain.chain.next) {
-                            state.undoRedoChain.chain = state.undoRedoChain.chain.next;
-                            return true;
-                        }
-                        return false;
-                    },
-                    addModification: function (commitObject, clear) {
-                        var newItem;
-                        if (clear) {
-                            state.undoRedoChain.chain = {
-                                commit: commitObject[CONSTANTS.STORAGE.MONGO_ID],
-                                root: commitObject.root,
-                                previous: null,
-                                next: null
-                            };
-                            return;
-                        }
-
-                        newItem = {
-                            commit: commitObject[CONSTANTS.STORAGE.MONGO_ID],
-                            root: commitObject.root,
-                            previous: state.undoRedoChain.chain,
-                            next: null
-                        };
-                        state.undoRedoChain.chain.next = newItem;
-                        state.undoRedoChain.chain = newItem;
-                    }
-                },
+                undoRedoChain: null, //{commit: '#hash', root: '#hash', previous: object, next: object}
                 inTransaction: false,
                 msg: ''
             },
@@ -119,8 +66,12 @@ define([
 
         EventDispatcher.call(this);
 
-        function logState(level) {
+        function logState(level, msg) {
             function replacer(key, value) {
+                var chainItem,
+                    prevChain,
+                    nextChain,
+                    chain;
                 if (key === 'project') {
                     if (value) {
                         return value.name;
@@ -134,8 +85,6 @@ define([
                     } else {
                         return 'notInstantiated';
                     }
-                } else if (key === 'isConnected') {
-                    return storage.connected;
                 } else if (key === 'metaNodes') {
                     return Object.keys(value);
                 } else if (key === 'nodes') {
@@ -149,12 +98,46 @@ define([
                         current: value.current,
                         previous: value.previous
                     };
+                } else if (key === 'undoRedoChain') {
+                    if (value) {
+                        chain = {
+                            previous: null,
+                            next: null
+                        };
+                        if (value.previous) {
+                            prevChain = {};
+                            chain.previous = prevChain;
+                        }
+                        chainItem = value;
+                        while (chainItem.previous) {
+                            prevChain.previous = {
+                                commit: chainItem.commit,
+                                previous: null
+                            };
+                            prevChain = prevChain.previous;
+                            chainItem = chainItem.previous;
+                        }
+                        if (value.next) {
+                            nextChain = {};
+                            chain.next = nextChain;
+                        }
+                        chainItem = value;
+                        while (chainItem.next) {
+                            nextChain.next = {
+                                commit: chainItem.commit,
+                                next: null
+                            };
+                            nextChain = nextChain.next;
+                            chainItem = chainItem.next;
+                        }
+                        return chain;
+                    }
                 }
 
                 return value;
             }
 
-            //logger[level]('state', JSON.stringify(state, replacer, 2));
+            logger[level]('state at ' + msg, JSON.stringify(state, replacer, 2));
             //logger[level]('state', state);
         }
 
@@ -175,12 +158,13 @@ define([
         }
 
         this.connectToDatabase = function (callback) {
-            if (state.isConnected()) {
-                logger.warn('connectToDatabase - already connected, check isConnected first.');
+            if (isConnected()) {
+                logger.warn('connectToDatabase - already connected');
                 callback(null);
                 return;
             }
             storage.open(function (connectionState) {
+                state.connection = connectionState;
                 if (connectionState === CONSTANTS.STORAGE.CONNECTED) {
                     //N.B. this event will only be triggered once.
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
@@ -210,12 +194,7 @@ define([
                     logger: logger.fork('core')
                 });
                 self.meta.initialize(state.core, state.metaNodes, saveRoot);
-                //TODO: Add these back, maybe not..
-                //if (_clientGlobal.commitCache) {
-                //    _clientGlobal.commitCache.clearCache();
-                //} else {
-                //    createCommitCache(_clientGlobal); //attaches itself to the global
-                //}
+                logState('info', 'projectOpened');
                 self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectName);
 
                 if (branches.hasOwnProperty('master') === false) {
@@ -228,6 +207,7 @@ define([
                         callback(err);
                         return;
                     }
+                    logState('info', 'selectBranch');
                     reLaunchUsers();
                     callback();
                 });
@@ -280,7 +260,7 @@ define([
         this.selectBranch = function (branchName, commitHandler, callback) {
             ASSERT(state.project, 'selectBranch invoked without open project');
             logger.debug('selectBranch', branchName);
-            var prevBranchName;
+            var prevBranchName = state.branchName;
 
             if (prevBranchName === branchName) {
                 logger.warn('branchName is already opened', branchName);
@@ -310,14 +290,14 @@ define([
 
                         //undo-redo
                         logger.debug('changing branch - cleaning undo-redo chain');
-                        state.undoRedoChain.addModification(commitObject, true);
-                        self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
-                        self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
+                        addModification(commitObject, true);
+                        self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
+                        self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
                         state.viewer = false;
                         state.branchName = branchName;
                         state.branchStatus = CONSTANTS.STORAGE.SYNCH;
-                        logState('info');
+                        logState('info', 'openBranch');
                         self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
                         self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, state.branchStatus);
 
@@ -332,7 +312,7 @@ define([
             }
 
             if (state.branchName !== null) {
-                logger.debug('Branch was open, closing it first', state.branchName);
+                logger.debug('Other branch was open, closing it first', state.branchName);
                 prevBranchName = state.branchName;
                 state.branchName = null;
                 state.branchStatus = null;
@@ -358,12 +338,12 @@ define([
                 self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
                 state.project.loadObject(commitHash, function (err, commitObj) {
                     if (!err && commitObj) {
-                        logState('info');
                         addCommit(commitObj[CONSTANTS.STORAGE.MONGO_ID]);
+                        logState('info', 'selectCommit');
                         loading(commitObj.root, callback);
                     } else {
                         logger.error('Cannot view given ' + commitHash + ' commit as it\'s root cannot be loaded! [' +
-                            JSON.stringify(err) + ']');
+                        JSON.stringify(err) + ']');
                         callback(err || new Error('commit object cannot be found!'));
                     }
                 });
@@ -378,64 +358,6 @@ define([
             } else {
                 openCommit(null);
             }
-        };
-
-        this.undo = function (branchName, callback) {
-            if (!state.undoRedoChain.canUndo()) {
-                callback(new Error('unable to make undo'));
-                return;
-            }
-
-            state.undoRedoChain.undo();
-            loading(state.undoRedoChain.chain.root, function (err) {
-                //TODO do we need to handle this??
-                if (err) {
-                    logger.error(err);
-                }
-            });
-            self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
-            self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
-            storage.setBranchHash(state.project.name,
-                state.branchName, state.undoRedoChain.chain.commit, state.commit.current, function (err) {
-                    if (err) {
-                        //TODO do we need to handle this? How?
-                        callback(err);
-                        return;
-                    }
-
-                    state.commit.current = state.undoRedoChain.chain.commit;
-                    callback(null);
-                }
-            );
-
-        };
-
-        this.redo = function (branchName, callback) {
-            if (!state.undoRedoChain.canRedo()) {
-                callback(new Error('unable to make redo'));
-                return;
-            }
-
-            state.undoRedoChain.redo();
-            loading(state.undoRedoChain.chain.root, function (err) {
-                //TODO do we need to handle this??
-                if (err) {
-                    logger.error(err);
-                }
-            });
-            self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
-            self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
-            storage.setBranchHash(state.project.name,
-                state.branchName, state.undoRedoChain.chain.commit, state.commit.current, function (err) {
-                    if (err) {
-                        //TODO do we need to handle this? How?
-                        callback(err);
-                        return;
-                    }
-                    state.commit.current = state.undoRedoChain.chain.commit;
-                    callback(null);
-                }
-            );
         };
 
         function getDefaultCommitHandler() {
@@ -454,6 +376,7 @@ define([
                         state.branchStatus = CONSTANTS.STORAGE.SYNCH;
                         self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, CONSTANTS.STORAGE.SYNCH);
                     }
+                    logState('info', 'commitHandler');
                     callback(true); // All is fine, continue with the commitQueue..
                 } else if (result.status === CONSTANTS.STORAGE.FORKED) {
                     logger.debug('You got forked');
@@ -461,9 +384,10 @@ define([
                         state.branchStatus = CONSTANTS.STORAGE.FORKED;
                         self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, CONSTANTS.STORAGE.FORKED);
                     }
+                    logState('info', 'commitHandler');
                     callback(false);
                     alert('You got forked, TODO: \nstep one - automatically create new fork \n' +
-                        'step two - add UI piece.');
+                    'step two - add UI piece.');
                 } else {
                     callback(false);
                     throw new Error('Unexpected result', result);
@@ -479,20 +403,23 @@ define([
 
                 //undo-redo
                 logger.debug('foreign modification clearing undo-redo chain');
-                state.undoRedoChain.addModification(eventData.commitObject, true);
-                self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
-                self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
+                addModification(eventData.commitObject, true);
+                self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
+                self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
                 loading(eventData.commitObject.root, function (err, aborted) {
                     if (err) {
                         logger.error('updatehandler invoked loading and it returned error',
                             eventData.commitObject.root, err);
+                        logState('info', 'updateHandler');
                         callback(true);
                     } else if (aborted === true) {
+                        logState('info', 'updateHandler');
                         callback(true);
                     } else {
                         addCommit(commitHash);
                         logger.debug('loading complete for incoming rootHash', eventData.commitObject.root);
+                        logState('info', 'updateHandler');
                         callback(false);
                     }
                 });
@@ -501,11 +428,7 @@ define([
 
         // State getters.
         this.getNetworkStatus = function () {
-            if (state.isConnected()) {
-                return CONSTANTS.STORAGE.CONNECTED;
-            } else {
-                return CONSTANTS.STORAGE.DISCONNECTED;
-            }
+            return state.connection;
         };
 
         this.getActiveProjectName = function () {
@@ -533,11 +456,116 @@ define([
             return state.viewer;
         };
 
+        // Undo/Redo functionality
+        function addModification(commitObject, clear) {
+            var newItem;
+            if (clear) {
+                state.undoRedoChain = {
+                    commit: commitObject[CONSTANTS.STORAGE.MONGO_ID],
+                    root: commitObject.root,
+                    previous: null,
+                    next: null
+                };
+                return;
+            }
+
+            newItem = {
+                commit: commitObject[CONSTANTS.STORAGE.MONGO_ID],
+                root: commitObject.root,
+                previous: state.undoRedoChain,
+                next: null
+            };
+            state.undoRedoChain.next = newItem;
+            state.undoRedoChain = newItem;
+        }
+
+        function canUndo() {
+            var result = false;
+            if (state.undoRedoChain && state.undoRedoChain.previous) {
+                result = true;
+            }
+
+            return result;
+        }
+
+        function canRedo() {
+            var result = false;
+            if (state.undoRedoChain && state.undoRedoChain.next) {
+                result = true;
+            }
+
+            return result;
+        }
+
+        this.undo = function (branchName, callback) {
+            if (canUndo() === false) {
+                callback(new Error('unable to make undo'));
+                return;
+            }
+
+            state.undoRedoChain = state.undoRedoChain.previous;
+
+            loading(state.undoRedoChain.root, function (err) {
+                //TODO do we need to handle this??
+                if (err) {
+                    logger.error(err);
+                }
+            });
+            self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
+            self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
+            logState('info', 'undo [before setBranchHash]');
+            storage.setBranchHash(state.project.name,
+                state.branchName, state.undoRedoChain.commit, state.commit.current, function (err) {
+                    if (err) {
+                        //TODO do we need to handle this? How?
+                        callback(err);
+                        return;
+                    }
+
+                    state.commit.current = state.undoRedoChain.commit;
+                    logState('info', 'undo [after setBranchHash]');
+                    callback(null);
+                }
+            );
+
+        };
+
+        this.redo = function (branchName, callback) {
+            if (canRedo() === false) {
+                callback(new Error('unable to make redo'));
+                return;
+            }
+
+            state.undoRedoChain = state.undoRedoChain.next;
+
+            loading(state.undoRedoChain.root, function (err) {
+                //TODO do we need to handle this??
+                if (err) {
+                    logger.error(err);
+                }
+            });
+            self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
+            self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
+            logState('info', 'redo [before setBranchHash]');
+            storage.setBranchHash(state.project.name,
+                state.branchName, state.undoRedoChain.commit, state.commit.current, function (err) {
+                    if (err) {
+                        //TODO do we need to handle this? How?
+                        callback(err);
+                        return;
+                    }
+                    state.commit.current = state.undoRedoChain.commit;
+                    logState('info', 'redo [after setBranchHash]');
+                    callback(null);
+                }
+            );
+        };
+
         // REST-like functions and forwarded to storage TODO: add these to separate base class
 
         //  Getters
         this.getProjectNames = function (callback) {
-            if (state.isConnected()) {
+            if (isConnected()) {
                 storage.getProjectNames(callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -545,7 +573,7 @@ define([
         };
 
         this.getProjects = function (callback) {
-            if (state.isConnected()) {
+            if (isConnected()) {
                 storage.getProjects(callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -565,7 +593,7 @@ define([
         };
 
         this.getProjectsAndBranches = function (callback) {
-            if (state.isConnected()) {
+            if (isConnected()) {
                 storage.getProjectsAndBranches(function (err, projectsWithBranches) {
                     var i,
                         result = {};
@@ -626,6 +654,11 @@ define([
         };
 
         // Internal functions
+        function isConnected() {
+            return state.connection === CONSTANTS.STORAGE.CONNECTED ||
+                state.connection === CONSTANTS.STORAGE.RECONNECTED;
+        }
+
         var ROOT_PATH = ''; //FIXME: This should come from constants..
 
         function COPY(object) {
@@ -966,7 +999,7 @@ define([
             logger.debug('loading newRootHash', newRootHash);
 
             callback = callback || function (/*err*/) {
-                };
+            };
 
 
             loadRoot(newRootHash, function (err) {
@@ -1032,7 +1065,7 @@ define([
             logger.debug('saveRoot msg', msg);
 
             callback = callback || function () {
-                };
+            };
             if (!state.viewer && !state.readOnlyProject) {
                 if (state.msg) {
                     state.msg += '\n' + msg;
@@ -1069,9 +1102,9 @@ define([
                     );
                     addCommit(newCommitObject[CONSTANTS.STORAGE.MONGO_ID]);
                     //undo-redo
-                    state.undoRedoChain.addModification(newCommitObject, false);
-                    self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, state.undoRedoChain.canUndo());
-                    self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
+                    addModification(newCommitObject, false);
+                    self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
+                    self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
                     state.msg = '';
                 } else {
