@@ -191,9 +191,10 @@ describe('API', function () {
             });
 
             // AUTH METHODS
-            it('should return with 401 GET /api/v1/user', function (done) {
+            it('should return with guest account and 200 GET /api/v1/user', function (done) {
                 agent.get(server.getUrl() + '/api/v1/user').end(function (err, res) {
-                    expect(res.status).equal(401, err);
+                    expect(res.status).equal(200, err);
+                    expect(res.body._id).equal(gmeConfig.authentication.guestAccount);
                     done();
                 });
             });
@@ -262,7 +263,7 @@ describe('API', function () {
                 agent.patch(server.getUrl() + '/api/v1/users/user_to_modify')
                     //.set('Authorization', 'Basic ' + new Buffer('unknown_username:guest').toString('base64'))
                     .end(function (err, res) {
-                        expect(res.status).equal(401, err);
+                        expect(res.status).equal(403, err);
                         done();
                     });
             });
@@ -530,7 +531,7 @@ describe('API', function () {
                         agent.put(server.getUrl() + '/api/v1/users')
                             .send(newUser)
                             .end(function (err, res2) {
-                                expect(res2.status).equal(401, err);
+                                expect(res2.status).equal(403, err);
 
                                 done();
                             });
@@ -615,15 +616,15 @@ describe('API', function () {
                     });
             });
 
-            it('should fail to delete a specified user if not authenticated DELETE /api/v1/users/guest', function (done) {
-                agent.get(server.getUrl() + '/api/v1/users/guest')
+            it('should fail to delete a specified user if not authenticated DELETE /api/v1/users/admin', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users/admin')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
-                        agent.del(server.getUrl() + '/api/v1/users/guest')
+                        agent.del(server.getUrl() + '/api/v1/users/admin')
                             .end(function (err, res2) {
-                                expect(res2.status).equal(401, err);
+                                expect(res2.status).equal(403, err);
 
-                                agent.get(server.getUrl() + '/api/v1/users/guest')
+                                agent.get(server.getUrl() + '/api/v1/users/admin')
                                     .end(function (err, res2) {
                                         expect(res.status).equal(200, err);
                                         expect(res.body).deep.equal(res2.body); // make sure we did not lose any users
@@ -908,9 +909,10 @@ describe('API', function () {
             });
 
             // AUTH METHODS
-            it('should return with 401 GET /api/v1/user', function (done) {
+            it('should return with guest user account and 200 GET /api/v1/user', function (done) {
                 agent.get(server.getUrl() + '/api/v1/user').end(function (err, res) {
-                    expect(res.status).equal(401, err);
+                    expect(res.status).equal(200, err);
+                    expect(res.body._id).equal(gmeConfig.authentication.guestAccount);
                     done();
                 });
             });
@@ -970,7 +972,6 @@ describe('API', function () {
 
             // NO AUTH methods
             it('should list projects /projects', function (done) {
-                /*jshint camelcase: false */
                 agent.get(server.getUrl() + '/api/projects').end(function (err, res) {
                     expect(res.status).equal(200, err);
                     expect(res.body).deep.equal(['project', 'unauthorized_project']);

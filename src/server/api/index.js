@@ -466,7 +466,7 @@ function createAPI(app, mountPath, middlewareOpts) {
 
 // PROJECTS
 
-    router.get('/projects', function (req, res, next) {
+    router.get('/projects', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req);
         safeStorage.getProjectNames({username: userId})
             .then(function (result) {
@@ -508,7 +508,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/projects/:projectId/commits', function (req, res, next) {
+    router.get('/projects/:projectId/commits', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
             data = {
                 username: userId,
@@ -526,7 +526,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/projects/:projectId/branches', function (req, res, next) {
+    router.get('/projects/:projectId/branches', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
             data = {
                 username: userId,
@@ -543,7 +543,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
 
-    router.get('/projects/:projectId/branches/:branchId', function (req, res, next) {
+    router.get('/projects/:projectId/branches/:branchId', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
             data = {
                 username: userId,
