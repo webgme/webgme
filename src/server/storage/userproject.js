@@ -35,6 +35,12 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     this.loadObject = projectCache.loadObject;
     this.ID_NAME = CONSTANTS.MONGO_ID;
 
+    this.getBranch = function () {
+        return null;
+        // This is for the PluginManagerBase tests on the server.
+        // TODO: PluginManagerBase tests should run on the client.
+    };
+
     // Functions forwarded to storage
     this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
         var self = this,
@@ -53,8 +59,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
             .nodeify(callback);
     };
 
-    // FIXME: NOTE: this method calls getBranches, but we need it because of the PluginManagerBase
-    this.getBranchNames = function (callback) {
+    this.getBranches = function (callback) {
         var data = {
             username: self.userName,
             projectName: self.name
@@ -77,6 +82,17 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
             .nodeify(callback);
     };
 
+    this.getBranchHash = function (branchName, callback) {
+        var data = {
+            username: self.userName,
+            projectName: self.name,
+            branchName: branchName
+        };
+
+        return storage.getBranchHash(data)
+            .nodeify(callback);
+    };
+
     this.createBranch = function (branchName, hash, callback) {
         var data = {
             username: self.userName,
@@ -86,6 +102,18 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
         };
 
         return storage.createBranch(data)
+            .nodeify(callback);
+    };
+
+    this.getCommits = function (before, number, callback) {
+        var data = {
+            username: self.userName,
+            projectName: self.name,
+            before: before,
+            number: number
+        };
+
+        return storage.getCommits(data)
             .nodeify(callback);
     };
 

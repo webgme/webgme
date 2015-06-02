@@ -20,7 +20,7 @@ define(['plugin/PluginBase', 'plugin/PluginContext'], function (PluginBase, Plug
             this.gmeConfig = gmeConfig; // global configuration of webgme
             this.logger = logger.fork('PluginManager');
             this._Core = Core;       // webgme core class is used to operate on objects
-            this._storage = storage; // webgme storage
+            this._storage = storage; // webgme storage (project)
             this._plugins = plugins; // key value pair of pluginName: pluginType - plugins are already loaded/downloaded
             this._pluginConfigs = {}; // keeps track of the current configuration for each plugins by name
 
@@ -140,6 +140,8 @@ define(['plugin/PluginBase', 'plugin/PluginContext'], function (PluginBase, Plug
 
             pluginContext.project = this._storage;
             pluginContext.projectName = managerConfiguration.project;
+            pluginContext.branchName = managerConfiguration.branchName;
+            pluginContext.branch = pluginContext.project.getBranch(pluginContext.branchName, true);
             pluginContext.core = new self._Core(pluginContext.project, {
                 globConf: self.gmeConfig,
                 logger: self.logger.fork('core') //TODO: This logger should probably fork from the plugin logger
@@ -147,6 +149,7 @@ define(['plugin/PluginBase', 'plugin/PluginContext'], function (PluginBase, Plug
             pluginContext.commitHash = managerConfiguration.commit;
             pluginContext.activeNode = null;    // active object
             pluginContext.activeSelection = []; // selected objects
+
 
             // add activeSelection
             function loadActiveSelectionAndMetaNodes() {
@@ -182,15 +185,30 @@ define(['plugin/PluginBase', 'plugin/PluginContext'], function (PluginBase, Plug
             // add activeNode
             function loadCommitHashAndRun(commitHash) {
                 self.logger.info('Loading commit ' + commitHash);
-                pluginContext.project.loadObject(commitHash, function (err, commitObj) {
-                    if (err) {
-                        callback(err, pluginContext);
+                pluginContext.project.getCommits(commitHash, 1, function (err, commitObjects) {
+                    var commitObj;
+                    if (err || commitObjects.length !== 1) {
+                        if (err) {
+                            callback(err, pluginContext);
+                        } else {
+                            self.logger.error('commitObjects', commitObjects);
+                            callback('getCommits did not return with one commit', pluginContext);
+                        }
                         return;
                     }
+
+                    commitObj = commitObjects[0];
 
                     if (typeof commitObj === 'undefined' || commitObj === null) {
                         callback('cannot find commit', pluginContext);
                         return;
+                    }
+
+                    if (managerConfiguration.rootHash && commitObj.root !== managerConfiguration.rootHash) {
+                        // This is a sanity check for the client state handling..
+                        self.logger.error('Root hash for commit-object, is not the same as passed from the client.' +
+                        'commitHash, rootHash, given rootHash:',
+                            commitHash, commitObj.root, managerConfiguration.rootHash);
                     }
 
                     pluginContext.core.loadRoot(commitObj.root, function (err, rootNode) {
@@ -221,21 +239,23 @@ define(['plugin/PluginBase', 'plugin/PluginContext'], function (PluginBase, Plug
             }
 
             // load commit hash and run based on branch name or commit hash
-            if (managerConfiguration.branchName) {
-                pluginContext.project.getBranchNames(function (err, branchNames) {
-                    self.logger.debug(branchNames);
-
-                    if (branchNames.hasOwnProperty(managerConfiguration.branchName)) {
-                        pluginContext.commitHash = branchNames[managerConfiguration.branchName];
-                        pluginContext.branchName = managerConfiguration.branchName;
-                        loadCommitHashAndRun(pluginContext.commitHash);
-                    } else {
-                        callback('cannot find branch "' + managerConfiguration.branchName + '"', pluginContext);
-                    }
-                });
-            } else {
-                loadCommitHashAndRun(pluginContext.commitHash);
-            }
+            //if (managerConfiguration.branchName) {
+            pluginContext.project.getBranches(function (err, branches) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                self.logger.debug(branches);
+                if (branches.hasOwnProperty(managerConfiguration.branchName)) {
+                    //pluginContext.commitHash = branches[managerConfiguration.branchName];
+                    loadCommitHashAndRun(pluginContext.commitHash);
+                } else {
+                    callback('cannot find branch "' + managerConfiguration.branchName + '"', pluginContext);
+                }
+            });
+            //} else {
+            //    loadCommitHashAndRun(pluginContext.commitHash);
+            //}
 
         };
 

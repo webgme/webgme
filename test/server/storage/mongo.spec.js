@@ -558,7 +558,7 @@ describe('Mongo storage', function () {
         });
 
         it('should setBranchHash - create a new branch', function (done) {
-            project.getBranchHash('master', '')
+            project.getBranchHash('master')
                 .then(function (hash) {
                     return project.setBranchHash('new_branch', '', hash);
                 })
@@ -574,7 +574,7 @@ describe('Mongo storage', function () {
         });
 
         it('should setBranchHash - delete a branch', function (done) {
-            project.getBranchHash('master', '')
+            project.getBranchHash('master')
                 .then(function (hash) {
                     return project.setBranchHash('toBeDeletedBranch', '', hash);
                 })
@@ -599,7 +599,7 @@ describe('Mongo storage', function () {
 
 
         it('should not change branch hash if old hash is the same as new hash', function (done) {
-            project.getBranchHash('master', '')
+            project.getBranchHash('master')
                 .then(function (hash) {
                     return project.setBranchHash('stable', '', hash);
                 })
@@ -624,7 +624,7 @@ describe('Mongo storage', function () {
         });
 
         it('should fail to set branch hash if oldhash does not match', function (done) {
-            project.getBranchHash('master', '')
+            project.getBranchHash('master')
                 .then(function (hash) {
                     return project.setBranchHash('dummy', '', hash);
                 })
@@ -650,7 +650,7 @@ describe('Mongo storage', function () {
         });
 
         it('should fail to set new branch hash if oldhash does not match', function (done) {
-            project.getBranchHash('master', '')
+            project.getBranchHash('master')
                 .then(function (hash) {
                     return project.setBranchHash('dummy', '', hash);
                 })

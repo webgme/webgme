@@ -294,7 +294,7 @@ define([
         var self = this,
             forkName;
         if (self.currentHash !== self.branch.getLocalHash()) {
-            // If the client has made local change since the plugin started - create a new branch.
+            // If the client has made local changes  since the plugin started - create a new branch.
             forkName = self.forkName || self.branchName + '_' + (new Date()).getTime();
             self.logger.warn('Client has made local change since the plugin started in "' + self.branchName + '". ' +
             'Trying to create a new branch "' + forkName + '".');

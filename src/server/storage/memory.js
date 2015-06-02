@@ -120,7 +120,7 @@ function Memory(mainLogger, gmeConfig) {
                 branchNames = {},
                 pending = 0,
                 updateBranchEntry = function (branchName) {
-                    self.getBranchHash(branchName, '', function (err, hash) {
+                    self.getBranchHash(branchName, function (err, hash) {
                         pending -= 1;
                         branchNames[branchName] = hash;
                         done();
@@ -150,9 +150,9 @@ function Memory(mainLogger, gmeConfig) {
             return deferred.promise.nodeify(callback);
         };
 
-        this.getBranchHash = function (branch, oldhash, callback) {
+        this.getBranchHash = function (branch, callback) {
             ASSERT(typeof branch === 'string' && REGEXP.RAW_BRANCH.test('*' + branch));
-            ASSERT(typeof oldhash === 'string' && (oldhash === '' || REGEXP.HASH.test(oldhash)));
+            //ASSERT(typeof oldhash === 'string' && (oldhash === '' || REGEXP.HASH.test(oldhash)));
 
             var deferred = Q.defer(),
                 hash = storage.getItem(database + SEPARATOR + name + SEPARATOR + '*' + branch);
@@ -162,18 +162,19 @@ function Memory(mainLogger, gmeConfig) {
             }
 
             hash = (hash && hash.hash) || '';
-            if (hash !== oldhash) {
-                deferred.resolve(hash, null);
-            } else {
-                hash = storage.getItem(database + SEPARATOR + name + SEPARATOR + '*' + branch);
-                if (hash) {
-                    hash = JSON.parse(hash);
-                }
-                hash = (hash && hash.hash) || '';
 
-                deferred.resolve(hash, null);
-            }
-
+            //if (hash !== oldhash) {
+            //    deferred.resolve(hash, null);
+            //} else {
+            //    hash = storage.getItem(database + SEPARATOR + name + SEPARATOR + '*' + branch);
+            //    if (hash) {
+            //        hash = JSON.parse(hash);
+            //    }
+            //    hash = (hash && hash.hash) || '';
+            //
+            //    deferred.resolve(hash, null);
+            //}
+            deferred.resolve(hash);
             return deferred.promise.nodeify(callback);
         };
 
