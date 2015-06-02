@@ -24,6 +24,14 @@ describe('Memory storage', function () {
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
+                return Q.all([
+                    gmeAuth.authorizeByUserId(guestAccount, 'something', 'create',
+                        {
+                            read: true,
+                            write: true,
+                            delete: true
+                        })
+                    ]);
             })
             .nodeify(done);
     });
@@ -118,6 +126,26 @@ describe('Memory storage', function () {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
 
             memoryStorage.openProject({projectName: 'something'})
+                .then(function () {
+                    done(new Error('should have failed to openProject'));
+                })
+                .catch(function (err) {
+                    if (err instanceof Error) {
+                        // TODO: check error message
+                        done();
+                    } else {
+                        done(new Error('should have failed to openProject'));
+                    }
+                });
+        });
+
+        it('should fail to open a project if project does not exist', function (done) {
+            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+
+            memoryStorage.openDatabase()
+                .then(function () {
+                    return memoryStorage.openProject({projectName: 'something'});
+                })
                 .then(function () {
                     done(new Error('should have failed to openProject'));
                 })
@@ -363,6 +391,50 @@ describe('Memory storage', function () {
                 .catch(done);
         });
 
+        it('should fail to insert object with circular references to an existing project', function (done) {
+            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+
+            memoryStorage.openDatabase()
+                .then(function () {
+                    return memoryStorage.getProjectNames({});
+                })
+                .then(function (projectNames) {
+                    expect(projectNames).deep.equal([]);
+                    return memoryStorage.createProject({projectName: projectName});
+                })
+                .then(function () {
+                    return memoryStorage.getProjectNames({});
+                })
+                .then(function (projectNames) {
+                    expect(projectNames).deep.equal([projectName]);
+                    return memoryStorage.openProject({projectName: projectName});
+                })
+                .then(function (project) {
+                    var data = {
+                        _id: '#123',
+                        a: {
+                            b: 42
+                        }
+                    };
+
+                    data.a.p = data; // create circular reference
+
+                    expect(project.name).equal(projectName);
+
+                    return project.insertObject(data);
+                })
+                .then(function () {
+                    done(new Error('should have failed'));
+                })
+                .catch(function (err) {
+                    if (err instanceof Error) {
+                        // TODO: check error message
+                        done();
+                    } else {
+                        done(new Error('should have failed to openProject'));
+                    }
+                });
+        });
 
         it('should fail to open a non-existing project', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
@@ -676,7 +748,7 @@ describe('Memory storage', function () {
                     addCommitObject([commitChain[10]]);
                     addCommitObject([commitChain[9], commitChain[11]]);
 
-                    function makeCommit (commitData) {
+                    function makeCommit(commitData) {
                         return storage.makeCommit(commitData);
                     }
 
