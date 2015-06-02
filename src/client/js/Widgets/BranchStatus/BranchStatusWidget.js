@@ -83,7 +83,6 @@ define([
     };
 
     BranchStatusWidget.prototype._branchForked = function () {
-        alert('Brach is forked! TODO: Handle this!'); //TODO: Handle this!!
         this._ddBranchStatus.clear();
         this._ddBranchStatus.setTitle('OUT OF SYNC');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);

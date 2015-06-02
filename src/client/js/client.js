@@ -391,7 +391,14 @@ define([
             self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
             storage.setBranchHash(state.project.name,
                 state.branchName, state.undoRedoChain.chain.commit, state.commit.current, function (err) {
-                    //TODO do we need to handle this? How?
+                    if (err) {
+                        //TODO do we need to handle this? How?
+                        callback(err);
+                        return;
+                    }
+
+                    state.commit.current = state.undoRedoChain.chain.commit;
+                    callback(null);
                 }
             );
 
@@ -414,7 +421,13 @@ define([
             self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, state.undoRedoChain.canRedo());
             storage.setBranchHash(state.project.name,
                 state.branchName, state.undoRedoChain.chain.commit, state.commit.current, function (err) {
-                    //TODO do we need to handle this? How?
+                    if (err) {
+                        //TODO do we need to handle this? How?
+                        callback(err);
+                        return;
+                    }
+                    state.commit.current = state.undoRedoChain.chain.commit;
+                    callback(null);
                 }
             );
         };
