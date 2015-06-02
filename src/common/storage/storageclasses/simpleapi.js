@@ -56,7 +56,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
      *
      * @callback StorageSimpleAPI~getProjectsCallback
      * @param {string} err - error string.
-     * @param {{object[]} projects - Names of all projects the user has at least read-access to.
+     * @param {{object[]} projects - All projects in the database.
      * @example
      * // projects is of the form
      * // [{ name: 'ProjectName', read: true, write: false, delete: false} ]
@@ -78,12 +78,12 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
      *
      * @callback StorageSimpleAPI~getProjectsAndBranches
      * @param {string} err - error string.
-     * @param {{object[]} projectsWithBranches - Names of all projects the user has at least read-access to.
+     * @param {{object[]} projectsWithBranches - Projects the user has at least read-access to.
      * @example
      * // projectsWithBranches is of the form
      * // [{
      * //    name: 'ProjectName',
-     * //    read: true,
+     * //    read: true, //will always be true
      * //    write: false,
      * //    delete: false
      * //    branches: {

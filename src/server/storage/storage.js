@@ -85,6 +85,10 @@ Storage.prototype.getLatestCommitData = function (data, callback) {
             return project.getBranchHash(data.branchName);
         })
         .then(function (branchHash) {
+            if (branchHash === '') {
+                throw new Error('Branch "' + data.branchName + '" does not exist in project "' +
+                data.projectName + '"');
+            }
             return project.loadObject(branchHash);
         })
         .then(function (commitObject) {
@@ -276,17 +280,17 @@ Storage.prototype.setBranchHash = function (data, callback) {
             return project.setBranchHash(data.branchName, data.oldHash, data.newHash)
                 .then(function () {
                     var eventData = {
-                        projectName: data.projectName,
-                        branchName: data.branchName,
-                        newHash: data.newHash,
-                        oldHash: data.oldHash
-                    },
-                    fullEventData = {
-                        projectName: data.projectName,
-                        branchName: data.branchName,
-                        commitObject: null,
-                        coreObjects: []
-                    };
+                            projectName: data.projectName,
+                            branchName: data.branchName,
+                            newHash: data.newHash,
+                            oldHash: data.oldHash
+                        },
+                        fullEventData = {
+                            projectName: data.projectName,
+                            branchName: data.branchName,
+                            commitObject: null,
+                            coreObjects: []
+                        };
 
                     if (data.hasOwnProperty('socket')) {
                         fullEventData.socket = data.socket;

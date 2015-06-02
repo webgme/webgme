@@ -271,6 +271,12 @@ define([
             }
         };
 
+        /**
+         *
+         * @param {string} branchName - name of branch to open.
+         * @param {function} [commitHandler=getDefaultCommitHandler()] - Handles returned statuses after commits.
+         * @param callback
+         */
         this.selectBranch = function (branchName, commitHandler, callback) {
             ASSERT(state.project, 'selectBranch invoked without open project');
             logger.debug('selectBranch', branchName);

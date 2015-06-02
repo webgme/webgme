@@ -78,11 +78,8 @@ define([
             client,
             loadPanels,
             logger = Logger.create('gme:WebGME', WebGMEGlobal.gmeConfig.client.log),
-            selectObject,
-            loadBranch,
             initialThingsToDo = WebGMEUrlManager.parseInitialThingsToDoFromUrl(),
-            projectOpenDialog,
-            openProjectLoadDialog;
+            projectOpenDialog;
 
         // URL query has higher priority than the config.
         if ((initialThingsToDo.projectToLoad || initialThingsToDo.createNewProject) === false) {
@@ -183,129 +180,68 @@ define([
                     if (_.isFunction(afterPanelsLoaded)) {
                         afterPanelsLoaded(client);
                     }
-                    openProjectLoadDialog();
-                    return;
-                    //TODO: Handle these
                     if (initialThingsToDo.createNewProject) {
-                        client.connectToDatabaseAsync({}, function (err) {
-                            if (err) {
-                                logger.error(err);
-                                openProjectLoadDialog();
-                                return;
-                            }
-                            client.getAvailableProjectsAsync(function (err, projectArray) {
-                                var seedParameters;
-
+                        createNewProject();
+                    } else {
+                        if (initialThingsToDo.projectToLoad) {
+                            client.connectToDatabase(function (err) {
                                 if (err) {
-                                    logger.error(err);
-                                    openProjectLoadDialog();
+                                    logger.error('Failed to connect to database', err);
                                     return;
                                 }
-                                if (projectArray.indexOf(initialThingsToDo.projectToLoad) !== -1) {
-                                    //we fallback to loading
-                                    client.selectProject(initialThingsToDo.projectToLoad, function (err) {
-                                        if (err) {
-                                            logger.error(err);
-                                            openProjectLoadDialog();
-                                            return;
-                                        }
-                                        if (initialThingsToDo.branchToLoad) {
-                                            loadBranch(initialThingsToDo.branchToLoad);
-                                        } else if (initialThingsToDo.commitToLoad &&
-                                                   initialThingsToDo.commitToLoad !== '') {
-                                            client.selectCommit(initialThingsToDo.commitToLoad, function (err) {
-                                                if (err) {
-                                                    logger.error(err);
-                                                    WebGMEGlobal.State.setIsInitPhase(false);
-                                                    logger.info('init-phase false');
-                                                    return;
-                                                }
-                                                selectObject();
-                                            });
-                                        } else {
-                                            selectObject();
-                                        }
-                                    });
-                                } else {
-                                    //we create the project
-                                    seedParameters = {
-                                        type: 'file', // FIXME: is the default project always file?
-                                        projectName: initialThingsToDo.projectToLoad,
-                                        seedName: WebGMEGlobal.gmeConfig.seedProjects.defaultProject,
-                                        branchName: 'master'
-                                    };
-
-                                    client.seedProjectAsync(seedParameters, function (err) {
-                                        if (err) {
-                                            logger.error(err);
-                                            openProjectLoadDialog();
-                                            return;
-                                        }
-                                        client.selectProjectAsync(initialThingsToDo.projectToLoad, function (err) {
+                                client.selectProject(initialThingsToDo.projectToLoad, function (err) {
+                                    if (err) {
+                                        logger.error(err);
+                                        openProjectLoadDialog(false);
+                                        return;
+                                    }
+                                    if (initialThingsToDo.branchToLoad) {
+                                        loadBranch(initialThingsToDo.branchToLoad);
+                                    } else if (initialThingsToDo.commitToLoad) {
+                                        client.selectCommit(initialThingsToDo.commitToLoad, function (err) {
                                             if (err) {
                                                 logger.error(err);
-                                                openProjectLoadDialog();
+                                                openProjectLoadDialog(false);
                                                 return;
                                             }
-                                            WebGMEGlobal.State.setIsInitPhase(false);
-                                            logger.info('init-phase false');
-                                            //otherwise we are pretty much done cause we ignore the other parameters
+                                            selectObject();
                                         });
-                                    });
-                                }
-                            });
-                        });
-                    } else {
-                        if (!initialThingsToDo.projectToLoad) {
-                            openProjectLoadDialog();
-                        } else {
-                            client.connectToDatabaseAsync({
-                                open: initialThingsToDo.projectToLoad,
-                                project: initialThingsToDo.projectToLoad
-                            }, function (err) {
-                                if (err) {
-                                    logger.error(err);
-                                    openProjectLoadDialog();
-                                    return;
-                                }
-                                if (initialThingsToDo.branchToLoad) {
-                                    loadBranch(initialThingsToDo.branchToLoad);
-                                } else if (initialThingsToDo.commitToLoad) {
-                                    client.selectCommit(initialThingsToDo.commitToLoad, function (err) {
-                                        if (err) {
-                                            logger.error(err);
-                                            openProjectLoadDialog();
-                                            return;
-                                        }
+                                    } else {
                                         selectObject();
-                                    });
-                                } else {
-                                    selectObject();
-                                }
+                                    }
+                                });
                             });
+                        } else {
+                            openProjectLoadDialog(true);
                         }
                     }
                 }
             });
         };
 
-        openProjectLoadDialog = function () {
+        function openProjectLoadDialog(connect) {
             //if initial project openings failed we show the project opening dialog
             WebGMEGlobal.State.setIsInitPhase(false);
             logger.info('init-phase false');
-            client.connectToDatabase(function (err) {
-                if (err) {
-                    logger.error(err);
-                    return;
-                }
-                //client.getAvailableProjectsAsync(function (/*err, projectArray*/) {
+            logger.info('about to open projectOpenDialog, connect:', connect);
+            if (connect) {
+                client.connectToDatabase(function (err) {
+                    if (err) {
+                        logger.error('Failed to connect to database', err);
+                        return;
+                    }
+                    //client.getAvailableProjectsAsync(function (/*err, projectArray*/) {
+                    projectOpenDialog = new ProjectsDialog(client);
+                    projectOpenDialog.show();
+                    //});
+                });
+            } else {
                 projectOpenDialog = new ProjectsDialog(client);
                 projectOpenDialog.show();
-                //});
-            });
-        };
+            }
+        }
 
-        selectObject = function () {
+        function selectObject() {
             var user = {},
                 userPattern = {},
                 userActiveNodeId,
@@ -354,19 +290,114 @@ define([
 
             userActiveNodeId = client.addUI(user, eventHandler);
             client.updateTerritory(userActiveNodeId, userPattern);
-        };
+        }
 
-
-        loadBranch = function (branchName) {
-            client.selectBranchAsync(branchName, function (err) {
+        function loadBranch(branchName) {
+            client.getBranches(initialThingsToDo.projectToLoad, function (err, branches) {
+                var branchNames;
                 if (err) {
                     logger.error(err);
-                    openProjectLoadDialog();
+                    openProjectLoadDialog(false);
+                    return;
+                }
+                branchNames = Object.keys(branches);
+                if (branchNames.indexOf(branchName) > -1) {
+                    logger.debug('Given branch exists among branches, selecting..', branchName, branchNames);
+                    client.selectBranch(branchName, null, function (err) {
+                        if (err) {
+                            logger.error(err);
+                            openProjectLoadDialog(false);
+                        } else {
+                            selectObject();
+                        }
+                    });
                 } else {
-                    selectObject();
+                    logger.error('Given branch did not exist among branches.', branchName, branchNames);
+                    openProjectLoadDialog(false);
                 }
             });
-        };
+        }
+
+        function createNewProject() {
+            client.connectToDatabase(function (err) {
+                if (err) {
+                    logger.error('Failed to connect to database', err);
+                    return;
+                }
+                client.getProjects(function (err, projectArray) {
+                    var seedParameters,
+                        projectExisted = false,
+                        i;
+                    if (err) {
+                        logger.error(err);
+                        openProjectLoadDialog(false);
+                        return;
+                    }
+
+                    for (i = 0; i < projectArray.length; i += 1) {
+                        if (projectArray[i].name === initialThingsToDo.projectToLoad) {
+                            projectExisted = true;
+                            break;
+                        }
+                    }
+
+                    if (projectExisted) {
+                        // we fallback to loading
+                        client.selectProject(initialThingsToDo.projectToLoad, function (err) {
+                            if (err) {
+                                logger.error(err);
+                                openProjectLoadDialog(false);
+                                return;
+                            }
+                            if (initialThingsToDo.branchToLoad) {
+                                loadBranch(initialThingsToDo.branchToLoad);
+                            } else if (initialThingsToDo.commitToLoad && initialThingsToDo.commitToLoad !== '') {
+                                client.selectCommit(initialThingsToDo.commitToLoad, function (err) {
+                                    if (err) {
+                                        logger.error(err);
+                                        WebGMEGlobal.State.setIsInitPhase(false);
+                                        logger.info('init-phase false');
+                                        return;
+                                    }
+                                    selectObject();
+                                });
+                            } else {
+                                selectObject();
+                            }
+                        });
+                    } else {
+                        //we create the project
+                        logger.error('TODO: implement createNewProject');
+                        openProjectLoadDialog(false);
+                        return;
+                        seedParameters = {
+                            type: 'file', // FIXME: is the default project always file?
+                            projectName: initialThingsToDo.projectToLoad,
+                            seedName: WebGMEGlobal.gmeConfig.seedProjects.defaultProject,
+                            branchName: 'master'
+                        };
+
+                        client.seedProject(seedParameters, function (err) {
+                            if (err) {
+                                logger.error(err);
+                                openProjectLoadDialog(false);
+                                return;
+                            }
+                            client.selectProject(initialThingsToDo.projectToLoad, function (err) {
+                                if (err) {
+                                    logger.error(err);
+                                    openProjectLoadDialog(false);
+                                    return;
+                                }
+                                WebGMEGlobal.State.setIsInitPhase(false);
+                                logger.info('init-phase false');
+                                //otherwise we are pretty much done cause we ignore the other parameters
+                            });
+                        });
+                    }
+                });
+            });
+        }
 
         //This is still asychronous but has a better chance to finish here rather than from the client.
         function getAvaliablePluginsAndDecorators() {
