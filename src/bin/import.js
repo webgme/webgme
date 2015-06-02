@@ -22,14 +22,10 @@ var webgme = require('../../webgme'),
     openContext = webgme.openContext,
     Serialization = webgme.serializer,
 
-    importProject = function (storage, _gmeConfig, projectId, jsonProject, branchName, overwrite, callback) {
+    importProject = function (storage, _gmeConfig, projectId, jsonProject, branchName, overwrite, userName, callback) {
         var project,
             core,
-            oldRoot,
-            username = 'kecso',
-            projectNamesData = {username: 'guest'},
-            oldCommitHash,
-            contextParams,
+            username = userName || _gmeConfig.authentication.guestAccount,
             closeContext = function (error, data) {
                 try {
                     project.closeProject(function () {
@@ -47,12 +43,6 @@ var webgme = require('../../webgme'),
 
         branchName = branchName || 'master';
 
-        contextParams = {
-            projectName: projectId,
-            createProject: true,
-            overwriteProject: overwrite,
-            branchName: branchName
-        };
         storage.openDatabase()
             .then(function () {
                 return storage.getProjectNames({username: username});
@@ -63,7 +53,7 @@ var webgme = require('../../webgme'),
                         closeContext(new Error('project already exists'));
                         return;
                     }
-                    return storage.openProject({projectName: projectId});
+                    return storage.openProject({username: username, projectName: projectId});
                 }
                 return storage.createProject({username: username, projectName: projectId});
             })
@@ -119,7 +109,7 @@ var webgme = require('../../webgme'),
                                         return;
                                     }
                                     logger.info('import was done to branch [' + branchName + ']');
-                                    closeContext(null, {commitHash: commitHash, storage: storage});
+                                    closeContext(null, {commitHash: commitResult.hash, storage: storage});
                                 }
                             );
                         }
@@ -174,6 +164,7 @@ if (require.main === module) {
         .version('0.1.0')
         .usage('<project-file> [options]')
         .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
+        .option('-u, --user [string]', 'the user of the command')
         .option('-p, --project-identifier [value]', 'project identifier')
         .option('-b, --branch [branch]', 'the branch that should be created with the imported data')
         .option('-o --overwrite [boolean]', 'if a project exist it will be deleted and created again')
@@ -214,7 +205,7 @@ if (require.main === module) {
         } else {
             var myStorage = webgme.getStorage(logger, gmeConfig, gmeAuth);
             importProject(myStorage, gmeConfig, program.projectIdentifier, jsonProject,
-                program.branch, program.overwrite,
+                program.branch, program.overwrite, program.user,
                 function (err, data) {
                     if (err) {
                         logger.error('error during project import: ', err);
