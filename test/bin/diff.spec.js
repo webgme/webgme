@@ -6,44 +6,36 @@
 
 var testFixture = require('../_globals');
 
-describe('diff CLI tests', function () {
+describe.only('diff CLI tests', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        Storage = testFixture.WebGME.serverUserStorage,
+        storage,
+        gmeAuth,
+        logger = testFixture.logger.fork('diff.spec'),
         diffCLI = require('../../src/bin/diff'),
         importCLI = require('../../src/bin/import'),
-        mongodb = testFixture.mongodb,
-        mongoConn,
         FS = testFixture.fs,
         getJsonProject = function (path) {
             return JSON.parse(FS.readFileSync(path, 'utf-8'));
         },
 
-        mongoUri = gmeConfig.mongo.uri,
         diffCliTest = 'diffCliTest';
 
     before(function (done) {
-        // TODO: move this to globals.js as a utility function
-        mongodb.MongoClient.connect(mongoUri, gmeConfig.mongo.options, function (err, db) {
-            if (err) {
-                done(err);
-                return;
-            }
-            mongoConn = db;
-            db.dropCollection(diffCliTest, function (err) {
-                // ignores if the collection was not found
-                if (err && err.errmsg !== 'ns not found') {
-                    done(err);
-                    return;
-                }
-                done();
-            });
-        });
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, diffCliTest)
+            .then(function (gmeAuth__) {
+                gmeAuth = gmeAuth__;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: diffCliTest});
+            })
+            .nodeify(done);
     });
 
     after(function (done) {
-        mongoConn.close();
-        done();
+        storage.closeDatabase(done);
     });
 
     describe('basic', function () {
@@ -57,17 +49,20 @@ describe('diff CLI tests', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(Storage, gmeConfig, diffCliTest, jsonProject, 'source', true, function (err) {
-                    if (err) {
-                        done(err);
-                        return;
+                importCLI.import(storage,
+                    gmeConfig, diffCliTest, jsonProject, 'source', true, undefined, function (err) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        importCLI.import(storage,
+                            gmeConfig, diffCliTest, jsonProject, 'target', true, undefined, done);
                     }
-                    importCLI.import(Storage, gmeConfig, diffCliTest, jsonProject, 'target', false, done);
-                });
+                );
             });
 
             it('diff should be empty on identical project states source->target', function (done) {
-                diffCLI.generateDiff(mongoUri, diffCliTest, 'source', 'target', function (err, diff) {
+                diffCLI.generateDiff(storage, diffCliTest, 'source', 'target', undefined, function (err, diff) {
                     if (err) {
                         done(err);
                         return;
@@ -78,7 +73,7 @@ describe('diff CLI tests', function () {
             });
 
             it('diff should be empty on identical project states target->source', function (done) {
-                diffCLI.generateDiff(mongoUri, diffCliTest, 'target', 'source', function (err, diff) {
+                diffCLI.generateDiff(storage, diffCliTest, 'target', 'source', undefined, function (err, diff) {
                     if (err) {
                         done(err);
                         return;
@@ -101,17 +96,17 @@ describe('diff CLI tests', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(Storage, gmeConfig, diffCliTest, source, 'source', true, function (err) {
+                importCLI.import(storage, gmeConfig, diffCliTest, source, 'source', true, undefined, function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    importCLI.import(Storage, gmeConfig, diffCliTest, target, 'target', false, done);
+                    importCLI.import(storage, gmeConfig, diffCliTest, target, 'target', true, undefined, done);
                 });
             });
 
             it('new node should be visible in diff source->target', function (done) {
-                diffCLI.generateDiff(mongoUri, diffCliTest, 'source', 'target', function (err, diff) {
+                diffCLI.generateDiff(storage, diffCliTest, 'source', 'target', undefined, function (err, diff) {
                     if (err) {
                         done(err);
                         return;
@@ -126,7 +121,7 @@ describe('diff CLI tests', function () {
             });
 
             it('node remove should be visible in diff target->source', function (done) {
-                diffCLI.generateDiff(mongoUri, diffCliTest, 'target', 'source', function (err, diff) {
+                diffCLI.generateDiff(storage, diffCliTest, 'target', 'source', undefined, function (err, diff) {
                     if (err) {
                         done(err);
                         return;
@@ -152,17 +147,17 @@ describe('diff CLI tests', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(Storage, gmeConfig, diffCliTest, source, 'source', true, function (err) {
+                importCLI.import(storage, gmeConfig, diffCliTest, source, 'source', true, undefined, function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    importCLI.import(Storage, gmeConfig, diffCliTest, target, 'target', false, done);
+                    importCLI.import(storage, gmeConfig, diffCliTest, target, 'target', true, undefined, done);
                 });
             });
 
             it('changed attribute should be visible in diff source->target', function (done) {
-                diffCLI.generateDiff(mongoUri, diffCliTest, 'source', 'target', function (err, diff) {
+                diffCLI.generateDiff(storage, diffCliTest, 'source', 'target', undefined, function (err, diff) {
                     if (err) {
                         done(err);
                         return;
@@ -177,7 +172,7 @@ describe('diff CLI tests', function () {
             });
 
             it('changed attribute should be visible in diff target->source', function (done) {
-                diffCLI.generateDiff(mongoUri, diffCliTest, 'target', 'source', function (err, diff) {
+                diffCLI.generateDiff(storage, diffCliTest, 'target', 'source', undefined, function (err, diff) {
                     if (err) {
                         done(err);
                         return;
@@ -204,17 +199,17 @@ describe('diff CLI tests', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(Storage, gmeConfig, diffCliTest, source, 'source', true, function (err) {
+                importCLI.import(storage, gmeConfig, diffCliTest, source, 'source', true, undefined, function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    importCLI.import(Storage, gmeConfig, diffCliTest, target, 'target', false, done);
+                    importCLI.import(storage, gmeConfig, diffCliTest, target, 'target', true, undefined, done);
                 });
             });
 
             it('changed registry should be visible in diff source->target', function (done) {
-                diffCLI.generateDiff(mongoUri, diffCliTest, 'source', 'target', function (err, diff) {
+                diffCLI.generateDiff(storage, diffCliTest, 'source', 'target', undefined, function (err, diff) {
                     if (err) {
                         done(err);
                         return;
@@ -229,7 +224,7 @@ describe('diff CLI tests', function () {
             });
 
             it('changed registry should be visible in diff target->source', function (done) {
-                diffCLI.generateDiff(mongoUri, diffCliTest, 'target', 'source', function (err, diff) {
+                diffCLI.generateDiff(storage, diffCliTest, 'target', 'source', undefined, function (err, diff) {
                     if (err) {
                         done(err);
                         return;

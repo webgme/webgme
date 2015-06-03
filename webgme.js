@@ -134,7 +134,7 @@ module.exports = {
     core: requirejs('common/core/core'),
     serializer: requirejs('common/core/users/serialization'),
     canon: requirejs('common/util/canon'),
-    openContext: requirejs('common/util/opencontext'),
+    openContext: require('./src/server/util/opencontext').openContext,
     Logger: require('./src/server/logger'),
     REGEXP: requirejs('common/regexp')
 };
