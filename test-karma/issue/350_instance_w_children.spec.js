@@ -15,16 +15,16 @@ describe('issue 350 client crashes when manipulating a node that has a model chi
         options = {};
 
     function buildUpForTest(testId, next) {
-        client.selectProjectAsync(projectName, function (err) {
+        client.selectProject(projectName, function (err) {
             expect(err).to.equal(null);
 
-            client.selectBranchAsync('master', function (err) {
+            client.selectBranch('master', function (err) {
                 expect(err).to.equal(null);
 
-                client.createBranchAsync(testId, client.getActualCommit(), function (err) {
+                client.createBranch(projectName, testId, client.getActiveCommit(), function (err) {
                     expect(err).to.equal(null);
 
-                    client.selectBranchAsync(testId, function (err) {
+                    client.selectBranch(testId, function (err) {
                         expect(err).to.equal(null);
 
                         next();
@@ -43,10 +43,10 @@ describe('issue 350 client crashes when manipulating a node that has a model chi
             projectImport = JSON.parse(projectJSON);
 
             client = new Client(gmeConfig);
-            client.connectToDatabaseAsync(options, function (err) {
+            client.connectToDatabase(function (err) {
                 expect(err).to.equal(null);
 
-                client.deleteProjectAsync(projectName, function (err) {
+                client.deleteProject(projectName, function (err) {
                     expect(err).to.equal(null);
 
                     client.createProjectFromFileAsync(projectName, projectImport, function (err) {
@@ -60,7 +60,7 @@ describe('issue 350 client crashes when manipulating a node that has a model chi
     });
 
     after(function (done) {
-        client.deleteProjectAsync(projectName, function (err) {
+        client.deleteProject(projectName, function (err) {
             expect(err).to.equal(null);
 
             done();

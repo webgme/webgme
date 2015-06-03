@@ -21,13 +21,12 @@ describe('issue 171 server crashes when trying to switch to non-existent branch'
     });
 
     after(function (done) {
-        var client = new Client(gmeConfig),
-            options = {};
+        var client = new Client(gmeConfig);
 
-        client.connectToDatabaseAsync(options, function (err) {
+        client.connectToDatabase(function (err) {
             expect(err).to.equal(null);
 
-            client.deleteProjectAsync(projectName, function (err) {
+            client.deleteProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
                 done();
@@ -38,43 +37,41 @@ describe('issue 171 server crashes when trying to switch to non-existent branch'
     it('should send error without opened database connection', function (done) {
         var client = new Client(gmeConfig);
 
-        client.selectBranchAsync('other', function (err) {
+        client.selectBranch('other', null, function (err) {
             expect(err).not.to.equal(null);
             done();
         });
     });
 
     it('should send error without opened project', function (done) {
-        var client = new Client(gmeConfig),
-            options = {};
-        client.connectToDatabaseAsync(options, function (err) {
+        var client = new Client(gmeConfig);
+        client.connectToDatabase(function (err) {
             expect(err).to.equal(null);
-            client.selectBranchAsync('other', function (err) {
+            client.selectBranch('other', null, function (err) {
                 expect(err).not.to.equal(null);
                 done();
             });
         });
     });
 
-    it('initially should be only the master branch', function (done) {
+    it.skip('initially should be only the master branch', function (done) {
         this.timeout(5000);
         var client = new Client(gmeConfig),
-            options = {},
             info = {};
 
-        client.connectToDatabaseAsync(options, function (err) {
+        client.connectToDatabase(function (err) {
             expect(err).to.equal(null);
 
-            client.deleteProjectAsync(projectName, function (err) {
+            client.deleteProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
-                client.createProjectAsync(projectName, info, function (err) {
+                client.createProject(projectName, info, function (err) {
                     expect(err).to.equal(null);
 
-                    client.selectProjectAsync(projectName, function (err) {
+                    client.selectProject(projectName, function (err) {
                         expect(err).to.equal(null);
 
-                        client.getBranchesAsync(function (err, names) {
+                        client.getBranches(projectName, function (err, names) {
                             expect(err).to.equal(null);
 
                             expect(names).to.have.length(1);
@@ -89,7 +86,7 @@ describe('issue 171 server crashes when trying to switch to non-existent branch'
         });
     });
 
-    it('should get some error when selecting non-existent branch', function (done) {
+    it.skip('should get some error when selecting non-existent branch', function (done) {
         var client = new Client(gmeConfig),
             options = {},
             info = {};

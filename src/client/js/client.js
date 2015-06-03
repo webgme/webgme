@@ -10,7 +10,7 @@ define([
     'common/EventDispatcher',
     'common/core/core',
     'js/client/constants',
-    'common/core/users/META',
+    'common/core/users/meta',
     'common/util/assert',
     'common/core/tasync',
     'common/util/guid',
@@ -34,7 +34,7 @@ define([
             logger = Logger.create('gme:client', gmeConfig.client.log),
             storage = Storage.getStorage(logger, gmeConfig),
             state = {
-                connection: CONSTANTS.STORAGE.DISCONNECTED, // CONNECTED, RECONNECTED
+                connection: null, // CONSTANTS.STORAGE. CONNECTED/DISCONNECTED/RECONNECTED
                 project: null,
                 core: null,
                 branchName: null,
@@ -174,9 +174,20 @@ define([
                 } else if (connectionState === CONSTANTS.STORAGE.RECONNECTED) {
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
                 } else { //CONSTANTS.ERROR
-                    throw new Error('Connection failed!');
+                    callback(Error('Connection failed!' + connectionState));
                 }
             });
+        };
+
+        this.disconnectFromDatabase = function (callback) {
+            if (isConnected()) {
+                storage.close();
+                state.connection = CONSTANTS.STORAGE.DISCONNECTED;
+                callback(null);
+            } else {
+                logger.warn('Trying to disconnect when already disconnected.');
+                callback(null);
+            }
         };
 
         this.selectProject = function (projectName, callback) {
@@ -258,8 +269,16 @@ define([
          * @param callback
          */
         this.selectBranch = function (branchName, commitHandler, callback) {
-            ASSERT(state.project, 'selectBranch invoked without open project');
             logger.debug('selectBranch', branchName);
+            if (isConnected() === false) {
+                callback(new Error('There is no open database connection!'));
+                return;
+            }
+            if (!state.project) {
+                callback(new Error('selectBranch invoked without open project'));
+                return;
+            }
+
             var prevBranchName = state.branchName;
 
             if (prevBranchName === branchName) {
