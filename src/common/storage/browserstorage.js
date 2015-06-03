@@ -16,7 +16,7 @@ define([
 
     function _createStorage(logger, gmeConfig) {
         var ioClient = new BrowserIoClient(gmeConfig),
-            webSocket = new WebSocket(ioClient, logger),
+            webSocket = new WebSocket(ioClient, logger, gmeConfig),
             storage = new EditorStorage(webSocket, logger, gmeConfig);
 
         return storage;

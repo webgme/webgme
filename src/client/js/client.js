@@ -14,6 +14,7 @@ define([
     'common/util/assert',
     'common/core/tasync',
     'common/util/guid',
+    'common/util/url',
     'js/client/gmeNodeGetter',
     'js/client/gmeNodeSetter'
 ], function (Logger,
@@ -25,6 +26,7 @@ define([
              ASSERT,
              TASYNC,
              GUID,
+             URL,
              getNode,
              getNodeSetters) {
     'use strict';
@@ -168,6 +170,7 @@ define([
                 if (connectionState === CONSTANTS.STORAGE.CONNECTED) {
                     //N.B. this event will only be triggered once.
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
+                    state.userId = URL.parseCookie(document.cookie).webgme || gmeConfig.authentication.guestAccount;
                     callback(null);
                 } else if (connectionState === CONSTANTS.STORAGE.DISCONNECTED) {
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
@@ -606,14 +609,6 @@ define([
         // REST-like functions and forwarded to storage TODO: add these to separate base class
 
         //  Getters
-        this.getProjectNames = function (callback) {
-            if (isConnected()) {
-                storage.getProjectNames(callback);
-            } else {
-                callback(new Error('There is no open database connection!'));
-            }
-        };
-
         this.getProjects = function (callback) {
             if (isConnected()) {
                 storage.getProjects(callback);
@@ -1145,7 +1140,7 @@ define([
                         [state.commit.current],
                         persisted.rootHash,
                         persisted.objects,
-                        msg
+                        state.msg
                     );
                     addCommit(newCommitObject[CONSTANTS.STORAGE.MONGO_ID]);
                     //undo-redo
@@ -1276,6 +1271,16 @@ define([
                 }
             }
         }
+
+        this.getUserId = function () {
+            var cookies = URL.parseCookie(document.cookie);
+            if (cookies.webgme) {
+                return cookies.webgme;
+            } else {
+                return 'n/a';
+            }
+        };
+
     }
 
     // Inherit from the EventDispatcher

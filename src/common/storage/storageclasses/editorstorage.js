@@ -30,6 +30,7 @@ define([
             projects = {};
 
         self.logger = logger;
+        self.userId = null;
 
         StorageObjectLoaders.call(this, webSocket, mainLogger, gmeConfig);
 
@@ -40,6 +41,7 @@ define([
                     networkHandler(CONSTANTS.ERROR);
                 } else if (connectionState === CONSTANTS.CONNECTED) {
                     self.connected = true;
+                    self.userId = webSocket.userId;
                     networkHandler(connectionState);
                 } else if (connectionState === CONSTANTS.RECONNECTED) {
                     self._rejoinWatcherRooms();
@@ -340,7 +342,7 @@ define([
             var commitObj = {
                     root: rootHash,
                     parents: parents,
-                    updater: ['dummy'], //TODO: use session to get user
+                    updater: [self.userId],
                     time: (new Date()).getTime(),
                     message: msg,
                     type: 'commit'

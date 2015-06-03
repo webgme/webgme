@@ -93,8 +93,43 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
 
         logger.debug('listening');
 
+        webSocket.use(function (socket, next) {
+            //either the html header contains some webgme signed cookie with the sessionID
+            // or the data has a webGMESession member which should also contain the sessionID
+            // - currently the same as the cookie
+            if (gmeConfig.authentication.enable === true) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        if (typeof userId === 'string') {
+                            next();
+                        } else {
+                            throw new Error('Could not authenticate socket.');
+                        }
+                    })
+                    .catch(function (err) {
+                        next(err.toString());
+                    });
+            } else {
+                next();
+            }
+        });
+
         webSocket.on('connection', function (socket) {
             logger.debug('New socket connected', socket.id);
+
+            socket.on('getUserId', function (callback) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        if (typeof userId === 'string') {
+                            callback(null, userId);
+                        } else {
+                            throw new Error('Could not get userId');
+                        }
+                    }).catch(function (err) {
+                        callback(err.toString());
+                    });
+            });
+
             // watcher functions
             socket.on('watchDatabase', function (data) {
                 logger.debug('watchDatabase', {metadata: data});

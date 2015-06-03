@@ -7,8 +7,9 @@
 
 define([
     'js/logger',
-    'js/Controls/DropDownMenu'
-], function (Logger, DropDownMenu) {
+    'js/Controls/DropDownMenu',
+    'js/client/constants'
+], function (Logger, DropDownMenu, CLIENT_CONSTANTS) {
 
     'use strict';
 
@@ -66,16 +67,16 @@ define([
             self._refreshBranchList();
         };
 
-        this._client.addEventListener(this._client.events.PROJECT_OPENED, function () {
+        this._client.addEventListener(CLIENT_CONSTANTS.PROJECT_OPENED, function () {
             self._refreshActualBranchInfo();
             self._refreshBranchList();
         });
-        this._client.addEventListener(this._client.events.PROJECT_CLOSED, function () {
+        this._client.addEventListener(CLIENT_CONSTANTS.PROJECT_CLOSED, function () {
             self._refreshActualBranchInfo();
             self._refreshBranchList();
         });
 
-        this._client.addEventListener(this._client.events.BRANCH_CHANGED, function () {
+        this._client.addEventListener(CLIENT_CONSTANTS.BRANCH_CHANGED, function () {
             self._refreshActualBranchInfo();
             self._refreshBranchList();
         });
@@ -116,7 +117,7 @@ define([
         };
 
         try {
-            this._client.getBranchesAsync(branchesLoaded);
+            this._client.getBranches(this._client.getActiveProjectName(), branchesLoaded);
         } catch (exp) {
             this._logger.error('_client.getBranchesAsync failed.... SHOULD NEVER HAPPEN');
         }

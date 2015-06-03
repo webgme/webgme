@@ -314,7 +314,7 @@ define([
                 return;
             }
 
-            self.logger.debug('getFullProjectsInfoAsync', projectList);
+            self.logger.debug('getProjectsAndBranches', projectList);
 
             // clear project list
             self.projects = {};

@@ -13,12 +13,13 @@ define([
 
     'use strict';
 
-    function WebSocket(ioClient, mainLogger) {
+    function WebSocket(ioClient, mainLogger, gmeConfig) {
         var self = this,
             logger = mainLogger.fork('WebSocket'),
             beenConnected = false;
 
         self.socket = null;
+        self.userId = null;
 
         logger.debug('ctor');
         EventDispatcher.call(this);
@@ -39,7 +40,15 @@ define([
                     } else {
                         logger.debug('Socket got connected for the first time.');
                         beenConnected = true;
-                        networkHandler(null, CONSTANTS.CONNECTED);
+                        self.socket.emit('getUserId', function (err, userId) {
+                            if (err) {
+                                self.userId = self.gmeConfig.authentication.guestAccount;
+                                logger.error('Error getting user id setting to default', err, self.userId);
+                            } else {
+                                self.userId = userId;
+                            }
+                            networkHandler(null, CONSTANTS.CONNECTED);
+                        });
                     }
                 });
 

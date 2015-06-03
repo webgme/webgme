@@ -49,7 +49,7 @@ define([
 
         this._ddNetworkStatus.onItemClicked = function (value) {
             if (value === ITEM_VALUE_CONNECT) {
-                self._client.connect();
+                //self._client.connect();
             }
         };
 
