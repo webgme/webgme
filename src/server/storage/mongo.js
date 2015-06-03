@@ -9,7 +9,7 @@
 'use strict';
 
 var mongodb = require('mongodb'),
-    Q = require('Q'),
+    Q = require('q'),
 
     CONSTANTS = requireJS('common/storage/constants'),
     CANON = requireJS('common/util/canon'),

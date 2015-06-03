@@ -15,7 +15,7 @@
 
 'use strict';
 
-var Q = require('Q'),
+var Q = require('q'),
 
     REGEXP = requireJS('common/regexp'),
     ASSERT = requireJS('common/util/assert'),

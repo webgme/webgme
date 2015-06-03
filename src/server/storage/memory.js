@@ -5,7 +5,7 @@
  */
 'use strict';
 
-var Q = require('Q'),
+var Q = require('q'),
 
     ASSERT = requireJS('common/util/assert'),
     //CANON = requireJS('common/util/canon'),

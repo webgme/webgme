@@ -6,7 +6,7 @@
 
 var ASSERT = requireJS('common/util/assert'),
     Core = requireJS('common/core/core'),
-    Q = require('Q'),
+    Q = require('q'),
     REGEXP = requireJS('common/regexp'),
     CONSTANTS = requireJS('common/storage/constants'),
     Project = require('../storage/userproject');

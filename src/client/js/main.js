@@ -30,7 +30,6 @@ require.config({
     paths: {
 
         domReady: 'lib/require/require-domready/domReady',
-        Q: 'lib/q/q',
 
         //jQuery and stuff
         jquery: 'lib/jquery/jquery-' + _jqueryVersion + ( DEBUG ? '.min' : '' ),
@@ -67,6 +66,7 @@ require.config({
         jszip: 'lib/jszip/jszip',
         superagent: 'lib/superagent/superagent-' + _superagentVersion,
         debug: 'lib/debug/debug',
+        Q: 'lib/q/q',
 
 
         codemirror: 'lib/codemirror/codemirror.amd',

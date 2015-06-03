@@ -6,7 +6,7 @@
  */
 'use strict';
 
-var Q = require('Q'),
+var Q = require('q'),
 
     EventDispatcher = requireJS('common/EventDispatcher'),
     CONSTANTS = requireJS('common/storage/constants');

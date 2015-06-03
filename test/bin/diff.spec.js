@@ -6,7 +6,7 @@
 
 var testFixture = require('../_globals');
 
-describe.only('diff CLI tests', function () {
+describe('diff CLI tests', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         storage,

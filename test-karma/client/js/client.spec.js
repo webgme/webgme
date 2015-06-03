@@ -46,7 +46,6 @@ describe.only('GME client', function () {
 
 
             //eventer related API
-            console.log(Object.keys(client).sort());
             expect(typeof client.addEventListener).to.equal('function');
             expect(typeof client.removeEventListener).to.equal('function');
             expect(typeof client.removeAllEventListeners).to.equal('function');
@@ -65,7 +64,7 @@ describe.only('GME client', function () {
                 'getBranches',
                 'selectCommit',
                 'getCommits',
-                'getActiveCommit',
+                'getActiveCommitHash',
                 'getActiveBranchName',
                 'getNetworkStatus',
                 'getBranchStatus',
@@ -104,9 +103,9 @@ describe.only('GME client', function () {
                 'createSet',
                 'deleteSet',
                 'setBase',
-                'delBase',
-                'setConstraint',
-                'delConstraint'
+                'delBase'
+                //'setConstraint', TODO: Add these back
+                //'delConstraint'
             );
 
             //META manipulation API
@@ -199,83 +198,59 @@ describe.only('GME client', function () {
 
     });
 
-    describe.skip('database connection', function () {
+    describe('database connection', function () {
         var Client,
             gmeConfig,
-            projectName = 'ProjectAndBranchOperationsTest',
-            client;
+            projectName = 'ProjectAndBranchOperationsTest';
 
         before(function (done) {
             this.timeout(10000);
             requirejs(['js/client', 'text!gmeConfig.json'], function (Client_, gmeConfigJSON) {
                 Client = Client_;
                 gmeConfig = JSON.parse(gmeConfigJSON);
-                client = new Client(gmeConfig);
 
                 done();
             });
         });
 
         it('should connect to the database', function (done) {
-            var options = {};
-
-            client.connectToDatabaseAsync(options, function (err) {
+            var client = new Client(gmeConfig);
+            client.connectToDatabase(function (err) {
                 expect(err).to.equal(null);
                 done();
             });
         });
 
         it('should connect to the database even if we already connected', function (done) {
-            var options = {};
-
-            client.connectToDatabaseAsync(options, function (err) {
+            var client = new Client(gmeConfig);
+            client.connectToDatabase(function (err) {
                 expect(err).to.equal(null);
 
-                client.connectToDatabaseAsync(options, function (err) {
+                client.connectToDatabase(function (err) {
                     expect(err).to.equal(null);
                     done();
                 });
             });
         });
 
-        it('should connect to the database but close the project if it was opened before', function (done) {
-
-            client.connectToDatabaseAsync({}, function (err) {
-                expect(err).to.equal(null);
-                client.selectProjectAsync(projectName, function (err) {
-                    expect(err).to.equal(null);
-
-                    expect(client.getActiveProjectName()).to.equal(projectName);
-                    client.connectToDatabaseAsync({}, function (err) {
-                        expect(err).to.equal(null);
-
-                        expect(client.getActiveProjectName()).to.equal(null);
-                        done();
-                    });
-                });
-            });
-        });
-
-        it('should connect and open the given project', function (done) {
-
-            client.connectToDatabaseAsync({open: true, project: projectName}, function (err) {
-                expect(err).to.equal(null);
-                expect(client.getActiveProjectName()).to.equal(projectName);
-
-                done();
-            });
-        });
-
-        //FIXME we should remove this functionality
-        it('should connect and open the \'first\' project', function (done) {
-
-            client.connectToDatabaseAsync({open: true}, function (err) {
-                expect(err).to.equal(null);
-                expect(client.getActiveProjectName()).not.to.equal(null);
-
-                done();
-            });
-        });
+        //TODO: Should it really?
+        //it.skip('should connect to the database but close the project if it was opened before', function (done) {
+        //
+        //    client.connectToDatabase(function (err) {
+        //        expect(err).to.equal(null);
+        //        client.selectProject(projectName, function (err) {
+        //            expect(err).to.equal(null);
+        //
+        //            expect(client.getActiveProjectName()).to.equal(projectName);
+        //            client.connectToDatabase(function (err) {
+        //                expect(err).to.equal(null);
+        //
+        //                expect(client.getActiveProjectName()).to.equal(null);
+        //                done();
+        //            });
+        //        });
+        //    });
+        //});
     });
 
     describe('no database connection', function () {
@@ -295,8 +270,8 @@ describe.only('GME client', function () {
             });
         });
 
-        it('should fail to get available project list', function (done) {
-            client.getAvailableProjectsAsync(function (err) {
+        it('should fail to get getProjects', function (done) {
+            client.getProjects(function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.contain('no open database');
 
@@ -304,27 +279,8 @@ describe.only('GME client', function () {
             });
         });
 
-        it('should fail to get filtered project list', function (done) {
-            client.getViewableProjectsAsync(function (err) {
-                expect(err).not.to.equal(null);
-                expect(err.message).to.contain('no open database');
-
-                done();
-            });
-        });
-
-        it('should fail to get authorization info of a project', function (done) {
-            client.getProjectAuthInfoAsync('any project', function (err) {
-                expect(err).not.to.equal(null);
-                expect(err.message).to.contain('no open database');
-
-                done();
-            });
-        });
-
-        //FIXME - this should also fail
-        it.skip('should fail to full project list', function (done) {
-            client.getFullProjectListAsync(function (err) {
+        it('should fail to get getProjectsAndBranches', function (done) {
+            client.getProjectsAndBranches(false, function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.contain('no open database');
 
@@ -333,7 +289,7 @@ describe.only('GME client', function () {
         });
 
         it('should fail to select project', function (done) {
-            client.selectProjectAsync('any project', function (err) {
+            client.selectProject('any project', function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.contain('no open database');
 
@@ -342,7 +298,7 @@ describe.only('GME client', function () {
         });
 
         it('should fail to create project', function (done) {
-            client.createProjectAsync('any project', {}, function (err) {
+            client.createProject('any project', {}, function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.contain('no open database');
 
@@ -351,7 +307,7 @@ describe.only('GME client', function () {
         });
 
         it('should fail to delete project', function (done) {
-            client.deleteProjectAsync('any project', function (err) {
+            client.deleteProject('any project', function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.contain('no open database');
 
@@ -359,18 +315,17 @@ describe.only('GME client', function () {
             });
         });
 
-        //FIXME - harmonize error texts
         it('should fail to get branch names', function (done) {
-            client.getBranchesAsync(function (err) {
+            client.getBranches('any project', function (err) {
                 expect(err).not.to.equal(null);
-                expect(err.message).to.contain('no opened database');
+                expect(err.message).to.contain('no open database');
 
                 done();
             });
         });
 
         it('should fail to select branch', function (done) {
-            client.selectBranchAsync('any branch', function (err) {
+            client.selectBranch('any branch', null, function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.contain('no open database');
 
@@ -379,7 +334,7 @@ describe.only('GME client', function () {
         });
 
         it('should fail to select commit', function (done) {
-            client.selectCommitAsync('any commit', function (err) {
+            client.selectCommit('any commit', function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.contain('no open database');
 
@@ -388,7 +343,7 @@ describe.only('GME client', function () {
         });
 
         it('should fail to get commits', function (done) {
-            client.getCommitsAsync('any commit', 'any number', function (err) {
+            client.getCommits('anyProject', 'any commit', 'any number', function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.contain('no open database');
 
@@ -397,7 +352,7 @@ describe.only('GME client', function () {
         });
 
         it('should fail to create branch', function (done) {
-            client.createBranchAsync('any branch', 'any commit', function (err) {
+            client.createBranch('anyProject', 'any branch', 'any commitHash', function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.contain('no open database');
 
@@ -406,7 +361,7 @@ describe.only('GME client', function () {
         });
 
         it('should fail to delete branch', function (done) {
-            client.deleteBranchAsync('any branch', function (err) {
+            client.deleteBranch('anyProject', 'any branch', 'any commitHash', function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.contain('no open database');
 
@@ -414,16 +369,16 @@ describe.only('GME client', function () {
             });
         });
 
-        it('should fail to make a commit', function (done) {
-            var commitOptions = {message: 'any message'};
-
-            client.commitAsync(commitOptions, function (err) {
-                expect(err).not.to.equal(null);
-                expect(err.message).to.contain('no open database');
-
-                done();
-            });
-        });
+        //it('should fail to make a commit', function (done) {
+        //    var commitOptions = {message: 'any message'};
+        //
+        //    client.commitAsync(commitOptions, function (err) {
+        //        expect(err).not.to.equal(null);
+        //        expect(err.message).to.contain('no open database');
+        //
+        //        done();
+        //    });
+        //});
 
         //FIXME - there are other Async functions which misses the database check, so they can cause crash in the client
         // so either we refactor and make the API dynamic,
@@ -465,7 +420,7 @@ describe.only('GME client', function () {
         });
 
         beforeEach(function (done) {
-            client.connectToDatabaseAsync({}, function (err) {
+            client.connectToDatabase(function (err) {
                 expect(err).to.equal(null);
 
                 done();
@@ -477,7 +432,7 @@ describe.only('GME client', function () {
         });
 
         it('should return the valid textual id of the opened project', function (done) {
-            client.selectProjectAsync(projectName, function (err) {
+            client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
                 expect(client.getActiveProjectName()).to.equal(projectName);
@@ -485,73 +440,29 @@ describe.only('GME client', function () {
             });
         });
 
-        //TODO inlcude checks for all imported projects that should be in the database
-        it('should return the list of textual ids of available projects', function (done) {
-            client.getAvailableProjectsAsync(function (err, names) {
-                expect(err).to.equal(null);
-
-                expect(names).to.have.length.least(1);
-                expect(names).to.include(projectName);
-                done();
-            });
-        });
-
-        //TODO inlcude checks for all imported projects that should be in the database
-        it('should return a filtered list of textual project ids, where the user have read access', function (done) {
-            client.getViewableProjectsAsync(function (err, names) {
-                expect(err).to.equal(null);
-
-                expect(names).to.have.length.least(1);
-                expect(names).to.include(projectName);
-                done();
-            });
-        });
-
         it('list of viewable projects should be equal to list of all projects without authentication', function (done) {
-            client.getAvailableProjectsAsync(function (err, allNames) {
+            client.getProjects(function (err, allProjects) {
                 expect(err).to.equal(null);
-
-                client.getViewableProjectsAsync(function (err, viewableNames) {
-                    expect(err).to.equal(null);
-
-                    expect(viewableNames).to.deep.equal(allNames);
-                    done();
-                });
+                expect(allProjects).to.equal(null);
             });
         });
 
-        it('should return the authorization info of a given project', function (done) {
-            client.getProjectAuthInfoAsync(projectName, function (err, authInfo) {
-                expect(err).to.equal(null);
-                expect(authInfo).to.deep.equal({read: true, write: true, delete: true});
-                done();
-            });
-        });
-
-        //FIXME check how it should behave in these scenario - drop error at least under authentication
-        it('should return unknown project error for an unknown project', function (done) {
-            client.getProjectAuthInfoAsync('unknown_project', function (err) {
-                //expect(err).not.to.equal(null);
-                expect(err).to.equal(null);
-                done();
-            });
-        });
-
-        it('should return the complete project list, with branches and authorization info', function (done) {
-            client.getFullProjectListAsync(function (err, projects) {
+        it('getProjectsAndBranches should return the complete project object, with branches and authorization info', function (done) {
+            client.getProjectsAndBranches(true, function (err, projects) {
                 var key;
                 expect(err).to.equal(null);
                 for (key in projects) {
                     expect(projects[key].hasOwnProperty('read')).to.equal(true);
                     expect(projects[key].hasOwnProperty('write')).to.equal(true);
                     expect(projects[key].hasOwnProperty('delete')).to.equal(true);
+                    expect(projects[key].hasOwnProperty('branches')).to.equal(true);
                 }
                 done();
             });
         });
 
         it('should selects a given project', function (done) {
-            client.selectProjectAsync(projectName, function (err) {
+            client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
                 expect(client.getActiveProjectName()).to.equal(projectName);
@@ -561,20 +472,20 @@ describe.only('GME client', function () {
         });
 
         it('should fail to select an unknown project', function (done) {
-            client.selectProjectAsync('unknown_project', function (err) {
+            client.selectProject('unknown_project', function (err) {
                 expect(err.message).to.contain('no such project');
                 done();
             });
         });
 
         it('should be able to delete a nonexistent project', function (done) {
-            client.deleteProjectAsync('unknown_project', function (err) {
+            client.deleteProject('unknown_project', function (err) {
                 expect(err).to.equal(null);
                 done();
             });
         });
 
-        it('should delete a project', function (done) {
+        it.skip('should delete a project', function (done) {
             var testProjectName = 'deleteProject',
                 projectInfo = {};
 
@@ -604,7 +515,7 @@ describe.only('GME client', function () {
             });
         });
 
-        it('should create a project with info data', function (done) {
+        it.skip('should create a project with info data', function (done) {
             var testProjectName = 'createProject',
                 info = {property: 'value'};
 
@@ -624,7 +535,7 @@ describe.only('GME client', function () {
             });
         });
 
-        it('should fail to create an already existing project', function (done) {
+        it.skip('should fail to create an already existing project', function (done) {
             client.createProjectAsync(projectName, {}, function (err) {
                 expect(err).to.contain('already exists!');
                 done();
@@ -635,13 +546,13 @@ describe.only('GME client', function () {
         it('should list the available branches of the opened project', function (done) {
             var actualBranch,
                 actualCommit;
-            client.selectProjectAsync(projectName, function (err) {
+            client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
                 actualBranch = client.getActualBranch();
                 actualCommit = client.getActualCommit();
 
-                client.getBranchesAsync(function (err, branches) {
+                client.getBranches(projectName, function (err, branches) {
                     expect(err).to.equal(null);
 
                     expect(branches).to.have.length.of.at.least(1);
@@ -652,10 +563,10 @@ describe.only('GME client', function () {
         });
 
         it('should select the given branch of the opened project', function (done) {
-            client.selectProjectAsync(projectName, function (err) {
+            client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
-                client.selectBranchAsync('master', function (err) {
+                client.selectBranch('master', function (err) {
                     expect(err).to.equal(null);
                     done();
                 });
@@ -663,10 +574,10 @@ describe.only('GME client', function () {
         });
 
         it('should select a nonexistent branch of the opened project', function (done) {
-            client.selectProjectAsync(projectName, function (err) {
+            client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
-                client.selectBranchAsync('does_not_exist', function (err) {
+                client.selectBranch('does_not_exist', function (err) {
                     expect(err.message).to.equal('there is no such branch!');
                     done();
                 });

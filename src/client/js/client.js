@@ -194,6 +194,9 @@ define([
         };
 
         this.selectProject = function (projectName, callback) {
+            if (isConnected() === false) {
+                callback(new Error('There is no open database connection!'));
+            }
             var prevProjectName,
                 branchToOpen = 'master';
 
@@ -347,8 +350,15 @@ define([
         };
 
         this.selectCommit = function (commitHash, callback) {
-            ASSERT(state.project, 'selectCommit invoked without an open project.');
             logger.debug('selectCommit', commitHash);
+            if (isConnected() === false) {
+                callback(new Error('There is no open database connection!'));
+                return;
+            }
+            if (!state.project) {
+                callback(new Error('selectCommit invoked without open project'));
+                return;
+            }
             var prevBranchName;
 
             function openCommit(err) {
@@ -618,11 +628,19 @@ define([
         };
 
         this.getBranches = function (projectName, callback) {
-            storage.getBranches(projectName, callback);
+            if (isConnected()) {
+                storage.getBranches(projectName, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
         };
 
         this.getCommits = function (projectName, before, number, callback) {
-            storage.getCommits(projectName, before, number, callback);
+            if (isConnected()) {
+                storage.getCommits(projectName, before, number, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
         };
 
         this.getLatestCommitData = function (projectName, branchName, callback) {
@@ -663,19 +681,35 @@ define([
 
         //  Setters
         this.createProject = function (projectName, parameters, callback) {
-            storage.createProject(projectName, parameters, callback);
+            if (isConnected()) {
+                storage.createProject(projectName, parameters, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
         };
 
         this.deleteProject = function (projectName, callback) {
-            storage.deleteProject(projectName, callback);
+            if (isConnected()) {
+                storage.deleteProject(projectName, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
         };
 
         this.createBranch = function (projectName, branchName, newHash, callback) {
-            storage.createBranch(projectName, branchName, newHash, callback);
+            if (isConnected()) {
+                storage.createBranch(projectName, branchName, newHash, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
         };
 
         this.deleteBranch = function (projectName, branchName, oldHash, callback) {
-            storage.deleteBranch(projectName, branchName, oldHash, callback);
+            if (isConnected()) {
+                storage.deleteBranch(projectName, branchName, oldHash, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
         };
 
         // Watchers (used in e.g. ProjectNavigator).
