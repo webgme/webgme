@@ -143,7 +143,7 @@ define([
 
 
             client.decoratorManager = new DecoratorManager();
-            getAvaliablePluginsAndDecorators();
+            getAvaliablePluginsAndDecoratorsAndSeeds();
 
             client.decoratorManager.downloadAll(gmeConfig.client.usedDecorators, function (err) {
                 if (err) {
@@ -399,7 +399,7 @@ define([
         }
 
         //This is still asychronous but has a better chance to finish here rather than from the client.
-        function getAvaliablePluginsAndDecorators() {
+        function getAvaliablePluginsAndDecoratorsAndSeeds() {
             superagent.get('/listAllPlugins')
                 .end(function (err, res) {
                     if (res.status === 200) {
@@ -418,6 +418,16 @@ define([
                     } else {
                         logger.error('/listAllDecorators failed', err);
                         WebGMEGlobal.allDecorators = [];
+                    }
+                });
+            superagent.get('/listAllSeeds')
+                .end(function (err, res) {
+                    if (res.status === 200) {
+                        WebGMEGlobal.allSeeds = res.body.allSeeds;
+                        logger.debug('/listAllSeeds', WebGMEGlobal.allSeeds);
+                    } else {
+                        logger.error('/listAllSeeds failed', err);
+                        WebGMEGlobal.allSeeds = [];
                     }
                 });
         }

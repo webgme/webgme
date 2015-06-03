@@ -615,7 +615,7 @@ define([
             storage.getLatestCommitData(projectName, branchName, callback);
         };
 
-        this.getProjectsAndBranches = function (callback) {
+        this.getProjectsAndBranches = function (asObject, callback) {
             if (isConnected()) {
                 storage.getProjectsAndBranches(function (err, projectsWithBranches) {
                     var i,
@@ -624,18 +624,23 @@ define([
                         callback(err);
                         return;
                     }
-                    //Move the result in the same format as before.
-                    for (i = 0; i < projectsWithBranches.length; i += 1) {
-                        result[projectsWithBranches[i].name] = {
-                            branches: projectsWithBranches[i].branches,
-                            rights: {
-                                read: projectsWithBranches[i].read,
-                                write: projectsWithBranches[i].write,
-                                delete: projectsWithBranches[i].delete,
-                            }
-                        };
+                    if (asObject === true) {
+                        //Move the result in the same format as before.
+                        for (i = 0; i < projectsWithBranches.length; i += 1) {
+                            result[projectsWithBranches[i].name] = {
+                                branches: projectsWithBranches[i].branches,
+                                rights: {
+                                    read: projectsWithBranches[i].read,
+                                    write: projectsWithBranches[i].write,
+                                    delete: projectsWithBranches[i].delete,
+                                }
+                            };
+                        }
+                        callback(null, result);
+                    } else {
+                        callback(null, projectsWithBranches);
                     }
-                    callback(null, result);
+
                 });
             } else {
                 callback(new Error('There is no open database connection!'));

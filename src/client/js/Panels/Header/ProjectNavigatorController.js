@@ -304,9 +304,8 @@ define([
     ProjectNavigatorController.prototype.updateProjectList = function () {
         var self = this;
         self.logger.debug('updateProjectList');
-        // FIXME: get read=only/viewable/available project?!
         self.projects = {};
-        self.gmeClient.getProjectsAndBranches(function (err, projectList) {
+        self.gmeClient.getProjectsAndBranches(true, function (err, projectList) {
             var projectId,
                 branchId;
 

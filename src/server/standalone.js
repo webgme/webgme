@@ -986,6 +986,30 @@ function StandAloneServer(gmeConfig) {
         res.setHeader('Content-type', 'application/json');
         res.end(JSON.stringify({allPlugins: names}));
     });
+
+    __app.get('/listAllSeeds', ensureAuthenticated, function (req, res) {
+        var names = [],
+            result = [],
+            seedName,
+            i,
+            j;
+        if (gmeConfig.seedProjects.enable === true) {
+            for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
+                names = FS.readdirSync(gmeConfig.seedProjects.basePaths[i]);
+                for (j = 0; j < names.length; j++) {
+                    seedName = Path.basename(names[j], '.json');
+                    if (result.indexOf(seedName) === -1) {
+                        result.push(seedName);
+                    }
+                }
+            }
+        }
+        logger.debug('/listAllSeeds', {metadata: result});
+        res.status(200);
+        res.setHeader('Content-type', 'application/json');
+        res.end(JSON.stringify({allSeeds: result.sort()}));
+    });
+
     __app.get('/listAllVisualizerDescriptors', ensureAuthenticated, function (req, res) {
         var allVisualizerDescriptors = getVisualizersDescriptor();
         res.status(200);
