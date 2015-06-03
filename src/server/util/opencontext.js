@@ -8,6 +8,7 @@ var ASSERT = requireJS('common/util/assert'),
     Core = requireJS('common/core/core'),
     Q = require('Q'),
     REGEXP = requireJS('common/regexp'),
+    CONSTANTS = requireJS('common/storage/constants'),
     Project = require('../storage/userproject');
 /**
  * Opens the context specified by the parameters and returns a result object.
@@ -42,17 +43,21 @@ function openContext(storage, gmeConfig, _logger, parameters, callback) {
         emptyProject = false,
         logger = _logger.fork('openContext'),
         closeOnError = function (err) {
-            if (result.project) {
-                result.project.closeProject(function () {
-                    storage.closeDatabase(function () {
-                        contextDeferred.reject(err);
-                    });
-                });
-            } else {
-                storage.closeDatabase(function () {
-                    contextDeferred.reject(err);
-                });
-            }
+            logger.error(err);
+            storage.closeDatabase(function () {
+                contextDeferred.reject(err);
+            });
+            /*if (result.project) {
+             result.project.closeProject(function () {
+             storage.closeDatabase(function () {
+             contextDeferred.reject(err);
+             });
+             });
+             } else {
+             storage.closeDatabase(function () {
+             contextDeferred.reject(err);
+             });
+             }*/
         };
 
     if (parameters.userName) {
@@ -109,15 +114,27 @@ function openContext(storage, gmeConfig, _logger, parameters, callback) {
             }
         })
         .then(function (dbProject) {
+            var deferred = Q.defer();
             result.project = new Project(dbProject, storage, logger.fork('project'), gmeConfig);
             result.core = new Core(result.project, {
                 globConf: gmeConfig,
                 logger: logger.fork('core')
             });
 
+
+            if (!parameters.branchName) {
+                if (parameters.branchOrCommit && REGEXP.BRANCH.test(parameters.branchOrCommit)) {
+                    parameters.branchName = parameters.branchOrCommit;
+                } else {
+                    parameters.branchName = 'master';
+                }
+            }
+
             if (emptyProject) {
                 var root = result.core.createNode({parent: null, base: null}),
                     persisted = result.core.persist(root);
+
+                result.branchName = parameters.branchName;
 
                 result.project.makeCommit(null,
                     [],
@@ -125,118 +142,170 @@ function openContext(storage, gmeConfig, _logger, parameters, callback) {
                     persisted.objects,
                     'create empty project',
                     function (err, commitResult) {
+                        var setParams = {
+                            branchName: parameters.branchName,
+                            projectName: parameters.projectName,
+                            oldHash: ''
+                        };
                         if (err) {
                             logger.error('project.makeCommit failed.');
                             closeOnError(err);
-                            return;
                         }
-                        storage.setBranchHash({
-                                username: username,
-                                branchName: branchName,
-                                projectName: projectId,
-                                oldHash: commitHash,
-                                newHash: commitResult.hash
-                            }, function (err, updateResult) {
+
+                        setParams.newHash = commitResult.hash;
+                        result.commitHash = commitResult.hash;
+                        result.rootNode = root;
+
+                        if (parameters.userName) {
+                            setParams.username = parameters.userName;
+                        }
+                        storage.setBranchHash(setParams, function (err, updateResult) {
                                 if (err) {
                                     logger.error('setBranchHash failed with error.');
-                                    closeOnError('project imported to commit: ' + commitHash + ', but branch "' +
-                                        branchName + '" could not be updated.', commitHash);
-                                    return;
+                                    closeOnError('project imported to commit: ' + commitResult.hash + ', but branch "' +
+                                        parameters.branchName + '" could not be updated.', commitResult.hash);
                                 }
-                                contextDeferred.resolve(result);
+                                deferred.resolve(null);
                                 return;
                             }
                         );
                     }
                 );
-            }
-
-            if (parameters.branchName || parameters.commitHash || parameters.branchOrCommit) {
-                var deferred = Q.defer();
-                if (parameters.branchName) {
-                    result.project.getBranchHash(parameters.branchName).
-                        then(function (branchHash) {
-                            result.commitHash = branchHash;
-                            Q.ninvoke(result.project, 'loadObject', branchHash)
-                                .then(function (commitObject) {
-                                    logger.debug('commitObject loaded', {metadata: commitObject});
-                                    result.core.loadRoot(commitObject.root, function (err, rootNode) {
-                                        if (err) {
-                                            deferred.reject(err);
-                                        } else {
-                                            logger.debug('rootNode loaded');
-                                            deferred.resolve(rootNode);
-                                        }
+            } else {
+                if (parameters.commitHash || (parameters.branchOrCommit && REGEXP.HASH.test(parameters.branchOrCommit))) {
+                    //we have a commit, so we have to load it
+                    Q.ninvoke(result.project, 'loadObject', parameters.commitHash || parameters.branchOrCommit)
+                        .then(function (commitObject) {
+                            result.commitHash = commitObject[CONSTANTS.MONGO_ID];
+                            logger.debug('commitObject loaded', {metadata: commitObject});
+                            result.core.loadRoot(commitObject.root, function (err, rootNode) {
+                                if (err) {
+                                    deferred.reject(err);
+                                } else {
+                                    logger.debug('rootNode loaded');
+                                    deferred.resolve(rootNode);
+                                }
+                            });
+                        })
+                        .catch(function (err) {
+                            closeOnError('No such commitHash "' + result.commitHash + '", in project "' +
+                                parameters.projectName + '".');
+                        });
+                } else {
+                    //we work with a branch
+                    result.branchName = parameters.branchName;
+                    result.project.getBranches()
+                        .then(function (branches) {
+                            if (branches[parameters.branchName]) {
+                                result.commitHash = branches[parameters.branchName];
+                                Q.ninvoke(result.project, 'loadObject', result.commitHash)
+                                    .then(function (commitObject) {
+                                        logger.debug('commitObject loaded', {metadata: commitObject});
+                                        result.core.loadRoot(commitObject.root, function (err, rootNode) {
+                                            if (err) {
+                                                deferred.reject(err);
+                                            } else {
+                                                logger.debug('rootNode loaded');
+                                                deferred.resolve(rootNode);
+                                            }
+                                        });
+                                    })
+                                    .catch(function (err) {
+                                        closeOnError('No such commitHash "' + result.commitHash + '", in project "' +
+                                            parameters.projectName + '".');
                                     });
-                                });
-                        }).
-                        catch(function (err) {
+                            } else {
+                                closeOnError('"' + parameters.branchName + '" not in project: "' +
+                                    parameters.projectName + '".');
+                            }
+                        })
+                        .catch(function (err) {
                             deferred.reject(err);
+                            return;
                         });
                 }
-                return deferred.promise;
-            } else {
-                contextDeferred.resolve(result);
-                return;
             }
+            return deferred.promise;
         })
         .then(function (rootObject) {
-            var loadedNodeHandler = function (err, nodeObj) {
-                    if (err) {
-                        error += err;
-                    }
-                    nodes.push(nodeObj);
 
-                    if (nodes.length === parameters.nodePaths.length) {
-                        allNodesLoadedHandler();
-                    }
-                },
-                allNodesLoadedHandler = function () {
-                    var i;
-                    if (error) {
-                        contextDeferred.reject(error);
-                        return;
-                    }
-
-                    for (i = 0; i < nodes.length; i+=1) {
-                        if (insertByName) {
-                            result.nodes[result.core.getAttribute(nodes[i], 'name')] = nodes[i];
-                        } else {
-                            result.nodes[result.core.getPath(nodes[i])] = nodes[i];
-                        }
-                    }
-                    contextDeferred.resolve(result);
-                    return;
-
-                },
-                error,
-                insertByName = false,
-                nodes = [],
-                len = parameters.nodePaths.length || 0;
+            if (rootObject === null) {
+                //we have just created an empty project so we should be fine
+                contextDeferred.resolve(result);
+            }
 
             result.rootNode = rootObject;
-            if (parameters.nodePaths) {
+            loadNodes(storage, result, parameters.nodePaths || [], false)
+                .then(function (nodes) {
+                    if (parameters.nodePaths) {
+                        result.nodes = nodes;
+                    }
 
-                result.nodes = {};
-
-                if (len === 0) {
-                    allNodesLoadedHandler();
-                }
-                while (len--) {
-                    result.core.loadByPath(result.rootNode, parameters.nodePaths[len], loadedNodeHandler);
-                }
-
-            } else {
-                contextDeferred.resolve(result);
-                return;
-            }
+                    if (parameters.meta) {
+                        var metaIds = result.core.getMemberPaths(result.rootNode, 'MetaAspectSet');
+                        loadNodes(storage, result, metaIds, true)
+                            .then(function (nodes) {
+                                result.META = nodes;
+                                contextDeferred.resolve(result);
+                            })
+                            .catch(function (err) {
+                                contextDeferred.reject(err);
+                            });
+                    } else {
+                        contextDeferred.resolve(result);
+                    }
+                })
+                .catch(function (err) {
+                    closeOnError(err);
+                });
         })
         .catch(function (err) {
             closeOnError(err);
-            return;
         });
 
     return contextDeferred.promise.nodeify(callback);
 }
 
+function loadNodes(storage, result, paths, storeByName, callback) {
+    var deferred = Q.defer(),
+        nodes = {},
+        counter = 0,
+        loadedNodeHandler = function (err, nodeObj) {
+            counter += 1;
+            if (err) {
+                error += err;
+            }
+
+            if (nodeObj) {
+                if (storeByName) {
+                    nodes[result.core.getAttribute(nodeObj, 'name')] = nodeObj;
+                } else {
+                    nodes[result.core.getPath(nodeObj)] = nodeObj;
+                }
+            }
+
+            if (counter === paths.length) {
+                allNodesLoadedHandler();
+            }
+        },
+        allNodesLoadedHandler = function () {
+            if (error) {
+                deferred.reject(error);
+            }
+
+            deferred.resolve(nodes);
+        },
+        error,
+        len;
+
+    len = paths.length || 0;
+
+    if (len === 0) {
+        allNodesLoadedHandler();
+    }
+    while (len--) {
+        result.core.loadByPath(result.rootNode, paths[len], loadedNodeHandler);
+    }
+    return deferred.promise.nodeify(callback);
+}
 module.exports.openContext = openContext;
