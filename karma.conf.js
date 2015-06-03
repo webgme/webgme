@@ -26,10 +26,12 @@ var testFixture = require('./test/_globals.js'),
         {
             name: 'projectSeedSingleNonMaster',
             path: './test-karma/client/js/client/clientNodeTestProject.json',
-            branch: 'other'
+            branches: ['other']
         },
-        {name: 'projectSeedMultiple', path: './test-karma/client/js/client/clientNodeTestProject.json'},
-        //{name: 'projectSeedMultiple', path: './test-karma/client/js/client/metaTestProject.json', branch: 'other'},
+        {   name: 'projectSeedMultiple',
+            path: './test-karma/client/js/client/clientNodeTestProject.json',
+            branches: ['master', 'other']
+        },
     ];
 
 (function initializeServer() {
@@ -56,19 +58,38 @@ var testFixture = require('./test/_globals.js'),
         .then(function () {
             // Import all the projects.
             function importProject(projectInfo) {
+                var branchName = projectInfo.hasOwnProperty('branches') ?
+                    projectInfo.branches[0] : 'master';
+
                 return testFixture.importProject(storage, {
                     projectSeed: projectInfo.path,
                     projectName: projectInfo.name,
-                    branchName: projectInfo.branch || 'master',
+                    branchName: branchName,
                     gmeConfig: gmeConfig,
                     logger: logger
+                })
+                .then(function (importResult) {
+                    var i,
+                        createBranches = [];
+                    if (projectInfo.hasOwnProperty('branches') && projectInfo.branches.length > 1) {
+                        // First one is already added thus i = 1.
+                        for (i = 1; i < projectInfo.branches.length; i += 1) {
+                            createBranches.push(storage.createBranch({
+                                    projectName: projectInfo.name,
+                                    branchName: projectInfo.branches[i],
+                                    hash: importResult.commitHash
+                                })
+                            );
+                        }
+                    }
+                    return Q.all(createBranches);
                 });
             }
+
             return Q.all(PROJECTS_TO_IMPORT.map(importProject));
         })
-        .then(function (importResult) {
+        .then(function () {
             // Close the storage
-            logger.debug(importResult);
             return storage.closeDatabase();
         })
         .then(function () {
