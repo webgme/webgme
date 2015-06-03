@@ -151,8 +151,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
                 projectName,
                 i;
 
-            if (projectNameOrNames) {
-                // TODO: do this in a for loop
+            if (typeof projectNameOrNames === 'string') {
                 projectName = projectNameOrNames;
                 projectsToAuthorize.push(
                     gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
@@ -161,6 +160,18 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
                         delete: true
                     })
                 );
+            } else if (projectNameOrNames instanceof Array) {
+                for (i = 0; i < projectNameOrNames.length; i += 1) {
+                    projectsToAuthorize.push(
+                        gmeAuth.authorizeByUserId(guestAccount, projectNameOrNames[i], 'create', {
+                            read: true,
+                            write: true,
+                            delete: true
+                        })
+                    );
+                }
+            } else {
+                logger.warn('No projects to authorize...', projectNameOrNames);
             }
 
             return Q.all(projectsToAuthorize);
