@@ -10,12 +10,12 @@ describe('apply CLI tests', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
-        Storage = testFixture.WebGME.serverUserStorage,
+        logger = testFixture.logger.fork('apply.spec'),
+        storage,
+        gmeAuth,
         applyCLI = require('../../src/bin/apply'),
         importCLI = require('../../src/bin/import'),
         exportCLI = require('../../src/bin/export'),
-        mongodb = testFixture.mongodb,
-        mongoConn,
         FS = testFixture.fs,
         getJsonProject = function (path) {
             return JSON.parse(FS.readFileSync(path, 'utf-8'));
@@ -33,32 +33,23 @@ describe('apply CLI tests', function () {
             return i.should.be.eql(-1);
         },
 
-        mongoUri = gmeConfig.mongo.uri,
         applyCliTestProject = 'applyCliTest';
 
     before(function (done) {
-        // TODO: move this to globals.js as a utility function
-        mongodb.MongoClient.connect(mongoUri, gmeConfig.mongo.options, function (err, db) {
-            if (err) {
-                done(err);
-                return;
-            }
-            mongoConn = db;
-            db.dropCollection(applyCliTestProject, function (err) {
-                // ignores if the collection was not found
-                if (err && err.errmsg !== 'ns not found') {
-                    done(err);
-                    return;
-                }
-                done();
-            });
-
-        });
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, applyCliTestProject)
+            .then(function (gmeAuth__) {
+                gmeAuth = gmeAuth__;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: applyCliTestProject});
+            })
+            .nodeify(done);
     });
 
     after(function (done) {
-        mongoConn.close();
-        done();
+        storage.closeDatabase(done);
     });
 
     describe('basic', function () {
@@ -69,17 +60,17 @@ describe('apply CLI tests', function () {
         });
 
         beforeEach(function (done) {
-            importCLI.import(Storage, gmeConfig, applyCliTestProject, jsonBaseProject, 'base', true, done);
+            importCLI.import(storage, gmeConfig, applyCliTestProject, jsonBaseProject, 'base', true, undefined, done);
         });
 
         it('project should remain the same after applying empty patch', function (done) {
             var patch = {};
-            applyCLI.applyPatch(mongoUri, applyCliTestProject, 'base', patch, false, function (err, commit) {
+            applyCLI.applyPatch(storage, applyCliTestProject, 'base', patch, false, undefined, function (err, commit) {
                 if (err) {
                     done(err);
                     return;
                 }
-                exportCLI.export(mongoUri, applyCliTestProject, commit, function (err, jsonResultProject) {
+                exportCLI.export(storage, applyCliTestProject, commit, undefined, function (err, jsonResultProject) {
                     if (err) {
                         done(err);
                         return;
@@ -92,12 +83,12 @@ describe('apply CLI tests', function () {
 
         it('simple attribute change', function (done) {
             var patch = {attr: {name: 'otherROOT'}};
-            applyCLI.applyPatch(mongoUri, applyCliTestProject, 'base', patch, false, function (err, commit) {
+            applyCLI.applyPatch(storage, applyCliTestProject, 'base', patch, false, undefined, function (err, commit) {
                 if (err) {
                     done(err);
                     return;
                 }
-                exportCLI.export(mongoUri, applyCliTestProject, commit, function (err, jsonResultProject) {
+                exportCLI.export(storage, applyCliTestProject, commit, undefined, function (err, jsonResultProject) {
                     if (err) {
                         done(err);
                         return;
@@ -115,11 +106,11 @@ describe('apply CLI tests', function () {
                 attr: {name: 'ROOTy'},
                 1: {attr: {name: 'FCOy'}}
             };
-            applyCLI.applyPatch(mongoUri, applyCliTestProject, 'base', patch, false, function (err, commit) {
+            applyCLI.applyPatch(storage, applyCliTestProject, 'base', patch, false, undefined, function (err, commit) {
                 if (err) {
                     return done(err);
                 }
-                exportCLI.export(mongoUri, applyCliTestProject, commit, function (err, jsonResultProject) {
+                exportCLI.export(storage, applyCliTestProject, commit, undefined, function (err, jsonResultProject) {
                     if (err) {
                         return done(err);
                     }
