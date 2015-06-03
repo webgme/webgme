@@ -8,7 +8,7 @@
 var Core = requireJS('common/core/core'),
     PluginResult = requireJS('plugin/PluginResult'),
     PluginMessage = requireJS('plugin/PluginMessage'),
-    Q = require('Q');
+    Q = require('q');
 
 /**
  * TODO: A single instance should be able to run on different projects (and cores)..
