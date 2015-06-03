@@ -2,7 +2,7 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-
+'use strict';
 var webgme = require('../../webgme'),
     program = require('commander'),
     FS = require('fs'),
@@ -19,7 +19,6 @@ webgme.addToRequireJsPaths(gmeConfig);
 
 
 var generateDiff = function (storage, projectId, sourceBranchOrCommit, targetBranchOrCommit, userName, callback) {
-    'use strict';
     var project,
         core,
         contextParams,
@@ -70,7 +69,7 @@ var generateDiff = function (storage, projectId, sourceBranchOrCommit, targetBra
     };
 
     if (userName) {
-        contextParams.username = userName;
+        contextParams.userName = userName;
     }
 
     openContext(storage, gmeConfig, logger, contextParams, function (err, context) {
@@ -130,7 +129,6 @@ if (require.main === module) {
         .then(function () {
             generateDiff(cliStorage, program.projectIdentifier, program.source, program.target, program.user,
                 function (err, diff) {
-                    'use strict';
                     if (err) {
                         console.warn('diff generation finished with error: ', err);
                         process.exit(0);

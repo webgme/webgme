@@ -47,17 +47,6 @@ function openContext(storage, gmeConfig, _logger, parameters, callback) {
             storage.closeDatabase(function () {
                 contextDeferred.reject(err);
             });
-            /*if (result.project) {
-             result.project.closeProject(function () {
-             storage.closeDatabase(function () {
-             contextDeferred.reject(err);
-             });
-             });
-             } else {
-             storage.closeDatabase(function () {
-             contextDeferred.reject(err);
-             });
-             }*/
         };
 
     if (parameters.userName) {
@@ -116,6 +105,9 @@ function openContext(storage, gmeConfig, _logger, parameters, callback) {
         .then(function (dbProject) {
             var deferred = Q.defer();
             result.project = new Project(dbProject, storage, logger.fork('project'), gmeConfig);
+            if(parameters.userName){
+                result.project.setUser(parameters.userName);
+            }
             result.core = new Core(result.project, {
                 globConf: gmeConfig,
                 logger: logger.fork('core')

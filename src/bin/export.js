@@ -2,50 +2,40 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-
+'use strict';
 var webgme = require('../../webgme'),
     program = require('commander'),
     FS = require('fs'),
-    openContext,
-    Storage,
-    Serialization,
+    cliStorage,
+    gmeAuth,
     path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
     logger = webgme.Logger.create('gme:bin:export', gmeConfig.bin.log, false),
     REGEXP = webgme.REGEXP,
     openContext = webgme.openContext,
-    Storage = webgme.serverUserStorage,
     Serialization = webgme.serializer;
 
 
 webgme.addToRequireJsPaths(gmeConfig);
 
-var exportProject = function (mongoUri, projectId, branchOrCommit, callback) {
-    'use strict';
-    var storage,
-        project,
+var exportProject = function (storage, projectId, branchOrCommit, userName, callback) {
+    var project,
         contextParams,
         closeContext = function (error, data) {
-            try {
-                project.closeProject(function () {
-                    storage.closeDatabase(function () {
-                        callback(error, data);
-                    });
-                });
-            } catch (err) {
-                storage.closeDatabase(function () {
-                    callback(error, data);
-                });
-            }
+            storage.closeDatabase(function () {
+                callback(error, data);
+            });
         };
 
-    gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
-    storage = new Storage({globConf: gmeConfig, logger: logger.fork('storage')});
 
     contextParams = {
         projectName: projectId,
         branchOrCommit: branchOrCommit
     };
+
+    if (userName) {
+        contextParams.userName = userName;
+    }
 
     openContext(storage, gmeConfig, logger, contextParams, function (err, context) {
         if (err) {
@@ -63,6 +53,7 @@ if (require.main === module) {
     program
         .version('0.1.0')
         .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
+        .option('-u, --user [string]', 'the user of the command')
         .option('-p, --project-identifier [value]', 'project identifier')
         .option('-s, --source [branch/commit]', 'the branch or commit that should be exported')
         .option('-o, --out [path]', 'the path of the output file')
@@ -83,31 +74,42 @@ if (require.main === module) {
         program.help();
     }
 
-    //calling the export function
-    exportProject(program.mongoDatabaseUri, program.projectIdentifier, program.source,
-        function (err, jsonProject) {
-            'use strict';
-            if (err) {
-                console.error('error during project export: ', err);
-                process.exit(1);
-            } else {
-                if (program.out) {
-                    try {
-                        FS.writeFileSync(program.out, JSON.stringify(jsonProject, null, 2));
-                        console.log('project \'' + program.projectIdentifier +
-                            '\' hase been successfully written to \'' + program.out + '\'');
-                        process.exit(0);
-                    } catch (err) {
-                        console.error('failed to create output file: ' + err);
+    webgme.getGmeAuth(gmeConfig)
+        .then(function (gmeAuth__) {
+            gmeAuth = gmeAuth__;
+            cliStorage = webgme.getStorage(logger.fork('storage'), gmeConfig, gmeAuth);
+            return cliStorage.openDatabase();
+        })
+        .then(function () {
+            //calling the export function
+            exportProject(cliStorage, program.projectIdentifier, program.source, program.user,
+                function (err, jsonProject) {
+                    if (err) {
+                        console.error('error during project export: ', err);
                         process.exit(1);
+                    } else {
+                        if (program.out) {
+                            try {
+                                FS.writeFileSync(program.out, JSON.stringify(jsonProject, null, 2));
+                                console.log('project \'' + program.projectIdentifier +
+                                    '\' hase been successfully written to \'' + program.out + '\'');
+                                process.exit(0);
+                            } catch (err) {
+                                console.error('failed to create output file: ' + err);
+                                process.exit(1);
+                            }
+                        } else {
+                            console.log('project \'' + program.projectIdentifier + '\':');
+                            console.log(JSON.stringify(jsonProject, null, 2));
+                            process.exit(0);
+                        }
                     }
-                } else {
-                    console.log('project \'' + program.projectIdentifier + '\':');
-                    console.log(JSON.stringify(jsonProject, null, 2));
-                    process.exit(0);
-                }
-            }
 
-        }
-    );
+                }
+            );
+        })
+        .catch(function (err) {
+            console.error('error during project export: ', err);
+            process.exit(1);
+        });
 }
