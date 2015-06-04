@@ -42,7 +42,7 @@ define([
                         beenConnected = true;
                         self.socket.emit('getUserId', function (err, userId) {
                             if (err) {
-                                self.userId = self.gmeConfig.authentication.guestAccount;
+                                self.userId = gmeConfig.authentication.guestAccount;
                                 logger.error('Error getting user id setting to default', err, self.userId);
                             } else {
                                 self.userId = userId;

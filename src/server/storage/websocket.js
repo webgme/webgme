@@ -17,7 +17,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         webSocket;
     logger.debug('ctor');
 
-    function getUserIdFromSocket(socket, callback) {
+    function getSessionIdFromSocket(socket) {
         var sessionId,
             handshakeData = socket.handshake;
 
@@ -42,7 +42,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             }
         }
 
-        return gmeAuth.getUserIdBySession(sessionId)
+        return sessionId;
+    }
+
+    function getUserIdFromSocket(socket, callback) {
+        return gmeAuth.getUserIdBySession(getSessionIdFromSocket(socket))
             .nodeify(callback);
     }
 
@@ -403,6 +407,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 getUserIdFromSocket(socket).
                     then(function (userId) {
                         parameters.userId = userId;
+                        parameters.webGMESessionId = getSessionIdFromSocket(socket);
                         workerManager.request(parameters, callback);
                     })
                     .catch(function (err) {
@@ -432,6 +437,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 getUserIdFromSocket(socket).
                     then(function (userId) {
                         parameters.userId = userId;
+                        parameters.webGMESessionId = getSessionIdFromSocket(socket);
                         workerManager.query(workerId, parameters, callback);
                     })
                     .catch(function (err) {

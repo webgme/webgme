@@ -26,7 +26,9 @@ process.on('SIGINT', function () {
 });
 
 var WEBGME = require(__dirname + '/../../../webgme'),
-
+    openContext = WEBGME.openContext,
+    Q = WEBGME.Q,
+    exportProject = require(__dirname + '/../../../src/bin/export').export,
     Core = requireJS('common/core/core'),
     GUID = requireJS('common/util/guid'),
     DUMP = requireJS('common/core/users/dumpmore'),
@@ -40,7 +42,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     FS = require('fs'),
 
     PluginNodeManager = require('../../plugin/nodemanager'),
-    GMEAUTH = require('../middleware/auth/gmeauth'),
     CONSTANT = require('./constants'),
     Logger = require('../logger'),
 
@@ -93,26 +94,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
             logger = Logger.create('gme:server:worker:simpleworker:pid_' + process.pid, gmeConfig.server.log, true);
             logger.debug('initializing');
 
-            if (gmeConfig.authentication.enable === true) {
-                logger.debug('adding GME auth');
-                AUTH = GMEAUTH({}, gmeConfig); //FIXME: Should session really be empty object??
-                AUTH.connect(function (err) {
-                    if (err) {
-                        initialized = false;
-                        AUTH = null;
-                        safeSend({
-                            pid: process.pid,
-                            type: CONSTANT.msgTypes.info,
-                            info: 'worker initialization failed, try again'
-                        });
-                        return;
-                    }
-                    safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
-                });
-            } else {
-                safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
-            }
-
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
         } else {
             safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
         }
@@ -594,6 +576,95 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     },
 
     seedProject = function (parameters, callback) {
+        var storage = getConnectedStorage(parameters.webGMESessionId);
+
+        storage.open(function (networkState) {
+            var jsonSeed,
+                seedReady = function () {
+                    //console.log('seed',jsonSeed);
+                    storage.createProject(parameters.projectName, {
+                        username: parameters.userName
+                    }, function (err, project) {
+                        console.log(err,project);
+                    });
+                    /*openContext(storage, gmeConfig, logger, {
+                        projectName: parameters.projectName,
+                        userName: parameters.userId,
+                        branchName: 'master',
+                        createProject: true
+                    })
+                        .then(function (context) {
+                            Serialization.import(context.core, context.rootNode, jsonSeed, function (err) {
+                                if (err) {
+                                    logger.error('import of seed failed');
+                                    callback(err);
+                                    return;
+                                }
+
+                                var persisted = context.core.persist(context.rootNode);
+                                storage.makeCommit(parameters.projectName,
+                                    null,
+                                    [],
+                                    persisted.rootHash,
+                                    persisted.objects,
+                                    'seeding project[' + parameters.seedName + ']',
+                                    function (err, commitResult) {
+                                        if (err) {
+                                            logger.error('makeCommit failed.');
+                                            callback(err);
+                                            return;
+                                        }
+                                        storage.setBranchHash({
+                                                username: parameters.userId,
+                                                branchName: 'master',
+                                                projectName: parameters.projectName,
+                                                oldHash: context.commitHash,
+                                                newHash: commitResult.hash
+                                            }, function (err, updateResult) {
+                                                if (err) {
+                                                    logger.error('setting branch failed');
+                                                    callback(err);
+                                                }
+                                                logger.info('seeding [' + parameters.seedName + '] to [' + parameters.projectName + '] completed');
+                                                callback(null);
+                                            }
+                                        );
+                                    }
+                                );
+                            });
+                        })
+                        .catch(function (err) {
+                            callback(err);
+                        });*/
+                };
+
+            if (networkState = STORAGE_CONSTANTS.CONNECTED) {
+                if (parameters.type === 'file') {
+                    jsonSeed = getSeedFromFile(parameters.seedName);
+                    seedReady();
+                    return;
+                } else if (parameters.seedBranch) {
+                    exportProject(storage, parameters.seedName, parameters.seedBranch, parameters.userId,
+                        function (err, result) {
+                            if (err) {
+                                logger.error('exporting seed failed');
+                                callback(err);
+                                return;
+                            }
+                            jsonSeed = result;
+                            seedReady();
+                        }
+                    );
+                } else {
+                    callback('cannot get seed');
+                }
+            } else {
+                callback('problems connecting to the webgme server');
+            }
+        });
+    },
+
+    _seedProject = function (parameters, callback) {
         //check if the seed can be found
         //try to export the seed
         //try to create a new project from the seed
