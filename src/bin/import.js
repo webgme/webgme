@@ -27,17 +27,9 @@ var webgme = require('../../webgme'),
             core,
             username = userName || _gmeConfig.authentication.guestAccount,
             closeContext = function (error, data) {
-                try {
-                    project.closeProject(function () {
-                        storage.closeDatabase(function () {
-                            callback(error, data);
-                        });
-                    });
-                } catch (err) {
-                    storage.closeDatabase(function () {
-                        callback(error, data);
-                    });
-                }
+                storage.closeDatabase(function () {
+                    callback(error, data);
+                });
             };
 
 

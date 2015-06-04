@@ -11,6 +11,7 @@ describe('openContext', function () {
     var expect = testFixture.expect,
         WebGME = testFixture.WebGME,
         logger = testFixture.logger,
+        Q = testFixture.Q,
         openContext = testFixture.openContext,
         usedProjectNames = ['doesExist', 'willBeOverwritten', 'willBeCreated'],
         storage;
@@ -40,21 +41,25 @@ describe('openContext', function () {
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
                     storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
-                    storage.openDatabase()
-                        .then(function () {
-                            importParam.storage = storage;
-                            testFixture.importProject(storage, importParam, function (err, result) {
-                                expect(err).to.equal(null);
-                                commitHash = result.commitHash;
-                                done();
-                            });
+                    return storage.openDatabase();
+                })
+                .then(function(){
+                    return Q.all([
+                        storage.deleteProject({projectName:'doesExist'}),
+                        storage.deleteProject({projectName:'willBeOverwritten'}),
+                        storage.deleteProject({projectName:'willBeCreated'})
+                    ]);
+                })
+                .then(function () {
+                    importParam.storage = storage;
+                    testFixture.importProject(storage, importParam, function (err, result) {
+                        expect(err).to.equal(null);
+                        commitHash = result.commitHash;
+                        done();
+                    });
 
-                        })
-                        .catch(function (err) {
-                            done(err);
-                        });
-                }).
-                catch(function (err) {
+                })
+                .catch(function (err) {
                     done(err);
                 });
 
