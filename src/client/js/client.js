@@ -37,7 +37,7 @@ define([
             storage = Storage.getStorage(logger, gmeConfig, true),
             state = {
                 connection: null, // CONSTANTS.STORAGE. CONNECTED/DISCONNECTED/RECONNECTED
-                project: null,
+                project: null, //CONSTANTS.BRANCH_STATUS. SYNCH/FORKED/AHEAD/PULLING
                 core: null,
                 branchName: null,
                 branchStatus: null,
@@ -71,6 +71,7 @@ define([
         this.CONSTANTS = CONSTANTS;
 
         function logState(level, msg) {
+            var lightState;
             function replacer(key, value) {
                 var chainItem,
                     prevChain,
@@ -140,9 +141,21 @@ define([
 
                 return value;
             }
-
-            logger[level]('state at ' + msg, JSON.stringify(state, replacer, 2));
-            //logger[level]('state', state);
+            if (gmeConfig.debug) {
+                logger[level]('state at ' + msg, JSON.stringify(state, replacer, 2));
+            } else {
+                lightState = {
+                    connection: self.getNetworkStatus(),
+                    projectName: self.getActiveProjectName(),
+                    branchName: self.getActiveBranchName(),
+                    branchStatus: self.getBranchStatus(),
+                    commitHash: self.getActiveCommitHash(),
+                    rootHash: self.getActiveRootHash(),
+                    projectReadOnly: self.isProjectReadOnly(),
+                    commitReadOnly: self.isCommitReadOnly()
+                };
+                logger[level]('state at ' + msg, JSON.stringify(lightState));
+            }
         }
 
         this.meta = new META();
@@ -275,7 +288,7 @@ define([
                 }
                 state.core = null;
                 state.branchName = null;
-                state.branchStatus = null;
+                changeBranchStatus(null);
                 state.patterns = {};
                 //state.gHash = 0;
                 state.nodes = {};
@@ -315,6 +328,7 @@ define([
 
             if (prevBranchName === branchName) {
                 logger.warn('branchName is already opened', branchName);
+                changeBranchStatus(state.branchStatus);
                 callback(null);
                 return;
             }
@@ -351,10 +365,9 @@ define([
 
                         state.viewer = false;
                         state.branchName = branchName;
-                        state.branchStatus = CONSTANTS.STORAGE.SYNCH;
-                        logState('info', 'openBranch');
                         self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
-                        self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, state.branchStatus);
+                        changeBranchStatus(CONSTANTS.STORAGE.PULLING, 1);
+                        logState('info', 'openBranch');
 
                         loading(commitObject.root, function (err) {
                             if (err) {
@@ -362,6 +375,7 @@ define([
                             } else {
                                 addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
                             }
+                            changeBranchStatus(CONSTANTS.STORAGE.SYNCH); // TODO: Make sure this is always the case.
                             callback(err);
                         });
                     }
@@ -371,8 +385,8 @@ define([
             if (state.branchName !== null) {
                 logger.debug('Other branch was open, closing it first', state.branchName);
                 prevBranchName = state.branchName;
-                state.branchName = null;
-                state.branchStatus = null;
+                //state.branchName = null;
+                //state.branchStatus = null;
                 storage.closeBranch(state.project.name, prevBranchName, openBranch);
             } else {
                 openBranch(null);
@@ -399,7 +413,8 @@ define([
                 }
 
                 state.viewer = true;
-                self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
+                changeBranchStatus(null);
+                changeBranchStatus(CONSTANTS.STORAGE.PULLING, 1);
                 state.project.loadObject(commitHash, function (err, commitObj) {
                     if (!err && commitObj) {
                         logState('info', 'selectCommit loaded commit');
@@ -415,6 +430,7 @@ define([
                                 addCommit(commitHash);
                                 logger.debug('loading complete for selectCommit rootHash', commitObj.root);
                                 logState('info', 'selectCommit loading');
+                                changeBranchStatus(null);
                                 callback(null);
                             }
                         });
@@ -430,7 +446,7 @@ define([
                 logger.debug('Branch was open, closing it first', state.branchName);
                 prevBranchName = state.branchName;
                 state.branchName = null;
-                state.branchStatus = null;
+                //state.branchStatus = null;
                 storage.closeBranch(state.project.name, prevBranchName, openCommit);
             } else {
                 openCommit(null);
@@ -439,6 +455,7 @@ define([
 
         function getDefaultCommitHandler() {
             return function (commitQueue, result, callback) {
+                var forkName = state.branchName + '_' + (new Date()).getTime();
                 logger.debug('default commitHandler invoked, result: ', result);
                 logger.debug('commitQueue', commitQueue);
                 //TODO: dispatch an event showing how far off from the origin we are.
@@ -449,31 +466,29 @@ define([
                     } else {
                         logger.debug('Will proceed with next queued commit...');
                     }
-                    if (state.branchStatus !== CONSTANTS.STORAGE.SYNCH) {
-                        state.branchStatus = CONSTANTS.STORAGE.SYNCH;
-                        self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, CONSTANTS.STORAGE.SYNCH);
-                    }
                     logState('info', 'commitHandler');
+                    if (commitQueue.length === 0) {
+                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNCH);
+                    } else {
+                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD, commitQueue.length);
+                    }
                     callback(true); // All is fine, continue with the commitQueue..
                 } else if (result.status === CONSTANTS.STORAGE.FORKED) {
                     logger.debug('You got forked');
-                    if (state.branchStatus !== CONSTANTS.STORAGE.FORKED) {
-                        state.branchStatus = CONSTANTS.STORAGE.FORKED;
-                        self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, CONSTANTS.STORAGE.FORKED);
-                    }
                     logState('info', 'commitHandler');
+                    changeBranchStatus(CONSTANTS.BRANCH_STATUS.FORKED, forkName);
+
                     callback(false);
-                    alert('You got forked, TODO: \nstep one - automatically create new fork \n' +
-                        'step two - add UI piece.');
                 } else {
                     callback(false);
+                    changeBranchStatus(null);
                     throw new Error('Unexpected result', result);
                 }
             };
         }
 
         function getUpdateHandler() {
-            return function (eventData, callback) {
+            return function (updateQueue, eventData, callback) {
                 var commitHash = eventData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
                 logger.debug('updateHandler invoked. project, branch', eventData.projectName, eventData.branchName);
                 logger.debug('loading commitHash', commitHash);
@@ -483,7 +498,7 @@ define([
                 addModification(eventData.commitObject, true);
                 self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
                 self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
-
+                changeBranchStatus(CONSTANTS.BRANCH_STATUS.PULLING, updateQueue.length);
                 loading(eventData.commitObject.root, function (err, aborted) {
                     if (err) {
                         logger.error('updatehandler invoked loading and it returned error',
@@ -496,16 +511,29 @@ define([
                     } else {
                         addCommit(commitHash);
                         logger.debug('loading complete for incoming rootHash', eventData.commitObject.root);
-                        logState('info', 'updateHandler');
+                        logState('debug', 'updateHandler');
+                        if (updateQueue.length === 1) {
+                            changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNCH);
+                        }
                         callback(false);
                     }
                 });
             };
         }
 
+        function changeBranchStatus(branchStatus, details) {
+            logger.debug('changeBranchStatus, prev, new, details', state.branchStatus, branchStatus, details);
+            state.branchStatus = branchStatus;
+            self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {status: branchStatus, details: details});
+        }
+
         // State getters.
         this.getNetworkStatus = function () {
             return state.connection;
+        };
+
+        this.getBranchStatus = function () {
+            return state.branchStatus;
         };
 
         this.getActiveProjectName = function () {
@@ -522,10 +550,6 @@ define([
 
         this.getActiveRootHash = function () {
             return state.root.current;
-        };
-
-        this.getBranchStatus = function () {
-            return state.branchStatus;
         };
 
         this.isProjectReadOnly = function () {
@@ -1186,6 +1210,7 @@ define([
             var persisted,
                 numberOfPersistedObjects,
                 beforeLoading = true,
+                commitQueue,
                 newCommitObject;
             logger.debug('saveRoot msg', msg);
 
@@ -1211,6 +1236,9 @@ define([
                         //This is just for debugging
                         logger.warn('Lots of persisted objects', numberOfPersistedObjects);
                     }
+
+                    commitQueue = state.project.getBranch(state.branchName, true).getCommitQueue();
+                    changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD, commitQueue.length + 1);
                     // Calling event-listeners (users)
                     // N.B. it is no longer waiting for the setBranchHash to return from server.
                     // Which also was the case before:

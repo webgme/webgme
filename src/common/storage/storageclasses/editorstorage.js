@@ -182,7 +182,7 @@ define([
                     }
 
                     updateData = branch.getFirstUpdate();
-                    branch.localUpdateHandler(updateData, function (aborted) {
+                    branch.localUpdateHandler(branch.getUpdateQueue(), updateData, function (aborted) {
                         var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                         if (aborted === false) {
                             logger.debug('New commit was successfully loaded, updating localHash.');
