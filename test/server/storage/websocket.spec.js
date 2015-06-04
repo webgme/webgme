@@ -17,7 +17,7 @@ describe('WebSocket', function () {
         superagent = testFixture.superagent,
 
         gmeAuth,
-        projectName = 'webSocketTest1',
+        projectName = 'webSocketTestProject',
         guestAccount = gmeConfig.authentication.guestAccount,
 
         safeStorage,
@@ -70,67 +70,103 @@ describe('WebSocket', function () {
                 });
         };
 
+    describe('valid sessionId as a guest user', function () {
+        before(function (done) {
+            server = WebGME.standaloneServer(gmeConfig);
+            serverBaseUrl = server.getUrl();
+            server.start(function (err) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
 
-    before(function (done) {
-        server = WebGME.standaloneServer(gmeConfig);
-        serverBaseUrl = server.getUrl();
-        server.start(function (err) {
-            if (err) {
-                done(new Error(err));
-                return;
-            }
+                testFixture.clearDBAndGetGMEAuth(gmeConfig, [projectName])
+                    .then(function (gmeAuth_) {
+                        gmeAuth = gmeAuth_;
+                        safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
-            testFixture.clearDBAndGetGMEAuth(gmeConfig, [projectName])
-                .then(function (gmeAuth_) {
-                    gmeAuth = gmeAuth_;
-                    safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                        return safeStorage.openDatabase();
+                    })
+                    .then(function () {
+                        return safeStorage.deleteProject({projectName: projectName});
+                    })
+                    .then(function () {
+                        return testFixture.importProject(safeStorage, {
+                            projectSeed: 'seeds/EmptyProject.json',
+                            projectName: projectName,
+                            gmeConfig: gmeConfig,
+                            logger: logger
+                        });
+                    })
+                    .nodeify(done);
+            });
+        });
 
-                    return safeStorage.openDatabase();
+        after(function (done) {
+            server.stop(function (err) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+
+                Q.all([
+                    gmeAuth.unload(),
+                    safeStorage.closeDatabase()
+                ])
+                    .nodeify(done);
+            });
+        });
+
+        beforeEach(function () {
+            agent = superagent.agent();
+        });
+
+        it('should getUserId', function (done) {
+            openSocketIo()
+                .then(function (socket) {
+                    return Q.ninvoke(socket, 'emit', 'getUserId');
                 })
-                .then(function () {
-                    return safeStorage.deleteProject({projectName: projectName});
-                })
-                .then(function () {
-                    return testFixture.importProject(safeStorage, {
-                        projectSeed: 'seeds/EmptyProject.json',
-                        projectName: projectName,
-                        gmeConfig: gmeConfig,
-                        logger: logger
-                    });
+                .then(function (result) {
+                    expect(result).to.equal(guestAccount);
                 })
                 .nodeify(done);
         });
-    });
 
-    after(function (done) {
-        server.stop(function (err) {
-            if (err) {
-                done(new Error(err));
-                return;
-            }
 
-            Q.all([
-                gmeAuth.unload(),
-                safeStorage.closeDatabase()
-            ])
+        it('should open an existing project', function (done) {
+            openSocketIo()
+                .then(function (socket) {
+                    var data = {
+                        projectName: projectName
+                    };
+
+                    return Q.ninvoke(socket, 'emit', 'openProject', data);
+                })
+                .then(function (result) {
+                    expect(result).to.have.property('master');
+                })
                 .nodeify(done);
         });
+
+        it('should fail to open an existing project if data is not an object', function (done) {
+            openSocketIo()
+                .then(function (socket) {
+                    var data = projectName;
+
+                    return Q.ninvoke(socket, 'emit', 'openProject', data);
+                })
+                .then(function () {
+                    throw new Error('should have failed to openProject');
+                })
+                .catch(function (err) {
+                    if (typeof err === 'string' && err.indexOf('Invalid argument') > -1) {
+                        return;
+                    } else {
+                        throw new Error('should have failed to openProject');
+                    }
+                })
+                .nodeify(done);
+        });
+        
     });
-
-    beforeEach(function () {
-        agent = superagent.agent();
-    });
-
-    it('should getUserId', function (done) {
-        openSocketIo()
-            .then(function (socket) {
-                return Q.ninvoke(socket, 'emit', 'getUserId');
-            })
-            .then(function (data) {
-                expect(data).to.equal(guestAccount);
-            })
-            .nodeify(done);
-    });
-
-
 });
