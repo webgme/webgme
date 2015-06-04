@@ -293,6 +293,7 @@ define([
                 callback(null);
             });
         }
+
         /**
          *
          * @param {string} branchName - name of branch to open.
@@ -419,7 +420,7 @@ define([
                         });
                     } else {
                         logger.error('Cannot view given ' + commitHash + ' commit as it\'s root cannot be loaded! [' +
-                        JSON.stringify(err) + ']');
+                            JSON.stringify(err) + ']');
                         callback(err || new Error('commit object cannot be found!'));
                     }
                 });
@@ -463,7 +464,7 @@ define([
                     logState('info', 'commitHandler');
                     callback(false);
                     alert('You got forked, TODO: \nstep one - automatically create new fork \n' +
-                    'step two - add UI piece.');
+                        'step two - add UI piece.');
                 } else {
                     callback(false);
                     throw new Error('Unexpected result', result);
@@ -713,6 +714,18 @@ define([
         };
 
         //  Setters
+        this.seedProject = function (parameters, callback) {
+            parameters.command = 'seedProject';
+            storage.simpleRequest(parameters, function (err, id) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                storage.simpleResult(id, callback);
+            });
+        };
+
         this.createProject = function (projectName, parameters, callback) {
             if (isConnected()) {
                 storage.createProject(projectName, parameters, callback);
@@ -1110,7 +1123,7 @@ define([
             logger.debug('loading newRootHash', newRootHash);
 
             callback = callback || function (/*err*/) {
-            };
+                };
 
 
             loadRoot(newRootHash, function (err) {
@@ -1177,7 +1190,7 @@ define([
             logger.debug('saveRoot msg', msg);
 
             callback = callback || function () {
-            };
+                };
             if (!state.viewer && !state.readOnlyProject) {
                 if (state.msg) {
                     state.msg += '\n' + msg;

@@ -168,6 +168,18 @@ define([
             self.socket.emit('getLatestCommitData', data, callback);
         };
 
+        //temporary simple request / result functions
+        this.simpleRequest = function (data, callback) {
+            self.socket.emit('simpleRequest', data, callback);
+        };
+
+        this.simpleResult = function (data, callback) {
+            self.socket.emit('simpleResult', data, callback);
+        };
+
+        this.simpleQuery = function (workerId, data, callback) {
+            self.socket.emit('simpleQuery', workerId, data, callback);
+        };
         // Helper functions
         this.getBranchUpdateEventName = function (projectName, branchName) {
             return CONSTANTS.BRANCH_UPDATED + projectName + CONSTANTS.ROOM_DIVIDER + branchName;

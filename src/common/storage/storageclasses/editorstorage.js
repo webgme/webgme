@@ -172,7 +172,7 @@ define([
                 branch.commitHandler = commitHandler;
                 branch.localUpdateHandler = updateHandler;
 
-                function handleNextUpdate () {
+                function handleNextUpdate() {
                     var updateData;
 
                     logger.debug('About to update, updateQueue', branch.getUpdateQueue());
@@ -351,7 +351,7 @@ define([
                     });
                 } else {
                     logger.error('_pushNextQueuedCommit returned from server but the branch was closed, ' +
-                    'the branch has probably been closed while waiting for the response.', projectName, branchName);
+                        'the branch has probably been closed while waiting for the response.', projectName, branchName);
                 }
             });
         };
@@ -394,6 +394,19 @@ define([
                     }
                 }
             }
+        };
+
+        //temporary simple request and result functions
+        this.simpleRequest = function (parameters, callback) {
+            webSocket.simpleRequest(parameters, callback);
+        };
+
+        this.simpleResult = function (resultId, callback) {
+            webSocket.simpleResult(resultId, callback);
+        };
+
+        this.simpleQuery = function (workerId, parameters, callback) {
+            webSocket.simpleQuery(workerId, parameters, callback);
         };
     }
 

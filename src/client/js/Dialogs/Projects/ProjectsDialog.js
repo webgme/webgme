@@ -534,7 +534,7 @@ define([
         // TODO: remove these two lines once the create seed API is implemented and functional
         loader.start();
 
-        self._client.seedProjectAsync(parameters, function (err) {
+        self._client.seedProject(parameters, function (err) {
             if (err) {
                 self._logger.error('Cannot create seed project', err);
                 loader.stop();
