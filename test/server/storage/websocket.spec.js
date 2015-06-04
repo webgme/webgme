@@ -18,6 +18,7 @@ describe('WebSocket', function () {
 
         gmeAuth,
         projectName = 'webSocketTestProject',
+        projectNameUnauthorized = 'webSocketTestUnauthorizedProject',
         guestAccount = gmeConfig.authentication.guestAccount,
 
         safeStorage,
@@ -80,23 +81,52 @@ describe('WebSocket', function () {
                     return;
                 }
 
-                testFixture.clearDBAndGetGMEAuth(gmeConfig, [projectName])
+                testFixture.clearDBAndGetGMEAuth(gmeConfig, [projectName, projectNameUnauthorized])
                     .then(function (gmeAuth_) {
                         gmeAuth = gmeAuth_;
                         safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
-                        return safeStorage.openDatabase();
+                        return Q.all([
+                            safeStorage.openDatabase(),
+                            gmeAuth.authorizeByUserId(guestAccount, 'project_does_not_exist', 'create',
+                                {
+                                    read: true,
+                                    write: true,
+                                    delete: true
+                                })
+                        ]);
                     })
                     .then(function () {
-                        return safeStorage.deleteProject({projectName: projectName});
+                        return Q.all([
+                            safeStorage.deleteProject({projectName: projectName}),
+                            safeStorage.deleteProject({projectName: projectNameUnauthorized})
+                        ]);
                     })
                     .then(function () {
-                        return testFixture.importProject(safeStorage, {
-                            projectSeed: 'seeds/EmptyProject.json',
-                            projectName: projectName,
-                            gmeConfig: gmeConfig,
-                            logger: logger
-                        });
+                        return Q.all([
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'seeds/EmptyProject.json',
+                                projectName: projectName,
+                                gmeConfig: gmeConfig,
+                                logger: logger
+                            }),
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'seeds/EmptyProject.json',
+                                projectName: projectNameUnauthorized,
+                                gmeConfig: gmeConfig,
+                                logger: logger
+                            })
+                        ]);
+                    })
+                    .then(function () {
+                        return Q.all([
+                            gmeAuth.authorizeByUserId(guestAccount, projectNameUnauthorized, 'create',
+                                {
+                                    read: false,
+                                    write: false,
+                                    delete: false
+                                })
+                        ]);
                     })
                     .nodeify(done);
             });
@@ -167,6 +197,50 @@ describe('WebSocket', function () {
                 })
                 .nodeify(done);
         });
-        
+
+        it('should fail to open a non-existent project', function (done) {
+            openSocketIo()
+                .then(function (socket) {
+                    var data = {
+                        projectName: 'project_does_not_exist'
+                    };
+
+                    return Q.ninvoke(socket, 'emit', 'openProject', data);
+                })
+                .then(function () {
+                    throw new Error('should have failed to openProject');
+                })
+                .catch(function (err) {
+                    if (typeof err === 'string' && err.indexOf('Project does not exist') > -1) {
+                        return;
+                    } else {
+                        throw new Error('should have failed to openProject');
+                    }
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to open a project, when there is no read access', function (done) {
+            openSocketIo()
+                .then(function (socket) {
+                    var data = {
+                        projectName: projectNameUnauthorized
+                    };
+
+                    return Q.ninvoke(socket, 'emit', 'openProject', data);
+                })
+                .then(function () {
+                    throw new Error('should have failed to openProject');
+                })
+                .catch(function (err) {
+                    if (typeof err === 'string' && err.indexOf('Not authorized') > -1) {
+                        return;
+                    } else {
+                        throw new Error('should have failed to openProject');
+                    }
+                })
+                .nodeify(done);
+        });
+
     });
 });
