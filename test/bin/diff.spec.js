@@ -15,6 +15,7 @@ describe('diff CLI tests', function () {
         diffCLI = require('../../src/bin/diff'),
         importCLI = require('../../src/bin/import'),
         FS = testFixture.fs,
+        Q = testFixture.Q,
         getJsonProject = function (path) {
             return JSON.parse(FS.readFileSync(path, 'utf-8'));
         },
@@ -35,7 +36,11 @@ describe('diff CLI tests', function () {
     });
 
     after(function (done) {
-        storage.closeDatabase(done);
+        Q.all([
+            gmeAuth.unload(),
+            storage.closeDatabase()
+        ])
+            .nodeify(done);
     });
 
     describe('basic', function () {

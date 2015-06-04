@@ -14,6 +14,7 @@ describe('import CLI tests', function () {
         importCLI = require('../../src/bin/import'),
         openContext = testFixture.openContext,
         projectName,
+        Q = testFixture.Q,
         logger = testFixture.logger.fork('import.spec'),
         storage,
         gmeAuth,
@@ -44,6 +45,14 @@ describe('import CLI tests', function () {
         } else {
             done();
         }
+    });
+
+    after(function (done) {
+        Q.all([
+            gmeAuth.unload(),
+            storage.closeDatabase()
+        ])
+            .nodeify(done);
     });
 
     it('should import non-existing project with unspecified branch into master', function (done) {

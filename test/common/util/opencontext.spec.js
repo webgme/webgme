@@ -12,10 +12,12 @@ describe('openContext', function () {
         WebGME = testFixture.WebGME,
         logger = testFixture.logger,
         openContext = testFixture.openContext,
+        usedProjectNames = ['doesExist', 'willBeOverwritten', 'willBeCreated'],
         storage;
 
     function importAndCloseProject(importParam, callback) {
         testFixture.importProject(storage, importParam, function (err, result) {
+            console.log(err,result);
             callback(err, result.commitHash);
         });
     }
@@ -34,7 +36,7 @@ describe('openContext', function () {
                 gmeConfig: gmeConfig,
                 logger: logger.fork('importProject')
             };
-            testFixture.clearDBAndGetGMEAuth(gmeConfig, importParam.projectName)
+            testFixture.clearDBAndGetGMEAuth(gmeConfig, usedProjectNames)
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
                     storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
@@ -316,7 +318,7 @@ describe('openContext', function () {
                 gmeConfig: gmeConfig,
                 logger: logger.fork('importProject')
             };
-            testFixture.clearDBAndGetGMEAuth(gmeConfig, importParam.projectName)
+            testFixture.clearDBAndGetGMEAuth(gmeConfig, usedProjectNames)
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
                     storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
@@ -349,6 +351,9 @@ describe('openContext', function () {
 
         after(function (done) {
             storage.deleteProject({projectName: 'willBeCreated'})
+                .then(function(){
+                    return storage.deleteProject({projectName: 'willBeOverwritten'});
+                })
                 .then(function () {
                     storage.closeDatabase(done);
                 })

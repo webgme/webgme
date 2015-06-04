@@ -17,6 +17,7 @@ describe('apply CLI tests', function () {
         importCLI = require('../../src/bin/import'),
         exportCLI = require('../../src/bin/export'),
         FS = testFixture.fs,
+        Q = testFixture.Q,
         getJsonProject = function (path) {
             return JSON.parse(FS.readFileSync(path, 'utf-8'));
         },
@@ -49,7 +50,11 @@ describe('apply CLI tests', function () {
     });
 
     after(function (done) {
-        storage.closeDatabase(done);
+        Q.all([
+            gmeAuth.unload(),
+            storage.closeDatabase()
+        ])
+            .nodeify(done);
     });
 
     describe('basic', function () {
