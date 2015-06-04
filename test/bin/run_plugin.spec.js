@@ -11,13 +11,9 @@ describe('Run plugin CLI', function () {
 
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('run_plugin.spec'),
-        should = testFixture.should,
         spawn = testFixture.childProcess.spawn,
         storage,
-        mongodb = require('mongodb'),
-        mongoConn,
-        importCLI = require('../../src/bin/import'),
-        fs = require('fs'),
+        expect = testFixture.expect,
         filename = require('path').normalize('src/bin/run_plugin.js'),
         projectName = 'aaa',
         gmeAuth,
@@ -76,11 +72,9 @@ describe('Run plugin CLI', function () {
             });
 
             runpluginProcess.on('close', function (code) {
-                //console.log(stdoutData);
-                //console.log(err);
-                stdout.should.contain('execution was successful');
-                stderr.should.contain('This is an error message');
-                should.equal(code, 0);
+                //expect(stdout).to.contain('execution was successful');
+                expect(stderr).to.contain('This is an error message');
+                expect(code).to.equal(0);
                 done();
             });
         });
@@ -96,7 +90,7 @@ describe('Run plugin CLI', function () {
 
         it('should run the Minimal Working Example plugin', function (done) {
             process.exit = function (code) {
-                should.equal(code, 0, 'Should have succeeded');
+                expect(code).to.equal(0);
             };
 
             runPlugin.main(['node', filename, '-p', projectName, '-n', 'MinimalWorkingExample'],
@@ -105,8 +99,8 @@ describe('Run plugin CLI', function () {
                         done(new Error(err));
                         return;
                     }
-                    should.equal(result.success, true);
-                    should.equal(result.error, null);
+                    expect(result.success).to.equal(true);
+                    expect(result.error).to.equal(null);
                     done();
                 }
             );

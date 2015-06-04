@@ -5,7 +5,8 @@
 
 var testFixture = require('../_globals.js'),
     gmeConfig = testFixture.getGmeConfig();
-describe('merge CLI test', function () {
+
+describe.skip('merge CLI test', function () {
     'use strict';
     var filename = require('path').normalize('src/bin/merge.js'),
         mergeCli = require('../../src/bin/merge'),

@@ -5,7 +5,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('ServerWorkerManager', function () {
+describe.skip('ServerWorkerManager', function () {
     'use strict';
     function sessionToUser(/*sessionID*/) {
         return [true, 'testUser'];
