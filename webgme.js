@@ -56,7 +56,8 @@ function addToRequireJsPaths(gmeConfig) {
             var componentNames = getComponentNames(basepaths),
                 i, j;
 
-            //we go through every plugin and we check where we are able to find the main part of it so we can set the plugin/pluginName path according that in requirejs
+            // We go through every plugin and we check where we are able to find the main part of it
+            // so we can set the plugin/pluginName path according that in requirejs.
             var componentPaths = {};
             for (i in componentNames) {
                 var found = false;
@@ -99,7 +100,6 @@ function addToRequireJsPaths(gmeConfig) {
     addFromBasePath(gmeConfig.plugin.basePaths, 'plugin');
     addFromBasePath(gmeConfig.addOn.basePaths, 'addon');
     addFromRequireJsPath(gmeConfig.requirejsPaths);
-    //console.error(JSON.stringify(requirejs.s.contexts._.config, null, 4)); // TODO remove me
 }
 
 module.exports = {
@@ -115,7 +115,7 @@ module.exports = {
         return new SafeStorage(mongo, logger, gmeConfig, gmeAuth);
     },
     getGmeAuth: function (gmeConfig, callback) {
-        var Q = require('Q'),
+        var Q = require('q'),
             GMEAuth = require('./src/server/middleware/auth/gmeauth'),
             deferred = Q.defer(),
             gmeAuth;
