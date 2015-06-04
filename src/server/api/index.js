@@ -556,6 +556,9 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(result);
             })
             .catch(function (err) {
+                if (err.message.indexOf('not exist') > -1) {
+                    err.status = 404;
+                }
                 next(err);
             });
     });
@@ -664,16 +667,24 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.use(function (err, req, res, next) { // NOTE: it is important to have this function signature with 4 arguments!
         var errorMessage = {
                 401: 'Authentication required',
-                403: 'No sufficient role',
+                403: 'Forbidden',
                 404: 'Not found'
             },
             message = err.message ? err.message : err;
 
         if (res.statusCode === 200) {
+            if (err.message.indexOf('Not authorized') > -1) {
+                err.status = err.status || 403;
+            }
             res.status(err.status || 500);
         }
+
+        if (errorMessage.hasOwnProperty(res.statusCode)) {
+            message = errorMessage[res.statusCode];
+        }
+
         res.json({
-            message: errorMessage.hasOwnProperty(res.statusCode) ? errorMessage[res.statusCode] : message,
+            message: message,
             documentation_url: '', //jshint ignore: line
             error: err.message ? err.message : err // FIXME: only in dev mode
         });

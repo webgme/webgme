@@ -126,7 +126,6 @@ describe('merge CLI test', function () {
                                     done(err);
                                     return;
                                 }
-                                console.log(err, result);
                                 result.project.createBranch('other', result.commitHash, function (err) {
                                     if (err) {
                                         done(err);

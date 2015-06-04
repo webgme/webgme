@@ -254,7 +254,7 @@ __Will be available in 0.10+ release__
 
 
 # Group Projects
-Organization related resources of *WebGME API*.
+Project related resources of *WebGME API*.
 
 # Projects collection [/projects]
 

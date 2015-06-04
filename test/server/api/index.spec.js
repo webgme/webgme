@@ -12,6 +12,7 @@ describe('API', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
+        logger = testFixture.logger.fork('index.spec'),
         WebGME = testFixture.WebGME,
         expect = testFixture.expect,
         GMEAuth = testFixture.GMEAuth,
@@ -317,29 +318,30 @@ describe('API', function () {
                     });
             });
 
-            it('should give site admin access to user with valid data PATCH /api/v1/users/user_to_modify', function (done) {
-                var updates = {
-                    siteAdmin: true
-                };
+            it('should give site admin access to user with valid data PATCH /api/v1/users/user_to_modify',
+                function (done) {
+                    var updates = {
+                        siteAdmin: true
+                    };
 
-                agent.get(server.getUrl() + '/api/v1/users/user_to_modify')
-                    .end(function (err, res) {
-                        expect(res.status).equal(200, err);
-                        expect(res.body.siteAdmin).not.equal(updates.siteAdmin);
+                    agent.get(server.getUrl() + '/api/v1/users/user_to_modify')
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body.siteAdmin).not.equal(updates.siteAdmin);
 
-                        agent.patch(server.getUrl() + '/api/v1/users/user_to_modify')
-                            .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
-                            .send(updates)
-                            .end(function (err, res2) {
-                                expect(res2.status).equal(200, err);
-                                // have not changed anything that we did not requested to change
-                                expect(res2.body._id).equal(res.body._id);
-                                expect(res2.body.siteAdmin).equal(true);
+                            agent.patch(server.getUrl() + '/api/v1/users/user_to_modify')
+                                .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                                .send(updates)
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(200, err);
+                                    // have not changed anything that we did not requested to change
+                                    expect(res2.body._id).equal(res.body._id);
+                                    expect(res2.body.siteAdmin).equal(true);
 
-                                done();
-                            });
-                    });
-            });
+                                    done();
+                                });
+                        });
+                });
 
             it('should fail to update non existent user PATCH /api/v1/users/does_not_exist', function (done) {
                 var updates = {
@@ -417,31 +419,32 @@ describe('API', function () {
                     });
             });
 
-            it('should fail to grant site admin acc with no site admin roles PATCH /api/v1/users/guest', function (done) {
-                var updates = {
-                    email: 'new_email_address',
-                    canCreate: false,
-                    siteAdmin: true
-                };
+            it('should fail to grant site admin acc with no site admin roles PATCH /api/v1/users/guest',
+                function (done) {
+                    var updates = {
+                        email: 'new_email_address',
+                        canCreate: false,
+                        siteAdmin: true
+                    };
 
-                agent.get(server.getUrl() + '/api/v1/user')
-                    .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
-                    .end(function (err, res) {
-                        expect(res.status).equal(200, err);
-                        expect(res.body.email).not.equal(updates.email);
-                        expect(res.body.canCreate).not.equal(updates.canCreate);
-                        expect(res.body.siteAdmin).not.equal(true);
+                    agent.get(server.getUrl() + '/api/v1/user')
+                        .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body.email).not.equal(updates.email);
+                            expect(res.body.canCreate).not.equal(updates.canCreate);
+                            expect(res.body.siteAdmin).not.equal(true);
 
-                        agent.patch(server.getUrl() + '/api/v1/users/guest')
-                            .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
-                            .send(updates)
-                            .end(function (err, res2) {
-                                expect(res2.status).equal(403, err);
+                            agent.patch(server.getUrl() + '/api/v1/users/guest')
+                                .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                                .send(updates)
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(403, err);
 
-                                done();
-                            });
-                    });
-            });
+                                    done();
+                                });
+                        });
+                });
 
             it('should create a new user with valid data PUT /api/v1/users/new_user', function (done) {
                 var newUser = {
@@ -493,28 +496,29 @@ describe('API', function () {
                     });
             });
 
-            it('should fail to create a new user if acting user is not a site admin PUT /api/v1/users', function (done) {
-                var newUser = {
-                    userId: 'new_user2',
-                    email: 'new_email_address2',
-                    password: 'new_user_pass2',
-                    canCreate: true
-                };
+            it('should fail to create a new user if acting user is not a site admin PUT /api/v1/users',
+                function (done) {
+                    var newUser = {
+                        userId: 'new_user2',
+                        email: 'new_email_address2',
+                        password: 'new_user_pass2',
+                        canCreate: true
+                    };
 
-                agent.get(server.getUrl() + '/api/v1/users/new_user2')
-                    .end(function (err, res) {
-                        expect(res.status).equal(404, err); // user should not exist at this point
+                    agent.get(server.getUrl() + '/api/v1/users/new_user2')
+                        .end(function (err, res) {
+                            expect(res.status).equal(404, err); // user should not exist at this point
 
-                        agent.put(server.getUrl() + '/api/v1/users')
-                            .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
-                            .send(newUser)
-                            .end(function (err, res2) {
-                                expect(res2.status).equal(403, err);
+                            agent.put(server.getUrl() + '/api/v1/users')
+                                .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                                .send(newUser)
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(403, err);
 
-                                done();
-                            });
-                    });
-            });
+                                    done();
+                                });
+                        });
+                });
 
             it('should fail to create a new user if not authenticated PUT /api/v1/users', function (done) {
                 var newUser = {
@@ -616,24 +620,25 @@ describe('API', function () {
                     });
             });
 
-            it('should fail to delete a specified user if not authenticated DELETE /api/v1/users/admin', function (done) {
-                agent.get(server.getUrl() + '/api/v1/users/admin')
-                    .end(function (err, res) {
-                        expect(res.status).equal(200, err);
-                        agent.del(server.getUrl() + '/api/v1/users/admin')
-                            .end(function (err, res2) {
-                                expect(res2.status).equal(403, err);
+            it('should fail to delete a specified user if not authenticated DELETE /api/v1/users/admin',
+                function (done) {
+                    agent.get(server.getUrl() + '/api/v1/users/admin')
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            agent.del(server.getUrl() + '/api/v1/users/admin')
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(403, err);
 
-                                agent.get(server.getUrl() + '/api/v1/users/admin')
-                                    .end(function (err, res2) {
-                                        expect(res.status).equal(200, err);
-                                        expect(res.body).deep.equal(res2.body); // make sure we did not lose any users
+                                    agent.get(server.getUrl() + '/api/v1/users/admin')
+                                        .end(function (err, res2) {
+                                            expect(res.status).equal(200, err);
+                                            expect(res.body).deep.equal(res2.body); // make sure we did not lose any users
 
-                                        done();
-                                    });
-                            });
-                    });
-            });
+                                            done();
+                                        });
+                                });
+                        });
+                });
 
             it('should fail to delete a specified user if acting user is not a site admin DELETE /api/v1/users/guest',
                 function (done) {
@@ -947,11 +952,17 @@ describe('API', function () {
     });
 
 
-    describe.skip('PROJECT SPECIFIC API', function () {
+    describe('PROJECT SPECIFIC API', function () {
 
         describe('auth disabled, allowGuests false', function () {
             var server,
-                agent;
+                agent,
+                projectName = 'project',
+                unauthorizedProjectName = 'unauthorized_project',
+                toDeleteProjectName = 'project_to_delete',
+                safeStorage,
+                gmeAuth,
+                guestAccount = gmeConfig.authentication.guestAccount;
 
             before(function (done) {
                 var gmeConfig = testFixture.getGmeConfig();
@@ -959,11 +970,75 @@ describe('API', function () {
                 gmeConfig.authentication.allowGuests = false;
 
                 server = WebGME.standaloneServer(gmeConfig);
-                server.start(done);
+                server.start(function (err) {
+                    if (err) {
+                        done(new Error(err));
+                        return;
+                    }
+
+                    testFixture.clearDBAndGetGMEAuth(gmeConfig,
+                        [projectName, unauthorizedProjectName, toDeleteProjectName])
+                        .then(function (gmeAuth_) {
+                            gmeAuth = gmeAuth_;
+                            safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                            return safeStorage.openDatabase();
+                        })
+                        .then(function () {
+                            return Q.all([
+                                safeStorage.deleteProject({projectName: projectName}),
+                                safeStorage.deleteProject({projectName: unauthorizedProjectName}),
+                                safeStorage.deleteProject({projectName: toDeleteProjectName})
+                            ]);
+                        })
+                        .then(function () {
+                            return Q.all([
+                                testFixture.importProject(safeStorage, {
+                                    projectSeed: 'seeds/EmptyProject.json',
+                                    projectName: projectName,
+                                    gmeConfig: gmeConfig,
+                                    logger: logger
+                                }),
+                                testFixture.importProject(safeStorage, {
+                                    projectSeed: 'seeds/EmptyProject.json',
+                                    projectName: unauthorizedProjectName,
+                                    gmeConfig: gmeConfig,
+                                    logger: logger
+                                }),
+                                testFixture.importProject(safeStorage, {
+                                    projectSeed: 'seeds/EmptyProject.json',
+                                    projectName: toDeleteProjectName,
+                                    gmeConfig: gmeConfig,
+                                    logger: logger
+                                })
+                            ]);
+                        })
+                        .then(function () {
+                            return Q.all([
+                                gmeAuth.authorizeByUserId(guestAccount, unauthorizedProjectName, 'create',
+                                    {
+                                        read: true,
+                                        write: false,
+                                        delete: false
+                                    })
+                            ]);
+                        })
+                        .nodeify(done);
+                });
             });
 
             after(function (done) {
-                server.stop(done);
+                server.stop(function (err) {
+                    if (err) {
+                        done(new Error(err));
+                        return;
+                    }
+
+                    Q.all([
+                        gmeAuth.unload(),
+                        safeStorage.closeDatabase()
+                    ])
+                        .nodeify(done);
+                });
             });
 
             beforeEach(function () {
@@ -974,70 +1049,85 @@ describe('API', function () {
             it('should list projects /projects', function (done) {
                 agent.get(server.getUrl() + '/api/projects').end(function (err, res) {
                     expect(res.status).equal(200, err);
-                    expect(res.body).deep.equal(['project', 'unauthorized_project']);
-                    done(new Error('implement this test'));
+                    expect(res.body.length).to.equal(3);
+                    expect(res.body).to.contain(projectName);
+                    expect(res.body).to.contain(unauthorizedProjectName);
+                    expect(res.body).to.contain(toDeleteProjectName);
+                    done();
                 });
             });
 
             it('should branches for project /projects/:projectId/branches', function (done) {
                 agent.get(server.getUrl() + '/api/projects/project/branches').end(function (err, res) {
                     expect(res.status).equal(200, err);
-                    //expect(res.body).true;
-                    done(new Error('implement this test'));
+                    expect(res.body).to.have.property('master');
+                    done();
                 });
             });
 
             it('should not get branches for non-existent project', function (done) {
                 agent.get(server.getUrl() + '/api/projects/does_not_exist/branches').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    //expect(res.body).true;
-                    done(new Error('implement this test'));
+                    expect(res.status).equal(403, err);
+                    done();
                 });
             });
 
             it('should get branch information for project /projects/:projectId/branches/master', function (done) {
-                agent.get(server.getUrl() + '/api/projects/project/branches/master').end(function (err, res) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName + '/branches/master').end(function (err,
+                                                                                                               res) {
                     expect(res.status).equal(200, err);
-                    //expect(res.body).true;
-                    done(new Error('implement this test'));
+                    expect(res.body).to.have.property('projectName');
+                    expect(res.body).to.have.property('branchName');
+                    expect(res.body).to.have.property('commitObject');
+                    expect(res.body).to.have.property('coreObjects');
+
+                    expect(res.body.projectName).to.equal(projectName);
+                    expect(res.body.branchName).to.equal('master');
+
+                    done();
                 });
             });
 
             it('should not get branch information for non-existent branch', function (done) {
                 agent.get(server.getUrl() + '/api/projects/project/branches/does_not_exist').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    //expect(res.body).true;
-                    done(new Error('implement this test'));
+                    expect(res.status).equal(404, err);
+                    done();
                 });
             });
 
             it('should list commits for project /projects/:projectId/commits', function (done) {
                 agent.get(server.getUrl() + '/api/projects/project/commits').end(function (err, res) {
                     expect(res.status).equal(200, err);
-                    //expect(res.body).true;
-                    done(new Error('implement this test'));
+                    expect(res.body.length).to.equal(1);
+                    expect(res.body[0]).to.have.property('message');
+                    expect(res.body[0]).to.have.property('parents');
+                    expect(res.body[0]).to.have.property('root');
+                    expect(res.body[0]).to.have.property('time');
+                    expect(res.body[0]).to.have.property('type');
+                    expect(res.body[0]).to.have.property('updater');
+                    expect(res.body[0]).to.have.property('_id');
+                    done();
                 });
             });
 
             it('should not get commits for non-existent project', function (done) {
                 agent.get(server.getUrl() + '/api/projects/does_not_exist/commits').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    //expect(res.body).true;
-                    done(new Error('implement this test'));
+                    expect(res.status).equal(403, err);
+                    done();
                 });
             });
 
             it('should delete a project by id /projects/project_to_delete', function (done) {
                 agent.del(server.getUrl() + '/api/projects/project_to_delete').end(function (err, res) {
                     expect(res.status).equal(204, err);
-                    done(new Error('implement this test'));
+                    done();
                 });
             });
 
             it('should fail to delete a non-existent project', function (done) {
                 agent.del(server.getUrl() + '/api/projects/does_not_exist').end(function (err, res) {
-                    expect(res.status).equal(404, err);
-                    done(new Error('implement this test'));
+                    expect(res.status).equal(403, err);
+                    done();
                 });
             });
 
