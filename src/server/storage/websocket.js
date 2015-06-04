@@ -12,7 +12,7 @@ var io = require('socket.io'),
     ROOM_DIV = CONSTANTS.ROOM_DIVIDER, // TODO: Add prefixes
     DATABASE_ROOM = CONSTANTS.DATABASE_ROOM;
 
-function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
+function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
     var logger = mainLogger.fork('WebSocket'),
         webSocket;
     logger.debug('ctor');
@@ -28,13 +28,13 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                 // TODO: Isn't this branch deprecated?
                 sessionId = handshakeData.query.webGMESessionId;
             } else if (handshakeData.query &&
-                       handshakeData.query[gmeConfig.server.sessionCookieId] &&
-                       handshakeData.query[gmeConfig.server.sessionCookieId] !== 'undefined') {
+                handshakeData.query[gmeConfig.server.sessionCookieId] &&
+                handshakeData.query[gmeConfig.server.sessionCookieId] !== 'undefined') {
                 sessionId = COOKIE.signedCookie(handshakeData.query[gmeConfig.server.sessionCookieId],
                     gmeConfig.server.sessionCookieSecret);
             } else if (gmeConfig.server.sessionCookieId &&
-                       gmeConfig.server.sessionCookieSecret &&
-                       handshakeData.headers && handshakeData.headers.cookie) {
+                gmeConfig.server.sessionCookieSecret &&
+                handshakeData.headers && handshakeData.headers.cookie) {
                 //we try to dig it from the signed cookie
                 sessionId = COOKIE.signedCookie(
                     URL.parseCookie(handshakeData.headers.cookie)[gmeConfig.server.sessionCookieId],
@@ -388,6 +388,51 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                     })
                     .then(function (commitData) {
                         callback(null, commitData);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
+            //worker commands
+            socket.on('simpleRequest', function (parameters, callback) {
+                getUserIdFromSocket(socket).
+                    then(function (userId) {
+                        parameters.userId = userId;
+                        workerManager.request(parameters, callback);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
+            socket.on('simpleResult', function (resultId, callback) {
+                getUserIdFromSocket(socket).
+                    then(function (/*userId*/) {
+                        workerManager.result(resultId, callback);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
+            socket.on('simpleQuery', function (workerId, parameters, callback) {
+                getUserIdFromSocket(socket).
+                    then(function (userId) {
+                        parameters.userId = userId;
+                        workerManager.query(workerId, parameters, callback);
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {

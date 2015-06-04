@@ -628,7 +628,7 @@ function StandAloneServer(gmeConfig) {
 
     __database = new Mongo(logger, gmeConfig);
     __storage = new Storage(__database, logger, gmeConfig, __gmeAuth);
-    __webSocket = new WebSocket(__storage, logger, gmeConfig, __gmeAuth);
+    __webSocket = new WebSocket(__storage, logger, gmeConfig, __gmeAuth, __workerManager);
 
     middlewareOpts = {  //TODO: Pass this to every middleware They must not modify the options!
         gmeConfig: gmeConfig,
