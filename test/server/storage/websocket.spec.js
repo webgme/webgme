@@ -70,7 +70,7 @@ describe('WebSocket', function () {
                     return defer.promise;
                 });
         };
-    
+
     describe('with valid sessionId as a guest user', function () {
         before(function (done) {
             server = WebGME.standaloneServer(gmeConfig);
@@ -420,6 +420,45 @@ describe('WebSocket', function () {
                 })
                 .then(function (result) {
                     expect(result).to.have.property('master');
+                })
+                .nodeify(done);
+        });
+
+        it('should create and delete branch using setBranchHash', function (done) {
+            var socket,
+                data = {
+                    projectName: projectName,
+                    branchName: 'newBranch'
+                };
+
+            openSocketIo()
+                .then(function (socket_) {
+                    socket = socket_;
+                    return Q.ninvoke(socket, 'emit', 'getBranches', data);
+                })
+                .then(function (result) {
+                    expect(result).to.have.property('master');
+                    expect(result).to.not.have.property(data.branchName);
+                    data.oldHash = '';
+                    data.newHash = result.master;
+                    return Q.ninvoke(socket, 'emit', 'setBranchHash', data);
+                })
+                .then(function () {
+                    return Q.ninvoke(socket, 'emit', 'getBranches', data);
+                })
+                .then(function (result) {
+                    expect(result).to.have.property('master');
+                    expect(result).to.have.property(data.branchName);
+                    data.oldHash = data.newHash;
+                    data.newHash = '';
+                    return Q.ninvoke(socket, 'emit', 'setBranchHash', data);
+                })
+                .then(function () {
+                    return Q.ninvoke(socket, 'emit', 'getBranches', data);
+                })
+                .then(function (result) {
+                    expect(result).to.have.property('master');
+                    expect(result).to.not.have.property(data.branchName);
                 })
                 .nodeify(done);
         });

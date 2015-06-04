@@ -247,6 +247,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('loadObjects', function (data, callback) {
                 storage.loadObjects(data, function (err, result) {
+                    // FIXME: different than other functions... catch(function (err) ...
                     callback(err, result);
                 });
             });
@@ -256,6 +257,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     data.socket = socket;
                 }
                 storage.setBranchHash(data, function (err, result) {
+                    // FIXME: different than other functions... catch(function (err) ...
                     callback(err, result);
                 });
             });
@@ -345,7 +347,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         data.username = userId;
                         return storage.createProject(data);
                     })
-                    .nodeify(callback);
+                    .nodeify(callback); // FIXME: different than other functions... catch(function (err) ...
             });
 
             socket.on('getBranches', function (data, callback) {
