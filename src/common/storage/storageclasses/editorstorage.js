@@ -351,7 +351,7 @@ define([
                     });
                 } else {
                     logger.error('_pushNextQueuedCommit returned from server but the branch was closed, ' +
-                    'the branch has probably been closed while waiting for the response.');
+                    'the branch has probably been closed while waiting for the response.', projectName, branchName);
                 }
             });
         };

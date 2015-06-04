@@ -172,7 +172,7 @@ define([
                 if (connectionState === CONSTANTS.STORAGE.CONNECTED) {
                     //N.B. this event will only be triggered once.
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
-                    state.userId = URL.parseCookie(document.cookie).webgme || gmeConfig.authentication.guestAccount;
+                    reLaunchUsers();
                     callback(null);
                 } else if (connectionState === CONSTANTS.STORAGE.DISCONNECTED) {
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
@@ -1172,6 +1172,7 @@ define([
         function saveRoot(msg, callback) {
             var persisted,
                 numberOfPersistedObjects,
+                beforeLoading = true,
                 newCommitObject;
             logger.debug('saveRoot msg', msg);
 
@@ -1201,15 +1202,26 @@ define([
                     // N.B. it is no longer waiting for the setBranchHash to return from server.
                     // Which also was the case before:
                     // https://github.com/webgme/webgme/commit/48547c33f638aedb60866772ca5638f9e447fa24
-                    loading(persisted.rootHash); // FIXME: Are local updates really guaranteed to be synchronous?
 
+                    loading(persisted.rootHash, function (err) {
+                        if (err) {
+                            logger.error('Saveroot - loading failed', err);
+                        }
+                        // TODO: Are local updates really guaranteed to be synchronous?
+                        if (beforeLoading === false) {
+                            logger.error('Saveroot - was not synchronous!');
+                        }
+                    });
+
+                    beforeLoading = false;
                     newCommitObject = storage.makeCommit(
                         state.project.name,
                         state.branchName,
                         [state.commit.current],
                         persisted.rootHash,
                         persisted.objects,
-                        state.msg
+                        state.msg,
+                        callback
                     );
                     addCommit(newCommitObject[CONSTANTS.STORAGE.MONGO_ID]);
                     //undo-redo
@@ -1243,6 +1255,7 @@ define([
         };
 
         this.removeUI = function (guid) {
+            logger.debug('removeUI', guid);
             delete state.users[guid];
         };
 
