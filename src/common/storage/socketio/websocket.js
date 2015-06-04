@@ -90,6 +90,7 @@ define([
 
         this.disconnect = function () {
             self.socket.disconnect();
+            beenConnected = false; //This is a forced disconnect from the storage and all listeners are removed
         };
 
         // watcher functions

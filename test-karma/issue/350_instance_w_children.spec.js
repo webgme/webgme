@@ -5,7 +5,7 @@
  */
 var WebGMEGlobal = {}; //jshint ignore: line
 
-describe('issue 350 client crashes when manipulating a node that has a model child which is an instance of' +
+describe.skip('issue 350 client crashes when manipulating a node that has a model child which is an instance of' +
     'another model having children', function () {
     var Client,
         gmeConfig,
@@ -18,13 +18,13 @@ describe('issue 350 client crashes when manipulating a node that has a model chi
         client.selectProject(projectName, function (err) {
             expect(err).to.equal(null);
 
-            client.selectBranch('master', function (err) {
+            client.selectBranch('master', null, function (err) {
                 expect(err).to.equal(null);
 
-                client.createBranch(projectName, testId, client.getActiveCommit(), function (err) {
+                client.createBranch(projectName, testId, client.getActiveCommitHash(), function (err) {
                     expect(err).to.equal(null);
 
-                    client.selectBranch(testId, function (err) {
+                    client.selectBranch(testId, null, function (err) {
                         expect(err).to.equal(null);
 
                         next();

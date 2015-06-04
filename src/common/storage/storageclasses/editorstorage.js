@@ -92,6 +92,10 @@ define([
             var data = {
                 projectName: projectName
             };
+            if (projects[projectName]) {
+                logger.error('project is already open', projectName);
+                callback('project is already open');
+            }
             webSocket.openProject(data, function (err, branches) {
                 if (err) {
                     callback(err);
@@ -153,6 +157,7 @@ define([
                     projectName: projectName,
                     branchName: branchName
                 };
+
             webSocket.openBranch(data, function (err, latestCommit) {
                 if (err) {
                     callback(err);
@@ -160,7 +165,7 @@ define([
                 }
                 var i,
                     branchHash = latestCommit.commitObject[CONSTANTS.MONGO_ID],
-                    branch = project.getBranch(branchName);
+                    branch = project.getBranch(branchName, false);
 
                 branch.updateHashes(branchHash, branchHash);
 
@@ -314,9 +319,11 @@ define([
             var project = projects[projectName],
                 branch = project.getBranch(branchName, true),
                 commitData;
+            logger.debug('_pushNextQueuedCommit', branch.getCommitQueue());
             if (branch.getCommitQueue().length === 0) {
                 return;
             }
+
             commitData = branch.getFirstCommit(false);
             webSocket.makeCommit(commitData, function (err, result) {
                 if (err) {
@@ -343,7 +350,7 @@ define([
                         }
                     });
                 } else {
-                    logger.error('_pushNextQueuedCommit returned from server but the branch was close, ' +
+                    logger.error('_pushNextQueuedCommit returned from server but the branch was closed, ' +
                     'the branch has probably been closed while waiting for the response.');
                 }
             });

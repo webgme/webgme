@@ -69,6 +69,7 @@ define([
         EventDispatcher.call(this);
 
         this.CONSTANTS = CONSTANTS;
+
         function logState(level, msg) {
             function replacer(key, value) {
                 var chainItem,
@@ -184,10 +185,20 @@ define([
         };
 
         this.disconnectFromDatabase = function (callback) {
-            if (isConnected()) {
+
+            function closeStorage(err) {
                 storage.close();
                 state.connection = CONSTANTS.STORAGE.DISCONNECTED;
-                callback(null);
+                callback(err);
+            }
+
+            if (isConnected()) {
+                if (state.project) {
+                    closeProject(state.project.name, closeStorage);
+                } else {
+                    closeStorage(null);
+                }
+
             } else {
                 logger.warn('Trying to disconnect when already disconnected.');
                 callback(null);
@@ -234,35 +245,19 @@ define([
 
             if (state.project) {
                 prevProjectName = state.project.name;
+                logger.debug('A project was open, closing it', prevProjectName);
+
                 if (prevProjectName === projectName) {
                     logger.warn('projectName is already opened', projectName);
                     callback(null);
                     return;
                 }
-                state.project = null;
-                //TODO what if for some reason we are in transaction?
-                storage.closeProject(prevProjectName, function (err) {
+                closeProject(prevProjectName, function (err) {
                     if (err) {
-                        throw new Error(err);
+                        logger.error('problems closing previous project', err);
+                        callback(err);
+                        return;
                     }
-                    state.core = null;
-                    state.branchName = null;
-                    state.branchStatus = null;
-                    state.patterns = {};
-                    //state.gHash = 0;
-                    state.nodes = {};
-                    state.metaNodes = {};
-                    state.loadNodes = {};
-                    state.loadError = 0;
-                    state.root.current = null;
-                    state.root.previous = null;
-                    //state.root.object = null;
-                    state.inTransaction = false;
-                    state.msg = '';
-
-                    cleanUsersTerritories();
-                    //TODO: Does it matter if we dispatch these before or after the storage.closeProject?
-                    self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, prevProjectName);
                     storage.openProject(projectName, projectOpened);
                 });
             } else {
@@ -270,6 +265,34 @@ define([
             }
         };
 
+        function closeProject(projectName, callback) {
+            state.project = null;
+            //TODO what if for some reason we are in transaction?
+            storage.closeProject(projectName, function (err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                state.core = null;
+                state.branchName = null;
+                state.branchStatus = null;
+                state.patterns = {};
+                //state.gHash = 0;
+                state.nodes = {};
+                state.metaNodes = {};
+                state.loadNodes = {};
+                state.loadError = 0;
+                state.root.current = null;
+                state.root.previous = null;
+                //state.root.object = null;
+                state.inTransaction = false;
+                state.msg = '';
+
+                cleanUsersTerritories();
+                self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, projectName);
+                callback(null);
+            });
+        }
         /**
          *
          * @param {string} branchName - name of branch to open.

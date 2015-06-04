@@ -5,7 +5,7 @@
  */
 var WebGMEGlobal = {}; //jshint ignore: line
 
-describe('issue 171 server crashes when trying to switch to non-existent branch', function () {
+describe.skip('issue 171 server crashes when trying to switch to non-existent branch', function () {
     'use strict';
     var Client,
         gmeConfig,
@@ -54,7 +54,7 @@ describe('issue 171 server crashes when trying to switch to non-existent branch'
         });
     });
 
-    it.skip('initially should be only the master branch', function (done) {
+    it('initially should be only the master branch', function (done) {
         this.timeout(5000);
         var client = new Client(gmeConfig),
             info = {};
@@ -86,7 +86,7 @@ describe('issue 171 server crashes when trying to switch to non-existent branch'
         });
     });
 
-    it.skip('should get some error when selecting non-existent branch', function (done) {
+    it('should get some error when selecting non-existent branch', function (done) {
         var client = new Client(gmeConfig),
             options = {},
             info = {};

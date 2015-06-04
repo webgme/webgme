@@ -23,6 +23,7 @@ define([
 
         logger.debug('ctor');
         this.getBranch = function (branchName, shouldExist) {
+
             if (shouldExist === true) {
                 ASSERT(this.branches.hasOwnProperty(branchName), 'branch does not exist ' + branchName);
             } else if (shouldExist === false) {
