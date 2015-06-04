@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('Safestorage', function () {
+describe('SafeStorage', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
