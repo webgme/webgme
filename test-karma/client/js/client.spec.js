@@ -3083,7 +3083,7 @@ describe('GME client', function () {
 
     });
 
-    describe.skip('undo-redo tests', function () {
+    describe('undo-redo tests', function () {
         var Client,
             gmeConfig,
             client,
@@ -3224,7 +3224,7 @@ describe('GME client', function () {
 
     });
 
-    describe.skip('REST-like functions', function () {
+    describe('REST-like functions', function () {
         var Client,
             gmeConfig,
             client,
@@ -3330,7 +3330,7 @@ describe('GME client', function () {
         });
     });
 
-    describe.skip('import functions', function () {
+    describe('import functions', function () {
         it.skip('should update the given library (sub-tree) with the specified import json', function () {
             // updateLibraryAsync
 
@@ -3364,13 +3364,39 @@ describe('GME client', function () {
     });
 
 //TODO add only proxied functions
-    describe.skip('meta rule query and setting tests', function () {
+    describe('meta rule query and setting tests', function () {
         var Client,
             gmeConfig,
             client,
+            currentTestId,
             projectName = 'metaQueryAndManipulationTest',
             baseCommitHash;
 
+        function prepareBranchForTest(branchName, commitHandler, next) {
+            //creates a branch then a UI for it, finally waits for the nodes to load
+            currentTestId = branchName;
+            client.createBranch(projectName, branchName, baseCommitHash, function (err) {
+                expect(err).to.equal(null);
+
+                client.selectBranch(branchName, commitHandler, function (err) {
+                    expect(err).to.equal(null);
+
+                    //now we should load all necessary node, possibly in one step to allow the synchronous execution
+                    //we handle only the first incoming set of events to not cause any confusion
+                    var alreadyHandled = false;
+                    client.updateTerritory(client.addUI({}, function (events) {
+                        if (!alreadyHandled) {
+                            expect(events).to.have.length(12);
+                            expect(events[0]).to.contain.keys('eid', 'etype');
+                            expect(events[0].etype).to.equal('complete');
+
+                            alreadyHandled = true;
+                            next(null);
+                        }
+                    }, branchName), {'': {children: 1}});
+                });
+            });
+        }
 
         before(function (done) {
             this.timeout(10000);
@@ -3391,8 +3417,24 @@ describe('GME client', function () {
             });
         });
 
+        after(function (done) {
+            client.disconnectFromDatabase(done);
+        });
+
+        afterEach(function (done) {
+            var branchHash = client.getActiveCommitHash();
+            client.removeUI(currentTestId);
+            client.selectBranch('master', null, function (err) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                client.deleteBranch(projectName, currentTestId, branchHash, done);
+            });
+        });
+
         it('should return the meta rules of the given node in a json format', function (done) {
-            prepareBranchForTest('simpleGet', function (err) {
+            prepareBranchForTest('simpleGet', null, function (err) {
                 expect(err).to.equal(null);
 
                 expect(client.getMeta('/1')).to.deep.equal({
@@ -3417,7 +3459,7 @@ describe('GME client', function () {
         });
 
         it('should return the flattened meta rules of a node in json format', function (done) {
-            prepareBranchForTest('inheritedGet', function (err) {
+            prepareBranchForTest('inheritedGet', null, function (err) {
                 expect(err).to.equal(null);
                 var metaRules = client.getMeta('/1865460677');
                 //FIXME: this fails on my machine /patrik
@@ -3449,7 +3491,7 @@ describe('GME client', function () {
         });
 
         it('should return null if the object is not loaded', function (done) {
-            prepareBranchForTest('unknownGet', function (err) {
+            prepareBranchForTest('unknownGet', null, function (err) {
                 expect(err).to.equal(null);
 
                 expect(client.getMeta('/42/42')).to.equal(null);
@@ -3458,19 +3500,25 @@ describe('GME client', function () {
         });
 
         it('modify an empty ruleset to empty', function (done) {
-            prepareBranchForTest('noChangeSet', function (err) {
+            var commitHandler = function (queue, result, callback) {
+                callback(false);
+                done();
+            };
+            prepareBranchForTest('noChangeSet', commitHandler, function (err) {
                 expect(err).to.equal(null);
 
                 var old = client.getMeta('/1730437907');
                 client.setMeta('/1730437907', {});
                 expect(client.getMeta('/1730437907')).to.deep.equal(old);
-                done();
             });
-
         });
 
         it('add some rule via setMeta', function (done) {
-            prepareBranchForTest('addWithSet', function (err) {
+            var commitHandler = function (queue, result, callback) {
+                callback(false);
+                done();
+            };
+            prepareBranchForTest('addWithSet', commitHandler, function (err) {
                 expect(err).to.equal(null);
 
                 var old = client.getMeta('/1730437907'),
@@ -3479,12 +3527,15 @@ describe('GME client', function () {
                 //we extend our json format as well
                 old.attributes.newAttr = newAttribute;
                 expect(client.getMeta('/1730437907')).to.deep.equal(old);
-                done();
             });
         });
 
         it('remove some rule via setMeta', function (done) {
-            prepareBranchForTest('removeWithSet', function (err) {
+            var commitHandler = function (queue, result, callback) {
+                callback(false);
+                done();
+            };
+            prepareBranchForTest('removeWithSet', commitHandler, function (err) {
                 expect(err).to.equal(null);
 
                 var meta = client.getMeta('/1');
@@ -3493,7 +3544,6 @@ describe('GME client', function () {
                 delete meta.attributes.name;
                 client.setMeta('/1', meta);
                 expect(client.getMeta('/1').attributes).not.to.include.keys('name');
-                done();
 
             });
         });
@@ -3526,31 +3576,6 @@ describe('GME client', function () {
             // getValidChildrenItems
 
         });
-
-        function prepareBranchForTest(branchName, next) {
-            //creates a branch then a UI for it, finally waits for the nodes to load
-            client.createBranch(projectName, branchName, baseCommitHash, function (err) {
-                expect(err).to.equal(null);
-
-                client.selectBranch(branchName, null, function (err) {
-                    expect(err).to.equal(null);
-
-                    //now we should load all necessary node, possibly in one step to allow the synchronous execution
-                    //we handle only the first incoming set of events to not cause any confusion
-                    var alreadyHandled = false;
-                    client.updateTerritory(client.addUI({}, function (events) {
-                        if (!alreadyHandled) {
-                            expect(events).to.have.length(12);
-                            expect(events[0]).to.contain.keys('eid', 'etype');
-                            expect(events[0].etype).to.equal('complete');
-
-                            alreadyHandled = true;
-                            next(null);
-                        }
-                    }), {'': {children: 1}});
-                });
-            });
-        }
 
 //    updateValidChildrenItem: META.updateValidChildrenItem,
 //    removeValidChildrenItem: META.removeValidChildrenItem,
