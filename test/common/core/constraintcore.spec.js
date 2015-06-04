@@ -78,7 +78,7 @@ describe('constraint.core', function () {
         storage.deleteProject({projectName: projectName}, done);
     });
 
-    it('gives back null for unknown contraint', function () {
+    it('gives back null for unknown constraint', function () {
         (core.getConstraint(rootNode, 'any') === null).should.be.true;
     });
 
