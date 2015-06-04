@@ -973,7 +973,7 @@ describe('AutoRouter', function () {
             describe('Tests', replayTests);
         });
 
-        describe('Web Worker', function () {
+        describe.skip('Web Worker', function () {
             // Set up the Autorouter as a web worker
             before(function() {
                 bugPlayer.useWebWorker(true);

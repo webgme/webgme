@@ -6,7 +6,7 @@
 
 var WebGMEGlobal = {}; // jshint ignore:line
 
-describe.only('GME client', function () {
+describe('GME client', function () {
     'use strict';
 
     var superagent = null;
