@@ -266,7 +266,7 @@ function StandAloneServer(gmeConfig) {
 
         try {
             // FIXME: is this call synchronous?
-
+            __webSocket.stop();
             //kill all remaining workers
             __workerManager.stop(function (err) {
                 var numDestroyedSockets = 0;
@@ -566,7 +566,6 @@ function StandAloneServer(gmeConfig) {
     //variables
     var logger = null,
         __storage = null,
-        __storageOptions = {},
         __database = null,
         __webSocket = null,
         __gmeAuth = null,

@@ -9,11 +9,16 @@ define([], function () {
 
     function IoClient (gmeConfig) {
         this.connect = function (callback) {
-            var protocol = gmeConfig.server.https.enable ? 'https' : 'http',
-                socketIoUrl = protocol + '://' + window.location.host + '/socket.io/socket.io.js';
-            require([socketIoUrl], function (io_) {
+            var hostAddress = window.location.protocol + '//' + window.location.host;
+
+            if (window.__karma__) {
+                // TRICKY: karma uses web sockets too, we need to use the gme server's port
+                hostAddress = window.location.protocol + '//localhost:' + gmeConfig.server.port;
+            }
+
+            require([hostAddress + '/socket.io/socket.io.js'], function (io_) {
                 var io = io_ || window.io,
-                    socket = io.connect(window.location.host, gmeConfig.socketIO);
+                    socket = io.connect(hostAddress, gmeConfig.socketIO);
                 callback(null, socket);
             });
         };

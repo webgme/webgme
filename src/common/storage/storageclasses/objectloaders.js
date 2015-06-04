@@ -78,9 +78,9 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
             }
             self.logger.debug('loadObjects returned', result);
             for (i = 0; i < hashedObjects.length; i++) {
-                //TODO: This is temporary error handling
                 if (typeof result[hashedObjects[i].hash] === 'string') {
-                    self.logger.error('failed loading object', hashedObjects[i].hash, result[hashedObjects[i].hash]);
+                    self.logger.error(result[hashedObjects[i].hash]);
+                    hashedObjects[i].cb(result[hashedObjects[i].hash]);
                 } else {
                     hashedObjects[i].cb(err, result[hashedObjects[i].hash]);
                 }

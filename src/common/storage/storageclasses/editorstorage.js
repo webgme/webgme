@@ -93,6 +93,10 @@ define([
                 projectName: projectName
             };
             webSocket.openProject(data, function (err, branches) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
                 var project = new Project(projectName, self, logger, gmeConfig);
                 projects[projectName] = project;
                 callback(err, project, branches);
@@ -150,6 +154,10 @@ define([
                     branchName: branchName
                 };
             webSocket.openBranch(data, function (err, latestCommit) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
                 var i,
                     branchHash = latestCommit.commitObject[CONSTANTS.MONGO_ID],
                     branch = project.getBranch(branchName);
@@ -159,7 +167,7 @@ define([
                 branch.commitHandler = commitHandler;
                 branch.localUpdateHandler = updateHandler;
 
-                function callLocalUpdateHandler () {
+                function handleNextUpdate () {
                     var updateData;
 
                     logger.debug('About to update, updateQueue', branch.getUpdateQueue());
@@ -175,7 +183,7 @@ define([
                             logger.debug('New commit was successfully loaded, updating localHash.');
                             branch.updateHashes(originHash, null);
                             branch.getFirstUpdate(true);
-                            callLocalUpdateHandler();
+                            handleNextUpdate();
                         } else {
                             logger.warn('Loading of update commit was aborted or failed.', updateData);
                         }
@@ -195,7 +203,7 @@ define([
 
                     if (branch.getCommitQueue().length === 0) {
                         if (branch.getUpdateQueue().length === 1) {
-                            callLocalUpdateHandler();
+                            handleNextUpdate();
                         }
                     } else {
                         logger.debug('commitQueue is not empty, only updating originHash.');
@@ -312,7 +320,6 @@ define([
             commitData = branch.getFirstCommit(false);
             webSocket.makeCommit(commitData, function (err, result) {
                 if (err) {
-                    //TODO: check error code and retry if e.g. failed inserts.
                     throw new Error(err);
                 }
 
@@ -320,6 +327,11 @@ define([
                     branch.getFirstCommit(true);
                     branch.updateHashes(null, commitData.commitObject[CONSTANTS.MONGO_ID]);
                 }
+
+                // This is for when e.g. a plugin makes a commit to the same branch as the
+                // client and waits for the callback before proceeding.
+                // (If it is a forking commit, the plugin can proceed knowing that and the client will get notified of
+                // the fork through the commitHandler.)
                 if (typeof callback === 'function') {
                     callback(err, result);
                 }

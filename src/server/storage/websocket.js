@@ -126,7 +126,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                             throw new Error('Could not get userId');
                         }
                     }).catch(function (err) {
-                        callback(err.toString());
+                        callback(err.message);
                     });
             });
 
@@ -180,7 +180,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
-                            callback(err.toString());
+                            callback(err.message);
                         }
                     });
             });
@@ -209,7 +209,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
-                            callback(err.toString());
+                            callback(err.message);
                         }
                     });
             });
@@ -236,7 +236,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
-                            callback(err.toString());
+                            callback(err.message);
                         }
                     });
             });
@@ -270,7 +270,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
-                            callback(err.toString());
+                            callback(err.message);
                         }
                     });
             });
@@ -288,7 +288,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
-                            callback(err.toString());
+                            callback(err.message);
                         }
                     });
             });
@@ -306,7 +306,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
-                            callback(err.toString());
+                            callback(err.message);
                         }
                     });
             });
@@ -327,7 +327,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
-                            callback(err.toString());
+                            callback(err.message);
                         }
                     });
             });
@@ -357,7 +357,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
-                            callback(err.toString());
+                            callback(err.message);
                         }
                     });
             });
@@ -375,7 +375,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
-                            callback(err.toString());
+                            callback(err.message);
                         }
                     });
             });
@@ -393,15 +393,21 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth) {
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
-                            callback(err.toString());
+                            callback(err.message);
                         }
                     });
             });
         });
     };
 
-    this.stop = function (callback) {
-
+    this.stop = function () {
+        //disconnect clients
+        if (webSocket) {
+            webSocket.sockets.sockets.forEach(function (socket) {
+                socket.disconnect();
+            });
+            webSocket = null;
+        }
     };
 }
 

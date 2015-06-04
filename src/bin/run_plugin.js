@@ -27,8 +27,7 @@ main = function (argv, callback) {
     program.option('-p, --project <name><mandatory>', 'Name of the project.');
     program.option('-b, --branch <name>', 'Name of the branch.', 'master');
     program.option('-j, --pluginConfigPath <name>',
-        'Path to json file with plugin options that should be overwritten.',
-        '');
+        'Path to json file with plugin options that should be overwritten.', '');
     program.option('-n, --pluginName <name><mandatory>', 'Path to given plugin.');
     program.option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '');
     program.parse(argv);

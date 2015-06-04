@@ -22,10 +22,21 @@ define([
         return storage;
     }
 
-    function getStorage (logger, gmeConfig) {
+    function getStorage (logger, gmeConfig, forceNew) {
+        logger.debug('getStorage');
+
         if (!_storage) {
+            logger.debug('No storage existed, will create new one..');
             _storage = _createStorage(logger, gmeConfig);
+        } else {
+            logger.debug('Storage existed...');
+
+            if (forceNew === true) {
+                logger.debug('Force new set to true, will create new one.');
+                _storage = _createStorage(logger, gmeConfig);
+            }
         }
+
         return _storage;
     }
 

@@ -217,7 +217,7 @@ describe.only('GME client', function () {
             var client = new Client(gmeConfig);
             client.connectToDatabase(function (err) {
                 expect(err).to.equal(null);
-                done();
+                client.disconnectFromDatabase(done);
             });
         });
 
@@ -228,7 +228,7 @@ describe.only('GME client', function () {
 
                 client.connectToDatabase(function (err) {
                     expect(err).to.equal(null);
-                    done();
+                    client.disconnectFromDatabase(done);
                 });
             });
         });
@@ -401,7 +401,7 @@ describe.only('GME client', function () {
         //getAllInfoTagsAsync
     });
 
-    describe('project and branch operations', function () {
+    describe.only('project and branch operations', function () {
         var Client,
             gmeConfig,
             client,
@@ -414,17 +414,12 @@ describe.only('GME client', function () {
                 gmeConfig = JSON.parse(gmeConfigJSON);
                 gmeConfig.storage.timeout = 1000;
                 client = new Client(gmeConfig);
-
-                done();
+                client.connectToDatabase(done);
             });
         });
 
-        beforeEach(function (done) {
-            client.connectToDatabase(function (err) {
-                expect(err).to.equal(null);
-
-                done();
-            });
+        after(function (done) {
+            client.disconnectFromDatabase(done);
         });
 
         it('should return null as textual id if there is no opened project', function () {
@@ -440,22 +435,38 @@ describe.only('GME client', function () {
             });
         });
 
-        it('list of viewable projects should be equal to list of all projects without authentication', function (done) {
+        it('getProjects should return array of objects with project name and rights', function (done) {
             client.getProjects(function (err, allProjects) {
                 expect(err).to.equal(null);
-                expect(allProjects).to.equal(null);
+                expect(allProjects instanceof Array).to.equal(true);
+                expect(allProjects[0]).to.include.keys('name', 'read', 'write', 'delete');
+                done();
             });
         });
 
-        it('getProjectsAndBranches should return the complete project object, with branches and authorization info', function (done) {
+        it('getProjectsAndBranches-true should return an object with branches and rights', function (done) {
             client.getProjectsAndBranches(true, function (err, projects) {
                 var key;
                 expect(err).to.equal(null);
+                expect(typeof projects).to.equal('object');
+                expect(projects instanceof Array).to.equal(false);
                 for (key in projects) {
-                    expect(projects[key].hasOwnProperty('read')).to.equal(true);
-                    expect(projects[key].hasOwnProperty('write')).to.equal(true);
-                    expect(projects[key].hasOwnProperty('delete')).to.equal(true);
-                    expect(projects[key].hasOwnProperty('branches')).to.equal(true);
+                    expect(projects[key]).to.include.keys('branches', 'rights');
+                    expect(projects[key].rights).to.include.keys( 'read', 'write', 'delete');
+                    expect(typeof projects[key].branches).to.equal('object');
+                }
+                done();
+            });
+        });
+
+        it('getProjectsAndBranches-false should return an array of objects with branches and rights', function (done) {
+            client.getProjectsAndBranches(false, function (err, projects) {
+                var i;
+                expect(err).to.equal(null);
+                expect(projects instanceof Array).to.equal(true);
+                for (i = 0; i < projects.length; i += 1) {
+                    expect(projects[i]).to.include.keys('branches', 'read', 'write', 'delete', 'name');
+                    expect(typeof projects[i].branches).to.equal('object');
                 }
                 done();
             });
@@ -473,14 +484,14 @@ describe.only('GME client', function () {
 
         it('should fail to select an unknown project', function (done) {
             client.selectProject('unknown_project', function (err) {
-                expect(err.message).to.contain('no such project');
+                expect(err.message).to.contain('Not authorized to read project');
                 done();
             });
         });
 
-        it('should be able to delete a nonexistent project', function (done) {
+        it('should fail to delete a nonexistent project', function (done) {
             client.deleteProject('unknown_project', function (err) {
-                expect(err).to.equal(null);
+                expect(err.message).to.contain('Not authorized: cannot delete project. unknown_project');
                 done();
             });
         });
@@ -542,21 +553,20 @@ describe.only('GME client', function () {
             });
         });
 
-
         it('should list the available branches of the opened project', function (done) {
             var actualBranch,
                 actualCommit;
             client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
-                actualBranch = client.getActualBranch();
-                actualCommit = client.getActualCommit();
+                actualBranch = client.getActiveBranchName();
+                actualCommit = client.getActiveCommitHash();
 
                 client.getBranches(projectName, function (err, branches) {
                     expect(err).to.equal(null);
 
-                    expect(branches).to.have.length.of.at.least(1);
-                    expect(branches).to.include({name: actualBranch, commitId: actualCommit, sync: true});
+                    expect(Object.keys(branches)).to.have.length.of.at.least(1);
+                    expect(branches[Object.keys(branches)[0]]).to.contain('#'); //TODO: Proper hash check.
                     done();
                 });
             });
@@ -566,7 +576,7 @@ describe.only('GME client', function () {
             client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
-                client.selectBranch('master', function (err) {
+                client.selectBranch('master', null, function (err) {
                     expect(err).to.equal(null);
                     done();
                 });
@@ -577,32 +587,37 @@ describe.only('GME client', function () {
             client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
-                client.selectBranch('does_not_exist', function (err) {
-                    expect(err.message).to.equal('there is no such branch!');
+                client.selectBranch('does_not_exist', null, function (err) {
+                    expect(err.message).to.equal('Error: Branch "does_not_exist" does not ' +
+                    'exist in project "ProjectAndBranchOperationsTest"');
                     done();
                 });
             });
         });
 
         it('should select a given commit', function (done) {
-            client.selectProjectAsync(projectName, function (err) {
+            client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
-                client.selectCommitAsync(client.getActualCommit(), function (err) {
+                client.selectBranch('master', null, function (err) {
+                    var commitHash = client.getActiveCommitHash();
                     expect(err).to.equal(null);
+                    expect(commitHash).to.contain('#'); //TODO: Proper hash check.
+                    client.selectCommit(commitHash, function (err) {
+                        expect(err).to.equal(null);
 
-                    done();
+                        done();
+                    });
                 });
             });
         });
 
-        //FIXME - possible fault that it 'switches branch' before it checks if the commit is known or not
         it('should fail to select an unknown commit', function (done) {
-            client.selectProjectAsync(projectName, function (err) {
+            client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
-                client.selectCommitAsync('#unknown', function (err) {
-                    expect(err).not.to.equal(null);
+                client.selectCommit('#unknown', function (err) {
+                    expect(err).to.equal('object does not exist #unknown');
 
                     done();
                 });
@@ -610,46 +625,46 @@ describe.only('GME client', function () {
         });
 
         it('should return the latest n commits', function (done) {
-            client.selectProjectAsync(projectName, function (err) {
+            client.selectProject(projectName, function (err) {
                 var commitHash; //testing if it is not initialized
 
                 expect(err).to.equal(null);
 
-                client.getCommitsAsync(commitHash, 10, function (err, commits) {
+                client.getCommits(commitHash, 10, function (err, commits) {
                     expect(err).to.equal(null);
                     expect(commits).not.to.equal(null);
                     expect(commits).not.to.equal(undefined);
 
                     expect(commits).to.have.length.least(1);
                     expect(commits[0]).to.contain.keys('_id', 'root', 'updater', 'time', 'message', 'type');
-                    expect(commits[0]._id).to.equal(client.getActualCommit());
+                    expect(commits[0]._id).to.equal(client.getActiveCommitHash());
                     done();
                 });
             });
         });
 
         it('should return the actual commit hash', function (done) {
-            client.selectProjectAsync(projectName, function (err) {
+            client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
-                client.selectBranchAsync('master', function (err) {
+                client.selectBranch('master', function (err) {
                     expect(err).to.equal(null);
 
-                    expect(client.getActualCommit()).to.contain('#');
-                    expect(client.getActualCommit()).to.have.length(41);
+                    expect(client.getActiveCommitHash()).to.contain('#');
+                    expect(client.getActiveCommitHash()).to.have.length(41);
                     done();
                 });
             });
         });
 
         it('should return the name of the actual branch', function (done) {
-            client.selectProjectAsync(projectName, function (err) {
+            client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
-                client.selectBranchAsync('master', function (err) {
+                client.selectBranch('master', null, function (err) {
                     expect(err).to.equal(null);
 
-                    expect(client.getActualBranch()).to.equal('master');
+                    expect(client.getActiveCommitHash()).to.equal('master');
                     done();
                 });
             });
@@ -657,7 +672,7 @@ describe.only('GME client', function () {
 
         it('should return the current network state', function (done) {
             setTimeout(function () {
-                expect(client.getActualNetworkStatus()).to.equal('connected');
+                expect(client.getNetworkStatus()).to.equal('connected');
                 done();
             }, 100);
         });
@@ -665,7 +680,7 @@ describe.only('GME client', function () {
         it('should return the current branch state', function (done) {
             client.selectProjectAsync(projectName, function (err) {
                 expect(err).to.equal(null);
-                expect(client.getActualBranchStatus()).to.equal('inSync');
+                expect(client.getBranchStatus()).to.equal('inSync');
 
                 done();
             });

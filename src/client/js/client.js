@@ -34,7 +34,7 @@ define([
     function Client(gmeConfig) {
         var self = this,
             logger = Logger.create('gme:client', gmeConfig.client.log),
-            storage = Storage.getStorage(logger, gmeConfig),
+            storage = Storage.getStorage(logger, gmeConfig, true),
             state = {
                 connection: null, // CONSTANTS.STORAGE. CONNECTED/DISCONNECTED/RECONNECTED
                 project: null,
@@ -68,6 +68,7 @@ define([
 
         EventDispatcher.call(this);
 
+        this.CONSTANTS = CONSTANTS;
         function logState(level, msg) {
             function replacer(key, value) {
                 var chainItem,
@@ -202,7 +203,8 @@ define([
 
             function projectOpened(err, project, branches) {
                 if (err) {
-                    throw new Error(err);
+                    callback(new Error(err));
+                    return;
                 }
                 state.project = project;
                 state.readOnlyProject = false; //TODO: this should be returned from the storage
@@ -226,7 +228,7 @@ define([
                     }
                     logState('info', 'selectBranch');
                     reLaunchUsers();
-                    callback();
+                    callback(null);
                 });
             }
 
@@ -302,6 +304,10 @@ define([
                 commitHandler = commitHandler || getDefaultCommitHandler();
                 storage.openBranch(state.project.name, branchName, getUpdateHandler(), commitHandler,
                     function (err, latestCommit) {
+                        if (err) {
+                            callback(new Error(err));
+                            return;
+                        }
                         var commitObject;
                         if (err) {
                             logger.error('storage.openBranch returned with error', err);
@@ -377,15 +383,15 @@ define([
                             if (err) {
                                 logger.error('loading returned error', commitObj.root, err);
                                 logState('error', 'selectCommit loading');
-                                callback(true);
+                                callback(err);
                             } else if (aborted === true) {
                                 logState('warn', 'selectCommit loading');
-                                callback(true);
+                                callback('Loading selected commit was aborted');
                             } else {
                                 addCommit(commitHash);
                                 logger.debug('loading complete for selectCommit rootHash', commitObj.root);
                                 logState('info', 'selectCommit loading');
-                                callback(false);
+                                callback(null);
                             }
                         });
                     } else {
@@ -644,7 +650,11 @@ define([
         };
 
         this.getLatestCommitData = function (projectName, branchName, callback) {
-            storage.getLatestCommitData(projectName, branchName, callback);
+            if (isConnected()) {
+                storage.getLatestCommitData(projectName, branchName, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
         };
 
         this.getProjectsAndBranches = function (asObject, callback) {
@@ -690,7 +700,9 @@ define([
 
         this.deleteProject = function (projectName, callback) {
             if (isConnected()) {
-                storage.deleteProject(projectName, callback);
+                storage.deleteProject(projectName, function (err) {
+                    callback(new Error(err));
+                });
             } else {
                 callback(new Error('There is no open database connection!'));
             }
