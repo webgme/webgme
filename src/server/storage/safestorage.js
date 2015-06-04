@@ -824,7 +824,7 @@ SafeStorage.prototype.loadObjects = function (data, callback) {
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
     check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
-    check(data.hashes instanceof Array, deferred, 'data.hashes is not an array' + data.hashes.toString());
+    check(data.hashes instanceof Array, deferred, 'data.hashes is not an array: ' + JSON.stringify(data.hashes));
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
