@@ -155,6 +155,7 @@ define([
         this._ddBranchStatus.clear();
         this._ddBranchStatus.setTitle('NO BRANCH');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.GRAY);
+        this._outOfSync = false;
         //this._popoverBox.show('No branch selected', this._popoverBox.alertLevels.WARNING, false);
     };
 
