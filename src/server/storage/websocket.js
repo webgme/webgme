@@ -29,13 +29,13 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 // TODO: Isn't this branch deprecated?
                 sessionId = handshakeData.query.webGMESessionId;
             } else if (handshakeData.query &&
-                handshakeData.query[gmeConfig.server.sessionCookieId] &&
-                handshakeData.query[gmeConfig.server.sessionCookieId] !== 'undefined') {
+                       handshakeData.query[gmeConfig.server.sessionCookieId] &&
+                       handshakeData.query[gmeConfig.server.sessionCookieId] !== 'undefined') {
                 sessionId = COOKIE.signedCookie(handshakeData.query[gmeConfig.server.sessionCookieId],
                     gmeConfig.server.sessionCookieSecret);
             } else if (gmeConfig.server.sessionCookieId &&
-                gmeConfig.server.sessionCookieSecret &&
-                handshakeData.headers && handshakeData.headers.cookie) {
+                       gmeConfig.server.sessionCookieSecret &&
+                       handshakeData.headers && handshakeData.headers.cookie) {
                 //we try to dig it from the signed cookie
                 sessionId = COOKIE.signedCookie(
                     URL.parseCookie(handshakeData.headers.cookie)[gmeConfig.server.sessionCookieId],
@@ -312,10 +312,17 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 if (socket.rooms.indexOf(data.projectName) > -1) {
                     data.socket = socket;
                 }
-                storage.setBranchHash(data, function (err, result) {
-                    // FIXME: different than other functions... catch(function (err) ...
-                    callback(err, result);
-                });
+                storage.setBranchHash(data)
+                    .then(function (result) {
+                        callback(null, result);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
             });
 
             // REST like functions

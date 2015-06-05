@@ -10,7 +10,7 @@ describe('WebSocket', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
-        logger = testFixture.logger.fork('Websocket.spec'),
+        logger = testFixture.logger.fork('WebSocket.spec'),
         Q = testFixture.Q,
         WebGME = testFixture.WebGME,
         CONSTANTS = requireJS('common/storage/constants'),
@@ -26,7 +26,12 @@ describe('WebSocket', function () {
             projectNameUnauthorized,
             'WebSocketTest_NewProject',
             'WebSocketTest_ProjectToBeDeleted',
-            'WebSocketTest_ProjectCreated'
+            'WebSocketTest_PROJECT_CREATED',
+            'WebSocketTest_PROJECT_DELETED',
+            'WebSocketTest_BRANCH_CREATED',
+            'WebSocketTest_BRANCH_DELETED',
+            'WebSocketTest_BRANCH_HASH_UPDATED',
+            'WebSocketTest_BRANCH_UPDATED'
         ],
 
         guestAccount = gmeConfig.authentication.guestAccount,
@@ -253,6 +258,30 @@ describe('WebSocket', function () {
                                 projectName: projectNameUnauthorized,
                                 gmeConfig: gmeConfig,
                                 logger: logger
+                            }),
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'seeds/EmptyProject.json',
+                                projectName: 'WebSocketTest_BRANCH_CREATED',
+                                gmeConfig: gmeConfig,
+                                logger: logger
+                            }),
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'seeds/EmptyProject.json',
+                                projectName: 'WebSocketTest_BRANCH_DELETED',
+                                gmeConfig: gmeConfig,
+                                logger: logger
+                            }),
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'seeds/EmptyProject.json',
+                                projectName: 'WebSocketTest_BRANCH_HASH_UPDATED',
+                                gmeConfig: gmeConfig,
+                                logger: logger
+                            }),
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'seeds/EmptyProject.json',
+                                projectName: 'WebSocketTest_BRANCH_UPDATED',
+                                gmeConfig: gmeConfig,
+                                logger: logger
                             })
                         ]);
                     })
@@ -328,7 +357,7 @@ describe('WebSocket', function () {
                     return Q.ninvoke(socket, 'emit', 'getProjectNames', data);
                 })
                 .then(function (result) {
-                    expect(result).to.deep.equal([projectName]);
+                    expect(result.length).to.equal(5);
                 })
                 .nodeify(done);
         });
@@ -356,8 +385,7 @@ describe('WebSocket', function () {
                     return Q.ninvoke(socket, 'emit', 'getProjectsAndBranches', data);
                 })
                 .then(function (result) {
-                    expect(result.length).to.equal(1);
-                    expect(result[0].name).to.equal(projectName);
+                    expect(result.length).to.equal(5);
                     expect(result[0].branches).to.have.property('master');
                 })
                 .nodeify(done);
@@ -658,10 +686,10 @@ describe('WebSocket', function () {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Watcher related tests
 
-        it('should get events with watchDatabase', function (done) {
+        it('should get PROJECT_CREATED event with watchDatabase', function (done) {
             var socket,
                 data = {
-                    projectName: 'WebSocketTest_ProjectCreated',
+                    projectName: 'WebSocketTest_PROJECT_CREATED',
                     branchName: 'master',
                     join: true
                 },
@@ -670,30 +698,191 @@ describe('WebSocket', function () {
                     expect(resultData.projectName).to.equal(data.projectName);
 
                     data.join = false;
-                    socket.emit('watchDatabase', data);
-                    //socket.emit('watchProject', data);
-                    //socket.emit('watchBranch', data);
-
-                    deferred.resolve(resultData);
+                    Q.ninvoke(socket, 'emit', 'watchDatabase', data)
+                        .then(function () {
+                            deferred.resolve(resultData);
+                        })
+                        .catch(deferred.reject);
                 };
-
-            //this.timeout(10000);
 
             openSocketIo()
                 .then(function (socket_) {
                     socket = socket_;
                     socket.on(CONSTANTS.PROJECT_CREATED, eventHandler);
-                    //socket.on(CONSTANTS.PROJECT_DELETED, eventHandler);
-                    //socket.on(CONSTANTS.BRANCH_CREATED, eventHandler);
-                    //socket.on(CONSTANTS.BRANCH_UPDATED, eventHandler);
-                    //socket.on(CONSTANTS.BRANCH_HASH_UPDATED, eventHandler);
                     return Q.ninvoke(socket, 'emit', 'watchDatabase', data);
-                    //socket.emit('watchProject', data);
-                    //socket.emit('watchBranch', data);
-                    //return Q.ninvoke(socket, 'emit', 'watchDatabase', data);
                 })
                 .then(function () {
                     return Q.ninvoke(socket, 'emit', 'createProject', data);
+                })
+                .then(function () {
+                    return deferred.promise;
+                })
+                .nodeify(done);
+        });
+
+        it('should get PROJECT_DELETED event with watchDatabase', function (done) {
+            var socket,
+                data = {
+                    projectName: 'WebSocketTest_PROJECT_DELETED',
+                    branchName: 'master',
+                    join: true
+                },
+                deferred = Q.defer(),
+                eventHandler = function (resultData) {
+                    expect(resultData.projectName).to.equal(data.projectName);
+
+                    data.join = false;
+                    Q.ninvoke(socket, 'emit', 'watchDatabase', data)
+                        .then(function () {
+                            deferred.resolve(resultData);
+                        })
+                        .catch(deferred.reject);
+                };
+
+            openSocketIo()
+                .then(function (socket_) {
+                    socket = socket_;
+                    socket.on(CONSTANTS.PROJECT_DELETED, eventHandler);
+                    return Q.ninvoke(socket, 'emit', 'watchDatabase', data);
+                })
+                .then(function () {
+                    return Q.ninvoke(socket, 'emit', 'createProject', data);
+                })
+                .then(function () {
+                    return Q.ninvoke(socket, 'emit', 'deleteProject', data);
+                })
+                .then(function () {
+                    return deferred.promise;
+                })
+                .nodeify(done);
+        });
+
+        it('should get BRANCH_CREATED event with watchProject', function (done) {
+            var socket,
+                data = {
+                    projectName: 'WebSocketTest_BRANCH_CREATED',
+                    branchName: 'new_branch',
+                    join: true
+                },
+                deferred = Q.defer(),
+                newBranchHash,
+                eventHandler = function (resultData) {
+                    expect(resultData.projectName).to.equal(data.projectName);
+                    expect(resultData.branchName).to.equal(data.branchName);
+                    expect(resultData.newHash).to.equal(newBranchHash);
+
+                    data.join = false;
+                    Q.ninvoke(socket, 'emit', 'watchProject', data)
+                        .then(function () {
+                            deferred.resolve(resultData);
+                        })
+                        .catch(deferred.reject);
+                };
+
+            openSocketIo()
+                .then(function (socket_) {
+                    socket = socket_;
+                    socket.on(CONSTANTS.BRANCH_CREATED, eventHandler);
+                    return Q.ninvoke(socket, 'emit', 'watchProject', data);
+                })
+                .then(function () {
+                    return Q.ninvoke(socket, 'emit', 'getBranches', data);
+                })
+                .then(function (result) {
+                    expect(result).to.have.property('master');
+                    expect(result).to.not.have.property(data.branchName);
+                    data.oldHash = '';
+                    data.newHash = result.master;
+                    newBranchHash = data.newHash;
+                    return Q.ninvoke(socket, 'emit', 'setBranchHash', data);
+                })
+                .then(function () {
+                    return deferred.promise;
+                })
+                .nodeify(done);
+        });
+
+        it('should get BRANCH_DELETED event with watchProject', function (done) {
+            var socket,
+                data = {
+                    projectName: 'WebSocketTest_BRANCH_DELETED',
+                    branchName: 'master',
+                    join: true
+                },
+                deferred = Q.defer(),
+                newBranchHash,
+                eventHandler = function (resultData) {
+                    expect(resultData.projectName).to.equal(data.projectName);
+                    expect(resultData.branchName).to.equal(data.branchName);
+                    expect(resultData.newHash).to.equal(newBranchHash);
+
+                    data.join = false;
+                    Q.ninvoke(socket, 'emit', 'watchProject', data)
+                        .then(function () {
+                            deferred.resolve(resultData);
+                        })
+                        .catch(deferred.reject);
+                };
+
+            openSocketIo()
+                .then(function (socket_) {
+                    socket = socket_;
+                    socket.on(CONSTANTS.BRANCH_DELETED, eventHandler);
+                    return Q.ninvoke(socket, 'emit', 'watchProject', data);
+                })
+                .then(function () {
+                    return Q.ninvoke(socket, 'emit', 'getBranches', data);
+                })
+                .then(function (result) {
+                    expect(result).to.have.property('master');
+                    data.oldHash = result.master;
+                    data.newHash = '';
+                    newBranchHash = data.newHash;
+                    return Q.ninvoke(socket, 'emit', 'setBranchHash', data);
+                })
+                .then(function () {
+                    return deferred.promise;
+                })
+                .nodeify(done);
+        });
+
+        it.skip('should get BRANCH_HASH_UPDATED event with watchProject', function (done) {
+            var socket,
+                data = {
+                    projectName: 'WebSocketTest_BRANCH_HASH_UPDATED',
+                    branchName: 'master',
+                    join: true
+                },
+                deferred = Q.defer(),
+                newBranchHash,
+                eventHandler = function (resultData) {
+                    expect(resultData.projectName).to.equal(data.projectName);
+                    expect(resultData.branchName).to.equal(data.branchName);
+                    expect(resultData.newHash).to.equal(newBranchHash);
+
+                    data.join = false;
+                    Q.ninvoke(socket, 'emit', 'watchBranch', data)
+                        .then(function () {
+                            deferred.resolve(resultData);
+                        })
+                        .catch(deferred.reject);
+                };
+
+            openSocketIo()
+                .then(function (socket_) {
+                    socket = socket_;
+                    socket.on(CONSTANTS.BRANCH_HASH_UPDATED, eventHandler);
+                    return Q.ninvoke(socket, 'emit', 'watchBranch', data);
+                })
+                .then(function () {
+                    return Q.ninvoke(socket, 'emit', 'getBranches', data);
+                })
+                .then(function (result) {
+                    expect(result).to.have.property('master');
+                    data.oldHash = result.master;
+                    data.newHash = '#_________dummyHash';
+                    newBranchHash = data.newHash;
+                    return Q.ninvoke(socket, 'emit', 'setBranchHash', data);
                 })
                 .then(function () {
                     return deferred.promise;
