@@ -133,39 +133,66 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     },
 
 // Export and node-dumping functions
-    exportLibrary = function (webGMESessionId, name, hash, libraryRootPath, callback) {
+    exportLibrary = function (webGMESessionId, name, hash, branch, commit, libraryRootPath, callback) {
 
         var storage = getConnectedStorage(webGMESessionId),
+            project,
             finish = function (err, data) {
                 storage.close();
-                callback(err,data);
-            };
+                callback(err, data);
+            },
+            gotHash = function () {
+                var core = new Core(project, {
+                    globConf: gmeConfig,
+                    logger: logger.fork('core')
+                });
 
-        storage.open(function (networkState) {
-            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
-                storage.openProject(name, function (err, project, branches) {
+                core.loadRoot(hash, function (err, root) {
                     if (err) {
                         finish(err);
                         return;
                     }
 
-                    var core = new Core(project, {
-                        globConf: gmeConfig,
-                        logger: logger.fork('core')
+                    core.loadByPath(root, libraryRootPath, function (err, libraryRoot) {
+                        if (err) {
+                            finish(err);
+                        }
+                        Serialization.export(core, libraryRoot, finish);
                     });
+                });
+            }
 
-                    core.loadRoot(hash, function (err, root) {
+        storage.open(function (networkState) {
+            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
+
+                storage.openProject(name, function (err, project__, branches) {
+                    if (err) {
+                        finish(err);
+                        return;
+                    }
+
+                    project = project__;
+
+                    if (hash) {
+                        gotHash(project);
+                        return;
+                    }
+
+                    commit = commit || branches[branch];
+
+                    if (!commit) {
+                        finish('no such branch found in the project');
+                        return;
+                    }
+
+                    project.loadObject(commit, function (err, commitObject) {
                         if (err) {
                             finish(err);
                             return;
                         }
 
-                        core.loadByPath(root, libraryRootPath, function (err, libraryRoot) {
-                            if (err) {
-                                finish(err);
-                            }
-                            Serialization.export(core, libraryRoot, finish);
-                        });
+                        hash = commitObject.root;
+                        gotHash();
                     });
                 });
             } else {
@@ -854,12 +881,15 @@ process.on('message', function (parameters) {
             });
         }
     } else if (parameters.command === CONSTANT.workerCommands.exportLibrary) {
+        console.log(parameters);
         if (typeof parameters.name === 'string' &&
-            typeof parameters.hash === 'string' &&
+            (typeof parameters.hash === 'string' ||
+            typeof parameters.branch === 'string' ||
+            typeof parameters.commit === 'string') &&
             typeof parameters.path === 'string') {
             safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            exportLibrary(parameters.webGMESessionId, parameters.name, parameters.hash, parameters.path,
-                resultHandling);
+            exportLibrary(parameters.webGMESessionId, parameters.name, parameters.hash,
+                parameters.branch, parameters.commit, parameters.path, resultHandling);
         } else {
             initResult();
             safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});

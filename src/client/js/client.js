@@ -1475,6 +1475,28 @@ define([
             });
         };
 
+        //export branch
+        this.getExportProjectBranchUrl = function (projectName, branchName, fileName, callback) {
+            var command = {};
+            command.command = 'exportLibrary';
+            command.name = projectName;
+            command.branch = branchName;
+            command.path = ROOT_PATH;
+            if (command.name && command.branch) {
+                storage.simpleRequest(command, function (err, resId) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        callback(null,
+                            window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
+                            resId + '/' + fileName);
+                    }
+                });
+            } else {
+                callback(new Error('invalid parameters!'));
+            }
+        };
+
         //library functions
         this.getExportLibraryUrl = function (libraryRootPath, filename, callback) {
             var command = {};
@@ -1507,7 +1529,7 @@ define([
             });
         };
 
-        this.addLibrary = function(libraryParentPath, newLibrary, callback) {
+        this.addLibrary = function (libraryParentPath, newLibrary, callback) {
             self.startTransaction('creating library as a child of ' + libraryParentPath);
             var libraryRoot = self.createChild({
                 parentId: libraryParentPath,
@@ -1525,7 +1547,7 @@ define([
         };
 
         //plugin on server
-        this.runServerPlugin = function(name, context, callback) {
+        this.runServerPlugin = function (name, context, callback) {
             storage.simpleRequest({command: 'executePlugin', name: name, context: context}, callback);
         };
     }
