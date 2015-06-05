@@ -44,10 +44,19 @@ function sessionStore(parentLogger, gmeConfig) {
     };
     store.getSessionUser = function (sid, callback) {
         store.get(sid, function (err, data) {
-            if (!err && data) {
-                return callback(null, data.udmId);
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            if (data) {
+                if (data.hasOwnProperty('udmId')) {
+                    callback(null, data.udmId);
+                } else {
+                    callback(new Error('Data was found for session, but it does not contain udmId: ' + JSON.stringify(data)));
+                }
             } else {
-                return callback(err, false);
+                callback(new Error('User was not found based on session id: ' + sid));
             }
         });
     };

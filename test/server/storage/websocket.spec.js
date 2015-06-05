@@ -88,6 +88,123 @@ describe('WebSocket', function () {
                 });
         };
 
+    describe('with valid sessionId as a guest user, auth turned on', function () {
+        before(function (done) {
+            var gmeConfigWithAuth = testFixture.getGmeConfig();
+            gmeConfigWithAuth.authentication.enable = true;
+            gmeConfigWithAuth.authentication.allowGuests = true;
+
+            server = WebGME.standaloneServer(gmeConfigWithAuth);
+            serverBaseUrl = server.getUrl();
+            server.start(function (err) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+
+                testFixture.clearDBAndGetGMEAuth(gmeConfigWithAuth, projects)
+                    .then(function (gmeAuth_) {
+                        gmeAuth = gmeAuth_;
+                        safeStorage = testFixture.getMongoStorage(logger, gmeConfigWithAuth, gmeAuth);
+
+                        return Q.all([
+                            safeStorage.openDatabase(),
+                            gmeAuth.authorizeByUserId(guestAccount, 'project_does_not_exist', 'create',
+                                {
+                                    read: true,
+                                    write: true,
+                                    delete: true
+                                })
+                        ]);
+                    })
+                    .then(function () {
+                        var promises = [],
+                            i;
+
+                        for (i = 0; i < projects.length; i += 1) {
+                            promises.push(safeStorage.deleteProject({projectName: projects[i]}));
+                        }
+
+                        return Q.all(promises);
+                    })
+                    .then(function () {
+                        return Q.all([
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'seeds/EmptyProject.json',
+                                projectName: projectName,
+                                gmeConfig: gmeConfigWithAuth,
+                                logger: logger
+                            }),
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'seeds/EmptyProject.json',
+                                projectName: projectNameUnauthorized,
+                                gmeConfig: gmeConfigWithAuth,
+                                logger: logger
+                            })
+                        ]);
+                    })
+                    .then(function () {
+                        return Q.all([
+                            gmeAuth.authorizeByUserId(guestAccount, projectNameUnauthorized, 'create',
+                                {
+                                    read: false,
+                                    write: false,
+                                    delete: false
+                                })
+                        ]);
+                    })
+                    .nodeify(done);
+            });
+        });
+
+        after(function (done) {
+            server.stop(function (err) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+
+                Q.all([
+                    gmeAuth.unload(),
+                    safeStorage.closeDatabase()
+                ])
+                    .nodeify(done);
+            });
+        });
+
+        beforeEach(function () {
+            agent = superagent.agent();
+        });
+
+        it('should getUserId', function (done) {
+            openSocketIo()
+                .then(function (socket) {
+                    return Q.ninvoke(socket, 'emit', 'getUserId');
+                })
+                .then(function (result) {
+                    expect(result).to.equal(guestAccount);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to getUserId with invalid session id', function (done) {
+            openSocketIo('invalid_session_id')
+                .then(function (socket) {
+                    return Q.ninvoke(socket, 'emit', 'getUserId');
+                })
+                .then(function () {
+                    throw new Error('should have failed to getUserId');
+                })
+                .catch(function (err) {
+                    if (typeof err === 'string' && err.indexOf('User was not found') > -1) {
+                        return;
+                    }
+                    throw new Error('should have failed to getUserId');
+                })
+                .nodeify(done);
+        });
+    });
+
     describe('with valid sessionId as a guest user', function () {
         before(function (done) {
             server = WebGME.standaloneServer(gmeConfig);
@@ -192,7 +309,7 @@ describe('WebSocket', function () {
                     throw new Error('should have failed to getUserId');
                 })
                 .catch(function (err) {
-                    if (typeof err === 'string' && err.indexOf('Could not get userId') > -1) {
+                    if (typeof err === 'string' && err.indexOf('User was not found') > -1) {
                         return;
                     }
                     throw new Error('should have failed to getUserId');

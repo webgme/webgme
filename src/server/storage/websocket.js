@@ -111,7 +111,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         }
                     })
                     .catch(function (err) {
-                        next(err.toString());
+                        next(err);
                     });
             } else {
                 next();

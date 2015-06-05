@@ -75,8 +75,11 @@ describe('Session store', function () {
     
         it('should fail getting user session for invalid session', function (done) {
             var sessionStore = new SessionStore(logger, gmeConfig);
-            sessionStore.getSessionUser(null, function (err, authenticated) {
-                expect(authenticated).equal(false);
+            sessionStore.getSessionUser(null, function (err /*, authenticated*/) {
+                if (err && err.message.indexOf('User was not found based on session id:') > -1) {
+                    done();
+                    return;
+                }
                 done(err);
             });
         });
