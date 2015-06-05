@@ -221,10 +221,9 @@ define([
                     project.insertObject(latestCommit.coreObjects[i]);
                 }
 
+                callback(err, latestCommit, branch.getCommitQueue());
                 // This only has an effect after a fork with pending commits.
                 self._pushNextQueuedCommit(projectName, branchName);
-
-                callback(err, latestCommit);
             });
         };
 
@@ -261,7 +260,7 @@ define([
                 branch = project.getBranch(branchName, true),
                 forkData;
 
-            forkData = branch.getCommitsForNewFork(commitHash); // commitHash = null defaults to latest commit.
+            forkData = branch.getCommitsForNewFork(commitHash, forkName); // commitHash = null defaults to latest commit.
             self.logger.debug('Forking with forkData', forkData);
             self.createBranch(projectName, forkName, forkData.originHash, function (err) {
                 var fork;
