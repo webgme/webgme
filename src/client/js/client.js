@@ -1522,7 +1522,12 @@ define([
                     self.completeTransaction('library update done\nlogs:\n' + log, callback);
                 }
             );
-        }
+        };
+
+        //plugin on server
+        this.runServerPlugin = function(name, context, callback) {
+            storage.simpleRequest({command: 'executePlugin', name: name, context: context}, callback);
+        };
     }
 
 
