@@ -507,7 +507,7 @@ define([
 
         loader.start();
 
-        self._client.createProjectFromFileAsync(projectName, jsonContent, function (err) {
+        self._client.createProjectFromFile(projectName, jsonContent, function (err) {
             if (err) {
                 self._logger.error('CANNOT CREATE NEW PROJECT FROM FILE: ' + err.message);
             } else {

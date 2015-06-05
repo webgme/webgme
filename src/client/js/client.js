@@ -1462,6 +1462,68 @@ define([
             }
         };
 
+        //create from file
+        this.createProjectFromFile = function (projectName, jProject, callback) {
+            //TODO somehow the export / import should contain the INFO field
+            // so the tags and description could come from it
+            storage.createProject(projectName, function (err, project) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                var core = new Core(project, {
+                        globConf: gmeConfig,
+                        logger: logger.fork('core')
+                    }),
+                    root = core.createNode({parent: null, base: null}),
+                    persisted = core.persist(root);
+
+                storage.makeCommit(projectName,
+                    null,
+                    [],
+                    persisted.rootHash,
+                    persisted.objects,
+                    'creating project from a file',
+                    function (err, commitResult) {
+                        if (err) {
+                            logger.error('cannot make initial commit for project creation from file');
+                            callback(err);
+                            return;
+                        }
+
+                        project.createBranch('master', commitResult.hash, function (err) {
+                            if (err) {
+                                logger.error('cannot set branch \'master\' for project creation from file');
+                                callback(err);
+                                return;
+                            }
+
+                            storage.closeProject(projectName,function(err){
+                                if(err){
+                                    callback(err);
+                                    return;
+                                }
+                                self.selectProject(projectName, function (err) {
+                                    if (err) {
+                                        callback(err);
+                                        return;
+                                    }
+
+                                    Serialization.import(state.core, state.root.object, jProject, function (err) {
+                                        if (err) {
+                                            return callback(err);
+                                        }
+                                        saveRoot('project created from file', callback);
+                                    });
+                                });
+                            });
+                        });
+                    }
+                );
+            });
+        };
+
         //seed
         this.seedProject = function (parameters, callback) {
             parameters.command = 'seedProject';
