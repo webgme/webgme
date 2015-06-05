@@ -77,9 +77,7 @@ describe('GME authentication', function () {
                     write: false,
                     delete: false
                 });
-            });
-
-        Q.all([dbConn])
+            })
             .nodeify(done);
     });
 

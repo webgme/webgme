@@ -8,7 +8,7 @@
 var testFixture = require('../../_globals.js');
 
 
-describe('Simple worker', function () {
+describe.skip('Simple worker', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,
@@ -571,7 +571,7 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
-    it.only('should create a project from db seed', function (done) {
+    it('should create a project from db seed', function (done) {
         var worker = getSimpleWorker(),
             projectName = 'workerSeedFromDB';
 

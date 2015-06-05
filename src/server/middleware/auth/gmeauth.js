@@ -151,8 +151,7 @@ function GMEAuth(session, gmeConfig) {
                     return addUser(guestAcc, guestAcc, guestAcc, true, {overwrite: true});
                 }
             })
-            .then(function (userAccount) {
-                console.log(userAccount);
+            .then(function () {
                 if (gmeConfig.authentication.allowGuests) {
                     logger.warn('Guest access can be disabled by setting' +
                                 ' gmeConfig.authentication.allowGuests = false');
