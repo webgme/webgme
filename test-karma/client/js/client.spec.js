@@ -44,39 +44,69 @@ describe('GME client', function () {
         it('should have public functions', function () {
             var client = new Client(gmeConfig);
 
-            //eventer related API
+            //event related API
             expect(typeof client.addEventListener).to.equal('function');
             expect(typeof client.removeEventListener).to.equal('function');
             expect(typeof client.removeAllEventListeners).to.equal('function');
             expect(typeof client.dispatchEvent).to.equal('function');
 
-            //project, branch and connection related API
+            //project, branch and connection actions API
             expect(client).to.include.keys(
                 'CONSTANTS',
                 'getUserId',
-                'getActiveProjectName',
-                'getProjects',
-                'getProjectsAndBranches',
+
                 'connectToDatabase',
+                'disconnectFromDatabase',
+
                 'selectProject',
-                'createProject',
-                'deleteProject',
-                'getBranches',
-                'selectCommit',
-                'getCommits',
-                'getActiveCommitHash',
-                'getActiveBranchName',
-                'getNetworkStatus',
-                'getBranchStatus',
-                'createBranch',
-                'deleteBranch',
                 'selectBranch',
+                'selectCommit',
+
+                'forkCurrentBranch',
                 //'commitAsync',
-                'isProjectReadOnly',
-                'isCommitReadOnly',
-                'getProjectObject',
                 'undo',
                 'redo'
+            );
+
+            // State getters
+            expect(client).to.include.keys(
+                'getNetworkStatus',
+                'getBranchStatus',
+
+                'getActiveProjectName',
+                'getActiveBranchName',
+                'getActiveCommitHash',
+                'getActiveRootHash',
+
+                'isProjectReadOnly',
+                'isCommitReadOnly',
+
+                'getProjectObject'
+            );
+
+            // Requests getters
+            expect(client).to.include.keys(
+                'getProjects',
+                'getBranches',
+                'getCommits',
+                'getLatestCommitData',
+                'getProjectsAndBranches'
+            );
+
+            // Requests setters
+            expect(client).to.include.keys(
+                'createProject',
+                'deleteProject',
+                'createBranch',
+                'deleteBranch'
+            );
+
+            // Watchers
+            expect(client).to.include.keys(
+                'watchDatabase',
+                'unwatchDatabase',
+                'watchProject',
+                'unwatchProject'
             );
 
             //node manipulation API
@@ -169,20 +199,14 @@ describe('GME client', function () {
             );
 
             //export - import API
-            //TODO: Add these back
-            //expect(client).to.include.keys(
-            //    'runServerPlugin',
-            //    'exportItems',
-            //    'getExportItemsUrlAsync',
-            //    'dumpNodeAsync',
-            //    'importNodeAsync',
-            //    'mergeNodeAsync',
-            //    'createProjectFromFileAsync',
-            //    'getExportProjectBranchUrlAsync',
-            //    'getExportLibraryUrlAsync',
-            //    'updateLibraryAsync',
-            //    'addLibraryAsync'
-            //);
+            expect(client.hasOwnProperty('runServerPlugin')).to.equal(true, 'runServerPlugin');
+            //expect(client.hasOwnProperty('exportItems')).to.equal(true, 'exportItems'); //TODO: Add this back
+            expect(client.hasOwnProperty('getExportItemsUrlAsync')).to.equal(true, 'getExportItemsUrlAsync');
+            expect(client.hasOwnProperty('createProjectFromFile')).to.equal(true, 'createProjectFromFile');
+            expect(client.hasOwnProperty('getExportProjectBranchUrl')).to.equal(true, 'getExportProjectBranchUrl');
+            expect(client.hasOwnProperty('getExportLibraryUrl')).to.equal(true, 'getExportLibraryUrl');
+            expect(client.hasOwnProperty('updateLibrary')).to.equal(true, 'updateLibrary');
+            expect(client.hasOwnProperty('addLibrary')).to.equal(true, 'addLibrary');
         });
 
         it('should not contain merge related functions', function () {
@@ -3624,7 +3648,7 @@ describe('GME client', function () {
 
     });
 
-    describe.skip('projectSeed', function () {
+    describe('projectSeed', function () {
         var Client,
             gmeConfig,
             client,
@@ -3655,25 +3679,27 @@ describe('GME client', function () {
                 }
             );
         });
+
         after(function (done) {
             //remove all create projects
-            done();
+            client.disconnectFromDatabase(done);
         });
 
-        it.skip('should seed a project from an existing one', function (done) {
+        it('should seed a project from an existing one', function (done) {
             var projectName = 'seedTestBasicMaster',
                 seedConfig = {
                     seedName: 'projectSeedSingleMaster',
                     projectName: projectName
                 };
-            client.deleteProject(projectName, function (err) {
-                expect(err).to.equal(null);
 
-                client.seedProjectAsync(seedConfig, function (err) {
+            client.deleteProject(projectName, function (err, didExist) {
+                expect(err).to.equal(null, 'deleteProject returned error');
+
+                client.seedProject(seedConfig, function (err) {
                     expect(err).to.equal(null);
 
-                    client.getExportProjectBranchUrlAsync(projectName,
-                        'master', '', 'seedTestOutPut', function (err, url) {
+                    client.getExportProjectBranchUrl(projectName, 'master', 'seedTestOutPut',
+                        function (err, url) {
                             expect(err).to.equal(null);
                             superagent.get(url, function (err, result) {
                                 expect(err).to.equal(null);
@@ -3687,23 +3713,22 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should seed a project from a seed file', function (done) {
+        it('should seed a project from a seed file', function (done) {
             this.timeout(5000);
             var projectName = 'seedTestBasicFile',
                 seedConfig = {
                     type: 'file',
                     seedName: 'SignalFlowSystem',
                     projectName: projectName
-                },
-                url;
-            client.deleteProjectAsync(projectName, function (err) {
+                };
+            client.deleteProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
-                client.seedProjectAsync(seedConfig, function (err) {
+                client.seedProject(seedConfig, function (err) {
                     expect(err).to.equal(null);
 
-                    client.getExportProjectBranchUrlAsync(projectName,
-                        'master', '', 'seedTestOutPut', function (err, url) {
+                    client.getExportProjectBranchUrl(projectName, 'master', 'seedTestOutPut',
+                        function (err, url) {
                             expect(err).to.equal(null);
 
                             superagent.get(url, function (err, result) {
@@ -3719,22 +3744,21 @@ describe('GME client', function () {
         });
 
         //FIXME what is with the superagent stuff???
-        it.skip('should seed a project from an existing one\'s given branch', function (done) {
+        it('should seed a project from an existing one\'s given branch', function (done) {
             var projectName = 'seedTestBasicOther',
                 seedConfig = {
                     seedName: 'projectSeedSingleNonMaster',
                     projectName: projectName,
                     seedBranch: 'other'
-                },
-                url;
-            client.deleteProjectAsync(projectName, function (err) {
+                };
+            client.deleteProject(projectName, function (err) {
                 expect(err).to.equal(null);
 
-                client.seedProjectAsync(seedConfig, function (err) {
+                client.seedProject(seedConfig, function (err) {
                     expect(err).to.equal(null);
 
-                    client.getExportProjectBranchUrlAsync(projectName,
-                        'other', '', 'seedTestOutPut', function (err, url) {
+                    client.getExportProjectBranchUrl(projectName, 'other', 'seedTestOutPut',
+                        function (err, url) {
                             expect(err).to.equal(null);
 
                             console.warn(url);
@@ -3752,23 +3776,23 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should not allow to overwrite projects with seed', function (done) {
+        it('should not allow to overwrite projects with seed', function (done) {
             var projectName = 'projectSeedSingleMaster',
                 seedConfig = {
                     seedName: 'projectSeedSingleMaster',
                     projectName: projectName
                 };
 
-            client.seedProjectAsync(seedConfig, function (err) {
+            client.seedProject(seedConfig, function (err) {
                 expect(err).not.to.equal(null);
 
-                expect(err).to.contain('overwrite');
+                expect(err).to.contain('project already exists');
 
                 done();
             });
         });
 
-        it.skip('should fail to seed form an unknown branch', function (done) {
+        it('should fail to seed form an unknown branch', function (done) {
             var projectName = 'noBranchSeedProject',
                 seedConfig = {
                     seedName: 'projectSeedSingleMaster',
@@ -3776,7 +3800,7 @@ describe('GME client', function () {
                     seedBranch: 'unknownBranch'
                 };
 
-            client.seedProjectAsync(seedConfig, function (err) {
+            client.seedProject(seedConfig, function (err) {
                 expect(err).not.to.equal(null);
 
                 expect(err).to.contain('unknownBranch');
@@ -3785,7 +3809,7 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should fail to seed from an unknown seed file', function (done) {
+        it('should fail to seed from an unknown seed file', function (done) {
             var projectName = 'noSeedFileProject',
                 seedConfig = {
                     type: 'file',
@@ -3793,7 +3817,7 @@ describe('GME client', function () {
                     projectName: projectName
                 };
 
-            client.seedProjectAsync(seedConfig, function (err) {
+            client.seedProject(seedConfig, function (err) {
                 expect(err).not.to.equal(null);
 
                 expect(err).to.contain('unknown file seed');

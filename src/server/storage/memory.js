@@ -410,7 +410,6 @@ function Memory(mainLogger, gmeConfig) {
         var deferred = Q.defer(),
             key,
             keyArray;
-
         if (storage.connected) {
             var i,
                 namesToRemove = [];
@@ -430,7 +429,7 @@ function Memory(mainLogger, gmeConfig) {
                 storage.removeItem(namesToRemove[i]);
             }
 
-            deferred.resolve();
+            deferred.resolve(true); //TODO: return false if it did not exist (will prevent emitting PROJECT_DELETED).
         } else {
             deferred.reject(new Error('In-memory database has to be initialized. Call openDatabase first.'));
         }

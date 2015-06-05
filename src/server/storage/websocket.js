@@ -42,12 +42,13 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     gmeConfig.server.sessionCookieSecret);
             }
         }
-
         return sessionId;
     }
 
     function getUserIdFromSocket(socket, callback) {
-        return gmeAuth.getUserIdBySession(getSessionIdFromSocket(socket))
+        var sessionId = getSessionIdFromSocket(socket);
+        logger.debug('sessionId for socket', sessionId);
+        return gmeAuth.getUserIdBySession(sessionId)
             .nodeify(callback);
     }
 
@@ -389,8 +390,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         data.username = userId;
                         return storage.deleteProject(data);
                     })
-                    .then(function () {
-                        callback(null);
+                    .then(function (didExist) {
+                        callback(null, didExist);
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {

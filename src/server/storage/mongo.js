@@ -398,13 +398,13 @@ function Mongo(mainLogger, gmeConfig) {
         var deferred = Q.defer();
         Q.ninvoke(mongo, 'dropCollection', name)
             .then(function () {
-                deferred.resolve();
+                deferred.resolve(true);
             })
             .catch(function (err) {
                 if (err.ok === 0) {
                     logger.debug('deleteProject, project does not exist', name);
                     // http://docs.mongodb.org/manual/reference/method/db.collection.drop/
-                    deferred.resolve();
+                    deferred.resolve(false);
                 } else {
                     deferred.reject(err);
                 }
