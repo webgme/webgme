@@ -8,7 +8,7 @@
 var testFixture = require('../../_globals.js');
 
 
-describe.skip('Simple worker', function () {
+describe('Simple worker', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,
@@ -20,6 +20,10 @@ describe.skip('Simple worker', function () {
 
         gmeAuth,
 
+        usedProjectNames = [
+            'workerSeedFromDB',
+            'WorkerProject'
+        ],
         logger = testFixture.logger.fork('simpleworker.spec'),
         storage,
         baseProjectContext = {
@@ -54,7 +58,7 @@ describe.skip('Simple worker', function () {
         server = WebGME.standaloneServer(gmeConfig);
         server.start(function (err) {
             expect(err).to.equal(null);
-            testFixture.clearDBAndGetGMEAuth(gmeConfig, baseProjectContext.name)
+            testFixture.clearDBAndGetGMEAuth(gmeConfig, usedProjectNames)
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
                     storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
@@ -567,7 +571,7 @@ describe.skip('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should create a project from db seed', function (done) {
+    it.only('should create a project from db seed', function (done) {
         var worker = getSimpleWorker(),
             projectName = 'workerSeedFromDB';
 

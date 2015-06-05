@@ -101,16 +101,7 @@ describe('User manager command line interface (CLI)', function () {
             };
 
         before(function (done) {
-            var gmeauthDeferred = Q.defer();
-
             auth = new GMEAuth(null, gmeConfig);
-            auth.connect(function (err) {
-                if (err) {
-                    gmeauthDeferred.reject(err);
-                } else {
-                    gmeauthDeferred.resolve(auth);
-                }
-            });
 
             dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', mongoUri, gmeConfig.mongo.options)
                 .then(function (db_) {
@@ -146,7 +137,10 @@ describe('User manager command line interface (CLI)', function () {
                     ]);
                 });
 
-            Q.all([dbConn, gmeauthDeferred.promise])
+            dbConn
+                .then(function () {
+                    return auth.connect();
+                })
                 .nodeify(done);
         });
 

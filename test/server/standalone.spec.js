@@ -195,7 +195,6 @@ describe('standalone server', function () {
             before(function (done) {
                 // we have to set the config here
                 var dbConn,
-                    gmeauthDeferred,
                     userReady,
                     auth,
                     serverReady = Q.defer(),
@@ -243,45 +242,38 @@ describe('standalone server', function () {
                         ]);
                     });
 
-                gmeauthDeferred = Q.defer();
                 auth = gmeauth(null /* session */, gmeConfig);
-                auth.connect(function (err) {
-                    if (err) {
-                        logger.error(err);
-                        gmeauthDeferred.reject(err);
-                    } else {
-                        logger.debug('gmeAuth is ready');
-                        gmeauthDeferred.resolve(auth);
-                    }
-                });
-
-                userReady = gmeauthDeferred.promise.then(function (gmeauth_) {
-                    gmeauth = gmeauth_;
-                    return dbConn.then(function () {
-                        var account = gmeConfig.authentication.guestAccount;
-                        return gmeauth.addUser(account, account + '@example.com', account, true, {overwrite: true});
-                    }).then(function () {
-                        return gmeauth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true});
-                    }).then(function () {
-                        return gmeauth.authorizeByUserId('user', 'project', 'create', {
-                            read: true,
-                            write: true,
-                            delete: false
-                        });
-                    }).then(function () {
-                        return gmeauth.authorizeByUserId('user', 'unauthorized_project', 'create', {
-                            read: false,
-                            write: false,
-                            delete: false
-                        });
-                    });
-                });
 
                 server = WebGME.standaloneServer(gmeConfig);
                 serverBaseUrl = server.getUrl();
                 server.start(serverReady.makeNodeResolver());
 
-                Q.all([serverReady, dbConn, userReady])
+                Q.all([serverReady, dbConn])
+                    .then(function () {
+                        return auth.connect();
+                    })
+                    .then(function (gmeauth_) {
+                        var account = gmeConfig.authentication.guestAccount;
+                        gmeauth = gmeauth_;
+                        return gmeauth.addUser(account, account + '@example.com', account, true, {overwrite: true});
+                    })
+                    .then(function () {
+                        return gmeauth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true});
+                    })
+                    .then(function () {
+                        return gmeauth.authorizeByUserId('user', 'project', 'create', {
+                            read: true,
+                            write: true,
+                            delete: false
+                        });
+                    })
+                    .then(function () {
+                        return gmeauth.authorizeByUserId('user', 'unauthorized_project', 'create', {
+                            read: false,
+                            write: false,
+                            delete: false
+                        });
+                    })
                     .nodeify(done);
             });
 
@@ -398,7 +390,6 @@ describe('standalone server', function () {
         before(function (done) {
             // we have to set the config here
             var dbConn,
-                gmeauthDeferred,
                 auth,
                 userReady,
                 serverReady = Q.defer(),
@@ -441,48 +432,34 @@ describe('standalone server', function () {
                     ]);
                 });
 
-            gmeauthDeferred = Q.defer();
             auth = gmeauth(null /* session */, gmeConfig);
-            auth.connect(function (err) {
-                if (err) {
-                    logger.error(err);
-                    gmeauthDeferred.reject(err);
-                } else {
-                    logger.debug('gmeAuth is ready');
-                    gmeauthDeferred.resolve(auth);
-                }
-            });
-
-            userReady = gmeauthDeferred.promise.then(function (gmeauth_) {
-                gmeauth = gmeauth_;
-                return dbConn.then(function () {
-                    return gmeauth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true});
-                }).then(function () {
-                    return gmeauth.authorizeByUserId('user', 'project', 'create', {
-                        read: true,
-                        write: true,
-                        delete: false
-                    });
-                }).then(function () {
-                    return gmeauth.authorizeByUserId('user', 'unauthorized_project', 'create', {
-                        read: false,
-                        write: false,
-                        delete: false
-                    });
-                    //}).then(function () {
-                    //    return gmeauth.addUser(gmeConfig.authentication.guestAccount,
-                    //        gmeConfig.authentication.guestAccount +'@example.com',
-                    //        'plaintext',
-                    //        true,
-                    //        {overwrite: true});
-                });
-            });
 
             server = WebGME.standaloneServer(gmeConfig);
             serverBaseUrl = server.getUrl();
             server.start(serverReady.makeNodeResolver());
 
-            Q.all([serverReady, dbConn, userReady])
+            Q.all([serverReady, dbConn])
+                .then(function () {
+                    return auth.connect();
+                })
+                .then(function (gmeauth_) {
+                    gmeauth = gmeauth_;
+                    return gmeauth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true});
+                })
+                .then(function () {
+                    return gmeauth.authorizeByUserId('user', 'project', 'create', {
+                        read: true,
+                        write: true,
+                        delete: false
+                    });
+                })
+                .then(function () {
+                    return gmeauth.authorizeByUserId('user', 'unauthorized_project', 'create', {
+                        read: false,
+                        write: false,
+                        delete: false
+                    });
+                })
                 .nodeify(done);
         });
 
