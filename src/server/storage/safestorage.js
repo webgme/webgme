@@ -783,9 +783,7 @@ SafeStorage.prototype.openProject = function (data, callback) {
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
     } else {
-        if (rejected === false) {
-            data.username = this.gmeConfig.authentication.guestAccount;
-        }
+        data.username = this.gmeConfig.authentication.guestAccount;
     }
 
     if (rejected === false) {
