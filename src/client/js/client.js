@@ -1559,6 +1559,25 @@ define([
             }
         };
 
+        //dump nodes
+        this.getExportItemsUr = function(paths, filename, callback) {
+            storage.simpleRequest({
+                    command: 'dumpMoreNodes',
+                    name: state.project.name,
+                    hash: state.root.current,
+                    nodes: paths
+                },
+                function (err, resId) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        callback(null,
+                            window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
+                            resId + '/' + filename);
+                    }
+                });
+        };
+
         //library functions
         this.getExportLibraryUrl = function (libraryRootPath, filename, callback) {
             var command = {};

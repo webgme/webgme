@@ -28,7 +28,7 @@ define(['jquery',
 
         if (_.isArray(objIDs) &&
             objIDs.length > 0) {
-            client.getExportItemsUrlAsync(objIDs, fileName, function (err, url) {
+            client.getExportItemsUrl(objIDs, fileName, function (err, url) {
                 if (!err) {
                     window.location = url;
                 }
