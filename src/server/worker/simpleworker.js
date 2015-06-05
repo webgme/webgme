@@ -27,8 +27,6 @@ process.on('SIGINT', function () {
 
 var WEBGME = require(__dirname + '/../../../webgme'),
     openContext = WEBGME.openContext,
-    Q = WEBGME.Q,
-    exportProject = require(__dirname + '/../../../src/bin/export').export,
     Core = requireJS('common/core/core'),
     GUID = requireJS('common/util/guid'),
     DUMP = requireJS('common/core/users/dumpmore'),
@@ -576,7 +574,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     },
 
     seedProject = function (parameters, callback) {
-        console.log('kecso seed', parameters);
         var storage = getConnectedStorage(parameters.webGMESessionId);
 
         storage.open(function (networkState) {
@@ -596,7 +593,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                 }),
                                 root = core.createNode({parent: null, base: null});
 
-                            Serialization.import(core,root,jsonSeed,function(err){
+                            Serialization.import(core, root, jsonSeed, function (err) {
                                 if (err) {
                                     logger.error('import of seed failed');
                                     callback(err);
@@ -617,12 +614,13 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                             return;
                                         }
 
-                                        project.createBranch('master',commitResult.hash,function(err){
+                                        project.createBranch('master', commitResult.hash, function (err) {
                                             if (err) {
                                                 logger.error('setting branch failed');
                                                 callback(err);
                                             }
-                                            logger.info('seeding [' + parameters.seedName + '] to [' + parameters.projectName + '] completed');
+                                            logger.info('seeding [' + parameters.seedName +
+                                                '] to [' + parameters.projectName + '] completed');
                                             callback(null);
                                         });
                                     }
@@ -631,55 +629,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                             });
 
                         });
-                    /*openContext(storage, gmeConfig, logger, {
-                     projectName: parameters.projectName,
-                     userName: parameters.userId,
-                     branchName: 'master',
-                     createProject: true
-                     })
-                     .then(function (context) {
-                     Serialization.import(context.core, context.rootNode, jsonSeed, function (err) {
-                     if (err) {
-                     logger.error('import of seed failed');
-                     callback(err);
-                     return;
-                     }
-
-                     var persisted = context.core.persist(context.rootNode);
-                     storage.makeCommit(parameters.projectName,
-                     null,
-                     [],
-                     persisted.rootHash,
-                     persisted.objects,
-                     'seeding project[' + parameters.seedName + ']',
-                     function (err, commitResult) {
-                     if (err) {
-                     logger.error('makeCommit failed.');
-                     callback(err);
-                     return;
-                     }
-                     storage.setBranchHash({
-                     username: parameters.userId,
-                     branchName: 'master',
-                     projectName: parameters.projectName,
-                     oldHash: context.commitHash,
-                     newHash: commitResult.hash
-                     }, function (err, updateResult) {
-                     if (err) {
-                     logger.error('setting branch failed');
-                     callback(err);
-                     }
-                     logger.info('seeding [' + parameters.seedName + '] to [' + parameters.projectName + '] completed');
-                     callback(null);
-                     }
-                     );
-                     }
-                     );
-                     });
-                     })
-                     .catch(function (err) {
-                     callback(err);
-                     });*/
                 };
 
             if (networkState = STORAGE_CONSTANTS.CONNECTED) {
@@ -688,17 +637,43 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     seedReady();
                     return;
                 } else if (parameters.seedBranch) {
-                    exportProject(storage, parameters.seedName, parameters.seedBranch, parameters.userId,
-                        function (err, result) {
+                    storage.openProject(parameters.seedName, function (err, project, branches) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+
+                        if (!branches[parameters.seedBranch]) {
+                            callback('no such branch');
+                            return;
+                        }
+                        project.loadObject(branches[parameters.seedBranch], function (err, commit) {
                             if (err) {
-                                logger.error('exporting seed failed');
                                 callback(err);
                                 return;
                             }
-                            jsonSeed = result;
-                            seedReady();
-                        }
-                    );
+
+                            var core = new Core(project, {
+                                globConf: gmeConfig,
+                                logger: logger.fork('core')
+                            });
+
+                            core.loadRoot(commit.root, function (err, root) {
+                                if (err) {
+                                    callback(err);
+                                    return;
+                                }
+                                Serialization.export(core, root, function (err, jsonExport) {
+                                    if (err) {
+                                        callback(err);
+                                        return;
+                                    }
+                                    jsonSeed = jsonExport;
+                                    seedReady();
+                                });
+                            });
+                        });
+                    });
                 } else {
                     callback('cannot get seed');
                 }

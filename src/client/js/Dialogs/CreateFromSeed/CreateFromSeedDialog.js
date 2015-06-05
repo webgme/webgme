@@ -116,7 +116,7 @@ define(['js/Loader/LoaderCircles',
                     self._optGroupDb.append($('<option>', {
                             text: projectId + ' (' + branchId + ' ' +
                             projectList[i].branches[branchId].slice(0, 8) + ')',
-                            value: 'db:' + projectId[i] + projectList[i].branches[branchId]
+                            value: 'db:' + projectId + projectList[i].branches[branchId]
                         }
                     ));
                     if (self.seedProjectName === projectId) {
