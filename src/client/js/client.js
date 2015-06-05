@@ -16,7 +16,8 @@ define([
     'common/util/guid',
     'common/util/url',
     'js/client/gmeNodeGetter',
-    'js/client/gmeNodeSetter'
+    'js/client/gmeNodeSetter',
+    'common/core/users/serialization'
 ], function (Logger,
              Storage,
              EventDispatcher,
@@ -28,7 +29,8 @@ define([
              GUID,
              URL,
              getNode,
-             getNodeSetters) {
+             getNodeSetters,
+             Serialization) {
     'use strict';
 
     function Client(gmeConfig) {
@@ -449,7 +451,7 @@ define([
                         });
                     } else {
                         logger.error('Cannot view given ' + commitHash + ' commit as it\'s root cannot be loaded! [' +
-                        JSON.stringify(err) + ']');
+                            JSON.stringify(err) + ']');
                         callback(err || new Error('commit object cannot be found!'));
                     }
                 });
@@ -785,18 +787,6 @@ define([
         };
 
         //  Setters
-        this.seedProject = function (parameters, callback) {
-            parameters.command = 'seedProject';
-            storage.simpleRequest(parameters, function (err, id) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                storage.simpleResult(id, callback);
-            });
-        };
-
         this.createProject = function (projectName, parameters, callback) {
             if (isConnected()) {
                 storage.createProject(projectName, parameters, callback);
@@ -834,37 +824,37 @@ define([
         // Watchers (used in e.g. ProjectNavigator).
         this.watchDatabase = function (eventHandler, callback) {
             callback = callback || function (err) {
-                if (err) {
-                    logger.error('Problems watching database room');
-                }
-            };
+                    if (err) {
+                        logger.error('Problems watching database room');
+                    }
+                };
             storage.watchDatabase(eventHandler, callback);
         };
 
         this.unwatchDatabase = function (eventHandler, callback) {
             callback = callback || function (err) {
-                if (err) {
-                    logger.error('Problems unwatching database room');
-                }
-            };
+                    if (err) {
+                        logger.error('Problems unwatching database room');
+                    }
+                };
             storage.watchDatabase(eventHandler, callback);
         };
 
         this.watchProject = function (projectName, eventHandler, callback) {
             callback = callback || function (err) {
-                if (err) {
-                    logger.error('Problems watching project room', projectName);
-                }
-            };
+                    if (err) {
+                        logger.error('Problems watching project room', projectName);
+                    }
+                };
             storage.watchProject(projectName, eventHandler, callback);
         };
 
         this.unwatchProject = function (projectName, eventHandler, callback) {
             callback = callback || function (err) {
-                if (err) {
-                    logger.error('Problems unwatching project room', projectName);
-                }
-            };
+                    if (err) {
+                        logger.error('Problems unwatching project room', projectName);
+                    }
+                };
             storage.unwatchProject(projectName, eventHandler, callback);
         };
 
@@ -1214,7 +1204,7 @@ define([
             logger.debug('loading newRootHash', newRootHash);
 
             callback = callback || function (/*err*/) {
-            };
+                };
 
 
             loadRoot(newRootHash, function (err) {
@@ -1282,7 +1272,7 @@ define([
             logger.debug('saveRoot msg', msg);
 
             callback = callback || function () {
-            };
+                };
             if (!state.viewer && !state.readOnlyProject) {
                 if (state.msg) {
                     state.msg += '\n' + msg;
@@ -1472,7 +1462,69 @@ define([
             }
         };
 
+        //seed
+        this.seedProject = function (parameters, callback) {
+            parameters.command = 'seedProject';
+            storage.simpleRequest(parameters, function (err, id) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                storage.simpleResult(id, callback);
+            });
+        };
+
+        //library functions
+        this.getExportLibraryUrl = function (libraryRootPath, filename, callback) {
+            var command = {};
+            command.command = 'exportLibrary';
+            command.name = state.project.name;
+            command.hash = state.root.current;
+            command.path = libraryRootPath;
+            if (command.name && command.hash) {
+                storage.simpleRequest(command, function (err, resId) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        callback(null,
+                            window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
+                            resId + '/' + filename);
+                    }
+                });
+            } else {
+                callback(new Error('there is no open project!'));
+            }
+        };
+
+        this.updateLibrary = function (libraryRootPath, newLibrary, callback) {
+            Serialization.import(state.core, state.nodes[libraryRootPath].node, newLibrary, function (err, log) {
+                if (err) {
+                    return callback(err);
+                }
+
+                saveRoot('library update done\nlogs:\n' + log, callback);
+            });
+        };
+
+        this.addLibrary = function(libraryParentPath, newLibrary, callback) {
+            self.startTransaction('creating library as a child of ' + libraryParentPath);
+            var libraryRoot = self.createChild({
+                parentId: libraryParentPath,
+                baseId: null
+            }, 'library placeholder');
+            Serialization.import(state.core,
+                state.nodes[libraryRoot].node, newLibrary, function (err, log) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    self.completeTransaction('library update done\nlogs:\n' + log, callback);
+                }
+            );
+        }
     }
+
 
     // Inherit from the EventDispatcher
     Client.prototype = Object.create(EventDispatcher.prototype);

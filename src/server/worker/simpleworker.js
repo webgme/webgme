@@ -135,26 +135,42 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 // Export and node-dumping functions
     exportLibrary = function (webGMESessionId, name, hash, libraryRootPath, callback) {
 
-        getProject(name, webGMESessionId, function (err, project) {
-            if (err) {
-                callback(err);
-                return;
-            }
-            var core = new Core(project, {globConf: gmeConfig, logger: logger.fork('exportLibrary:core')});
-            core.loadRoot(hash, function (err, root) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
+        var storage = getConnectedStorage(webGMESessionId),
+            finish = function (err, data) {
+                storage.close();
+                callback(err,data);
+            };
 
-                core.loadByPath(root, libraryRootPath, function (err, libraryRoot) {
+        storage.open(function (networkState) {
+            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
+                storage.openProject(name, function (err, project, branches) {
                     if (err) {
-                        return callback(err);
+                        finish(err);
+                        return;
                     }
 
-                    Serialization.export(core, libraryRoot, callback);
+                    var core = new Core(project, {
+                        globConf: gmeConfig,
+                        logger: logger.fork('core')
+                    });
+
+                    core.loadRoot(hash, function (err, root) {
+                        if (err) {
+                            finish(err);
+                            return;
+                        }
+
+                        core.loadByPath(root, libraryRootPath, function (err, libraryRoot) {
+                            if (err) {
+                                finish(err);
+                            }
+                            Serialization.export(core, libraryRoot, finish);
+                        });
+                    });
                 });
-            });
+            } else {
+                finish('having error with the webgme server connection');
+            }
         });
     },
 
@@ -574,9 +590,14 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     },
 
     seedProject = function (parameters, callback) {
-        var storage = getConnectedStorage(parameters.webGMESessionId);
+        var storage = getConnectedStorage(parameters.webGMESessionId),
+            finish = function (err, data) {
+                storage.close();
+                callback(err);
+            };
 
         storage.open(function (networkState) {
+
             var jsonSeed,
                 seedReady = function () {
                     //console.log('seed',jsonSeed);
@@ -584,7 +605,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                         function (err, project) {
                             if (err) {
                                 logger.error('empty project creation failed');
-                                callback(err);
+                                fininsh(err);
                                 return;
                             }
                             var core = new Core(project, {
@@ -596,7 +617,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                             Serialization.import(core, root, jsonSeed, function (err) {
                                 if (err) {
                                     logger.error('import of seed failed');
-                                    callback(err);
+                                    finish(err);
                                     return;
                                 }
 
@@ -610,7 +631,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                     function (err, commitResult) {
                                         if (err) {
                                             logger.error('makeCommit failed.');
-                                            callback(err);
+                                            finish(err);
                                             return;
                                         }
 
@@ -619,9 +640,10 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                                 logger.error('setting branch failed');
                                                 callback(err);
                                             }
+                                            storage.close();
                                             logger.info('seeding [' + parameters.seedName +
                                                 '] to [' + parameters.projectName + '] completed');
-                                            callback(null);
+                                            finish(null);
                                         });
                                     }
                                 );
@@ -636,20 +658,17 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     jsonSeed = getSeedFromFile(parameters.seedName);
                     seedReady();
                     return;
-                } else if (parameters.seedBranch) {
+                } else {
+                    parameters.seedBranch = parameters.seedBranch || 'master';
                     storage.openProject(parameters.seedName, function (err, project, branches) {
                         if (err) {
-                            callback(err);
+                            finish(err);
                             return;
                         }
 
-                        if (!branches[parameters.seedBranch]) {
-                            callback('no such branch');
-                            return;
-                        }
                         project.loadObject(branches[parameters.seedBranch], function (err, commit) {
                             if (err) {
-                                callback(err);
+                                finish(err);
                                 return;
                             }
 
@@ -660,12 +679,12 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
                             core.loadRoot(commit.root, function (err, root) {
                                 if (err) {
-                                    callback(err);
+                                    finish(err);
                                     return;
                                 }
                                 Serialization.export(core, root, function (err, jsonExport) {
                                     if (err) {
-                                        callback(err);
+                                        finish(err);
                                         return;
                                     }
                                     jsonSeed = jsonExport;
@@ -674,161 +693,10 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                             });
                         });
                     });
-                } else {
-                    callback('cannot get seed');
                 }
             } else {
-                callback('problems connecting to the webgme server');
+                finish('problems connecting to the webgme server');
             }
-        });
-    },
-
-    _seedProject = function (parameters, callback) {
-        //check if the seed can be found
-        //try to export the seed
-        //try to create a new project from the seed
-        var storage;
-        var checkRights = function () {
-                storage.getProjectNames(function (err, names) {
-                    if (err) {
-                        return fail(err);
-                    }
-
-                    if (names.indexOf(parameters.projectName) !== -1) {
-                        return fail('cannot overwrite project with seeding');
-                    }
-
-                    if (AUTH) {
-                        AUTH.getAllUserAuthInfo(parameters.userId, function (err, authInfo) {
-                            logger.debug('userInfo', authInfo);
-                            if (err) {
-                                return fail(err);
-                            }
-
-                            if (authInfo.canCreate !== true) {
-                                return fail('user cannot create project');
-                            }
-
-                            rightsChecked();
-                        });
-                    } else {
-                        rightsChecked();
-                    }
-                });
-            },
-            rightsChecked = function () {
-                if (parameters.type === 'file') {
-                    seed = getSeedFromFile(parameters.seedName);
-                    if (seed === null) {
-                        return fail('unknown file seed');
-                    }
-                    return createProjectfromSeed();
-                }
-
-                getSeedFromDb(parameters.seedName,
-                    parameters.seedBranch,
-                    parameters.seedCommit,
-                    function (err, result) {
-                        if (err || result === null) {
-                            return fail(err || 'unable to get seed project');
-                        }
-
-                        seed = result;
-                        createProjectfromSeed();
-                    }
-                );
-            },
-            createProjectfromSeed = function () {
-                var contextParameters = {
-                    projectName: parameters.projectName,
-                    branchName: parameters.branch || 'master',
-                    createProject: true,
-                    overwriteProject: false
-                };
-                openContext(storage, gmeConfig, logger, contextParameters, function (err, result) {
-                    if (err) {
-                        return fail(err);
-                    }
-                    Serialization.import(result.core, result.rootNode, seed, function (err) {
-                        if (err) {
-                            return fail(err);
-                        }
-                        result.core.persist(result.rootNode, function (err) {
-                            if (err) {
-                                return fail(err);
-                            }
-
-                            var newCommit = result.project.makeCommit([result.commitHash],
-                                result.core.getHash(result.rootNode),
-                                'seeding project[' + parameters.seedName + ']',
-                                function (/*err*/) {
-                                }
-                            );
-
-                            result.project.setBranchHash(contextParameters.branchName,
-                                result.commitHash,
-                                newCommit,
-                                function (err) {
-                                    if (err) {
-                                        return fail(err);
-                                    }
-                                    //we should add the newly created project to the user so he can manipulate it
-                                    if (AUTH) {
-                                        AUTH.authorizeByUserId(parameters.userId,
-                                            contextParameters.projectName,
-                                            'create',
-                                            {
-                                                read: true,
-                                                write: true,
-                                                delete: true
-                                            },
-                                            function (err) {
-                                                if (err) {
-                                                    return fail(err);
-                                                }
-                                                callback(null);
-                                            }
-                                        );
-                                    } else {
-                                        callback(null);
-                                    }
-                                }
-                            );
-                        });
-                    });
-                });
-            },
-            fail = function (error) {
-                callback(error);
-            },
-            getSeedFromDb = function (name, branch, commit, callback) {
-                var contextParameters = {
-                    projectName: name,
-                    createProject: false,
-                    overwriteProject: false
-                };
-                if (commit) {
-                    contextParameters.commitHash = commit;
-                } else {
-                    contextParameters.branchName = branch || 'master';
-                }
-                openContext(storage, gmeConfig, logger, contextParameters, function (err, result) {
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    Serialization.export(result.core, result.rootNode, callback);
-                });
-            },
-            seed = {};
-
-        getConnectedStorage(parameters.webGMESessionId, function (err, storage_) {
-            if (err) {
-                fail(err);
-                return;
-            }
-            storage = storage_;
-            checkRights();
         });
     },
 

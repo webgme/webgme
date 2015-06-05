@@ -33,7 +33,7 @@ var Path = require('path'),
     ExecutorServer = require('./middleware/executor/ExecutorServer'),
     api = require('./api'),
 
-    //Storage = require('./storage/serverstorage'),
+//Storage = require('./storage/serverstorage'),
     getClientConfig = require('../../config/getclientconfig'),
     GMEAUTH = require('./middleware/auth/gmeauth'),
     SSTORE = require('./middleware/auth/sessionstore'),
@@ -192,7 +192,6 @@ function StandAloneServer(gmeConfig) {
                 }
             });
         });
-
 
 
         //creating the proper storage for the standalone server
@@ -538,7 +537,7 @@ function StandAloneServer(gmeConfig) {
             restComponent = require(gmeConfig.rest.components[keys[i]]);
             if (restComponent) {
                 logger.debug('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
-                ' - /rest/external/' + keys[i]);
+                    ' - /rest/external/' + keys[i]);
                 __app.use('/rest/external/' + keys[i], restComponent(gmeConfig, ensureAuthenticated, logger));
             } else {
                 throw new Error('Loading ' + gmeConfig.rest.components[keys[i]] + ' failed.');
@@ -926,7 +925,8 @@ function StandAloneServer(gmeConfig) {
     __app.get('/worker/simpleResult/*', function (req, res) {
         var urlArray = req.url.split('/');
         if (urlArray.length > 3) {
-            __storage.getWorkerResult(urlArray[3], function (err, result) {
+            __workerManager.result(urlArray[3], function (err, result) {
+                console.log('result2', err, result);
                 if (err) {
                     res.sendStatus(500);
                 } else {

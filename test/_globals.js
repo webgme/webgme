@@ -325,7 +325,7 @@ function deleteProject(parameters, done) {
             return done(err);
         }
 
-        parameters.storage.deleteProject(parameters.projectName, done);
+        parameters.storage.deleteProject({projectName:parameters.projectName}, done);
     });
 }
 

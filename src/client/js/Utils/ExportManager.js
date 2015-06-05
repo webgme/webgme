@@ -58,7 +58,7 @@ define(['jquery',
             fileName = client.getActiveProjectName() + '_' + client.getActiveBranchName() + '_' +
                            object.getAttribute('name') + '_lib';
 
-            client.getExportLibraryUrlAsync(objID, fileName, function (err, url) {
+            client.getExportLibraryUrl(objID, fileName, function (err, url) {
                 if (!err) {
                     window.location = url;
                 }
