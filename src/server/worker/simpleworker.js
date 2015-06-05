@@ -200,45 +200,84 @@ var WEBGME = require(__dirname + '/../../../webgme'),
             }
         });
     },
+    loadNodes = function (root, core, paths, callback) {
+        var deferred = Q.defer(),
+            nodes = {},
+            counter = 0,
+            loadedNodeHandler = function (err, nodeObj) {
+                counter += 1;
+                if (err) {
+                    error += err;
+                }
 
+                if (nodeObj) {
+                    nodes[result.core.getPath(nodeObj)] = nodeObj;
+                }
+
+                if (counter === paths.length) {
+                    allNodesLoadedHandler();
+                }
+            },
+            allNodesLoadedHandler = function () {
+                if (error) {
+                    deferred.reject(error);
+                }
+
+                deferred.resolve(nodes);
+            },
+            error,
+            len;
+
+        len = paths.length || 0;
+
+        if (len === 0) {
+            allNodesLoadedHandler();
+        }
+        while (len--) {
+            result.core.loadByPath(root, paths[len], loadedNodeHandler);
+        }
+        return deferred.promise.nodeify(callback);
+    },
     dumpMoreNodes = function (webGMESessionId, name, hash, nodePaths, callback) {
 
-        getProject(name, webGMESessionId, function (err, project) {
-            if (err) {
-                callback(err);
-                return;
-            }
-            var core = new Core(project, {globConf: gmeConfig, logger: logger.fork('dumpMoreNodes:core')});
-            core.loadRoot(hash, function (err, root) {
-                if (err) {
-                    callback(err);
-                } else {
-                    var nodes = [],
-                        needed = nodePaths.length || 0,
-                        loadError = null,
-                        objectLoaded = function (err, node) {
-                            loadError = loadError || err;
-                            if (node !== undefined && node !== null) {
-                                nodes.push(node);
-                            }
-                            if (--needed === 0) {
-                                if (loadError) {
-                                    callback(loadError);
-                                } else {
-                                    DUMP(core, nodes, '', 'guid', callback);
-                                }
-                            }
-                        };
-                    if (needed > 0) {
-                        for (var i = 0; i < nodePaths.length; i++) {
-                            core.loadByPath(root, nodePaths[i], objectLoaded);
-                        }
-                    } else {
-                        callback(null, null);
-                    }
-                }
-            });
+        var storage = getConnectedStorage(webGMESessionId),
+            finish = function (err, data) {
+                storage.close();
+                callback(err, data);
+            };
 
+        storage.open(function (networkStatus) {
+            if (networkStatus === STORAGE_CONSTANTS.CONNECTED) {
+                storage.openProject(name, function (err, project/*, branches*/) {
+
+                    if (err) {
+                        finish(err);
+                        return;
+                    }
+
+                    var core = new Core(project, {
+                        globConf: gmeConfig,
+                        logger: logger.fork('core')
+                    });
+
+                    core.loadRoot(hash, function (err, root) {
+                        if (err) {
+                            finish(err);
+                            return;
+                        }
+
+                        loadNodes(root, core, nodePaths, function (err, nodes) {
+                            if (err) {
+                                finish(err);
+                                return;
+                            }
+                            DUMP(core, nodes, '', 'guid', finish);
+                        });
+                    });
+                });
+            } else {
+                finish('problems during connection to webgme');
+            }
         });
     },
 
@@ -732,33 +771,36 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         return requireJS('addon/' + name + '/' + name + '/' + name);
     },
 
-    initConnectedWorker = function (webGMESessionId, name, projectName, branchName, callback) {
-        if (!name || (AUTH && !webGMESessionId) || !projectName || !branchName) {
+    initConnectedWorker = function (webGMESessionId, userId, addOnName, projectName, branchName, callback) {
+        if (!addOnName || !projectName || !branchName) {
             return setImmediate(callback, 'Required parameter was not provided');
         }
-        var AddOn = getAddOn(name);
-        //for instance creation we need the Core class and the Storage object
-        getConnectedStorage(webGMESessionId, function (err, storage) {
-            if (err) {
-                callback('unable to connect user\'s storage: ' + err);
-                return;
-            }
-            _addOn = new AddOn(Core, storage, gmeConfig);
-            //for the initialization we need the project as well
-            getProject(projectName, webGMESessionId, function (err, project) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-                logger.debug('starting addon', {metadata: name});
+        var AddOn = getAddOn(addOnName),
+            storage = getConnectedStorage(webGMESessionId);
+
+        _addOn = new AddOn(Core, storage, gmeConfig, logger.fork('addOn_'+addOnName), userId);
+        //for the initialization we need the project as well
+        storage.open(function (networkStatus) {
+            if (networkStatus === STORAGE_CONSTANTS.CONNECTED) {
+                logger.debug('starting addon', {metadata: addOnName});
                 _addOn.start({
                     projectName: projectName,
                     branchName: branchName,
-                    project: project,
-                    logger: logger.fork(name)
-                }, callback);
-            });
+                    logger: logger.fork(addOnName)
+                }, function (err) {
+                    var myCallback = callback;
+                    callback = function () {
+                    };
+                    myCallback(err);
+                });
+            } else {
+                storage.close();
+                callback('unable to connect to webgme server');
+            }
         });
+
+
+
     },
 
     connectedWorkerQuery = function (parameters, callback) {
@@ -930,7 +972,7 @@ process.on('message', function (parameters) {
         seedProject(parameters, resultHandling);
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStart) {
         if (gmeConfig.addOn.enable === true) {
-            initConnectedWorker(parameters.webGMESessionId, parameters.workerName, parameters.project,
+            initConnectedWorker(parameters.webGMESessionId, parameters.usrId, parameters.workerName, parameters.project,
                 parameters.branch,
                 function (err) {
                     if (err) {

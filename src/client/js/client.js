@@ -17,7 +17,8 @@ define([
     'common/util/url',
     'js/client/gmeNodeGetter',
     'js/client/gmeNodeSetter',
-    'common/core/users/serialization'
+    'common/core/users/serialization',
+    'js/client/addon'
 ], function (Logger,
              Storage,
              EventDispatcher,
@@ -30,7 +31,8 @@ define([
              URL,
              getNode,
              getNodeSetters,
-             Serialization) {
+             Serialization,
+             AddOn) {
     'use strict';
 
     function Client(gmeConfig) {
@@ -67,7 +69,8 @@ define([
                 msg: ''
             },
             monkeyPatchKey,
-            nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode);
+            nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode),
+            addOnFunctions = new AddOn(state, storage, logger, gmeConfig);
 
         EventDispatcher.call(this);
 
@@ -798,7 +801,11 @@ define([
         this.deleteProject = function (projectName, callback) {
             if (isConnected()) {
                 storage.deleteProject(projectName, function (err) {
-                    callback(new Error(err));
+                    if (err) {
+                        callback(new Error(err));
+                    } else {
+                        callback(null);
+                    }
                 });
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -1149,6 +1156,7 @@ define([
                 ASSERT(err || root);
 
                 state.root.object = root;
+                addOnFunctions.updateRunningAddOns(root);
                 error = error || err;
                 if (!err) {
                     //_clientGlobal.addOn.updateRunningAddOns(root); //FIXME: ADD ME BACK!!
@@ -1499,8 +1507,8 @@ define([
                                 return;
                             }
 
-                            storage.closeProject(projectName,function(err){
-                                if(err){
+                            storage.closeProject(projectName, function (err) {
+                                if (err) {
                                     callback(err);
                                     return;
                                 }
@@ -1560,7 +1568,7 @@ define([
         };
 
         //dump nodes
-        this.getExportItemsUr = function(paths, filename, callback) {
+        this.getExportItemsUr = function (paths, filename, callback) {
             storage.simpleRequest({
                     command: 'dumpMoreNodes',
                     name: state.project.name,
@@ -1631,6 +1639,15 @@ define([
         this.runServerPlugin = function (name, context, callback) {
             storage.simpleRequest({command: 'executePlugin', name: name, context: context}, callback);
         };
+
+        //addOn
+        this.validateProjectAsync = addOnFunctions.validateProjectAsync;
+        this.validateModelAsync = addOnFunctions.validateModelAsync;
+        this.validateNodeAsync = addOnFunctions.validateNodeAsync;
+        this.setValidationCallback = addOnFunctions.setValidationCallback;
+        this.getDetailedHistoryAsync = addOnFunctions.getDetailedHistoryAsync;
+        this.getRunningAddOnNames = addOnFunctions.getRunningAddOnNames;
+        this.addOnsAllowed = gmeConfig.addOn.enable === true;
     }
 
 

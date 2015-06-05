@@ -8,8 +8,8 @@
 define(['addon/AddOnBase'], function (AddOnBase) {
 
     'use strict';
-    var ConstraintAddOn = function (Core, storage, gmeConfig) {
-        AddOnBase.call(this, Core, storage, gmeConfig);
+    var ConstraintAddOn = function (Core, storage, gmeConfig, logger, userId) {
+        AddOnBase.call(this, Core, storage, gmeConfig, logger, userId);
     };
 
     ConstraintAddOn.prototype = Object.create(AddOnBase.prototype);
@@ -57,7 +57,7 @@ define(['addon/AddOnBase'], function (AddOnBase) {
         }
     };
 
-    ConstraintAddOn.prototype.start = function (parameters, callback) {
+    /*ConstraintAddOn.prototype.start = function (parameters, callback) {
         var self = this;
         AddOnBase.prototype.start.call(this, parameters, function (err) {
             if (err) {
@@ -84,7 +84,7 @@ define(['addon/AddOnBase'], function (AddOnBase) {
                 });
             });
         });
-    };
+    };*/
 
     ConstraintAddOn.prototype.stop = function (callback) {
         AddOnBase.prototype.stop.call(this, callback);

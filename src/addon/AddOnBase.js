@@ -5,23 +5,27 @@
  * @author kecso / https://github.com/kecso
  */
 
-define([], function () {
+define(['common/storage/constants'], function (CONSTANTS) {
     'use strict';
-    var AddOnBase = function (Core, storage, gmeConfig) {
+    var AddOnBase = function (Core, storage, gmeConfig, logger__, userId) {
         this._Core = Core;
         this._storage = storage;
         this.gmeConfig = gmeConfig;
         this.core = null;
-        this.logger = null;
+        this.logger = logger__;
         this.project = null;
         this.branchName = '';
         this.projectName = '';
+        this.branch = null;
         this.commit = null;
+        this.root = null;
+        this.rootHash = '';
+        this.userId = userId;
 
     };
     AddOnBase.prototype.getName = function () {
         throw new Error('implement this function in the derived class - getting type automatically is a bad idea,' +
-        'when the js scripts are minified names are useless.');
+            'when the js scripts are minified names are useless.');
     };
 
     AddOnBase.prototype._eventer = function (ready) {
@@ -103,41 +107,97 @@ define([], function () {
         //}, 100); // for testing purposes only
     };
 
+    AddOnBase.prototype.updateHandler = function (updateQueue, updateData, aborting) {
+        var self = this;
+
+        self.rootHash = updateData.commitObject.root;
+        self.commit = updateData.commitObject[CONSTANTS.MONGO_ID];
+        self.core.loadRoot(self.rootHash, function (err, root) {
+            if (err) {
+                self.logger.error('failed to load new root', err);
+                aborting(true);
+                return;
+            }
+
+            self.root = root;
+            self.update(root, function (err) {
+                aborting(err !== null);
+            });
+        });
+    };
+
+    AddOnBase.prototype.commitHandler = function (commitQueue, result, pushing) {
+        //TODO check how it should work
+        pushing(true);
+    };
+
     AddOnBase.prototype.init = function (parameters, callback) {
         var self = this;
         // This is the part of the start process which should always be done,
         // so this function should be always called from the start.
         this.logger.debug('Initializing');
-        if (!(parameters.projectName && parameters.branchName && parameters.project)) {
+        if (!(parameters.projectName && parameters.branchName)) {
             callback(new Error('Failed to initialize'));
             return;
         }
-        this.project = parameters.project;
-        this.core = new this._Core(this.project, {globConf: this.gmeConfig, logger: this.logger.fork('core')});
-        this.projectName = parameters.projectName;
-        this.branchName = parameters.branchName;
 
-        this.running = false; // indicates if the start is called and the stop is not called yet.
-        this.stopped = false; // indicates when the addon stop function was called and it returned.
-        this.pendingEvents = 0;
-        // time to wait in ms for this amount after stop is called and before we kill the addon
-        this.waitTimeForPendingEvents = parameters.waitTimeForPendingEvents || 1500;
+        self.projectName = parameters.projectName;
+        self.branchName = parameters.branchName;
+        //we should open the project and the branch
+        this._storage.openProject(self.projectName, function (err, project, branches) {
+            if (err) {
+                callback(err);
+                return;
+            }
 
-        this.running = true;
+            if (!branches[self.branchName]) {
+                callback(new Error('no such branch [' + self.branchName + ']'));
+                return;
+            }
 
-        //start the eventing
-        this._eventer(function (err) {
-            self.logger.debug('Ready');
-            callback(err);
+            self.project = project;
+            self.commit = branches[self.branchName];
+            self.core = new self._Core(project, {globConf: self.gmeConfig, logger: self.logger.fork('core')});
+            self.running = false; // indicates if the start is called and the stop is not called yet.
+            self.stopped = false; // indicates when the addon stop function was called and it returned.
+            self.pendingEvents = 0;
+            // time to wait in ms for this amount after stop is called and before we kill the addon
+            self.waitTimeForPendingEvents = parameters.waitTimeForPendingEvents || 1500;
+
+            self._storage.openBranch(self.projectName, self.branchName, self.updateHandler, self.commitHandler, function (err, branch) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                self.branch = branch;
+                self.project.loadObject(self.commit, function (err, commitObject) {
+                    if (err) {
+                        callback(err);
+                    }
+
+                    self.rootHash = commitObject.root;
+                    self.core.loadRoot(self.rootHash, function (err, root) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+                        self.root = root;
+                        self.running = true;
+                        callback(null);
+                    });
+                });
+            });
         });
+
     };
 
     AddOnBase.prototype.start = function (parameters, callback) {
         var self = this;
         //this is the initialization function it could be overwritten or use as it is
-        this.logger = parameters.logger;
+        //this.logger = parameters.logger;
 
-        this.init(parameters, function (err) {
+        self.init(parameters, function (err) {
             if (err) {
                 self.running = false;
                 callback(err);
@@ -212,7 +272,7 @@ define([], function () {
 
     AddOnBase.prototype.update = function (root, callback) {
         callback(new Error('The update function is a main point of an addOn\'s functionality so it must be' +
-        'overwritten.'));
+            'overwritten.'));
     };
 
     AddOnBase.prototype.query = function (parameters, callback) {
