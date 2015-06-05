@@ -201,6 +201,7 @@ describe('GME client', function () {
     describe('database connection', function () {
         var Client,
             gmeConfig,
+            client,
             projectName = 'ProjectAndBranchOperationsTest';
 
         before(function (done) {
@@ -213,11 +214,21 @@ describe('GME client', function () {
             });
         });
 
+        after(function (done) {
+            if (client) {
+                client = null;
+                client.disconnectFromDatabase(done);
+            } else {
+                client = null;
+                done();
+            }
+        });
+
         it('should connect to the database', function (done) {
             var client = new Client(gmeConfig);
             client.connectToDatabase(function (err) {
                 expect(err).to.equal(null);
-                client.disconnectFromDatabase(done);
+                done();
             });
         });
 
@@ -228,7 +239,7 @@ describe('GME client', function () {
 
                 client.connectToDatabase(function (err) {
                     expect(err).to.equal(null);
-                    client.disconnectFromDatabase(done);
+                    done();
                 });
             });
         });
@@ -949,6 +960,10 @@ describe('GME client', function () {
                 });
             });
         });
+
+    });
+
+    describe('branch status updates', function () {
 
     });
 

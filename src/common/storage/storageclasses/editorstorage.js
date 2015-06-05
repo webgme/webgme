@@ -221,9 +221,10 @@ define([
                     project.insertObject(latestCommit.coreObjects[i]);
                 }
 
-                callback(err, latestCommit, branch.getCommitQueue());
                 // This only has an effect after a fork with pending commits.
                 self._pushNextQueuedCommit(projectName, branchName);
+
+                callback(err, latestCommit, branch.getCommitQueue());
             });
         };
 

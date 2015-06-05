@@ -356,8 +356,6 @@ define([
                         commitObject = latestCommit.commitObject;
                         logger.debug('Branch opened latestCommit', latestCommit);
 
-                        //addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
-
                         //undo-redo
                         logger.debug('changing branch - cleaning undo-redo chain');
                         addModification(commitObject, true);
