@@ -129,18 +129,14 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
         gmeAuth,
 
         clearDB = clearDatabase(gmeConfigParameter),
-        guestAccount = gmeConfigParameter.authentication.guestAccount,
-        gmeAuthPromise;
+        guestAccount = gmeConfigParameter.authentication.guestAccount;
 
-    gmeAuthPromise = getGMEAuth(gmeConfigParameter)
+    clearDB
+        .then(function () {
+            return getGMEAuth(gmeConfigParameter);
+        })
         .then(function (gmeAuth_) {
             gmeAuth = gmeAuth_;
-        })
-        .catch(deferred.reject);
-
-
-    Q.all([clearDB, gmeAuthPromise])
-        .then(function () {
             return Q.all([
                 gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
                 gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
@@ -180,6 +176,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
             deferred.resolve(gmeAuth);
         })
         .catch(deferred.reject);
+
 
     return deferred.promise.nodeify(callback);
 }

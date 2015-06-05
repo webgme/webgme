@@ -31,12 +31,12 @@ function GMEAuth(session, gmeConfig) {
         organizationCollection = organizationCollectionDeferred.promise,
         projectCollectionDeferred = Q.defer(),
         projectCollection = projectCollectionDeferred.promise;
-        //FIXME should be taken into use or remove it
-        //blacklistUserAndOrgName = [
-        //    'api',
-        //    'blob',
-        //    'executor'
-        //];
+    //FIXME should be taken into use or remove it
+    //blacklistUserAndOrgName = [
+    //    'api',
+    //    'blob',
+    //    'executor'
+    //];
 
     /**
      * 'users' collection has these fields:
@@ -100,6 +100,7 @@ function GMEAuth(session, gmeConfig) {
     addMongoOpsToPromize(projectCollection);
 
     function connect(callback) {
+        var self = this;
         return Q.ninvoke(Mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
             .then(function (db_) {
                 db = db_;
@@ -107,17 +108,9 @@ function GMEAuth(session, gmeConfig) {
             })
             .then(function (collection_) {
                 collectionDeferred.resolve(collection_);
-                if (gmeConfig.authentication.allowGuests) {
-                    collection.findOne({_id: gmeConfig.authentication.guestAccount})
-                        .then(function (userData) {
-                            var guestAcc = gmeConfig.authentication.guestAccount;
-                            if (!userData) {
-                                logger.error('User "' + guestAcc + '" not found. Create it with ' +
-                                'src/bin/usermanager.js or "' + guestAcc + '" access will not work. ' +
-                                'Disable guest access by setting gmeConfig.authentication.allowGuests = false');
-                            }
-                        });
-                }
+                return _prepareGuestAccount();
+            })
+            .then(function () {
                 return Q.ninvoke(db, 'collection', _organizationCollectionName);
             })
             .then(function (organizationCollection_) {
@@ -126,6 +119,7 @@ function GMEAuth(session, gmeConfig) {
             })
             .then(function (projectCollection_) {
                 projectCollectionDeferred.resolve(projectCollection_);
+                return self;
             })
             .catch(function (err) {
                 logger.error(err);
@@ -138,6 +132,43 @@ function GMEAuth(session, gmeConfig) {
         return collection
             .finally(function () {
                 return Q.ninvoke(db, 'close');
+            })
+            .nodeify(callback);
+    }
+
+    function _prepareGuestAccount(callback) {
+        var guestAcc = gmeConfig.authentication.guestAccount;
+        return collection.findOne({_id: guestAcc})
+            .then(function (userData) {
+                if (userData) {
+                    logger.debug('Guest user exists');
+                    return Q(null);
+                } else {
+                    logger.warn('User "' + guestAcc + '" was not found. ' +
+                                'We will attempt to create it automatically.');
+
+                    // TODO: maybe the canCreate can come from gmeConfig
+                    return addUser(guestAcc, guestAcc, guestAcc, true, {overwrite: true});
+                }
+            })
+            .then(function (userAccount) {
+                console.log(userAccount);
+                if (gmeConfig.authentication.allowGuests) {
+                    logger.warn('Guest access can be disabled by setting' +
+                                ' gmeConfig.authentication.allowGuests = false');
+                }
+
+                // TODO: maybe guest's project authorization can come from gmeConfig
+                // TODO: check if guest user has access to the default project or not.
+                // TODO: grant access to guest account for default project
+                return Q(null);
+            })
+            .then(function () {
+                return getUser(guestAcc);
+            })
+            .then(function (guestAccount) {
+                logger.info('Guest account: ', {metadata: guestAccount});
+                return Q.resolve(guestAccount);
             })
             .nodeify(callback);
     }
