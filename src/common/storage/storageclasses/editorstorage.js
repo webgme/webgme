@@ -107,6 +107,27 @@ define([
             });
         };
 
+        this.createProject = function (projectName, callback) {
+            var data = {
+                projectName: projectName
+            };
+            if (projects[projectName]) {
+                logger.error('project already exists', projectName);
+                callback('project already exists');
+                return;
+            }
+            webSocket.createProject(data, function (err) {
+                if (err) {
+                    logger.error('cannot create project ' + projectName);
+                    callback('cannot create project');
+                    return;
+                }
+                var project = new Project(projectName, self, logger, gmeConfig);
+                projects[projectName] = project;
+                callback(err, project);
+            });
+        };
+        
         this.closeProject = function (projectName, callback) {
             var project = projects[projectName],
                 error = '',

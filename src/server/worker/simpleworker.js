@@ -576,32 +576,34 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     },
 
     seedProject = function (parameters, callback) {
+        console.log('kecso seed', parameters);
         var storage = getConnectedStorage(parameters.webGMESessionId);
 
         storage.open(function (networkState) {
             var jsonSeed,
                 seedReady = function () {
                     //console.log('seed',jsonSeed);
-                    storage.createProject(parameters.projectName, {
-                        username: parameters.userName
-                    }, function (err, project) {
-                        console.log(err,project);
-                    });
-                    /*openContext(storage, gmeConfig, logger, {
-                        projectName: parameters.projectName,
-                        userName: parameters.userId,
-                        branchName: 'master',
-                        createProject: true
-                    })
-                        .then(function (context) {
-                            Serialization.import(context.core, context.rootNode, jsonSeed, function (err) {
+                    storage.createProject(parameters.projectName,
+                        function (err, project) {
+                            if (err) {
+                                logger.error('empty project creation failed');
+                                callback(err);
+                                return;
+                            }
+                            var core = new Core(project, {
+                                    globConf: gmeConfig,
+                                    logger: logger.fork('core')
+                                }),
+                                root = core.createNode({parent: null, base: null});
+
+                            Serialization.import(core,root,jsonSeed,function(err){
                                 if (err) {
                                     logger.error('import of seed failed');
                                     callback(err);
                                     return;
                                 }
 
-                                var persisted = context.core.persist(context.rootNode);
+                                var persisted = core.persist(root);
                                 storage.makeCommit(parameters.projectName,
                                     null,
                                     [],
@@ -614,28 +616,70 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                             callback(err);
                                             return;
                                         }
-                                        storage.setBranchHash({
-                                                username: parameters.userId,
-                                                branchName: 'master',
-                                                projectName: parameters.projectName,
-                                                oldHash: context.commitHash,
-                                                newHash: commitResult.hash
-                                            }, function (err, updateResult) {
-                                                if (err) {
-                                                    logger.error('setting branch failed');
-                                                    callback(err);
-                                                }
-                                                logger.info('seeding [' + parameters.seedName + '] to [' + parameters.projectName + '] completed');
-                                                callback(null);
+
+                                        project.createBranch('master',commitResult.hash,function(err){
+                                            if (err) {
+                                                logger.error('setting branch failed');
+                                                callback(err);
                                             }
-                                        );
+                                            logger.info('seeding [' + parameters.seedName + '] to [' + parameters.projectName + '] completed');
+                                            callback(null);
+                                        });
                                     }
                                 );
+
                             });
-                        })
-                        .catch(function (err) {
-                            callback(err);
-                        });*/
+
+                        });
+                    /*openContext(storage, gmeConfig, logger, {
+                     projectName: parameters.projectName,
+                     userName: parameters.userId,
+                     branchName: 'master',
+                     createProject: true
+                     })
+                     .then(function (context) {
+                     Serialization.import(context.core, context.rootNode, jsonSeed, function (err) {
+                     if (err) {
+                     logger.error('import of seed failed');
+                     callback(err);
+                     return;
+                     }
+
+                     var persisted = context.core.persist(context.rootNode);
+                     storage.makeCommit(parameters.projectName,
+                     null,
+                     [],
+                     persisted.rootHash,
+                     persisted.objects,
+                     'seeding project[' + parameters.seedName + ']',
+                     function (err, commitResult) {
+                     if (err) {
+                     logger.error('makeCommit failed.');
+                     callback(err);
+                     return;
+                     }
+                     storage.setBranchHash({
+                     username: parameters.userId,
+                     branchName: 'master',
+                     projectName: parameters.projectName,
+                     oldHash: context.commitHash,
+                     newHash: commitResult.hash
+                     }, function (err, updateResult) {
+                     if (err) {
+                     logger.error('setting branch failed');
+                     callback(err);
+                     }
+                     logger.info('seeding [' + parameters.seedName + '] to [' + parameters.projectName + '] completed');
+                     callback(null);
+                     }
+                     );
+                     }
+                     );
+                     });
+                     })
+                     .catch(function (err) {
+                     callback(err);
+                     });*/
                 };
 
             if (networkState = STORAGE_CONSTANTS.CONNECTED) {
