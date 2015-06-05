@@ -204,7 +204,7 @@ describe('WebSocket', function () {
                     if (typeof err === 'string' && err.indexOf('User was not found') > -1) {
                         return;
                     }
-                    throw new Error('should have failed to getUserId');
+                    throw new Error('should have failed to getUserId: ' + err);
                 })
                 .nodeify(done);
         });
@@ -341,7 +341,7 @@ describe('WebSocket', function () {
                     if (typeof err === 'string' && err.indexOf('User was not found') > -1) {
                         return;
                     }
-                    throw new Error('should have failed to getUserId');
+                    throw new Error('should have failed to getUserId: ' + err);
                 })
                 .nodeify(done);
         });
@@ -473,7 +473,7 @@ describe('WebSocket', function () {
                     if (typeof err === 'string' && err.indexOf('Invalid argument') > -1) {
                         return;
                     }
-                    throw new Error('should have failed to openProject');
+                    throw new Error('should have failed to openProject: ' + err);
                 })
                 .nodeify(done);
         });
@@ -494,7 +494,7 @@ describe('WebSocket', function () {
                     if (typeof err === 'string' && err.indexOf('Project does not exist') > -1) {
                         return;
                     }
-                    throw new Error('should have failed to openProject');
+                    throw new Error('should have failed to openProject: ' + err);
                 })
                 .nodeify(done);
         });
@@ -515,7 +515,7 @@ describe('WebSocket', function () {
                     if (typeof err === 'string' && err.indexOf('Not authorized') > -1) {
                         return;
                     }
-                    throw new Error('should have failed to openProject');
+                    throw new Error('should have failed to openProject: ' + err);
                 })
                 .nodeify(done);
         });
@@ -558,7 +558,7 @@ describe('WebSocket', function () {
                     if (typeof err === 'string' && err.indexOf('does not exist') > -1) {
                         return;
                     }
-                    throw new Error('should have failed to openBranch');
+                    throw new Error('should have failed to openBranch: ' + err);
                 })
                 .nodeify(done);
         });
