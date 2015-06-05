@@ -347,7 +347,16 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         data.username = userId;
                         return storage.createProject(data);
                     })
-                    .nodeify(callback); // FIXME: different than other functions... catch(function (err) ...
+                    .then(function (project) {
+                        callback(null, project);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
             });
 
             socket.on('getBranches', function (data, callback) {
