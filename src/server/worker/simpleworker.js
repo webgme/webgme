@@ -661,17 +661,18 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                 storage.close();
                 callback(err);
             };
+        logger.debug('seedProject');
 
         storage.open(function (networkState) {
 
             var jsonSeed,
                 seedReady = function () {
-                    //console.log('seed',jsonSeed);
+                    logger.debug('seedProject - seedReady');
                     storage.createProject(parameters.projectName,
                         function (err, project) {
                             if (err) {
                                 logger.error('empty project creation failed', err);
-                                fininsh(err);
+                                finish(err);
                                 return;
                             }
                             var core = new Core(project, {
@@ -719,21 +720,35 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                         });
                 };
 
-            if (networkState = STORAGE_CONSTANTS.CONNECTED) {
+            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
+                logger.debug('seedProject - storage is connected');
                 if (parameters.type === 'file') {
+                    logger.debug('seedProject - seeding from file:', parameters.seedName);
                     jsonSeed = getSeedFromFile(parameters.seedName);
-                    seedReady();
+                    if (jsonSeed === null) {
+                        finish('unknown file seed');
+                    } else {
+                        seedReady();
+                    }
                     return;
                 } else {
+                    logger.debug('seedProject - seeding from existing project:', parameters.seedName);
                     parameters.seedBranch = parameters.seedBranch || 'master';
                     storage.openProject(parameters.seedName, function (err, project, branches) {
                         if (err) {
+                            logger.error('seedProject - failed to open the existing project',
+                                parameters.seedName, err);
                             finish(err);
                             return;
                         }
-
+                        if (branches.hasOwnProperty(parameters.seedBranch) === false) {
+                            finish('Branch did not exist' + parameters.seedBranch);
+                            return;
+                        }
                         project.loadObject(branches[parameters.seedBranch], function (err, commit) {
                             if (err) {
+                                logger.error('seedProject - failed loading commitObject for branch',
+                                    parameters.seedBranch, err);
                                 finish(err);
                                 return;
                             }
@@ -745,11 +760,15 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
                             core.loadRoot(commit.root, function (err, root) {
                                 if (err) {
+                                    logger.error('seedProject - failed loading root for commit',
+                                        parameters.seedBranch, err);
                                     finish(err);
                                     return;
                                 }
                                 Serialization.export(core, root, function (err, jsonExport) {
                                     if (err) {
+                                        logger.error('seedProject - failed loading root for commit',
+                                            parameters.seedBranch, err);
                                         finish(err);
                                         return;
                                     }

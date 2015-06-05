@@ -800,12 +800,12 @@ define([
 
         this.deleteProject = function (projectName, callback) {
             if (isConnected()) {
-                storage.deleteProject(projectName, function (err) {
+                storage.deleteProject(projectName, function (err, didExist) {
                     if (err) {
                         callback(new Error(err));
-                    } else {
-                        callback(null);
+                        return;
                     }
+                    callback(null, didExist);
                 });
             } else {
                 callback(new Error('There is no open database connection!'));

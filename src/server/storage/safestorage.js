@@ -226,8 +226,8 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
                     throw new Error('Not authorized: cannot delete project. ' + data.projectName);
                 }
             })
-            .then(function () {
-                deferred.resolve();
+            .then(function (didExist) {
+                deferred.resolve(didExist);
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));

@@ -118,10 +118,11 @@ define([
             }
             webSocket.createProject(data, function (err) {
                 if (err) {
-                    logger.error('cannot create project ' + projectName);
-                    callback('cannot create project');
+                    logger.error('cannot create project ', projectName, err);
+                    callback('cannot create project', err);
                     return;
                 }
+
                 var project = new Project(projectName, self, logger, gmeConfig);
                 projects[projectName] = project;
                 callback(err, project);

@@ -39,17 +39,19 @@ Storage.prototype.getProjectNames = function (data, callback) {
 Storage.prototype.deleteProject = function (data, callback) {
     var self = this;
     return this.mongo.deleteProject(data.projectName)
-        .then(function () {
+        .then(function (didExist) {
             var eventData = {
                 projectName: data.projectName
             };
-
-            self.logger.debug('Project deleted will dispatch', data.projectName);
-            if (self.gmeConfig.storage.broadcastProjectEvents) {
-                eventData.socket = data.socket;
+            self.logger.debug('deleteProject, didExist?', didExist);
+            if (didExist) {
+                self.logger.debug('Project deleted will dispatch', data.projectName);
+                if (self.gmeConfig.storage.broadcastProjectEvents) {
+                    eventData.socket = data.socket;
+                }
+                self.dispatchEvent(CONSTANTS.PROJECT_DELETED, eventData);
             }
-
-            self.dispatchEvent(CONSTANTS.PROJECT_DELETED, eventData);
+            return Q(didExist);
         })
         .nodeify(callback);
 };
