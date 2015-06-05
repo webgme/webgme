@@ -20,7 +20,7 @@ process.on('SIGINT', function () {
         //    });
         //}
     } else {
-        console.error('child was killed without initialization');
+        //console.error('child was killed without initialization');
         process.exit(1);
     }
 });

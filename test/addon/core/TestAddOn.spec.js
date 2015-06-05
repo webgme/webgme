@@ -43,7 +43,7 @@ describe.skip('TestAddOn', function () {
             //});
             //storage = storage;
             storage.open(function () {
-                console.log(arguments);
+                //console.log(arguments);
             });
 
             testFixture.clearDBAndGetGMEAuth(gmeConfig, importParam.projectName)

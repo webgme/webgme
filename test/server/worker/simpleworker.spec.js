@@ -753,7 +753,6 @@ describe.skip('Simple worker', function () {
                 expect(msg.error).equal(null);
 
                 expect(msg.result).not.equal(null);
-                console.log(msg.result);
                 expect(msg.result.arbitrary).equal('object');
 
                 return worker.send({command: CONSTANTS.workerCommands.connectedWorkerStop});

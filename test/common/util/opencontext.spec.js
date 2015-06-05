@@ -18,7 +18,6 @@ describe('openContext', function () {
 
     function importAndCloseProject(importParam, callback) {
         testFixture.importProject(storage, importParam, function (err, result) {
-            console.log(err,result);
             callback(err, result.commitHash);
         });
     }
