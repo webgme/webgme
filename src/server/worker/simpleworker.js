@@ -631,7 +631,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     storage.createProject(parameters.projectName,
                         function (err, project) {
                             if (err) {
-                                logger.error('empty project creation failed');
+                                logger.error('empty project creation failed', err);
                                 fininsh(err);
                                 return;
                             }
@@ -643,7 +643,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
                             Serialization.import(core, root, jsonSeed, function (err) {
                                 if (err) {
-                                    logger.error('import of seed failed');
+                                    logger.error('import of seed failed', err);
                                     finish(err);
                                     return;
                                 }
@@ -657,14 +657,14 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                     'seeding project[' + parameters.seedName + ']',
                                     function (err, commitResult) {
                                         if (err) {
-                                            logger.error('makeCommit failed.');
+                                            logger.error('makeCommit failed.', err);
                                             finish(err);
                                             return;
                                         }
 
                                         project.createBranch('master', commitResult.hash, function (err) {
                                             if (err) {
-                                                logger.error('setting branch failed');
+                                                logger.error('setting branch failed', err);
                                                 callback(err);
                                             }
                                             storage.close();
@@ -881,7 +881,7 @@ process.on('message', function (parameters) {
             });
         }
     } else if (parameters.command === CONSTANT.workerCommands.exportLibrary) {
-        console.log(parameters);
+        logger.debug(parameters);
         if (typeof parameters.name === 'string' &&
             (typeof parameters.hash === 'string' ||
             typeof parameters.branch === 'string' ||

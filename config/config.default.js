@@ -173,10 +173,7 @@ var path = require('path'),
             loadBucketSize: 100,
             loadBucketTimer: 10,
             clientCacheSize: 2000, // overwrites cache on client
-            keyType: 'plainSHA1', // 'rand160Bits', 'ZSSHA', 'plainSHA1',
-            failSafe: 'memory',
-            failSafeFrequency: 10000,
-            timeout: 10000
+            keyType: 'plainSHA1' // 'rand160Bits', 'ZSSHA', 'plainSHA1',
         },
 
         visualization: {

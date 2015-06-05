@@ -185,10 +185,7 @@ function validateConfig (configOrFileName) {
     assertNumber('config.storage.cache', config.storage.cache);
     assertNumber('config.storage.loadBucketSize', config.storage.loadBucketSize);
     assertNumber('config.storage.loadBucketTimer', config.storage.loadBucketTimer);
-    assertNumber('config.storage.failSafeFrequency', config.storage.failSafeFrequency);
-    assertNumber('config.storage.timeout', config.storage.timeout);
     assertString('config.storage.keyType', config.storage.keyType);
-    assertString('config.storage.failSafe', config.storage.failSafe);
 
     //visualization
     expectedKeys.push('visualization');
