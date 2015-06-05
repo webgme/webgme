@@ -73,6 +73,7 @@ define([
 
         function logState(level, msg) {
             var lightState;
+
             function replacer(key, value) {
                 var chainItem,
                     prevChain,
@@ -142,6 +143,7 @@ define([
 
                 return value;
             }
+
             if (gmeConfig.debug) {
                 logger[level]('state at ' + msg, JSON.stringify(state, replacer, 2));
             } else {
@@ -160,10 +162,11 @@ define([
         }
 
         this.meta = new META();
-        //TODO: These should be accessed via this.meta.
-        //TODO: e.g. client.meta.getMetaAspectNames(id) instead of client.getMetaAspectNames(id)
-        //TODO: However that will break a lot since it's used all over the place...
+
         for (monkeyPatchKey in this.meta) {
+            //TODO: These should be accessed via this.meta.
+            //TODO: e.g. client.meta.getMetaAspectNames(id) instead of client.getMetaAspectNames(id)
+            //TODO: However that will break a lot since it's used all over the place...
             if (this.meta.hasOwnProperty(monkeyPatchKey)) {
                 self[monkeyPatchKey] = this.meta[monkeyPatchKey];
             }
@@ -321,7 +324,7 @@ define([
                 return;
             }
             if (!state.project) {
-                callback(new Error('selectBranch invoked without open project'));
+                callback(new Error('selectBranch invoked without an opened project'));
                 return;
             }
 
@@ -385,7 +388,8 @@ define([
                                 } else {
                                     addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
                                 }
-                                changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNCH); // TODO: Make sure this is always the case.
+                                changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNCH);
+                                // TODO: Make sure this is always the case.
                                 callback(err);
                             });
                         }
@@ -396,8 +400,6 @@ define([
             if (state.branchName !== null) {
                 logger.debug('Branch was open, closing it first', state.branchName);
                 prevBranchName = state.branchName;
-                //state.branchName = null;
-                //state.branchStatus = null;
                 storage.closeBranch(state.project.name, prevBranchName, openBranch);
             } else {
                 openBranch(null);
@@ -447,7 +449,7 @@ define([
                         });
                     } else {
                         logger.error('Cannot view given ' + commitHash + ' commit as it\'s root cannot be loaded! [' +
-                            JSON.stringify(err) + ']');
+                        JSON.stringify(err) + ']');
                         callback(err || new Error('commit object cannot be found!'));
                     }
                 });
@@ -468,7 +470,7 @@ define([
             return function (commitQueue, result, callback) {
                 logger.debug('default commitHandler invoked, result: ', result);
                 logger.debug('commitQueue', commitQueue);
-                //TODO: dispatch an event showing how far off from the origin we are.
+
                 if (result.status === CONSTANTS.STORAGE.SYNCH) {
                     logger.debug('You are in synch.');
                     logState('info', 'commitHandler');
@@ -484,11 +486,11 @@ define([
                         logger.debug('Will proceed with next queued commit...');
                         changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD, commitQueue);
                     }
-                    // All is fine, continue with the commitQueue..
-                    callback(true);
+                    callback(true); // push:true
                 } else if (result.status === CONSTANTS.STORAGE.FORKED) {
                     logger.debug('You got forked');
                     logState('info', 'commitHandler');
+                    //TODO: Handle this during creatingFork too...
                     changeBranchStatus(CONSTANTS.BRANCH_STATUS.FORKED, commitQueue);
                     callback(false);
                 } else {
@@ -513,7 +515,7 @@ define([
                 changeBranchStatus(CONSTANTS.BRANCH_STATUS.PULLING, updateQueue.length);
                 loading(eventData.commitObject.root, function (err, aborted) {
                     if (err) {
-                        logger.error('updatehandler invoked loading and it returned error',
+                        logger.error('updateHandler invoked loading and it returned error',
                             eventData.commitObject.root, err);
                         logState('error', 'updateHandler');
                         callback(true); // aborted: true
@@ -556,7 +558,7 @@ define([
             forkName = newName || currentBranchName + '_' + (new Date()).getTime();
             storage.forkBranch(this.getActiveProjectName(), currentBranchName, forkName, commitHash, function (err) {
                 if (err) {
-                    logger.error('Could not fork', newName);
+                    logger.error('Could not fork branch:', newName, err);
                     callback(err);
                     return;
                 }
@@ -830,20 +832,40 @@ define([
         };
 
         // Watchers (used in e.g. ProjectNavigator).
-        this.watchDatabase = function (eventHandler) {
-            storage.watchDatabase(eventHandler);
+        this.watchDatabase = function (eventHandler, callback) {
+            callback = callback || function (err) {
+                if (err) {
+                    logger.error('Problems watching database room');
+                }
+            };
+            storage.watchDatabase(eventHandler, callback);
         };
 
-        this.unwatchDatabase = function (eventHandler) {
-            storage.watchDatabase(eventHandler);
+        this.unwatchDatabase = function (eventHandler, callback) {
+            callback = callback || function (err) {
+                if (err) {
+                    logger.error('Problems unwatching database room');
+                }
+            };
+            storage.watchDatabase(eventHandler, callback);
         };
 
-        this.watchProject = function (projectName, eventHandler) {
-            storage.watchProject(projectName, eventHandler);
+        this.watchProject = function (projectName, eventHandler, callback) {
+            callback = callback || function (err) {
+                if (err) {
+                    logger.error('Problems watching project room', projectName);
+                }
+            };
+            storage.watchProject(projectName, eventHandler, callback);
         };
 
-        this.unwatchProject = function (projectName, eventHandler) {
-            storage.unwatchProject(projectName, eventHandler);
+        this.unwatchProject = function (projectName, eventHandler, callback) {
+            callback = callback || function (err) {
+                if (err) {
+                    logger.error('Problems unwatching project room', projectName);
+                }
+            };
+            storage.unwatchProject(projectName, eventHandler, callback);
         };
 
         // Internal functions
@@ -1192,7 +1214,7 @@ define([
             logger.debug('loading newRootHash', newRootHash);
 
             callback = callback || function (/*err*/) {
-                };
+            };
 
 
             loadRoot(newRootHash, function (err) {
@@ -1260,7 +1282,7 @@ define([
             logger.debug('saveRoot msg', msg);
 
             callback = callback || function () {
-                };
+            };
             if (!state.viewer && !state.readOnlyProject) {
                 if (state.msg) {
                     state.msg += '\n' + msg;

@@ -135,16 +135,17 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             // watcher functions
-            socket.on('watchDatabase', function (data) {
+            socket.on('watchDatabase', function (data, callback) {
                 logger.debug('watchDatabase', {metadata: data});
                 if (data.join) {
                     socket.join(DATABASE_ROOM);
                 } else {
                     socket.leave(DATABASE_ROOM);
                 }
+                callback(null);
             });
 
-            socket.on('watchProject', function (data) {
+            socket.on('watchProject', function (data, callback) {
                 logger.debug('watchProject', {metadata: data});
                 if (data.join) {
                     //TODO: Check if user is authorized to read the project.
@@ -154,9 +155,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     socket.leave(data.projectName);
                     logger.debug('socket left room', data.projectName);
                 }
+                callback(null);
             });
 
-            socket.on('watchBranch', function (data) {
+            socket.on('watchBranch', function (data, callback) {
                 var roomName = data.projectName + ROOM_DIV + data.branchName;
                 logger.debug('watchBranch', {metadata: data});
                 if (data.join) {
@@ -167,6 +169,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     socket.leave(roomName);
                     logger.debug('socket left room', roomName);
                 }
+                callback(null);
             });
 
             // model editing functions
@@ -347,8 +350,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         data.username = userId;
                         return storage.createProject(data);
                     })
-                    .then(function (project) {
-                        callback(null, project);
+                    .then(function (/*project*/) {
+                        callback(null);
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {

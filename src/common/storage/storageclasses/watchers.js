@@ -23,7 +23,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.connected = false;
     }
 
-    StorageWatcher.prototype.watchDatabase = function (eventHandler) {
+    StorageWatcher.prototype.watchDatabase = function (eventHandler, callback) {
         this.logger.debug('watchDatabase - handler added');
         this.webSocket.addEventListener(CONSTANTS.PROJECT_DELETED, eventHandler);
         this.webSocket.addEventListener(CONSTANTS.PROJECT_CREATED, eventHandler);
@@ -31,11 +31,13 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.logger.debug('Nbr of database watchers:', this.watchers.database);
         if (this.watchers.database === 1) {
             this.logger.debug('First watcher will enter database room.');
-            this.webSocket.watchDatabase({join: true});
+            this.webSocket.watchDatabase({join: true}, callback);
+        } else {
+            callback(null);
         }
     };
 
-    StorageWatcher.prototype.unwatchDatabase = function (eventHandler) {
+    StorageWatcher.prototype.unwatchDatabase = function (eventHandler, callback) {
         this.logger.debug('unwatchDatabase - handler will be removed');
         this.logger.debug('Nbr of database watchers (before removal):', this.watchers.database);
         this.webSocket.removeEventListener(CONSTANTS.PROJECT_DELETED, eventHandler);
@@ -44,14 +46,19 @@ define(['common/storage/constants'], function (CONSTANTS) {
         if (this.watchers.database === 0) {
             this.logger.debug('No more watchers will exit database room.');
             if (this.connected) {
-                this.webSocket.watchDatabase({join: false});
+                this.webSocket.watchDatabase({join: false}, callback);
+            } else {
+                callback(null);
             }
         } else if (this.watchers.database < 0) {
             this.logger.error('Number of database watchers became negative!');
+            callback('Number of database watchers became negative!');
+        } else {
+            callback(null);
         }
     };
 
-    StorageWatcher.prototype.watchProject = function (projectName, eventHandler) {
+    StorageWatcher.prototype.watchProject = function (projectName, eventHandler, callback) {
         this.logger.debug('watchProject - handler added for project', projectName);
         this.webSocket.addEventListener(CONSTANTS.BRANCH_DELETED + projectName, eventHandler);
         this.webSocket.addEventListener(CONSTANTS.BRANCH_CREATED + projectName, eventHandler);
@@ -62,11 +69,13 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.logger.debug('Nbr of watchers for project:', projectName, this.watchers.projects[projectName]);
         if (this.watchers.projects[projectName] === 1) {
             this.logger.debug('First watcher will enter project room:', projectName);
-            this.webSocket.watchProject({projectName: projectName, join: true});
+            this.webSocket.watchProject({projectName: projectName, join: true}, callback);
+        } else {
+            callback(null);
         }
     };
 
-    StorageWatcher.prototype.unwatchProject = function (projectName, eventHandler) {
+    StorageWatcher.prototype.unwatchProject = function (projectName, eventHandler, callback) {
         this.logger.debug('unwatchProject - handler will be removed', projectName);
         this.logger.debug('Nbr of database watchers (before removal):', projectName,
             this.watchers.projects[projectName]);
@@ -80,24 +89,37 @@ define(['common/storage/constants'], function (CONSTANTS) {
             this.logger.debug('No more watchers will exit project room:', projectName);
             delete this.watchers.projects[projectName];
             if (this.connected) {
-                this.webSocket.watchProject({projectName: projectName, join: false});
+                this.webSocket.watchProject({projectName: projectName, join: false}, callback);
+            } else {
+                callback(null);
             }
         } else if (this.watchers.database < 0) {
             this.logger.error('Number of project watchers became negative!:', projectName);
+            callback('Number of project watchers became negative!');
+        } else {
+            callback(null);
         }
     };
 
+
     StorageWatcher.prototype._rejoinWatcherRooms = function () {
-        var projectName;
+        var self = this,
+            projectName,
+            callback = function (err) {
+                //TODO: Add a callback here too.
+                if (err) {
+                    self.logger.error('problems rejoining watcher rooms', err);
+                }
+            };
         this.logger.debug('rejoinWatcherRooms');
         if (this.watchers.database > 0) {
             this.logger.debug('Rejoining database room.');
-            this.webSocket.watchDatabase({join: true});
+            this.webSocket.watchDatabase({join: true}, callback);
         }
         for (projectName in this.watchers.projects) {
             if (this.watchers.projects.hasOwnProperty(projectName) && this.watchers.projects[projectName] > 0) {
                 this.logger.debug('Rejoining project room', projectName, this.watchers.projects[projectName]);
-                this.webSocket.watchProject({projectName: projectName, join: true});
+                this.webSocket.watchProject({projectName: projectName, join: true}, callback);
             }
         }
     };

@@ -656,7 +656,7 @@ describe('WebSocket', function () {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Watcher related tests
 
-        it.skip('should get events with watchDatabase', function (done) {
+        it('should get events with watchDatabase', function (done) {
             var socket,
                 data = {
                     projectName: 'WebSocketTest_ProjectCreated',
@@ -685,12 +685,12 @@ describe('WebSocket', function () {
                     //socket.on(CONSTANTS.BRANCH_CREATED, eventHandler);
                     //socket.on(CONSTANTS.BRANCH_UPDATED, eventHandler);
                     //socket.on(CONSTANTS.BRANCH_HASH_UPDATED, eventHandler);
-                    socket.emit('watchDatabase', data);
+                    return Q.ninvoke(socket, 'emit', 'watchDatabase', data);
                     //socket.emit('watchProject', data);
                     //socket.emit('watchBranch', data);
                     //return Q.ninvoke(socket, 'emit', 'watchDatabase', data);
-                //})
-                //.then(function () {
+                })
+                .then(function () {
                     return Q.ninvoke(socket, 'emit', 'createProject', data);
                 })
                 .then(function () {

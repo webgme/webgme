@@ -40,7 +40,16 @@ Storage.prototype.deleteProject = function (data, callback) {
     var self = this;
     return this.mongo.deleteProject(data.projectName)
         .then(function () {
-            self.dispatchEvent(CONSTANTS.PROJECT_DELETED, data);
+            var eventData = {
+                projectName: data.projectName
+            };
+
+            self.logger.debug('Project deleted will dispatch', data.projectName);
+            if (self.gmeConfig.storage.broadcastProjectEvents) {
+                eventData.socket = data.socket;
+            }
+
+            self.dispatchEvent(CONSTANTS.PROJECT_DELETED, eventData);
         })
         .nodeify(callback);
 };
@@ -49,17 +58,19 @@ Storage.prototype.createProject = function (data, callback) {
     var self = this;
     return this.mongo.createProject(data.projectName)
         .then(function (project) {
-            // FIXME: At this point the project is not a valid gme-project.
-            self.dispatchEvent(CONSTANTS.PROJECT_CREATED, data);
+            var eventData = {
+                projectName: data.projectName
+            };
+
+            self.logger.debug('Project created will dispatch', data.projectName);
+            if (self.gmeConfig.storage.broadcastProjectEvents) {
+                eventData.socket = data.socket;
+            }
+
+            self.dispatchEvent(CONSTANTS.PROJECT_CREATED, eventData);
             return Q(project);
         })
         .nodeify(callback);
-    // if data option is fork from existing
-    //      this.mongo.forkProject - reuse Kevin's implementation
-    //
-    // else if data option is seed
-    //      send job to worker and dispatchEvent from here when it has finished.
-    //
 };
 
 Storage.prototype.getBranches = function (data, callback) {

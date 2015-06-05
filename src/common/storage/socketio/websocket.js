@@ -94,16 +94,16 @@ define([
         };
 
         // watcher functions
-        this.watchDatabase = function (data) {
-            self.socket.emit('watchDatabase', data);
+        this.watchDatabase = function (data, callback) {
+            self.socket.emit('watchDatabase', data, callback);
         };
 
-        this.watchProject = function (data) {
-            self.socket.emit('watchProject', data);
+        this.watchProject = function (data, callback) {
+            self.socket.emit('watchProject', data, callback);
         };
 
-        this.watchBranch = function (data) {
-            self.socket.emit('watchBranch', data);
+        this.watchBranch = function (data, callback) {
+            self.socket.emit('watchBranch', data, callback);
         };
 
         // model editing functions
