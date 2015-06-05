@@ -231,13 +231,13 @@ define([
             var prevProjectName,
                 branchToOpen = 'master';
 
-            function projectOpened(err, project, branches) {
+            function projectOpened(err, project, branches, access) {
                 if (err) {
                     callback(new Error(err));
                     return;
                 }
                 state.project = project;
-                state.readOnlyProject = false; //TODO: this should be returned from the storage
+                state.readOnlyProject = access.write === false;
                 state.core = new Core(project, {
                     globConf: gmeConfig,
                     logger: logger.fork('core')
