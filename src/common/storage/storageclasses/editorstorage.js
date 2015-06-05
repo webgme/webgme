@@ -165,35 +165,12 @@ define([
                 }
                 var i,
                     branchHash = latestCommit.commitObject[CONSTANTS.MONGO_ID],
-                    branch = project.getBranch(branchName, false);
+                    branch = project.getBranch(branchName);
 
                 branch.updateHashes(branchHash, branchHash);
 
                 branch.commitHandler = commitHandler;
                 branch.localUpdateHandler = updateHandler;
-
-                function handleNextUpdate() {
-                    var updateData;
-
-                    logger.debug('About to update, updateQueue', branch.getUpdateQueue());
-                    if (branch.getUpdateQueue().length === 0) {
-                        logger.debug('No queued updates, returns');
-                        return;
-                    }
-
-                    updateData = branch.getFirstUpdate();
-                    branch.localUpdateHandler(branch.getUpdateQueue(), updateData, function (aborted) {
-                        var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
-                        if (aborted === false) {
-                            logger.debug('New commit was successfully loaded, updating localHash.');
-                            branch.updateHashes(originHash, null);
-                            branch.getFirstUpdate(true);
-                            handleNextUpdate();
-                        } else {
-                            logger.warn('Loading of update commit was aborted or failed.', updateData);
-                        }
-                    });
-                }
 
                 branch.updateHandler = function (_ws, updateData) {
                     var j,
@@ -208,7 +185,7 @@ define([
 
                     if (branch.getCommitQueue().length === 0) {
                         if (branch.getUpdateQueue().length === 1) {
-                            handleNextUpdate();
+                            self._pullNextQueuedCommit(projectName, branchName);
                         }
                     } else {
                         logger.debug('commitQueue is not empty, only updating originHash.');
@@ -257,15 +234,15 @@ define([
 
         this.forkBranch = function (projectName, branchName, forkName, commitHash, callback) {
             ASSERT(projects.hasOwnProperty(projectName), 'Project not opened: ' + projectName);
-
+            this.logger.debug('forking', projectName, branchName, forkName, commitHash);
             var self = this,
                 project = projects[projectName],
                 branch = project.getBranch(branchName, true),
                 forkData;
 
-            forkData = branch.getCommitsForNewFork(commitHash);
-
-            self.setBranchHash(projectName, forkName, forkData.hash, '', function (err) {
+            forkData = branch.getCommitsForNewFork(commitHash); // commitHash = null defaults to latest commit.
+            self.logger.debug('Forking with forkData', forkData);
+            self.createBranch(projectName, forkName, forkData.originHash, function (err) {
                 var fork;
                 if (err) {
                     callback(err);
@@ -273,7 +250,7 @@ define([
                 }
                 fork = project.getBranch(forkName, false);
                 fork.setCommitQueue(forkData.queue);
-                fork.updateHashes(commitHash, forkData.hash);
+                fork.updateHashes(forkData.localHash, forkData.originHash);
                 callback(null); // Now it's up to the client to close the old branch and open the fork.
             });
         };
@@ -330,15 +307,10 @@ define([
                     throw new Error(err);
                 }
 
-                if (result.status === CONSTANTS.SYNCH) {
-                    branch.getFirstCommit(true);
-                    branch.updateHashes(null, commitData.commitObject[CONSTANTS.MONGO_ID]);
-                }
-
                 // This is for when e.g. a plugin makes a commit to the same branch as the
                 // client and waits for the callback before proceeding.
                 // (If it is a forking commit, the plugin can proceed knowing that and the client will get notified of
-                // the fork through the commitHandler.)
+                // the fork through the commitHandler.
                 if (typeof callback === 'function') {
                     callback(err, result);
                 }
@@ -346,6 +318,8 @@ define([
                 if (branch.isOpen) {
                     branch.commitHandler(branch.getCommitQueue(), result, function (push) {
                         if (push) {
+                            branch.getFirstCommit(true); // Remove the commit from the queue.
+                            branch.updateHashes(null, commitData.commitObject[CONSTANTS.MONGO_ID]);
                             self._pushNextQueuedCommit(projectName, branchName);
                         }
                     });
@@ -371,6 +345,38 @@ define([
             commitObj[CONSTANTS.MONGO_ID] = commitHash;
 
             return commitObj;
+        };
+
+        this._pullNextQueuedCommit = function (projectName, branchName) {
+            ASSERT(projects.hasOwnProperty(projectName), 'Project not opened: ' + projectName);
+            var self = this,
+                project = projects[projectName],
+                branch = project.getBranch(branchName, true),
+                updateData;
+
+            logger.debug('About to update, updateQueue', branch.getUpdateQueue());
+            if (branch.getUpdateQueue().length === 0) {
+                logger.debug('No queued updates, returns');
+                return;
+            }
+
+            updateData = branch.getFirstUpdate();
+            if (branch.isOpen) {
+                branch.localUpdateHandler(branch.getUpdateQueue(), updateData, function (aborted) {
+                    var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
+                    if (aborted === false) {
+                        logger.debug('New commit was successfully loaded, updating localHash.');
+                        branch.updateHashes(originHash, null);
+                        branch.getFirstUpdate(true);
+                        self._pullNextQueuedCommit(projectName, branchName);
+                    } else {
+                        logger.warn('Loading of update commit was aborted or failed.', updateData);
+                    }
+                });
+            } else {
+                logger.error('_pullNextQueuedCommit returned from server but the branch was closed.',
+                    projectName, branchName);
+            }
         };
 
         this._rejoinBranchRooms = function () {

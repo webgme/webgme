@@ -79,11 +79,13 @@ define(['common/storage/constants'], function (CONSTANTS) {
             var i,
                 forkHash,
                 commitData,
+                chosenHash,
                 subQueue = [];
             // Move over all commit-data up till the chosen commitHash to the fork's queue,
             // except the commit that caused the fork (all its objects are already in the database).
             for (i = 0; i < commitQueue.length; i += 1) {
                 commitData = commitQueue[i];
+                chosenHash = commitData.commitObject[CONSTANTS.MONGO_ID];
                 if (i === 0) {
                     forkHash = commitData.commitObject[CONSTANTS.MONGO_ID];
                 } else {
@@ -95,7 +97,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
                     break;
                 }
             }
-            return {hash: forkHash, queue: subQueue};
+            return {originHash: forkHash, localHash: chosenHash, queue: subQueue};
         };
 
         this.setCommitQueue = function (newQueue) {
