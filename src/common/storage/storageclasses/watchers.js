@@ -101,7 +101,6 @@ define(['common/storage/constants'], function (CONSTANTS) {
         }
     };
 
-
     StorageWatcher.prototype._rejoinWatcherRooms = function () {
         var self = this,
             projectName,

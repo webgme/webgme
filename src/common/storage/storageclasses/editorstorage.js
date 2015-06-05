@@ -96,14 +96,14 @@ define([
                 logger.error('project is already open', projectName);
                 callback('project is already open');
             }
-            webSocket.openProject(data, function (err, branches) {
+            webSocket.openProject(data, function (err, branches, access) {
                 if (err) {
                     callback(err);
                     return;
                 }
                 var project = new Project(projectName, self, logger, gmeConfig);
                 projects[projectName] = project;
-                callback(err, project, branches);
+                callback(err, project, branches, access);
             });
         };
 

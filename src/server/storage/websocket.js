@@ -1,11 +1,12 @@
 /*globals requireJS*/
-/*jshint node:true*/
+/*jshint node:true, newcap: false*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';
 
 var io = require('socket.io'),
+    Q = require('q'),
     COOKIE = require('cookie-parser'),
     URL = requireJS('common/util/url'),
     CONSTANTS = requireJS('common/storage/constants'),
@@ -47,6 +48,22 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
     function getUserIdFromSocket(socket, callback) {
         return gmeAuth.getUserIdBySession(getSessionIdFromSocket(socket))
+            .nodeify(callback);
+    }
+
+    function projectAccess(socket, projectName, callback) {
+        var userId = userId;
+        return getUserIdFromSocket(socket)
+            .then(function (userId) {
+                return gmeAuth.getUser(userId);
+            })
+            .then(function (user) {
+                if (user.projects.hasOwnProperty(projectName)) {
+                    return Q(user.projects[projectName]);
+                } else {
+                    return Q({read: false, write: false, delete: false});
+                }
+            })
             .nodeify(callback);
     }
 
@@ -147,41 +164,77 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('watchProject', function (data, callback) {
                 logger.debug('watchProject', {metadata: data});
-                if (data.join) {
-                    //TODO: Check if user is authorized to read the project.
-                    socket.join(data.projectName);
-                    logger.debug('socket joined room', data.projectName);
-                } else {
-                    socket.leave(data.projectName);
-                    logger.debug('socket left room', data.projectName);
-                }
-                callback(null);
+
+                projectAccess(socket, data.projectName)
+                    .then(function (access) {
+                        if (data.join) {
+                            if (access.read) {
+                                socket.join(data.projectName);
+                                logger.debug('socket joined room', data.projectName);
+                                callback(null);
+                            } else {
+                                logger.warn('socket not authorized to join room', data.projectName);
+                                callback('No read access for ' + data.projectName);
+                            }
+                        } else {
+                            socket.leave(data.projectName);
+                            logger.debug('socket left room', data.projectName);
+                            callback(null);
+                        }
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
             });
 
             socket.on('watchBranch', function (data, callback) {
                 var roomName = data.projectName + ROOM_DIV + data.branchName;
                 logger.debug('watchBranch', {metadata: data});
-                if (data.join) {
-                    //TODO: Check if user is authorized to read the project.
-                    socket.join(roomName);
-                    logger.debug('socket joined room', roomName);
-                } else {
-                    socket.leave(roomName);
-                    logger.debug('socket left room', roomName);
-                }
-                callback(null);
+                projectAccess(socket, data.projectName)
+                    .then(function (access) {
+                        if (data.join) {
+                            if (access.read) {
+                                socket.join(roomName);
+                                logger.debug('socket joined room', roomName);
+                                callback(null);
+                            } else {
+                                logger.warn('socket not authorized to join room', roomName);
+                                callback('No read access for ' + data.projectName);
+                            }
+                        } else {
+                            socket.leave(roomName);
+                            logger.debug('socket left room', roomName);
+                            callback(null);
+                        }
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
             });
 
             // model editing functions
             socket.on('openProject', function (data, callback) {
+                var branches;
                 logger.debug('openProject', {metadata: data});
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.getBranches(data);
                     })
-                    .then(function (branches) {
-                        callback(null, branches);
+                    .then(function (branches_) {
+                        branches = branches_;
+                        return projectAccess(socket, data.projectName);
+                    })
+                    .then(function (access) {
+                        callback(null, branches, access);
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {

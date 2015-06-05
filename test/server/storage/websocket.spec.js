@@ -393,7 +393,7 @@ describe('WebSocket', function () {
                 .nodeify(done);
         });
 
-        it('should open an existing project', function (done) {
+        it('should open an existing project and return with auth info for project', function (done) {
             openSocketIo()
                 .then(function (socket) {
                     var data = {
@@ -402,8 +402,12 @@ describe('WebSocket', function () {
 
                     return Q.ninvoke(socket, 'emit', 'openProject', data);
                 })
-                .then(function (result) {
-                    expect(result).to.have.property('master');
+                .then(function (callbackArgs) {
+                    expect(callbackArgs[0]).to.have.property('master'); // branches
+                    expect(callbackArgs[1]).to.include.keys('read', 'write', 'delete'); // access
+                    expect(callbackArgs[1].read).to.equal(true);
+                    expect(callbackArgs[1].write).to.equal(true);
+                    expect(callbackArgs[1].delete).to.equal(true);
                 })
                 .nodeify(done);
         });
@@ -419,8 +423,9 @@ describe('WebSocket', function () {
                     socket = socket_;
                     return Q.ninvoke(socket, 'emit', 'openProject', data);
                 })
-                .then(function (result) {
-                    expect(result).to.have.property('master');
+                .then(function (callbackArgs) {
+                    expect(callbackArgs[0]).to.have.property('master'); // branches
+                    expect(callbackArgs[1]).to.include.keys('read', 'write', 'delete'); // access
                     return Q.ninvoke(socket, 'emit', 'closeProject', data);
                 })
                 .nodeify(done);
