@@ -379,15 +379,18 @@ define([
                                 openProjectLoadDialog(false);
                                 return;
                             }
-                            client.selectProject(initialThingsToDo.projectToLoad, function (err) {
-                                if (err) {
-                                    logger.error(err);
-                                    openProjectLoadDialog(false);
-                                    return;
-                                }
-                                WebGMEGlobal.State.setIsInitPhase(false);
-                                logger.info('init-phase false');
-                                //otherwise we are pretty much done cause we ignore the other parameters
+                            //FIXME: this is not necessarily safe
+                            setTimeout(function () {
+                                client.selectProject(initialThingsToDo.projectToLoad, function (err) {
+                                    if (err) {
+                                        logger.error(err);
+                                        openProjectLoadDialog(false);
+                                        return;
+                                    }
+                                    WebGMEGlobal.State.setIsInitPhase(false);
+                                    logger.info('init-phase false');
+                                    //otherwise we are pretty much done cause we ignore the other parameters
+                                });
                             });
                         });
                     }
