@@ -110,20 +110,22 @@ define(['common/storage/constants'], function (CONSTANTS) {
     AddOnBase.prototype.updateHandler = function (updateQueue, updateData, aborting) {
         var self = this;
 
-        self.rootHash = updateData.commitObject.root;
-        self.commit = updateData.commitObject[CONSTANTS.MONGO_ID];
-        self.core.loadRoot(self.rootHash, function (err, root) {
-            if (err) {
-                self.logger.error('failed to load new root', err);
-                aborting(true);
-                return;
-            }
+        if (self.running) {
+            self.rootHash = updateData.commitObject.root;
+            self.commit = updateData.commitObject[CONSTANTS.MONGO_ID];
+            self.core.loadRoot(self.rootHash, function (err, root) {
+                if (err) {
+                    self.logger.error('failed to load new root', err);
+                    aborting(true);
+                    return;
+                }
 
-            self.root = root;
-            self.update(root, function (err) {
-                aborting(err !== null);
+                self.root = root;
+                self.update(root, function (err) {
+                    aborting(err !== null);
+                });
             });
-        });
+        }
     };
 
     AddOnBase.prototype.commitHandler = function (commitQueue, result, pushing) {

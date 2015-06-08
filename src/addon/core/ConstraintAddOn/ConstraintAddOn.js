@@ -212,7 +212,7 @@ define(['addon/AddOnBase'], function (AddOnBase) {
 
         if (!self.contraints[script]) {
             var a = '';
-            eval('a = ' + script);
+            eval('a = ' + script + ';');
             self.contraints[script] = function (core, node, callback) {
                 try {
                     a(core, node, callback);
