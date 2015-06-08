@@ -8,8 +8,8 @@
 define(['addon/AddOnBase'], function (AddOnBase) {
 
     'use strict';
-    var TestAddOn = function (Core, storage, gmeConfig) {
-        AddOnBase.call(this, Core, storage, gmeConfig);
+    var TestAddOn = function (Core, storage, gmeConfig, logger, userId) {
+        AddOnBase.call(this, Core, storage, gmeConfig, logger, userId);
     };
 
     // Prototypal inheritance from AddOnBase.
@@ -40,10 +40,10 @@ define(['addon/AddOnBase'], function (AddOnBase) {
         });
     };
 
-    TestAddOn.prototype.start = function (parameters, callback) {
-        AddOnBase.prototype.start.call(this, parameters, callback);
-        this.logger.info('TestAddOn', new Date().getTime(), 'start');
-    };
+    //TestAddOn.prototype.start = function (parameters, callback) {
+    //    AddOnBase.prototype.start.call(this, parameters, callback);
+    //    this.logger.info('TestAddOn', new Date().getTime(), 'start');
+    //};
 
     return TestAddOn;
 });

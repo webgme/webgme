@@ -5,6 +5,7 @@
  * @author kecso / https://github.com/kecso
  */
 
+//TODO: No one uses this? It's not updated.. - It's deprecated..
 define(['addon/AddOnBase'], function (AddOnBase) {
 
     'use strict';

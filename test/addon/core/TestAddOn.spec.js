@@ -12,9 +12,14 @@ describe.skip('TestAddOn', function () {
         WebGME = testFixture.WebGME,
         Core = testFixture.WebGME.core,
         logger = testFixture.logger.fork('TestAddOn.spec'),
+        superagent = testFixture.superagent,
+        agent = superagent.agent(),
+        serverBaseUrl,
         server,
         storage,
-        project,
+        webgmeSessionId,
+        socket,
+        Q = testFixture.Q,
         gmeConfig = testFixture.getGmeConfig(),
         importParam = {
             projectSeed: './test/addon/core/TestAddOn/project.json',
@@ -23,6 +28,49 @@ describe.skip('TestAddOn', function () {
             gmeConfig: gmeConfig,
             logger: logger
         },
+        logIn = function (callback) {
+            agent.post(serverBaseUrl + '/login?redirect=%2F')
+                .type('form')
+                .send({username: gmeConfig.authentication.guestAccount})
+                .send({password: 'plaintext'})
+                .end(function (err, res) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    expect(res.status).to.equal(200);
+                    callback(err, res);
+                });
+        },
+        openSocketIo = function () {
+            var io = require('socket.io-client');
+            return Q.nfcall(logIn)
+                .then(function (res) {
+                    var socket,
+                        socketReq = {url: serverBaseUrl},
+                        defer = Q.defer();
+
+                    agent.attachCookies(socketReq);
+                    webgmeSessionId = /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1];
+                    logger.debug('session', webgmeSessionId);
+                    socket = io.connect(serverBaseUrl,
+                        {
+                            query: 'webGMESessionId=' + webgmeSessionId,
+                            transports: gmeConfig.socketIO.transports,
+                            multiplex: false
+                        });
+
+                    socket.on('error', function (err) {
+                        logger.error(err);
+                        defer.reject(err || 'could not connect');
+                        socket.disconnect();
+                    });
+                    socket.on('connect', function () {
+                        defer.resolve(socket);
+                    });
+
+                    return defer.promise;
+                });
+        },
         addOnName = 'TestAddOn',
         TestAddOn = testFixture.requirejs('addon/' + addOnName + '/' + addOnName + '/' + addOnName),
 
@@ -30,99 +78,64 @@ describe.skip('TestAddOn', function () {
         gmeAuth;
 
     before(function (done) {
-        server = WebGME.standaloneServer(gmeConfig);
-        server.start(function (err) {
-            expect(err).to.not.exist;
-            storage = testFixture.NodeStorage.createStorage(server.getUrl(), 'testopencontext', logger, gmeConfig);
-            //new WebGME.clientStorage({
-            //    globConf: gmeConfig,
-            //    type: 'node',
-            //    host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
-            //    logger: logger.fork(addOnName + ':storage'),
-            //    webGMESessionId: 'testopencontext'
-            //});
-            //storage = storage;
-            storage.open(function () {
-                //console.log(arguments);
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, importParam.projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                return safeStorage.openDatabase();
+            })
+            .then(function () {
+                return safeStorage.deleteProject({projectName: importParam.projectName});
+            })
+            .then(function () {
+                return testFixture.importProject(safeStorage, importParam);
+            })
+            .then(function () {
+                server = WebGME.standaloneServer(gmeConfig);
+                serverBaseUrl = server.getUrl();
+                return Q.ninvoke(server, 'start');
+            })
+            .then(function () {
+                return openSocketIo();
+            })
+            .then(function (socket_) {
+                socket = socket_;
+                done();
+            })
+            .catch(function (err) {
+                done(err);
             });
-
-            testFixture.clearDBAndGetGMEAuth(gmeConfig, importParam.projectName)
-                .then(function (gmeAuth_) {
-                    gmeAuth = gmeAuth_;
-                    safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-                    return safeStorage.openDatabase();
-                })
-                .then(function () {
-                    return safeStorage.deleteProject({projectName: importParam.projectName});
-                })
-                .nodeify(done);
-        });
-    });
-
-    afterEach(function (done) {
-        storage.deleteProject(importParam.projectName, function (err) {
-            done(err);
-        });
     });
 
     after(function (done) {
-
-        server.stop(function (err2) {
-            done(err2 || null);
-        });
+        storage.close();
+        server.stop(done);
     });
 
+    //TODO: We need a corresponding WebGMESessionId.
     it('should start, update and stop', function (done) {
-
-        testFixture.importProject(safeStorage, importParam, function (err, result) {
-            var startParam,
-                logMessages = [],
-                logger2 = logger.fork(addOnName),
-                addOn;
-            expect(err).equal(null);
-
-            logger2.info = function () {
-                logMessages.push(arguments);
-            };
-
-            project = result.project;
-
-            addOn = new TestAddOn(Core, storage, gmeConfig);
-
+        var _addOn,
             startParam = {
                 projectName: 'TestAddOn',
                 branchName: 'master',
-                project: project,
-                logger: logger2
+                logger: logger.fork(TestAddOn)
             };
 
-            addOn.start(startParam, function (err) {
-                expect(err).equal(null);
-                result.core.createNode(result.root, {base: '/1'}, 'new FCO instance');
-                //FIXME: Currently the addOn is using the same project and core.
-                testFixture.saveChanges({project: project, core: result.core, rootNode: result.root},
-                    function (err, rootHash, commitHash) {
-                        expect(err).equal(null);
-                        logger.debug(rootHash);
-                        logger.debug(commitHash);
+        storage = testFixture.NodeStorage.createStorage(server.getUrl(), webgmeSessionId, logger, gmeConfig);
+        _addOn = new TestAddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName),
+            gmeConfig.authentication.guestAccount);
 
-                        logger.debug(logMessages);
-                        addOn.stop(function (err) {
-                            expect(err).equal(null);
-                            logger.debug(logMessages);
-                            expect(logMessages.length).to.equal(3);
-                            expect(logMessages[0][2]).to.equal('start');
-                            expect(logMessages[1][2]).to.equal('update');
-                            expect(logMessages[1][4]).to.equal(rootHash);
-                            expect(logMessages[2][2]).to.equal('stop');
-                            done();
-                        });
-                    }
-                );
+        storage.open(function (networkStatus) {
+            if (networkStatus === testFixture.STORAGE_CONSTANTS.CONNECTED) {
+                logger.debug('starting addon', {metadata: addOnName});
 
-            });
+                _addOn.start(startParam, function (err) {
+
+                });
+            } else {
+                storage.close();
+                done('unable to connect storage');
+            }
         });
     });
-
-
 });

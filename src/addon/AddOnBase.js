@@ -28,84 +28,84 @@ define(['common/storage/constants'], function (CONSTANTS) {
             'when the js scripts are minified names are useless.');
     };
 
-    AddOnBase.prototype._eventer = function (ready) {
-        var lastGuid = '',
-            self = this,
-            isReady = false,
-            nextServerEvent = function (err, guid, parameters) {
-                lastGuid = guid || lastGuid;
-                self.logger.debug('next server event');
-                if (self.running === false) {
-                    self.logger.debug('event will not be processed; addon has already stopped', {metadata: arguments});
-                    return;
-                }
-                if (isReady === false) {
-                    self.logger.debug('eventer is ready');
-                    isReady = true;
-                    ready();
-                }
-                self.logger.debug('eventer', {metadata: arguments});
-                if (!err && parameters) {
-                    self.pendingEvents += 1;
-                    switch (parameters.type) { // FIXME use if else
-                        case 'PROJECT_CREATED':
-                        case 'PROJECT_DELETED':
-                        case 'BRANCH_CREATED':
-                        case 'BRANCH_DELETED':
-                            //TODO can be handled later
-                            self.pendingEvents -= 1;
-                            return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-                        case 'BRANCH_UPDATED':
-                            if (self.projectName === parameters.project && self.branchName === parameters.branch) {
-                                //setTimeout(function () {
-
-                                self.project.loadObject(parameters.commit, function (err, commit) {
-                                    if (err || !commit) {
-                                        // FIXME: we should do something with the error.
-                                        self.pendingEvents -= 1;
-                                        return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-                                    }
-
-                                    self.commit = parameters.commit;
-                                    self.core.loadRoot(commit.root, function (err, root) {
-                                        if (err) {
-                                            // FIXME: we should do something with the error.
-                                            self.pendingEvents -= 1;
-                                            return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-                                        }
-                                        if (self.stopped) {
-                                            // do not call update if addon has stopped.
-                                            self.pendingEvents -= 1;
-                                            //return;
-                                        } else {
-                                            self.update(root, function (/*err*/) {
-                                                //TODO: error handling here?
-                                                self.pendingEvents -= 1;
-                                                return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-                                            });
-                                        }
-                                    });
-                                });
-                                //}, 400); // Intentional delay to test code,
-                                // for testing use 400 (success) and 1800 (failure)
-                            } else {
-                                return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-                            }
-                    }
-                } else {
-                    // FIXME: log error if any
-                    if (self.running) {
-                        setTimeout(function () {
-                            return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-                        }, 1000);
-                    }
-                }
-            };
-
-        //setTimeout(function () {
-        self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-        //}, 100); // for testing purposes only
-    };
+    //AddOnBase.prototype._eventer = function (ready) {
+    //    var lastGuid = '',
+    //        self = this,
+    //        isReady = false,
+    //        nextServerEvent = function (err, guid, parameters) {
+    //            lastGuid = guid || lastGuid;
+    //            self.logger.debug('next server event');
+    //            if (self.running === false) {
+    //                self.logger.debug('event will not be processed; addon has already stopped', {metadata: arguments});
+    //                return;
+    //            }
+    //            if (isReady === false) {
+    //                self.logger.debug('eventer is ready');
+    //                isReady = true;
+    //                ready();
+    //            }
+    //            self.logger.debug('eventer', {metadata: arguments});
+    //            if (!err && parameters) {
+    //                self.pendingEvents += 1;
+    //                switch (parameters.type) { // FIXME use if else
+    //                    case 'PROJECT_CREATED':
+    //                    case 'PROJECT_DELETED':
+    //                    case 'BRANCH_CREATED':
+    //                    case 'BRANCH_DELETED':
+    //                        //TODO can be handled later
+    //                        self.pendingEvents -= 1;
+    //                        return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
+    //                    case 'BRANCH_UPDATED':
+    //                        if (self.projectName === parameters.project && self.branchName === parameters.branch) {
+    //                            //setTimeout(function () {
+    //
+    //                            self.project.loadObject(parameters.commit, function (err, commit) {
+    //                                if (err || !commit) {
+    //                                    // FIXME: we should do something with the error.
+    //                                    self.pendingEvents -= 1;
+    //                                    return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
+    //                                }
+    //
+    //                                self.commit = parameters.commit;
+    //                                self.core.loadRoot(commit.root, function (err, root) {
+    //                                    if (err) {
+    //                                        // FIXME: we should do something with the error.
+    //                                        self.pendingEvents -= 1;
+    //                                        return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
+    //                                    }
+    //                                    if (self.stopped) {
+    //                                        // do not call update if addon has stopped.
+    //                                        self.pendingEvents -= 1;
+    //                                        //return;
+    //                                    } else {
+    //                                        self.update(root, function (/*err*/) {
+    //                                            //TODO: error handling here?
+    //                                            self.pendingEvents -= 1;
+    //                                            return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
+    //                                        });
+    //                                    }
+    //                                });
+    //                            });
+    //                            //}, 400); // Intentional delay to test code,
+    //                            // for testing use 400 (success) and 1800 (failure)
+    //                        } else {
+    //                            return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
+    //                        }
+    //                }
+    //            } else {
+    //                // FIXME: log error if any
+    //                if (self.running) {
+    //                    setTimeout(function () {
+    //                        return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
+    //                    }, 1000);
+    //                }
+    //            }
+    //        };
+    //
+    //    //setTimeout(function () {
+    //    self._storage.getNextServerEvent(lastGuid, nextServerEvent);
+    //    //}, 100); // for testing purposes only
+    //};
 
     AddOnBase.prototype.updateHandler = function (updateQueue, updateData, aborting) {
         var self = this;
