@@ -26,13 +26,13 @@ process.on('SIGINT', function () {
 });
 
 var WEBGME = require(__dirname + '/../../../webgme'),
-    openContext = WEBGME.openContext,
+    Q = WEBGME.Q,
     Core = requireJS('common/core/core'),
     GUID = requireJS('common/util/guid'),
     DUMP = requireJS('common/core/users/dumpmore'),
     Storage = requireJS('common/storage/nodestorage'),
     Serialization = requireJS('common/core/users/serialization'),
-    BlobClient = requireJS('common/blob/BlobClient'),
+    //BlobClient = requireJS('common/blob/BlobClient'),
     PluginResult = requireJS('plugin/PluginResult'),
     PluginMessage = requireJS('plugin/PluginMessage'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
@@ -160,7 +160,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                         Serialization.export(core, libraryRoot, finish);
                     });
                 });
-            }
+            };
 
         storage.open(function (networkState) {
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
@@ -582,58 +582,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         });
     },
 
-    getAvailableSeedNames = function () {
-        var result = [],
-            i, names, j;
-        if (gmeConfig.seedProjects.enable !== true) {
-            return result;
-        }
-
-        try {
-            for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
-                names = FS.readdirSync(gmeConfig.seedProjects.basePaths[i]);
-                for (j = 0; j < names.length; j++) {
-                    if (names[j].slice(-5) === '.json' && result.indexOf(names[j].slice(0, -5)) === -1) {
-                        result.push(names[j].slice(0, -5));
-                    }
-                }
-            }
-        } catch (e) {
-            return result;
-        }
-
-        return result;
-    },
-
-    getSeedInfo = function (webGMESessionId, userId, callback) {
-        var result = {},
-            createChecked = function () {
-                getAllProjectsInfo(webGMESessionId, userId, function (err, fullProjectInfo) {
-                    result.db = Object.keys(fullProjectInfo || {});
-
-                    callback(null, result);
-                });
-            };
-
-        result.db = [];
-        result.file = getAvailableSeedNames();
-        if (AUTH) {
-            AUTH.getAllUserAuthInfo(userId, function (err, userData) {
-                if (err) {
-                    return callback(err);
-                }
-
-                if (!userData.canCreate) {
-                    callback(null, result);
-                }
-
-                createChecked();
-            });
-        } else {
-            createChecked();
-        }
-    },
-
     getSeedFromFile = function (name) {
         var i, names;
         if (gmeConfig.seedProjects.enable !== true) {
@@ -657,7 +605,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
     seedProject = function (parameters, callback) {
         var storage = getConnectedStorage(parameters.webGMESessionId),
-            finish = function (err, data) {
+            finish = function (err) {
                 storage.close();
                 callback(err);
             };
