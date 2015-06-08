@@ -10,7 +10,6 @@ describe('User manager command line interface (CLI)', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
-        should = testFixture.should,
         expect = testFixture.expect,
         spawn = testFixture.childProcess.spawn,
         mongodb = testFixture.mongodb,
@@ -29,7 +28,7 @@ describe('User manager command line interface (CLI)', function () {
         it('should print help for useradd subcommand', function (done) {
             var nodeUserManager = spawn('node', [filename, 'useradd', '--help']),
                 stdoutData,
-                err;
+                err = null;
 
             nodeUserManager.stdout.on('data', function (data) {
                 stdoutData = stdoutData || '';
@@ -44,10 +43,10 @@ describe('User manager command line interface (CLI)', function () {
             });
 
             nodeUserManager.on('close', function (code) {
-                stdoutData.should.contain('Usage:');
-                stdoutData.should.contain('--help');
-                should.not.exist(err);
-                should.equal(code, 0);
+                expect(stdoutData).to.contain('Usage:');
+                expect(stdoutData).to.contain('--help');
+                expect(err).to.equal(null);
+                expect(code).to.equal(0, 'process exited with non-zero code');
                 done();
             });
         });
@@ -101,16 +100,7 @@ describe('User manager command line interface (CLI)', function () {
             };
 
         before(function (done) {
-            var gmeauthDeferred = Q.defer();
-
             auth = new GMEAuth(null, gmeConfig);
-            auth.connect(function (err) {
-                if (err) {
-                    gmeauthDeferred.reject(err);
-                } else {
-                    gmeauthDeferred.resolve(auth);
-                }
-            });
 
             dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', mongoUri, gmeConfig.mongo.options)
                 .then(function (db_) {
@@ -146,7 +136,10 @@ describe('User manager command line interface (CLI)', function () {
                     ]);
                 });
 
-            Q.all([dbConn, gmeauthDeferred.promise])
+            dbConn
+                .then(function () {
+                    return auth.connect();
+                })
                 .nodeify(done);
         });
 

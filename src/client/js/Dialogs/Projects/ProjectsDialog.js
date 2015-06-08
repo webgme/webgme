@@ -80,7 +80,7 @@ define([
 
         function openProject(projectId) {
             if (self._projectList[projectId].read === true) {
-                self._client.selectProjectAsync(projectId, function () {
+                self._client.selectProject(projectId, function () {
                     self._dialog.modal('hide');
                 });
             }
@@ -362,18 +362,16 @@ define([
         this._btnRefresh.disable(true);
         this._btnRefresh.find('i').css('opacity', '0');
 
-        this._client.getFullProjectListAsync(function (err, projectList) {
-            var p;
+        this._client.getProjects(function (err, projectList) {
+            var i;
             self._activeProject = self._client.getActiveProjectName();
             self._projectList = {};
             self._projectNames = [];
 
-            for (p in projectList) {
-                if (projectList.hasOwnProperty(p)) {
-                    self._projectNames.push(p);
-                    self._projectList[p] = projectList[p];
-                    self._projectList[p].projectId = p;
-                }
+            for (i = 0; i < projectList.length; i += 1) {
+                self._projectNames.push(projectList[i].name);
+                self._projectList[projectList[i].name] = projectList[i];
+                //self._projectList[p].projectId = p;
             }
 
             function getProjectUserRightSortValue(projectRights) {
@@ -509,7 +507,7 @@ define([
 
         loader.start();
 
-        self._client.createProjectFromFileAsync(projectName, jsonContent, function (err) {
+        self._client.createProjectFromFile(projectName, jsonContent, function (err) {
             if (err) {
                 self._logger.error('CANNOT CREATE NEW PROJECT FROM FILE: ' + err.message);
             } else {
@@ -536,13 +534,13 @@ define([
         // TODO: remove these two lines once the create seed API is implemented and functional
         loader.start();
 
-        self._client.seedProjectAsync(parameters, function (err) {
+        self._client.seedProject(parameters, function (err) {
             if (err) {
                 self._logger.error('Cannot create seed project', err);
                 loader.stop();
             } else {
                 self._logger.debug('Created new project from seed');
-                self._client.selectProjectAsync(projectName, function (err) {
+                self._client.selectProject(projectName, function (err) {
                     if (err) {
                         self._logger.error('Cannot select project', err);
                     } else {

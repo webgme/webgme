@@ -154,8 +154,9 @@ define(['js/logger',
         this._logger.warn('onLoadCommit is not overridden in Controller...params: \'' + JSON.stringify(params) + '\'');
     };
 
-    ProjectRepositoryWidget.prototype.onDeleteBranchClick = function (branch) {
-        this._logger.warn('onDeleteBranchClick is not overridden in Controller...branch: \'' + branch + '\'');
+    ProjectRepositoryWidget.prototype.onDeleteBranchClick = function (branchName, branchHash) {
+        this._logger.warn('onDeleteBranchClick is not overridden in Controller...branch, branchHash:',
+            branchName, branchHash);
     };
 
     ProjectRepositoryWidget.prototype.onCreateBranchFromCommit = function (params) {
@@ -242,9 +243,17 @@ define(['js/logger',
 
         this._el.on('click.iconRemove', '.remove-branch-button', function (event) {
             var btn = $(this),
-                branch = btn.data('branch');
+                branchName = btn.data('branch'),
+                branchHash,
+                i;
 
-            self.onDeleteBranchClick(branch);
+            for (i = 0; i < self._branches.length; i += 1) {
+                if (self._branches[i].name === branchName) {
+                    branchHash = self._branches[i].commitId;
+                }
+            }
+
+            self.onDeleteBranchClick(branchName, branchHash);
 
             event.stopPropagation();
             event.preventDefault();

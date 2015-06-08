@@ -9,17 +9,16 @@ var Q = require('q'),
     path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
     Core = webgme.core,
+    cliStorage,
+    gmeAuth,
     logger = webgme.Logger.create('gme:bin:merge', gmeConfig.bin.log),
-    Storage = webgme.serverUserStorage,
     REGEXP = webgme.REGEXP;
 
 
-var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrCommit, autoMerge, callback) {
+var merge = function (database, projectId, sourceBranchOrCommit, targetBranchOrCommit, autoMerge, callback) {
         'use strict';
-        gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
 
-        var database = new Storage({ globConf: gmeConfig, logger: logger.fork('storage') }),
-            project,
+        var project,
             core,
             myCommitHash,
             theirCommitHash,
@@ -197,10 +196,10 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
                             if (autoMerge === true) {
                                 if (conflict === null) {
                                     autoFailureReason = ' cannot do automatic merge as empty ' +
-                                    'conflict object was generated';
+                                        'conflict object was generated';
                                 } else if (conflict.item.length > 0) {
                                     autoFailureReason = 'cannot do automatic merge as there are ' +
-                                    'conflicts that cannot be resolved';
+                                        'conflicts that cannot be resolved';
                                 }
                                 error = error || new Error(autoFailureReason);
                                 finishUp();
@@ -271,6 +270,7 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
         program
             .version('0.1.0')
             .option('-m, --mongo-database-uri [uri]', 'URI to connect to mongoDB where the project is stored')
+            .option('-u, --user [string]', 'the user of the command')
             .option('-p, --project-identifier [value]', 'project identifier')
             .option('-M, --mine [branch/commit]', 'my version of the project')
             .option('-T, --theirs [branch/commit]', 'their version of the project')
@@ -281,10 +281,10 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
         //check necessary arguments
         if (!program.mongoDatabaseUri && !gmeConfig.mongo.uri) {
             logger.error('there is no preconfigured mongoDb commection so the mongo-database-uri' +
-            'parameter is mandatory');
+                'parameter is mandatory');
             program.outputHelp();
             mainDeferred.reject(new SyntaxError('invalid mongo database connection parameter'));
-            return;
+            return mainDeferred.promise;
         }
         if (!program.projectIdentifier) {
             program.outputHelp();
@@ -310,51 +310,63 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
             return mainDeferred.promise;
         }
 
-        merge(program.mongoDatabaseUri, program.projectIdentifier, program.mine, program.theirs, program.autoMerge,
-            function (err, result) {
-                if (err) {
-                    logger.warn('merging failed: ', err);
-                }
-                //it is possible that we have enough stuff to still print some results to the screen or to some file
-                if (result.updatedBranch) {
-                    logger.info('branch [' + result.updatedBranch +
-                    '] was successfully updated with the merged result');
-                } else if (result.finalCommitHash) {
-                    logger.info('merge was successfully saved to commit [' +
-                    result.finalCommitHash + ']');
-                } else if (result.baseCommitHash && result.diff.mine && result.diff.theirs) {
-                    logger.info('to finish merge you have to apply your changes to commit[' +
-                    result.baseCommitHash + ']');
-                }
+        webgme.getGmeAuth(gmeConfig)
+            .then(function (gmeAuth__) {
+                gmeAuth = gmeAuth__;
+                cliStorage = webgme.getStorage(logger.fork('storage'), gmeConfig, gmeAuth);
+                return cliStorage.openDatabase();
+            })
+            .then(function () {
+                merge(cliStorage, program.projectIdentifier, program.mine, program.theirs, program.autoMerge, program.user,
+                    function (err, result) {
+                        if (err) {
+                            logger.warn('merging failed: ', err);
+                        }
+                        //it is possible that we have enough stuff to still print some results to the screen or to some file
+                        if (result.updatedBranch) {
+                            logger.info('branch [' + result.updatedBranch +
+                                '] was successfully updated with the merged result');
+                        } else if (result.finalCommitHash) {
+                            logger.info('merge was successfully saved to commit [' +
+                                result.finalCommitHash + ']');
+                        } else if (result.baseCommitHash && result.diff.mine && result.diff.theirs) {
+                            logger.info('to finish merge you have to apply your changes to commit[' +
+                                result.baseCommitHash + ']');
+                        }
 
-                if (program.pathPrefix) {
-                    if (result.diff.mine && result.diff.theirs) {
-                        FS.writeFileSync(program.pathPrefix + '.mine',
-                            JSON.stringify(result.diff.mine, null, 2));
-                        FS.writeFileSync(program.pathPrefix + '.theirs',
-                            JSON.stringify(result.diff.theirs, null, 2));
-                        if (result.conflict) {
-                            FS.writeFileSync(program.pathPrefix + '.conflict',
-                                JSON.stringify(result.conflict, null, 2));
+                        if (program.pathPrefix) {
+                            if (result.diff.mine && result.diff.theirs) {
+                                FS.writeFileSync(program.pathPrefix + '.mine',
+                                    JSON.stringify(result.diff.mine, null, 2));
+                                FS.writeFileSync(program.pathPrefix + '.theirs',
+                                    JSON.stringify(result.diff.theirs, null, 2));
+                                if (result.conflict) {
+                                    FS.writeFileSync(program.pathPrefix + '.conflict',
+                                        JSON.stringify(result.conflict, null, 2));
+                                }
+                            }
+                        } else if (!result.updatedBranch && !result.finalCommitHash) {
+                            // If there were no prefix given we put anything to console only if the merge failed
+                            // at some point or was not even tried.
+                            if (result.diff.mine && result.diff.theirs) {
+                                logger.debug('diff base->mine:');
+                                logger.debug(JSON.stringify(result.diff.mine, null, 2));
+                                logger.debug('diff base->theirs:');
+                                logger.debug(JSON.stringify(result.diff.theirs, null, 2));
+                                if (result.conflict) {
+                                    logger.warn('conflict object:');
+                                    logger.warn(JSON.stringify(result.conflict, null, 2));
+                                }
+                            }
                         }
+                        mainDeferred.resolve();
                     }
-                } else if (!result.updatedBranch && !result.finalCommitHash) {
-                    // If there were no prefix given we put anything to console only if the merge failed
-                    // at some point or was not even tried.
-                    if (result.diff.mine && result.diff.theirs) {
-                        logger.debug('diff base->mine:');
-                        logger.debug(JSON.stringify(result.diff.mine, null, 2));
-                        logger.debug('diff base->theirs:');
-                        logger.debug(JSON.stringify(result.diff.theirs, null, 2));
-                        if (result.conflict) {
-                            logger.warn('conflict object:');
-                            logger.warn(JSON.stringify(result.conflict, null, 2));
-                        }
-                    }
-                }
-                mainDeferred.resolve();
-            }
-        );
+                );
+            })
+            .catch(function (err) {
+                mainDeferred.reject(err);
+                return mainDeferred.promise;
+            });
         return mainDeferred.promise;
     };
 

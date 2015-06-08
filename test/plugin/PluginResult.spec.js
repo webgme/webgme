@@ -124,96 +124,107 @@ describe('Plugin Result', function () {
         pluginResult.setError(null);
 
         pluginResult.serialize().should.deep.equal({
-            'artifacts': [
+            artifacts: [
                 'hash1',
                 'hash2'
             ],
-            'error': null,
-            'finishTime': '2015-03-09T19:32:10.202Z',
-            'messages': [
+            commits: [],
+            error: null,
+            finishTime: '2015-03-09T19:32:10.202Z',
+            messages: [
                 {
-                    'activeNode': {
-                        'id': '',
-                        'name': ''
+                    activeNode: {
+                        id: '',
+                        name: ''
                     },
-                    'commitHash': '',
-                    'message': '',
-                    'severity': 'info'
+                    commitHash: '',
+                    message: '',
+                    severity: 'info'
                 },
                 {
-                    'activeNode': {
-                        'id': '',
-                        'name': ''
+                    activeNode: {
+                        id: '',
+                        name: ''
                     },
-                    'commitHash': '',
-                    'message': '',
-                    'severity': 'info'
+                    commitHash: '',
+                    message: '',
+                    severity: 'info'
                 }
             ],
-            'pluginName': 'test plugin 11',
-            'startTime': '2015-03-09T19:32:10.202Z',
-            'success': true
+            pluginName: 'test plugin 11',
+            startTime: '2015-03-09T19:32:10.202Z',
+            success: true
         });
     });
 
     it('should serialize and deserialize', function () {
         var pluginResult = null,
             pluginResultTest = {
-                'artifacts': [
+                artifacts: [
                     'hash1',
                     'hash2'
                 ],
-                'error': null,
-                'finishTime': '2015-03-09T19:32:10.202Z',
-                'messages': [
+                commits: [{
+                    commitHash: 'hash123',
+                    status: 'FORKED',
+                    branchName: 'branch12'
+                }],
+                error: null,
+                finishTime: '2015-03-09T19:32:10.202Z',
+                messages: [
                     {
-                        'activeNode': {
-                            'id': '',
-                            'name': ''
+                        activeNode: {
+                            id: '',
+                            name: ''
                         },
-                        'commitHash': '',
-                        'message': '',
-                        'severity': 'info'
+                        commitHash: '',
+                        message: '',
+                        severity: 'info'
                     }
                 ],
-                'pluginName': 'test plugin 11',
-                'startTime': '2015-03-09T19:32:10.202Z',
-                'success': true
+                pluginName: 'test plugin 11',
+                startTime: '2015-03-09T19:32:10.202Z',
+                success: true
             };
 
         pluginResultTest.messages.push(new PluginMessage());
 
         pluginResult = new PluginResult(pluginResultTest);
         pluginResult.serialize().should.deep.equal({
-            'artifacts': [
+            artifacts: [
                 'hash1',
                 'hash2'
             ],
-            'error': null,
-            'finishTime': '2015-03-09T19:32:10.202Z',
-            'messages': [
+            commits: [{
+                commitHash: 'hash123',
+                status: 'FORKED',
+                branchName: 'branch12'
+            }],
+            error: null,
+            finishTime: '2015-03-09T19:32:10.202Z',
+            messages: [
                 {
-                    'activeNode': {
-                        'id': '',
-                        'name': ''
+                    activeNode: {
+                        id: '',
+                        name: ''
                     },
-                    'commitHash': '',
-                    'message': '',
-                    'severity': 'info'
+                    commitHash: '',
+                    message: '',
+                    severity: 'info'
                 },
                 {
-                    'activeNode': {
-                        'id': '',
-                        'name': ''
+                    activeNode: {
+                        id: '',
+                        name: ''
                     },
-                    'commitHash': '',
-                    'message': '',
-                    'severity': 'info'
+                    commitHash: '',
+                    message: '',
+                    severity: 'info'
                 }
             ],
-            'pluginName': 'test plugin 11',
-            'startTime': '2015-03-09T19:32:10.202Z',
-            'success': true
+            pluginName: 'test plugin 11',
+            startTime: '2015-03-09T19:32:10.202Z',
+            success: true
         });
     });
 });

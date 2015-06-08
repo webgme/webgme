@@ -1,375 +1,166 @@
 /*globals requireJS*/
-/*jshint node:true*/
+/*jshint node:true, newcap:false*/
 
 /**
  * @author mmaroti / https://github.com/mmaroti
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 'use strict';
 
-var MONGODB = require('mongodb'),
+var mongodb = require('mongodb'),
+    Q = require('q'),
 
-    ASSERT = requireJS('common/util/assert'),
+    CONSTANTS = requireJS('common/storage/constants'),
     CANON = requireJS('common/util/canon'),
     REGEXP = requireJS('common/regexp');
 
-var STATUS_CLOSED = 'mongodb closed';
-var STATUS_UNREACHABLE = 'mongodb unreachable';
-var STATUS_CONNECTED = 'connected';
-
-var PROJECT_INFO_ID = '*info*';
-var ID_NAME = '_id';
-
-function Database(options) {
-    ASSERT(typeof options === 'object');
-    ASSERT(typeof options.logger === 'object');
+function Mongo(mainLogger, gmeConfig) {
     var mongo = null,
-        gmeConfig = options.globConf,
-        logger = options.logger.fork('mongo');
+        logger = mainLogger.fork('mongo');
 
-    function openDatabase(callback) {
-        ASSERT(typeof callback === 'function');
+    /**
+     * Provides methods related to a specific project.
+     *
+     * @param {string} name - Name of the project.
+     * @param {object} collection - Mongo collection connected to database.
+     * @constructor
+     */
+    function Project(name, collection) {
+        this.name = name;
 
-        if (mongo === null) {
-            logger.debug('connecting to mongo');
-            // connect to mongo
-            MONGODB.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
-                if (!err && db) {
-                    mongo = db;
-                    callback(null);
-                } else {
-                    mongo = null;
-                    callback(err);
-                }
-            });
-        } else {
-            logger.debug('reusing mongo connection');
-            // we are already connected
-            callback(null);
-        }
-    }
-
-    function closeDatabase(callback) {
-        logger.debug('closeDatabase');
-        if (mongo !== null) {
-            logger.debug('closing mongo calling fsyncDatabase');
-            fsyncDatabase(function () {
-                logger.debug('closing mongo calling close');
-                mongo.close(function () {
-                    mongo = null;
-                    logger.debug('closed');
-                    if (typeof callback === 'function') {
-                        callback(null);
-                    }
-                });
-            });
-        } else if (typeof callback === 'function') {
-            callback(null);
-        }
-    }
-
-    function fsyncDatabase(callback) {
-        ASSERT(typeof callback === 'function');
-
-        logger.debug('fsyncDatabase');
-
-        var error = null;
-        var synced = 0;
-
-        function fsyncConnection(conn, i) {
-            logger.debug('fsyncConnection ' + conn.id);
-
-            mongo.command({getLastError: 1, fsync: true}, {connection: conn},
-                function (err /*, result*/) {
-                    //TODO we ignore the result right now
-                    error = error || err;
-                    logger.debug('fsyncConnection done for ' + i);
-
-                    if (++synced === conns.length) {
-                        logger.debug('fsyncConnection done');
-                        if (error) {
-                            logger.error(error);
-                        }
-                        callback(error);
-                    }
-                });
-        }
-
-        var conns = mongo.serverConfig.allRawConnections();
-        if (conns instanceof Array && conns.length >= 1) {
-            logger.debug('fsyncConnection for connections: ' + conns.length);
-            for (var i = 0; i < conns.length; ++i) {
-                fsyncConnection(conns[i], i);
-            }
-        } else {
-            callback('not connected');
-        }
-    }
-
-    function getDatabaseStatus(oldstatus, callback) {
-        if (oldstatus !== null && typeof oldstatus !== 'string') {
-            return callback('Invalid status "' + oldstatus + '"');
-        }
-        ASSERT(typeof callback === 'function');
-
-        if (mongo === null) {
-            reportStatus(oldstatus, STATUS_CLOSED, callback);
-        } else {
-            mongo.command({
-                ping: 1
-            }, function (err) {
-                reportStatus(oldstatus, err ? STATUS_UNREACHABLE : STATUS_CONNECTED, callback);
-            });
-        }
-    }
-
-    function reportStatus(oldstatus, newstatus, callback) {
-        if (oldstatus !== newstatus) {
-            callback(null, newstatus);
-        } else {
-            setTimeout(function () {
-                if (mongo === null) {
-                    newstatus = STATUS_CLOSED;
-                }
-                callback(null, newstatus);
-            }, gmeConfig.storage.timeout);
-        }
-    }
-
-    function getProjectNames(callback) {
-        ASSERT(typeof callback === 'function');
-
-        mongo.collectionNames(function (err, collections) {
-            if (err) {
-                callback(err);
-            } else {
-                var names = [];
-                for (var i = 0; i < collections.length; i++) {
-                    if (!REGEXP.PROJECT.test(collections[i].name)) {
-                        continue;
-                    }
-                    var p = collections[i].name.indexOf('.');
-                    var n = collections[i].name.substring(p + 1);
-                    if (n.indexOf('system') === -1 && n.indexOf('.') === -1 && n.indexOf('_') !== 0) {
-                        names.push(n);
-                    }
-                }
-                callback(null, names);
-            }
-        });
-    }
-
-    function deleteProject(name, callback) {
-        if (typeof name !== 'string' || REGEXP.PROJECT.test(name) === false) {
-            return callback('Invalid project name "' + name + '"');
-        }
-        ASSERT(typeof callback === 'function');
-
-        mongo.dropCollection(name, function (err) {
-            if (err) {
-                logger.debug('Error in dropCollection (not handled)', err);
-            }
-            callback(null);
-        });
-    }
-
-    function openProject(name, callback) {
-        if (typeof name !== 'string' || REGEXP.PROJECT.test(name) === false) {
-            return callback('Invalid project name "' + name + '"');
-        }
-        ASSERT(mongo !== null && typeof callback === 'function');
-
-        var collection = null;
-
-        mongo.collection(name, function (err, result) {
-            if (err) {
-                callback(err);
-            } else {
-                collection = result;
-                callback(null, {
-                    fsyncDatabase: fsyncDatabase,
-                    getDatabaseStatus: getDatabaseStatus,
-                    closeProject: closeProject,
-                    loadObject: loadObject,
-                    insertObject: insertObject,
-                    getInfo: getInfo,
-                    setInfo: setInfo,
-                    findHash: findHash,
-                    dumpObjects: dumpObjects,
-                    getBranchNames: getBranchNames,
-                    getBranchHash: getBranchHash,
-                    setBranchHash: setBranchHash,
-                    getCommits: getCommits,
-                    getCommonAncestorCommit: getCommonAncestorCommit,
-                    ID_NAME: ID_NAME
-                });
-            }
-        });
-
-        function closeProject(callback) {
+        this.closeProject = function (callback) {
+            var deferred = Q.defer();
+            //TODO: Does this really do something?
             collection = null;
-            if (typeof callback === 'function') {
-                callback(null);
-            }
-        }
+            deferred.resolve();
+            return deferred.promise.nodeify(callback);
+        };
 
-        function loadObject(hash, callback) {
-            if (typeof hash !== 'string' || REGEXP.HASH.test(hash) === false) {
-                return callback('Invalid hash "' + hash + '"');
-            }
-
-            collection.findOne({
-                _id: hash
-            }, callback);
-        }
-
-        function insertObject(object, callback) {
-            if (object === null || typeof object !== 'object') {
-                return callback('Invalid object in insertObject');
-            }
-            if (typeof object._id !== 'string' || REGEXP.HASH.test(object._id) === false) {
-                return callback('Invalid hash "' + object._id + '"');
-            }
-
-            collection.insert(object, function (err) {
-                // manually check duplicate keys
-                if (err && err.code === 11000) {
-                    collection.findOne({
-                        _id: object._id
-                    }, function (err2, data) {
-                        if (!err2 && CANON.stringify(object) === CANON.stringify(data)) {
-                            callback(null);
-                        } else {
-                            callback(err);
-                        }
-                    });
-                } else {
-                    callback(err);
-                }
-            });
-        }
-
-        function getInfo(callback) {
-            ASSERT(typeof callback === 'function');
-            collection.findOne({
-                _id: PROJECT_INFO_ID
-            }, function (err, info) {
-                if (info) {
-                    delete info._id;
-                }
-                callback(err, info);
-            });
-        }
-
-        function setInfo(info, callback) {
-            if (typeof info !== 'object') {
-                return callback('Invalid info ' + typeof info);
-            }
-            ASSERT(typeof callback === 'function');
-            info['_id'] = PROJECT_INFO_ID;
-            collection.update({_id: PROJECT_INFO_ID}, info, {upsert: true}, callback);
-        }
-
-        function findHash(beginning, callback) {
-            if (typeof beginning !== 'string') {
-                return callback('Invalid findHash "' + beginning + '"');
-            }
-            ASSERT(typeof callback === 'function');
-
-            if (!REGEXP.HASH.test(beginning)) {
-                callback('hash ' + beginning + ' not valid');
+        this.loadObject = function (hash, callback) {
+            var deferred = Q.defer();
+            if (typeof hash !== 'string') {
+                deferred.reject('loadObject - given hash is not a string : ' + typeof hash);
+            } else if (!REGEXP.HASH.test(hash)) {
+                deferred.reject('loadObject - invalid hash :' + hash);
             } else {
-                collection.find({
-                    _id: {
-                        $regex: '^' + beginning
-                    }
-                }, {
-                    limit: 2
-                }).toArray(function (err, docs) {
+                logger.debug('loadObject ' + hash);
+                collection.findOne({_id: hash}, function (err, obj) {
                     if (err) {
-                        callback(err);
-                    } else if (docs.length === 0) {
-                        callback('hash ' + beginning + ' not found');
-                    } else if (docs.length !== 1) {
-                        callback('hash ' + beginning + ' not unique');
+                        logger.error(err);
+                        deferred.reject(err);
+                    } else if (obj) {
+                        deferred.resolve(obj);
                     } else {
-                        callback(null, docs[0]._id);
+                        logger.error('object does not exist ' + hash);
+                        deferred.reject('object does not exist ' + hash);
                     }
                 });
             }
-        }
 
-        function dumpObjects(callback) {
-            ASSERT(typeof callback === 'function');
+            return deferred.promise.nodeify(callback);
+        };
 
-            collection.find().each(function (err, item) {
-                if (err || item === null) {
-                    callback(err);
-                } else {
-                    logger.debug(item);
-                }
-            });
-        }
+        this.insertObject = function (object, callback) {
+            var deferred = Q.defer(),
+                rejected = false;
+            if (object === null || typeof object !== 'object') {
+                deferred.reject('object is not an object');
+                rejected = true;
+            } else if (typeof object._id !== 'string' || !REGEXP.HASH.test(object._id)) {
+                deferred.reject('object._id is not a valid hash.');
+                rejected = true;
+            }
+            if (rejected === false) {
+                collection.insert(object, function (err) {
+                    // manually check duplicate keys
+                    if (err && err.code === 11000) {
+                        collection.findOne({
+                            _id: object._id
+                        }, function (err2, data) {
+                            if (!err2 && CANON.stringify(object) === CANON.stringify(data)) {
+                                deferred.resolve();
+                            } else {
+                                deferred.reject(err);
+                            }
+                        });
+                    } else if (err) {
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve();
+                    }
+                });
+            }
 
-        function getBranchNames(callback) {
-            ASSERT(typeof callback === 'function');
+            return deferred.promise.nodeify(callback);
+        };
 
-            collection.find({
+        //this.getInfo = function (callback) {
+        //    return Q.ninvoke(collection, 'findOne', {_id: CONSTANTS.PROJECT_INFO_ID})
+        //        .then(function (info) {
+        //            if (info) {
+        //                delete info._id;
+        //            }
+        //            return Q(info);
+        //        })
+        //        .nodeify(callback);
+        //};
+        //
+        //this.setInfo = function (info, callback) {
+        //    ASSERT(typeof info === 'object' && typeof callback === 'function');
+        //    info._id = CONSTANTS.PROJECT_INFO_ID;
+        //
+        //    return Q.ninvoke(collection, 'update', {_id: CONSTANTS.PROJECT_INFO_ID}, info, {upsert: true})
+        //        .nodeify(callback);
+        //};
+        //
+        //this.dumpObjects = function (callback) {
+        //    ASSERT(typeof callback === 'function');
+        //
+        //    collection.find().each(function (err, item) {
+        //        if (err || item === null) {
+        //            callback(err);
+        //        } else {
+        //            logger.debug(item);
+        //        }
+        //    });
+        //};
+
+        this.getBranches = function (callback) {
+            var mongoFind = collection.find({
                 _id: {
                     $regex: REGEXP.RAW_BRANCH.source
                 }
-            }).toArray(function (err, docs) {
-                if (err) {
-                    callback(err);
-                } else {
+            });
+
+            return Q.ninvoke(mongoFind, 'toArray')
+                .then(function (docs) {
                     var branches = {};
                     for (var i = 0; i < docs.length; ++i) {
                         branches[docs[i]._id.slice(1)] = docs[i].hash;
                     }
-                    callback(null, branches);
-                }
-            });
-        }
+                    return Q(branches);
+                })
+                .nodeify(callback);
+        };
 
-        function getBranchHash(branch, oldhash, callback) {
+        this.getBranchHash = function (branch, callback) {
             branch = '*' + branch;
-            if (typeof branch !== 'string' || REGEXP.RAW_BRANCH.test(branch) === false) {
-                return callback('Invalid branch "' + branch + '"');
-            }
-            if (oldhash !== null && (typeof oldhash !== 'string' || (oldhash !== '' && REGEXP.HASH.test(oldhash) === false))) {
-                return callback('Invalid hash "' + oldhash + '"');
-            }
-            ASSERT(typeof callback === 'function');
 
-            collection.findOne({
-                _id: branch
-            }, function (err, obj) {
-                if (err) {
-                    callback(err);
-                } else {
-                    var newhash = (obj && obj.hash) || '';
-                    if (oldhash === null || oldhash !== newhash) {
-                        callback(null, newhash, null);
-                    } else {
-                        setTimeout(callback, gmeConfig.storage.timeout, null, newhash, null);
-                    }
-                }
-            });
-        }
+            return Q.ninvoke(collection, 'findOne', {_id: branch})
+                .then(function (branchObj) {
+                    // FIXME: This behaviour of return empty string rather than an error is the same as before.
+                    // FIXME: Consider returning with an error in style with 'Branch does not exist'.
+                    return Q((branchObj && branchObj.hash) || '');
+                }).nodeify(callback);
+        };
 
-        function setBranchHash(branch, oldhash, newhash, callback) {
+        this.setBranchHash = function (branch, oldhash, newhash, callback) {
+            var deferred = Q.defer();
             branch = '*' + branch;
-            if (typeof branch !== 'string' || REGEXP.RAW_BRANCH.test(branch) === false) {
-                return callback('Invalid branch "' + branch + '"');
-            }
-            if (typeof oldhash !== 'string' || (oldhash !== '' && REGEXP.HASH.test(oldhash) === false)) {
-                return callback('Invalid hash "' + oldhash + '"');
-            }
-            if (typeof newhash !== 'string' || (newhash !== '' && REGEXP.HASH.test(newhash) === false)) {
-                return callback('Invalid hash "' + newhash + '"');
-            }
-            ASSERT(typeof callback === 'function');
 
+            //TODO: Refactor this to a more promise like function (for now keep it close to the original function).
+            //TODO: These error messages need to be more to the point.
             if (oldhash === newhash) {
                 collection.findOne({
                     _id: branch
@@ -377,7 +168,11 @@ function Database(options) {
                     if (!err && oldhash !== ((obj && obj.hash) || '')) {
                         err = 'branch hash mismatch';
                     }
-                    callback(err);
+                    if (err) {
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve();
+                    }
                 });
             } else if (newhash === '') {
                 collection.remove({
@@ -387,14 +182,26 @@ function Database(options) {
                     if (!err && num !== 1) {
                         err = 'branch hash mismatch';
                     }
-                    callback(err);
+                    if (err) {
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve();
+                    }
                 });
             } else if (oldhash === '') {
                 collection.insert({
                     _id: branch,
                     hash: newhash
                 }, function (err) {
-                    callback(err);
+                    if (err) {
+                        if (err.code === 11000) { // insertDocument :: caused by :: 11000 E11000 duplicate key error...
+                            deferred.reject('branch hash mismatch');
+                        } else {
+                            deferred.reject(err);
+                        }
+                    } else {
+                        deferred.resolve();
+                    }
                 });
             } else {
                 collection.update({
@@ -405,31 +212,40 @@ function Database(options) {
                         hash: newhash
                     }
                 }, function (err, num) {
-
                     if (!err && num !== 1) {
                         err = 'branch hash mismatch';
                     }
-                    callback(err);
+                    if (err) {
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve();
+                    }
                 });
             }
-        }
 
-        function getCommits(before, number, callback) {
-            //TODO we should think whether this needs options or not
-            ASSERT(typeof callback === 'function');
+            return deferred.promise.nodeify(callback);
+        };
 
-            collection.find({
+        this.getCommits = function (before, number, callback) {
+            var mongoFind = collection.find({
                 type: 'commit',
                 time: {
                     $lt: before
                 }
             }).limit(number).sort({
                 $natural: -1
-            }).toArray(callback);
-        }
+            });
 
-        function getCommonAncestorCommit(commitA, commitB, callback) {
-            var ancestorsA = {},
+            return Q.ninvoke(mongoFind, 'toArray')
+                .then(function (docs) {
+                    return Q(docs);
+                })
+                .nodeify(callback);
+        };
+
+        this.getCommonAncestorCommit = function (commitA, commitB, callback) {
+            var deferred = Q.defer(),
+                ancestorsA = {},
                 ancestorsB = {},
                 newAncestorsA = [],
                 newAncestorsB = [],
@@ -437,13 +253,13 @@ function Database(options) {
                     var needed = commits.length,
                         i, newCommits = [],
                         commitLoaded = function (err, commit) {
-                            var i;
+                            var j;
                             if (!err && commit) {
-                                for (i = 0; i < commit.parents.length; i++) {
-                                    if (newCommits.indexOf(commit.parents[i]) === -1) {
-                                        newCommits.push(commit.parents[i]);
+                                for (j = 0; j < commit.parents.length; j++) {
+                                    if (newCommits.indexOf(commit.parents[j]) === -1) {
+                                        newCommits.push(commit.parents[j]);
                                     }
-                                    ancestorsSoFar[commit.parents[i]] = true;
+                                    ancestorsSoFar[commit.parents[j]] = true;
                                 }
                             }
                             if (--needed === 0) {
@@ -484,11 +300,12 @@ function Database(options) {
                             if (newAncestorsA.length > 0 || newAncestorsB.length > 0) {
                                 loadStep();
                             } else {
-                                callback('unable to find common ancestor commit', null);
+                                deferred.reject('unable to find common ancestor commit');
                             }
                         };
                     if (candidate) {
-                        return callback(null, candidate);
+                        deferred.resolve(candidate);
+                        return;
                     }
                     getAncestors(newAncestorsA, ancestorsA, function (nCommits) {
                         newAncestorsA = nCommits || [];
@@ -511,26 +328,147 @@ function Database(options) {
             newAncestorsB = [commitB];
             loadStep();
 
-        }
+            return deferred.promise.nodeify(callback);
+        };
     }
 
-    return {
-        openDatabase: openDatabase,
-        closeDatabase: closeDatabase,
-        fsyncDatabase: fsyncDatabase,
-        getDatabaseStatus: getDatabaseStatus,
-        getProjectNames: getProjectNames,
-        openProject: openProject,
-        deleteProject: deleteProject,
-        simpleRequest: function () {
-        }, //placeholder as this function doesn't reach this level
-        simpleResult: function () {
-        }, //placeholder
-        simpleQuery: function () {
-        }, //placeholder
-        getToken: function () {
-        } //placeholder
-    };
+    function openDatabase(callback) {
+        var deferred = Q.defer();
+        logger.debug('openDatabase');
+
+        if (mongo === null) {
+            logger.debug('Connecting to mongo...');
+            // connect to mongo
+            mongodb.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
+                if (!err && db) {
+                    mongo = db;
+                    logger.debug('Connected.');
+                    deferred.resolve();
+                } else {
+                    mongo = null;
+                    deferred.reject(err);
+                }
+            });
+        } else {
+            logger.debug('Reusing mongo connection.');
+            // we are already connected
+            deferred.resolve();
+        }
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function closeDatabase(callback) {
+        var deferred = Q.defer();
+        logger.debug('closeDatabase');
+        if (mongo !== null) {
+            logger.debug('Closing connection to mongo...');
+            mongo.close(function () {
+                mongo = null;
+                logger.debug('Closed.');
+                deferred.resolve();
+            });
+        } else {
+            logger.debug('No mongo connection was established.');
+            deferred.resolve();
+        }
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function getProjectNames(callback) {
+        return Q.ninvoke(mongo, 'collectionNames')
+            .then(function (collections) {
+                var names = [];
+                for (var i = 0; i < collections.length; i++) {
+                    if (!REGEXP.PROJECT.test(collections[i].name)) {
+                        continue;
+                    }
+                    var p = collections[i].name.indexOf('.');
+                    var n = collections[i].name.substring(p + 1);
+                    if (n.indexOf('system') === -1 && n.indexOf('.') === -1 && n.indexOf('_') !== 0) {
+                        names.push(n);
+                    }
+                }
+                return Q(names);
+            }).nodeify(callback);
+    }
+
+    function deleteProject(name, callback) {
+        var deferred = Q.defer();
+        Q.ninvoke(mongo, 'dropCollection', name)
+            .then(function () {
+                deferred.resolve(true);
+            })
+            .catch(function (err) {
+                if (err.ok === 0) {
+                    logger.debug('deleteProject, project does not exist', name);
+                    // http://docs.mongodb.org/manual/reference/method/db.collection.drop/
+                    deferred.resolve(false);
+                } else {
+                    deferred.reject(err);
+                }
+            });
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function openProject(name, callback) {
+        var collection;
+        logger.debug('openProject', name);
+
+        return Q.ninvoke(mongo, 'collection', name)
+            .then(function (result) {
+                collection = result;
+                return Q.ninvoke(result, 'findOne', {}, {_id: 1});
+            })
+            .then(function (something) {
+                var deferred = Q.defer();
+                if (!something) {
+                    deferred.reject('Project does not exist ' + name);
+                } else {
+                    deferred.resolve(new Project(name, collection));
+                }
+
+                return deferred.promise;
+            }).nodeify(callback);
+    }
+
+    function createProject(name, callback) {
+        var collection;
+        logger.debug('createProject', name);
+
+        return Q.ninvoke(mongo, 'collection', name)
+            .then(function (result) {
+                collection = result;
+                return Q.ninvoke(result, 'findOne', {}, {_id: 1});
+            })
+            .then(function (something) {
+                var deferred = Q.defer();
+                if (something) {
+                    deferred.reject('Project already exist ' + name);
+                } else {
+                    Q.ninvoke(collection, 'insert', {_id: CONSTANTS.EMPTY_PROJECT_DATA})
+                    .then(function () {
+                        deferred.resolve(new Project(name, collection));
+                    })
+                    .catch(function (err) {
+                        deferred.reject(err);
+                    });
+                }
+
+                return deferred.promise;
+            }).nodeify(callback);
+    }
+
+    this.openDatabase = openDatabase;
+    this.closeDatabase = closeDatabase;
+
+    this.getProjectNames = getProjectNames;
+
+    this.openProject = openProject;
+    this.deleteProject = deleteProject;
+    this.createProject = createProject;
 }
 
-module.exports = Database;
+module.exports = Mongo;

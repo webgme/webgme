@@ -81,6 +81,8 @@ describe('Plugin Manager Base', function () {
             bcParam = {},
             blobClient,
 
+            gmeAuth,
+
             gmeConfig = testFixture.getGmeConfig();
 
         gmeConfig.server.https.enable = false;
@@ -95,24 +97,34 @@ describe('Plugin Manager Base', function () {
 
                 blobClient = new BlobClient(bcParam);
 
-                testFixture.importProject({
-                    filePath: './test/plugin/PluginManagerBase/project.json',
-                    projectName: 'PluginManagerBase',
-                    gmeConfig: gmeConfig
-                }, function (err, result) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    storage = result.storage;
-                    project = result.project;
-                    core = result.core;
-                    root = result.root;
-                    commit = result.commitHash;
-                    baseCommit = result.commitHash;
-                    rootHash = core.getHash(root);
-                    done();
-                });
+                testFixture.clearDBAndGetGMEAuth(gmeConfig, 'PluginManagerBase')
+                    .then(function (gmeAuth_) {
+                        gmeAuth = gmeAuth_;
+                        storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                        return storage.openDatabase();
+                    })
+                    .then(function () {
+
+                        testFixture.importProject(storage, {
+                            projectSeed: './test/plugin/PluginManagerBase/project.json',
+                            projectName: 'PluginManagerBase',
+                            gmeConfig: gmeConfig,
+                            logger: logger
+                        }, function (err, result) {
+                            if (err) {
+                                done(err);
+                                return;
+                            }
+                            project = result.project;
+                            core = result.core;
+                            root = result.rootNode;
+                            commit = result.commitHash;
+                            baseCommit = result.commitHash;
+                            rootHash = core.getHash(root);
+                            done();
+                        });
+                    });
+
             });
         });
 
@@ -130,7 +142,8 @@ describe('Plugin Manager Base', function () {
             server.stop(done);
         });
 
-        it('should execute plugin MinimalWorkingExample on commit and save', function (done) {
+        it.skip('should execute plugin MinimalWorkingExample on commit and save', function (done) {
+            // Plugins in the client are associated with a branch.
             var pluginManagerBase,
                 pluginManagerConfig = {
                     PluginGenerator: PluginGenerator,
@@ -171,15 +184,21 @@ describe('Plugin Manager Base', function () {
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
-            pluginManagerBase.executePlugin('MinimalWorkingExample', managerConfiguration, function (err/*, result*/) {
-                // TODO: do proper check.
-                if (err) {
-                    done(new Error(err));
-                    return;
-                }
-                //console.log(result);
-                done();
-            });
+            project.getBranchHash('master')
+                .then(function (branchHash) {
+                    testFixture.expect(branchHash).to.not.equal(null);
+                    managerConfiguration.commit = branchHash;
+                    pluginManagerBase.executePlugin('MinimalWorkingExample', managerConfiguration, function (err/*, result*/) {
+                        // TODO: do proper check.
+                        if (err) {
+                            done(new Error(err));
+                            return;
+                        }
+                        //console.log(result);
+                        done();
+                    });
+                })
+                .catch(done);
         });
 
         it('should execute plugin PluginGenerator', function (done) {
@@ -189,6 +208,7 @@ describe('Plugin Manager Base', function () {
                 },
                 managerConfiguration = {
                     commit: commit,
+                    branchName: 'master',
                     activeSelection: [],
                     blobClient: blobClient
                 };
@@ -221,15 +241,21 @@ describe('Plugin Manager Base', function () {
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
-            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err/*, result*/) {
-                // TODO: do proper check.
-                if (err) {
-                    done(new Error(err));
-                    return;
-                }
-                //console.log(result);
-                done();
-            });
+            project.getBranchHash('master')
+                .then(function (branchHash) {
+                    testFixture.expect(branchHash).to.not.equal(null);
+                    managerConfiguration.commit = branchHash;
+                    pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err/*, result*/) {
+                        // TODO: do proper check.
+                        if (err) {
+                            done(new Error(err));
+                            return;
+                        }
+                        //console.log(result);
+                        done();
+                    });
+                })
+                .catch(done);
         });
 
         it('should fail to execute plugin when invalid branchName is given', function (done) {
@@ -264,6 +290,7 @@ describe('Plugin Manager Base', function () {
                 },
                 managerConfiguration = {
                     commit: commit,
+                    branchName: 'master',
                     activeSelection: [''],
                     blobClient: blobClient
                 };
@@ -288,7 +315,7 @@ describe('Plugin Manager Base', function () {
                     PluginGenerator: PluginGenerator
                 },
                 managerConfiguration = {
-                    // FIXME: for some reason branchName fails
+                    branchName: 'master',
                     commit: commit,
                     activeNode: '',
                     activeSelection: [''],
@@ -318,6 +345,7 @@ describe('Plugin Manager Base', function () {
                 managerConfiguration = {
                     commit: commit,
                     activeNode: 'does not exist',
+                    branchName: 'master',
                     activeSelection: [''],
                     blobClient: blobClient
                 };
@@ -344,7 +372,8 @@ describe('Plugin Manager Base', function () {
                 managerConfiguration = {
                     commit: commit,
                     activeSelection: ['does not exist'],
-                    blobClient: blobClient
+                    blobClient: blobClient,
+                    branchName: 'master'
                 };
 
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
@@ -362,7 +391,7 @@ describe('Plugin Manager Base', function () {
         });
 
 
-        it('should execute plugin with error, when commit does not exist', function () {
+        it('should execute plugin with error, when commit is invalid hash', function (done) {
             var pluginManagerBase,
                 pluginManagerConfig = {
                     PluginGenerator: PluginGenerator
@@ -370,17 +399,44 @@ describe('Plugin Manager Base', function () {
                 managerConfiguration = {
                     commit: 'does not exist',
                     activeSelection: [''],
-                    blobClient: blobClient
+                    blobClient: blobClient,
+                    branchName: 'master'
                 };
 
             pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
 
             pluginManagerBase.initialize(null, null, null);
-            (function () {
-                pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (/*err, result*/) {
-                    //// TODO: do proper check, this function should not throw exceptions!
-                });
-            }).should.throw(Error);
+            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
+                testFixture.expect(err).to.not.equal(null);
+                testFixture.expect(err.message)
+                    .to.equal('Invalid argument, data.before is not a number nor a valid hash.');
+
+                done();
+            });
+        });
+
+        it('should execute plugin with error, when commit does not exist', function (done) {
+            var pluginManagerBase,
+                pluginManagerConfig = {
+                    PluginGenerator: PluginGenerator
+                },
+                managerConfiguration = {
+                    commit: '#doesnotexist',
+                    activeSelection: [''],
+                    blobClient: blobClient,
+                    branchName: 'master'
+                };
+
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, logger, pluginManagerConfig, gmeConfig);
+
+            pluginManagerBase.initialize(null, null, null);
+            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
+                testFixture.expect(err).to.not.equal(null);
+                testFixture.expect(err.message)
+                    .to.equal('object does not exist #doesnotexist');
+
+                done();
+            });
         });
     });
 

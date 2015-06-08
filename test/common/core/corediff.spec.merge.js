@@ -11,106 +11,105 @@ describe('corediff-merge', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         FS = testFixture.fs,
+        Q = testFixture.Q,
         WebGME = testFixture.WebGME,
-        storage = testFixture.Storage({
-            globConf: gmeConfig,
-            logger: testFixture.logger.fork('corediff-merge:storage')
-        });
+        logger = testFixture.logger.fork('corediff.spec.merge'),
+        storage,
+        getJsonProject = testFixture.loadJsonFile,
+        jsonProject,
+        projectName = 'corediffMergeTesting',
+        project,
+        core,
+        rootNode,
+        commit,
+        baseRootHash,
+
+        gmeAuth,
+
+        guestAccount = gmeConfig.authentication.guestAccount;
+
+    before(function (done) {
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .nodeify(done);
+    });
+
 
     describe('merge', function () {
-        var project, core, root, commit, baseCommitHash, baseRootHash,
-            applyChange = function (changeObject, next) {
-                core.applyTreeDiff(root, changeObject.diff, function (err) {
+        var applyChange = function (changeObject, next) {
+                core.applyTreeDiff(rootNode, changeObject.diff, function (err) {
+                    var persisted;
                     if (err) {
                         next(err);
                         return;
                     }
-                    core.persist(root, function (err) {
-                        if (err) {
-                            next(err);
-                            return;
-                        }
-                        changeObject.rootHash = core.getHash(root);
-                        changeObject.root = root;
-                        changeObject.commitHash = project.makeCommit([baseCommitHash], changeObject.rootHash,
-                            'apply change fininshed ' + new Date().getTime(), function (/*err*/) {
-                                //we ignore this
-                            });
-                        //we restore the root object
-                        core.loadRoot(baseRootHash, function (err, r) {
+                    persisted = core.persist(rootNode);
+                    changeObject.rootHash = core.getHash(rootNode);
+                    changeObject.root = rootNode;
+                    project.makeCommit(null,
+                        [commit],
+                        changeObject.rootHash,
+                        [], // no core-objects
+                        'apply change finished ' + new Date().getTime(),
+                        function (err, commitResult) {
                             if (err) {
                                 next(err);
                                 return;
                             }
-                            root = r;
-                            next();
+                            changeObject.commitHash = commitResult.hash;
+                            //we restore the root object
+                            core.loadRoot(baseRootHash, function (err, r) {
+                                if (err) {
+                                    next(err);
+                                    return;
+                                }
+                                rootNode = r;
+                                next();
+                            });
                         });
-                    });
                 });
             };
+
         before(function (done) {
-            //creating the base project
-            storage.openDatabase(function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                storage.openProject('corediffMergeTesting', function (err, p) {
-                    var jsonProject;
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    project = p;
-                    try {
-                        jsonProject = JSON.parse(FS.readFileSync('./test/common/core/corediff/base002.json', 'utf8'));
-                    } catch (err) {
-                        done(err);
-                        return;
-                    }
-
-                    core = new WebGME.core(project, {
-                        globConf: gmeConfig,
-                        logger: testFixture.logger.fork('corediff merge:core')
+            storage.openDatabase()
+                .then(function () {
+                    return storage.deleteProject({projectName: projectName});
+                })
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: 'test/common/core/corediff/base002.json',
+                        projectName: projectName,
+                        branchName: 'base',
+                        gmeConfig: gmeConfig,
+                        logger: logger
                     });
-                    root = core.createNode();
-
-                    WebGME.serializer.import(core, root, jsonProject, function (err/*log*/) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-
-                        core.persist(root, function (err) {
-                            if (err) {
-                                return done(err);
-                            }
-
-                            commit = project.makeCommit([], core.getHash(root), 'initial project import',
-                                function (/*err*/) {
-                                    //ignore it
-                                });
-                            if (err) {
-                                done(err);
-                                return;
-                            }
-                            baseCommitHash = commit;
-                            baseRootHash = core.getHash(root);
-                            done();
-                        });
-                    });
-                });
-            });
+                })
+                .then(function (result) {
+                    project = result.project;
+                    core = result.core;
+                    rootNode = result.rootNode;
+                    commit = result.commitHash;
+                    baseRootHash = result.rootHash;
+                })
+                .then(done)
+                .catch(done);
         });
+
         after(function (done) {
-            storage.deleteProject('corediffMergeTesting', function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                storage.closeDatabase(done);
-            });
+            storage.deleteProject({projectName: projectName})
+                .then(function () {
+                    storage.closeDatabase(done);
+                })
+                .catch(function (err) {
+                    logger.error(err);
+                    storage.closeDatabase(done);
+                });
         });
+
         beforeEach(function (done) {
             //load the base state and sets the
             core.loadRoot(baseRootHash, function (err, r) {
@@ -118,19 +117,19 @@ describe('corediff-merge', function () {
                     done(err);
                     return;
                 }
-                root = r;
+                rootNode = r;
                 done();
             });
         });
         describe('attribute', function () {
             it('initial value check', function (done) {
-                core.loadByPath(root, '/579542227/651215756', function (err, a) {
+                core.loadByPath(rootNode, '/579542227/651215756', function (err, a) {
                     if (err) {
                         done(err);
                         return;
                     }
                     core.getAttribute(a, 'priority').should.be.equal(100);
-                    core.loadByPath(root, '/579542227/2088994530', function (err, a) {
+                    core.loadByPath(rootNode, '/579542227/2088994530', function (err, a) {
                         if (err) {
                             done(err);
                             return;
@@ -178,22 +177,22 @@ describe('corediff-merge', function () {
                             done(err);
                             return;
                         }
-                        project.getCommonAncestorCommit(changeA.commitHash, changeB.commitHash, function (err, hash) {
+                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
                             }
-                            hash.should.be.equal(baseCommitHash);
+                            hash.should.be.equal(commit);
 
                             //generate diffs
-                            core.generateTreeDiff(root, changeA.root, function (err, diff) {
+                            core.generateTreeDiff(rootNode, changeA.root, function (err, diff) {
                                 if (err) {
                                     done(err);
                                     return;
                                 }
                                 diff[579542227][651215756].attr.priority.should.be.equal(2);
                                 changeA.computedDiff = diff;
-                                core.generateTreeDiff(root, changeB.root, function (err, diff) {
+                                core.generateTreeDiff(rootNode, changeB.root, function (err, diff) {
                                     if (err) {
                                         done(err);
                                         return;
@@ -271,22 +270,22 @@ describe('corediff-merge', function () {
                             done(err);
                             return;
                         }
-                        project.getCommonAncestorCommit(changeA.commitHash, changeB.commitHash, function (err, hash) {
+                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
                             }
-                            hash.should.be.equal(baseCommitHash);
+                            hash.should.be.equal(commit);
 
                             //generate diffs
-                            core.generateTreeDiff(root, changeA.root, function (err, diff) {
+                            core.generateTreeDiff(rootNode, changeA.root, function (err, diff) {
                                 if (err) {
                                     done(err);
                                     return;
                                 }
                                 diff[579542227][651215756].attr.priority.should.be.equal(2);
                                 changeA.computedDiff = diff;
-                                core.generateTreeDiff(root, changeB.root, function (err, diff) {
+                                core.generateTreeDiff(rootNode, changeB.root, function (err, diff) {
                                     if (err) {
                                         done(err);
                                         return;
@@ -357,22 +356,22 @@ describe('corediff-merge', function () {
                             done(err);
                             return;
                         }
-                        project.getCommonAncestorCommit(changeA.commitHash, changeB.commitHash, function (err, hash) {
+                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
                             }
-                            hash.should.be.equal(baseCommitHash);
+                            hash.should.be.equal(commit);
 
                             //generate diffs
-                            core.generateTreeDiff(root, changeA.root, function (err, diff) {
+                            core.generateTreeDiff(rootNode, changeA.root, function (err, diff) {
                                 if (err) {
                                     done(err);
                                     return;
                                 }
                                 diff[579542227][651215756].attr.priority.should.be.equal(2);
                                 changeA.computedDiff = diff;
-                                core.generateTreeDiff(root, changeB.root, function (err, diff) {
+                                core.generateTreeDiff(rootNode, changeB.root, function (err, diff) {
                                     if (err) {
                                         done(err);
                                         return;
@@ -444,36 +443,36 @@ describe('corediff-merge', function () {
                         return;
                     }
                     core.getAttribute(changeA.root, 'changeA').should.be.true;
-                    (core.getAttribute(root, 'changeA') === undefined).should.be.true;
-                    (core.getAttribute(root, 'changeB') === undefined).should.be.true;
+                    (core.getAttribute(rootNode, 'changeA') === undefined).should.be.true;
+                    (core.getAttribute(rootNode, 'changeB') === undefined).should.be.true;
                     applyChange(changeB, function (err) {
                         if (err) {
                             done(err);
                             return;
                         }
                         core.getAttribute(changeB.root, 'changeB').should.be.true;
-                        (core.getAttribute(root, 'changeA') === undefined).should.be.true;
-                        (core.getAttribute(root, 'changeB') === undefined).should.be.true;
-                        project.getCommonAncestorCommit(changeA.commitHash, changeB.commitHash, function (err, hash) {
+                        (core.getAttribute(rootNode, 'changeA') === undefined).should.be.true;
+                        (core.getAttribute(rootNode, 'changeB') === undefined).should.be.true;
+                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
                             }
-                            (core.getAttribute(root, 'changeA') === undefined).should.be.true;
-                            (core.getAttribute(root, 'changeB') === undefined).should.be.true;
-                            hash.should.be.equal(baseCommitHash);
+                            (core.getAttribute(rootNode, 'changeA') === undefined).should.be.true;
+                            (core.getAttribute(rootNode, 'changeB') === undefined).should.be.true;
+                            hash.should.be.equal(commit);
 
                             //generate diffs
-                            core.generateTreeDiff(root, changeA.root, function (err, diff) {
-                                (core.getAttribute(root, 'changeA') === undefined).should.be.true;
-                                (core.getAttribute(root, 'changeB') === undefined).should.be.true;
+                            core.generateTreeDiff(rootNode, changeA.root, function (err, diff) {
+                                (core.getAttribute(rootNode, 'changeA') === undefined).should.be.true;
+                                (core.getAttribute(rootNode, 'changeB') === undefined).should.be.true;
                                 if (err) {
                                     done(err);
                                     return;
                                 }
                                 diff[579542227][651215756].attr.priority.should.be.equal(2);
                                 changeA.computedDiff = diff;
-                                core.generateTreeDiff(root, changeB.root, function (err, diff) {
+                                core.generateTreeDiff(rootNode, changeB.root, function (err, diff) {
                                     if (err) {
                                         done(err);
                                         return;
@@ -510,7 +509,7 @@ describe('corediff-merge', function () {
         });
         describe('registry', function () {
             it('initial value check', function (done) {
-                core.loadByPath(root, '/579542227/651215756', function (err, a) {
+                core.loadByPath(rootNode, '/579542227/651215756', function (err, a) {
                     if (err) {
                         done(err);
                         return;
@@ -518,7 +517,7 @@ describe('corediff-merge', function () {
                     core.getRegistry(a, 'position').x.should.be.equal(69);
                     core.getRegistry(a, 'position').y.should.be.equal(276);
 
-                    core.loadByPath(root, '/579542227/2088994530', function (err, a) {
+                    core.loadByPath(rootNode, '/579542227/2088994530', function (err, a) {
                         if (err) {
                             done(err);
                             return;
@@ -566,15 +565,15 @@ describe('corediff-merge', function () {
                             done(err);
                             return;
                         }
-                        project.getCommonAncestorCommit(changeA.commitHash, changeB.commitHash, function (err, hash) {
+                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
                             }
-                            hash.should.be.equal(baseCommitHash);
+                            hash.should.be.equal(commit);
 
                             //generate diffs
-                            core.generateTreeDiff(root, changeA.root, function (err, diff) {
+                            core.generateTreeDiff(rootNode, changeA.root, function (err, diff) {
                                 if (err) {
                                     done(err);
                                     return;
@@ -582,7 +581,7 @@ describe('corediff-merge', function () {
                                 diff[579542227][651215756].reg.position.x.should.be.equal(200);
                                 diff[579542227][651215756].reg.position.y.should.be.equal(200);
                                 changeA.computedDiff = diff;
-                                core.generateTreeDiff(root, changeB.root, function (err, diff) {
+                                core.generateTreeDiff(rootNode, changeB.root, function (err, diff) {
                                     if (err) {
                                         done(err);
                                         return;
@@ -663,15 +662,15 @@ describe('corediff-merge', function () {
                             done(err);
                             return;
                         }
-                        project.getCommonAncestorCommit(changeA.commitHash, changeB.commitHash, function (err, hash) {
+                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
                             }
-                            hash.should.be.equal(baseCommitHash);
+                            hash.should.be.equal(commit);
 
                             //generate diffs
-                            core.generateTreeDiff(root, changeA.root, function (err, diff) {
+                            core.generateTreeDiff(rootNode, changeA.root, function (err, diff) {
                                 if (err) {
                                     done(err);
                                     return;
@@ -679,7 +678,7 @@ describe('corediff-merge', function () {
                                 diff[579542227][651215756].reg.position.x.should.be.equal(200);
                                 diff[579542227][651215756].reg.position.y.should.be.equal(200);
                                 changeA.computedDiff = diff;
-                                core.generateTreeDiff(root, changeB.root, function (err, diff) {
+                                core.generateTreeDiff(rootNode, changeB.root, function (err, diff) {
                                     if (err) {
                                         done(err);
                                         return;
@@ -752,15 +751,15 @@ describe('corediff-merge', function () {
                             done(err);
                             return;
                         }
-                        project.getCommonAncestorCommit(changeA.commitHash, changeB.commitHash, function (err, hash) {
+                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
                             }
-                            hash.should.be.equal(baseCommitHash);
+                            hash.should.be.equal(commit);
 
                             //generate diffs
-                            core.generateTreeDiff(root, changeA.root, function (err, diff) {
+                            core.generateTreeDiff(rootNode, changeA.root, function (err, diff) {
                                 if (err) {
                                     done(err);
                                     return;
@@ -768,7 +767,7 @@ describe('corediff-merge', function () {
                                 diff[579542227][651215756].reg.position.x.should.be.equal(200);
                                 diff[579542227][651215756].reg.position.y.should.be.equal(200);
                                 changeA.computedDiff = diff;
-                                core.generateTreeDiff(root, changeB.root, function (err, diff) {
+                                core.generateTreeDiff(rootNode, changeB.root, function (err, diff) {
                                     if (err) {
                                         done(err);
                                         return;
@@ -840,15 +839,15 @@ describe('corediff-merge', function () {
                             done(err);
                             return;
                         }
-                        project.getCommonAncestorCommit(changeA.commitHash, changeB.commitHash, function (err, hash) {
+                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
                             }
-                            hash.should.be.equal(baseCommitHash);
+                            hash.should.be.equal(commit);
 
                             //generate diffs
-                            core.generateTreeDiff(root, changeA.root, function (err, diff) {
+                            core.generateTreeDiff(rootNode, changeA.root, function (err, diff) {
                                 if (err) {
                                     done(err);
                                     return;
@@ -856,7 +855,7 @@ describe('corediff-merge', function () {
                                 diff[579542227][651215756].reg.position.x.should.be.equal(200);
                                 diff[579542227][651215756].reg.position.y.should.be.equal(200);
                                 changeA.computedDiff = diff;
-                                core.generateTreeDiff(root, changeB.root, function (err, diff) {
+                                core.generateTreeDiff(rootNode, changeB.root, function (err, diff) {
                                     if (err) {
                                         done(err);
                                         return;

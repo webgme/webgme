@@ -1,3 +1,4 @@
+/*globals require*/
 /*jshint browser: true*/
 var allTestFiles = [];
 var TEST_REGEXP = /(spec|test)\.js$/i;
@@ -52,6 +53,7 @@ require.config({
         'jszip': './src/client/lib/jszip/jszip',
         'debug': './src/client/lib/debug/debug',
         'underscore': './src/client/lib/underscore/underscore',
+        Q: './src/client/lib/q/q',
 
         'karmatest': './test-karma',
         'aRtestCases': './test-karma/client/js/AutoRouter/testCases'

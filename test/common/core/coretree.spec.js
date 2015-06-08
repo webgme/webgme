@@ -10,37 +10,53 @@ describe('CoreTree', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
+        Q = testFixture.Q,
         should = require('chai').should(),
         requirejs = require('requirejs'),
-
+        projectName = 'CoreTreeTest',
         CoreTree = requirejs('common/core/coretree'),
 
     // TODO: replace with in memory storage
 
-        storage = new testFixture.Storage({globConf: gmeConfig, logger: testFixture.logger.fork('CoreTree:storage')}),
+        logger = testFixture.logger.fork('coretree.spec'),
+        storage,
 
-        coreTree;
+        coreTree,
+
+        gmeAuth;
 
     before(function (done) {
-        storage.openDatabase(function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-
-            storage.openProject('CoreTreeTest', function (err, project) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
+                return storage.createProject({projectName: projectName});
+            })
+            .then(function (project) {
                 coreTree = new CoreTree(project, {
                     globConf: gmeConfig,
                     logger: testFixture.logger.fork('CoreTree:core')
                 });
-                done();
-            });
-        });
+            })
+            .then(done)
+            .catch(done);
+    });
+
+    after(function (done) {
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+                return Q.all([
+                    storage.closeDatabase(),
+                    gmeAuth.unload()
+                ]);
+            })
+            .nodeify(done);
     });
 
     describe('core.getParent', function () {

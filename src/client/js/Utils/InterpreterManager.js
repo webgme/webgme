@@ -129,10 +129,10 @@ define([
                                 token: '',
                                 activeNode: activeNode, // active object in the editor
                                 activeSelection: activeSelection || [],
-                                commit: self._client.getActualCommit(), //#668b3babcdf2ddcd7ba38b51acb62d63da859d90,
-
-                                // this has priority over the commit if not null
-                                branchName: self._client.getActualBranch()
+                                commit: self._client.getActiveCommitHash(), //#668b3babcdf2ddcd7ba38b51acb62d63da859d90,
+                                // This will get loaded too which will provide a sanity check on the client state.
+                                rootHash: self._client.getActiveRootHash(),
+                                branchName: self._client.getActiveBranchName()
                             };
 
                             if (globalconfig.runOnServer === true || silentPluginCfg.runOnServer === true) {

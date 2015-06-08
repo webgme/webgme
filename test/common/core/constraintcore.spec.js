@@ -5,38 +5,55 @@
  */
 var testFixture = require('../../_globals.js');
 
-describe('constraint core', function () {
+describe('constraint.core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = new testFixture.Storage({
-            globConf: gmeConfig,
-            logger: testFixture.logger.fork('constraint_core:storage')
-        }),
+        logger = testFixture.logger.fork('constraint.core:storage'),
+        Q = testFixture.Q,
+        storage,
         TASYNC = testFixture.requirejs('common/core/tasync'),
         project,
+        projectName = 'coreConstraintTesting',
         core,
-        root;
+        rootNode,
+
+        gmeAuth;
+
+    before(function (done) {
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .nodeify(done);
+    });
+
+    after(function (done) {
+        Q.all([
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
+            .nodeify(done);
+    });
 
     beforeEach(function (done) {
-        storage.openDatabase(function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            storage.openProject('coreConstraintTesting', function (err, p) {
-                var base, instance;
-                if (err) {
-                    done(err);
-                    return;
-                }
-                project = p;
+        storage.createProject({projectName: projectName})
+            .then(function (dbProject) {
+                var base,
+                    instance;
+
+                project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
                 core = new testFixture.WebGME.core(project, {
                     usertype: 'tasync',
                     globConf: gmeConfig,
-                    logger: testFixture.logger.fork('constraint_core:core')
+                    logger: logger
                 });
-                root = core.createNode();
-                base = core.createNode({parent: root});
+                rootNode = core.createNode();
+                base = core.createNode({parent: rootNode});
                 core.setAttribute(base, 'name', 'base');
                 core.setRegistry(base, 'position', {x: 100, y: 100});
                 core.setConstraint(base, 'global', {
@@ -45,7 +62,7 @@ describe('constraint core', function () {
                     script: 'script text for global constraint'
                 });
 
-                instance = core.createNode({parent: root, base: base});
+                instance = core.createNode({parent: rootNode, base: base});
                 core.setAttribute(instance, 'name', 'instance');
                 core.setConstraint(instance, 'local', {
                     priority: 1,
@@ -53,21 +70,18 @@ describe('constraint core', function () {
                     script: 'script text for local constraint'
                 });
                 done();
-            });
-        });
+            })
+            .catch(done);
     });
+
     afterEach(function (done) {
-        storage.deleteProject('coreConstraintTesting', function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            storage.closeDatabase(done);
-        });
+        storage.deleteProject({projectName: projectName}, done);
     });
-    it('gives back null for unknown contraint', function () {
-        (core.getConstraint(root, 'any') === null).should.be.true;
+
+    it('gives back null for unknown constraint', function () {
+        (core.getConstraint(rootNode, 'any') === null).should.be.true;
     });
+
     it('gives back proper names for own and all constraints', function (done) {
         TASYNC.call(function (children) {
             var base, instance, i;
@@ -82,15 +96,15 @@ describe('constraint core', function () {
                 }
             }
 
-            core.getConstraintNames(root).should.be.empty;
-            core.getOwnConstraintNames(root).should.be.empty;
+            core.getConstraintNames(rootNode).should.be.empty;
+            core.getOwnConstraintNames(rootNode).should.be.empty;
             core.getConstraintNames(base).should.be.eql(['global']);
             core.getOwnConstraintNames(base).should.be.eql(['global']);
             core.getConstraintNames(instance).should.include.members(['global', 'local']);
             core.getOwnConstraintNames(instance).should.be.eql(['local']);
 
             done();
-        }, core.loadChildren(root));
+        }, core.loadChildren(rootNode));
     });
     it('removing constraints', function (done) {
         TASYNC.call(function (children) {
@@ -111,6 +125,6 @@ describe('constraint core', function () {
             core.getOwnConstraintNames(instance).should.be.eql(['local']);
 
             done();
-        }, core.loadChildren(root));
+        }, core.loadChildren(rootNode));
     });
 });

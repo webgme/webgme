@@ -964,7 +964,7 @@ describe('AutoRouter', function () {
 
     });
 
-    describe('Replay tests', function() {
+    describe.skip('Replay tests', function() {
         describe('Standard', function () {
             // Set up the Autorouter as a web worker
             before(function() {

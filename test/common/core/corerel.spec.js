@@ -8,56 +8,83 @@ var testFixture = require('../../_globals.js');
 describe('corerel', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = new testFixture.Storage({globConf: gmeConfig, logger: testFixture.logger.fork('corerel:storage')}),
+        logger = testFixture.logger.fork('corerel.spec'),
+        Q = testFixture.Q,
+        storage,
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),
         TASYNC = testFixture.requirejs('common/core/tasync'),
         Core = function (s, options) {
             return new Rel(new Tree(s, options), options);
         },
+        projectName = 'coreRelTesting',
         project,
         core,
-        root;
+        root,
+
+        gmeAuth;
+
+    before(function (done) {
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .nodeify(done);
+    });
+
+    after(function (done) {
+        Q.all([
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
+            .nodeify(done);
+    });
 
     beforeEach(function (done) {
-        storage.openDatabase(function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            storage.openProject('coreRelTesting', function (err, p) {
+        storage.openDatabase()
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
+                return storage.createProject({projectName: projectName});
+            })
+            .then(function (project) {
                 var child;
-                if (err) {
-                    done(err);
-                    return;
-                }
-                project = p;
+
                 core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('corerel:core')});
                 root = core.createNode();
                 child = core.createNode({parent: root});
                 core.setAttribute(child, 'name', 'child');
                 core.setRegistry(child, 'position', {x: 100, y: 100});
                 core.setPointer(child, 'parent', root);
+            })
+            .then(done)
+            .catch(done);
+    });
 
-                done();
-            });
-        });
-    });
     afterEach(function (done) {
-        storage.deleteProject('coreRelTesting', function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            storage.closeDatabase(done);
-        });
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+                storage.closeDatabase(done);
+            })
+            .catch(function (err) {
+                logger.error(err);
+                storage.closeDatabase(done);
+            });
     });
+
     it('should load all children', function (done) {
         TASYNC.call(function (children) {
             children.should.have.length(1);
             done();
         }, core.loadChildren(root));
     });
+
     it('child should have pointer and root should not', function (done) {
         TASYNC.call(function (children) {
             var child = children[0];
@@ -67,6 +94,7 @@ describe('corerel', function () {
             done();
         }, core.loadChildren(root));
     });
+
     it('root should have collection and child should not', function (done) {
         TASYNC.call(function (children) {
             var child = children[0];
@@ -76,6 +104,7 @@ describe('corerel', function () {
             done();
         }, core.loadChildren(root));
     });
+
     it('copying nodes should work fine', function (done) {
         TASYNC.call(function (children) {
             var child = children[0],
@@ -93,6 +122,7 @@ describe('corerel', function () {
             done();
         }, core.loadChildren(root));
     });
+
     it('loading collection and pointer', function (done) {
         TASYNC.call(function (children) {
             children.should.have.length(1);
@@ -104,6 +134,7 @@ describe('corerel', function () {
             }, core.loadPointer(child, 'parent'));
         }, core.loadCollection(root, 'parent'));
     });
+
     it('getting outside pointer path', function (done) {
         TASYNC.call(function (children) {
             var child = children[0],
@@ -116,13 +147,15 @@ describe('corerel', function () {
             done();
         }, core.loadChildren(root));
     });
-    it('getting chilrdren paths', function (done) {
+
+    it('getting children paths', function (done) {
         TASYNC.call(function (children) {
             core.getChildrenPaths(root).should.include.members([core.getPath(children[0])]);
 
             done();
         }, core.loadChildren(root));
     });
+
     it('moving node around', function (done) {
         TASYNC.call(function (children) {
             var child = children[0],

@@ -3,48 +3,39 @@
  * @author kecso / https://github.com/kecso
  */
 
+'use strict';
+
 var webgme = require('../../webgme'),
     program = require('commander'),
     FS = require('fs'),
-    Storage,
-    patchJson,
-    openContext,
+    cliStorage,
+    gmeAuth,
     path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
-    logger = webgme.Logger.create('gme:bin:apply', gmeConfig.bin.log, false);
+    logger = webgme.Logger.create('gme:bin:apply', gmeConfig.bin.log, false),
+    openContext = webgme.openContext,
+    patchJson;
 
 webgme.addToRequireJsPaths(gmeConfig);
 
-Storage = webgme.serverUserStorage;
-openContext = webgme.openContext;
-
-var applyPatch = function (mongoUri, projectId, branchOrCommit, patch, noUpdate, callback) {
-    'use strict';
-    var storage,
-        project,
+var applyPatch = function (storage, projectId, branchOrCommit, patch, noUpdate, userName, callback) {
+    var project,
         contextParams,
         closeContext = function (error, data) {
-            try {
-                project.closeProject(function () {
-                    storage.closeDatabase(function () {
-                        callback(error, data);
-                    });
-                });
-            } catch (err) {
-                storage.closeDatabase(function () {
-                    callback(error, data);
-                });
-            }
+            storage.closeDatabase(function () {
+                callback(error, data);
+            });
         };
 
-    gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
-
-    storage = new Storage({globConf: gmeConfig, logger: logger.fork('storage')});
 
     contextParams = {
         projectName: projectId,
         branchOrCommit: branchOrCommit
     };
+
+    if (userName) {
+        contextParams.userName = userName;
+    }
 
     openContext(storage, gmeConfig, logger, contextParams, function (err, context) {
         if (err) {
@@ -57,11 +48,55 @@ var applyPatch = function (mongoUri, projectId, branchOrCommit, patch, noUpdate,
                 closeContext(err);
                 return;
             }
+            var persisted = context.core.persist(context.rootNode);
+
+            if (!persisted.objects) {
+                logger.warn('empty patch was inserted - not making commit');
+                closeContext(null, context.commitHash);
+                return;
+            }
+
+            context.project.makeCommit(null,
+                [context.commitHash],
+                context.core.getHash(context.rootNode),
+                persisted.objects,
+                'CLI patch applied',
+                function (err, commitResult) {
+                    var setParams = {
+                        branchName: context.branchName,
+                        projectName: projectId,
+                        oldHash: context.commitHash
+                    };
+                    if (err) {
+                        logger.error('project.makeCommit failed.');
+                        closeContext(err);
+                        return;
+                    }
+
+                    if (noUpdate || !contextParams.branchName) {
+                        closeContext(null, commitResult.hash);
+                        return;
+                    }
+                    setParams.newHash = commitResult.hash;
+
+                    if (userName) {
+                        setParams.username = userName;
+                    }
+                    storage.setBranchHash(setParams, function (err, updateResult) {
+                            closeContext(err, commitResult.hash);
+                            return;
+                        }
+                    );
+                }
+            );
+
             context.core.persist(context.rootNode, function (err) {
                 if (err) {
                     closeContext(err);
                     return;
                 }
+
+
                 project.makeCommit([context.commitHash], context.core.getHash(context.rootNode), 'CLI patch applied',
                     function (err, newCommitHash) {
                         if (err) {
@@ -94,6 +129,7 @@ if (require.main === module) {
         .version('0.1.0')
         .usage('<patch-file> [options]')
         .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
+        .option('-u, --user [string]', 'the user of the command')
         .option('-p, --project-identifier [value]', 'project identifier')
         .option('-t, --target [branch/commit]', 'the target where we should apply the patch')
         .option('-n, --no-update', 'show if we should not update the branch')
@@ -117,15 +153,27 @@ if (require.main === module) {
         process.exit(1);
     }
 
-    applyPatch(program.mongoDatabaseUri, program.projectIdentifier, program.target, patchJson, program.noUpdate,
-        function (err) {
-            'use strict';
-            if (err) {
-                logger.error('there was an error during the application of the patch: ', err);
-            } else {
-                logger.info('patch applied successfully to project \'' + program.projectIdentifier + '\'');
-            }
-            process.exit(0);
-        }
-    );
+    webgme.getGmeAuth(gmeConfig)
+        .then(function (gmeAuth__) {
+            gmeAuth = gmeAuth__;
+            cliStorage = webgme.getStorage(logger.fork('storage'), gmeConfig, gmeAuth);
+            return cliStorage.openDatabase();
+        })
+        .then(function () {
+            applyPatch(program.mongoDatabaseUri,
+                program.projectIdentifier, program.target, patchJson, program.noUpdate, program.user,
+                function (err) {
+                    if (err) {
+                        logger.error('there was an error during the application of the patch: ', err);
+                    } else {
+                        logger.info('patch applied successfully to project \'' + program.projectIdentifier + '\'');
+                    }
+                    process.exit(0);
+                }
+            );
+        })
+        .catch(function (err) {
+            logger.error(err);
+            process.exit(1);
+        });
 }

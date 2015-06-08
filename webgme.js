@@ -56,7 +56,8 @@ function addToRequireJsPaths(gmeConfig) {
             var componentNames = getComponentNames(basepaths),
                 i, j;
 
-            //we go through every plugin and we check where we are able to find the main part of it so we can set the plugin/pluginName path according that in requirejs
+            // We go through every plugin and we check where we are able to find the main part of it
+            // so we can set the plugin/pluginName path according that in requirejs.
             var componentPaths = {};
             for (i in componentNames) {
                 var found = false;
@@ -99,23 +100,41 @@ function addToRequireJsPaths(gmeConfig) {
     addFromBasePath(gmeConfig.plugin.basePaths, 'plugin');
     addFromBasePath(gmeConfig.addOn.basePaths, 'addon');
     addFromRequireJsPath(gmeConfig.requirejsPaths);
-    //console.error(JSON.stringify(requirejs.s.contexts._.config, null, 4)); // TODO remove me
 }
 
 module.exports = {
-    serverStorage: require('./src/server/storage/serverstorage'),
-    serverUserStorage: require('./src/server/storage/serveruserstorage'),
     standaloneServer: require('./src/server/standalone.js'),
-    runPlugin: require('./src/server/runplugin'),
 
     requirejs: requirejs,
     addToRequireJsPaths: addToRequireJsPaths,
-    clientStorage: requirejs('common/storage/clientstorage'),
-    localStorage: requirejs('common/storage/localstorage'),
+    getStorage: function (logger, gmeConfig, gmeAuth) {
+        var Mongo = require('./src/server/storage/mongo'),
+            SafeStorage = require('./src/server/storage/safestorage'),
+            mongo = new Mongo(logger, gmeConfig);
+
+        return new SafeStorage(mongo, logger, gmeConfig, gmeAuth);
+    },
+    getGmeAuth: function (gmeConfig, callback) {
+        var Q = require('q'),
+            GMEAuth = require('./src/server/middleware/auth/gmeauth'),
+            deferred = Q.defer(),
+            gmeAuth;
+
+        gmeAuth = new GMEAuth(null, gmeConfig);
+        gmeAuth.connect(function (err) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve(gmeAuth);
+            }
+        });
+
+        return deferred.promise.nodeify(callback);
+    },
     core: requirejs('common/core/core'),
     serializer: requirejs('common/core/users/serialization'),
     canon: requirejs('common/util/canon'),
-    openContext: requirejs('common/util/opencontext'),
+    openContext: require('./src/server/util/opencontext').openContext,
     Logger: require('./src/server/logger'),
     REGEXP: requirejs('common/regexp')
 };

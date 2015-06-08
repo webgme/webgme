@@ -8,7 +8,9 @@ var testFixture = require('../../_globals.js');
 describe('coretype', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = new testFixture.Storage({globConf: gmeConfig, logger: testFixture.logger.fork('coretype:storage')}),
+        Q = testFixture.Q,
+        logger = testFixture.logger.fork('coretype.spec'),
+        storage,
         Type = testFixture.requirejs('common/core/coretype'),
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),
@@ -16,23 +18,47 @@ describe('coretype', function () {
         Core = function (s, options) {
             return new Type(new Rel(new Tree(s, options), options), options);
         },
+        projectName = 'coreTypeTesting',
         project,
         core,
-        root;
+        root,
+
+        gmeAuth;
+
+    before(function (done) {
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .nodeify(done);
+    });
+
+    after(function (done) {
+        Q.all([
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
+            .nodeify(done);
+    });
 
     beforeEach(function (done) {
-        storage.openDatabase(function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            storage.openProject('coreTypeTesting', function (err, p) {
-                var base, bChild, instance;
-                if (err) {
-                    done(err);
-                    return;
-                }
-                project = p;
+        storage.openDatabase()
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
+                return storage.createProject({projectName: projectName});
+            })
+            .then(function (project) {
+                var base,
+                    bChild,
+                    instance;
+
                 core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('coretype:core')});
                 root = core.createNode();
                 base = core.createNode({parent: root});
@@ -45,19 +71,22 @@ describe('coretype', function () {
                 core.setPointer(bChild, 'in', base);
                 instance = core.createNode({parent: root, base: base});
                 core.setAttribute(instance, 'name', 'instance');
-                done();
-            });
-        });
+            })
+            .then(done)
+            .catch(done);
     });
+
     afterEach(function (done) {
-        storage.deleteProject('coreTypeTesting', function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            storage.closeDatabase(done);
-        });
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+                storage.closeDatabase(done);
+            })
+            .catch(function (err) {
+                logger.error(err);
+                storage.closeDatabase(done);
+            });
     });
+
     it('check inheritance bases', function (done) {
         TASYNC.call(function (children) {
             var base, instance, i;

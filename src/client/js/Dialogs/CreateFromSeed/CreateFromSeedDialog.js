@@ -88,94 +88,79 @@ define(['js/Loader/LoaderCircles',
 
         // get seed project list
         self._loader.start();
-        self._client.getSeedInfoAsync(function (err, data) {
-            var i,
-                defaultOption;
+        self._client.getProjectsAndBranches(false, function (err, projectList) {
+            var projectId,
+                branchId,
+                projectGroup,
+                i,
+                defaultOption,
+                fileSeeds = WebGMEGlobal.allSeeds || [];
+
+            for (i = 0; i < fileSeeds.length; i += 1) {
+                self._optGroupFile.append($('<option>', {text: fileSeeds[i], value: 'file:' + fileSeeds[i]}));
+                if (self.seedProjectName === fileSeeds) {
+                    defaultOption = 'file:' + fileSeeds;
+                }
+            }
 
             if (err) {
-                self._logger.error(err);
-            } else {
-                self._logger.debug(data);
+                self.logger.error(err);
+                self._loader.stop();
+                return;
+            }
 
-                // sort alphabetically
-                data.file.sort();
-                data.db.sort();
-
-                for (i = 0; i < data.file.length; i += 1) {
-                    self._optGroupFile.append($('<option>', {text: data.file[i], value: 'file:' + data.file[i]}));
-                    if (self.seedProjectName === data.file[i]) {
-                        defaultOption = 'file:' + data.file[i];
+            for (i = 0; i < projectList.length; i += 1) {
+                projectId = projectList[i].name;
+                if (Object.keys(projectList[i].branches).length === 1) {
+                    branchId = Object.keys(projectList[i].branches)[0];
+                    self._optGroupDb.append($('<option>', {
+                            text: projectId + ' (' + branchId + ' ' +
+                            projectList[i].branches[branchId].slice(0, 8) + ')',
+                            value: 'db:' + projectId + projectList[i].branches[branchId]
+                        }
+                    ));
+                    if (self.seedProjectName === projectId) {
+                        defaultOption = 'db:' + projectId + projectList[i].branches[branchId];
                     }
-                }
+                } else {
+                    // more than one branches
+                    projectGroup = $('<optgroup>', {
+                            label: projectId
+                        }
+                    );
+                    self._option.append(projectGroup);
 
-                self._client.getFullProjectsInfoAsync(function (err, projectList) {
-                    var projectId,
-                        branchId,
-                        proojectGroup;
-
-                    if (err) {
-                        self.logger.error(err);
-                        return;
-                    }
-
-                    for (i = 0; i < data.db.length; i += 1) {
-                        projectId = data.db[i];
-                        if (projectList.hasOwnProperty(projectId)) {
-                            if (Object.keys(projectList[projectId].branches).length === 0) {
-
-                            } else if (Object.keys(projectList[projectId].branches).length === 1) {
-                                branchId = Object.keys(projectList[projectId].branches)[0];
-                                self._optGroupDb.append($('<option>', {
-                                        text: data.db[i] + ' (' + branchId + ' ' +
-                                               projectList[projectId].branches[branchId].slice(0, 8) + ')',
-                                        value: 'db:' + data.db[i] + projectList[projectId].branches[branchId]
-                                    }
-                                ));
-                                if (self.seedProjectName === data.db[i]) {
-                                    defaultOption = 'db:' + data.db[i] + projectList[projectId].branches[branchId];
+                    for (branchId in projectList[i].branches) {
+                        if (projectList[i].branches.hasOwnProperty(branchId)) {
+                            projectGroup.append($('<option>', {
+                                    text: projectId + ' (' + branchId + ' ' +
+                                    projectList[i].branches[branchId].slice(0, 8) + ')',
+                                    value: 'db:' + projectId +
+                                    projectList[i].branches[branchId]
                                 }
-                            } else {
-                                // more than one branches
-                                proojectGroup = $('<optgroup>', {
-                                        label: data.db[i]
-                                    }
-                                );
-                                self._option.append(proojectGroup);
-
-                                for (branchId in projectList[projectId].branches) {
-                                    if (projectList[projectId].branches.hasOwnProperty(branchId)) {
-                                        proojectGroup.append($('<option>', {
-                                                text: data.db[i] + ' (' + branchId + ' ' +
-                                                       projectList[projectId].branches[branchId].slice(0, 8) + ')',
-                                                value: 'db:' + data.db[i] +
-                                                       projectList[projectId].branches[branchId]
-                                            }
-                                        ));
-                                    }
-                                }
-
-                                if (projectList[projectId].branches.hasOwnProperty('master')) {
-                                    branchId = 'master';
-                                } else {
-                                    branchId = Object.keys(projectList[projectId].branches)[0];
-                                }
-
-                                if (self.seedProjectName === data.db[i]) {
-                                    defaultOption = 'db:' + data.db[i] + branchId;
-                                }
-                            }
-                        } else {
-                            self._logger.error('Project does not exist: ' + projectId);
+                            ));
                         }
                     }
 
-                    if (defaultOption) {
-                        self._option.val(defaultOption);
+                    if (projectList[i].branches.hasOwnProperty('master')) {
+                        branchId = 'master';
+                    } else {
+                        branchId = Object.keys(projectList[i].branches)[0];
                     }
-                });
+
+                    if (self.seedProjectName === projectId) {
+                        defaultOption = 'db:' + projectId + branchId;
+                    }
+                }
+
+            }
+
+            if (defaultOption) {
+                self._option.val(defaultOption);
             }
             self._loader.stop();
         });
+
     };
 
     CreateFromSeed.prototype._displayMessage = function (msg, isError) {

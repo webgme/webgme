@@ -5,15 +5,14 @@
 
 var testFixture = require('../_globals.js'),
     gmeConfig = testFixture.getGmeConfig();
+
 describe('merge CLI test', function () {
     'use strict';
     var filename = require('path').normalize('src/bin/merge.js'),
         mergeCli = require('../../src/bin/merge'),
-        storageParams = {
-            globConf: gmeConfig,
-            logger: testFixture.logger.fork('merge CLI test:storage')
-        },
-        database = new testFixture.WebGME.serverUserStorage(storageParams),
+        applyCLI = require('../../src/bin/apply'),
+        logger = testFixture.logger.fork('merge.CLI'),
+        database,
         projectName = 'mergeCliTest',
         oldProcessExit = process.exit,
         oldConsoleLog = console.log,
@@ -93,117 +92,93 @@ describe('merge CLI test', function () {
             });
         };
     before(function (done) {
-        var oldDone = done,
-            applyChanges = function () {
-                var needed = 2,
-                    error = null,
-                    applied = function (err) {
-                        error = error || err;
-                        if (--needed === 0) {
-                            oldDone(error);
-                        }
-                    };
-                applyChange('./test/bin/merge/masterDiff.json', 'master', applied);
-                applyChange('./test/bin/merge/otherDiff.json', 'other', applied);
-            },
-            applyChange = function (filePath, branch, next) {
-                var nodeApplyPatch = testFixture.childProcess.spawn('node',
-                        ['./src/bin/apply.js', filePath, '-m', gmeConfig.mongo.uri, '-p', projectName, '-t', branch]),
-                    stdoutData,
-                    err;
+        var oldDone = done;
 
-                nodeApplyPatch.stdout.on('data', function (data) {
-                    stdoutData = stdoutData || '';
-                    stdoutData += data.toString();
-                    //console.log(data.toString());
-                });
-
-                nodeApplyPatch.stderr.on('data', function (data) {
-                    err = err || '';
-                    err += data.toString();
-                    //console.log(data.toString());
-                });
-
-                nodeApplyPatch.on('close', function (code) {
-                    next(code ? new Error('error during patch application: ' + (err || code)) : null);
-                });
-            };
-        database.openDatabase(function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-
-            done = function (error) {
-                database.closeDatabase(function (err) {
-                    oldDone(error || err);
-                });
-            };
-            database.deleteProject(projectName, function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                database.openProject(projectName, function (err, project) {
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, ['PluginManagerBase', projectName])
+            .then(function (gmeAuth_) {
+                var gmeAuth;
+                gmeAuth = gmeAuth_;
+                database = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                database.openDatabase(function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
 
-                    var core = new testFixture.WebGME.core(project, {
-                            globConf: gmeConfig,
-                            logger: testFixture.logger.fork('core')
-                        }),
-                        root = core.createNode(),
-                        jsonProject = JSON.parse(testFixture.fs.readFileSync('./test/bin/merge/base.json')),
-                        commitHash;
-
-                    testFixture.WebGME.serializer.import(core, root, jsonProject, function (err) {
+                    done = function (error) {
+                        database.closeDatabase(function (err) {
+                            oldDone(error || err);
+                        });
+                    };
+                    database.deleteProject({projectName: projectName}, function (err) {
                         if (err) {
                             done(err);
                             return;
                         }
-                        //now creating the start commit and make it the basis of two branches -master- and -other-
-                        core.persist(root, function (err) {
-                            if (err) {
-                                done(err);
-                                return;
-                            }
-                            commitHash = project.makeCommit([], core.getHash(root), 'initial commit', function (err) {
+
+                        testFixture.openContext(database, gmeConfig, logger, {
+                                projectName: projectName,
+                                branchName: 'master',
+                                createProject: true,
+                                projectSeed: './test/bin/merge/base.json'
+                            }, function (err, result) {
                                 if (err) {
                                     done(err);
                                     return;
                                 }
-                                project.setBranchHash('master', '', commitHash, function (err) {
+                                result.project.createBranch('other', result.commitHash, function (err) {
                                     if (err) {
                                         done(err);
                                         return;
                                     }
-                                    project.setBranchHash('other', '', commitHash, function (err) {
-                                        if (err) {
-                                            done(err);
-                                            return;
+
+                                    applyCLI.applyPatch(
+                                        database,
+                                        projectName,
+                                        'master',
+                                        JSON.parse(
+                                            testFixture.fs.readFileSync('./test/bin/merge/masterDiff.json')
+                                        ),
+                                        false,
+                                        undefined,
+                                        function (err/*, result*/) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
+
+                                            applyCLI.applyPatch(
+                                                database,
+                                                projectName,
+                                                'other',
+                                                JSON.parse(
+                                                    testFixture.fs.readFileSync('./test/bin/merge/otherDiff.json')
+                                                ),
+                                                false,
+                                                undefined,
+                                                function (err/*, result*/) {
+                                                    done(err);
+                                                }
+                                            );
                                         }
-                                        applyChanges();
-                                    });
+                                    );
                                 });
-                            });
-                        });
+                            }
+                        );
                     });
                 });
             });
-        });
     });
+
     after(function (done) {
-        database.openDatabase(function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            database.deleteProject(projectName, function (/*err*/) {
+        database.openDatabase()
+            .then(function () {
+                return database.deleteProject({projectName: projectName});
+            })
+            .then(function () {
                 database.closeDatabase(done);
-            });
-        });
+            })
+            .catch(done);
     });
 
     it('should have a main', function () {

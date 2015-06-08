@@ -5,37 +5,37 @@
  */
 define([], function () {
     'use strict';
-    function gmeNodeSetter(_clientGlobal) {
+    function gmeNodeSetter(logger, state, saveRoot, storeNode) {
 
         function setAttributes(path, name, value, msg) {
-            if (_clientGlobal.core && _clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.setAttribute(_clientGlobal.nodes[path].node, name, value);
+            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.setAttribute(state.nodes[path].node, name, value);
                 msg = msg || 'setAttribute(' + path + ',' + name + ',' + value + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
         function delAttributes(path, name, msg) {
-            if (_clientGlobal.core && _clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.delAttribute(_clientGlobal.nodes[path].node, name);
+            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.delAttribute(state.nodes[path].node, name);
                 msg = msg || 'delAttribute(' + path + ',' + name + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
         function setRegistry(path, name, value, msg) {
-            if (_clientGlobal.core && _clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.setRegistry(_clientGlobal.nodes[path].node, name, value);
+            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.setRegistry(state.nodes[path].node, name, value);
                 msg = msg || 'setRegistry(' + path + ',' + ',' + name + ',' + value + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
         function delRegistry(path, name, msg) {
-            if (_clientGlobal.core && _clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.delRegistry(_clientGlobal.nodes[path].node, name);
+            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.delRegistry(state.nodes[path].node, name);
                 msg = msg || 'delRegistry(' + path + ',' + ',' + name + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
@@ -45,8 +45,8 @@ define([], function () {
                 j,
                 newNode;
 
-            if (typeof parameters.parentId === 'string' && _clientGlobal.nodes[parameters.parentId] &&
-                typeof _clientGlobal.nodes[parameters.parentId].node === 'object') {
+            if (typeof parameters.parentId === 'string' && state.nodes[parameters.parentId] &&
+                typeof state.nodes[parameters.parentId].node === 'object') {
                 for (i in parameters) {
                     if (i !== 'parentId') {
                         pathestocopy.push(i);
@@ -57,50 +57,50 @@ define([], function () {
                 if (pathestocopy.length < 1) {
                     // empty on purpose
                 } else if (pathestocopy.length === 1) {
-                    newNode = _clientGlobal.core.copyNode(_clientGlobal.nodes[pathestocopy[0]].node,
-                        _clientGlobal.nodes[parameters.parentId].node);
-                    _clientGlobal.functions.storeNode(newNode);
+                    newNode = state.core.copyNode(state.nodes[pathestocopy[0]].node,
+                        state.nodes[parameters.parentId].node);
+                    storeNode(newNode);
                     if (parameters[pathestocopy[0]]) {
                         for (j in parameters[pathestocopy[0]].attributes) {
                             if (parameters[pathestocopy[0]].attributes.hasOwnProperty(j)) {
-                                _clientGlobal.core.setAttribute(newNode, j, parameters[pathestocopy[0]].attributes[j]);
+                                state.core.setAttribute(newNode, j, parameters[pathestocopy[0]].attributes[j]);
                             }
                         }
                         for (j in parameters[pathestocopy[0]].registry) {
                             if (parameters[pathestocopy[0]].registry.hasOwnProperty(j)) {
-                                _clientGlobal.core.setRegistry(newNode, j, parameters[pathestocopy[0]].registry[j]);
+                                state.core.setRegistry(newNode, j, parameters[pathestocopy[0]].registry[j]);
                             }
                         }
                     }
-                    _clientGlobal.functions.saveRoot(msg);
+                    saveRoot(msg);
                 } else {
                     copyMoreNodesAsync(pathestocopy, parameters.parentId, function (err, copyarr) {
                         var i,
                             j;
                         if (err) {
                             //rollBackModification();
-                            _clientGlobal.logger.error(err);
+                            state.logger.error(err);
                         } else {
                             for (i in copyarr) {
                                 if (copyarr.hasOwnProperty(i) && parameters[i]) {
                                     for (j in parameters[i].attributes) {
                                         if (parameters[i].attributes.hasOwnProperty(j)) {
-                                            _clientGlobal.core.setAttribute(copyarr[i], j, parameters[i].attributes[j]);
+                                            state.core.setAttribute(copyarr[i], j, parameters[i].attributes[j]);
                                         }
                                     }
                                     for (j in parameters[i].registry) {
                                         if (parameters[i].registry.hasOwnProperty(j)) {
-                                            _clientGlobal.core.setRegistry(copyarr[i], j, parameters[i].registry[j]);
+                                            state.core.setRegistry(copyarr[i], j, parameters[i].registry[j]);
                                         }
                                     }
                                 }
                             }
-                            _clientGlobal.functions.saveRoot(msg);
+                            saveRoot(msg);
                         }
                     });
                 }
             } else {
-                _clientGlobal.logger.error('wrong parameters for copy operation - denied -');
+                state.logger.error('wrong parameters for copy operation - denied -');
             }
         }
 
@@ -117,66 +117,66 @@ define([], function () {
                         result = true;
 
                     for (i = 0; i < nodePaths.length; i += 1) {
-                        result = result && (_clientGlobal.nodes[nodePaths[i]] &&
-                            typeof _clientGlobal.nodes[nodePaths[i]].node === 'object');
+                        result = result && (state.nodes[nodePaths[i]] &&
+                            typeof state.nodes[nodePaths[i]].node === 'object');
                     }
                     return result;
                 };
 
-            if (_clientGlobal.nodes[parentPath] &&
-                typeof _clientGlobal.nodes[parentPath].node === 'object' && checkPaths()) {
+            if (state.nodes[parentPath] &&
+                typeof state.nodes[parentPath].node === 'object' && checkPaths()) {
                 helpArray = {};
                 subPathArray = {};
-                parent = _clientGlobal.nodes[parentPath].node;
+                parent = state.nodes[parentPath].node;
                 returnArray = {};
 
                 //creating the 'from' object
-                tempFrom = _clientGlobal.core.createNode({
+                tempFrom = state.core.createNode({
                     parent: parent,
-                    base: _clientGlobal.core.getTypeRoot(_clientGlobal.nodes[nodePaths[0]].node)
+                    base: state.core.getTypeRoot(state.nodes[nodePaths[0]].node)
                 });
                 //and moving every node under it
                 for (i = 0; i < nodePaths.length; i += 1) {
                     helpArray[nodePaths[i]] = {};
                     helpArray[nodePaths[i]].origparent =
-                        _clientGlobal.core.getParent(_clientGlobal.nodes[nodePaths[i]].node);
+                        state.core.getParent(state.nodes[nodePaths[i]].node);
                     helpArray[nodePaths[i]].tempnode =
-                        _clientGlobal.core.moveNode(_clientGlobal.nodes[nodePaths[i]].node, tempFrom);
-                    subPathArray[_clientGlobal.core.getRelid(helpArray[nodePaths[i]].tempnode)] = nodePaths[i];
-                    delete _clientGlobal.nodes[nodePaths[i]];
+                        state.core.moveNode(state.nodes[nodePaths[i]].node, tempFrom);
+                    subPathArray[state.core.getRelid(helpArray[nodePaths[i]].tempnode)] = nodePaths[i];
+                    delete state.nodes[nodePaths[i]];
                 }
 
                 //do the copy
-                tempTo = _clientGlobal.core.copyNode(tempFrom, parent);
+                tempTo = state.core.copyNode(tempFrom, parent);
 
                 //moving back the temporary source
                 for (i = 0; i < nodePaths.length; i += 1) {
-                    helpArray[nodePaths[i]].node = _clientGlobal.core.moveNode(helpArray[nodePaths[i]].tempnode,
+                    helpArray[nodePaths[i]].node = state.core.moveNode(helpArray[nodePaths[i]].tempnode,
                         helpArray[nodePaths[i]].origparent);
-                    _clientGlobal.functions.storeNode(helpArray[nodePaths[i]].node);
+                    storeNode(helpArray[nodePaths[i]].node);
                 }
 
                 //gathering the destination nodes
-                _clientGlobal.core.loadChildren(tempTo, function (err, children) {
+                state.core.loadChildren(tempTo, function (err, children) {
                     var newNode;
 
                     if (!err && children && children.length > 0) {
                         for (i = 0; i < children.length; i += 1) {
-                            if (subPathArray[_clientGlobal.core.getRelid(children[i])]) {
-                                newNode = _clientGlobal.core.moveNode(children[i], parent);
-                                _clientGlobal.functions.storeNode(newNode);
-                                returnArray[subPathArray[_clientGlobal.core.getRelid(children[i])]] = newNode;
+                            if (subPathArray[state.core.getRelid(children[i])]) {
+                                newNode = state.core.moveNode(children[i], parent);
+                                storeNode(newNode);
+                                returnArray[subPathArray[state.core.getRelid(children[i])]] = newNode;
                             } else {
-                                _clientGlobal.logger.error('635 - should never happen!!!');
+                                state.logger.error('635 - should never happen!!!');
                             }
                         }
-                        _clientGlobal.core.deleteNode(tempFrom);
-                        _clientGlobal.core.deleteNode(tempTo);
+                        state.core.deleteNode(tempFrom);
+                        state.core.deleteNode(tempTo);
                         callback(null, returnArray);
                     } else {
                         //clean up the mess and return
-                        _clientGlobal.core.deleteNode(tempFrom);
-                        _clientGlobal.core.deleteNode(tempTo);
+                        state.core.deleteNode(tempFrom);
+                        state.core.deleteNode(tempTo);
                         callback(err, {});
                     }
                 });
@@ -200,18 +200,18 @@ define([], function () {
 
             if (pathsToMove.length > 0 &&
                 typeof parameters.parentId === 'string' &&
-                _clientGlobal.nodes[parameters.parentId] &&
-                typeof _clientGlobal.nodes[parameters.parentId].node === 'object') {
+                state.nodes[parameters.parentId] &&
+                typeof state.nodes[parameters.parentId].node === 'object') {
                 for (i = 0; i < pathsToMove.length; i += 1) {
-                    if (_clientGlobal.nodes[pathsToMove[i]] &&
-                        typeof _clientGlobal.nodes[pathsToMove[i]].node === 'object') {
-                        newNode = _clientGlobal.core.moveNode(_clientGlobal.nodes[pathsToMove[i]].node,
-                            _clientGlobal.nodes[parameters.parentId].node);
-                        returnParams[pathsToMove[i]] = _clientGlobal.core.getPath(newNode);
+                    if (state.nodes[pathsToMove[i]] &&
+                        typeof state.nodes[pathsToMove[i]].node === 'object') {
+                        newNode = state.core.moveNode(state.nodes[pathsToMove[i]].node,
+                            state.nodes[parameters.parentId].node);
+                        returnParams[pathsToMove[i]] = state.core.getPath(newNode);
                         if (parameters[pathsToMove[i]].attributes) {
                             for (j in parameters[pathsToMove[i]].attributes) {
                                 if (parameters[pathsToMove[i]].attributes.hasOwnProperty(j)) {
-                                    _clientGlobal.core.setAttribute(newNode,
+                                    state.core.setAttribute(newNode,
                                         j, parameters[pathsToMove[i]].attributes[j]);
                                 }
                             }
@@ -219,14 +219,14 @@ define([], function () {
                         if (parameters[pathsToMove[i]].registry) {
                             for (j in parameters[pathsToMove[i]].registry) {
                                 if (parameters[pathsToMove[i]].registry.hasOwnProperty(j)) {
-                                    _clientGlobal.core.setRegistry(newNode,
+                                    state.core.setRegistry(newNode,
                                         j, parameters[pathsToMove[i]].registry[j]);
                                 }
                             }
                         }
 
-                        delete _clientGlobal.nodes[pathsToMove[i]];
-                        _clientGlobal.functions.storeNode(newNode, true);
+                        delete state.nodes[pathsToMove[i]];
+                        storeNode(newNode, true);
                     }
                 }
             }
@@ -240,7 +240,7 @@ define([], function () {
                 paths = [],
                 nodes = [],
                 node,
-                parent = _clientGlobal.nodes[parameters.parentId].node,
+                parent = state.nodes[parameters.parentId].node,
                 names, i, j, index, pointer,
                 newChildren = [],
                 relations = [];
@@ -250,17 +250,17 @@ define([], function () {
             paths = Object.keys(parameters);
             paths.splice(paths.indexOf('parentId'), 1);
             for (i = 0; i < paths.length; i++) {
-                node = _clientGlobal.nodes[paths[i]].node;
+                node = state.nodes[paths[i]].node;
                 nodes.push(node);
                 pointer = {};
-                names = _clientGlobal.core.getPointerNames(node);
+                names = state.core.getPointerNames(node);
                 index = names.indexOf('base');
                 if (index !== -1) {
                     names.splice(index, 1);
                 }
 
                 for (j = 0; j < names.length; j++) {
-                    index = paths.indexOf(_clientGlobal.core.getPointerPath(node, names[j]));
+                    index = paths.indexOf(state.core.getPointerPath(node, names[j]));
                     if (index !== -1) {
                         pointer[names[j]] = index;
                     }
@@ -270,7 +270,7 @@ define([], function () {
 
             //now the instantiation
             for (i = 0; i < nodes.length; i++) {
-                newChildren.push(_clientGlobal.core.createNode({parent: parent, base: nodes[i]}));
+                newChildren.push(state.core.createNode({parent: parent, base: nodes[i]}));
             }
 
             //now for the storage and relation setting
@@ -278,85 +278,85 @@ define([], function () {
                 //attributes
                 names = Object.keys(parameters[paths[i]].attributes || {});
                 for (j = 0; j < names.length; j++) {
-                    _clientGlobal.core.setAttribute(newChildren[i],
+                    state.core.setAttribute(newChildren[i],
                         names[j], parameters[paths[i]].attributes[names[j]]);
                 }
                 //registry
                 names = Object.keys(parameters[paths[i]].registry || {});
                 for (j = 0; j < names.length; j++) {
-                    _clientGlobal.core.setRegistry(newChildren[i],
+                    state.core.setRegistry(newChildren[i],
                         names[j], parameters[paths[i]].registry[names[j]]);
                 }
 
                 //relations
                 names = Object.keys(relations[i]);
                 for (j = 0; j < names.length; j++) {
-                    _clientGlobal.core.setPointer(newChildren[i], names[j], newChildren[relations[i][names[j]]]);
+                    state.core.setPointer(newChildren[i], names[j], newChildren[relations[i][names[j]]]);
                 }
 
                 //store
-                result[paths[i]] = _clientGlobal.functions.storeNode(newChildren[i]);
+                result[paths[i]] = storeNode(newChildren[i]);
 
             }
 
             msg = msg || 'createChildren(' + JSON.stringify(result) + ')';
-            _clientGlobal.functions.saveRoot(msg);
+            saveRoot(msg);
             return result;
         }
 
         //TODO should be removed as there is no user or public API related to this function
         //function deleteNode(path, msg) {
-        //  if (_clientGlobal.core && _clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-        //    _clientGlobal.core.deleteNode(_clientGlobal.nodes[path].node);
-        //    //delete _clientGlobal.nodes[path];
+        //  if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
+        //    state.core.deleteNode(state.nodes[path].node);
+        //    //delete state.nodes[path];
         //    msg = msg || 'deleteNode(' + path + ')';
         //    saveRoot(msg);
         //  }
         //}
 
         function delMoreNodes(paths, msg) {
-            if (_clientGlobal.core) {
+            if (state.core) {
                 for (var i = 0; i < paths.length; i++) {
-                    if (_clientGlobal.nodes[paths[i]] && typeof _clientGlobal.nodes[paths[i]].node === 'object') {
-                        _clientGlobal.core.deleteNode(_clientGlobal.nodes[paths[i]].node);
-                        //delete _clientGlobal.nodes[paths[i]];
+                    if (state.nodes[paths[i]] && typeof state.nodes[paths[i]].node === 'object') {
+                        state.core.deleteNode(state.nodes[paths[i]].node);
+                        //delete state.nodes[paths[i]];
                     }
                 }
                 msg = msg || 'delMoreNodes(' + paths + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
         function createChild(parameters, msg) {
             var newID;
 
-            if (_clientGlobal.core) {
-                if (typeof parameters.parentId === 'string' && _clientGlobal.nodes[parameters.parentId] &&
-                    typeof _clientGlobal.nodes[parameters.parentId].node === 'object') {
+            if (state.core) {
+                if (typeof parameters.parentId === 'string' && state.nodes[parameters.parentId] &&
+                    typeof state.nodes[parameters.parentId].node === 'object') {
                     var baseNode = null;
-                    if (_clientGlobal.nodes[parameters.baseId]) {
-                        baseNode = _clientGlobal.nodes[parameters.baseId].node || baseNode;
+                    if (state.nodes[parameters.baseId]) {
+                        baseNode = state.nodes[parameters.baseId].node || baseNode;
                     }
-                    var child = _clientGlobal.core.createNode({
-                        parent: _clientGlobal.nodes[parameters.parentId].node,
+                    var child = state.core.createNode({
+                        parent: state.nodes[parameters.parentId].node,
                         base: baseNode,
                         guid: parameters.guid,
                         relid: parameters.relid
                     });
                     if (parameters.position) {
-                        _clientGlobal.core.setRegistry(child,
+                        state.core.setRegistry(child,
                             'position',
                             {
                                 x: parameters.position.x || 100,
                                 y: parameters.position.y || 100
                             });
                     } else {
-                        _clientGlobal.core.setRegistry(child, 'position', {x: 100, y: 100});
+                        state.core.setRegistry(child, 'position', {x: 100, y: 100});
                     }
-                    _clientGlobal.functions.storeNode(child);
-                    newID = _clientGlobal.core.getPath(child);
+                    storeNode(child);
+                    newID = state.core.getPath(child);
                     msg = msg || 'createChild(' + parameters.parentId + ',' + parameters.baseId + ',' + newID + ')';
-                    _clientGlobal.functions.saveRoot(msg);
+                    saveRoot(msg);
                 }
             }
 
@@ -365,129 +365,128 @@ define([], function () {
 
         function makePointer(id, name, to, msg) {
             if (to === null) {
-                _clientGlobal.core.setPointer(_clientGlobal.nodes[id].node, name, to);
+                state.core.setPointer(state.nodes[id].node, name, to);
             } else {
 
 
-                _clientGlobal.core.setPointer(_clientGlobal.nodes[id].node, name, _clientGlobal.nodes[to].node);
+                state.core.setPointer(state.nodes[id].node, name, state.nodes[to].node);
             }
 
             msg = msg || 'makePointer(' + id + ',' + name + ',' + to + ')';
-            _clientGlobal.functions.saveRoot(msg);
+            saveRoot(msg);
         }
 
         function delPointer(path, name, msg) {
-            if (_clientGlobal.core && _clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.deletePointer(_clientGlobal.nodes[path].node, name);
+            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.deletePointer(state.nodes[path].node, name);
                 msg = msg || 'delPointer(' + path + ',' + name + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
 
         //MGAlike - set functions
         function addMember(path, memberpath, setid, msg) {
-            if (_clientGlobal.nodes[path] &&
-                _clientGlobal.nodes[memberpath] &&
-                typeof _clientGlobal.nodes[path].node === 'object' &&
-                typeof _clientGlobal.nodes[memberpath].node === 'object') {
-                _clientGlobal.core.addMember(_clientGlobal.nodes[path].node,
-                    setid, _clientGlobal.nodes[memberpath].node);
+            if (state.nodes[path] &&
+                state.nodes[memberpath] &&
+                typeof state.nodes[path].node === 'object' &&
+                typeof state.nodes[memberpath].node === 'object') {
+                state.core.addMember(state.nodes[path].node,
+                    setid, state.nodes[memberpath].node);
                 msg = msg || 'addMember(' + path + ',' + memberpath + ',' + setid + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
         function removeMember(path, memberpath, setid, msg) {
-            if (_clientGlobal.nodes[path] &&
-                typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.delMember(_clientGlobal.nodes[path].node, setid, memberpath);
+            if (state.nodes[path] &&
+                typeof state.nodes[path].node === 'object') {
+                state.core.delMember(state.nodes[path].node, setid, memberpath);
                 msg = msg || 'removeMember(' + path + ',' + memberpath + ',' + setid + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
         function setMemberAttribute(path, memberpath, setid, name, value, msg) {
-            if (_clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.setMemberAttribute(_clientGlobal.nodes[path].node, setid, memberpath, name, value);
+            if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.setMemberAttribute(state.nodes[path].node, setid, memberpath, name, value);
                 msg = msg ||
                     'setMemberAttribute(' + path + ',' + memberpath + ',' + setid + ',' + name + ',' + value +
                     ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
         function delMemberAttribute(path, memberpath, setid, name, msg) {
-            if (_clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.delMemberAttribute(_clientGlobal.nodes[path].node, setid, memberpath, name);
+            if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.delMemberAttribute(state.nodes[path].node, setid, memberpath, name);
                 msg = msg || 'delMemberAttribute(' + path + ',' + memberpath + ',' + setid + ',' + name + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
         function setMemberRegistry(path, memberpath, setid, name, value, msg) {
-            if (_clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.setMemberRegistry(_clientGlobal.nodes[path].node, setid, memberpath, name, value);
+            if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.setMemberRegistry(state.nodes[path].node, setid, memberpath, name, value);
                 msg = msg ||
                     'setMemberRegistry(' + path + ',' + memberpath + ',' + setid + ',' + name + ',' + value + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
         function delMemberRegistry(path, memberpath, setid, name, msg) {
-            if (_clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.delMemberRegistry(_clientGlobal.nodes[path].node, setid, memberpath, name);
+            if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.delMemberRegistry(state.nodes[path].node, setid, memberpath, name);
                 msg = msg || 'delMemberRegistry(' + path + ',' + memberpath + ',' + setid + ',' + name + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
         function createSet(path, setid, msg) {
-            if (_clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.createSet(_clientGlobal.nodes[path].node, setid);
+            if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.createSet(state.nodes[path].node, setid);
                 msg = msg || 'createSet(' + path + ',' + setid + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
         function deleteSet(path, setid, msg) {
-            if (_clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.deleteSet(_clientGlobal.nodes[path].node, setid);
+            if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.deleteSet(state.nodes[path].node, setid);
                 msg = msg || 'deleteSet(' + path + ',' + setid + ')';
-                _clientGlobal.functions.saveRoot(msg);
+                saveRoot(msg);
             }
         }
 
         function setBase(path, basepath) {
-            /*if (_clientGlobal.core &&
-             _clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-             _clientGlobal.core.setRegistry(_clientGlobal.nodes[path].node,'base',basepath);
+            /*if (state.core &&
+             state.nodes[path] && typeof state.nodes[path].node === 'object') {
+             state.core.setRegistry(state.nodes[path].node,'base',basepath);
              saveRoot('setBase('+path+','+basepath+')');
              }*/
-            if (_clientGlobal.core &&
-                _clientGlobal.nodes[path] &&
-                typeof _clientGlobal.nodes[path].node === 'object' &&
-                _clientGlobal.nodes[basepath] &&
-                typeof _clientGlobal.nodes[basepath].node === 'object') {
-                _clientGlobal.core.setBase(_clientGlobal.nodes[path].node, _clientGlobal.nodes[basepath].node);
-                _clientGlobal.functions.saveRoot('setBase(' + path + ',' + basepath + ')');
+            if (state.core &&
+                state.nodes[path] &&
+                typeof state.nodes[path].node === 'object' &&
+                state.nodes[basepath] &&
+                typeof state.nodes[basepath].node === 'object') {
+                state.core.setBase(state.nodes[path].node, state.nodes[basepath].node);
+                saveRoot('setBase(' + path + ',' + basepath + ')');
             }
         }
 
         function delBase(path) {
-            /*if (_clientGlobal.core &&
-             _clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-             _clientGlobal.core.delRegistry(_clientGlobal.nodes[path].node,'base');
+            /*if (state.core &&
+             state.nodes[path] && typeof state.nodes[path].node === 'object') {
+             state.core.delRegistry(state.nodes[path].node,'base');
              saveRoot('delBase('+path+')');
              }*/
-            if (_clientGlobal.core && _clientGlobal.nodes[path] && typeof _clientGlobal.nodes[path].node === 'object') {
-                _clientGlobal.core.setBase(_clientGlobal.nodes[path].node, null);
-                _clientGlobal.functions.saveRoot('delBase(' + path + ')');
+            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.setBase(state.nodes[path].node, null);
+                saveRoot('delBase(' + path + ')');
             }
         }
 
-
-        _clientGlobal.nodeSetter = {
+        return {
             setAttributes: setAttributes,
             delAttributes: delAttributes,
             setRegistry: setRegistry,

@@ -11,58 +11,58 @@ describe('import CLI tests', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
         WebGME = testFixture.WebGME,
-        Storage = WebGME.serverUserStorage,
         importCLI = require('../../src/bin/import'),
-        openContext = testFixture.requirejs('common/util/opencontext'),
+        openContext = testFixture.openContext,
         projectName,
+        Q = testFixture.Q,
+        logger = testFixture.logger.fork('import.spec'),
         storage,
+        gmeAuth,
         project,
         jsonProject;
 
     function closeContext(callback) {
-        try {
-            project.closeProject(function () {
-                storage.closeDatabase(function (err) {
-                    callback(err);
-                });
-            });
-        } catch (err) {
-            storage.closeDatabase(function () {
-                callback(err);
-            });
-        }
+        storage.closeDatabase(function (err) {
+            callback(err);
+        });
     }
 
-    before(function () {
+    before(function (done) {
         jsonProject = testFixture.loadJsonFile('./test/bin/import/project.json');
-        storage = storage = new WebGME.serverUserStorage({
-            globConf: gmeConfig,
-            logger: testFixture.logger.fork('import_CLI_tests:storage')
-        });
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .nodeify(done);
+
     });
 
     afterEach(function (done) {
         if (project && projectName) {
-            project.closeProject(function (err1) {
-                storage.deleteProject(projectName, function (err2) {
-                    storage.closeDatabase(function (err3) {
-                        done(err1 || err2 || err3 || null);
-                    });
-                });
-            });
+            storage.deleteProject({projectName: projectName}, done);
         } else {
             done();
         }
     });
 
+    after(function (done) {
+        Q.all([
+            gmeAuth.unload(),
+            storage.closeDatabase()
+        ])
+            .nodeify(done);
+    });
+
     it('should import non-existing project with unspecified branch into master', function (done) {
         var nodePath = '/960660211/1365653822',
             contextParam = {
-            projectName: 'importTestNumber1',
-            branchName: 'master',
-            nodePaths: [nodePath]
-        };
-        importCLI.import(Storage, gmeConfig, contextParam.projectName, jsonProject, null, true,
+                projectName: 'importTestNumber1',
+                branchName: 'master',
+                nodePaths: [nodePath]
+            };
+        importCLI.import(storage, gmeConfig, contextParam.projectName, jsonProject, null, true, undefined,
             function (err, data) {
                 expect(err).to.equal(null);
 
@@ -84,11 +84,12 @@ describe('import CLI tests', function () {
     it('should import non-existing project with specified branch', function (done) {
         var nodePath = '/960660211/1365653822',
             contextParam = {
-            projectName: 'importTestNumber2',
-            branchName: 'b1',
-            nodePaths: [nodePath]
-        };
-        importCLI.import(Storage, gmeConfig, contextParam.projectName, jsonProject, contextParam.branchName, true,
+                projectName: 'importTestNumber2',
+                branchName: 'b1',
+                nodePaths: [nodePath]
+            };
+        importCLI.import(storage,
+            gmeConfig, contextParam.projectName, jsonProject, contextParam.branchName, true, undefined,
             function (err, data) {
                 expect(err).to.equal(null);
 
@@ -116,7 +117,7 @@ describe('import CLI tests', function () {
             },
             tmpJsonProject = testFixture.loadJsonFile('./test/bin/import/basicProject.json');
 
-        importCLI.import(Storage, gmeConfig, contextParam.projectName, tmpJsonProject, null, true,
+        importCLI.import(storage, gmeConfig, contextParam.projectName, tmpJsonProject, null, true, undefined,
             function (err, data) {
                 expect(err).to.equal(null);
 
@@ -136,7 +137,8 @@ describe('import CLI tests', function () {
                     closeContext(function (err) {
                         expect(err).to.equal(null);
 
-                        importCLI.import(Storage, gmeConfig, contextParam.projectName, jsonProject, null, true,
+                        importCLI.import(storage,
+                            gmeConfig, contextParam.projectName, jsonProject, null, true, undefined,
                             function (err, data) {
                                 expect(err).to.equal(null);
 

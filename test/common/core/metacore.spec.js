@@ -9,7 +9,10 @@ var testFixture = require('../../_globals.js');
 describe('meta core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = testFixture.Storage({globConf: gmeConfig, logger: testFixture.logger.fork('meta core:storage')}),
+        Q = testFixture.Q,
+        logger = testFixture.logger.fork('metacore.spec'),
+        storage,
+        projectName = 'coreMetaTesting',
         project,
         core,
         root,
@@ -17,20 +20,40 @@ describe('meta core', function () {
         attrNode,
         setNode,
         childNode,
-        aspectNode;
+        aspectNode,
+
+        gmeAuth;
+
+    before(function (done) {
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .nodeify(done);
+    });
+
+    after(function (done) {
+        Q.all([
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
+            .nodeify(done);
+    });
 
     beforeEach(function (done) {
-        storage.openDatabase(function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            storage.openProject('coreMetaTesting', function (err, p) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                project = p;
+        storage.openDatabase()
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
+                return storage.createProject({projectName: projectName});
+            })
+            .then(function (project) {
                 core = new testFixture.WebGME.core(project, {
                     globConf: gmeConfig,
                     logger: testFixture.logger.fork('meta-core:core')
@@ -65,28 +88,33 @@ describe('meta core', function () {
                 aspectNode = core.createNode({parent: root, base: base});
                 core.setAttribute(aspectNode, 'name', 'aspect');
                 core.setAspectMetaTarget(aspectNode, 'aspect', base);
-                done();
-            });
-        });
+            })
+            .then(done)
+            .catch(done);
     });
+
     afterEach(function (done) {
-        storage.deleteProject('coreMetaTesting', function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            storage.closeDatabase(done);
-        });
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+                storage.closeDatabase(done);
+            })
+            .catch(function (err) {
+                logger.error(err);
+                storage.closeDatabase(done);
+            });
     });
+
     it('checking types', function () {
         core.isTypeOf(attrNode, base).should.be.true;
         core.isTypeOf(attrNode, setNode).should.be.false;
     });
+
     it('check instances', function () {
         core.isInstanceOf(attrNode, 'base').should.be.true;
         core.isInstanceOf(setNode, 'set').should.be.false;
         core.isInstanceOf(base, 'unkown').should.be.false;
     });
+
     it('checking attribute values', function () {
 
         core.isValidAttributeValueOf(attrNode, 'unknown', 'anything').should.be.false;
@@ -111,6 +139,7 @@ describe('meta core', function () {
         core.isValidAttributeValueOf(attrNode, 'float', true).should.be.false;
         core.isValidAttributeValueOf(attrNode, 'float', '1').should.be.true;
     });
+
     it('checking attributes', function () {
         core.getValidAttributeNames(attrNode).should.include.members(['boolean', 'float', 'integer', 'string']);
         core.getValidAttributeNames(attrNode).should.have.length(4);
@@ -122,6 +151,7 @@ describe('meta core', function () {
         core.getValidAttributeNames(attrNode).should.not.include.members(['string']);
         core.getValidAttributeNames(attrNode).should.have.length(3);
     });
+
     it('checking pointers and sets', function () {
         core.getValidSetNames(setNode).should.include.members(['set']);
         core.getValidSetNames(setNode).should.have.length(1);
@@ -140,6 +170,7 @@ describe('meta core', function () {
         core.isValidTargetOf(base, setNode, 'ptr').should.be.true;
         core.isValidTargetOf(root, setNode, 'ptr').should.be.false;
     });
+
     it('removing pointer rules', function () {
         core.getValidSetNames(setNode).should.include.members(['set']);
         core.getValidSetNames(setNode).should.have.length(1);
@@ -164,6 +195,7 @@ describe('meta core', function () {
         core.getValidPointerNames(setNode).should.have.length(1);
 
     });
+
     it('checking children rules', function () {
         core.getValidChildrenPaths(childNode).should.have.length(3);
         core.getValidChildrenPaths(childNode).should.include.members([core.getPath(childNode),
@@ -179,6 +211,7 @@ describe('meta core', function () {
         core.getValidChildrenPaths(childNode).should.include.members([core.getPath(setNode), core.getPath(attrNode)]);
 
     });
+
     it('checking aspect rules', function () {
         core.getValidAspectNames(aspectNode).should.have.length(1);
         core.getValidAspectNames(aspectNode).should.include.members(['aspect']);
@@ -192,6 +225,7 @@ describe('meta core', function () {
 
         core.getValidAspectNames(aspectNode).should.be.empty;
     });
+
     it('checks MetaSheet based type query', function () {
         core.addMember(root, 'MetaAspectSet', attrNode);
         core.addMember(root, 'MetaAspectSet', base);

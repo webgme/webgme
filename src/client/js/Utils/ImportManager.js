@@ -62,7 +62,7 @@ define([
         var d = new ImportDialog();
         d.show(function (fileContent) {
             _loader.start();
-            _client.updateLibraryAsync(objID, fileContent, function (err) {
+            _client.updateLibrary(objID, fileContent, function (err) {
                 if (err) {
                     _displayMessage('Library update failed: ' + err, true);
                 }
@@ -75,7 +75,7 @@ define([
         var d = new ImportDialog();
         d.show(function (fileContent) {
             _loader.start();
-            _client.addLibraryAsync(parentID, fileContent, function (err) {
+            _client.addLibrary(parentID, fileContent, function (err) {
                 if (err) {
                     _displayMessage('Library update failed: ' + err, true);
                 }
@@ -87,7 +87,7 @@ define([
     //return utility functions
     return {
         initialize: _initialize,
-        import: _import,
+        import: _import, //TODO check if anyone uses this
         importLibrary: _importLibrary,
         addLibrary: _addLibrary
     };

@@ -29,6 +29,7 @@ function createAPI(app, mountPath, middlewareOpts) {
 
         logger = middlewareOpts.logger.fork('api'),
         gmeAuth = middlewareOpts.gmeAuth,
+        safeStorage = middlewareOpts.safeStorage,
         ensureAuthenticated = middlewareOpts.ensureAuthenticated,
 
         versionedAPIPath = mountPath + '/v1',
@@ -465,12 +466,17 @@ function createAPI(app, mountPath, middlewareOpts) {
 
 // PROJECTS
 
-    //router.get('/projects', function (req, res) {
-    //
-    //    res.json({
-    //        message: 'Not implemented yet ' + req.params.owner
-    //    });
-    //});
+    router.get('/projects', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req);
+        safeStorage.getProjectNames({username: userId})
+            .then(function (result) {
+                res.json(result);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
     //
     //router.get('/projects/:owner/:project', function (req, res) {
     //
@@ -485,13 +491,130 @@ function createAPI(app, mountPath, middlewareOpts) {
     //        message: 'Not implemented yet ' + req.params.owner
     //    });
     //});
-    //
-    //router.delete('/projects/:owner/:project', function (req, res) {
-    //
-    //    res.json({
-    //        message: 'Not implemented yet ' + req.params.owner
-    //    });
-    //});
+
+    router.delete('/projects/:projectId', function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId
+            };
+
+        safeStorage.deleteProject(data)
+            .then(function () {
+                res.sendStatus(204);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.get('/projects/:projectId/commits', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId,
+                before: (new Date()).getTime(), // current time
+                number: 100 // asks for the last 100 commits from the time specified above
+            };
+
+        safeStorage.getCommits(data)
+            .then(function (result) {
+                res.json(result);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.get('/projects/:projectId/branches', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId
+            };
+
+        safeStorage.getBranches(data)
+            .then(function (result) {
+                res.json(result);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+
+    router.get('/projects/:projectId/branches/:branchId', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId,
+                branchName: req.params.branchId
+            };
+
+        safeStorage.getLatestCommitData(data)
+            .then(function (result) {
+                res.json(result);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('not exist') > -1) {
+                    err.status = 404;
+                }
+                next(err);
+            });
+    });
+
+    router.patch('/projects/:projectId/branches/:branchId', function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId,
+                branchName: req.params.branchId,
+                hash: req.body.hash
+            };
+
+        safeStorage.createBranch(data)
+            .then(function () {
+                res.sendStatus(200);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.put('/projects/:projectId/branches/:branchId', function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId,
+                branchName: req.params.branchId,
+                hash: req.body.hash
+            };
+
+        safeStorage.createBranch(data)
+            .then(function () {
+                res.sendStatus(201);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.delete('/projects/:projectId/branches/:branchId', function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectName: req.params.projectId,
+                branchName: req.params.branchId
+            };
+
+        safeStorage.deleteBranch(data)
+            .then(function () {
+                res.sendStatus(204);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
 
 //// FIXME: requires auth
 //    router.get('/projects/:owner/:project/collaborators', function (req, res) {
@@ -541,19 +664,27 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     // error handling
-    router.use(function (err, req, res/*, next*/) {
+    router.use(function (err, req, res, next) { // NOTE: it is important to have this function signature with 4 arguments!
         var errorMessage = {
                 401: 'Authentication required',
-                403: 'No sufficient role',
+                403: 'Forbidden',
                 404: 'Not found'
             },
             message = err.message ? err.message : err;
 
         if (res.statusCode === 200) {
+            if (err.message.indexOf('Not authorized') > -1) {
+                err.status = err.status || 403;
+            }
             res.status(err.status || 500);
         }
+
+        if (errorMessage.hasOwnProperty(res.statusCode)) {
+            message = errorMessage[res.statusCode];
+        }
+
         res.json({
-            message: errorMessage.hasOwnProperty(res.statusCode) ? errorMessage[res.statusCode] : message,
+            message: message,
             documentation_url: '', //jshint ignore: line
             error: err.message ? err.message : err // FIXME: only in dev mode
         });

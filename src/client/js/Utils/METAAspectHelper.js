@@ -177,15 +177,15 @@ define([
         }
         _client = c;
 
-        _client.addEventListener(_client.events.PROJECT_OPENED, function (/*__project, projectName*/) {
+        _client.addEventListener(CONSTANTS.CLIENT.PROJECT_OPENED, function (/*__project, projectName*/) {
             _reset();
         });
 
-        _client.addEventListener(_client.events.PROJECT_CLOSED, function (/*__project*/) {
+        _client.addEventListener(CONSTANTS.CLIENT.PROJECT_CLOSED, function (/*__project*/) {
             _reset();
         });
 
-        _client.addEventListener(_client.events.BRANCH_CHANGED, function (/*__project, branch*/) {
+        _client.addEventListener(CONSTANTS.CLIENT.BRANCH_CHANGED, function (/*__project, branch*/) {
             _reset();
         });
 

@@ -44,7 +44,7 @@ define([
 
     CommitDialog.prototype._initDialog = function () {
         var self = this,
-            actualBranchName = this._client.getActualBranch();
+            actualBranchName = this._client.getActiveBranchName();
 
         this._dialog = $(commitDialogTemplate);
 
@@ -83,9 +83,10 @@ define([
             var val = self._txtMessage.val();
             if (val !== '') {
                 self._btnCommit.off('click').hide();
-                self._client.commitAsync({message: val}, function () {
-                    self._dialog.modal('hide');
-                });
+                self._logger.error('TODO: Make commit not supported/implemented.');
+                //self._client.commitAsync({message: val}, function () {
+                //    self._dialog.modal('hide');
+                //});
             }
         });
     };

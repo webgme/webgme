@@ -1,0 +1,40 @@
+<html>
+<head>
+    <script type="text/javascript">
+        var myInit = function () {
+            console.log('myInit function was called');
+
+            // you can use GME.classes.Client from this point
+            console.log(GME);
+
+
+        };
+        function onClickEventHandler () {
+            var projectName, branchName;
+            projectName = document.getElementById('projectName').value;
+            branchName = document.getElementById('branchName').value;
+            console.log('projectName, branchName', projectName, branchName);
+            var client = new GME.classes.TestStorage(GME.gmeConfig, projectName, branchName);
+//            alert('Check console for debug messages (localStorage.debug = "gme:*") \n ' +
+//            'Refresh to try with a different project or branch.');
+        }
+
+    </script>
+
+    <script type="text/javascript" src="/extlib/dist/webgme.classes.build.js"></script>
+
+</head>
+
+<body on-gme-init="myInit()">
+
+Test page.
+See console for messages.
+<div>
+    <label aria-label="projectName">Project Name:</label>
+    <input id="projectName" type="text" name="projectName"  value="Test"/>
+    <label>Branch Name:</label>
+    <input id="branchName" type="text" name="branchName" value="master"/>
+    <button onclick="onClickEventHandler()">Start Test</button>
+</div>
+</body>
+</html>

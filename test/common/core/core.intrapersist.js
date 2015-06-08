@@ -1,13 +1,15 @@
 /*jshint node:true, mocha:true*/
 /**
- * @author kecso / https://github.com/kecso
- */
+* @author kecso / https://github.com/kecso
+*/
 var testFixture = require('../../_globals.js');
 
-describe('Core IntraPersist', function () {
+describe('core.intrapersist', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = null,
+        logger = testFixture.logger.fork('core.intrapersist'),
+        Q = testFixture.Q,
+        storage,
         CANON = testFixture.requirejs('../src/common/util/canon');
 
     function loadNodes(paths, next) {
@@ -35,28 +37,46 @@ describe('Core IntraPersist', function () {
         root = null,
         rootHash = '',
         core = null,
-        project = null;
+        projectName = 'coreIntrapersistTest',
+        project = null,
 
+        gmeAuth;
 
     before(function (done) {
-        testFixture.importProject({
-            filePath: 'test/common/core/core/intraPersist.json',
-            projectName: 'coreIntrapersistTest',
-            gmeConfig: gmeConfig
-        }, function (err, result) {
-            if (err) {
-                done(err);
-                return;
-            }
-            storage = result.storage;
-            project = result.project;
-            core = result.core;
-            root = result.root;
-            commit = result.commitHash;
-            baseCommit = result.commitHash;
-            rootHash = core.getHash(root);
-            done();
-        });
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
+                return testFixture.importProject(storage, {
+                    projectSeed: 'test/common/core/core/intraPersist.json',
+                    projectName: projectName,
+                    gmeConfig: gmeConfig,
+                    logger: logger
+                });
+            })
+            .then(function (result) {
+                project = result.project;
+                core = result.core;
+                root = result.rootNode;
+                commit = result.commitHash;
+                baseCommit = result.commitHash;
+                rootHash = result.rootHash;
+            })
+            .nodeify(done);
+    });
+
+    after(function (done) {
+        Q.all([
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
+            .nodeify(done);
     });
 
     describe('SimpleChanges', function () {

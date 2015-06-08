@@ -54,25 +54,21 @@ define([
         ASSERT(typeof options.globConf === 'object');
         ASSERT(typeof options.logger !== 'undefined');
 
-        var gmeConfig = options.globConf;
-        //var logger = options.logger.fork('coretree');
+        var gmeConfig = options.globConf,
+            logger = options.logger.fork('coretree'),
+            MAX_AGE = 3, // MAGIC NUMBER
+            MAX_TICKS = 2000, // MAGIC NUMBER
+            MAX_MUTATE = 30000, // MAGIC NUMBER
 
-        var MAX_AGE = 3; // MAGIC NUMBER
-        var MAX_TICKS = 2000; // MAGIC NUMBER
-        var MAX_MUTATE = 30000; // MAGIC NUMBER
-
-        var ID_NAME = storage.ID_NAME;
-        //var EMPTY_DATA = {};
-        var __getEmptyData = function () {
-            return {};
-        };
-
-        var roots = [];
-        var ticks = 0;
+            ID_NAME = storage.ID_NAME,
+            __getEmptyData = function () {
+                return {};
+            },
+            roots = [],
+            ticks = 0,
+            stackedObjects = {};
 
         storage.loadObject = TASYNC.wrap(storage.loadObject);
-        storage.insertObject = FUTURE.adapt(storage.insertObject);
-        storage.fsyncDatabase = FUTURE.adapt(storage.fsyncDatabase);
 
         // ------- static methods
 
@@ -724,19 +720,22 @@ define([
         var __saveData = function (data) {
             ASSERT(__isMutableData(data));
 
-            var done = __getEmptyData();
+            var done = __getEmptyData(),
+                keys = Object.keys(data),
+                i, child, sub, hash;
+
             delete data._mutable;
 
-            for (var relid in data) {
-                var child = data[relid];
+            for (i = 0; i < keys.length; i++) {
+                child = data[keys[i]];
                 if (__isMutableData(child)) {
-                    var sub = __saveData(child);
+                    sub = __saveData(child);
                     if (sub === __getEmptyData()) {
-                        delete data[relid];
+                        delete data[keys[i]];
                     } else {
-                        done = FUTURE.join(done, sub);
+                        done = sub;
                         if (typeof child[ID_NAME] === 'string') {
-                            data[relid] = child[ID_NAME];
+                            data[keys[i]] = child[ID_NAME];
                         }
                     }
                 } else {
@@ -744,15 +743,18 @@ define([
                 }
             }
 
+
             if (done !== __getEmptyData()) {
-                var hash = data[ID_NAME];
+                hash = data[ID_NAME];
                 ASSERT(hash === '' || typeof hash === 'undefined');
 
                 if (hash === '') {
                     hash = '#' + GENKEY(data, gmeConfig);
                     data[ID_NAME] = hash;
 
-                    done = FUTURE.join(done, storage.insertObject(data));
+                    done = data;
+                    storage.insertObject(data, stackedObjects);
+                    //stackedObjects[hash] = data;
                 }
             }
 
@@ -760,14 +762,26 @@ define([
         };
 
         var persist = function (node) {
+            var updated = false,
+                result;
+
             node = normalize(node);
 
             if (!__isMutableData(node.data)) {
-                return false;
+                return {rootHash: node.data[ID_NAME], objects: {}};
             }
 
-            var done = __saveData(node.data);
-            return FUTURE.join(done, storage.fsyncDatabase());
+            updated = __saveData(node.data);
+            if (updated !== __getEmptyData()) {
+                result = {};
+                result.objects = stackedObjects;
+                stackedObjects = {};
+                result.rootHash = node.data[ID_NAME];
+            } else {
+                result = {rootHash: node.data[ID_NAME], objects: {}};
+            }
+
+            return result;
         };
 
         var loadRoot = function (hash) {
@@ -973,7 +987,7 @@ define([
             isHashed: isHashed,
             setHashed: setHashed,
             getHash: getHash,
-            persist: TASYNC.wrap(FUTURE.unadapt(persist)),
+            persist: persist,
             loadRoot: loadRoot,
             loadChild: loadChild,
             loadByPath: loadByPath,

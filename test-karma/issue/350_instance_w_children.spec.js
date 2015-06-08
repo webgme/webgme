@@ -5,7 +5,7 @@
  */
 var WebGMEGlobal = {}; //jshint ignore: line
 
-describe('issue 350 client crashes when manipulating a node that has a model child which is an instance of' +
+describe.skip('issue 350 client crashes when manipulating a node that has a model child which is an instance of' +
     'another model having children', function () {
     var Client,
         gmeConfig,
@@ -15,16 +15,16 @@ describe('issue 350 client crashes when manipulating a node that has a model chi
         options = {};
 
     function buildUpForTest(testId, next) {
-        client.selectProjectAsync(projectName, function (err) {
+        client.selectProject(projectName, function (err) {
             expect(err).to.equal(null);
 
-            client.selectBranchAsync('master', function (err) {
+            client.selectBranch('master', null, function (err) {
                 expect(err).to.equal(null);
 
-                client.createBranchAsync(testId, client.getActualCommit(), function (err) {
+                client.createBranch(projectName, testId, client.getActiveCommitHash(), function (err) {
                     expect(err).to.equal(null);
 
-                    client.selectBranchAsync(testId, function (err) {
+                    client.selectBranch(testId, null, function (err) {
                         expect(err).to.equal(null);
 
                         next();
@@ -43,10 +43,10 @@ describe('issue 350 client crashes when manipulating a node that has a model chi
             projectImport = JSON.parse(projectJSON);
 
             client = new Client(gmeConfig);
-            client.connectToDatabaseAsync(options, function (err) {
+            client.connectToDatabase(function (err) {
                 expect(err).to.equal(null);
 
-                client.deleteProjectAsync(projectName, function (err) {
+                client.deleteProject(projectName, function (err) {
                     expect(err).to.equal(null);
 
                     client.createProjectFromFileAsync(projectName, projectImport, function (err) {
@@ -60,7 +60,7 @@ describe('issue 350 client crashes when manipulating a node that has a model chi
     });
 
     after(function (done) {
-        client.deleteProjectAsync(projectName, function (err) {
+        client.deleteProject(projectName, function (err) {
             expect(err).to.equal(null);
 
             done();

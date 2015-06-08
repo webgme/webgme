@@ -164,7 +164,7 @@ define(['js/logger',
             _isResetablePointer,
             rootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID),
             validDecorators = null,
-            decoratorNames = _client.getAvailableDecoratorNames();
+            decoratorNames = WebGMEGlobal.allDecorators;
 
         if (rootNode && rootNode.getRegistry(REGISTRY_KEYS.VALID_DECORATORS)) {
             validDecorators = rootNode.getRegistry(REGISTRY_KEYS.VALID_DECORATORS).split(' ');

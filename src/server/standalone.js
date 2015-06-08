@@ -24,12 +24,16 @@ var Path = require('path'),
     Https = require('https'),
     URL = require('url'),
 
+    Mongo = require('./storage/mongo'),
+    Storage = require('./storage/safestorage'),
+    WebSocket = require('./storage/websocket'),
+
 // Middleware
     BlobServer = require('./middleware/blob/BlobServer'),
     ExecutorServer = require('./middleware/executor/ExecutorServer'),
     api = require('./api'),
 
-    Storage = require('./storage/serverstorage'),
+//Storage = require('./storage/serverstorage'),
     getClientConfig = require('../../config/getclientconfig'),
     GMEAUTH = require('./middleware/auth/gmeauth'),
     SSTORE = require('./middleware/auth/sessionstore'),
@@ -189,32 +193,42 @@ function StandAloneServer(gmeConfig) {
             });
         });
 
+
         //creating the proper storage for the standalone server
-        __storageOptions = {
-            combined: __httpServer,
-            logger: logger.fork('storage')
-        };
-        if (true === gmeConfig.authentication.enable) {
-            __storageOptions.sessioncheck = __sessionStore.check;
-            __storageOptions.authorization = globalAuthorization;
-            __storageOptions.authDeleteProject = __gmeAuth.deleteProject;
-            __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
-        }
+        //__storageOptions = {
+        //    combined: __httpServer,
+        //    logger: logger.fork('storage')
+        //};
+        //if (true === gmeConfig.authentication.enable) {
+        //    __storageOptions.sessioncheck = __sessionStore.check;
+        //    __storageOptions.authorization = globalAuthorization;
+        //    __storageOptions.authDeleteProject = __gmeAuth.deleteProject;
+        //    __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
+        //}
+        //
+        //
+        //__storageOptions.getToken = __gmeAuth.getToken;
+        //
+        //__storageOptions.sessionToUser = __sessionStore.getSessionUser;
+        //
+        //__storageOptions.workerManager = __workerManager;
+        //
+        //__storageOptions.globConf = gmeConfig;
+        //__storage = new Storage(__storageOptions);
+        ////end of storage creation
+        //__storage.open(function (err) {
+        //    if (err) {
+        //        storageDeferred.reject(err);
+        //    } else {
+        //        storageDeferred.resolve();
+        //    }
+        //});
 
-
-        __storageOptions.getToken = __gmeAuth.getToken;
-
-        __storageOptions.sessionToUser = __sessionStore.getSessionUser;
-
-        __storageOptions.workerManager = __workerManager;
-
-        __storageOptions.globConf = gmeConfig;
-        __storage = new Storage(__storageOptions);
-        //end of storage creation
-        __storage.open(function (err) {
+        __storage.openDatabase(function (err) {
             if (err) {
                 storageDeferred.reject(err);
             } else {
+                __webSocket.start(__httpServer);
                 storageDeferred.resolve();
             }
         });
@@ -251,13 +265,13 @@ function StandAloneServer(gmeConfig) {
 
         try {
             // FIXME: is this call synchronous?
-
+            __webSocket.stop();
             //kill all remaining workers
             __workerManager.stop(function (err) {
                 var numDestroyedSockets = 0;
 
                 // close storage
-                __storage.close(function (err1) {
+                __storage.closeDatabase(function (err1) {
                     __gmeAuth.unload(function (err2) {
                         logger.debug('gmeAuth unloaded');
                         // request server close - do not accept any new connections.
@@ -431,6 +445,11 @@ function StandAloneServer(gmeConfig) {
 
             }
         } else {
+            // if authentication is turned off we treat everybody as a guest user
+            req.session.authenticated = true;
+            req.session.udmId = gmeConfig.authentication.guestAccount;
+            req.session.userType = 'GME';
+            res.cookie('webgme', req.session.udmId);
             return next();
         }
     }
@@ -518,7 +537,7 @@ function StandAloneServer(gmeConfig) {
             restComponent = require(gmeConfig.rest.components[keys[i]]);
             if (restComponent) {
                 logger.debug('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
-                ' - /rest/external/' + keys[i]);
+                    ' - /rest/external/' + keys[i]);
                 __app.use('/rest/external/' + keys[i], restComponent(gmeConfig, ensureAuthenticated, logger));
             } else {
                 throw new Error('Loading ' + gmeConfig.rest.components[keys[i]] + ' failed.');
@@ -546,7 +565,8 @@ function StandAloneServer(gmeConfig) {
     //variables
     var logger = null,
         __storage = null,
-        __storageOptions = {},
+        __database = null,
+        __webSocket = null,
         __gmeAuth = null,
         apiReady,
         __secureSiteInfo = {},
@@ -605,11 +625,16 @@ function StandAloneServer(gmeConfig) {
     logger.debug('initializing static server');
     __app = new Express();
 
+    __database = new Mongo(logger, gmeConfig);
+    __storage = new Storage(__database, logger, gmeConfig, __gmeAuth);
+    __webSocket = new WebSocket(__storage, logger, gmeConfig, __gmeAuth, __workerManager);
+
     middlewareOpts = {  //TODO: Pass this to every middleware They must not modify the options!
         gmeConfig: gmeConfig,
         logger: logger,
         ensureAuthenticated: ensureAuthenticated,
         gmeAuth: __gmeAuth,
+        safeStorage: __storage,
         workerManager: __workerManager
     };
 
@@ -900,7 +925,8 @@ function StandAloneServer(gmeConfig) {
     __app.get('/worker/simpleResult/*', function (req, res) {
         var urlArray = req.url.split('/');
         if (urlArray.length > 3) {
-            __storage.getWorkerResult(urlArray[3], function (err, result) {
+            __workerManager.result(urlArray[3], function (err, result) {
+                console.log('result2', err, result);
                 if (err) {
                     res.sendStatus(500);
                 } else {
@@ -959,6 +985,30 @@ function StandAloneServer(gmeConfig) {
         res.setHeader('Content-type', 'application/json');
         res.end(JSON.stringify({allPlugins: names}));
     });
+
+    __app.get('/listAllSeeds', ensureAuthenticated, function (req, res) {
+        var names = [],
+            result = [],
+            seedName,
+            i,
+            j;
+        if (gmeConfig.seedProjects.enable === true) {
+            for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
+                names = FS.readdirSync(gmeConfig.seedProjects.basePaths[i]);
+                for (j = 0; j < names.length; j++) {
+                    seedName = Path.basename(names[j], '.json');
+                    if (result.indexOf(seedName) === -1) {
+                        result.push(seedName);
+                    }
+                }
+            }
+        }
+        logger.debug('/listAllSeeds', {metadata: result});
+        res.status(200);
+        res.setHeader('Content-type', 'application/json');
+        res.end(JSON.stringify({allSeeds: result.sort()}));
+    });
+
     __app.get('/listAllVisualizerDescriptors', ensureAuthenticated, function (req, res) {
         var allVisualizerDescriptors = getVisualizersDescriptor();
         res.status(200);

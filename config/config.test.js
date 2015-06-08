@@ -4,17 +4,21 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-var config = require('./config.default');
+var path = require('path'),
+    config = require('./config.default');
 
 config.server.port = 9001;
 
 config.mongo.uri = 'mongodb://127.0.0.1:27017/webgme_tests';
-config.mongo.options.server.poolSize = 5; // this is the default
+config.mongo.options.server.poolSize = 2; // 5 is the default
 
 config.blob.fsDir = './test-tmp/blob-storage';
 
 config.executor.outputDir = './test-tmp/executor';
 config.executor.workerRefreshInterval = 100;
+
+//FIXME: Have a common dir for this..
+config.plugin.basePaths.push(path.join(__dirname, '../test/plugin/scenarios/plugins'));
 
 config.server.log = {
     transports: [{

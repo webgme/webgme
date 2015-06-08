@@ -5,7 +5,11 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/logger', 'css!./styles/ProjectTitleWidget.css'], function (Logger) {
+define([
+    'js/logger',
+    'js/client/constants',
+    'css!./styles/ProjectTitleWidget.css'
+], function (Logger, CLIENT_CONSTANTS) {
     'use strict';
 
     var ProjectTitleWidget,
@@ -30,13 +34,13 @@ define(['js/logger', 'css!./styles/ProjectTitleWidget.css'], function (Logger) {
 
         this._projectTitle = this._el.find('.title');
 
-        this._client.addEventListener(this._client.events.PROJECT_OPENED, function () {
+        this._client.addEventListener(CLIENT_CONSTANTS.PROJECT_OPENED, function () {
             self._refresh();
         });
-        this._client.addEventListener(this._client.events.PROJECT_CLOSED, function () {
+        this._client.addEventListener(CLIENT_CONSTANTS.PROJECT_CLOSED, function () {
             self._refresh();
         });
-        this._client.addEventListener(this._client.events.BRANCH_CHANGED, function () {
+        this._client.addEventListener(CLIENT_CONSTANTS.BRANCH_CHANGED, function () {
             self._refresh();
         });
     };
@@ -44,7 +48,7 @@ define(['js/logger', 'css!./styles/ProjectTitleWidget.css'], function (Logger) {
     ProjectTitleWidget.prototype._refresh = function () {
         var client = this._client,
             actualProject = client.getActiveProjectName(),
-            actualBranch = client.getActualBranch(),
+            actualBranch = client.getActiveBranchName(),
             readOnly = client.isProjectReadOnly() || client.isCommitReadOnly(),
             titleText = actualProject + ' @ ' + actualBranch,
             documentTitle = titleText + (readOnly ? ' [READ-ONLY]' : '');

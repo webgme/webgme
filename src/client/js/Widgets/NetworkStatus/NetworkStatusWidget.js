@@ -9,8 +9,9 @@
 define([
     'js/logger',
     'js/Controls/DropDownMenu',
-    'js/Controls/PopoverBox'
-], function (Logger, DropDownMenu, PopoverBox) {
+    'js/Controls/PopoverBox',
+    'js/Constants'
+], function (Logger, DropDownMenu, PopoverBox, CONSTANTS) {
 
     'use strict';
 
@@ -30,7 +31,8 @@ define([
     };
 
     NetworkStatusWidget.prototype._initializeUI = function () {
-        var self = this;
+        var self = this,
+            initialStatus = this._client.getNetworkStatus();
 
         this._el.empty();
 
@@ -47,25 +49,27 @@ define([
 
         this._ddNetworkStatus.onItemClicked = function (value) {
             if (value === ITEM_VALUE_CONNECT) {
-                self._client.connect();
+                //self._client.connect();
             }
         };
 
-        this._client.addEventListener(this._client.events.NETWORKSTATUS_CHANGED, function (/*__project, state*/) {
-            self._refreshNetworkStatus();
+        this._client.addEventListener(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, function (client, networkStatus) {
+            self._refreshNetworkStatus(networkStatus);
         });
 
-        this._refreshNetworkStatus();
+        this._refreshNetworkStatus(initialStatus);
     };
 
-    NetworkStatusWidget.prototype._refreshNetworkStatus = function () {
-        var status = this._client.getActualNetworkStatus();
-
+    NetworkStatusWidget.prototype._refreshNetworkStatus = function (status) {
+        this._logger.debug('_refreshNetworkStatus', status);
         switch (status) {
-            case this._client.networkStates.CONNECTED:
+            case CONSTANTS.CLIENT.STORAGE.CONNECTED:
                 this._modeConnected();
                 break;
-            case this._client.networkStates.DISCONNECTED:
+            case CONSTANTS.CLIENT.STORAGE.RECONNECTED:
+                this._modeReconnected();
+                break;
+            case CONSTANTS.CLIENT.STORAGE.DISCONNECTED:
                 this._modeDisconnected();
                 break;
         }
@@ -74,6 +78,18 @@ define([
     NetworkStatusWidget.prototype._modeConnected = function () {
         this._ddNetworkStatus.clear();
         this._ddNetworkStatus.setTitle('CONNECTED');
+        this._ddNetworkStatus.setColor(DropDownMenu.prototype.COLORS.GREEN);
+
+        if (this._disconnected === true) {
+            this._popoverBox.show('Connected to the server',
+                this._popoverBox.alertLevels.SUCCESS, true);
+            delete this._disconnected;
+        }
+    };
+
+    NetworkStatusWidget.prototype._modeReconnected = function () {
+        this._ddNetworkStatus.clear();
+        this._ddNetworkStatus.setTitle('RECONNECTED');
         this._ddNetworkStatus.setColor(DropDownMenu.prototype.COLORS.GREEN);
 
         if (this._disconnected === true) {

@@ -6,28 +6,30 @@
 define([], function () {
     'use strict';
 
-    function AddOn(_clientGlobal) {
+    function AddOn(state, storage, logger__, gmeConfig) {
         var _addOns = {},
+            logger = logger__.fork('addOn'),
             _constraintCallback = function () {
             };
         //addOn functions
         function startAddOn(name) {
             if (_addOns[name] === undefined) {
                 _addOns[name] = 'loading';
-                _clientGlobal.db.simpleRequest({
+                logger.debug('loading addOn ' + name);
+                storage.simpleRequest({
                         command: 'connectedWorkerStart',
                         workerName: name,
-                        project: _clientGlobal.projectName,
-                        branch: _clientGlobal.branch
+                        project: state.project.name,
+                        branch: state.branchName
                     },
                     function (err, id) {
                         if (err) {
-                            _clientGlobal.logger.error('starting addon failed ' + err);
+                            logger.error('starting addon failed ' + err);
                             delete _addOns[name];
-                            return _clientGlobal.logger.error(err);
+                            return logger.error(err);
                         }
 
-                        _clientGlobal.logger.debug('started addon ' + name + ' ' + id);
+                        logger.debug('started addon ' + name + ' ' + id);
                         _addOns[name] = id;
                     });
             }
@@ -38,12 +40,12 @@ define([], function () {
             if (!_addOns[name] || _addOns[name] === 'loading') {
                 return callback(new Error('no such addOn is ready for queries'));
             }
-            _clientGlobal.db.simpleQuery(_addOns[name], query, callback);
+            storage.simpleQuery(_addOns[name], query, callback);
         }
 
         function stopAddOn(name, callback) {
             if (_addOns[name] && _addOns[name] !== 'loading') {
-                _clientGlobal.db.simpleResult(_addOns[name], callback);
+                storage.simpleResult(_addOns[name], callback);
                 delete _addOns[name];
             } else {
                 callback(_addOns[name] ? new Error('addon loading') : null);
@@ -56,11 +58,11 @@ define([], function () {
                 neededAddOns,
                 runningAddOns,
                 callback = function (err) {
-                    _clientGlobal.logger.error(err);
+                    logger.error(err);
                 };
 
-            if (_clientGlobal.gmeConfig.addOn.enable === true) {
-                neededAddOns = _clientGlobal.core.getRegistry(root, 'usedAddOns');
+            if (gmeConfig.addOn.enable === true) {
+                neededAddOns = state.core.getRegistry(root, 'usedAddOns');
                 runningAddOns = getRunningAddOnNames();
                 neededAddOns = neededAddOns ? neededAddOns.split(' ') : [];
                 for (i = 0; i < neededAddOns.length; i += 1) {
@@ -81,11 +83,11 @@ define([], function () {
                 keys,
                 callback;
 
-            if (_clientGlobal.gmeConfig.addOn.enable === true) {
+            if (gmeConfig.addOn.enable === true) {
                 keys = Object.keys(_addOns);
                 callback = function (err) {
                     if (err) {
-                        _clientGlobal.logger.error('stopAddOn' + err);
+                        logger.error('stopAddOn' + err);
                     }
                 };
 
@@ -156,7 +158,7 @@ define([], function () {
 
         //core addOns end
 
-        _clientGlobal.addOn = {
+        return {
             startAddOn: startAddOn,
             queryAddOn: queryAddOn,
             stopAddOn: stopAddOn,
@@ -166,7 +168,8 @@ define([], function () {
             validateProjectAsync: validateProjectAsync,
             validateModelAsync: validateModelAsync,
             validateNodeAsync: validateNodeAsync,
-            setValidationCallback: setValidationCallback
+            setValidationCallback: setValidationCallback,
+            getRunningAddOnNames: getRunningAddOnNames
         };
     }
 

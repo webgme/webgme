@@ -8,7 +8,7 @@
 var testFixture = require('../../_globals.js');
 
 
-describe('Simple worker', function () {
+describe.skip('Simple worker', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,
@@ -18,8 +18,14 @@ describe('Simple worker', function () {
         CONSTANTS = require('./../../../src/server/worker/constants'),
         server,
 
-        logger = testFixture.logger,
-        MongoStorage = require('./../../../src/server/storage/serveruserstorage'),
+        gmeAuth,
+
+        usedProjectNames = [
+            'workerSeedFromDB',
+            'WorkerProject'
+        ],
+        logger = testFixture.logger.fork('simpleworker.spec'),
+        storage,
         baseProjectContext = {
             name: 'WorkerProject',
             commitHash: '',
@@ -29,10 +35,6 @@ describe('Simple worker', function () {
         baseProjectJson = JSON.parse(
             testFixture.fs.readFileSync('test/server/worker/simpleworker/baseProject.json', 'utf8')
         ),
-        storage = new MongoStorage({
-            logger: logger.fork('mongoStorage'),
-            globConf: gmeConfig
-        }),
         deleteProject = function (projectName, next) {
             testFixture.deleteProject({
                 storage: storage,
@@ -56,24 +58,47 @@ describe('Simple worker', function () {
         server = WebGME.standaloneServer(gmeConfig);
         server.start(function (err) {
             expect(err).to.equal(null);
-            testFixture.importProject({
-                storage: storage,
-                filePath: 'test/server/worker/simpleworker/baseProject.json',
-                projectName: baseProjectContext.name,
-                branchName: baseProjectContext.branch,
-                gmeConfig: gmeConfig
-            }, function (err, result) {
-                expect(err).to.equal(null);
-                baseProjectContext.commitHash = result.commitHash;
-                baseProjectContext.rootHash = result.core.getHash(result.root);
-
-                done();
-            });
+            testFixture.clearDBAndGetGMEAuth(gmeConfig, usedProjectNames)
+                .then(function (gmeAuth_) {
+                    gmeAuth = gmeAuth_;
+                    storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                    return storage.openDatabase();
+                })
+                .then(function () {
+                    return storage.deleteProject({projectName: baseProjectContext.name});
+                })
+                .then(function () {
+                    return testFixture.importProject(storage,
+                        {
+                            projectSeed: 'test/server/worker/simpleworker/baseProject.json',
+                            projectName: baseProjectContext.name,
+                            branchName: baseProjectContext.branch,
+                            gmeConfig: gmeConfig,
+                            logger: logger
+                        });
+                })
+                .then(function (result) {
+                    baseProjectContext.commitHash = result.commitHash;
+                    baseProjectContext.rootHash = result.core.getHash(result.rootNode);
+                })
+                .nodeify(done);
         });
     });
 
     after(function (done) {
-        server.stop(done);
+        server.stop(function (err) {
+            if (err) {
+                logger.error(err);
+            }
+            storage.deleteProject({projectName: baseProjectContext.name})
+                .then(function () {
+                    return Q.all([
+                        storage.closeDatabase(),
+                        gmeAuth.unload()
+                    ]);
+                })
+                .nodeify(done);
+        });
     });
 
     function unloadSimpleWorker() {
@@ -728,7 +753,6 @@ describe('Simple worker', function () {
                 expect(msg.error).equal(null);
 
                 expect(msg.result).not.equal(null);
-                console.log(msg.result);
                 expect(msg.result.arbitrary).equal('object');
 
                 return worker.send({command: CONSTANTS.workerCommands.connectedWorkerStop});
@@ -758,8 +782,8 @@ describe('Simple worker', function () {
                 }
             };
 
-        deleteProject(projectName, function (err) {
-            expect(err).equal(null);
+        //deleteProject(projectName, function (err) {
+        //    expect(err).equal(null);
 
             worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
                 .then(function (msg) {
@@ -785,7 +809,7 @@ describe('Simple worker', function () {
                 })
                 .finally(restoreProcessFunctions)
                 .nodeify(done);
-        });
+//        });
     });
 
     it('should fail to execute a plugin if the server execution is not allowed', function (done) {

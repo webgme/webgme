@@ -10,57 +10,47 @@ describe('Run plugin CLI', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
-        should = testFixture.should,
+        logger = testFixture.logger.fork('run_plugin.spec'),
         spawn = testFixture.childProcess.spawn,
-        Storage = testFixture.WebGME.serverUserStorage,
-        mongodb = require('mongodb'),
-        mongoConn,
-        importCLI = require('../../src/bin/import'),
-        fs = require('fs'),
+        storage,
+        expect = testFixture.expect,
         filename = require('path').normalize('src/bin/run_plugin.js'),
-        projectName = 'aaa';
+        projectName = 'aaa',
+        gmeAuth,
+        Q = testFixture.Q;
 
     before(function (done) {
-        // TODO: refactor this into _globals.js
-        var jsonProject,
-            getJsonProject = function (path) {
-                return JSON.parse(fs.readFileSync(path, 'utf-8'));
-            };
-        mongodb.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
-            if (err) {
-                done(err);
-                return;
-            }
-            mongoConn = db;
-            db.dropCollection(projectName, function (err) {
-                // ignores if the collection was not found
-                if (err && err.errmsg !== 'ns not found') {
-                    done(err);
-                    return;
-                }
-
-                try {
-                    jsonProject = getJsonProject('./test/bin/run_plugin/project.json');
-                } catch (err) {
-                    done(err);
-                    return;
-                }
-                importCLI.import(Storage, gmeConfig, projectName, jsonProject, 'master', true,
-                    function (err) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        done();
-                    }
-                );
-            });
-        });
+        //adding some project to the database
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
+                return testFixture.importProject(storage, {
+                    projectSeed: './test/bin/run_plugin/project.json',
+                    projectName: projectName,
+                    branchName: 'master',
+                    gmeConfig: gmeConfig,
+                    logger: logger
+                });
+            })
+            .nodeify(done);
     });
 
     after(function (done) {
-        mongoConn.close();
-        done();
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+                return Q.all([
+                    storage.closeDatabase(),
+                    gmeAuth.unload()
+                ]);
+            })
+            .nodeify(done);
     });
 
     describe('as a child process', function () {
@@ -82,11 +72,9 @@ describe('Run plugin CLI', function () {
             });
 
             runpluginProcess.on('close', function (code) {
-                //console.log(stdoutData);
-                //console.log(err);
-                stdout.should.contain('execution was successful');
-                stderr.should.contain('This is an error message');
-                should.equal(code, 0);
+                //expect(stdout).to.contain('execution was successful');
+                expect(stderr).to.contain('This is an error message');
+                expect(code).to.equal(0);
                 done();
             });
         });
@@ -102,7 +90,7 @@ describe('Run plugin CLI', function () {
 
         it('should run the Minimal Working Example plugin', function (done) {
             process.exit = function (code) {
-                should.equal(code, 0, 'Should have succeeded');
+                expect(code).to.equal(0);
             };
 
             runPlugin.main(['node', filename, '-p', projectName, '-n', 'MinimalWorkingExample'],
@@ -111,8 +99,8 @@ describe('Run plugin CLI', function () {
                         done(new Error(err));
                         return;
                     }
-                    should.equal(result.success, true);
-                    should.equal(result.error, null);
+                    expect(result.success).to.equal(true);
+                    expect(result.error).to.equal(null);
                     done();
                 }
             );
