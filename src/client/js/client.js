@@ -1648,6 +1648,21 @@ define([
         this.getDetailedHistoryAsync = addOnFunctions.getDetailedHistoryAsync;
         this.getRunningAddOnNames = addOnFunctions.getRunningAddOnNames;
         this.addOnsAllowed = gmeConfig.addOn.enable === true;
+
+        //constraint
+        this.setConstraint = function(path, name, constraintObj) {
+            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.setConstraint(state.nodes[path].node, name, constraintObj);
+                saveRoot('setConstraint(' + path + ',' + name + ')');
+            }
+        };
+
+        this.delConstraint = function(path, name) {
+            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                state.core.delConstraint(state.nodes[path].node, name);
+                saveRoot('delConstraint(' + path + 'name' + ')');
+            }
+        };
     }
 
 
