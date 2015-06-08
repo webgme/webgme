@@ -368,7 +368,6 @@ define([
                         //we create the project
                         logger.error('TODO: implement createNewProject');
                         openProjectLoadDialog(false);
-                        return;
                         seedParameters = {
                             type: 'file', // FIXME: is the default project always file?
                             projectName: initialThingsToDo.projectToLoad,
