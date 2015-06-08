@@ -1839,31 +1839,33 @@ describe('GME client', function () {
                 node;
             currentTestId = testId;
 
-            buildUpForTest(testId, {'/323573539': {children: 0}, '/1': {children: 0}}, commitHandler, function (events) {
-                if (testState === 'init') {
-                    testState = 'checking';
+            buildUpForTest(testId, {'/323573539': {children: 0}, '/1': {children: 0}}, commitHandler,
+                function (events) {
+                    if (testState === 'init') {
+                        testState = 'checking';
 
-                    expect(events).to.have.length(3);
-                    expect(events).to.include({eid: '/323573539', etype: 'load'});
-                    expect(events).to.include({eid: '/1', etype: 'load'});
+                        expect(events).to.have.length(3);
+                        expect(events).to.include({eid: '/323573539', etype: 'load'});
+                        expect(events).to.include({eid: '/1', etype: 'load'});
 
-                    node = client.getNode(events[1].eid);
-                    expect(node).not.to.equal(null);
+                        node = client.getNode(events[1].eid);
+                        expect(node).not.to.equal(null);
 
-                    client.makePointer('/323573539', 'ptr', '/1', 'basic make pointer test');
-                    return;
+                        client.makePointer('/323573539', 'ptr', '/1', 'basic make pointer test');
+                        return;
+                    }
+
+                    if (testState === 'checking') {
+                        expect(events).to.have.length(3);
+                        expect(events).to.include({eid: '/323573539', etype: 'update'});
+                        expect(events).to.include({eid: '/1', etype: 'update'});
+
+                        node = client.getNode('/323573539');
+                        expect(node).not.to.equal(null);
+                        expect(node.getPointer('ptr')).to.deep.equal({to: '/1', from: []});
+                    }
                 }
-
-                if (testState === 'checking') {
-                    expect(events).to.have.length(3);
-                    expect(events).to.include({eid: '/323573539', etype: 'update'});
-                    expect(events).to.include({eid: '/1', etype: 'update'});
-
-                    node = client.getNode('/323573539');
-                    expect(node).not.to.equal(null);
-                    expect(node.getPointer('ptr')).to.deep.equal({to: '/1', from: []});
-                }
-            });
+            );
         });
 
         it('should set a null target', function (done) {
@@ -2198,6 +2200,10 @@ describe('GME client', function () {
             var testId = 'copyFailureTests',
                 failures = 0,
                 wantedFailures = 2,
+                commitHandler = function (queue, result, callback) {
+                    callback(false);
+                    done();
+                },
                 oldConsoleLog = console.log; //TODO awkward but probably should be changed in the code as well
 
             currentTestId = testId;
@@ -2315,7 +2321,6 @@ describe('GME client', function () {
                                 newId = events[i].eid;
                             } else {
                                 throw new Error('there should be only one new element in the territory!');
-                                return;
                             }
                         }
                     }
@@ -3483,20 +3488,20 @@ describe('GME client', function () {
                 expect(err).to.equal(null);
 
                 expect(client.getMeta('/1')).to.deep.equal({
-                    'attributes': {
-                        'name': {
-                            'type': 'string'
+                    attributes: {
+                        name: {
+                            type: 'string'
                         }
                     },
-                    'children': {
-                        'minItems': [],
-                        'maxItems': [],
-                        'items': [],
-                        'min': undefined,
-                        'max': undefined
+                    children: {
+                        minItems: [],
+                        maxItems: [],
+                        items: [],
+                        min: undefined,
+                        max: undefined
                     },
-                    'pointers': {},
-                    'aspects': {}
+                    pointers: {},
+                    aspects: {}
                 });
                 done();
             });
@@ -3511,14 +3516,14 @@ describe('GME client', function () {
 
                 expect(metaRules).to.have.keys('attributes', 'aspects', 'pointers', 'children');
                 expect(metaRules.attributes).to.deep.equal({
-                    'name': {
-                        'type': 'string'
+                    name: {
+                        type: 'string'
                     }
                 });
                 expect(metaRules.pointers).to.deep.equal({});
                 expect(metaRules.aspects).to.deep.equal({
-                    'onlyOne': {
-                        'items': [
+                    onlyOne: {
+                        items: [
                             {$ref: '/1730437907'}
                         ]
                     }
@@ -3567,8 +3572,8 @@ describe('GME client', function () {
                 expect(err).to.equal(null);
 
                 var old = client.getMeta('/1730437907'),
-                    newAttribute = {'type': 'string'};
-                client.setMeta('/1730437907', {'attributes': {'newAttr': newAttribute}});
+                    newAttribute = {type: 'string'};
+                client.setMeta('/1730437907', {attributes: {newAttr: newAttribute}});
                 //we extend our json format as well
                 old.attributes.newAttr = newAttribute;
                 expect(client.getMeta('/1730437907')).to.deep.equal(old);
@@ -3692,13 +3697,14 @@ describe('GME client', function () {
         });
 
         it('should seed a project from an existing one', function (done) {
+            this.timeout(5000);
             var projectName = 'seedTestBasicMaster',
                 seedConfig = {
                     seedName: 'projectSeedSingleMaster',
                     projectName: projectName
                 };
 
-            client.deleteProject(projectName, function (err, didExist) {
+            client.deleteProject(projectName, function (err /*, didExist*/) {
                 expect(err).to.equal(null, 'deleteProject returned error');
 
                 client.seedProject(seedConfig, function (err) {

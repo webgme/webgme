@@ -4,7 +4,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-//TODO this module has all the merge related functions
+//TODO this module has all the merge related functions and is not used in the client right now.
 define(['common/util/assert'], function (ASSERT) {
     'use strict';
     function Merge(_clientGlobal) {

@@ -133,15 +133,15 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     };
 
     // Setters
-    StorageSimpleAPI.prototype.createProject = function (projectName, parameters, callback) {
-        var data = {
-            projectName: projectName,
-            parameters: parameters
-        };
-
-        this.logger.debug('invoking createProject');
-        this.webSocket.createProject(data, callback);
-    };
+    //StorageSimpleAPI.prototype.createProject = function (projectName, parameters, callback) {
+    //    var data = {
+    //        projectName: projectName,
+    //        parameters: parameters
+    //    };
+    //
+    //    this.logger.debug('invoking createProject');
+    //    this.webSocket.createProject(data, callback);
+    //};
 
     StorageSimpleAPI.prototype.deleteProject = function (projectName, callback) {
         var data = {
@@ -171,6 +171,22 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         };
         this.logger.debug('invoking deleteBranch', data);
         this.webSocket.setBranchHash(data, callback);
+    };
+
+    //temporary simple request and result functions
+    StorageSimpleAPI.prototype.simpleRequest = function (parameters, callback) {
+        this.logger.debug('invoking simpleRequest', parameters);
+        this.webSocket.simpleRequest(parameters, callback);
+    };
+
+    StorageSimpleAPI.prototype.simpleResult = function (resultId, callback) {
+        this.logger.debug('invoking simpleResult', resultId);
+        this.webSocket.simpleResult(resultId, callback);
+    };
+
+    StorageSimpleAPI.prototype.simpleQuery = function (workerId, parameters, callback) {
+        this.logger.debug('invoking simpleQuery; workerId, parameters', workerId, parameters);
+        this.webSocket.simpleQuery(workerId, parameters, callback);
     };
 
     return StorageSimpleAPI;

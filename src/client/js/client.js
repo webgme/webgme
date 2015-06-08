@@ -69,7 +69,7 @@ define([
                 msg: ''
             },
             monkeyPatchKey,
-            nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode),
+            nodeSetterFunctions,
             addOnFunctions = new AddOn(state, storage, logger, gmeConfig);
 
         EventDispatcher.call(this);
@@ -166,6 +166,102 @@ define([
             }
         }
 
+        // Forwarded functions
+        function saveRoot(msg, callback) {
+            var persisted,
+                numberOfPersistedObjects,
+                beforeLoading = true,
+                commitQueue,
+                newCommitObject;
+            logger.debug('saveRoot msg', msg);
+
+            callback = callback || function () {
+            };
+            if (!state.viewer && !state.readOnlyProject) {
+                if (state.msg) {
+                    state.msg += '\n' + msg;
+                } else {
+                    state.msg += msg;
+                }
+                if (!state.inTransaction) {
+                    ASSERT(state.project && state.core && state.branchName);
+                    logger.debug('is NOT in transaction - will persist.');
+                    persisted = state.core.persist(state.nodes[ROOT_PATH].node);
+                    logger.debug('persisted', persisted);
+                    numberOfPersistedObjects = Object.keys(persisted.objects).length;
+                    if (numberOfPersistedObjects === 0) {
+                        logger.warn('No changes after persist will return from saveRoot.');
+                        callback(null);
+                        return;
+                    } else if (numberOfPersistedObjects > 200) {
+                        //This is just for debugging
+                        logger.warn('Lots of persisted objects', numberOfPersistedObjects);
+                    }
+
+                    // Calling event-listeners (users)
+                    // N.B. it is no longer waiting for the setBranchHash to return from server.
+                    // Which also was the case before:
+                    // https://github.com/webgme/webgme/commit/48547c33f638aedb60866772ca5638f9e447fa24
+
+                    loading(persisted.rootHash, function (err) {
+                        if (err) {
+                            logger.error('Saveroot - loading failed', err);
+                        }
+                        // TODO: Are local updates really guaranteed to be synchronous?
+                        if (beforeLoading === false) {
+                            logger.error('SaveRoot - was not synchronous!');
+                        }
+                    });
+
+                    beforeLoading = false;
+                    newCommitObject = storage.makeCommit(
+                        state.project.name,
+                        state.branchName,
+                        [state.commit.current],
+                        persisted.rootHash,
+                        persisted.objects,
+                        state.msg,
+                        callback
+                    );
+                    commitQueue = state.project.getBranch(state.branchName, true).getCommitQueue();
+                    changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD, commitQueue);
+
+                    addCommit(newCommitObject[CONSTANTS.STORAGE.MONGO_ID]);
+                    //undo-redo
+                    addModification(newCommitObject, false);
+                    self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
+                    self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
+
+                    state.msg = '';
+                } else {
+                    logger.debug('is in transaction - will NOT persist.');
+                }
+            } else {
+                //TODO: Why is this set to empty here?
+                state.msg = '';
+                callback(null);
+            }
+        }
+
+        function storeNode(node /*, basic */) {
+            var path;
+            //basic = basic || true;
+            if (node) {
+                path = state.core.getPath(node);
+                state.metaNodes[path] = node;
+                if (state.nodes[path]) {
+                    //TODO we try to avoid this
+                } else {
+                    state.nodes[path] = {node: node, hash: ''/*,incomplete:true,basic:basic*/};
+                    //TODO this only needed when real eventing will be reintroduced
+                    //_inheritanceHash[path] = getInheritanceChain(node);
+                }
+                return path;
+            }
+            return null;
+        }
+
+        // Monkey patching from other files..
         this.meta = new META();
 
         for (monkeyPatchKey in this.meta) {
@@ -177,12 +273,15 @@ define([
             }
         }
 
+        nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode);
+
         for (monkeyPatchKey in nodeSetterFunctions) {
             if (nodeSetterFunctions.hasOwnProperty(monkeyPatchKey)) {
                 self[monkeyPatchKey] = nodeSetterFunctions[monkeyPatchKey];
             }
         }
 
+        // Main API functions (with helpers) for connecting, selecting project and branches etc.
         this.connectToDatabase = function (callback) {
             if (isConnected()) {
                 logger.warn('connectToDatabase - already connected');
@@ -1232,24 +1331,6 @@ define([
             });
         }
 
-        function storeNode(node /*, basic */) {
-            var path;
-            //basic = basic || true;
-            if (node) {
-                path = state.core.getPath(node);
-                state.metaNodes[path] = node;
-                if (state.nodes[path]) {
-                    //TODO we try to avoid this
-                } else {
-                    state.nodes[path] = {node: node, hash: ''/*,incomplete:true,basic:basic*/};
-                    //TODO this only needed when real eventing will be reintroduced
-                    //_inheritanceHash[path] = getInheritanceChain(node);
-                }
-                return path;
-            }
-            return null;
-        }
-
         this.startTransaction = function (msg) {
             if (state.inTransaction) {
                 logger.error('Already in transaction, will proceed though..');
@@ -1270,82 +1351,6 @@ define([
                 saveRoot(msg, callback);
             }
         };
-
-        function saveRoot(msg, callback) {
-            var persisted,
-                numberOfPersistedObjects,
-                beforeLoading = true,
-                commitQueue,
-                newCommitObject;
-            logger.debug('saveRoot msg', msg);
-
-            callback = callback || function () {
-                };
-            if (!state.viewer && !state.readOnlyProject) {
-                if (state.msg) {
-                    state.msg += '\n' + msg;
-                } else {
-                    state.msg += msg;
-                }
-                if (!state.inTransaction) {
-                    ASSERT(state.project && state.core && state.branchName);
-                    logger.debug('is NOT in transaction - will persist.');
-                    persisted = state.core.persist(state.nodes[ROOT_PATH].node);
-                    logger.debug('persisted', persisted);
-                    numberOfPersistedObjects = Object.keys(persisted.objects).length;
-                    if (numberOfPersistedObjects === 0) {
-                        logger.warn('No changes after persist will return from saveRoot.');
-                        callback(null);
-                        return;
-                    } else if (numberOfPersistedObjects > 200) {
-                        //This is just for debugging
-                        logger.warn('Lots of persisted objects', numberOfPersistedObjects);
-                    }
-
-                    // Calling event-listeners (users)
-                    // N.B. it is no longer waiting for the setBranchHash to return from server.
-                    // Which also was the case before:
-                    // https://github.com/webgme/webgme/commit/48547c33f638aedb60866772ca5638f9e447fa24
-
-                    loading(persisted.rootHash, function (err) {
-                        if (err) {
-                            logger.error('Saveroot - loading failed', err);
-                        }
-                        // TODO: Are local updates really guaranteed to be synchronous?
-                        if (beforeLoading === false) {
-                            logger.error('SaveRoot - was not synchronous!');
-                        }
-                    });
-
-                    beforeLoading = false;
-                    newCommitObject = storage.makeCommit(
-                        state.project.name,
-                        state.branchName,
-                        [state.commit.current],
-                        persisted.rootHash,
-                        persisted.objects,
-                        state.msg,
-                        callback
-                    );
-                    commitQueue = state.project.getBranch(state.branchName, true).getCommitQueue();
-                    changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD, commitQueue);
-
-                    addCommit(newCommitObject[CONSTANTS.STORAGE.MONGO_ID]);
-                    //undo-redo
-                    addModification(newCommitObject, false);
-                    self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-                    self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
-
-                    state.msg = '';
-                } else {
-                    logger.debug('is in transaction - will NOT persist.');
-                }
-            } else {
-                //TODO: Why is this set to empty here?
-                state.msg = '';
-                callback(null);
-            }
-        }
 
         function addCommit(commitHash) {
             state.commit.previous = state.commit.current;
@@ -1650,14 +1655,14 @@ define([
         this.addOnsAllowed = gmeConfig.addOn.enable === true;
 
         //constraint
-        this.setConstraint = function(path, name, constraintObj) {
+        this.setConstraint = function (path, name, constraintObj) {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 state.core.setConstraint(state.nodes[path].node, name, constraintObj);
                 saveRoot('setConstraint(' + path + ',' + name + ')');
             }
         };
 
-        this.delConstraint = function(path, name) {
+        this.delConstraint = function (path, name) {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 state.core.delConstraint(state.nodes[path].node, name);
                 saveRoot('delConstraint(' + path + 'name' + ')');

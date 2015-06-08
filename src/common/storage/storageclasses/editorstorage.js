@@ -423,19 +423,6 @@ define([
                 }
             }
         };
-
-        //temporary simple request and result functions
-        this.simpleRequest = function (parameters, callback) {
-            webSocket.simpleRequest(parameters, callback);
-        };
-
-        this.simpleResult = function (resultId, callback) {
-            webSocket.simpleResult(resultId, callback);
-        };
-
-        this.simpleQuery = function (workerId, parameters, callback) {
-            webSocket.simpleQuery(workerId, parameters, callback);
-        };
     }
 
     EditorStorage.prototype = Object.create(StorageObjectLoaders.prototype);
