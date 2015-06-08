@@ -12,6 +12,7 @@
 var BlobClient = requireJS('blob/BlobClient'),
     BlobMetadata = requireJS('blob/BlobMetadata'),
 
+    BufferStreamReader = require('../../util/BufferStreamReader'),
     StringStreamWriter = require('../../util/StringStreamWriter');
 
 /**
@@ -71,6 +72,10 @@ BlobRunPluginClient.prototype.putMetadata = function (metadataDescriptor, callba
 
 
 BlobRunPluginClient.prototype.putFile = function (name, data, callback) {
+
+    if (Buffer.isBuffer(data)) {
+        data = new BufferStreamReader(data);
+    }
 
     this.blobBackend.putFile(name, data, function (err, hash) {
         if (err) {
