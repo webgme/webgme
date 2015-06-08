@@ -179,16 +179,15 @@ describe('GME client', function () {
             );
 
             //addOn related API
-            // TODO: Add these back!!
-            //expect(client).to.include.keys(
-            //    'validateProjectAsync',
-            //    'validateModelAsync',
-            //    'validateNodeAsync',
-            //    'setValidationCallback',
-            //    'getDetailedHistoryAsync',
-            //    'getRunningAddOnNames',
-            //    'addOnsAllowed'
-            //);
+            expect(client).to.include.keys(
+                'validateProjectAsync',
+                'validateModelAsync',
+                'validateNodeAsync',
+                'setValidationCallback',
+                'getDetailedHistoryAsync',
+                'getRunningAddOnNames',
+                'addOnsAllowed'
+            );
 
             //territory related API
             expect(client).to.include.keys(
@@ -201,7 +200,7 @@ describe('GME client', function () {
             //export - import API
             expect(client.hasOwnProperty('runServerPlugin')).to.equal(true, 'runServerPlugin');
             //expect(client.hasOwnProperty('exportItems')).to.equal(true, 'exportItems'); //TODO: Add this back
-            expect(client.hasOwnProperty('getExportItemsUrlAsync')).to.equal(true, 'getExportItemsUrlAsync');
+            expect(client.hasOwnProperty('getExportItemsUrl')).to.equal(true, 'getExportItemsUrl');
             expect(client.hasOwnProperty('createProjectFromFile')).to.equal(true, 'createProjectFromFile');
             expect(client.hasOwnProperty('getExportProjectBranchUrl')).to.equal(true, 'getExportProjectBranchUrl');
             expect(client.hasOwnProperty('getExportLibraryUrl')).to.equal(true, 'getExportLibraryUrl');
@@ -537,28 +536,27 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should delete a project', function (done) {
-            var testProjectName = 'deleteProject',
-                projectInfo = {};
+        it('should delete a project', function (done) {
+            var testProjectName = 'deleteProject';
 
-            client.deleteProjectAsync(testProjectName, function (err) {
+            client.deleteProject(testProjectName, function (err) {
                 expect(err).to.equal(null);
 
-                client.createProjectAsync(testProjectName, projectInfo, function (err) {
+                client.createProject(testProjectName, function (err) {
                     expect(err).to.equal(null);
 
-                    client.getAvailableProjectsAsync(function (err, names) {
+                    client.getProjectsAndBranches(true, function (err, projects) {
                         expect(err).to.equal(null);
 
-                        expect(names).to.include(testProjectName);
+                        expect(projects).to.include.keys(testProjectName);
 
-                        client.deleteProjectAsync(testProjectName, function (err) {
+                        client.deleteProject(testProjectName, function (err) {
                             expect(err).to.equal(null);
 
-                            client.getAvailableProjectsAsync(function (err, names) {
+                            client.getProjectsAndBranches(true, function (err, projects) {
                                 expect(err).to.equal(null);
 
-                                expect(names).not.to.include(testProjectName);
+                                expect(projects).not.to.include.keys(testProjectName);
                                 done();
                             });
                         });
@@ -587,9 +585,9 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should fail to create an already existing project', function (done) {
-            client.createProjectAsync(projectName, {}, function (err) {
-                expect(err).to.contain('already exists!');
+        it('should fail to create an already existing project', function (done) {
+            client.createProject(projectName, function (err) {
+                expect(err).to.contain('Project already exist');
                 done();
             });
         });
@@ -896,7 +894,7 @@ describe('GME client', function () {
         //    });
         //});
 
-        it.skip('should create a new branch for the given project (not necessarily the opened)', function (done) {
+        it('should create a new branch for the given project (not necessarily the opened)', function (done) {
             var actualProject,
                 genericProjectName = 'createGenericBranch';
 
@@ -909,13 +907,13 @@ describe('GME client', function () {
 
                 client.deleteProject(genericProjectName, function (err) {
                     expect(err).to.equal(null);
-                    client.createProjectAsync(genericProjectName, {}, function (err) {
+                    client.createProject(genericProjectName, function (err) {
                         expect(err).to.equal(null);
 
-                        client.createGenericBranchAsync(genericProjectName, 'genericBranch', '#424242', function (err) {
+                        client.createBranch(genericProjectName, 'genericBranch', '#424242', function (err) {
                             expect(err).to.equal(null);
 
-                            client.getFullProjectsInfoAsync(function (err, info) {
+                            client.getProjectsAndBranches(true, function (err, info) {
                                 expect(err).to.equal(null);
 
                                 expect(client.getActiveProjectName()).to.equal(actualProject);
@@ -932,7 +930,7 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should delete a branch form the given project (not necessarily the opened one)', function (done) {
+        it('should delete a branch form the given project (not necessarily the opened one)', function (done) {
             // deleteGenericBranchAsync
             var actualProject,
                 genericProjectName = 'removeGenericBranch';
@@ -944,7 +942,7 @@ describe('GME client', function () {
 
                 client.deleteProject(genericProjectName, function (err) {
                     expect(err).to.equal(null);
-                    client.createProject(genericProjectName, {}, function (err) {
+                    client.createProject(genericProjectName, function (err) {
                         expect(err).to.equal(null);
 
                         client.createBranch(genericProjectName, 'genericBranch', '#424242', function (err) {
@@ -964,7 +962,7 @@ describe('GME client', function () {
                                     '#424242',
                                     function (err) {
                                         expect(err).to.equal(null);
-                                        client.getProjectsAndBranches(function (err, info) {
+                                        client.getProjectsAndBranches(true, function (err, info) {
                                             expect(err).to.equal(null);
 
                                             expect(client.getActiveProjectName()).to.equal(actualProject);
@@ -1729,15 +1727,18 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should complete a transaction and commit the changes', function (done) {
-            var testId = 'basicCompleteTransaction';
+        it('should complete a transaction but not commit any changes', function (done) {
+            var testId = 'basicCompleteTransaction',
+                commitHandler = function (queue, result, callback) {
+                    callback(false);
+                };
             currentTestId = testId;
 
-            buildUpForTest(testId, {}, function () {
+            buildUpForTest(testId, {}, commitHandler, function () {
                 client.removeUI(testId);//we do not need a UI and it would just make test code more complex
-                client.completeTransaction('should indicate a commit', function (err) {
+                client.completeTransaction('should not persist anything', function (err) {
                     expect(err).to.equal(null);
-                    expect(baseCommitHash).not.to.equal(client.getActiveCommitHash());
+                    expect(baseCommitHash).to.equal(client.getActiveCommitHash());
                     done();
                 });
             });

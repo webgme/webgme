@@ -119,7 +119,7 @@ define([
             webSocket.createProject(data, function (err) {
                 if (err) {
                     logger.error('cannot create project ', projectName, err);
-                    callback('cannot create project', err);
+                    callback(err);
                     return;
                 }
 

@@ -768,7 +768,7 @@ define([
             node = normalize(node);
 
             if (!__isMutableData(node.data)) {
-                return false;
+                return {rootHash: node.data[ID_NAME], objects: {}};
             }
 
             updated = __saveData(node.data);

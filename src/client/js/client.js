@@ -1291,8 +1291,8 @@ define([
                     ASSERT(state.project && state.core && state.branchName);
                     logger.debug('is NOT in transaction - will persist.');
                     persisted = state.core.persist(state.nodes[ROOT_PATH].node);
-                    numberOfPersistedObjects = Object.keys(persisted.objects).length;
                     logger.debug('persisted', persisted);
+                    numberOfPersistedObjects = Object.keys(persisted.objects).length;
                     if (numberOfPersistedObjects === 0) {
                         logger.warn('No changes after persist will return from saveRoot.');
                         callback(null);
@@ -1568,7 +1568,7 @@ define([
         };
 
         //dump nodes
-        this.getExportItemsUr = function (paths, filename, callback) {
+        this.getExportItemsUrl = function (paths, filename, callback) {
             storage.simpleRequest({
                     command: 'dumpMoreNodes',
                     name: state.project.name,
