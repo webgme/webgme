@@ -193,10 +193,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('watchBranch', function (data, callback) {
-                var roomName = data.projectName + ROOM_DIV + data.branchName;
                 logger.debug('watchBranch', {metadata: data});
                 projectAccess(socket, data.projectName)
                     .then(function (access) {
+                        var roomName = data.projectName + ROOM_DIV + data.branchName;
                         if (data.join) {
                             if (access.read) {
                                 socket.join(roomName);
@@ -282,11 +282,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('makeCommit', function (data, callback) {
-                if (socket.rooms.indexOf(data.projectName + ROOM_DIV + data.branchName) > -1) {
-                    data.socket = socket;
-                }
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
+                        if (socket.rooms.indexOf(data.projectName + ROOM_DIV + data.branchName) > -1) {
+                            data.socket = socket;
+                        }
                         data.username = userId;
                         return storage.makeCommit(data);
                     })
@@ -303,17 +303,32 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('loadObjects', function (data, callback) {
-                storage.loadObjects(data, function (err, result) {
-                    // FIXME: different than other functions... catch(function (err) ...
-                    callback(err, result);
-                });
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.loadObjects(data);
+                    })
+                    .then(function (loadedObjects) {
+                        callback(null, loadedObjects); //Single load-fails are reported in this object.
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
             });
 
             socket.on('setBranchHash', function (data, callback) {
-                if (socket.rooms.indexOf(data.projectName) > -1) {
-                    data.socket = socket;
-                }
-                storage.setBranchHash(data)
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        if (socket.rooms.indexOf(data.projectName) > -1) {
+                            data.socket = socket;
+                        }
+                        data.username = userId;
+                        return storage.setBranchHash(data);
+                    })
                     .then(function (result) {
                         callback(null, result);
                     })
@@ -382,11 +397,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('deleteProject', function (data, callback) {
-                if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
-                    data.socket = socket;
-                }
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
+                        if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
+                            data.socket = socket;
+                        }
                         data.username = userId;
                         return storage.deleteProject(data);
                     })
@@ -403,11 +418,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('createProject', function (data, callback) {
-                if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
-                    data.socket = socket;
-                }
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
+                        if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
+                            data.socket = socket;
+                        }
                         data.username = userId;
                         return storage.createProject(data);
                     })
