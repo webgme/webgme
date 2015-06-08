@@ -319,7 +319,30 @@ describe('Memory storage', function () {
                     expect(projectNames).deep.equal([projectName]);
                     return memoryStorage.deleteProject({projectName: projectName});
                 })
+                .then(function (result) {
+                    expect(result).to.equal(true);
+                    return memoryStorage.getProjectNames({});
+                })
+                .then(function (projectNames) {
+                    expect(projectNames).deep.equal([]);
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should delete a non-existent project', function (done) {
+            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+
+            memoryStorage.openDatabase()
                 .then(function () {
+                    return memoryStorage.getProjectNames({});
+                })
+                .then(function (projectNames) {
+                    expect(projectNames).deep.equal([]);
+                    return memoryStorage.deleteProject({projectName: projectName});
+                })
+                .then(function (result) {
+                    expect(result).to.equal(false);
                     return memoryStorage.getProjectNames({});
                 })
                 .then(function (projectNames) {
