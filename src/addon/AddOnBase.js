@@ -27,117 +27,36 @@ define(['common/storage/constants'], function (CONSTANTS) {
         throw new Error('implement this function in the derived class - getting type automatically is a bad idea,' +
             'when the js scripts are minified names are useless.');
     };
-
-    //AddOnBase.prototype._eventer = function (ready) {
-    //    var lastGuid = '',
-    //        self = this,
-    //        isReady = false,
-    //        nextServerEvent = function (err, guid, parameters) {
-    //            lastGuid = guid || lastGuid;
-    //            self.logger.debug('next server event');
-    //            if (self.running === false) {
-    //                self.logger.debug('event will not be processed; addon has already stopped', {metadata: arguments});
-    //                return;
-    //            }
-    //            if (isReady === false) {
-    //                self.logger.debug('eventer is ready');
-    //                isReady = true;
-    //                ready();
-    //            }
-    //            self.logger.debug('eventer', {metadata: arguments});
-    //            if (!err && parameters) {
-    //                self.pendingEvents += 1;
-    //                switch (parameters.type) { // FIXME use if else
-    //                    case 'PROJECT_CREATED':
-    //                    case 'PROJECT_DELETED':
-    //                    case 'BRANCH_CREATED':
-    //                    case 'BRANCH_DELETED':
-    //                        //TODO can be handled later
-    //                        self.pendingEvents -= 1;
-    //                        return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-    //                    case 'BRANCH_UPDATED':
-    //                        if (self.projectName === parameters.project && self.branchName === parameters.branch) {
-    //                            //setTimeout(function () {
-    //
-    //                            self.project.loadObject(parameters.commit, function (err, commit) {
-    //                                if (err || !commit) {
-    //                                    // FIXME: we should do something with the error.
-    //                                    self.pendingEvents -= 1;
-    //                                    return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-    //                                }
-    //
-    //                                self.commit = parameters.commit;
-    //                                self.core.loadRoot(commit.root, function (err, root) {
-    //                                    if (err) {
-    //                                        // FIXME: we should do something with the error.
-    //                                        self.pendingEvents -= 1;
-    //                                        return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-    //                                    }
-    //                                    if (self.stopped) {
-    //                                        // do not call update if addon has stopped.
-    //                                        self.pendingEvents -= 1;
-    //                                        //return;
-    //                                    } else {
-    //                                        self.update(root, function (/*err*/) {
-    //                                            //TODO: error handling here?
-    //                                            self.pendingEvents -= 1;
-    //                                            return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-    //                                        });
-    //                                    }
-    //                                });
-    //                            });
-    //                            //}, 400); // Intentional delay to test code,
-    //                            // for testing use 400 (success) and 1800 (failure)
-    //                        } else {
-    //                            return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-    //                        }
-    //                }
-    //            } else {
-    //                // FIXME: log error if any
-    //                if (self.running) {
-    //                    setTimeout(function () {
-    //                        return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-    //                    }, 1000);
-    //                }
-    //            }
-    //        };
-    //
-    //    //setTimeout(function () {
-    //    self._storage.getNextServerEvent(lastGuid, nextServerEvent);
-    //    //}, 100); // for testing purposes only
-    //};
-
-    AddOnBase.prototype.updateHandler = function (updateQueue, updateData, aborting) {
-        var self = this;
-
-        if (self.running) {
-            self.rootHash = updateData.commitObject.root;
-            self.commit = updateData.commitObject[CONSTANTS.MONGO_ID];
-            self.core.loadRoot(self.rootHash, function (err, root) {
-                if (err) {
-                    self.logger.error('failed to load new root', err);
-                    aborting(true);
-                    return;
-                }
-
-                self.root = root;
-                self.update(root, function (err) {
-                    aborting(err !== null);
-                });
-            });
-        }
-    };
-
-    AddOnBase.prototype.commitHandler = function (commitQueue, result, pushing) {
-        //TODO check how it should work
-        pushing(true);
-    };
-
+    
     AddOnBase.prototype.init = function (parameters, callback) {
-        var self = this;
+        var self = this,
+            updateHandler = function (updateQueue, updateData, aborting) {
+
+                if (self.running) {
+                    self.rootHash = updateData.commitObject.root;
+                    self.commit = updateData.commitObject[CONSTANTS.MONGO_ID];
+                    self.core.loadRoot(self.rootHash, function (err, root) {
+                        if (err) {
+                            self.logger.error('failed to load new root', err);
+                            aborting(true);
+                            return;
+                        }
+
+                        self.root = root;
+                        self.update(root, function (err) {
+                            aborting(err !== null);
+                        });
+                    });
+                }
+            },
+            commitHandler = function (commitQueue, result, pushing) {
+                //TODO check how it should work
+                pushing(true);
+            };
+
         // This is the part of the start process which should always be done,
         // so this function should be always called from the start.
-        this.logger.debug('Initializing');
+        self.logger.debug('Initializing');
         if (!(parameters.projectName && parameters.branchName)) {
             callback(new Error('Failed to initialize'));
             return;
@@ -166,7 +85,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             // time to wait in ms for this amount after stop is called and before we kill the addon
             self.waitTimeForPendingEvents = parameters.waitTimeForPendingEvents || 1500;
 
-            self._storage.openBranch(self.projectName, self.branchName, self.updateHandler, self.commitHandler, function (err, branch) {
+            self._storage.openBranch(self.projectName, self.branchName, updateHandler, commitHandler, function (err, branch) {
                 if (err) {
                     callback(err);
                     return;
