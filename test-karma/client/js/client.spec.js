@@ -2,6 +2,8 @@
 /* jshint browser: true, mocha: true, expr: true */
 /**
  * @author lattmann / https://github.com/lattmann
+ * @author kesco / https://github.com/kesco
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 var WebGMEGlobal = {}; // jshint ignore:line
@@ -271,19 +273,15 @@ describe('GME client', function () {
             var client = new Client(gmeConfig);
             client.connectToDatabase(function (err) {
                 expect(err).to.equal(null);
-                console.log('connected');
                 client.selectProject(projectName, function (err) {
                     expect(err).to.equal(null);
-                    console.log('selected');
 
                     expect(client.getActiveProjectName()).to.equal(projectName);
                     client.disconnectFromDatabase(function (err) {
-                        console.log('disconnected');
                         expect(err).to.equal(null);
 
                         client.connectToDatabase(function (err) {
                             expect(err).to.equal(null);
-                            console.log('connected');
                             expect(client.getActiveProjectName()).to.equal(null);
                             done();
                         });
@@ -2535,7 +2533,7 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should add or modify a constraint', function (done) {
+        it('should add or modify a constraint', function (done) {
             var testState = 'init',
                 testId = 'basicSetConstraint',
                 node,
@@ -2588,7 +2586,7 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should remove the constraint from the node data', function (done) {
+        it('should remove the constraint from the node data', function (done) {
             // delConstraint 701504349
             var testState = 'init',
                 testId = 'basicDelConstraint',
@@ -2757,12 +2755,18 @@ describe('GME client', function () {
             );
         });
 
-        it.skip('should remove the specific attribute of the set member', function (done) {
+        it('should remove the specific attribute of the set member', function (done) {
             var testState = 'init',
                 testId = 'basicDelMemberAttribute',
+                first = true,
                 commitHandler = function (queue, result, callback) {
-                    callback(false);
-                    done();
+                    if (first) {
+                        first = false;
+                        callback(true);
+                    } else {
+                        callback(false);
+                        done();
+                    }
                 },
                 node;
 
@@ -2772,7 +2776,6 @@ describe('GME client', function () {
                 function (events) {
                 if (testState === 'init') {
                     testState = 'add';
-
                     expect(events).to.have.length(3);
                     expect(events).to.include({eid: '/323573539', etype: 'load'});
                     expect(events).to.include({eid: '/1697300825', etype: 'load'});
@@ -2786,7 +2789,7 @@ describe('GME client', function () {
                         '/1697300825',
                         'set',
                         'name',
-                        'set member',
+                        'set membero',
                         'basic del member attribute test - set');
                     return;
                 }
@@ -2794,12 +2797,11 @@ describe('GME client', function () {
                 if (testState === 'add') {
                     testState = 'del';
                     expect(events).to.have.length(3);
-
                     node = client.getNode('/323573539');
                     expect(node).not.to.equal(null);
                     expect(node.getMemberIds('set')).to.include('/1697300825');
                     expect(node.getMemberAttributeNames('set', '/1697300825')).to.include('name');
-                    expect(node.getMemberAttribute('set', '/1697300825', 'name')).to.equal('set member');
+                    expect(node.getMemberAttribute('set', '/1697300825', 'name')).to.equal('set membero');
 
 
                     client.delMemberAttribute('/323573539',
@@ -2812,7 +2814,6 @@ describe('GME client', function () {
 
                 if (testState === 'del') {
                     expect(events).to.have.length(3);
-
                     node = client.getNode('/323573539');
                     expect(node).not.to.equal(null);
                     expect(node.getMemberIds('set')).to.include('/1697300825');
@@ -2870,12 +2871,18 @@ describe('GME client', function () {
             );
         });
 
-        it.skip('should remove the specified registry key of the set member', function (done) {
+        it('should remove the specified registry key of the set member', function (done) {
             var testState = 'init',
                 testId = 'basicDelMemberRegistry',
+                first = true,
                 commitHandler = function (queue, result, callback) {
-                    callback(false);
-                    done();
+                    if (first) {
+                        first = false;
+                        callback(true);
+                    } else {
+                        callback(false);
+                        done();
+                    }
                 },
                 node;
 
@@ -2899,7 +2906,7 @@ describe('GME client', function () {
                         '/1697300825',
                         'set',
                         'name',
-                        'set member',
+                        'set membere',
                         'basic del member registry test - set');
                     return;
                 }
@@ -2912,7 +2919,7 @@ describe('GME client', function () {
                     expect(node).not.to.equal(null);
                     expect(node.getMemberIds('set')).to.include('/1697300825');
                     expect(node.getMemberRegistryNames('set', '/1697300825')).to.include('name');
-                    expect(node.getMemberRegistry('set', '/1697300825', 'name')).to.equal('set member');
+                    expect(node.getMemberRegistry('set', '/1697300825', 'name')).to.equal('set membere');
 
 
                     client.delMemberRegistry('/323573539',
@@ -2931,8 +2938,6 @@ describe('GME client', function () {
                     expect(node.getMemberIds('set')).to.include('/1697300825');
                     expect(node.getMemberRegistryNames('set', '/1697300825')).not.to.include('name');
                     expect(node.getMemberRegistry('set', '/1697300825', 'name')).to.equal(undefined);
-
-                    done();
                 }
             });
         });
@@ -3311,8 +3316,8 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should return a url which would download the given list of nodes', function (done) {
-            client.getExportItemsUrlAsync(['', '/1'], 'output', function (err, url) {
+        it('should return a url which would download the given list of nodes', function (done) {
+            client.getExportItemsUrl(['', '/1'], 'output', function (err, url) {
                 expect(err).to.equal(null);
                 expect(url).to.contain('output');
                 expect(url).to.contain('/worker/simpleResult/');
@@ -3334,9 +3339,9 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should return a url where the given library (sub-tree) is available', function (done) {
+        it('should return a url where the given library (sub-tree) is available', function (done) {
             this.timeout(5000);
-            client.getExportLibraryUrlAsync('', 'output', function (err, url) {
+            client.getExportLibraryUrl('', 'output', function (err, url) {
                 expect(err).to.equal(null);
                 expect(url).to.contain('output');
                 expect(url).to.contain('/worker/simpleResult/');
