@@ -3305,42 +3305,26 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should export the list of nodes in a REST-API format', function (done) {
-            client.exportItems(['', '/1'], function (err, exportedItems) {
-                expect(err).to.equal(null);
-
-                expect(exportedItems).have.length(2);
-                done();
-            });
-        });
-
-        it.skip('should fail to export not loaded object', function (done) {
-            client.exportItems(['/42/42'], function (err) {
-                expect(err).not.to.equal(null);
-                done();
-            });
-        });
-
         it('should return a url which would download the given list of nodes', function (done) {
+            this.timeout(10000);
             client.getExportItemsUrl(['', '/1'], 'output', function (err, url) {
                 expect(err).to.equal(null);
                 expect(url).to.contain('output');
                 expect(url).to.contain('/worker/simpleResult/');
 
                 //FIXME why server crashes at the end if we get the result??
-                //superagent.get(url).end(function (err, res) {
-                //
-                //    expect(err).to.equal(null);
-                //
-                //    expect(res.status).to.equal(200);
-                //
-                //    expect(res.body).not.to.equal(null);
-                //
-                //    expect(res.body).to.have.length(2);
-                //
-                //    done();
-                //});
-                done();
+                superagent.get(url).end(function (err, res) {
+
+                    expect(err).to.equal(null);
+
+                    expect(res.status).to.equal(200);
+
+                    expect(res.body).not.to.equal(null);
+
+                    expect(res.body).to.have.length(2);
+
+                    done();
+                });
             });
         });
 

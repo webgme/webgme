@@ -26,13 +26,13 @@ process.on('SIGINT', function () {
 });
 
 var WEBGME = require(__dirname + '/../../../webgme'),
-    Q = WEBGME.Q,
+    Q = require('q'),
     Core = requireJS('common/core/core'),
     GUID = requireJS('common/util/guid'),
     DUMP = requireJS('common/core/users/dumpmore'),
     Storage = requireJS('common/storage/nodestorage'),
     Serialization = requireJS('common/core/users/serialization'),
-    //BlobClient = requireJS('common/blob/BlobClient'),
+//BlobClient = requireJS('common/blob/BlobClient'),
     PluginResult = requireJS('plugin/PluginResult'),
     PluginMessage = requireJS('plugin/PluginMessage'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
@@ -211,7 +211,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                 }
 
                 if (nodeObj) {
-                    nodes[result.core.getPath(nodeObj)] = nodeObj;
+                    nodes[core.getPath(nodeObj)] = nodeObj;
                 }
 
                 if (counter === paths.length) {
@@ -223,9 +223,15 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     deferred.reject(error);
                 }
 
-                deferred.resolve(nodes);
+                var result = [],
+                    i;
+
+                for (i = 0; i < paths.length; i += 1) {
+                    result.push(nodes[paths[i]] || null);
+                }
+                deferred.resolve(result);
             },
-            error,
+            error = null,
             len;
 
         len = paths.length || 0;
@@ -234,7 +240,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
             allNodesLoadedHandler();
         }
         while (len--) {
-            result.core.loadByPath(root, paths[len], loadedNodeHandler);
+            core.loadByPath(root, paths[len], loadedNodeHandler);
         }
         return deferred.promise.nodeify(callback);
     },
@@ -267,6 +273,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                         }
 
                         loadNodes(root, core, nodePaths, function (err, nodes) {
+                            console.log('loaded', err, nodes);
                             if (err) {
                                 finish(err);
                                 return;
@@ -745,7 +752,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         var AddOn = getAddOn(addOnName),
             storage = getConnectedStorage(webGMESessionId);
 
-        _addOn = new AddOn(Core, storage, gmeConfig, logger.fork('addOn_'+addOnName), userId);
+        _addOn = new AddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName), userId);
         //for the initialization we need the project as well
         storage.open(function (networkStatus) {
             if (networkStatus === STORAGE_CONSTANTS.CONNECTED) {
@@ -765,7 +772,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                 callback('unable to connect to webgme server');
             }
         });
-
 
 
     },
