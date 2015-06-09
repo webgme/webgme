@@ -98,8 +98,8 @@ define(['js/Loader/LoaderCircles',
 
             for (i = 0; i < fileSeeds.length; i += 1) {
                 self._optGroupFile.append($('<option>', {text: fileSeeds[i], value: 'file:' + fileSeeds[i]}));
-                if (self.seedProjectName === fileSeeds) {
-                    defaultOption = 'file:' + fileSeeds;
+                if (self.seedProjectName === fileSeeds[i]) {
+                    defaultOption = 'file:' + fileSeeds[i];
                 }
             }
 
@@ -119,7 +119,7 @@ define(['js/Loader/LoaderCircles',
                             value: 'db:' + projectId + projectList[i].branches[branchId]
                         }
                     ));
-                    if (self.seedProjectName === projectId) {
+                    if (!defaultOption && self.seedProjectName === projectId) { //File seed has precedence.
                         defaultOption = 'db:' + projectId + projectList[i].branches[branchId];
                     }
                 } else {
@@ -148,7 +148,7 @@ define(['js/Loader/LoaderCircles',
                         branchId = Object.keys(projectList[i].branches)[0];
                     }
 
-                    if (self.seedProjectName === projectId) {
+                    if (!defaultOption && self.seedProjectName === projectId) { //File seed has precedence.
                         defaultOption = 'db:' + projectId + branchId;
                     }
                 }
