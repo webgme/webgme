@@ -538,9 +538,11 @@ define([
             exportBranch,
             createBranch,
             deleteBranch,
+            mergeBranch,
             createCommitMessage,
 
             deleteBranchItem,
+            mergeBranchItem,
             undoLastCommitItem,
             redoLastUndoItem;
 
@@ -609,6 +611,11 @@ define([
 
             };
 
+            mergeBranch = function (data) {
+                self.logger.error('trying to merge '+data.branchId+' into '+self.$scope.navigator.items[self.navIdBranch].id+' of project '+data.projectId);
+                self.logger.error('merge call not yet implemented');
+            };
+
             createCommitMessage = function (data) {
                 self.selectBranch(data, function (err) {
                     var cd;
@@ -673,6 +680,18 @@ define([
                 projectId: projectId,
                 branchId: branchId,
                 branchInfo: branchInfo
+            }
+        };
+
+        mergeBranchItem = {
+            id: 'mergeBranch',
+            label: 'Merge into current branch',
+            iconClass: 'fa fa-share-alt fa-rotate-90',
+            disabled: false,
+            action: mergeBranch,
+            actionData: {
+                projectId: projectId,
+                branchId: branchId
             }
         };
 
@@ -744,6 +763,7 @@ define([
                             }
                         },
                         deleteBranchItem,
+                        mergeBranchItem,
                         {
                             id: 'exportBranch',
                             label: 'Export branch',
@@ -761,6 +781,7 @@ define([
         };
 
         self.projects[projectId].branches[branchId].deleteBranchItem = deleteBranchItem;
+        self.projects[projectId].branches[branchId].mergeBranchItem = mergeBranchItem;
         self.projects[projectId].branches[branchId].undoLastCommitItem = undoLastCommitItem;
         self.projects[projectId].branches[branchId].redoLastUndoItem = redoLastUndoItem;
 
@@ -854,6 +875,7 @@ define([
         if (currentBranch) {
             currentBranch.isSelected = false;
             currentBranch.deleteBranchItem.disabled = false;
+            currentBranch.mergeBranchItem.disabled = false;
         }
 
         if (projectId || projectId === '') {
@@ -876,6 +898,7 @@ define([
                 if (currentBranch) {
                     currentBranch.isSelected = true;
                     currentBranch.deleteBranchItem.disabled = true;
+                    currentBranch.mergeBranchItem.disabled = true;
                 }
 
                 return;
@@ -932,6 +955,7 @@ define([
                 self.projects[projectId].branches[branchId].isSelected = true;
 
                 self.projects[projectId].branches[branchId].deleteBranchItem.disabled = true;
+                self.projects[projectId].branches[branchId].mergeBranchItem.disabled = true;
 
                 if (self.gmeClient) {
                     if (branchId !== self.gmeClient.getActiveBranchName()) {
