@@ -8,6 +8,8 @@ var Q = require('q'),
     FS = require('fs'),
     path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
+    Project = require('../../src/server/storage/userproject'),
+
     Core = webgme.core,
     cliStorage,
     gmeAuth,
@@ -15,7 +17,7 @@ var Q = require('q'),
     REGEXP = webgme.REGEXP;
 
 
-var merge = function (database, projectId, sourceBranchOrCommit, targetBranchOrCommit, autoMerge, callback) {
+var merge = function (database, projectId, sourceBranchOrCommit, targetBranchOrCommit, autoMerge, userName, callback) {
         'use strict';
 
         var project,
@@ -41,34 +43,25 @@ var merge = function (database, projectId, sourceBranchOrCommit, targetBranchOrC
                 });
             },
             finishUp = function () {
-                try {
-                    project.closeProject(function (err) {
-                        if (err) {
-                            callback(error || err, result);
-                            return;
-                        }
-                        database.closeDatabase(function (err) {
-                            callback(error || err, result);
-                        });
-                    });
-                } catch (err) {
-                    try {
-                        database.closeDatabase(function (err) {
-                            callback(error || err, result);
-                        });
-                    } catch (err) {
-                        callback(error || err, result);
-                    }
-                }
+                database.closeDatabase(function () {
+                    callback(error,result);
+                });
             };
 
         database.openDatabase(function (err) {
+            var openProjectData = {
+                projectName: projectId
+            };
+            if (userName) {
+                openProjectData.username = userName;
+            }
+
             if (err) {
                 error = err;
                 finishUp();
                 return;
             }
-            database.openProject(projectId, function (err, p) {
+            database.openProject(openProjectData, function (err, p) {
                 var baseCommitCalculated = function (err, bc) {
                         if (err) {
                             error = error || err;
@@ -150,46 +143,54 @@ var merge = function (database, projectId, sourceBranchOrCommit, targetBranchOrC
                                     finishUp();
                                     return;
                                 }
-                                core.persist(baseRoot, function (err) {
-                                    if (err) {
-                                        error = err;
-                                        finishUp();
-                                        return;
-                                    }
-                                    var newHash = core.getHash(baseRoot),
-                                        newCommitHash = project.makeCommit([myCommitHash, theirCommitHash],
-                                            newHash,
-                                            'merging [' + sourceBranchOrCommit + '] into [' +
-                                            targetBranchOrCommit + ']',
-                                            function (err) {
-                                                if (err) {
-                                                    error = err;
-                                                    finishUp();
-                                                    return;
-                                                }
-                                                result.finalCommitHash = newCommitHash;
 
-                                                if (REGEXP.BRANCH.test(targetBranchOrCommit)) {
-                                                    //we updates the branch as well
-                                                    project.setBranchHash(targetBranchOrCommit,
-                                                        theirCommitHash,
-                                                        newCommitHash,
-                                                        function (err) {
-                                                            if (err) {
-                                                                error = err;
-                                                                finishUp();
-                                                                return;
-                                                            }
-                                                            result.updatedBranch = targetBranchOrCommit;
-                                                            finishUp();
-                                                        }
-                                                    );
-                                                } else {
+                                var persisted = core.persist(baseRoot);
+                                project.makeCommit(null,
+                                    [myCommitHash, theirCommitHash],
+                                    persisted.rootHash,
+                                    persisted.objects,
+                                    'merging [' + sourceBranchOrCommit + '] into [' +
+                                    targetBranchOrCommit + ']',
+                                    function (err, commitResult) {
+                                        if (err) {
+                                            logger.error('project.makeCommit failed.');
+                                            error = err;
+                                            finishUp();
+                                            return;
+                                        }
+
+                                        result.finalCommitHash = commitResult.hash;
+                                        if (REGEXP.BRANCH.test(targetBranchOrCommit)) {
+                                            var branchParameters = {
+                                                branchName: targetBranchOrCommit,
+                                                projectName: projectId,
+                                                oldHash: theirCommitHash,
+                                                newHash: commitResult.hash
+                                            };
+                                            if (userName) {
+                                                branchParameters.username = userName;
+                                            }
+                                            database.setBranchHash(branchParameters, function (err, updateResult) {
+                                                    if (err) {
+                                                        logger.error('setBranchHash failed with error.');
+                                                        error = err;
+                                                        finishUp();
+                                                        return;
+                                                    }
+
+                                                    result.updatedBranch = targetBranchOrCommit;
+                                                    logger.info('merge was done to branch [' + targetBranchOrCommit + ']');
+                                                    error = null;
                                                     finishUp();
                                                 }
-                                            }
-                                        );
-                                });
+                                            );
+                                        } else {
+                                            error = null;
+                                            finishUp();
+                                        }
+
+                                    }
+                                );
                             });
 
                         } else {
@@ -227,20 +228,20 @@ var merge = function (database, projectId, sourceBranchOrCommit, targetBranchOrC
                             }
                             next();
                         } else if (REGEXP.BRANCH.test(inputIdentifier)) {
-                            project.getBranchNames(function (err, names) {
+                            project.getBranches(function (err, branches) {
                                 if (err) {
                                     next(err);
                                     return;
                                 }
-                                if (!names[inputIdentifier]) {
+                                if (!branches[inputIdentifier]) {
                                     next('unknown branch [' + inputIdentifier + ']');
                                     return;
                                 }
 
                                 if (isMine) {
-                                    myCommitHash = names[inputIdentifier];
+                                    myCommitHash = branches[inputIdentifier];
                                 } else {
-                                    theirCommitHash = names[inputIdentifier];
+                                    theirCommitHash = branches[inputIdentifier];
                                 }
                                 next();
                             });
@@ -251,7 +252,11 @@ var merge = function (database, projectId, sourceBranchOrCommit, targetBranchOrC
                     callback(err, result);
                     return;
                 }
-                project = p;
+
+                project = new Project(p, database, logger, gmeConfig);
+                if (userName) {
+                    project.setUser(userName);
+                }
                 core = new Core(project, {globConf: gmeConfig, logger: logger.fork('core')});
 
                 needed = 2;
@@ -317,7 +322,8 @@ var merge = function (database, projectId, sourceBranchOrCommit, targetBranchOrC
                 return cliStorage.openDatabase();
             })
             .then(function () {
-                merge(cliStorage, program.projectIdentifier, program.mine, program.theirs, program.autoMerge, program.user,
+                merge(cliStorage,
+                    program.projectIdentifier, program.mine, program.theirs, program.autoMerge, program.user,
                     function (err, result) {
                         if (err) {
                             logger.warn('merging failed: ', err);
@@ -379,9 +385,11 @@ if (require.main === module) {
         .then(function () {
             'use strict';
             logger.info('Done');
+            process.exit(0);
         })
         .catch(function (err) {
             'use strict';
             logger.error('ERROR : ' + err);
+            process.exit(1);
         });
 }
