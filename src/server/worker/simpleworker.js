@@ -273,7 +273,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                         }
 
                         loadNodes(root, core, nodePaths, function (err, nodes) {
-                            console.log('loaded', err, nodes);
                             if (err) {
                                 finish(err);
                                 return;

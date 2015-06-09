@@ -926,7 +926,6 @@ function StandAloneServer(gmeConfig) {
         var urlArray = req.url.split('/');
         if (urlArray.length > 3) {
             __workerManager.result(urlArray[3], function (err, result) {
-                console.log('result2', err, result);
                 if (err) {
                     res.sendStatus(500);
                 } else {
