@@ -205,6 +205,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         var deferred = Q.defer(),
             nodes = {},
             counter = 0,
+            error = '',
             loadedNodeHandler = function (err, nodeObj) {
                 counter += 1;
                 if (err) {
@@ -232,7 +233,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                 }
                 deferred.resolve(result);
             },
-            error = null,
             len;
 
         len = paths.length || 0;
@@ -288,23 +288,25 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         });
     },
 
-// Plugin functions
-    getPlugin = function (name) {
-        return requireJS('plugin/' + name + '/' + name + '/' + name);
-    },
-
-    executePlugin = function (webGMESessionId, userId, name, context, callback) {
+    /**
+     * Executes a plugin.
+     *
+     * @param {string} webGMESessionId
+     * @param {string} userId
+     * @param {string} pluginName
+     * @param {object} context - where the plugin should execute.
+     * @param {string} context.project - name of project.
+     * @param {string} context.activeNode - path to activeNode.
+     * @param {string} [context.activeSelection=[]] - paths to selected nodes.
+     * @param {string} context.commit - commit hash to start the plugin from.
+     * @param {string} context.branchName - branch which to save to.
+     * @param {object} context.pluginConfig - specific configuration for the plugin.
+     * @param {function} callback
+     */
+    executePlugin = function (webGMESessionId, userId, pluginName, context, callback) {
         var storage = getConnectedStorage(webGMESessionId);
-        //context.managerConfig: {
-        //    project: self._client.getActiveProjectName(),
-        //    token: '',
-        //    activeNode: activeNode, // active object in the editor
-        //    activeSelection: activeSelection || [],
-        //    commit: self._client.getActualCommit(), //#668b3babcdf2ddcd7ba38b51acb62d63da859d90,
-        //
-        //    branchName: self._client.getActualBranch()
-        //};
-        // context.pluginConfig
+        logger.debug('executePlugin', userId, pluginName);
+        logger.debug('executePlugin context', {metadata: context});
         storage.open(function (status) {
             logger.debug('storage is open');
             if (status === STORAGE_CONSTANTS.CONNECTED) {
@@ -324,24 +326,19 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                         branchName: context.managerConfig.branchName
                     };
 
-                    pluginManager.executePlugin(name, context.pluginConfig, pluginContext, function (err, result) {
-                        callback(err, result.serialize());
-                        //FIXME: We should not have to wait for this disconnect
-                        storage.closeProject(context.managerConfig.project, function (err) {
-                            if (err) {
-                                logger.error('Closing project after plugin execution returned error', err);
-                            }
-                            logger.debug('Closed project after plugin execution.');
-                        });
-                    });
+                    pluginManager.executePlugin(pluginName, context.pluginConfig, pluginContext,
+                        function (err, result) {
+                            storage.close();
+                            callback(err, result.serialize());
+                        }
+                    );
                 });
             } else if (status === STORAGE_CONSTANTS.RECONNECTED) {
-                //TODO: handle
+                logger.error('Storage RECONNECTED during plugin execution..');
             } else if (status === STORAGE_CONSTANTS.DISCONNECTED) {
-                //TODO: handle
+                logger.error('Storage DISCONNECTED during plugin execution..');
             } else if (status === STORAGE_CONSTANTS.ERROR) {
-                //TODO: handle
-                throw new Error('Could not connect');
+                logger.error('Storage ERROR during plugin execution..');
             }
         });
     },
