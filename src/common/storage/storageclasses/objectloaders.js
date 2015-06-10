@@ -48,11 +48,13 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
         if (self.loadBucketSize === 1) {
             self.logger.debug('loadBucket was empty starting timer [ms]', self.gmeConfig.storage.loadBucketTimer);
             self.loadBucketTimer = setTimeout(function () {
-                self.logger.debug('loadBucketTimer triggered, loadBucket size', self.loadBucketSize);
+                self.logger.debug('loadBucketTimer triggered, bucketSize:', self.loadBucketSize);
                 resetBucketAndLoadObjects();
             }, self.gmeConfig.storage.loadBucketTimer);
-        } else if (self.loadBucketSize === self.gmeConfig.storage.loadBucketSize) {
-            self.logger.debug('loadBuckSize reached sending out loadObjects', self.loadBucketSize);
+        }
+        
+        if (self.loadBucketSize === self.gmeConfig.storage.loadBucketSize) {
+            self.logger.debug('loadBuckSize reached will loadObjects, bucketSize:', self.loadBucketSize);
             clearTimeout(self.loadBucketTimer);
             resetBucketAndLoadObjects();
         }
