@@ -799,10 +799,10 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 //autoMerge
     autoMerge = function (webGMESessionId, userName, projectName, mine, theirs, callback) {
         var storage = getConnectedStorage(webGMESessionId),
-            result = {},
+            mergeResult = {},
             finish = function (err) {
                 storage.close();
-                callback(err, result);
+                callback(err, mergeResult);
             };
         logger.debug('autoMerge ' + projectName + ' ' + mine + ' -> ' + theirs);
 
@@ -860,10 +860,10 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                         return;
                                     }
 
-                                    result.conflict = core.tryToConcatChanges(myDiff, theirDiff);
+                                    mergeResult.conflict = core.tryToConcatChanges(myDiff, theirDiff);
 
-                                    if (result.conflict !== null && result.conflict.items.length === 0) {
-                                        core.applyTreeDiff(baseRoot, result.conflict.merge, function (err) {
+                                    if (mergeResult.conflict !== null && mergeResult.conflict.items.length === 0) {
+                                        core.applyTreeDiff(baseRoot, mergeResult.conflict.merge, function (err) {
                                             if (err) {
                                                 finish(err);
                                                 return;
@@ -883,7 +883,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                                         return;
                                                     }
 
-                                                    result.finalCommitHash = commitResult.hash;
+                                                    mergeResult.finalCommitHash = commitResult.hash;
 
                                                     project.setBranchHash(theirs, commitResult.hash, theirCommit, function (err, updateResult) {
                                                             if (err) {
@@ -892,7 +892,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                                                 return;
                                                             }
 
-                                                            result.updatedBranch = theirs;
+                                                            mergeResult.updatedBranch = theirs;
                                                             logger.info('merge was done to branch [' + theirs + ']');
                                                             finish(null);
                                                         }
@@ -935,9 +935,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                 return;
                             }
 
-                            result.baseCommitHash = commit;
+                            mergeResult.baseCommitHash = commit;
 
-                            loadRoot(result.baseCommitHash, function (err, root) {
+                            loadRoot(mergeResult.baseCommitHash, function (err, root) {
                                 error = error || err;
                                 baseRoot = root;
                                 if (--needed === 0) {
@@ -1161,6 +1161,7 @@ process.on('message', function (parameters) {
             });
         }
     } else if (parameters.command === CONSTANT.workerCommands.autoMerge) {
+        safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
         autoMerge(parameters.webGMESessionId,
             parameters.userId,
             parameters.project,

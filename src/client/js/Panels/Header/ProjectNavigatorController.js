@@ -619,7 +619,7 @@ define([
                             self.logger.error('merge of branch failed', err);
                         }
 
-                        if (result && result.conflict && result.conflict.item.length > 0) {
+                        if (result && result.conflict && result.conflict.items.length > 0) {
                             //TODO create some user-friendly way to show this type of result
                             self.logger.error('merge ended in conflicts', result.conflict);
                         } else {
