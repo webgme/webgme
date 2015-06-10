@@ -187,7 +187,7 @@ define([
                 }
                 var i,
                     branchHash = latestCommit.commitObject[CONSTANTS.MONGO_ID],
-                    branch = project.getBranch(branchName);
+                    branch = project.getBranch(branchName, false);
 
                 branch.updateHashes(branchHash, branchHash);
 
@@ -223,7 +223,7 @@ define([
                 }
 
                 // This only has an effect after a fork with pending commits.
-                self._pushNextQueuedCommit(projectName, branchName);
+                //self._pushNextQueuedCommit(projectName, branchName);
 
                 callback(err, latestCommit, branch.getCommitQueue());
             });
@@ -256,25 +256,40 @@ define([
 
         this.forkBranch = function (projectName, branchName, forkName, commitHash, callback) {
             ASSERT(projects.hasOwnProperty(projectName), 'Project not opened: ' + projectName);
-            this.logger.debug('forking', projectName, branchName, forkName, commitHash);
+            this.logger.debug('forkBranch', projectName, branchName, forkName, commitHash);
             var self = this,
                 project = projects[projectName],
                 branch = project.getBranch(branchName, true),
                 forkData;
 
-            forkData = branch.getCommitsForNewFork(commitHash, forkName); // commitHash = null defaults to latest commit.
-            self.logger.debug('Forking with forkData', forkData);
-            self.createBranch(projectName, forkName, forkData.originHash, function (err) {
-                var fork;
-                if (err) {
-                    callback(err);
-                    return;
+            forkData = branch.getCommitsForNewFork(commitHash, forkName); // commitHash = null defaults to latest commit
+            self.logger.debug('forkBranch - forkData', forkData);
+            function commitNext() {
+                var currentCommitData = forkData.queue.shift();
+                logger.debug('forkBranch - commitNext, currentCommitData', currentCommitData);
+                if (currentCommitData) {
+                    webSocket.makeCommit(currentCommitData, function (err, result) {
+                        if (err) {
+                            logger.error('forkBranch - failed committing', err);
+                            callback(err);
+                            return;
+                        }
+                        logger.error('forkBranch - commit successful, hash', result);
+                        commitNext();
+                    });
+                } else {
+                    self.createBranch(projectName, forkName, forkData.commitHash, function (err) {
+                        if (err) {
+                            logger.error('forkBranch - failed creating new branch', err);
+                            callback(err);
+                            return;
+                        }
+                        callback(null);
+                    });
                 }
-                fork = project.getBranch(forkName, false);
-                fork.setCommitQueue(forkData.queue);
-                fork.updateHashes(forkData.localHash, forkData.originHash);
-                callback(null); // Now it's up to the client to close the old branch and open the fork.
-            });
+            }
+
+            commitNext();
         };
 
         this.setBranchHash = function (projectName, branchName, newHash, oldHash, callback) {
@@ -321,7 +336,6 @@ define([
             };
 
             return webSocket.getCommonAncestorCommit(parameters, callback);
-
         };
 
         this._pushNextQueuedCommit = function (projectName, branchName, callback) {

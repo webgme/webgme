@@ -434,13 +434,6 @@ define([
 
             var prevBranchName = state.branchName;
 
-            //if (prevBranchName === branchName) {
-            //    logger.warn('branchName is already opened', branchName);
-            //    changeBranchStatus(state.branchStatus);
-            //    callback(null);
-            //    return;
-            //}
-
             function openBranch(err) {
                 if (err) {
                     logger.error('Problems closing existing branch', err);
@@ -471,32 +464,22 @@ define([
 
                         state.viewer = false;
                         state.branchName = branchName;
-                        if (state.creatingFork) {
-                            if (queuedCommits.length === 0) {
-                                self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
-                                changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNCH);
-                                state.creatingFork = false;
-                            } else {
-                                changeBranchStatus(null);
-                                changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD, queuedCommits);
-                            }
-                            callback(null);
-                        } else {
-                            self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
-                            changeBranchStatus(CONSTANTS.BRANCH_STATUS.PULLING, 1);
-                            logState('info', 'openBranch');
 
-                            loading(commitObject.root, function (err) {
-                                if (err) {
-                                    logger.error('loading failed after opening branch', branchName);
-                                } else {
-                                    addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
-                                }
-                                changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNCH);
-                                // TODO: Make sure this is always the case.
-                                callback(err);
-                            });
-                        }
+                        self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
+                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.PULLING, 1);
+                        logState('info', 'openBranch');
+
+                        loading(commitObject.root, function (err) {
+                            if (err) {
+                                logger.error('loading failed after opening branch', branchName);
+                            } else {
+                                addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
+                            }
+                            changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNCH);
+                            // TODO: Make sure this is always the case.
+                            callback(err);
+                        });
+
                     }
                 );
             }
@@ -581,11 +564,6 @@ define([
                     if (commitQueue.length === 1) {
                         logger.debug('No commits queued.');
                         changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNCH);
-                        if (state.creatingFork) {
-                            state.creatingFork = false;
-                            self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, state.branchName);
-                            changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNCH);
-                        }
                     } else {
                         logger.debug('Will proceed with next queued commit...');
                         changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD, commitQueue);
@@ -594,9 +572,8 @@ define([
                 } else if (result.status === CONSTANTS.STORAGE.FORKED) {
                     logger.debug('You got forked');
                     logState('info', 'commitHandler');
-                    //TODO: Handle this during creatingFork too...
                     changeBranchStatus(CONSTANTS.BRANCH_STATUS.FORKED, commitQueue);
-                    callback(false);
+                    callback(false); // push:false
                 } else {
                     callback(false);
                     changeBranchStatus(null);
@@ -649,7 +626,7 @@ define([
             var self = this,
                 currentBranchName = self.getActiveBranchName(),
                 forkName;
-            state.creatingFork = true;
+
             logger.debug('forkCurrentBranch', newName, commitHash);
             if (!state.project) {
                 callback('Cannot fork without an open project!');
@@ -666,15 +643,7 @@ define([
                     callback(err);
                     return;
                 }
-                //TODO: Check that we are in sync with our new branch.
-                self.selectBranch(forkName, null, function (err) {
-                    if (err) {
-                        logger.error('Could not select new branch', forkName);
-                        callback(err);
-                        return;
-                    }
-                    callback(null);
-                });
+                callback(null, forkName);
             });
         };
 
