@@ -128,7 +128,7 @@ define([
                 callback(err, project);
             });
         };
-        
+
         this.closeProject = function (projectName, callback) {
             var project = projects[projectName],
                 error = '',
@@ -311,6 +311,17 @@ define([
             }
 
             return commitData.commitObject; //commitHash
+        };
+
+        this.getCommonAncestorCommit = function (projectName, commitA, commitB, callback) {
+            var parameters = {
+                commitA: commitA,
+                commitB: commitB,
+                projectName: projectName
+            };
+
+            return webSocket.getCommonAncestorCommit(parameters, callback);
+
         };
 
         this._pushNextQueuedCommit = function (projectName, branchName, callback) {

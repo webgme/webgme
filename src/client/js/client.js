@@ -176,7 +176,7 @@ define([
             logger.debug('saveRoot msg', msg);
 
             callback = callback || function () {
-            };
+                };
             if (!state.viewer && !state.readOnlyProject) {
                 if (state.msg) {
                     state.msg += '\n' + msg;
@@ -1668,10 +1668,27 @@ define([
                 saveRoot('delConstraint(' + path + 'name' + ')');
             }
         };
+
+        //automerge
+        this.autoMerge = function (projectName, mine, theirs, callback) {
+            var command = {
+                command: 'autoMerge',
+                project: projectName,
+                mine: mine,
+                theirs: theirs
+            };
+            storage.simpleRequest(command, function (err, resId) {
+                if (err) {
+                    callback(err);
+                } else {
+                    storage.simpleResult(resId, callback);
+                }
+            });
+        };
     }
 
 
-    // Inherit from the EventDispatcher
+// Inherit from the EventDispatcher
     Client.prototype = Object.create(EventDispatcher.prototype);
     Client.prototype.constructor = Client;
 

@@ -612,8 +612,22 @@ define([
             };
 
             mergeBranch = function (data) {
-                self.logger.error('trying to merge '+data.branchId+' into '+self.$scope.navigator.items[self.navIdBranch].id+' of project '+data.projectId);
+                self.logger.error('trying to merge ' + data.branchId + ' into ' + self.$scope.navigator.items[self.navIdBranch].id + ' of project ' + data.projectId);
                 self.logger.error('merge call not yet implemented');
+                self.gmeClient.autoMerge(data.projectId,
+                    data.branchId, self.$scope.navigator.items[self.navIdBranch].id,
+                    function (err, result) {
+                        if (err) {
+                            self.logger.error('merge of branch failed', err);
+                        }
+
+                        if (result && result.conflict && result.conflict.item.length > 0) {
+                            self.logger.error('merge ended in conflicts', result.conflict);
+                        } else {
+                            self.logger.debug('successfull merge');
+                        }
+                    }
+                );
             };
 
             createCommitMessage = function (data) {

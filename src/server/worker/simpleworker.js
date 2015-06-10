@@ -31,6 +31,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     GUID = requireJS('common/util/guid'),
     DUMP = requireJS('common/core/users/dumpmore'),
     Storage = requireJS('common/storage/nodestorage'),
+    mergeProject = require(__dirname + '/../../../src/bin/merge').merge,
     Serialization = requireJS('common/core/users/serialization'),
 //BlobClient = requireJS('common/blob/BlobClient'),
     PluginResult = requireJS('plugin/PluginResult'),
@@ -796,8 +797,191 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         } else {
             callback(null);
         }
-    };
+    },
 
+//autoMerge
+    autoMerge = function (webGMESessionId, userName, projectName, theirs, mine, callback) {
+        var storage = getConnectedStorage(webGMESessionId),
+            result = {},
+            finish = function (err) {
+                storage.close();
+                callback(err, result);
+            };
+        logger.debug('autoMerge ' + projectName + ' ' + mine + ' -> ' + theirs);
+
+        storage.open(function (networkState) {
+
+            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
+                //mergeProject(storage, projectName, mine, theirs, true, userName, finish);
+                storage.openProject(projectName, function (err, project, branches) {
+                    if (err) {
+                        finish(err);
+                        return;
+                    }
+
+                    var myCommit,
+                        theirCommit,
+                        myRoot,
+                        theirRoot,
+                        baseRoot,
+                        myDiff,
+                        theirDiff,
+                        core = new Core(project, {
+                            globConf: gmeConfig,
+                            logger: logger.fork('core')
+                        });
+
+                    if (!branches[theirs]) {
+                        finish('no target branch (' + theirs + ') was found');
+                        return;
+                    }
+
+                    if (!branches[mine]) {
+                        finish('no source branch (' + mine + ') was found');
+                        return;
+                    }
+
+                    myCommit = branches[mine];
+                    theirCommit = branches[theirs];
+
+                    project.getCommonAncestorCommit(myCommit, theirCommit,
+                        function (err, commit) {
+                            var needed = 3,
+                                error = null,
+                                loadRoot = function (commitHash, next) {
+                                    project.loadObject(commitHash, function (err, commitObject) {
+                                        if (err) {
+                                            next(err);
+                                            return;
+                                        }
+                                        core.loadRoot(commitObject.root, next);
+                                    });
+                                },
+                                diffsAreGenerated = function () {
+                                    if (error) {
+                                        finish(error);
+                                        return;
+                                    }
+
+                                    result.conflict = core.tryToConcatChanges(myDiff, theirDiff);
+
+                                    console.log('merging',result);
+
+                                    if (result.conflict !== null && result.conflict.items.length === 0) {
+                                        core.applyTreeDiff(baseRoot, result.conflict.merge, function (err) {
+                                            if (err) {
+                                                finish(err);
+                                                return;
+                                            }
+
+                                            var persisted = core.persist(baseRoot);
+                                            project.makeCommit(null,
+                                                [myCommit, theirCommit],
+                                                persisted.rootHash,
+                                                persisted.objects,
+                                                'merging [' + mine + '] into [' +
+                                                theirs + ']',
+                                                function (err, commitResult) {
+                                                    if (err) {
+                                                        logger.error('project.makeCommit failed.');
+                                                        finish(err);
+                                                        return;
+                                                    }
+
+                                                    console.log('merging2',result);
+                                                    result.finalCommitHash = commitResult.hash;
+                                                    var branchParameters = {
+                                                        branchName: theirs,
+                                                        projectName: projectName,
+                                                        oldHash: theirCommit,
+                                                        newHash: commitResult.hash,
+                                                        username: userName
+                                                        };
+
+                                                    storage.setBranchHash(branchParameters, function (err, updateResult) {
+                                                            console.log('merging3',err,updateResult);
+                                                            if (err) {
+                                                                logger.error('setBranchHash failed with error.');
+                                                                finish(err);
+                                                                return;
+                                                            }
+
+                                                            result.updatedBranch = theirs;
+                                                            logger.info('merge was done to branch [' + theirs + ']');
+                                                            finish(null);
+                                                        }
+                                                    );
+
+                                                }
+                                            );
+                                        });
+
+                                    } else {
+                                        finish(null);
+                                    }
+                                },
+                                allRootsLoaded = function () {
+                                    if (error) {
+                                        finish(err);
+                                        return;
+                                    }
+
+                                    needed = 2;
+
+                                    core.generateTreeDiff(baseRoot, myRoot, function (err, diff) {
+                                        error = error || err;
+                                        myDiff = diff;
+                                        if (--needed === 0) {
+                                            diffsAreGenerated();
+                                        }
+                                    });
+                                    core.generateTreeDiff(baseRoot, theirRoot, function (err, diff) {
+                                        error = error || err;
+                                        theirDiff = diff;
+                                        if (--needed === 0) {
+                                            diffsAreGenerated();
+                                        }
+                                    });
+                                };
+
+                            if (err) {
+                                finish(err);
+                                return;
+                            }
+
+                            result.baseCommitHash = commit;
+
+                            loadRoot(result.baseCommitHash, function (err, root) {
+                                error = error || err;
+                                baseRoot = root;
+                                if (--needed === 0) {
+                                    allRootsLoaded();
+                                }
+                            });
+                            loadRoot(myCommit, function (err, root) {
+                                error = error || err;
+                                myRoot = root;
+                                if (--needed === 0) {
+                                    allRootsLoaded();
+                                }
+                            });
+                            loadRoot(theirCommit, function (err, root) {
+                                error = error || err;
+                                theirRoot = root;
+                                if (--needed === 0) {
+                                    allRootsLoaded();
+                                }
+                            });
+
+                        }
+                    );
+
+                });
+            } else {
+                finish('unable to establish connection to webgme');
+            }
+        });
+    };
 
 //main message processing loop
 process.on('message', function (parameters) {
@@ -916,9 +1100,6 @@ process.on('message', function (parameters) {
             initResult();
             safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
         }
-    } else if (parameters.command === CONSTANT.workerCommands.getAllProjectsInfo) {
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-        getAllProjectsInfo(parameters.webGMESessionId, parameters.userId, resultHandling);
     } else if (parameters.command === CONSTANT.workerCommands.setProjectInfo) {
         safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
         setProjectInfo(parameters.webGMESessionId, parameters.projectId, parameters.info || {}, resultHandling);
@@ -993,6 +1174,13 @@ process.on('message', function (parameters) {
                 resid: null
             });
         }
+    } else if (parameters.command === CONSTANT.workerCommands.autoMerge) {
+        autoMerge(parameters.webGMESessionId,
+            parameters.userId,
+            parameters.project,
+            parameters.mine,
+            parameters.theirs,
+            resultHandling);
     } else {
         safeSend({
             pid: process.pid,

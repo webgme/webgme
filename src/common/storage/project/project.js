@@ -66,6 +66,10 @@ define([
             storage.getCommits(this.name, before, number, callback);
         };
 
+        this.getCommonAncestorCommit = function (commitA, commitB, callback) {
+            storage.getCommonAncestorCommit(this.name, commitA, commitB, callback);
+        };
+
         // Functions forwarded to project cache.
         this.insertObject = function (obj, stageBucket) {
             projectCache.insertObject(obj, stageBucket);

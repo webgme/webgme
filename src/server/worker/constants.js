@@ -40,6 +40,7 @@ module.exports = {
         setProjectInfo: 'setProjectInfo',
         getAllInfoTags: 'getAllInfoTags',
         getSeedInfo: 'getSeedInfo',
-        seedProject: 'seedProject'
+        seedProject: 'seedProject',
+        autoMerge: 'autoMerge'
     }
 };
