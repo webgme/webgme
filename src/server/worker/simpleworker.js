@@ -314,7 +314,8 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     var pluginManager,
                         pluginContext;
                     if (err) {
-                        throw new Error(err);
+                        callback(err, null);
+                        return;
                     }
                     logger.debug('Opened project, got branches:', context.managerConfig.project, branches);
                     pluginManager = new PluginNodeManager(webGMESessionId, project, logger, gmeConfig);
@@ -328,6 +329,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
                     pluginManager.executePlugin(pluginName, context.pluginConfig, pluginContext,
                         function (err, result) {
+                            if (err) {
+                                logger.error('Plugin failed', pluginName);
+                            }
                             storage.close();
                             callback(err, result.serialize());
                         }

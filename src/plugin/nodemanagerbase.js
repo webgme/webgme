@@ -108,8 +108,9 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
                 });
             })
             .catch(function (err) {
-                var pluginResult = self.getPluginErrorResult(pluginName, 'Failed to load context.');
-                callback(err.toString(), pluginResult);
+                var pluginResult = self.getPluginErrorResult(pluginName, 'Exception got thrown');
+                self.logger.error(err.stack);
+                callback(err.message, pluginResult);
             });
     };
 
@@ -189,6 +190,9 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
                 pluginContext.META = metaNodes;
                 self.logger.debug('metaNodes loaded');
                 deferred.resolve(pluginContext);
+            })
+            .catch(function (err) {
+                deferred.reject(err);
             });
 
         return deferred.promise;
