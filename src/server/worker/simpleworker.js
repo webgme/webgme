@@ -797,7 +797,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     },
 
 //autoMerge
-    autoMerge = function (webGMESessionId, userName, projectName, theirs, mine, callback) {
+    autoMerge = function (webGMESessionId, userName, projectName, mine, theirs, callback) {
         var storage = getConnectedStorage(webGMESessionId),
             result = {},
             finish = function (err) {
@@ -862,8 +862,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
                                     result.conflict = core.tryToConcatChanges(myDiff, theirDiff);
 
-                                    console.log('merging',result);
-
                                     if (result.conflict !== null && result.conflict.items.length === 0) {
                                         core.applyTreeDiff(baseRoot, result.conflict.merge, function (err) {
                                             if (err) {
@@ -885,18 +883,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                                         return;
                                                     }
 
-                                                    console.log('merging2',result);
                                                     result.finalCommitHash = commitResult.hash;
-                                                    var branchParameters = {
-                                                        branchName: theirs,
-                                                        projectName: projectName,
-                                                        oldHash: theirCommit,
-                                                        newHash: commitResult.hash,
-                                                        username: userName
-                                                        };
 
-                                                    storage.setBranchHash(branchParameters, function (err, updateResult) {
-                                                            console.log('merging3',err,updateResult);
+                                                    project.setBranchHash(theirs, commitResult.hash, theirCommit, function (err, updateResult) {
                                                             if (err) {
                                                                 logger.error('setBranchHash failed with error.');
                                                                 finish(err);
