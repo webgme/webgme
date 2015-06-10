@@ -86,7 +86,7 @@ define([
                             }
                         });
                     } else {
-                        self._client.autoMerge(projectName, branchName, forkName, function (err, result) {
+                        self._client.autoMerge(projectName, forkName, branchName, function (err, result) {
                             if (err) {
                                 self._logger.error('Merging resulted in error', err);
                                 self._logger.info('Trying to select fork', forkName);
@@ -99,9 +99,9 @@ define([
                             }
                             if (result && result.conflict && result.conflict.items.length > 0) {
                                 //TODO create some user-friendly way to show this type of result
-                                self.logger.error('merge had conflicts', result.conflict);
+                                self._logger.error('merge had conflicts', result.conflict);
                             } else {
-                                self.logger.debug('Merge was successful');
+                                self._logger.debug('Merge was successful');
                                 self._client.selectBranch(branchName, null, function (err) {
                                     if (err) {
                                         self._logger.error('could not select the branch after merge', branchName);
@@ -180,7 +180,7 @@ define([
             });
             this._ddBranchStatus.addItem({
                 text: 'Try to merge',
-                value: ITEM_VALUE_FOLLOW
+                value: ITEM_VALUE_MERGE
             });
             this._ddBranchStatus.setTitle('AHEAD[' + eventData.details.length + ']');
             this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);

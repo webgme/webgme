@@ -274,7 +274,7 @@ define([
                             callback(err);
                             return;
                         }
-                        logger.error('forkBranch - commit successful, hash', result);
+                        logger.debug('forkBranch - commit successful, hash', result);
                         commitNext();
                     });
                 } else {
