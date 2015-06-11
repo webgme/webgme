@@ -135,6 +135,12 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
         //TODO the pointer loading is totally based upon the loadByPath...
         core.loadPointer = function (node, name) {
             var pointerPath = core.getPointerPath(node, name);
+            if (pointerPath === undefined) {
+                return undefined;
+            }
+            if (pointerPath === null) {
+                return null;
+            }
             return TASYNC.call(core.loadByPath, core.getRoot(node), pointerPath);
         };
 
