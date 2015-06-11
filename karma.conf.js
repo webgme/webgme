@@ -35,10 +35,11 @@ var testFixture = require('./test/_globals.js'),
             path: './test-karma/client/js/client/clientNodeTestProject.json',
             branches: ['other']
         },
-        {   name: 'projectSeedMultiple',
+        {
+            name: 'projectSeedMultiple',
             path: './test-karma/client/js/client/clientNodeTestProject.json',
             branches: ['master', 'other']
-        },
+        }
     ];
 
 (function initializeServer() {
@@ -60,6 +61,7 @@ var testFixture = require('./test/_globals.js'),
             function deleteProject(projectInfo) {
                 return storage.deleteProject({projectName: projectInfo.name});
             }
+
             return Q.all(PROJECTS_TO_IMPORT.map(deleteProject));
         })
         .then(function () {
@@ -75,22 +77,22 @@ var testFixture = require('./test/_globals.js'),
                     gmeConfig: gmeConfig,
                     logger: logger
                 })
-                .then(function (importResult) {
-                    var i,
-                        createBranches = [];
-                    if (projectInfo.hasOwnProperty('branches') && projectInfo.branches.length > 1) {
-                        // First one is already added thus i = 1.
-                        for (i = 1; i < projectInfo.branches.length; i += 1) {
-                            createBranches.push(storage.createBranch({
-                                    projectName: projectInfo.name,
-                                    branchName: projectInfo.branches[i],
-                                    hash: importResult.commitHash
-                                })
-                            );
+                    .then(function (importResult) {
+                        var i,
+                            createBranches = [];
+                        if (projectInfo.hasOwnProperty('branches') && projectInfo.branches.length > 1) {
+                            // First one is already added thus i = 1.
+                            for (i = 1; i < projectInfo.branches.length; i += 1) {
+                                createBranches.push(storage.createBranch({
+                                        projectName: projectInfo.name,
+                                        branchName: projectInfo.branches[i],
+                                        hash: importResult.commitHash
+                                    })
+                                );
+                            }
                         }
-                    }
-                    return Q.all(createBranches);
-                });
+                        return Q.all(createBranches);
+                    });
             }
 
             return Q.all(PROJECTS_TO_IMPORT.map(importProject));
@@ -101,9 +103,11 @@ var testFixture = require('./test/_globals.js'),
         })
         .then(function () {
             server = webgme.standaloneServer(gmeConfig);
+            //setTimeout(function () {
             server.start(function () {
                 console.log('webgme server started');
             });
+            //}, 10000); // timeout to emulate long server start up see test-main.js
         })
         .catch(function (err) {
             console.error(err);
@@ -190,7 +194,7 @@ module.exports = function (config) {
             '/worker': 'http://localhost:' + gmeConfig.server.port + '/worker',
             '/listAllDecorators': 'http://localhost:' + gmeConfig.server.port + '/listAllDecorators',
             '/listAllPlugins': 'http://localhost:' + gmeConfig.server.port + '/listAllPlugins',
-            '/listAllSeeds': 'http://localhost:' + gmeConfig.server.port + '/listAllSeeds',
+            '/listAllSeeds': 'http://localhost:' + gmeConfig.server.port + '/listAllSeeds'
         }
     });
 };
