@@ -45,16 +45,14 @@ define([
                 core: null,
                 branchName: null,
                 branchStatus: null,
-                creatingFork: false,
                 readOnlyProject: false,
                 viewer: false, // This means that a specific commit is selected w/o regards to any branch.
+
                 users: {},
-                patterns: {},
-                gHash: 0,
                 nodes: {},
                 metaNodes: {},
                 loadNodes: {},
-                loadError: null,
+
                 root: {
                     current: null,
                     previous: null,
@@ -66,7 +64,9 @@ define([
                 },
                 undoRedoChain: null, //{commit: '#hash', root: '#hash', previous: object, next: object}
                 inTransaction: false,
-                msg: ''
+                msg: '',
+                gHash: 0,
+                loadError: null
             },
             monkeyPatchKey,
             nodeSetterFunctions,
@@ -149,7 +149,7 @@ define([
                 return value;
             }
 
-            if (gmeConfig.debug) {
+            if (true) {
                 logger[level]('state at ' + msg, JSON.stringify(state, replacer, 2));
             } else {
                 lightState = {
@@ -442,7 +442,7 @@ define([
                 }
                 commitHandler = commitHandler || getDefaultCommitHandler();
                 storage.openBranch(state.project.name, branchName, getUpdateHandler(), commitHandler,
-                    function (err, latestCommit, queuedCommits) {
+                    function (err, latestCommit) {
                         if (err) {
                             callback(new Error(err));
                             return;
@@ -1126,7 +1126,7 @@ define([
                         callback(null);
                     }
                 };
-
+            logState('info', 'loadPattern');
             if (nodesSoFar[id]) {
                 base = nodesSoFar[id].node;
                 baseLoaded();
