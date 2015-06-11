@@ -281,7 +281,7 @@ define([
                             callback(err);
                             return;
                         }
-                        callback(null);
+                        callback(null, forkData.commitHash);
                     });
                 }
             }

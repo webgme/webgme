@@ -13,9 +13,9 @@ define(['common/storage/constants'], function (STORAGE_CONSTANTS) {
         STORAGE: STORAGE_CONSTANTS,
 
         BRANCH_STATUS: {
-            SYNCH: 'SYNCH',
-            AHEAD: 'AHEAD',
-            FORKED: 'FORKED',
+            SYNC: 'SYNC',
+            AHEAD_SYNC: 'AHEAD_SYNC',
+            AHEAD_NOT_SYNC: 'AHEAD_NOT_SYNC',
             PULLING: 'PULLING'
         },
 
