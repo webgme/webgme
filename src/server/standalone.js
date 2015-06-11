@@ -602,7 +602,8 @@ function StandAloneServer(gmeConfig) {
     logger.debug('initializing server worker manager');
     __workerManager = new ServerWorkerManager({
         sessionToUser: __sessionStore.getSessionUser,
-        globConf: gmeConfig
+        globConf: gmeConfig,
+        logger: logger
     });
 
     logger.debug('initializing authentication modules');

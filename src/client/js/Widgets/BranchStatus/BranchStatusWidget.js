@@ -16,7 +16,8 @@ define([
 
     var BranchStatusWidget,
         ITEM_VALUE_FORK = 'fork',
-        ITEM_VALUE_FOLLOW = 'follow';
+        ITEM_VALUE_FOLLOW = 'follow',
+        ITEM_VALUE_MERGE = 'merge';
 
     BranchStatusWidget = function (containerEl, client) {
         this._logger = Logger.create('gme:Widgets:BranchStatusWidget', WebGMEGlobal.gmeConfig.client.log);
@@ -46,12 +47,25 @@ define([
         this._el.append(this._ddBranchStatus.getEl());
 
         this._ddBranchStatus.onItemClicked = function (value) {
-            var branchName = self._client.getActiveBranchName();
+            var branchName = self._client.getActiveBranchName(),
+                projectName = self._client.getActiveProjectName();
             if (value === ITEM_VALUE_FORK) {
-                self._client.forkCurrentBranch(null, null, function (err) {
+                self._client.forkCurrentBranch(null, null, function (err, forkName) {
                     if (err) {
                         self._logger.error('could not fork the branch', branchName);
-                        throw new Error(err);
+                        self._client.selectBranch(branchName, null, function (err) {
+                            if (err) {
+                                self._logger.error('could not re-select the branch', branchName);
+                                throw new Error(err);
+                            }
+                        });
+                    } else {
+                        self._client.selectBranch(forkName, null, function (err) {
+                            if (err) {
+                                self._logger.error('Could not select new branch', forkName);
+                                throw new Error(err);
+                            }
+                        });
                     }
                 });
             } else if (value === ITEM_VALUE_FOLLOW) {
@@ -59,6 +73,50 @@ define([
                     if (err) {
                         self._logger.error('could not re-select the branch', branchName);
                         throw new Error(err);
+                    }
+                });
+            } else if (value === ITEM_VALUE_MERGE) {
+                self._client.forkCurrentBranch(null, null, function (err, forkName) {
+                    if (err) {
+                        self._logger.error('could not fork the branch', branchName);
+                        self._client.selectBranch(branchName, null, function (err) {
+                            if (err) {
+                                self._logger.error('could not re-select the branch', branchName);
+                                throw new Error(err);
+                            }
+                        });
+                    } else {
+                        self._client.autoMerge(projectName, forkName, branchName, function (err, result) {
+                            if (err) {
+                                self._logger.error('Merging resulted in error', err);
+                                self._logger.info('Trying to select fork', forkName);
+                                self._client.selectBranch(forkName, null, function (err) {
+                                    if (err) {
+                                        self._logger.error('Could not select new branch', forkName);
+                                        throw new Error(err);
+                                    }
+                                });
+                                return;
+                            }
+                            if (result && result.conflict && result.conflict.items.length > 0) {
+                                //TODO create some user-friendly way to show this type of result
+                                self._logger.error('merge had conflicts', result.conflict);
+                                self._client.selectBranch(forkName, null, function (err) {
+                                    if (err) {
+                                        self._logger.error('Could not select the new branch', forkName);
+                                        throw new Error(err);
+                                    }
+                                });
+                            } else {
+                                self._logger.debug('Merge was successful');
+                                self._client.selectBranch(branchName, null, function (err) {
+                                    if (err) {
+                                        self._logger.error('could not select the branch after merge', branchName);
+                                        throw new Error(err);
+                                    }
+                                });
+                            }
+                        });
                     }
                 });
             }
@@ -109,19 +167,11 @@ define([
         this._ddBranchStatus.setTitle('OUT OF SYNC');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);
         this._outOfSync = true;
-        this._ddBranchStatus.addItem({
-            text: 'Create fork',
-            value: ITEM_VALUE_FORK
-        });
-        this._ddBranchStatus.addItem({
-            text: 'Drop local changes',
-            value: ITEM_VALUE_FOLLOW
-        });
 
-        this._outOfSync = true;
         this._popoverBox = this._popoverBox || new PopoverBox(this._ddBranchStatus.getEl());
         this._popoverBox.show('You got out of sync from the origin',
             this._popoverBox.alertLevels.WARNING, true);
+        this._branchAhead(eventData);
     };
 
     BranchStatusWidget.prototype._branchAhead = function (eventData) {
@@ -134,6 +184,10 @@ define([
             this._ddBranchStatus.addItem({
                 text: 'Drop local changes',
                 value: ITEM_VALUE_FOLLOW
+            });
+            this._ddBranchStatus.addItem({
+                text: 'Try to merge',
+                value: ITEM_VALUE_MERGE
             });
             this._ddBranchStatus.setTitle('AHEAD[' + eventData.details.length + ']');
             this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);

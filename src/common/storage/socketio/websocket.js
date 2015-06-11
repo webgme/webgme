@@ -180,6 +180,11 @@ define([
         this.simpleQuery = function (workerId, data, callback) {
             self.socket.emit('simpleQuery', workerId, data, callback);
         };
+
+        this.getCommonAncestorCommit = function (data, callback) {
+            self.socket.emit('getCommonAncestorCommit', data, callback);
+        };
+
         // Helper functions
         this.getBranchUpdateEventName = function (projectName, branchName) {
             return CONSTANTS.BRANCH_UPDATED + projectName + CONSTANTS.ROOM_DIVIDER + branchName;

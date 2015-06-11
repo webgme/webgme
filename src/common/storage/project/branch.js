@@ -75,22 +75,24 @@ define(['common/storage/constants'], function (CONSTANTS) {
             return commitQueue;
         };
 
-        this.getCommitsForNewFork = function (upTillCommitHash, forkName) {
+        this.getCommitsForNewFork = function (upTillCommitHash) {
             var i,
-                newOriginHash,
                 commitData,
-                localHash,
+                commitHash,
                 subQueue = [];
+
+            if (commitQueue.length === 0) {
+                commitHash = localHash;
+            }
+
             // Move over all commit-data up till the chosen commitHash to the fork's queue,
             // except the commit that caused the fork (all its objects are already in the database).
             for (i = 0; i < commitQueue.length; i += 1) {
                 commitData = commitQueue[i];
-                localHash = commitData.commitObject[CONSTANTS.MONGO_ID];
-                // update the commit-data to point to new branch
-                commitData.branchName = forkName;
-                if (i === 0) {
-                    newOriginHash = commitData.commitObject[CONSTANTS.MONGO_ID];
-                } else {
+                commitHash = commitData.commitObject[CONSTANTS.MONGO_ID];
+                // remove the branchName of the commitData
+                delete commitData.branchName;
+                if (i !== 0) {
                     subQueue.push(commitData);
                 }
                 if (commitData.commitObject[CONSTANTS.MONGO_ID] === upTillCommitHash) {
@@ -99,11 +101,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
                     break;
                 }
             }
-            return {originHash: newOriginHash, localHash: localHash, queue: subQueue};
-        };
-
-        this.setCommitQueue = function (newQueue) {
-            commitQueue = newQueue;
+            return {commitHash: commitHash, queue: subQueue};
         };
 
         this.queueUpdate = function (updateData) {

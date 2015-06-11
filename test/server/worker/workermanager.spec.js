@@ -21,7 +21,8 @@ describe.skip('ServerWorkerManager', function () {
         ServerWorkerManager = require('../../../src/server/worker/serverworkermanager'),
         workerManagerParameters = {
             sessionToUser: sessionToUser,
-            globConf: gmeConfig
+            globConf: gmeConfig,
+            logger: logger,
         },
         projectName = 'SWMProject',
         gmeAuth;

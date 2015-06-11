@@ -19,8 +19,9 @@ function ServerWorkerManager(_parameters) {
         _workers = {},
         _idToPid = {},
         _waitingRequests = [],
+        debugPort = 5859,
         gmeConfig = _parameters.globConf,
-        logger = Logger.create('gme:server:worker:serverworkermanager', gmeConfig.server.log);
+        logger = _parameters.logger.fork('serverworkermanager');
 
     //helping functions
     //TODO always check if this works properly
@@ -29,13 +30,28 @@ function ServerWorkerManager(_parameters) {
     }
 
     function reserveWorker() {
+        var debug = false,
+            execArgv = process.execArgv.filter(function (arg) {
+                if (arg.indexOf('--debug-brk') === 0) {
+                    logger.info('Main process is in debug mode', arg);
+                    debug = true;
+                    return false;
+                }
+                return true;
+            });
+        // http://stackoverflow.com/questions/16840623/how-to-debug-node-js-child-forked-process
+        // For some reason --debug-brk is given here..
+        if (debug) {
+            execArgv.push('--debug-brk=' + debugPort.toString());
+            logger.info('Child debug flag: --debug-brk=' + debugPort.toString());
+            debugPort += 1;
+        }
+
+        logger.debug('execArgv for main process', process.execArgv);
+        logger.debug('execArgv for new child process', execArgv);
+
         if (Object.keys(_workers || {}).length < gmeConfig.server.maxWorkers) {
-            var worker = Child.fork(getBaseDir() + '/server/worker/simpleworker.js', [],
-                {
-                    execArgv: process.execArgv.filter(function (arg) {
-                        return arg.indexOf('--debug-brk') !== 0;
-                    })
-                });
+            var worker = Child.fork(getBaseDir() + '/server/worker/simpleworker.js', [], {execArgv: execArgv});
             _workers[worker.pid] = {worker: worker, state: CONSTANTS.workerStates.initializing, type: null, cb: null};
             logger.debug('workerPid forked ' + worker.pid);
             worker.on('message', messageHandling);
