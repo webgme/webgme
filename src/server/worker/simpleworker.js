@@ -3,17 +3,6 @@
 
 'use strict';
 
-// graceful ending of the child process
-process.on('SIGINT', function () {
-    //FIXME: AUTH.unload
-    if (logger) {
-        logger.debug('stopping child process');
-    } else {
-        //console.error('child was killed without initialization');
-        process.exit(1);
-    }
-});
-
 var WEBGME = require(__dirname + '/../../../webgme'),
     Q = require('q'),
     Core = requireJS('common/core/core'),
@@ -38,11 +27,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     resultId = null,
     error = null,
     initialized = false,
-    AUTH = null,
     _addOn = null,
     gmeConfig,
     logger,
-    sessionIdToStorage = {},
 
     safeSend = function (msg) {
         if (initialized) {
@@ -266,7 +253,8 @@ var WEBGME = require(__dirname + '/../../../webgme'),
      * @param {function} callback
      */
     executePlugin = function (webGMESessionId, userId, pluginName, context, callback) {
-        var storage = getConnectedStorage(webGMESessionId);
+        var storage = getConnectedStorage(webGMESessionId),
+            errMessage;
         logger.debug('executePlugin', userId, pluginName);
         logger.debug('executePlugin context', {metadata: context});
         storage.open(function (status) {
@@ -299,12 +287,11 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                         }
                     );
                 });
-            } else if (status === STORAGE_CONSTANTS.RECONNECTED) {
-                logger.error('Storage RECONNECTED during plugin execution..');
-            } else if (status === STORAGE_CONSTANTS.DISCONNECTED) {
-                logger.error('Storage DISCONNECTED during plugin execution..');
-            } else if (status === STORAGE_CONSTANTS.ERROR) {
-                logger.error('Storage ERROR during plugin execution..');
+            } else {
+                errMessage = 'Storage ' + status + ' during plugin execution..';
+                logger.error(errMessage);
+                storage.close();
+                callback(errMessage); //TODO: create pluginResult
             }
         });
     },
@@ -606,7 +593,8 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
                                                     mergeResult.finalCommitHash = commitResult.hash;
 
-                                                    project.setBranchHash(theirs, commitResult.hash, theirCommit, function (err, updateResult) {
+                                                    project.setBranchHash(theirs, commitResult.hash, theirCommit,
+                                                        function (err /*, updateResult*/) {
                                                             if (err) {
                                                                 logger.error('setBranchHash failed with error.');
                                                                 finish(err);
@@ -866,3 +854,13 @@ process.on('message', function (parameters) {
 });
 
 safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialize});
+
+// graceful ending of the child process
+process.on('SIGINT', function () {
+    if (logger) {
+        logger.debug('stopping child process');
+    } else {
+        //console.error('child was killed without initialization');
+        process.exit(1);
+    }
+});

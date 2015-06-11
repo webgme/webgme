@@ -96,10 +96,17 @@ define([
                                         throw new Error(err);
                                     }
                                 });
+                                return;
                             }
                             if (result && result.conflict && result.conflict.items.length > 0) {
                                 //TODO create some user-friendly way to show this type of result
                                 self._logger.error('merge had conflicts', result.conflict);
+                                self._client.selectBranch(forkName, null, function (err) {
+                                    if (err) {
+                                        self._logger.error('Could not select the new branch', forkName);
+                                        throw new Error(err);
+                                    }
+                                });
                             } else {
                                 self._logger.debug('Merge was successful');
                                 self._client.selectBranch(branchName, null, function (err) {

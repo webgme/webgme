@@ -617,6 +617,7 @@ define([
                     function (err, result) {
                         if (err) {
                             self.logger.error('merge of branch failed', err);
+                            return;
                         }
 
                         if (result && result.conflict && result.conflict.items.length > 0) {
