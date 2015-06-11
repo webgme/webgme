@@ -149,7 +149,7 @@ define([
                 return value;
             }
 
-            if (true) {
+            if (gmeConfig.debug) {
                 logger[level]('state at ' + msg, JSON.stringify(state, replacer, 2));
             } else {
                 lightState = {
@@ -1126,7 +1126,7 @@ define([
                         callback(null);
                     }
                 };
-            logState('info', 'loadPattern');
+
             if (nodesSoFar[id]) {
                 base = nodesSoFar[id].node;
                 baseLoaded();
