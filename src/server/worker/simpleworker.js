@@ -8,17 +8,6 @@ process.on('SIGINT', function () {
     //FIXME: AUTH.unload
     if (logger) {
         logger.debug('stopping child process');
-        //if (storage) {
-        //    storage.closeDatabase(function (err) {
-        //        if (err) {
-        //            logger.error(err);
-        //            process.exit(1);
-        //        } else {
-        //            logger.debug('child process finished');
-        //            process.exit(0);
-        //        }
-        //    });
-        //}
     } else {
         //console.error('child was killed without initialization');
         process.exit(1);
@@ -31,9 +20,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     GUID = requireJS('common/util/guid'),
     DUMP = requireJS('common/core/users/dumpmore'),
     Storage = requireJS('common/storage/nodestorage'),
-    mergeProject = require(__dirname + '/../../../src/bin/merge').merge,
     Serialization = requireJS('common/core/users/serialization'),
-//BlobClient = requireJS('common/blob/BlobClient'),
     PluginResult = requireJS('plugin/PluginResult'),
     PluginMessage = requireJS('plugin/PluginMessage'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
@@ -99,14 +86,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         }
     },
 
-    getWorkerProcessInfo = function (callback) {
-        var processInfo = {
-            pid: process.pid,
-            uptime: process.uptime(),
-            memoryUsage: process.memoryUsage()
-        };
-        callback(null, processInfo);
-    },
 
 // Helper functions
     getConnectedStorage = function (webGMESessionId) {
@@ -114,23 +93,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
             storage = Storage.createStorage(host, webGMESessionId, logger, gmeConfig);
 
         return storage;
-    },
-
-    getProject = function (projectName, webGMESessionId, callback) {
-        getConnectedStorage(webGMESessionId, function (err, storage) {
-            if (err) {
-                return callback(err);
-            }
-            storage.getProjectNames(function (err, names) {
-                if (err) {
-                    return callback(err);
-                }
-                if (names.indexOf(projectName) === -1) {
-                    return callback(new Error('nonexistent project: ' + projectName));
-                }
-                storage.openProject(projectName, callback);
-            });
-        });
     },
 
 // Export and node-dumping functions
@@ -347,249 +309,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         });
     },
 
-// Project/Branch info functions
-//    getAllProjectsInfo = function (webGMESessionId, userId, callback) {
-//        // TODO: if authentication is turned on,
-//        // just query the users database for the list of projects for which the user is authorized
-//        var projectNames,
-//            userAuthInfo = null,
-//            completeInfo = {},
-//            needed,
-//            i;
-//
-//        function filterProjectList(cb) {
-//            if (AUTH === null) {
-//                return cb(null);
-//            }
-//
-//            if (typeof userId === 'string') {
-//                AUTH.getUserAuthInfo(userId, function (err, userData) {
-//                    if (err) {
-//                        projectNames = [];
-//                        return cb(err);
-//                    }
-//
-//                    userAuthInfo = userData;
-//
-//                    //the actual filtering
-//                    var i, filtered = [];
-//                    for (i = 0; i < projectNames.length; i++) {
-//                        if (userAuthInfo[projectNames[i]]) {
-//                            filtered.push(projectNames[i]);
-//                        }
-//                    }
-//                    projectNames = filtered;
-//                    cb(null);
-//                });
-//            } else {
-//                projectNames = []; //we have authentication yet doesn't get valid user name...
-//                return cb(new Error('invalid user'));
-//
-//            }
-//        }
-//
-//        function addUserAuthInfo(projectName) {
-//            if (userAuthInfo === null) {
-//                completeInfo[projectName].rights = {read: true, write: true, delete: true};
-//            } else {
-//                completeInfo[projectName].rights = userAuthInfo[projectName] || {
-//                    read: false,
-//                    write: false,
-//                    delete: false
-//                };
-//            }
-//        }
-//
-//        function getProjectInfo(storage, name, cb) {
-//            storage.openProject(name, function (err, project) {
-//                var needed = 2,
-//                    info = {info: null, branches: {}},
-//                    error = null;
-//
-//                if (err) {
-//                    return cb(err);
-//                }
-//
-//                project.getBranchNames(function (err, branches) {
-//                    error = error || err;
-//                    if (!err && branches) {
-//                        info.branches = branches;
-//                    }
-//
-//                    if (--needed === 0) {
-//                        return cb(error, name, info);
-//                    }
-//                });
-//                project.getInfo(function (err, i) {
-//                    error = error || err;
-//
-//                    if (!err && i) {
-//                        info.info = i;
-//                    }
-//
-//                    if (--needed === 0) {
-//                        return cb(error, name, info);
-//                    }
-//                });
-//            });
-//        }
-//
-//        function projectInfoReceived(err, name, info) {
-//            if (!err) {
-//                completeInfo[name] = {info: info.info, branches: info.branches};
-//                addUserAuthInfo(name);
-//            }
-//
-//            if (--needed === 0) {
-//                //TODO here we first should go and add the user right info
-//                callback(null, completeInfo);
-//            }
-//        }
-//
-//        getConnectedStorage(webGMESessionId, function (err, storage) {
-//            if (err) {
-//                callback(err);
-//                return;
-//            }
-//
-//            storage.getProjectNames({}, function (err, projectlist) {
-//                if (err) {
-//                    return callback(new Error('cannot get project name list'));
-//                }
-//                projectNames = projectlist;
-//                filterProjectList(function (err) {
-//                    if (err) {
-//                        callback(err);
-//                    }
-//                    needed = projectNames.length;
-//                    if (needed > 0) {
-//                        for (i = 0; i < projectNames.length; i++) {
-//                            getProjectInfo(storage, projectNames[i], projectInfoReceived);
-//                        }
-//                    } else {
-//                        return callback(new Error('there is no project on server'));
-//                    }
-//                });
-//            });
-//        });
-//    },
-//
-//    setProjectInfo = function (webGMESessionId, projectId, info, callback) {
-//        getProject(projectId, webGMESessionId, function (err, project) {
-//            if (err) {
-//                callback(err);
-//                return;
-//            }
-//            project.setInfo(info, callback);
-//        });
-//    },
-//
-//    getProjectInfo = function (webGMESessionId, projectId, callback) {
-//        getProject(projectId, webGMESessionId, function (err, project) {
-//            if (err) {
-//                callback(err);
-//                return;
-//            }
-//            project.getInfo(callback);
-//        });
-//    },
-//
-//    getAllInfoTags = function (webGMESessionId, callback) {
-//        var i,
-//            tags = {},
-//            needed;
-//
-//        function projectLoaded(err, project) {
-//            if (!err && project) {
-//                project.getInfo(infoArrived);
-//            } else {
-//                if (--needed === 0) {
-//                    callback(null, tags);
-//                }
-//            }
-//        }
-//
-//        function infoArrived(err, info) {
-//            //TODO now this function wires the info.tags structure...
-//            var keys, i;
-//            if (!err && info) {
-//                keys = Object.keys(info.tags || {});
-//                for (i = 0; i < keys.length; i++) {
-//                    tags[keys[i]] = info.tags[keys[i]];
-//                }
-//            }
-//
-//            if (--needed === 0) {
-//                callback(null, tags);
-//            }
-//        }
-//
-//        getConnectedStorage(webGMESessionId, function (err, storage) {
-//            if (err) {
-//                callback(err);
-//                return;
-//            }
-//            storage.getProjectNames(function (err, projectlist) {
-//                if (err) {
-//                    callback(err);
-//                    return;
-//                }
-//
-//                needed = projectlist.length;
-//                for (i = 0; i < projectlist.length; i++) {
-//                    getProject(projectlist[i], webGMESessionId, projectLoaded);
-//                }
-//            });
-//        });
-//    },
-
-// Seeding and Project/Branch creation functions
-    createProject = function (webGMESessionId, name, jsonProject, callback) {
-        getConnectedStorage(webGMESessionId, function (err, storage) {
-            if (err) {
-                return callback('' + err);
-            }
-
-            storage.openProject(name, function (err, project) {
-                if (err) {
-                    return callback('' + err);
-                }
-
-                var core = new Core(project, {globConf: gmeConfig, logger: logger.fork('createProject:core')}),
-                    root = core.createNode({parent: null, base: null});
-                Serialization.import(core, root, jsonProject, function (err) {
-                    if (err) {
-                        return storage.deleteProject(name, function () {
-                            callback('' + err);
-                        });
-                    }
-
-                    core.persist(root, function (/*err*/) {
-                    });
-                    var rhash = core.getHash(root),
-                        chash = project.makeCommit([], rhash, 'project imported', function (/*err*/) {
-                        });
-                    project.getBranchHash('master', '#hack', function (err, oldhash) {
-                        if (err) {
-                            return callback('' + err);
-                        }
-                        project.setBranchHash('master', oldhash, chash, callback);
-                    });
-                });
-            });
-        });
-    },
-
-    setBranch = function (webGMESessionId, projectName, branchName, oldHash, newHash, callback) {
-        getProject(projectName, webGMESessionId, function (err, project) {
-            if (err) {
-                callback(err);
-                return;
-            }
-            project.setBranchHash(branchName, oldHash, newHash, callback);
-        });
-    },
-
     getSeedFromFile = function (name) {
         var i, names;
         if (gmeConfig.seedProjects.enable !== true) {
@@ -741,7 +460,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         });
     },
 
-//addOn functions
     getAddOn = function (name) {
         return requireJS('addon/' + name + '/' + name + '/' + name);
     },
@@ -800,7 +518,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         }
     },
 
-//autoMerge
     autoMerge = function (webGMESessionId, userName, projectName, mine, theirs, callback) {
         var storage = getConnectedStorage(webGMESessionId),
             mergeResult = {},
@@ -1005,10 +722,7 @@ process.on('message', function (parameters) {
 
 
     resultId = GUID();
-    if (parameters.command === CONSTANT.workerCommands.getWorkerProcessInfo) {
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-        getWorkerProcessInfo(resultHandling);
-    } else if (parameters.command === CONSTANT.workerCommands.dumpMoreNodes) {
+    if (parameters.command === CONSTANT.workerCommands.dumpMoreNodes) {
         if (typeof parameters.name === 'string' &&
             typeof parameters.hash === 'string' &&
             parameters.nodes && parameters.nodes.length) {
@@ -1019,9 +733,6 @@ process.on('message', function (parameters) {
             initResult();
             safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
         }
-    } else if (parameters.command === CONSTANT.workerCommands.generateJsonURL) {
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-        resultHandling(null, parameters.object);
     } else if (parameters.command === CONSTANT.workerCommands.getResult) {
         if (resultReady === true) {
             var e = error,
@@ -1082,34 +793,6 @@ process.on('message', function (parameters) {
             initResult();
             safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
         }
-    } else if (parameters.command === CONSTANT.workerCommands.createProjectFromFile) {
-        if (typeof parameters.name === 'string' && typeof parameters.json === 'object') {
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            createProject(parameters.webGMESessionId, parameters.name, parameters.json, resultHandling);
-        } else {
-            initResult();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
-        }
-    } else if (parameters.command === CONSTANT.workerCommands.setProjectInfo) {
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-        setProjectInfo(parameters.webGMESessionId, parameters.projectId, parameters.info || {}, resultHandling);
-    } else if (parameters.command === CONSTANT.workerCommands.getProjectInfo) {
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-        getProjectInfo(parameters.webGMESessionId, parameters.projectId, resultHandling);
-    } else if (parameters.command === CONSTANT.workerCommands.getAllInfoTags) {
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-        getAllInfoTags(parameters.webGMESessionId, resultHandling);
-    } else if (parameters.command === CONSTANT.workerCommands.setBranch) {
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-        setBranch(parameters.webGMESessionId,
-            parameters.project,
-            parameters.branch,
-            parameters.old,
-            parameters.new,
-            resultHandling);
-    } else if (parameters.command === CONSTANT.workerCommands.getSeedInfo) {
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-        getSeedInfo(parameters.webGMESessionId, parameters.userId, resultHandling);
     } else if (parameters.command === CONSTANT.workerCommands.seedProject) {
         safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
         seedProject(parameters, resultHandling);
