@@ -633,7 +633,8 @@ define([
 
         this.forkCurrentBranch = function (newName, commitHash, callback) {
             var self = this,
-                currentBranchName = self.getActiveBranchName(),
+                activeBranchName = self.getActiveBranchName(),
+                activeProjectName = self.getActiveProjectName(),
                 forkName;
 
             logger.debug('forkCurrentBranch', newName, commitHash);
@@ -641,12 +642,12 @@ define([
                 callback('Cannot fork without an open project!');
                 return;
             }
-            if (currentBranchName === null) {
+            if (activeBranchName === null) {
                 callback('Cannot fork without an open branch!');
                 return;
             }
-            forkName = newName || currentBranchName + '_' + (new Date()).getTime();
-            storage.forkBranch(this.getActiveProjectName(), currentBranchName, forkName, commitHash,
+            forkName = newName || activeBranchName + '_' + (new Date()).getTime();
+            storage.forkBranch(activeProjectName, activeBranchName, forkName, commitHash,
                 function (err, forkHash) {
                     if (err) {
                         logger.error('Could not fork branch:', newName, err);

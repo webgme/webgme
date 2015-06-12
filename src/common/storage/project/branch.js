@@ -79,11 +79,23 @@ define(['common/storage/constants'], function (CONSTANTS) {
             var i,
                 commitData,
                 commitHash,
+                commitHashExisted = false,
                 subQueue = [];
+
+            logger.debug('getCommitsForNewFork', upTillCommitHash);
 
             if (commitQueue.length === 0) {
                 commitHash = localHash;
+
+                logger.debug('No commits queued will fork from', commitHash);
+                upTillCommitHash = upTillCommitHash || commitHash;
+                commitHashExisted = upTillCommitHash === commitHash;
+            } else {
+                upTillCommitHash = upTillCommitHash ||
+                    commitQueue[commitQueue.length - 1].commitObject[CONSTANTS.MONGO_ID];
             }
+
+            logger.debug('Will fork up to commitHash', upTillCommitHash);
 
             // Move over all commit-data up till the chosen commitHash to the fork's queue,
             // except the commit that caused the fork (all its objects are already in the database).
@@ -98,9 +110,16 @@ define(['common/storage/constants'], function (CONSTANTS) {
                 if (commitData.commitObject[CONSTANTS.MONGO_ID] === upTillCommitHash) {
                     // The commitHash from where to fork has been reached.
                     // If any, the rest of the 'pending' commits will not be used.
+                    commitHashExisted = true;
                     break;
                 }
             }
+
+            if (commitHashExisted === false) {
+                logger.error('Could not find the specified commitHash', upTillCommitHash);
+                return false;
+            }
+
             return {commitHash: commitHash, queue: subQueue};
         };
 

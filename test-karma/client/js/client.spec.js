@@ -807,7 +807,6 @@ describe('GME client', function () {
             });
         });
 
-        //FIXME - nondeterministic behaviour
         it('should fail to remove an unknown branch', function (done) {
             client.deleteBranch('someProject', 'unknown_branch', 'unknown_hash', function (err) {
                 console.warn(err);
@@ -855,42 +854,6 @@ describe('GME client', function () {
             });
 
         });
-
-        //it('should return the \'in collection\' meta data of a project', function (done) {
-        //    client.getProjectInfoAsync('ProjectAndBranchOperationsTest', function (err/*, info*/) {
-        //        expect(err).to.equal(null);
-        //
-        //        //we cannot check the info at this point as no nothing about it
-        //        done();
-        //    });
-        //});
-        //
-        //it('should set the \'in collection\' meta data of a project', function (done) {
-        //    // setProjectInfoAsync
-        //    client.setProjectInfoAsync('ProjectAndBranchOperationsTest',
-        //        {some: {arbitrary: 'info'}},
-        //        function (err) {
-        //            expect(err).to.equal(null);
-        //
-        //            client.getProjectInfoAsync('ProjectAndBranchOperationsTest', function (err/*, info*/) {
-        //                expect(err).to.equal(null);
-        //
-        //                //FIXME it is not working??!!!??
-        //                // expect(info).to.deep.equal({some: {arbitrary: info}});
-        //                done();
-        //            });
-        //        }
-        //    );
-        //});
-        //
-        //it('should return a list of used tags in the \'in collection\' meta data', function (done) {
-        //    client.getAllInfoTagsAsync(function (err/*, tags*/) {
-        //        expect(err).to.equal(null);
-        //
-        //        //FIXME we cannot check the info at this point as no nothing about it
-        //        done();
-        //    });
-        //});
 
         it('should create a new branch for the given project (not necessarily the opened)', function (done) {
             var actualProject,
@@ -981,6 +944,109 @@ describe('GME client', function () {
             });
         });
 
+        it('should fork the active branch without giving commitHash', function (done) {
+            var activeBranchName,
+                forkName = 'forked',
+                commitHash;
+
+            client.selectProject(projectName, function (err) {
+                expect(err).to.equal(null);
+                console.log('selected');
+                activeBranchName = client.getActiveBranchName();
+                commitHash = client.getActiveCommitHash();
+                client.deleteBranch(projectName, forkName, commitHash, function (err) {
+                    expect(err).to.equal(null);
+                    client.forkCurrentBranch(forkName, null, function (err, name, hash) {
+                        expect(err).to.equal(null);
+                        expect(name).to.equal(forkName);
+                        expect(hash).to.equal(commitHash);
+
+                        client.getBranches(projectName, function (err, branches) {
+                            expect(err).to.equal(null);
+                            expect(branches).to.include.keys('forked');
+                            expect(branches.forked).to.equal(commitHash);
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+        it('should fork the active branch without giving commitHash and forkName', function (done) {
+            var activeBranchName,
+                commitHash;
+
+            client.selectProject(projectName, function (err) {
+                expect(err).to.equal(null);
+                activeBranchName = client.getActiveBranchName();
+                commitHash = client.getActiveCommitHash();
+
+                client.forkCurrentBranch(null, null, function (err, name, hash) {
+                    expect(err).to.equal(null);
+                    expect(hash).to.equal(commitHash);
+
+                    client.getBranches(projectName, function (err, branches) {
+                        expect(err).to.equal(null);
+                        expect(branches).to.include.keys(name);
+                        expect(branches[name]).to.equal(commitHash);
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('should fork the active branch to given commitHash', function (done) {
+            var activeBranchName,
+                forkName = 'myForkWithGivenHash',
+                commitHash;
+
+            client.selectProject(projectName, function (err) {
+                expect(err).to.equal(null);
+                console.log('selected');
+                activeBranchName = client.getActiveBranchName();
+                commitHash = client.getActiveCommitHash();
+                expect(err).to.equal(null);
+
+                client.deleteBranch(projectName, forkName, commitHash, function (err) {
+                    expect(err).to.equal(null);
+
+                    client.forkCurrentBranch(forkName, commitHash, function (err, name, hash) {
+                        expect(err).to.equal(null);
+                        expect(hash).to.equal(commitHash);
+                        expect(name).to.equal(forkName);
+
+                        client.getBranches(projectName, function (err, branches) {
+                            expect(err).to.equal(null);
+                            expect(branches).to.include.keys(name);
+                            expect(branches[name]).to.equal(commitHash);
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+        it('should fail before forking with bogus commitHash', function (done) {
+            var activeBranchName,
+                forkName = 'willNotBeForked',
+                commitHash = '#abc123';
+
+            client.selectProject(projectName, function (err) {
+                expect(err).to.equal(null);
+                activeBranchName = client.getActiveBranchName();
+
+                client.forkCurrentBranch(forkName, commitHash, function (err /*, name, hash*/) {
+                    expect(err).to.include('Could not find specified commitHash');
+
+                    client.getBranches(projectName, function (err, branches) {
+                        expect(err).to.equal(null);
+
+                        expect(branches).not.to.include.keys(forkName);
+                        done();
+                    });
+                });
+            });
+        });
     });
 
     describe('branch status updates', function () {
@@ -1004,6 +1070,8 @@ describe('GME client', function () {
                     gmeConfig = JSON.parse(gmeConfigJSON);
                     client = new Client(gmeConfig);
                     client.connectToDatabase(function (err) {
+                        expect(err).to.equal(null);
+
                         client.selectProject(projectName, function (err) {
                             expect(err).to.equal(null);
                             masterHash = client.getActiveCommitHash();
@@ -1037,6 +1105,8 @@ describe('GME client', function () {
                 },
                 unwatch = function () {
                     client.unwatchProject(projectName, handler, function (err) {
+                        expect(err).to.equal(null);
+
                         client.deleteBranch(projectName, branchName, masterHash, function (err) {
                             expect(err).to.equal(null);
                             done(err);
