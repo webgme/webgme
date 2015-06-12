@@ -3392,10 +3392,6 @@ describe('GME client', function () {
 
     });
 
-    it.skip('should execute the given plugin on the server and return its result', function () {
-        // runServerPlugin
-
-    });
 
 //TODO add only proxied functions
     describe('meta rule query and setting tests', function () {

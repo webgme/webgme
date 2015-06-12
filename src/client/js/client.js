@@ -1620,9 +1620,52 @@ define([
             );
         };
 
-        //plugin on server
+        //plugin
         this.runServerPlugin = function (name, context, callback) {
             storage.simpleRequest({command: 'executePlugin', name: name, context: context}, callback);
+        };
+
+        /**
+         * @param {string[]} pluginNames - All avaliable plugins from server.
+         * @param {string} [nodePath=''] - Node to get the validPlugins from.
+         * @returns {string[]} - Filtered plugin names.
+         */
+        this.filterPlugins = function (pluginNames, nodePath) {
+            var filteredNames = [],
+                validPlugins,
+                i,
+                node;
+
+            logger.debug('filterPluginsBasedOnNode allPlugins, given nodePath', pluginNames, nodePath);
+            if (!nodePath) {
+                logger.debug('filterPluginsBasedOnNode nodePath not given - will fall back on root-node.');
+                nodePath = ROOT_PATH;
+            }
+
+            node = state.nodes[nodePath];
+
+            if (!node) {
+                logger.warn('filterPluginsBasedOnNode node not loaded - will fall back on root-node.', nodePath);
+                nodePath = ROOT_PATH;
+                node = state.nodes[nodePath];
+            }
+
+            if (!node) {
+                logger.warn('filterPluginsBasedOnNode root node not loaded - will return full list.');
+                return pluginNames;
+            }
+
+            validPlugins = (state.core.getRegistry(node.node, 'validPlugins') || '').split(' ');
+            for (i = 0; i < validPlugins.length; i += 1) {
+                if (pluginNames.indexOf(validPlugins[i]) > -1) {
+                    filteredNames.push(validPlugins[i]);
+                } else {
+                    logger.warn('Registered plugin for node at path "' + nodePath +
+                        '" is not amongst avaliable plugins', pluginNames);
+                }
+            }
+
+            return filteredNames;
         };
 
         //addOn

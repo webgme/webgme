@@ -34,7 +34,8 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
         };
 
         fillMenuItems = function () {
-            var pluginNames = WebGMEGlobal.allPlugins,
+            var pluginNames = WebGMEGlobal.gmeConfig.plugin.displayAll ? WebGMEGlobal.allPlugins :
+                    client.filterPlugins(WebGMEGlobal.allPlugins),
                 i, executeClickFunction = function (data) {
                     executePlugin(data.name);
                 };

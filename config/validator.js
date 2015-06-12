@@ -134,6 +134,7 @@ function validateConfig (configOrFileName) {
     assertObject('config.plugin', config.plugin);
     assertBoolean('config.plugin.allowServerExecution', config.plugin.allowServerExecution);
     assertArray('config.plugin.basePaths', config.plugin.basePaths);
+    assertBoolean('config.plugin.displayAll', config.plugin.displayAll);
 
     // requirejsPaths
     expectedKeys.push('requirejsPaths');
