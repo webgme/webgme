@@ -987,6 +987,113 @@ describe('GME client', function () {
 
     });
 
+    describe('branch watchers', function () {
+        var Client,
+            gmeConfig,
+            projectName = 'branchWatcher',
+            masterHash,
+            client;
+
+        before(function (done) {
+            this.timeout(10000);
+            requirejs([
+                    'js/client',
+                    'text!gmeConfig.json'],
+                function (Client_, gmeConfigJSON) {
+                    Client = Client_;
+                    gmeConfig = JSON.parse(gmeConfigJSON);
+                    client = new Client(gmeConfig);
+                    client.connectToDatabase(function (err) {
+                        client.selectProject(projectName, function (err) {
+                            expect(err).to.equal(null);
+                            masterHash = client.getActiveCommitHash();
+                            expect(masterHash).to.include('#');
+                            done();
+                        });
+                    });
+                }
+            );
+        });
+
+        after(function (done) {
+            client.disconnectFromDatabase(done);
+        });
+
+        it('should raise BRANCH_CREATED when a new branch is created', function (done) {
+            var branchName = 'b1',
+                triggered = false,
+                handler = function (storage, eventData) {
+                    expect(triggered).to.equal(false);
+                    expect(eventData).to.not.equal(null);
+                    expect(eventData).to.include.keys('etype', 'projectName', 'branchName', 'newHash', 'oldHash');
+                    expect(eventData.etype).to.equal(client.CONSTANTS.STORAGE.BRANCH_CREATED);
+                    expect(eventData.projectName).to.equal(projectName);
+                    expect(eventData.branchName).to.equal(branchName);
+                    expect(eventData.newHash).to.equal(masterHash);
+                    expect(eventData.oldHash).to.equal('');
+
+                    triggered = true;
+                    unwatch();
+                },
+                unwatch = function () {
+                    client.unwatchProject(projectName, handler, function (err) {
+                        client.deleteBranch(projectName, branchName, masterHash, function (err) {
+                            expect(err).to.equal(null);
+                            done(err);
+                        });
+                    });
+                };
+
+            client.watchProject(projectName, handler, function (err) {
+                expect(err).to.equal(null);
+                client.createBranch(projectName, branchName, masterHash, function (err) {
+                    expect(err).to.equal(null);
+                });
+            });
+        });
+
+        it('should raise BRANCH_DELETED when a branch is deleted', function (done) {
+            var branchName = 'b2',
+                triggered = 0,
+                handler = function (storage, eventData) {
+                    expect(triggered).to.be.below(2);
+                    expect(eventData).to.not.equal(null);
+                    expect(eventData).to.include.keys('etype', 'projectName', 'branchName', 'newHash', 'oldHash');
+                    if (triggered === 0) {
+                        expect(eventData.etype).to.equal(client.CONSTANTS.STORAGE.BRANCH_CREATED);
+                        expect(eventData.projectName).to.equal(projectName);
+                        expect(eventData.branchName).to.equal(branchName);
+                        expect(eventData.newHash).to.equal(masterHash);
+                        expect(eventData.oldHash).to.equal('');
+                    } else if (triggered === 1) {
+                        expect(eventData.etype).to.equal(client.CONSTANTS.STORAGE.BRANCH_DELETED);
+                        expect(eventData.projectName).to.equal(projectName);
+                        expect(eventData.branchName).to.equal(branchName);
+                        expect(eventData.newHash).to.equal('');
+                        expect(eventData.oldHash).to.equal(masterHash);
+                        unwatch();
+                    }
+
+                    triggered += 1;
+                },
+                unwatch = function () {
+                    client.unwatchProject(projectName, handler, function (err) {
+                        done(err);
+                    });
+                };
+
+            client.watchProject(projectName, handler, function (err) {
+                expect(err).to.equal(null);
+                client.createBranch(projectName, branchName, masterHash, function (err) {
+                    expect(err).to.equal(null);
+                    client.deleteBranch(projectName, branchName, masterHash, function (err) {
+                        expect(err).to.equal(null);
+                    });
+                });
+            });
+        });
+    });
+
     describe('client/node tests', function () {
         var Client,
             gmeConfig,
@@ -3672,7 +3779,6 @@ describe('GME client', function () {
         });
 
         after(function (done) {
-            //remove all create projects
             client.disconnectFromDatabase(done);
         });
 
@@ -3731,6 +3837,93 @@ describe('GME client', function () {
                             });
                         }
                     );
+                });
+            });
+        });
+
+        it('should seed a project and notify watcher', function (done) {
+            this.timeout(5000);
+            var projectName = 'watcherCreate',
+                seedConfig = {
+                    type: 'file',
+                    seedName: 'EmptyProject',
+                    projectName: projectName
+                },
+                triggered = false,
+                handler = function (storage, eventData) {
+                    expect(triggered).to.equal(false);
+                    expect(eventData).to.not.equal(null);
+                    expect(eventData).to.include.keys('etype', 'projectName');
+                    expect(eventData.etype).to.equal(client.CONSTANTS.STORAGE.PROJECT_CREATED);
+                    expect(eventData.projectName).to.equal(projectName);
+
+                    triggered = true;
+                    unwatch();
+                },
+                unwatch = function () {
+                    client.unwatchDatabase(handler, function (err) {
+                        done(err);
+                    });
+                };
+
+            client.deleteProject(projectName, function (err) {
+                expect(err).to.equal(null);
+
+                //* Triggers eventHandler(storage, eventData) on PROJECT_CREATED and PROJECT_DELETED.
+                //*
+                //* eventData = {
+                //*    etype: PROJECT_CREATED||DELETED,
+                //*    projectName: %name of project%
+                //* }
+                client.watchDatabase(handler, function (err) {
+                    expect(err).to.equal(null);
+
+                    client.seedProject(seedConfig, function (err) {
+                        expect(err).to.equal(null);
+
+                    });
+                });
+            });
+        });
+
+        it('should seed a project delete it and notify watcher', function (done) {
+            this.timeout(5000);
+            var projectName = 'watcherDelete',
+                seedConfig = {
+                    type: 'file',
+                    seedName: 'EmptyProject',
+                    projectName: projectName
+                },
+                triggered = false,
+                handler = function (storage, eventData) {
+                    expect(triggered).to.equal(false);
+                    expect(eventData).to.not.equal(null);
+                    expect(eventData).to.include.keys('etype', 'projectName');
+                    expect(eventData.etype).to.equal(client.CONSTANTS.STORAGE.PROJECT_DELETED);
+                    expect(eventData.projectName).to.equal(projectName);
+
+                    triggered = true;
+                    unwatch();
+                },
+                unwatch = function () {
+                    client.unwatchDatabase(handler, function (err) {
+                        done(err);
+                    });
+                };
+
+            client.deleteProject(projectName, function (err) {
+                expect(err).to.equal(null);
+
+                client.seedProject(seedConfig, function (err) {
+                    expect(err).to.equal(null);
+
+                    client.watchDatabase(handler, function (err) {
+                        expect(err).to.equal(null);
+
+                        client.deleteProject(projectName, function (err) {
+                            expect(err).to.equal(null);
+                        });
+                    });
                 });
             });
         });
