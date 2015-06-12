@@ -1620,7 +1620,18 @@ define([
             );
         };
 
-        //plugin
+        /**
+         * Run the plugin on the server inside a worker process.
+         * @param {string} name - name of plugin.
+         * @param {object} context - where the plugin should execute.
+         * @param {string} context.project - name of project.
+         * @param {string} context.activeNode - path to activeNode.
+         * @param {string} [context.activeSelection=[]] - paths to selected nodes.
+         * @param {string} context.commit - commit hash to start the plugin from.
+         * @param {string} context.branchName - branch which to save to.
+         * @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
+         * @param {function} callback
+         */
         this.runServerPlugin = function (name, context, callback) {
             storage.simpleRequest({command: 'executePlugin', name: name, context: context}, callback);
         };

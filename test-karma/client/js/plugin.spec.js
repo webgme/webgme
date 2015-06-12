@@ -104,4 +104,27 @@ describe('Plugin', function () {
         userGuid = client.addUI({}, eventHandler);
         client.updateTerritory(userGuid, {'/1': {children: 0}});
     });
+
+    it.skip('should run PluginGenerator on the server and return a valid result using default settings', function (done) {
+        var name = 'PluginGenerator',
+            context = {
+                project: projectName,
+                activeNode: '',
+                commit: baseCommitHash,
+                branchName: 'master'
+            };
+        //* @param {object} context - where the plugin should execute.
+        //* @param {string} context.project - name of project.
+        //* @param {string} context.activeNode - path to activeNode.
+        //* @param {string} [context.activeSelection=[]] - paths to selected nodes.
+        //* @param {string} context.commit - commit hash to start the plugin from.
+        //* @param {string} context.branchName - branch which to save to.
+        //* @param {object} context.pluginConfig - specific configuration for the plugin.
+        client.runServerPlugin(name, context, function (err, pluginResult) {
+            expect(err).to.equal(null);
+            expect(pluginResult).not.to.equal(null);
+            expect(pluginResult.success).to.equal(true, 'PluginGenerator did not succeed on server!');
+            done();
+        });
+    });
 });
