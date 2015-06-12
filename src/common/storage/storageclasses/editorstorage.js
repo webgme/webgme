@@ -261,6 +261,11 @@ define([
 
             forkData = branch.getCommitsForNewFork(commitHash, forkName); // commitHash = null defaults to latest commit
             self.logger.debug('forkBranch - forkData', forkData);
+            if (forkData === false) {
+                callback('Could not find specified commitHash');
+                return;
+            }
+
             function commitNext() {
                 var currentCommitData = forkData.queue.shift();
                 logger.debug('forkBranch - commitNext, currentCommitData', currentCommitData);
