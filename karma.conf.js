@@ -16,13 +16,13 @@ var testFixture = require('./test/_globals.js'),
     logger = testFixture.logger.fork('karma.conf'),
     PROJECTS_TO_IMPORT = [
         {name: 'ProjectAndBranchOperationsTest', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'seedTestBasicMaster', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'seedTestBasicFile', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'seedTestBasicOther', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'noBranchSeedProject', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'deleteProject', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'createGenericBranch', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'removeGenericBranch', path: './test-karma/client/js/client/basicProject.json'},
+        {name: 'seedTestBasicMaster', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'seedTestBasicFile', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'seedTestBasicOther', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'noBranchSeedProject', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'deleteProject', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'createGenericBranch', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'removeGenericBranch', path: './test-karma/client/js/client/pluginProject.json'},
         {name: 'metaQueryAndManipulationTest', path: './test-karma/client/js/client/metaTestProject.json'},
         {name: 'ClientNodeInquiryTests', path: './test-karma/client/js/client/clientNodeTestProject.json'},
         {name: 'nodeManipulationProject', path: './test-karma/client/js/client/clientNodeTestProject.json'},
@@ -40,7 +40,10 @@ var testFixture = require('./test/_globals.js'),
             path: './test-karma/client/js/client/clientNodeTestProject.json',
             branches: ['master', 'other']
         },
-        {name: 'pluginProject', path: './test-karma/client/js/client/pluginProject.json'}
+        {name: 'pluginProject', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'watcherDelete', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'watcherCreate', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'branchWatcher', path: './test-karma/client/js/client/pluginProject.json'}
     ];
 
 (function initializeServer() {

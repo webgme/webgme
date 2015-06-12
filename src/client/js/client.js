@@ -908,6 +908,17 @@ define([
         };
 
         // Watchers (used in e.g. ProjectNavigator).
+        /**
+         * Triggers eventHandler(storage, eventData) on PROJECT_CREATED and PROJECT_DELETED.
+         *
+         * eventData = {
+         *    etype: PROJECT_CREATED||DELETED,
+         *    projectName: %name of project%
+         * }
+         *
+         * @param {function} eventHandler
+         * @param {function} [callback]
+         */
         this.watchDatabase = function (eventHandler, callback) {
             callback = callback || function (err) {
                     if (err) {
@@ -923,9 +934,26 @@ define([
                         logger.error('Problems unwatching database room');
                     }
                 };
-            storage.watchDatabase(eventHandler, callback);
+            storage.unwatchDatabase(eventHandler, callback);
         };
 
+        /**
+         * Triggers eventHandler(storage, eventData) on BRANCH_CREATED, BRANCH_DELETED and BRANCH_HASH_UPDATED
+         * for the given projectName.
+         *
+         *
+         * eventData = {
+         *    etype: BRANCH_CREATED||DELETED||HASH_UPDATED,
+         *    projectName: %name of project%,
+         *    branchName: %name of branch%,
+         *    newHash: %new commitHash (='' when DELETED)%
+         *    oldHash: %previous commitHash (='' when CREATED)%
+         * }
+         *
+         * @param {string} projectName
+         * @param {function} eventHandler
+         * @param {function} [callback]
+         */
         this.watchProject = function (projectName, eventHandler, callback) {
             callback = callback || function (err) {
                     if (err) {
