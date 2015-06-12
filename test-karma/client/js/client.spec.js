@@ -735,7 +735,7 @@ describe('GME client', function () {
         it('should return the current branch state', function (done) {
             client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
-                expect(client.getBranchStatus()).to.equal(client.CONSTANTS.STORAGE.SYNCH);
+                expect(client.getBranchStatus()).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
 
                 done();
             });
