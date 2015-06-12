@@ -223,9 +223,6 @@ define([
         if (error) {
             return error;
         }
-
-        // TODO: add objects to meta sheets
-
     };
 
 
@@ -348,27 +345,38 @@ define([
             xmpMetaNames = Object.keys(self.cache.xmpMetaNode),
             xmpMetaName,
             xmpNode,
+            node,
             childObjectNames,
-            i;
+            i,
+            j,
+            position,
+            x,
+            y,
+            setNames = self.core.getSetNames(self.rootNode);
 
         // use cache to create meta rules
         self.logger.debug('Creating meta rules ...');
 
         for (i = 0; i < xmpMetaNames.length; i += 1) {
             xmpMetaName = xmpMetaNames[i];
+            node = self.cache.nodes[xmpMetaName];
             xmpNode = self.cache.xmpMetaNode[xmpMetaName];
+
             if (xmpNode.hasOwnProperty('@subfolders')) {
                 childObjectNames = xmpNode['@subfolders'].split(' ');
-                self.addValidChildren(self.cache.nodes[xmpMetaName], childObjectNames);
+                self.addValidChildren(node, childObjectNames);
             }
 
             if (xmpNode.hasOwnProperty('@rootobjects')) {
                 childObjectNames = xmpNode['@rootobjects'].split(' ');
-                self.addValidChildren(self.cache.nodes[xmpMetaName], childObjectNames);
+                self.addValidChildren(node, childObjectNames);
             }
 
             if (xmpNode.hasOwnProperty('role')) {
                 // TODO: add possible child objects
+                //for (j = 0; j < xmpNode.role.length; j += 1) {
+                //
+                //}
             }
 
             if (xmpNode.hasOwnProperty('connjoint')) {
@@ -379,9 +387,27 @@ define([
             // TODO: references
 
             // TODO: sets
-        }
 
-        // TODO: add elements to meta sheets
+            x = 100 + (i % 10) * 150;
+            y = 300 + Math.floor(i / 10) * 200;
+
+            position = {
+                x: x,
+                y: y
+            };
+
+            // add element to meta sheets
+            for (j = 0; j < setNames.length; j += 1) {
+                if (setNames[j].indexOf('MetaAspectSet') > -1) {
+                    self.core.addMember(self.rootNode, setNames[j], node);
+                    self.core.setMemberRegistry(self.rootNode,
+                        setNames[j],
+                        self.core.getPath(node),
+                        'position',
+                        position);
+                }
+            }
+        }
 
         self.logger.debug('Created meta rules.');
     };
