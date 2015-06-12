@@ -39,7 +39,8 @@ var testFixture = require('./test/_globals.js'),
             name: 'projectSeedMultiple',
             path: './test-karma/client/js/client/clientNodeTestProject.json',
             branches: ['master', 'other']
-        }
+        },
+        {name: 'pluginProject', path: './test-karma/client/js/client/pluginProject.json'}
     ];
 
 (function initializeServer() {
