@@ -76,7 +76,7 @@ define([
                     }
                 });
             } else if (value === ITEM_VALUE_MERGE) {
-                self._client.forkCurrentBranch(null, null, function (err, forkName) {
+                self._client.forkCurrentBranch(null, null, function (err, forkName, forkHash) {
                     if (err) {
                         self._logger.error('could not fork the branch', branchName);
                         self._client.selectBranch(branchName, null, function (err) {
@@ -115,6 +115,11 @@ define([
                                         throw new Error(err);
                                     }
                                 });
+                                self._client.deleteBranch(projectName, forkName, forkHash, function (err) {
+                                    if (err) {
+                                        self._logger.error('Could delete temporary branch after merge', forkName);
+                                    }
+                                });
                             }
                         });
                     }
@@ -133,13 +138,13 @@ define([
         var status = this._client.getBranchStatus();
 
         switch (status) {
-            case CONSTANTS.CLIENT.BRANCH_STATUS.SYNCH:
+            case CONSTANTS.CLIENT.BRANCH_STATUS.SYNC:
                 this._branchInSync();
                 break;
-            case CONSTANTS.CLIENT.BRANCH_STATUS.FORKED:
-                this._branchForked(eventData);
+            case CONSTANTS.CLIENT.BRANCH_STATUS.AHEAD_NOT_SYNC:
+                this._branchAheadNotSync(eventData);
                 break;
-            case CONSTANTS.CLIENT.BRANCH_STATUS.AHEAD:
+            case CONSTANTS.CLIENT.BRANCH_STATUS.AHEAD_SYNC:
                 this._branchAhead(eventData);
                 break;
             case CONSTANTS.CLIENT.BRANCH_STATUS.PULLING:
@@ -162,41 +167,32 @@ define([
         }
     };
 
-    BranchStatusWidget.prototype._branchForked = function (eventData) {
+    BranchStatusWidget.prototype._branchAheadNotSync = function (eventData) {
         this._ddBranchStatus.clear();
-        this._ddBranchStatus.setTitle('OUT OF SYNC');
-        this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);
         this._outOfSync = true;
-
+        this._ddBranchStatus.addItem({
+            text: 'Create fork',
+            value: ITEM_VALUE_FORK
+        });
+        this._ddBranchStatus.addItem({
+            text: 'Drop local changes',
+            value: ITEM_VALUE_FOLLOW
+        });
+        this._ddBranchStatus.addItem({
+            text: 'Try to merge',
+            value: ITEM_VALUE_MERGE
+        });
+        this._ddBranchStatus.setTitle('AHEAD[' + eventData.details.length + ']');
+        this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);
         this._popoverBox = this._popoverBox || new PopoverBox(this._ddBranchStatus.getEl());
-        this._popoverBox.show('You got out of sync from the origin',
+        this._popoverBox.show('You are out of sync from the origin.',
             this._popoverBox.alertLevels.WARNING, true);
-        this._branchAhead(eventData);
     };
 
     BranchStatusWidget.prototype._branchAhead = function (eventData) {
         this._ddBranchStatus.clear();
-        if (this._outOfSync === true) {
-            this._ddBranchStatus.addItem({
-                text: 'Create fork',
-                value: ITEM_VALUE_FORK
-            });
-            this._ddBranchStatus.addItem({
-                text: 'Drop local changes',
-                value: ITEM_VALUE_FOLLOW
-            });
-            this._ddBranchStatus.addItem({
-                text: 'Try to merge',
-                value: ITEM_VALUE_MERGE
-            });
-            this._ddBranchStatus.setTitle('AHEAD[' + eventData.details.length + ']');
-            this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);
-            this._popoverBox.show('You are out of sync from the origin.',
-                this._popoverBox.alertLevels.WARNING, true);
-        } else {
-            this._ddBranchStatus.setTitle('AHEAD[' + eventData.details.length + ']');
-            this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.LIGHT_BLUE);
-        }
+        this._ddBranchStatus.setTitle('AHEAD[' + eventData.details.length + ']');
+        this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.LIGHT_BLUE);
     };
 
     BranchStatusWidget.prototype._branchPulling = function (eventData) {
