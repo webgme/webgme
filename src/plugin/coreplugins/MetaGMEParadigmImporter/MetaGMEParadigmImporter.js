@@ -310,14 +310,19 @@ define([
             for (i = 0; i < attributeNames.length; i += 1) {
                 attributeName = attributeNames[i];
                 xmpAttribute = self.cache.attributes[attributeName];
-                // TODO: handle parameter type appropriately
-                self.core.setAttributeMeta(node,
-                    xmpAttribute['@name'],
-                    {
-                        type: 'string',
-                        default: xmpAttribute['@defvalue']
-                    });
-                self.core.setAttribute(node, xmpAttribute['@name'], xmpAttribute['@defvalue']);
+                if (xmpAttribute) {
+                    // TODO: handle parameter type appropriately
+                    self.core.setAttributeMeta(node,
+                        xmpAttribute['@name'],
+                        {
+                            type: 'string',
+                            default: xmpAttribute['@defvalue']
+                        });
+                    self.core.setAttribute(node, xmpAttribute['@name'], xmpAttribute['@defvalue']);
+                } else {
+                    self.logger.error('Attribute was not found in global cache: ',
+                        {metadata: {attrName: attributeName, xmpMetaNode: xmpMetaNode}});
+                }
             }
         }
 
