@@ -106,8 +106,6 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                             child = core.getChild(n, r);
                             core.setHashed(child, true, true);
                             child.base = b;
-                            n.children.push(child);
-                            n.data[r] = child.data; //FIXME there should be a proper way to do this
                             return child;
                         }
                     }, basechild, child, node, relid);
@@ -135,6 +133,12 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
         //TODO the pointer loading is totally based upon the loadByPath...
         core.loadPointer = function (node, name) {
             var pointerPath = core.getPointerPath(node, name);
+            if (pointerPath === undefined) {
+                return undefined;
+            }
+            if (pointerPath === null) {
+                return null;
+            }
             return TASYNC.call(core.loadByPath, core.getRoot(node), pointerPath);
         };
 

@@ -16,13 +16,13 @@ var testFixture = require('./test/_globals.js'),
     logger = testFixture.logger.fork('karma.conf'),
     PROJECTS_TO_IMPORT = [
         {name: 'ProjectAndBranchOperationsTest', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'seedTestBasicMaster', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'seedTestBasicFile', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'seedTestBasicOther', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'noBranchSeedProject', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'deleteProject', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'createGenericBranch', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'removeGenericBranch', path: './test-karma/client/js/client/basicProject.json'},
+        {name: 'seedTestBasicMaster', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'seedTestBasicFile', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'seedTestBasicOther', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'noBranchSeedProject', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'deleteProject', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'createGenericBranch', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'removeGenericBranch', path: './test-karma/client/js/client/pluginProject.json'},
         {name: 'metaQueryAndManipulationTest', path: './test-karma/client/js/client/metaTestProject.json'},
         {name: 'ClientNodeInquiryTests', path: './test-karma/client/js/client/clientNodeTestProject.json'},
         {name: 'nodeManipulationProject', path: './test-karma/client/js/client/clientNodeTestProject.json'},
@@ -35,10 +35,15 @@ var testFixture = require('./test/_globals.js'),
             path: './test-karma/client/js/client/clientNodeTestProject.json',
             branches: ['other']
         },
-        {   name: 'projectSeedMultiple',
+        {
+            name: 'projectSeedMultiple',
             path: './test-karma/client/js/client/clientNodeTestProject.json',
             branches: ['master', 'other']
         },
+        {name: 'pluginProject', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'watcherDelete', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'watcherCreate', path: './test-karma/client/js/client/pluginProject.json'},
+        {name: 'branchWatcher', path: './test-karma/client/js/client/pluginProject.json'}
     ];
 
 (function initializeServer() {
@@ -60,6 +65,7 @@ var testFixture = require('./test/_globals.js'),
             function deleteProject(projectInfo) {
                 return storage.deleteProject({projectName: projectInfo.name});
             }
+
             return Q.all(PROJECTS_TO_IMPORT.map(deleteProject));
         })
         .then(function () {
@@ -75,22 +81,22 @@ var testFixture = require('./test/_globals.js'),
                     gmeConfig: gmeConfig,
                     logger: logger
                 })
-                .then(function (importResult) {
-                    var i,
-                        createBranches = [];
-                    if (projectInfo.hasOwnProperty('branches') && projectInfo.branches.length > 1) {
-                        // First one is already added thus i = 1.
-                        for (i = 1; i < projectInfo.branches.length; i += 1) {
-                            createBranches.push(storage.createBranch({
-                                    projectName: projectInfo.name,
-                                    branchName: projectInfo.branches[i],
-                                    hash: importResult.commitHash
-                                })
-                            );
+                    .then(function (importResult) {
+                        var i,
+                            createBranches = [];
+                        if (projectInfo.hasOwnProperty('branches') && projectInfo.branches.length > 1) {
+                            // First one is already added thus i = 1.
+                            for (i = 1; i < projectInfo.branches.length; i += 1) {
+                                createBranches.push(storage.createBranch({
+                                        projectName: projectInfo.name,
+                                        branchName: projectInfo.branches[i],
+                                        hash: importResult.commitHash
+                                    })
+                                );
+                            }
                         }
-                    }
-                    return Q.all(createBranches);
-                });
+                        return Q.all(createBranches);
+                    });
             }
 
             return Q.all(PROJECTS_TO_IMPORT.map(importProject));
@@ -101,9 +107,11 @@ var testFixture = require('./test/_globals.js'),
         })
         .then(function () {
             server = webgme.standaloneServer(gmeConfig);
+            //setTimeout(function () {
             server.start(function () {
                 console.log('webgme server started');
             });
+            //}, 10000); // timeout to emulate long server start up see test-main.js
         })
         .catch(function (err) {
             console.error(err);
@@ -190,7 +198,7 @@ module.exports = function (config) {
             '/worker': 'http://localhost:' + gmeConfig.server.port + '/worker',
             '/listAllDecorators': 'http://localhost:' + gmeConfig.server.port + '/listAllDecorators',
             '/listAllPlugins': 'http://localhost:' + gmeConfig.server.port + '/listAllPlugins',
-            '/listAllSeeds': 'http://localhost:' + gmeConfig.server.port + '/listAllSeeds',
+            '/listAllSeeds': 'http://localhost:' + gmeConfig.server.port + '/listAllSeeds'
         }
     });
 };
