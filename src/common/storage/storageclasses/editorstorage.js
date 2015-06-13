@@ -222,10 +222,7 @@ define([
                     project.insertObject(latestCommit.coreObjects[i]);
                 }
 
-                // This only has an effect after a fork with pending commits.
-                //self._pushNextQueuedCommit(projectName, branchName);
-
-                callback(err, latestCommit, branch.getCommitQueue());
+                callback(err, latestCommit);
             });
         };
 
@@ -264,6 +261,11 @@ define([
 
             forkData = branch.getCommitsForNewFork(commitHash, forkName); // commitHash = null defaults to latest commit
             self.logger.debug('forkBranch - forkData', forkData);
+            if (forkData === false) {
+                callback('Could not find specified commitHash');
+                return;
+            }
+
             function commitNext() {
                 var currentCommitData = forkData.queue.shift();
                 logger.debug('forkBranch - commitNext, currentCommitData', currentCommitData);
@@ -284,7 +286,7 @@ define([
                             callback(err);
                             return;
                         }
-                        callback(null);
+                        callback(null, forkData.commitHash);
                     });
                 }
             }

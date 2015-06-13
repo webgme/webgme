@@ -45,16 +45,16 @@ define([
                 core: null,
                 branchName: null,
                 branchStatus: null,
-                creatingFork: false,
+                inSync: true,
                 readOnlyProject: false,
                 viewer: false, // This means that a specific commit is selected w/o regards to any branch.
+
                 users: {},
-                patterns: {},
-                gHash: 0,
                 nodes: {},
-                metaNodes: {},
                 loadNodes: {},
-                loadError: null,
+                // FIXME: This should be the same as nodes (need to make sure they are not modified in meta).
+                metaNodes: {},
+
                 root: {
                     current: null,
                     previous: null,
@@ -66,7 +66,9 @@ define([
                 },
                 undoRedoChain: null, //{commit: '#hash', root: '#hash', previous: object, next: object}
                 inTransaction: false,
-                msg: ''
+                msg: '',
+                gHash: 0,
+                loadError: null
             },
             monkeyPatchKey,
             nodeSetterFunctions,
@@ -224,7 +226,12 @@ define([
                         callback
                     );
                     commitQueue = state.project.getBranch(state.branchName, true).getCommitQueue();
-                    changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD, commitQueue);
+                    if (state.inSync === true) {
+                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC, commitQueue);
+                    } else {
+                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC, commitQueue);
+                    }
+
 
                     addCommit(newCommitObject[CONSTANTS.STORAGE.MONGO_ID]);
                     //undo-redo
@@ -442,7 +449,7 @@ define([
                 }
                 commitHandler = commitHandler || getDefaultCommitHandler();
                 storage.openBranch(state.project.name, branchName, getUpdateHandler(), commitHandler,
-                    function (err, latestCommit, queuedCommits) {
+                    function (err, latestCommit) {
                         if (err) {
                             callback(new Error(err));
                             return;
@@ -464,9 +471,7 @@ define([
 
                         state.viewer = false;
                         state.branchName = branchName;
-
                         self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
-                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.PULLING, 1);
                         logState('info', 'openBranch');
 
                         loading(commitObject.root, function (err) {
@@ -475,7 +480,7 @@ define([
                             } else {
                                 addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
                             }
-                            changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNCH);
+                            changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
                             // TODO: Make sure this is always the case.
                             callback(err);
                         });
@@ -514,7 +519,6 @@ define([
 
                 state.viewer = true;
                 changeBranchStatus(null);
-                changeBranchStatus(CONSTANTS.STORAGE.PULLING, 1);
                 state.project.loadObject(commitHash, function (err, commitObj) {
                     if (!err && commitObj) {
                         logState('info', 'selectCommit loaded commit');
@@ -563,16 +567,16 @@ define([
                     logState('info', 'commitHandler');
                     if (commitQueue.length === 1) {
                         logger.debug('No commits queued.');
-                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNCH);
+                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
                     } else {
                         logger.debug('Will proceed with next queued commit...');
-                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD, commitQueue);
+                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC, commitQueue);
                     }
                     callback(true); // push:true
                 } else if (result.status === CONSTANTS.STORAGE.FORKED) {
                     logger.debug('You got forked');
                     logState('info', 'commitHandler');
-                    changeBranchStatus(CONSTANTS.BRANCH_STATUS.FORKED, commitQueue);
+                    changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC, commitQueue);
                     callback(false); // push:false
                 } else {
                     callback(false);
@@ -608,7 +612,7 @@ define([
                         logger.debug('loading complete for incoming rootHash', eventData.commitObject.root);
                         logState('debug', 'updateHandler');
                         if (updateQueue.length === 1) {
-                            changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNCH);
+                            changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
                         }
                         callback(false); // aborted: false
                     }
@@ -619,12 +623,18 @@ define([
         function changeBranchStatus(branchStatus, details) {
             logger.debug('changeBranchStatus, prev, new, details', state.branchStatus, branchStatus, details);
             state.branchStatus = branchStatus;
+            if (branchStatus === CONSTANTS.BRANCH_STATUS.SYNC) {
+                state.inSync = true;
+            } else if (branchStatus === CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC) {
+                state.inSync = false;
+            }
             self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {status: branchStatus, details: details});
         }
 
         this.forkCurrentBranch = function (newName, commitHash, callback) {
             var self = this,
-                currentBranchName = self.getActiveBranchName(),
+                activeBranchName = self.getActiveBranchName(),
+                activeProjectName = self.getActiveProjectName(),
                 forkName;
 
             logger.debug('forkCurrentBranch', newName, commitHash);
@@ -632,19 +642,21 @@ define([
                 callback('Cannot fork without an open project!');
                 return;
             }
-            if (currentBranchName === null) {
+            if (activeBranchName === null) {
                 callback('Cannot fork without an open branch!');
                 return;
             }
-            forkName = newName || currentBranchName + '_' + (new Date()).getTime();
-            storage.forkBranch(this.getActiveProjectName(), currentBranchName, forkName, commitHash, function (err) {
-                if (err) {
-                    logger.error('Could not fork branch:', newName, err);
-                    callback(err);
-                    return;
+            forkName = newName || activeBranchName + '_' + (new Date()).getTime();
+            storage.forkBranch(activeProjectName, activeBranchName, forkName, commitHash,
+                function (err, forkHash) {
+                    if (err) {
+                        logger.error('Could not fork branch:', newName, err);
+                        callback(err);
+                        return;
+                    }
+                    callback(null, forkName, forkHash);
                 }
-                callback(null, forkName);
-            });
+            );
         };
 
         // State getters.
@@ -897,6 +909,17 @@ define([
         };
 
         // Watchers (used in e.g. ProjectNavigator).
+        /**
+         * Triggers eventHandler(storage, eventData) on PROJECT_CREATED and PROJECT_DELETED.
+         *
+         * eventData = {
+         *    etype: PROJECT_CREATED||DELETED,
+         *    projectName: %name of project%
+         * }
+         *
+         * @param {function} eventHandler
+         * @param {function} [callback]
+         */
         this.watchDatabase = function (eventHandler, callback) {
             callback = callback || function (err) {
                     if (err) {
@@ -912,9 +935,26 @@ define([
                         logger.error('Problems unwatching database room');
                     }
                 };
-            storage.watchDatabase(eventHandler, callback);
+            storage.unwatchDatabase(eventHandler, callback);
         };
 
+        /**
+         * Triggers eventHandler(storage, eventData) on BRANCH_CREATED, BRANCH_DELETED and BRANCH_HASH_UPDATED
+         * for the given projectName.
+         *
+         *
+         * eventData = {
+         *    etype: BRANCH_CREATED||DELETED||HASH_UPDATED,
+         *    projectName: %name of project%,
+         *    branchName: %name of branch%,
+         *    newHash: %new commitHash (='' when DELETED)%
+         *    oldHash: %previous commitHash (='' when CREATED)%
+         * }
+         *
+         * @param {string} projectName
+         * @param {function} eventHandler
+         * @param {function} [callback]
+         */
         this.watchProject = function (projectName, eventHandler, callback) {
             callback = callback || function (err) {
                     if (err) {
@@ -1609,9 +1649,63 @@ define([
             );
         };
 
-        //plugin on server
+        /**
+         * Run the plugin on the server inside a worker process.
+         * @param {string} name - name of plugin.
+         * @param {object} context - where the plugin should execute.
+         * @param {string} context.project - name of project.
+         * @param {string} context.activeNode - path to activeNode.
+         * @param {string} [context.activeSelection=[]] - paths to selected nodes.
+         * @param {string} context.commit - commit hash to start the plugin from.
+         * @param {string} context.branchName - branch which to save to.
+         * @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
+         * @param {function} callback
+         */
         this.runServerPlugin = function (name, context, callback) {
             storage.simpleRequest({command: 'executePlugin', name: name, context: context}, callback);
+        };
+
+        /**
+         * @param {string[]} pluginNames - All avaliable plugins from server.
+         * @param {string} [nodePath=''] - Node to get the validPlugins from.
+         * @returns {string[]} - Filtered plugin names.
+         */
+        this.filterPlugins = function (pluginNames, nodePath) {
+            var filteredNames = [],
+                validPlugins,
+                i,
+                node;
+
+            logger.debug('filterPluginsBasedOnNode allPlugins, given nodePath', pluginNames, nodePath);
+            if (!nodePath) {
+                logger.debug('filterPluginsBasedOnNode nodePath not given - will fall back on root-node.');
+                nodePath = ROOT_PATH;
+            }
+
+            node = state.nodes[nodePath];
+
+            if (!node) {
+                logger.warn('filterPluginsBasedOnNode node not loaded - will fall back on root-node.', nodePath);
+                nodePath = ROOT_PATH;
+                node = state.nodes[nodePath];
+            }
+
+            if (!node) {
+                logger.warn('filterPluginsBasedOnNode root node not loaded - will return full list.');
+                return pluginNames;
+            }
+
+            validPlugins = (state.core.getRegistry(node.node, 'validPlugins') || '').split(' ');
+            for (i = 0; i < validPlugins.length; i += 1) {
+                if (pluginNames.indexOf(validPlugins[i]) > -1) {
+                    filteredNames.push(validPlugins[i]);
+                } else {
+                    logger.warn('Registered plugin for node at path "' + nodePath +
+                        '" is not amongst avaliable plugins', pluginNames);
+                }
+            }
+
+            return filteredNames;
         };
 
         //addOn

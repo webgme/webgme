@@ -249,7 +249,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
      * @param {string} [context.activeSelection=[]] - paths to selected nodes.
      * @param {string} context.commit - commit hash to start the plugin from.
      * @param {string} context.branchName - branch which to save to.
-     * @param {object} context.pluginConfig - specific configuration for the plugin.
+     * @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
      * @param {function} callback
      */
     executePlugin = function (webGMESessionId, userId, pluginName, context, callback) {
