@@ -4,7 +4,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-describe.only('branch status', function () {
+describe('branch status', function () {
     'use strict';
     var client,
         storage,
