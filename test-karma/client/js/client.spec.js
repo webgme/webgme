@@ -1160,6 +1160,66 @@ describe('GME client', function () {
                 });
             });
         });
+
+        it('should raise BRANCH_HASH_UPDATED when the branch is updated', function (done) {
+            var branchName = 'b3',
+                triggered = false,
+                newHash,
+                handler = function (storage, eventData) {
+                    expect(triggered).to.equal(false);
+                    expect(eventData).to.not.equal(null);
+                    expect(eventData).to.include.keys('etype', 'projectName', 'branchName', 'newHash', 'oldHash');
+                    expect(eventData.etype).to.equal(client.CONSTANTS.STORAGE.BRANCH_HASH_UPDATED);
+                    expect(eventData.projectName).to.equal(projectName);
+                    expect(eventData.branchName).to.equal(branchName);
+                    expect(eventData.oldHash).to.equal(masterHash);
+                    expect(eventData.newHash).to.not.equal(masterHash);
+                    newHash = eventData.newHash;
+
+                    triggered = true;
+                    unwatch();
+                },
+                unwatch = function () {
+                    client.unwatchProject(projectName, handler, function (err) {
+                        expect(err).to.equal(null);
+
+                        client.deleteBranch(projectName, branchName, newHash, function (err) {
+                            expect(err).to.equal(null);
+                            done(err);
+                        });
+                    });
+                };
+
+            client.createBranch(projectName, branchName, masterHash, function (err) {
+                expect(err).to.equal(null);
+
+                client.selectBranch(branchName, null, function (err) {
+                    expect(err).to.equal(null);
+
+                    client.watchProject(projectName, handler, function (err) {
+                        expect(err).to.equal(null);
+                        var loaded = false,
+                            userGuid;
+
+                        function nodeEventHandler(events) {
+                            if (loaded) {
+                                done(new Error('More than one node event'));
+                            } else {
+                                loaded = true;
+                                expect(events.length).to.equal(2);
+                                client.removeUI(userGuid);
+
+                                client.setAttributes('', 'name', 'newRootName',
+                                    'should raise BRANCH_HASH_UPDATED when the branch is updated.');
+                            }
+                        }
+
+                        userGuid = client.addUI({}, nodeEventHandler);
+                        client.updateTerritory(userGuid, {'': {children: 0}});
+                    });
+                });
+            });
+        });
     });
 
     describe('client/node tests', function () {
