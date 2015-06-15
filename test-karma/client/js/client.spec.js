@@ -951,7 +951,6 @@ describe('GME client', function () {
 
             client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
-                console.log('selected');
                 activeBranchName = client.getActiveBranchName();
                 commitHash = client.getActiveCommitHash();
                 client.deleteBranch(projectName, forkName, commitHash, function (err) {
@@ -1002,7 +1001,6 @@ describe('GME client', function () {
 
             client.selectProject(projectName, function (err) {
                 expect(err).to.equal(null);
-                console.log('selected');
                 activeBranchName = client.getActiveBranchName();
                 commitHash = client.getActiveCommitHash();
                 expect(err).to.equal(null);
