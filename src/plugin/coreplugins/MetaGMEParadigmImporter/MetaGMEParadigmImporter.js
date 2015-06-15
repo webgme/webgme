@@ -68,7 +68,7 @@ define([
                 name: 'xmpFile',
                 displayName: 'XMP file',
                 description: 'Flat desktop GME meta model',
-                value: '', //'0afba05ea2640d9ebc2af8223b7a24cff95c5e20',
+                value: '0afba05ea2640d9ebc2af8223b7a24cff95c5e20', //'0afba05ea2640d9ebc2af8223b7a24cff95c5e20',
                 valueType: 'asset',
                 readOnly: false
             }
@@ -96,10 +96,14 @@ define([
                     atom: true,
                     connection: true,
                     model: true,
+                    set: true,
+                    reference: true,
                     aspect: true,
+                    part: true,
                     role: true,
                     constraint: true,
                     pointerspec: true,
+                    pointeritem: true,
                     regnode: true,
                     enumitem: true
                     //TODO: Complete this list
@@ -168,7 +172,8 @@ define([
             languageNode: null, // reference to the language node in webgme
             nodes: {},          // references by name to the node objects
             xmpMetaNode: {},    // references by name to xmp descriptors
-            attributes: {}      // references by name to xmp attribute definitions
+            attributes: {},     // references by name to xmp attribute definitions
+            roles: {}           // map roles to kind
         };
 
         self.logger.debug('Checking for important key values in xmp');
@@ -237,15 +242,16 @@ define([
             base: self.META.FCO
         });
 
+        self.core.setAttribute(languageNode, 'name', 'Language [' + paradigm['@name'] + ']');
+        self.core.setAttributeMeta(languageNode, 'metaguid', {type: 'string', default: ''});
+        self.core.setAttribute(languageNode, 'metaguid', paradigm['@guid']);
         self.core.setAttributeMeta(languageNode, 'cdate', {type: 'string', default: ''});
+        self.core.setAttribute(languageNode, 'cdate', paradigm['@cdate']);
         self.core.setAttributeMeta(languageNode, 'mdate', {type: 'string', default: ''});
+        self.core.setAttribute(languageNode, 'mdate', paradigm['@mdate']);
+
         // TODO: comment field
         // TODO: author field
-
-
-        self.core.setAttribute(languageNode, 'name', 'Language [' + paradigm['@name'] + ']');
-        self.core.setAttribute(languageNode, 'cdate', paradigm['@cdate']);
-        self.core.setAttribute(languageNode, 'mdate', paradigm['@mdate']);
 
         // TODO: set default view to META
 
@@ -290,6 +296,8 @@ define([
             attributeNames,
             attributeName,
             xmpAttribute,
+            xmpLocalAttribute,
+            xmpLocalAttributes = {},
             i;
 
         self.logger.debug('Creating node: ' + name);
@@ -299,14 +307,20 @@ define([
             base: self.META.FCO
         });
 
-        self.core.setAttributeMeta(node, 'metaref', {type: 'string', default: '0'});
-
         if (xmpMetaNode.hasOwnProperty('@attributes')) {
             // add attributes
             attributeNames = xmpMetaNode['@attributes'].split(' ');
+            if (xmpMetaNode.hasOwnProperty('attrdef')) {
+                for (i = 0; i < xmpMetaNode.attrdef.length; i += 1) {
+                    xmpLocalAttributes[xmpMetaNode.attrdef[i]['@name']] = xmpMetaNode.attrdef[i];
+                }
+            }
+
             for (i = 0; i < attributeNames.length; i += 1) {
                 attributeName = attributeNames[i];
-                xmpAttribute = self.cache.attributes[attributeName];
+                xmpAttribute = null; // clear previous value
+                xmpAttribute = self.cache.attributes[attributeName]; // get it from the global cache first
+                xmpAttribute = xmpAttribute || xmpLocalAttributes[attributeName]; // use local if not found in global
                 if (xmpAttribute) {
                     // TODO: handle parameter type appropriately
                     self.core.setAttributeMeta(node,
@@ -317,14 +331,22 @@ define([
                         });
                     self.core.setAttribute(node, xmpAttribute['@name'], xmpAttribute['@defvalue']);
                 } else {
-                    self.logger.error('Attribute was not found in global cache: ',
+                    self.logger.error('Attribute was not found in global or local cache: ',
                         {metadata: {attrName: attributeName, xmpMetaNode: xmpMetaNode}});
                 }
             }
         }
 
+        if (xmpMetaNode.hasOwnProperty('role')) {
+            for (i = 0; i < xmpMetaNode.role.length; i += 1) {
+                // FIXME: check if role already exists and maps to a different kind
+                self.cache.roles[xmpMetaNode.role[i]['@name']] = xmpMetaNode.role[i]['@kind'];
+            }
+        }
+
         self.core.setAttribute(node, 'name', name);
-        self.core.setAttribute(node, 'metaref', xmpMetaNode['@metaref']);
+        //self.core.setAttributeMeta(node, 'metaref', {type: 'string', default: '0'});
+        //self.core.setAttribute(node, 'metaref', xmpMetaNode['@metaref']);
 
         // FIXME: improve the auto layout of the nodes
         x = 100;
@@ -373,16 +395,14 @@ define([
             }
 
             if (xmpNode.hasOwnProperty('role')) {
-                // TODO: add possible child objects
-                //for (j = 0; j < xmpNode.role.length; j += 1) {
-                //
-                //}
+                childObjectNames = [];
+                for (j = 0; j < xmpNode.role.length; j += 1) {
+                    childObjectNames.push(xmpNode.role[j]['@kind']);
+                }
+                self.addValidChildren(node, childObjectNames);
             }
 
-            if (xmpNode.hasOwnProperty('connjoint')) {
-                // TODO: add possible connection rules
-
-            }
+            self.addValidConnections(node, xmpNode);
 
             // TODO: references
 
@@ -396,7 +416,7 @@ define([
                 y: y
             };
 
-            // add element to meta sheets
+            // add element to all meta sheets
             for (j = 0; j < setNames.length; j += 1) {
                 if (setNames[j].indexOf('MetaAspectSet') > -1) {
                     self.core.addMember(self.rootNode, setNames[j], node);
@@ -421,6 +441,40 @@ define([
             childNode = self.cache.nodes[childObjectNames[i]];
             self.core.setChildMeta(parentNode, childNode);
             self.logger.debug(self.core.getAttribute(parentNode, 'name') + ' can contain ' + childObjectNames[i]);
+        }
+    };
+
+    MetaGMEParadigmImporter.prototype.addValidConnections = function (node, xmpNode) {
+        var self = this,
+            i,
+            j,
+            pointerSpec,
+            pointerItem,
+            pointerName,
+            targetNames,
+            targetName,
+            targetNode;
+
+        if (xmpNode.hasOwnProperty('connjoint')) {
+            // add possible connection rules
+            for (i = 0; i < xmpNode.connjoint.pointerspec.length; i += 1) {
+                pointerSpec = xmpNode.connjoint.pointerspec[i];
+                pointerName = pointerSpec['@name'];
+                for (j = 0; j < pointerSpec.pointeritem.length; j += 1) {
+                    pointerItem = pointerSpec.pointeritem[j];
+                    targetNames = pointerItem['@desc'].split(' ');
+                    // get the last element from the list
+                    targetName = targetNames[targetNames.length - 1];
+
+                    if (self.cache.nodes.hasOwnProperty(targetName)) {
+                        targetNode = self.cache.nodes[targetName];
+                    } else {
+                        targetNode = self.cache.nodes[self.cache.roles[targetName]];
+                    }
+                    // TODO: 'node' can have a pointer named 'pointerName' to a target object type 'targetNode'
+                    // self.core.setPointerMetaTarget(node, pointerName, targetNode);
+                }
+            }
         }
     };
 
