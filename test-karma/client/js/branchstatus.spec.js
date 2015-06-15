@@ -254,13 +254,13 @@ describe('branch status', function () {
                         changeRootNodeName('newConflictRootName', currentHash, 'externalChange',
                             function (err, newHash) {
                                 expect(err).to.equal(null);
-                                client.setAttributes('', 'name', 'newRootyName', 'conflicting change');
                                 project.setBranchHash(branchName, newHash, currentHash,
                                     function (err, result) {
                                         expect(err).to.equal(null);
                                         expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
                                     }
                                 );
+                                client.setAttributes('', 'name', 'newRootyName', 'conflicting change');
                             }
                         );
                     }
