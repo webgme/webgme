@@ -250,8 +250,14 @@ define([
         self.core.setAttributeMeta(languageNode, 'mdate', {type: 'string', default: ''});
         self.core.setAttribute(languageNode, 'mdate', paradigm['@mdate']);
 
-        // TODO: comment field
-        // TODO: author field
+        self.core.setAttributeMeta(languageNode, 'author', {type: 'string', default: ''});
+        if (paradigm.author.hasOwnProperty('#text')) {
+            self.core.setAttribute(languageNode, 'author', paradigm.author['#text']);
+        }
+        self.core.setAttributeMeta(languageNode, 'comment', {type: 'string', default: ''});
+        if (paradigm.comment.hasOwnProperty('#text')) {
+            self.core.setAttribute(languageNode, 'comment', paradigm.comment['#text']);
+        }
 
         // TODO: set default view to META
 
@@ -296,7 +302,6 @@ define([
             attributeNames,
             attributeName,
             xmpAttribute,
-            xmpLocalAttribute,
             xmpLocalAttributes = {},
             i;
 
@@ -371,6 +376,11 @@ define([
             childObjectNames,
             i,
             j,
+            k,
+            aspect,
+            part,
+            isPort,
+            childNode,
             position,
             x,
             y,
@@ -400,6 +410,21 @@ define([
                     childObjectNames.push(xmpNode.role[j]['@kind']);
                 }
                 self.addValidChildren(node, childObjectNames);
+            }
+
+            if (xmpNode.hasOwnProperty('aspect')) {
+                for (j = 0; j < xmpNode.aspect.length; j += 1) {
+                    aspect = xmpNode.aspect[j];
+                    for (k = 0; k < aspect.part.length; k += 1) {
+                        part = aspect.part[k];
+                        childNode = self.cache.nodes[part['@role']];
+                        childNode = childNode || self.cache.nodes[self.cache.roles[part['@role']]];
+                        isPort = self.core.getRegistry(childNode, 'isPort') || false;
+                        isPort = isPort || part['@linked'] === 'yes';
+                        self.core.setRegistry(childNode, 'isPort', isPort);
+                    }
+                }
+
             }
 
             self.addValidConnections(node, xmpNode);
@@ -471,8 +496,9 @@ define([
                     } else {
                         targetNode = self.cache.nodes[self.cache.roles[targetName]];
                     }
-                    // TODO: 'node' can have a pointer named 'pointerName' to a target object type 'targetNode'
-                    // self.core.setPointerMetaTarget(node, pointerName, targetNode);
+                    // 'node' can have a pointer named 'pointerName' to a target object type 'targetNode'
+                    self.core.setPointerMetaTarget(node, pointerName, targetNode);
+                    self.core.setPointer(node, pointerName, null);
                 }
             }
         }
