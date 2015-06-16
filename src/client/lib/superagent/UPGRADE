@@ -3,4 +3,17 @@ https://github.com/visionmedia/superagent/issues/587#issuecomment-89029589
 Download and put the file here, when you upgrade the npm version.
 Browser and server side library versions should be in sync.
 
-https://wzrd.in/standalone/superagent@1.1.0
+https://wzrd.in/standalone/superagent@1.2.0
+
+1. Remove old version
+2. Download and name new version according to old version naming convension
+3. Update files that are referring to the superagent version number:
+
+
+➜  webgme git:(master) ✗ grep -r "superagent-1.1.0" utils
+utils/build/webgme.classes/cbuild.js:    superagent: './client/lib/superagent/superagent-1.1.0',
+utils/build/webgme.classes/webgme.classes.js:    'lib/superagent/superagent-1.1.0',
+➜  webgme git:(master) ✗ grep -r "superagent-1.1.0" src  
+src/server/middleware/executor/worker/index.html:                            "superagent": "lib/superagent/superagent-1.1.0",
+test-main.js:            superagent: './src/client/lib/superagent/superagent-1.1.0',
+
