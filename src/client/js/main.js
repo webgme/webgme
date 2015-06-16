@@ -11,7 +11,7 @@ var DEBUG = false,
     _jqueryUIVersion = '1.10.4',
     _bootstrapVersion = '3.1.1',
     _angularVersion = '1.3.15',
-    _superagentVersion = '1.1.0',
+    _superagentVersion = '1.2.0',
     WebGMEGlobal = WebGMEGlobal || {};
 
 
