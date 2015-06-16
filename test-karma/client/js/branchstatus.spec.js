@@ -58,12 +58,19 @@ describe('branch status', function () {
     });
 
     after(function (done) {
-        storage.close();
-        client.disconnectFromDatabase(done);
+        storage.close(function (err) {
+            client.disconnectFromDatabase(function (err2) {
+                done(err || err2);
+            });
+        });
     });
 
     afterEach(function (done) {
-        client.deleteBranch(projectName, currentBranchName, currentBranchHash, done);
+        client.selectBranch('master', null, function (err) {
+            client.deleteBranch(projectName, currentBranchName, currentBranchHash, function (err2) {
+                done(err || err2);
+            });
+        });
     });
 
     function createSelectBranch (branchName, callback) {

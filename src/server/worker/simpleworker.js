@@ -88,8 +88,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         var storage = getConnectedStorage(webGMESessionId),
             project,
             finish = function (err, data) {
-                storage.close();
-                callback(err, data);
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, data);
+                });
             },
             gotHash = function () {
                 var core = new Core(project, {
@@ -198,8 +199,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
         var storage = getConnectedStorage(webGMESessionId),
             finish = function (err, data) {
-                storage.close();
-                callback(err, data);
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, data);
+                });
             };
 
         storage.open(function (networkStatus) {
@@ -282,16 +284,25 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                             if (err) {
                                 logger.error('Plugin failed', pluginName);
                             }
-                            storage.close();
-                            callback(err, result.serialize());
+                            storage.close(function (closeErr) {
+                                if (closeErr) {
+                                    logger.error('error closing storage', closeErr);
+                                }
+                                callback(err, result.serialize());
+                            });
                         }
                     );
                 });
             } else {
                 errMessage = 'Storage ' + status + ' during plugin execution..';
                 logger.error(errMessage);
-                storage.close();
-                callback(errMessage); //TODO: create pluginResult
+                storage.close(function (closeErr) {
+                    if (closeErr) {
+                        logger.error('Problems closing storage', closeErr);
+                    }
+                    callback(errMessage); //TODO: create pluginResult
+                });
+
             }
         });
     },
@@ -320,8 +331,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     seedProject = function (parameters, callback) {
         var storage = getConnectedStorage(parameters.webGMESessionId),
             finish = function (err) {
-                storage.close();
-                callback(err);
+                storage.close(function (closeErr) {
+                    callback(err || closeErr);
+                });
             };
         logger.debug('seedProject');
 
@@ -369,7 +381,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                                 logger.error('setting branch failed', err);
                                                 callback(err);
                                             }
-                                            storage.close();
                                             logger.info('seeding [' + parameters.seedName +
                                                 '] to [' + parameters.projectName + '] completed');
                                             finish(null);
@@ -474,8 +485,12 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     myCallback(err);
                 });
             } else {
-                storage.close();
-                callback('unable to connect to webgme server');
+                storage.close(function (closeErr) {
+                    if (closeErr) {
+                        logger.error('error closing storage', closeErr);
+                    }
+                    callback('unable to connect to webgme server');
+                });
             }
         });
 
@@ -509,8 +524,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         var storage = getConnectedStorage(webGMESessionId),
             mergeResult = {},
             finish = function (err) {
-                storage.close();
-                callback(err, mergeResult);
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, mergeResult);
+                });
             };
         logger.debug('autoMerge ' + projectName + ' ' + mine + ' -> ' + theirs);
 

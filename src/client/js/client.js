@@ -315,9 +315,10 @@ define([
         this.disconnectFromDatabase = function (callback) {
 
             function closeStorage(err) {
-                storage.close();
-                state.connection = CONSTANTS.STORAGE.DISCONNECTED;
-                callback(err);
+                storage.close(function (err2) {
+                    state.connection = CONSTANTS.STORAGE.DISCONNECTED;
+                    callback(err || err2);
+                });
             }
 
             if (isConnected()) {
@@ -326,7 +327,6 @@ define([
                 } else {
                     closeStorage(null);
                 }
-
             } else {
                 logger.warn('Trying to disconnect when already disconnected.');
                 callback(null);

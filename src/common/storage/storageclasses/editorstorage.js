@@ -58,17 +58,41 @@ define([
             });
         };
 
-        this.close = function () {
-            // Remove the handler for the socket.io events 'connect' and 'disconnect'.
-            webSocket.socket.removeAllListeners('connect');
-            webSocket.socket.removeAllListeners('disconnect');
-            // Disconnect from the server.
-            webSocket.disconnect();
-            self.connected = false;
-            // Remove all local event-listeners.
-            webSocket.removeAllEventListeners();
-            // Remove project references
-            projects = {};
+        this.close = function (callback) {
+            var error = '',
+                openProjects = Object.keys(projects),
+                projectCnt = openProjects.length;
+
+            logger.debug('Closing storage, openProjects', openProjects);
+
+            function afterProjectClosed(err) {
+                if (err) {
+                    logger.error(err);
+                    error += err;
+                }
+                logger.debug('inside afterProjectClosed projectCnt', projectCnt);
+                if (projectCnt === 0) {
+                    // Remove the handler for the socket.io events 'connect' and 'disconnect'.
+                    webSocket.socket.removeAllListeners('connect');
+                    webSocket.socket.removeAllListeners('disconnect');
+                    // Disconnect from the server.
+                    webSocket.disconnect();
+                    self.connected = false;
+                    // Remove all local event-listeners.
+                    webSocket.removeAllEventListeners();
+                    callback(error || null);
+                }
+            }
+
+            if (projectCnt > 0) {
+                while (projectCnt) {
+                    projectCnt -= 1;
+                    this.closeProject(openProjects[projectCnt], afterProjectClosed);
+                }
+            } else {
+                logger.debug('No projects were open, will disconnect directly');
+                afterProjectClosed(null);
+            }
         };
 
         /**
@@ -353,7 +377,7 @@ define([
             commitData = branch.getFirstCommit(false);
             webSocket.makeCommit(commitData, function (err, result) {
                 if (err) {
-                    throw new Error(err);
+                    logger.error('makeCommit failed', err);
                 }
 
                 // This is for when e.g. a plugin makes a commit to the same branch as the
