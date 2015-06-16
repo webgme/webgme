@@ -58,8 +58,11 @@ describe('branch status', function () {
     });
 
     after(function (done) {
-        storage.close();
-        client.disconnectFromDatabase(done);
+        storage.close(function (err) {
+            client.disconnectFromDatabase(function (err2) {
+                done(err || err2);
+            });
+        });
     });
 
     afterEach(function (done) {
