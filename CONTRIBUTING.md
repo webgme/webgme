@@ -9,6 +9,17 @@
   - Running with karma using [browser tests](test-karma/) run with `npm run test_browser`
 5. Push to your fork and submit a pull request
 
+# Updating `package.json` dependencies
+
+1. `npm prune`
+2. `npm install`
+3. `npm outdated --depth=0`
+4. Update version numbers repeat 2-4, until only three packages are listed
+  - `socket.io`
+  - `socket.io-client`
+  - `mongodb@1.4.XX`
+5. Update superagent in `src/client/lib/superagent` see `src/client/lib/superagent/UPGRADE`
+6. Update q `cp node_modules/q/q.js src/client/lib/q/q.js` 
 
 # Development
 
