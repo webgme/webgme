@@ -138,7 +138,7 @@ define([
                             if (globalconfig.runOnServer === true || silentPluginCfg.runOnServer === true) {
                                 var context = {
                                     managerConfig: config,
-                                    pluginConfigs: updatedConfig
+                                    pluginConfig: updatedConfig[name]
                                 };
                                 self._client.runServerPlugin(name, context, function (err, result) {
                                     if (err) {
