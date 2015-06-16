@@ -202,44 +202,10 @@ define([
             self.selectProject({});
         });
 
-        //self.gmeClient.addEventListener(self.gmeClient.events.SERVER_PROJECT_CREATED, function (client, projectId) {
-        //    self.logger.debug(self.gmeClient.events.SERVER_PROJECT_CREATED, projectId);
-        //    self.addProject(projectId);
-        //});
-        //
-        //self.gmeClient.addEventListener(self.gmeClient.events.SERVER_PROJECT_DELETED, function (client, projectId) {
-        //    self.logger.debug(self.gmeClient.events.SERVER_PROJECT_DELETED, projectId);
-        //    self.removeProject(projectId);
-        //});
-
         self.gmeClient.addEventListener(CONSTANTS.CLIENT.BRANCH_CHANGED, function (client, branchId) {
             self.logger.debug(CONSTANTS.CLIENT.BRANCH_CHANGED, branchId);
             self.selectBranch({projectId: self.gmeClient.getActiveProjectName(), branchId: branchId});
         });
-
-        //TODO: Plug these in using watchers
-        //self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_CREATED, function (client, parameters) {
-        //    self.logger.debug(self.gmeClient.events.SERVER_BRANCH_CREATED, parameters);
-        //    self.addBranch(parameters.project, parameters.branch, parameters.commit);
-        //});
-        //
-        //self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_UPDATED, function (client, parameters) {
-        //    self.logger.debug(self.gmeClient.events.SERVER_BRANCH_UPDATED, parameters);
-        //    self.updateBranch(parameters.project, parameters.branch, parameters.commit);
-        //});
-        //
-        //self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_DELETED, function (client, parameters) {
-        //    var currentProject = self.$scope.navigator.items[self.navIdProject],
-        //        currentBranch = self.$scope.navigator.items[self.navIdBranch];
-        //    self.logger.debug(self.gmeClient.events.SERVER_BRANCH_DELETED, parameters);
-        //
-        //    self.removeBranch(parameters.project, parameters.branch);
-        //
-        //    if (currentBranch === parameters.branch && currentProject === parameters.project) {
-        //        self.selectProject(parameters.project);
-        //    }
-        //
-        //});
 
         angular.element(self.$window).on('keydown', function (e) {
 

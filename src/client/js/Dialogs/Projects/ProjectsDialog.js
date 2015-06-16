@@ -125,7 +125,7 @@ define([
                     dialogTitle: 'Confirm delete',
                     dialogContentTemplate: 'DeleteDialogTemplate.html',
                     onOk: function () {
-                        self._client.deleteProjectAsync(projectId, function (err) {
+                        self._client.deleteProject(projectId, function (err) {
                             if (err) {
                                 self._logger.error(err);
                                 return;
