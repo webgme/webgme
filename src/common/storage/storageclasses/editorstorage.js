@@ -377,7 +377,7 @@ define([
             commitData = branch.getFirstCommit(false);
             webSocket.makeCommit(commitData, function (err, result) {
                 if (err) {
-                    throw new Error(err);
+                    logger.error('makeCommit failed', err);
                 }
 
                 // This is for when e.g. a plugin makes a commit to the same branch as the

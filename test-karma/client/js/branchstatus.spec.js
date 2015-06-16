@@ -66,7 +66,11 @@ describe('branch status', function () {
     });
 
     afterEach(function (done) {
-        client.deleteBranch(projectName, currentBranchName, currentBranchHash, done);
+        client.selectBranch('master', null, function (err) {
+            client.deleteBranch(projectName, currentBranchName, currentBranchHash, function (err2) {
+                done(err || err2);
+            });
+        });
     });
 
     function createSelectBranch (branchName, callback) {
