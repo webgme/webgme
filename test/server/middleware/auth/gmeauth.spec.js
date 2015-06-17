@@ -14,6 +14,7 @@ describe('GME authentication', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         GMEAuth = testFixture.GMEAuth,
         mongodb = testFixture.mongodb,
+        expect = testFixture.expect,
         Q = testFixture.Q,
 
         auth,
@@ -99,8 +100,15 @@ describe('GME authentication', function () {
 
 
     it('adds random user without overwrite', function (done) {
-        auth.addUser('no_overwrite_user' + (new Date()).toISOString(),
-            'no_overwrite_user@example.com', 'plaintext', true, {overwrite: false}, done);
+        var username = 'no_overwrite_user' + (new Date()).toISOString();
+        auth.addUser(username, username + '@example.com', 'plaintext', true, {overwrite: false})
+            .then(function () {
+                return auth.getUser(username);
+            })
+            .then(function (userData) {
+                expect(userData._id).equal(username);
+            })
+            .nodeify(done);
     });
 
     it('adds user without overwrite', function (done) {
