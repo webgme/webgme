@@ -69,7 +69,7 @@ define([
      */
     PluginBase.prototype.getName = function () {
         throw new Error('implement this function in the derived class - getting type automatically is a bad idea,' +
-        'when the js scripts are minified names are useless.');
+            'when the js scripts are minified names are useless.');
     };
 
     //--------------------------------------------------------------------------------------------------------------
@@ -297,7 +297,7 @@ define([
             // If the client has made local changes  since the plugin started - create a new branch.
             forkName = self.forkName || self.branchName + '_' + (new Date()).getTime();
             self.logger.warn('Client has made local change since the plugin started in "' + self.branchName + '". ' +
-            'Trying to create a new branch "' + forkName + '".');
+                'Trying to create a new branch "' + forkName + '".');
             self.branch = null; // Set the branch to null - from now on the plugin is detached from the client branch.
             self.project.makeCommit(null,
                 [self.currentHash],
@@ -322,7 +322,7 @@ define([
                             self.currentHash = commitResult.hash;
                             if (updateResult.status === STORAGE_CONSTANTS.SYNCH) {
                                 self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
-                                '(Successive saves will try to save to this new branch.)');
+                                    '(Successive saves will try to save to this new branch.)');
                                 self.branchName = forkName;
                                 self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
 
@@ -333,7 +333,7 @@ define([
                                 self.branchName = null;
                                 self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
                                 callback('Plugin got forked from "' + originalBranchName + '". ' +
-                                'And got forked from name "' + forkName + '" too.');
+                                    'And got forked from name "' + forkName + '" too.');
                             }
                         }
                     );
@@ -360,13 +360,13 @@ define([
                     if (commmitResult.status === STORAGE_CONSTANTS.SYNCH) {
                         self.logger.info('"' + self.branchName + '" was updated to the new commit.');
 
-                        self.result.addCommit(STORAGE_CONSTANTS.SYNCH);
+                        self.addCommitToResult(STORAGE_CONSTANTS.SYNCH);
 
                         callback(null, {status: STORAGE_CONSTANTS.SYNCH});
                     } else if (commmitResult.status === STORAGE_CONSTANTS.FORKED) {
                         self.logger.warn('Plugin and client are forked from "' + self.branchName + '". ');
-                        self.branch = null; // Set the branch to null - from now on the plugin is detached
-                                            // from the client branch.
+                        // Set the branch to null - from now on the plugin is detached from the client branch.
+                        self.branch = null;
                         self._createFork(callback);
                     } else {
                         callback('makeCommit returned unexpected status, ' + commmitResult.status);
@@ -434,7 +434,7 @@ define([
             oldBranchName = self.branchName,
             forkName = self.forkName || self.branchName + '_' + (new Date()).getTime();
         self.logger.warn('Plugin got forked from "' + self.branchName + '". ' +
-        'Trying to create a new branch "' + forkName + '".');
+            'Trying to create a new branch "' + forkName + '".');
         self.project.createBranch(forkName, self.currentHash, function (err, forkResult) {
             if (err) {
                 self.logger.error('createBranch failed with error.');
@@ -444,7 +444,7 @@ define([
             if (forkResult.status === STORAGE_CONSTANTS.SYNCH) {
                 self.branchName = forkName;
                 self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
-                '(Successive saves will try to save to this new branch.)');
+                    '(Successive saves will try to save to this new branch.)');
                 self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
 
                 callback(null, {status: STORAGE_CONSTANTS.FORKED, forkName: forkName});
@@ -454,7 +454,7 @@ define([
                 self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
 
                 callback('Plugin got forked from "' + oldBranchName + '". ' +
-                'And got forked from "' + forkName + '" too.');
+                    'And got forked from "' + forkName + '" too.');
             } else {
                 callback('createBranch returned unexpected status' + forkResult.status);
             }
@@ -651,11 +651,7 @@ define([
 
         this.result = new PluginResult();
 
-        this.result.addCommit({
-            commitHash: this.commitHash,
-            status: STORAGE_CONSTANTS.SYNCH,
-            branchName: this.branchName});
-
+        this.addCommitToResult(STORAGE_CONSTANTS.SYNCH);
 
         this.isConfigured = true;
     };

@@ -74,6 +74,14 @@ if (typeof define === 'undefined') {
                     value: '',
                     valueType: 'string',
                     readOnly: false
+                },
+                {
+                    name: 'timeout',
+                    displayName: 'timeout',
+                    description: 'Time before committing change',
+                    value: 0,
+                    valueType: 'number',
+                    readOnly: false
                 }
             ];
         };
@@ -132,7 +140,7 @@ if (typeof define === 'undefined') {
                     }
                 );
             } else {
-                makeAndSaveChanges();
+                setTimeout(makeAndSaveChanges, config.timeout);
             }
         };
 
