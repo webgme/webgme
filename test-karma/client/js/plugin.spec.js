@@ -11,17 +11,20 @@ describe('Plugin', function () {
         gmeConfig,
         client,
         projectName = 'pluginProject',
+        InterpreterManager,
         baseCommitHash;
 
     before(function (done) {
         requirejs([
             'js/client',
             'text!gmeConfig.json',
-            'superagent'
-        ], function (Client_, gmeConfigJSON, superagent) {
+            'superagent',
+            'js/Utils/InterpreterManager'
+        ], function (Client_, gmeConfigJSON, superagent, InterpreterManager_) {
             Client = Client_;
             gmeConfig = JSON.parse(gmeConfigJSON);
             client = new Client(gmeConfig);
+            InterpreterManager = InterpreterManager_;
             superagent.get('/listAllPlugins')
                 .end(function (err, res) {
                     if (res.status === 200) {
@@ -105,23 +108,50 @@ describe('Plugin', function () {
         client.updateTerritory(userGuid, {'/1': {children: 0}});
     });
 
-    it.skip('should run PluginGenerator on the server and return a valid result using default settings', function (done) {
+    it('should run PluginGenerator on the server and return a valid result using default settings', function (done) {
         var name = 'PluginGenerator',
             context = {
-                project: projectName,
-                activeNode: '',
-                commit: baseCommitHash,
-                branchName: 'master'
+                managerConfig: {
+                    project: projectName,
+                    activeNode: '',
+                    commit: baseCommitHash,
+                    branchName: 'master'
+                }
             };
-        //* @param {object} context - where the plugin should execute.
-        //* @param {string} context.project - name of project.
-        //* @param {string} context.activeNode - path to activeNode.
-        //* @param {string} [context.activeSelection=[]] - paths to selected nodes.
-        //* @param {string} context.commit - commit hash to start the plugin from.
-        //* @param {string} context.branchName - branch which to save to.
-        //* @param {object} context.pluginConfig - specific configuration for the plugin.
+        //* @param {string} name - name of plugin.
+        //* @param {object} context
+        //* @param {object} context.managerConfig - where the plugin should execute.
+        //* @param {string} context.managerConfig.project - name of project.
+        //* @param {string} context.managerConfig.activeNode - path to activeNode.
+        //* @param {string} [context.managerConfig.activeSelection=[]] - paths to selected nodes.
+        //* @param {string} context.managerConfig.commit - commit hash to start the plugin from.
+        //* @param {string} context.managerConfig.branchName - branch which to save to.
+        //* @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
+        //* @param {function} callback
         client.runServerPlugin(name, context, function (err, pluginResult) {
             expect(err).to.equal(null);
+            expect(pluginResult).not.to.equal(null);
+            expect(pluginResult.success).to.equal(true, 'PluginGenerator did not succeed on server!');
+            done();
+        });
+    });
+
+    it.skip('should run PluginGenerator on in client and return a valid result using default settings', function (done) {
+        var name = 'PluginGenerator',
+            interpreterManager = new InterpreterManager(client, gmeConfig),
+            silentPluginCfg = {
+                activeNode: '',
+                activeSelection: [],
+                runOnServer: false,
+                pluginConfig: {}
+            };
+        //* @param {string} name - name of plugin to be executed.
+        //* @param {object} silentPluginCfg - if falsy dialog window will be shown.
+        //* @param {object.string} silentPluginCfg.activeNode - Path to activeNode.
+        //* @param {object.Array.<string>} silentPluginCfg.activeSelection - Paths to nodes in activeSelection.
+        //* @param {object.boolean} silentPluginCfg.runOnServer - Whether to run the plugin on the server or not.
+        //* @param {object.object} silentPluginCfg.pluginConfig - Plugin specific options.
+        interpreterManager.run(name, silentPluginCfg, function (pluginResult) {
             expect(pluginResult).not.to.equal(null);
             expect(pluginResult.success).to.equal(true, 'PluginGenerator did not succeed on server!');
             done();
