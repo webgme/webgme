@@ -419,7 +419,12 @@ define([
             y,
             sheetsRegistry,
             setGuid,
-            sheetId;
+            sheetId,
+            maxAttrInThisRow,
+            maxAttr = 0,
+            numElementsInARow = 10;
+
+        //xmpMetaNames.sort(); // maybe we should sort by name? or something else?
 
         // use cache to create meta rules
         self.logger.debug('Creating meta rules ...');
@@ -491,8 +496,23 @@ define([
                 self.addValidPointerSpecs(node, xmpNode);
             }
 
-            x = 100 + (i % 10) * 150;
-            y = 100 + Math.floor(i / 10) * 200;
+
+            if (i % numElementsInARow === 0) {
+                // first element
+                maxAttrInThisRow = 0;
+            }
+
+            if (xmpNode.hasOwnProperty('@attributes')) {
+                maxAttrInThisRow = Math.max(maxAttrInThisRow, xmpNode['@attributes'].split(' ').length);
+            }
+
+            x = 100 + (i % numElementsInARow) * 150;
+            y = 100 + maxAttr * 16 /* attr height */ + Math.floor(i / numElementsInARow) * (60 /* box height */ + 20 /* gap */);
+
+            if (i % numElementsInARow === numElementsInARow - 1) {
+                // last element
+                maxAttr = maxAttr + maxAttrInThisRow;
+            }
 
             position = {
                 x: x,
