@@ -101,7 +101,7 @@ if (typeof define === 'undefined') {
                 config = self.getCurrentConfig();
 
             function makeAndSaveChanges() {
-                self.core.setAttribute(self.activeNode, 'name', 'FCO_Own_Name' + (new Date().getTime()));
+                self.core.setAttribute(self.activeNode, 'name', 'FCO_Own_Name');
                 self.save('saving when config.forked = ' + config.fork.toString(), function (err, status) {
                     if (err) {
                         self.result.setSuccess(false);
@@ -119,7 +119,7 @@ if (typeof define === 'undefined') {
             }
 
             if (config.fork === true) {
-                self.core.setAttribute(self.activeNode, 'name', 'FCO_Fork_Name' + (new Date().getTime()));
+                self.core.setAttribute(self.activeNode, 'name', 'FCO_Fork_Name');
                 persisted = self.core.persist(self.rootNode);
                 self.project.makeCommit(null,
                     [self.currentHash],
