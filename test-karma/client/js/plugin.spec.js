@@ -19,12 +19,18 @@ describe('Plugin', function () {
             'js/client',
             'text!gmeConfig.json',
             'superagent',
-            'js/Utils/InterpreterManager'
-        ], function (Client_, gmeConfigJSON, superagent, InterpreterManager_) {
+            'js/Utils/InterpreterManager',
+            'MinimalWorkingExample',
+            'PluginForked'
+        ], function (Client_, gmeConfigJSON, superagent, InterpreterManager_, MinimalWorkingExample, PluginForked) {
             Client = Client_;
             gmeConfig = JSON.parse(gmeConfigJSON);
             client = new Client(gmeConfig);
             InterpreterManager = InterpreterManager_;
+            window.WebGMEGlobal = {};
+            window.WebGMEGlobal.plugins = {};
+            window.WebGMEGlobal.plugins.MinimalWorkingExample = MinimalWorkingExample;
+            window.WebGMEGlobal.plugins.PluginForked = PluginForked;
             superagent.get('/listAllPlugins')
                 .end(function (err, res) {
                     if (res.status === 200) {
@@ -136,8 +142,8 @@ describe('Plugin', function () {
         });
     });
 
-    it.skip('should run PluginGenerator on in client and return a valid result using default settings', function (done) {
-        var name = 'PluginGenerator',
+    it('should run MinimalWorkingExample in client and return a valid result using default settings', function (done) {
+        var name = 'MinimalWorkingExample',
             interpreterManager = new InterpreterManager(client, gmeConfig),
             silentPluginCfg = {
                 activeNode: '',

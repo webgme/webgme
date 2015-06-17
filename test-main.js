@@ -36,8 +36,9 @@ function done() {
 
             // plugins
             // TODO: populate plugin list dynamically based on config.json
-            'plugin/PluginGenerator/PluginGenerator': './src/plugin/coreplugins/PluginGenerator',
-            'js/Dialogs/PluginConfig/PluginConfigDialog': './src/plugin/empty',
+            MinimalWorkingExample: './src/plugin/coreplugins/MinimalWorkingExample/MinimalWorkingExample',
+            PluginForked: './test/plugin/scenarios/plugins/PluginForked/PluginForked',
+            'js/Dialogs/PluginConfig/PluginConfigDialog': './utils/build/empty/empty',
 
             // MAGIC ... from src/client/js/main.js
             executor: './src/common/executor',
