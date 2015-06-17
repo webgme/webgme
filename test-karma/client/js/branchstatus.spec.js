@@ -73,14 +73,14 @@ describe('branch status', function () {
         });
     });
 
-    function createSelectBranch (branchName, callback) {
+    function createSelectBranch(branchName, callback) {
         client.createBranch(projectName, branchName, originalCommitHash, function (err) {
             expect(err).to.equal(null);
             client.selectBranch(branchName, null, callback);
         });
     }
 
-    function changeRootNodeName (newName, commitHash, msg, callback) {
+    function changeRootNodeName(newName, commitHash, msg, callback) {
         // 1. Load commit-hash
         project.loadObject(commitHash, function (err, commitObject) {
             expect(err).to.equal(null);
@@ -261,13 +261,16 @@ describe('branch status', function () {
                         changeRootNodeName('newConflictRootName', currentHash, 'externalChange',
                             function (err, newHash) {
                                 expect(err).to.equal(null);
+                                client.startTransaction('sync_aheadSync_aheadNotSync__start');
                                 project.setBranchHash(branchName, newHash, currentHash,
                                     function (err, result) {
                                         expect(err).to.equal(null);
                                         expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
+                                        client.setAttributes('', 'name', 'newRootyName', 'conflicting change');
+                                        client.completeTransaction('sync_aheadSync_aheadNotSync__stop');
                                     }
                                 );
-                                client.setAttributes('', 'name', 'newRootyName', 'conflicting change');
+
                             }
                         );
                     }
@@ -335,13 +338,16 @@ describe('branch status', function () {
                         changeRootNodeName('newConflictRootName', currentHash, 'externalChange',
                             function (err, newHash) {
                                 expect(err).to.equal(null);
+                                client.startTransaction('sync_aheadSync_aheadNotSync_aheadNotSync__start');
                                 project.setBranchHash(branchName, newHash, currentHash,
                                     function (err, result) {
                                         expect(err).to.equal(null);
                                         expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
+                                        client.setAttributes('', 'name', 'newRootyNameTest2', 'conflicting change');
+                                        client.completeTransaction('sync_aheadSync_aheadNotSync_aheadNotSync__stop');
                                     }
                                 );
-                                client.setAttributes('', 'name', 'newRootyNameTest2', 'conflicting change');
+
                             }
                         );
                     }

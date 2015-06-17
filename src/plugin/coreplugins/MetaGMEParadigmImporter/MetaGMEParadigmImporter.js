@@ -161,7 +161,6 @@ define([
                 return;
             }
 
-            // FIXME: commit message is not respected by PluginBase, should be appended to the default base message.
             self.save('Imported meta model ' + xmpData.paradigm['@name'], function (err) {
                 if (err) {
                     self.result.setSuccess(false);
