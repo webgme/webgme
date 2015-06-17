@@ -441,13 +441,15 @@ define([
             if (xmpNode.hasOwnProperty('aspect')) {
                 for (j = 0; j < xmpNode.aspect.length; j += 1) {
                     aspect = xmpNode.aspect[j];
-                    for (k = 0; k < aspect.part.length; k += 1) {
-                        part = aspect.part[k];
-                        childNode = self.cache.nodes[part['@role']];
-                        childNode = childNode || self.cache.nodes[self.cache.roles[part['@role']]];
-                        isPort = self.core.getRegistry(childNode, 'isPort') || false;
-                        isPort = isPort || part['@linked'] === 'yes';
-                        self.core.setRegistry(childNode, 'isPort', isPort);
+                    if (aspect.hasOwnProperty('part')) {
+                        for (k = 0; k < aspect.part.length; k += 1) {
+                            part = aspect.part[k];
+                            childNode = self.cache.nodes[part['@role']];
+                            childNode = childNode || self.cache.nodes[self.cache.roles[part['@role']]];
+                            isPort = self.core.getRegistry(childNode, 'isPort') || false;
+                            isPort = isPort || part['@linked'] === 'yes';
+                            self.core.setRegistry(childNode, 'isPort', isPort);
+                        }
                     }
                 }
 
