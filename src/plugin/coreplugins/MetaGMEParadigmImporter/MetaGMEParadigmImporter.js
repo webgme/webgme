@@ -23,8 +23,9 @@
 define([
     'plugin/PluginConfig',
     'plugin/PluginBase',
-    'common/util/xmljsonconverter'
-], function (PluginConfig, PluginBase, Converters) {
+    'common/util/xmljsonconverter',
+    'common/util/guid'
+], function (PluginConfig, PluginBase, Converters, GUID) {
     'use strict';
 
     /**
@@ -234,7 +235,7 @@ define([
         }
 
         // add meta rules
-        error = self.createMetaRules(rootFolder);
+        error = self.createMetaRules(paradigm['@name']);
         if (error) {
             return error;
         }
@@ -399,7 +400,7 @@ define([
         return node;
     };
 
-    MetaGMEParadigmImporter.prototype.createMetaRules = function () {
+    MetaGMEParadigmImporter.prototype.createMetaRules = function (paradigmName) {
         var self = this,
             xmpMetaNames = Object.keys(self.cache.xmpMetaNode),
             xmpMetaName,
@@ -416,10 +417,28 @@ define([
             position,
             x,
             y,
-            setNames = self.core.getSetNames(self.rootNode);
+            sheetsRegistry,
+            setGuid,
+            sheetId;
 
         // use cache to create meta rules
         self.logger.debug('Creating meta rules ...');
+
+        setGuid = GUID();
+        sheetId = 'MetaAspectSet_' + setGuid;
+        self.logger.debug('Creating meta sheet ' + sheetId);
+
+        sheetsRegistry = self.core.getRegistry(self.rootNode, 'MetaSheets');
+        sheetsRegistry = JSON.parse(JSON.stringify(sheetsRegistry));
+        sheetsRegistry.push({
+            SetID: sheetId,
+            order: sheetsRegistry.length,
+            title: paradigmName
+        });
+        self.core.setRegistry(self.rootNode, 'MetaSheets', sheetsRegistry);
+        self.core.createSet(self.rootNode, sheetId);
+
+        self.logger.debug('Created meta sheet ' + sheetId);
 
         for (i = 0; i < xmpMetaNames.length; i += 1) {
             xmpMetaName = xmpMetaNames[i];
@@ -473,24 +492,20 @@ define([
             }
 
             x = 100 + (i % 10) * 150;
-            y = 300 + Math.floor(i / 10) * 200;
+            y = 100 + Math.floor(i / 10) * 200;
 
             position = {
                 x: x,
                 y: y
             };
 
-            // add element to all meta sheets
-            for (j = 0; j < setNames.length; j += 1) {
-                if (setNames[j].indexOf('MetaAspectSet') > -1) {
-                    self.core.addMember(self.rootNode, setNames[j], node);
-                    self.core.setMemberRegistry(self.rootNode,
-                        setNames[j],
-                        self.core.getPath(node),
-                        'position',
-                        position);
-                }
-            }
+            // add element to one meta sheet
+            self.core.addMember(self.rootNode, sheetId, node);
+            self.core.setMemberRegistry(self.rootNode,
+                sheetId,
+                self.core.getPath(node),
+                'position',
+                position);
         }
 
         self.logger.debug('Created meta rules.');
