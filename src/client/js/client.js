@@ -590,8 +590,12 @@ define([
             return function (updateQueue, eventData, callback) {
                 var commitHash = eventData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
                 logger.debug('updateHandler invoked. project, branch', eventData.projectName, eventData.branchName);
+                if (state.inTransaction) {
+                    logger.warn('Is in transaction, will not load in changes');
+                    callback(true); // aborted: true
+                    return;
+                }
                 logger.debug('loading commitHash', commitHash);
-
                 //undo-redo
                 logger.debug('foreign modification clearing undo-redo chain');
                 addModification(eventData.commitObject, true);
