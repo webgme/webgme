@@ -253,6 +253,8 @@ define([
         });
 
         self.core.setAttribute(languageNode, 'name', 'Language [' + paradigm['@name'] + ']');
+        self.core.setAttributeMeta(languageNode, 'xmp', {type: 'asset', default: ''});
+        self.core.setAttribute(languageNode, 'xmp', self.getCurrentConfig().xmpFile);
         self.core.setAttributeMeta(languageNode, 'metaguid', {type: 'string', default: ''});
         self.core.setAttribute(languageNode, 'metaguid', paradigm['@guid']);
         self.core.setAttributeMeta(languageNode, 'cdate', {type: 'string', default: ''});
@@ -355,10 +357,14 @@ define([
                     } else if (xmpAttribute['@valuetype'] === 'integer') {
                         attributeDescriptor.type = 'integer';
                         attributeDescriptor.default = parseInt(xmpAttribute['@defvalue']);
+                    } else if (xmpAttribute['@valuetype'] === 'double') {
+                        attributeDescriptor.type = 'float';
+                        attributeDescriptor.default = parseFloat(xmpAttribute['@defvalue']);
                     }
 
                     self.core.setAttributeMeta(node, xmpAttribute['@name'], attributeDescriptor);
                     self.core.setAttribute(node, xmpAttribute['@name'], xmpAttribute['@defvalue']);
+
                 } else {
                     self.logger.error('Attribute was not found in global or local cache: ',
                         {metadata: {attrName: attributeName, xmpMetaNode: xmpMetaNode}});
@@ -450,9 +456,10 @@ define([
                             isPort = isPort || part['@linked'] === 'yes';
                             self.core.setRegistry(childNode, 'isPort', isPort);
                         }
+                    } else {
+                        // TODO: generate an error message? or warning?
                     }
                 }
-
             }
 
             if (xmpNode.hasOwnProperty('connjoint')) {
@@ -515,25 +522,29 @@ define([
         for (i = 0; i < hasPointerSpecsObject.pointerspec.length; i += 1) {
             pointerSpec = hasPointerSpecsObject.pointerspec[i];
             pointerName = pointerSpec['@name'];
-            for (j = 0; j < pointerSpec.pointeritem.length; j += 1) {
-                pointerItem = pointerSpec.pointeritem[j];
-                targetNames = pointerItem['@desc'].split(' ');
-                // get the last element from the list
-                targetName = targetNames[targetNames.length - 1];
+            if (pointerSpec.hasOwnProperty('pointeritem')) {
+                for (j = 0; j < pointerSpec.pointeritem.length; j += 1) {
+                    pointerItem = pointerSpec.pointeritem[j];
+                    targetNames = pointerItem['@desc'].split(' ');
+                    // get the last element from the list
+                    targetName = targetNames[targetNames.length - 1];
 
-                if (self.cache.nodes.hasOwnProperty(targetName)) {
-                    targetNode = self.cache.nodes[targetName];
-                } else {
-                    targetNode = self.cache.nodes[self.cache.roles[targetName]];
-                }
+                    if (self.cache.nodes.hasOwnProperty(targetName)) {
+                        targetNode = self.cache.nodes[targetName];
+                    } else {
+                        targetNode = self.cache.nodes[self.cache.roles[targetName]];
+                    }
 
-                // 'node' can have a pointer named 'pointerName' to a target object type 'targetNode'
-                self.core.setPointerMetaTarget(node, pointerName, targetNode);
-                if (pointerName === 'set' ) {
-                    self.core.createSet(node, pointerName);
-                } else {
-                    self.core.setPointer(node, pointerName, null);
+                    // 'node' can have a pointer named 'pointerName' to a target object type 'targetNode'
+                    self.core.setPointerMetaTarget(node, pointerName, targetNode);
+                    if (pointerName === 'set') {
+                        self.core.createSet(node, pointerName);
+                    } else {
+                        self.core.setPointer(node, pointerName, null);
+                    }
                 }
+            } else {
+                // TODO: generate an error message? or warning?
             }
         }
     };
