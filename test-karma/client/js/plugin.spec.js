@@ -207,6 +207,11 @@ describe('Plugin', function () {
                 expect(pluginResult.commits[0].status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
                 expect(pluginResult.commits[1].branchName).to.include('MinimalWorkingExample1');
                 expect(pluginResult.commits[1].status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
+                client.getBranches(projectName, function (err, branches) {
+                    expect(err).to.equal(null);
+                    expect(Object.keys(branches).length).to.equal(2);
+                    done();
+                });
             });
         });
     });
@@ -219,37 +224,15 @@ describe('Plugin', function () {
                 activeSelection: [],
                 runOnServer: false,
                 pluginConfig: {
-                    timeout: 200
+                    timeout: 200,
+                    forkName: 'PluginForked1Fork'
                 }
             },
-            prevStatus;
+            branchName = 'PluginForked1';
 
-        currentBranchName = 'PluginForked1';
-
-        function removeHandler() {
-            client.removeEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
-        }
-
-        function eventHandler(__client, eventData) {
-            if (prevStatus === client.CONSTANTS.BRANCH_STATUS.SYNC) {
-                expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
-                prevStatus = eventData.status;
-            } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC) {
-                expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
-                removeHandler();
-                currentBranchHash = client.getActiveCommitHash();
-            } else {
-                removeHandler();
-                done(new Error('Unexpected BranchStatus ' + eventData.status));
-            }
-        }
-
-        createSelectBranch(currentBranchName, function (err) {
+        createSelectBranch(branchName, function (err) {
             expect(err).to.equal(null);
 
-            prevStatus = client.getBranchStatus();
-            expect(prevStatus).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
-            client.addEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
             var loaded = false,
                 userGuid;
 
@@ -262,7 +245,7 @@ describe('Plugin', function () {
                     client.removeUI(userGuid);
                     setTimeout(function () {
                         client.setAttributes('', 'name', 'PluginForkedNameFromClient', 'conflicting change');
-                    }, 100);
+                    }, 50);
                 }
             }
 
@@ -278,11 +261,86 @@ describe('Plugin', function () {
                 expect(pluginResult).not.to.equal(null);
                 expect(pluginResult.success).to.equal(true, 'PluginForked did not succeed.');
                 expect(pluginResult.commits.length).to.equal(2);
-                expect(pluginResult.commits[0].branchName).to.equal('PluginForked1');
+                expect(pluginResult.commits[0].branchName).to.equal(branchName);
                 expect(pluginResult.commits[0].status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
-                expect(pluginResult.commits[1].branchName).to.include('PluginForked1_');
+                expect(pluginResult.commits[1].branchName).to.equal('PluginForked1Fork');
                 expect(pluginResult.commits[1].status).to.equal(client.CONSTANTS.STORAGE.FORKED);
-                done();
+                client.getBranches(projectName, function (err, branches) {
+                    expect(err).to.equal(null);
+
+                    expect(Object.keys(branches).length).to.equal(3);
+                    expect(branches).to.include.keys('master', branchName, 'PluginForked1Fork');
+                    client.deleteBranch(projectName, 'PluginForked1Fork', branches.PluginForked1Fork, function (err) {
+                        expect(err).to.equal(null);
+
+                        client.selectBranch('master', null, function (err) {
+                            expect(err).to.equal(null);
+
+                            client.deleteBranch(projectName, branchName, branches[branchName], function (err) {
+                                expect(err).to.equal(null);
+
+                                done();
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    it('should fork with client when external changes are made', function (done) {
+        var name = 'PluginForked',
+            interpreterManager = new InterpreterManager(client, gmeConfig),
+            silentPluginCfg = {
+                activeNode: '',
+                activeSelection: [],
+                runOnServer: false,
+                pluginConfig: {
+                    fork: true, // This will inject changes to the branch
+                    forkName: 'PluginForked2Fork'
+                }
+            },
+            branchName = 'PluginForked2';
+
+        createSelectBranch(branchName, function (err) {
+            expect(err).to.equal(null);
+
+            //* @param {string} name - name of plugin to be executed.
+            //* @param {object} silentPluginCfg - if falsy dialog window will be shown.
+            //* @param {object.string} silentPluginCfg.activeNode - Path to activeNode.
+            //* @param {object.Array.<string>} silentPluginCfg.activeSelection - Paths to nodes in activeSelection.
+            //* @param {object.boolean} silentPluginCfg.runOnServer - Whether to run the plugin on the server or not.
+            //* @param {object.object} silentPluginCfg.pluginConfig - Plugin specific options.
+            client.startTransaction('starting');
+            interpreterManager.run(name, silentPluginCfg, function (pluginResult) {
+                expect(pluginResult).not.to.equal(null);
+
+                expect(pluginResult.success).to.equal(true, 'PluginForked did not succeed.');
+                expect(pluginResult.commits.length).to.equal(2);
+                expect(pluginResult.commits[0].branchName).to.equal('PluginForked2');
+                expect(pluginResult.commits[0].status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
+                expect(pluginResult.commits[1].branchName).to.equal('PluginForked2Fork');
+                expect(pluginResult.commits[1].status).to.equal(client.CONSTANTS.STORAGE.FORKED);
+                client.completeTransaction('stopping');
+                client.getBranches(projectName, function (err, branches) {
+                    expect(err).to.equal(null);
+
+                    expect(Object.keys(branches).length).to.equal(3);
+                    expect(branches).to.include.keys('master', branchName, 'PluginForked2Fork');
+                    client.deleteBranch(projectName, 'PluginForked2Fork', branches.PluginForked2Fork, function (err) {
+                        expect(err).to.equal(null);
+
+                        client.selectBranch('master', null, function (err) {
+                            expect(err).to.equal(null);
+
+                            client.deleteBranch(projectName, branchName, branches[branchName], function (err) {
+                                expect(err).to.equal(null);
+
+                                done();
+                            });
+                        });
+                    });
+                });
             });
         });
     });

@@ -101,7 +101,7 @@ if (typeof define === 'undefined') {
                 config = self.getCurrentConfig();
 
             function makeAndSaveChanges() {
-                self.core.setAttribute(self.activeNode, 'name', 'FCO_Own_Name');
+                self.core.setAttribute(self.activeNode, 'name', 'FCO_Own_Name' + (new Date().getTime()));
                 self.save('saving when config.forked = ' + config.fork.toString(), function (err, status) {
                     if (err) {
                         self.result.setSuccess(false);
@@ -119,9 +119,9 @@ if (typeof define === 'undefined') {
             }
 
             if (config.fork === true) {
-                self.core.setAttribute(self.activeNode, 'name', 'FCO_Fork_Name');
+                self.core.setAttribute(self.activeNode, 'name', 'FCO_Fork_Name' + (new Date().getTime()));
                 persisted = self.core.persist(self.rootNode);
-                self.project.makeCommit(self.branchName,
+                self.project.makeCommit(null,
                     [self.currentHash],
                     persisted.rootHash,
                     persisted.objects,
@@ -132,11 +132,15 @@ if (typeof define === 'undefined') {
                             callback(err);
                             return;
                         }
-                        if (commitResult.status === STORAGE_CONSTANTS.SYNCH) {
-                            makeAndSaveChanges();
-                        } else {
-                            callback('Injected commit was not in synch, ' + commitResult.status);
-                        }
+                        self.project.setBranchHash(self.branchName, commitResult.hash, self.currentHash,
+                            function (err, commitResult) {
+                                if (commitResult.status === STORAGE_CONSTANTS.SYNCH) {
+                                    makeAndSaveChanges();
+                                } else {
+                                    callback('Injected commit was not in synch, ' + commitResult.status);
+                                }
+                            }
+                        );
                     }
                 );
             } else {
