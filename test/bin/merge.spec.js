@@ -183,7 +183,6 @@ describe('merge CLI test', function () {
 
     it('should have a main', function () {
         mergeCli.should.have.property('main');
-        mergeCli.should.have.property('merge');
     });
     addTest({id: '-h prints out help text', params: '-h', out: 'Usage: merge [options]'});
     addTest({id: '--help prints out help text', params: '--help', out: 'Usage: merge [options]'});
