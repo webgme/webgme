@@ -20,20 +20,23 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
         }
 
         newRootHash = parameters.core.getHash(parameters.root);
+
+        //must use ASYNC version of makeCommit to allow usability from different project sources
         parameters.project.makeCommit(
             parameters.branchName || null,
             parameters.parents,
             newRootHash,
             persisted.objects,
-            parameters.msg)
-            .then(function (saveResult) {
-                //adding extra field that can be useful later
+            parameters.msg, function (err, saveResult) {
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
                 saveResult.root = parameters.root;
                 saveResult.rootHash = newRootHash;
 
                 deferred.resolve(saveResult);
-            })
-            .catch(deferred.reject);
+            });
 
         return deferred.promise.nodeify(callback);
     }
