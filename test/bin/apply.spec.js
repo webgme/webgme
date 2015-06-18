@@ -11,135 +11,119 @@ describe('apply CLI tests', function () {
 
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('apply.spec'),
+        expect = testFixture.expect,
         storage,
         gmeAuth,
         applyCLI = require('../../src/bin/apply'),
-        importCLI = require('../../src/bin/import'),
-        exportCLI = require('../../src/bin/export'),
-        FS = testFixture.fs,
         Q = testFixture.Q,
-        getJsonProject = function (path) {
-            return JSON.parse(FS.readFileSync(path, 'utf-8'));
-        },
-        checkPath = function (object, path, value) {
-            var i;
-            path = path.split('/');
-            path.shift();
-            for (i = 0; i < path.length - 1; i++) {
-                object = object[path[i]] || {};
-            }
-            if (object && object[path[i]] !== undefined) {
-                return object[path[i]].should.be.eql(value);
-            }
-            return i.should.be.eql(-1);
-        },
-
+        filename = require('path').normalize('src/bin/apply.js'),
+        oldLogFunction = console.log,
+        oldWarnFunction = console.warn,
+        oldStdOutFunction = process.stdout.write,
         applyCliTestProject = 'applyCliTest';
 
     before(function (done) {
         testFixture.clearDBAndGetGMEAuth(gmeConfig, applyCliTestProject)
             .then(function (gmeAuth__) {
                 gmeAuth = gmeAuth__;
-                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
             })
             .then(function () {
                 return storage.deleteProject({projectName: applyCliTestProject});
             })
+            .then(function () {
+                testFixture.importProject(storage, {
+                    projectName: applyCliTestProject,
+                    logger: logger.fork('import'),
+                    gmeConfig: gmeConfig,
+                    branchName: 'master',
+                    userName: gmeConfig.authentication.guestAccount,
+                    projectSeed: './test/bin/apply/base001.json',
+
+                });
+            })
             .nodeify(done);
     });
 
     after(function (done) {
-        Q.all([
-            gmeAuth.unload(),
-            storage.closeDatabase()
-        ])
+        storage.deleteProject({
+            projectName: applyCliTestProject
+        })
+            .then(function () {
+                return Q.all([
+                    gmeAuth.unload(),
+                    storage.closeDatabase()
+                ]);
+            })
             .nodeify(done);
     });
 
-    describe('basic', function () {
-        var jsonBaseProject;
+    beforeEach(function () {
+        console.log = function () {
+        };
+        process.stdout.write = function () {
+        };
+        console.warn = function () {
 
-        before(function () {
-            jsonBaseProject = getJsonProject('./test/bin/apply/base001.json');
-        });
+        };
+    });
 
-        beforeEach(function (done) {
-            importCLI.import(storage, gmeConfig, applyCliTestProject, jsonBaseProject, 'base', true, undefined, done);
-        });
+    afterEach(function () {
+        console.log = oldLogFunction;
+        console.warn = oldWarnFunction;
+        process.stdout.write = oldStdOutFunction;
+    });
 
-        it('project should remain the same after applying empty patch', function (done) {
-            var patch = {};
-            applyCLI.applyPatch(storage, applyCliTestProject, 'base', patch, false, undefined, function (err, commit) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                exportCLI.export(storage, applyCliTestProject, commit, undefined, function (err, jsonResultProject) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    jsonResultProject.should.be.eql(jsonBaseProject);
-                    done();
-                });
+    it('should have a main', function () {
+        applyCLI.should.have.property('main');
+    });
+
+    it('should fail if mandatory parameters missing', function (done) {
+        applyCLI.main(['node', filename])
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err).not.to.equal(null);
+                expect(err.toString()).to.contain('invalid argument');
+                done();
             });
-        });
+    });
 
-        it('simple attribute change', function (done) {
-            var patch = {attr: {name: 'otherROOT'}};
-            applyCLI.applyPatch(storage, applyCliTestProject, 'base', patch, false, undefined, function (err, commit) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                exportCLI.export(storage, applyCliTestProject, commit, undefined, function (err, jsonResultProject) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    checkPath(jsonResultProject, '/nodes/03d36072-9e09-7866-cb4e-d0a36ff825f6/attributes/name',
-                        'otherROOT');
-                    done();
-                });
-            });
-        });
+    it('should prin all projects', function (done) {
+        storage.getProjectNames({username: gmeConfig.authentication.guestAccount})
+            .then(function (names) {
+                logger.error(names);
+                done();
+            })
+            .catch(done);
+    });
 
-        //TODO fix this issue now tests has been removed
-        it('multiple attribute change', function (done) {
-            var patch = {
-                attr: {name: 'ROOTy'},
-                1: {attr: {name: 'FCOy'}}
-            };
-            applyCLI.applyPatch(storage, applyCliTestProject, 'base', patch, false, undefined, function (err, commit) {
-                if (err) {
-                    return done(err);
-                }
-                exportCLI.export(storage, applyCliTestProject, commit, undefined, function (err, jsonResultProject) {
-                    if (err) {
-                        return done(err);
-                    }
-                    checkPath(jsonResultProject, '/nodes/03d36072-9e09-7866-cb4e-d0a36ff825f6/attributes/name',
-                        'ROOTy');
-                    checkPath(jsonResultProject, '/nodes/cd891e7b-e2ea-e929-f6cd-9faf4f1fc045/attributes/name', 'FCOy');
-                    done();
-                });
+    it('should succeed if all parameter is given', function (done) {
+        applyCLI.main(['node', filename,
+            './test/bin/apply/patch.json',
+            '-p', applyCliTestProject,
+            '-t', 'master',
+            '-u', gmeConfig.authentication.guestAccount,
+            '-m', gmeConfig.mongo.uri])
+            .nodeify(done);
+    });
+
+    it('should succeed with a bad user', function (done) {
+        applyCLI.main(['node', filename,
+            './test/bin/apply/patch.json',
+            '-p', applyCliTestProject,
+            '-t', 'master',
+            '-u', 'badUser',
+            '-m', gmeConfig.mongo.uri])
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err).not.to.equal(null);
+                expect(err.toString()).to.contain('badUser');
+                done();
             });
-        });
-        /*it('simple registry change',function(done){
-         applyCLI.applyPatch(mongoUri,
-         applyCliTestProject,'base',{1:{reg:{position:{x:200,y:200}}}},false,function(err,commit){
-         if(err){
-         return done(err);
-         }
-         exportCLI.export(mongoUri,applyCliTestProject,commit,function(err,jsonResultProject){
-         if(err){
-         return done(err);
-         }
-         checkPath(jsonResultProject,'/nodes/cd891e7b-e2ea-e929-f6cd-9faf4f1fc045/registry/position',{x:200,y:200});
-         done();
-         });
-         });
-         });*/
     });
 });

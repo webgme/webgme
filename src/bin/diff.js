@@ -4,7 +4,6 @@
  */
 'use strict';
 var webgme = require('../../webgme'),
-    program = require('commander'),
     FS = require('fs'),
     Q = require('q'),
     MongoURI = require('mongo-uri'),
@@ -22,6 +21,8 @@ webgme.addToRequireJsPaths(gmeConfig);
 
 main = function (argv) {
     var mainDeferred = Q.defer(),
+        Command = require('commander').Command,
+        program = new Command(),
         finishUp = function (error) {
             var ended = function () {
                 if (error) {

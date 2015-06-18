@@ -6,7 +6,7 @@
 
 describe.skip('merge utils', function () {
     //coming from diffCLI test
-    describe.skip('basic', function () {
+    describe('basic', function () {
         describe('no diff', function () {
             var jsonProject;
 
@@ -206,5 +206,92 @@ describe.skip('merge utils', function () {
                 });
             });
         });
+    });
+
+    //coming from apply
+    describe('basic', function () {
+        var jsonBaseProject;
+
+        before(function () {
+            jsonBaseProject = getJsonProject('./test/bin/apply/base001.json');
+        });
+
+        beforeEach(function (done) {
+            importCLI.import(storage, gmeConfig, applyCliTestProject, jsonBaseProject, 'base', true, undefined, done);
+        });
+
+        it('project should remain the same after applying empty patch', function (done) {
+            var patch = {};
+            applyCLI.applyPatch(storage, applyCliTestProject, 'base', patch, false, undefined, function (err, commit) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                exportCLI.export(storage, applyCliTestProject, commit, undefined, function (err, jsonResultProject) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    jsonResultProject.should.be.eql(jsonBaseProject);
+                    done();
+                });
+            });
+        });
+
+        it('simple attribute change', function (done) {
+            var patch = {attr: {name: 'otherROOT'}};
+            applyCLI.applyPatch(storage, applyCliTestProject, 'base', patch, false, undefined, function (err, commit) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                exportCLI.export(storage, applyCliTestProject, commit, undefined, function (err, jsonResultProject) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    checkPath(jsonResultProject, '/nodes/03d36072-9e09-7866-cb4e-d0a36ff825f6/attributes/name',
+                        'otherROOT');
+                    done();
+                });
+            });
+        });
+
+        //TODO fix this issue now tests has been removed
+        it('multiple attribute change', function (done) {
+            var patch = {
+                attr: {name: 'ROOTy'},
+                1: {attr: {name: 'FCOy'}}
+            };
+            applyCLI.applyPatch(storage, applyCliTestProject, 'base', patch, false, undefined, function (err, commit) {
+                if (err) {
+                    return done(err);
+                }
+                exportCLI.export(storage, applyCliTestProject, commit, undefined, function (err, jsonResultProject) {
+                    if (err) {
+                        return done(err);
+                    }
+                    checkPath(jsonResultProject, '/nodes/03d36072-9e09-7866-cb4e-d0a36ff825f6/attributes/name',
+                        'ROOTy');
+                    checkPath(jsonResultProject, '/nodes/cd891e7b-e2ea-e929-f6cd-9faf4f1fc045/attributes/name', 'FCOy');
+                    done();
+                });
+            });
+        });
+        /*it('simple registry change',function(done){
+         applyCLI.applyPatch(mongoUri,
+         applyCliTestProject,'base',{1:{reg:{position:{x:200,y:200}}}},false,function(err,commit){
+         if(err){
+         return done(err);
+         }
+         exportCLI.export(mongoUri,applyCliTestProject,commit,function(err,jsonResultProject){
+         if(err){
+         return done(err);
+         }
+         checkPath(jsonResultProject,'/nodes/cd891e7b-e2ea-e929-f6cd-9faf4f1fc045/registry/position',{x:200,y:200});
+         done();
+         });
+         });
+         });*/
     });
 });

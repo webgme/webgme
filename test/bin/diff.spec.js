@@ -34,7 +34,7 @@ describe('diff CLI tests', function () {
         testFixture.clearDBAndGetGMEAuth(gmeConfig, diffCliTest)
             .then(function (gmeAuth__) {
                 gmeAuth = gmeAuth__;
-                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
             })
             .then(function () {
