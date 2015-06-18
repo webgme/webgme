@@ -277,6 +277,8 @@ define([
             persisted,
             commitMessage = '[Plugin] ' + self.getName() + ' (v' + self.getVersion() + ') updated the model.';
 
+        commitMessage = message ? commitMessage + ' - ' + message : commitMessage;
+
         self.logger.debug('Saving project');
         persisted = self.core.persist(self.rootNode);
         if (Object.keys(persisted.objects).length === 0) {
