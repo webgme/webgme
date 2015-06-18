@@ -78,10 +78,18 @@ function Mongo(mainLogger, gmeConfig) {
                         collection.findOne({
                             _id: object._id
                         }, function (err2, data) {
-                            if (!err2 && CANON.stringify(object) === CANON.stringify(data)) {
-                                deferred.resolve();
+                            if (err2) {
+                                deferred.reject(err2);
                             } else {
-                                deferred.reject(err);
+                                if (CANON.stringify(object) === CANON.stringify(data)) {
+                                    logger.info('tried to insert existing hash - the two objects were equal',
+                                        object._id);
+                                    deferred.resolve();
+                                } else {
+                                    logger.error('tried to insert existing hash - the two objects were NOT equal:',
+                                        {newObject: CANON.stringify(object), oldObject: CANON.stringify(data)});
+                                    deferred.reject(err);
+                                }
                             }
                         });
                     } else if (err) {
@@ -449,12 +457,12 @@ function Mongo(mainLogger, gmeConfig) {
                     deferred.reject('Project already exist ' + name);
                 } else {
                     Q.ninvoke(collection, 'insert', {_id: CONSTANTS.EMPTY_PROJECT_DATA})
-                    .then(function () {
-                        deferred.resolve(new Project(name, collection));
-                    })
-                    .catch(function (err) {
-                        deferred.reject(err);
-                    });
+                        .then(function () {
+                            deferred.resolve(new Project(name, collection));
+                        })
+                        .catch(function (err) {
+                            deferred.reject(err);
+                        });
                 }
 
                 return deferred.promise;

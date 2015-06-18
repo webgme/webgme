@@ -74,6 +74,14 @@ if (typeof define === 'undefined') {
                     value: '',
                     valueType: 'string',
                     readOnly: false
+                },
+                {
+                    name: 'timeout',
+                    displayName: 'timeout',
+                    description: 'Time before committing change',
+                    value: 0,
+                    valueType: 'number',
+                    readOnly: false
                 }
             ];
         };
@@ -113,7 +121,7 @@ if (typeof define === 'undefined') {
             if (config.fork === true) {
                 self.core.setAttribute(self.activeNode, 'name', 'FCO_Fork_Name');
                 persisted = self.core.persist(self.rootNode);
-                self.project.makeCommit(self.branchName,
+                self.project.makeCommit(null,
                     [self.currentHash],
                     persisted.rootHash,
                     persisted.objects,
@@ -124,15 +132,19 @@ if (typeof define === 'undefined') {
                             callback(err);
                             return;
                         }
-                        if (commitResult.status === STORAGE_CONSTANTS.SYNCH) {
-                            makeAndSaveChanges();
-                        } else {
-                            callback('Injected commit was not in synch, ' + commitResult.status);
-                        }
+                        self.project.setBranchHash(self.branchName, commitResult.hash, self.currentHash,
+                            function (err, commitResult) {
+                                if (commitResult.status === STORAGE_CONSTANTS.SYNCH) {
+                                    makeAndSaveChanges();
+                                } else {
+                                    callback('Injected commit was not in synch, ' + commitResult.status);
+                                }
+                            }
+                        );
                     }
                 );
             } else {
-                makeAndSaveChanges();
+                setTimeout(makeAndSaveChanges, config.timeout);
             }
         };
 

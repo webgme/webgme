@@ -75,11 +75,12 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
         // This will save the changes. If you don't want to save;
         // exclude self.save and call callback directly from this scope.
         self.result.setSuccess(true);
-        self.save('added obj', function (err) {
+        self.save('added obj', function (err, status) {
             if (err) {
                 self.result.setSuccess(false);
                 self.result.setError(err);
             }
+            self.logger.info('saved returned with status', status);
             callback(null, self.result);
         });
 

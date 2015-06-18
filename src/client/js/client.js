@@ -590,8 +590,12 @@ define([
             return function (updateQueue, eventData, callback) {
                 var commitHash = eventData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
                 logger.debug('updateHandler invoked. project, branch', eventData.projectName, eventData.branchName);
+                if (state.inTransaction) {
+                    logger.warn('Is in transaction, will not load in changes');
+                    callback(true); // aborted: true
+                    return;
+                }
                 logger.debug('loading commitHash', commitHash);
-
                 //undo-redo
                 logger.debug('foreign modification clearing undo-redo chain');
                 addModification(eventData.commitObject, true);
@@ -1652,12 +1656,13 @@ define([
         /**
          * Run the plugin on the server inside a worker process.
          * @param {string} name - name of plugin.
-         * @param {object} context - where the plugin should execute.
-         * @param {string} context.project - name of project.
-         * @param {string} context.activeNode - path to activeNode.
-         * @param {string} [context.activeSelection=[]] - paths to selected nodes.
-         * @param {string} context.commit - commit hash to start the plugin from.
-         * @param {string} context.branchName - branch which to save to.
+         * @param {object} context
+         * @param {object} context.managerConfig - where the plugin should execute.
+         * @param {string} context.managerConfig.project - name of project.
+         * @param {string} context.managerConfig.activeNode - path to activeNode.
+         * @param {string} [context.managerConfig.activeSelection=[]] - paths to selected nodes.
+         * @param {string} context.managerConfig.commit - commit hash to start the plugin from.
+         * @param {string} context.managerConfig.branchName - branch which to save to.
          * @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
          * @param {function} callback
          */

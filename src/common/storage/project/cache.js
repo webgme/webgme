@@ -81,19 +81,19 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
 
         this.insertObject = function (obj, stackedObjects) {
             ASSERT(typeof obj === 'object' && obj !== null);
-            logger.debug('insertObject');
 
             var key = obj[CONSTANTS.MONGO_ID];
+            logger.debug('insertObject', {metadata: key});
             ASSERT(typeof key === 'string');
 
             if (typeof cache[key] !== 'undefined') {
-                return;
+                logger.warn('object inserted was already in cache');
             } else {
                 var item = backup[key];
                 cacheInsert(key, obj);
 
                 if (typeof item !== 'undefined') {
-                    return;
+                    logger.warn('object inserted was already in back-up');
                 } else {
                     item = missing[key];
                     if (typeof item !== 'undefined') {

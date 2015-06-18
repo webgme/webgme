@@ -85,30 +85,32 @@ define(['common/storage/constants'], function (CONSTANTS) {
             // time to wait in ms for this amount after stop is called and before we kill the addon
             self.waitTimeForPendingEvents = parameters.waitTimeForPendingEvents || 1500;
 
-            self._storage.openBranch(self.projectName, self.branchName, updateHandler, commitHandler, function (err, branch) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                self.branch = branch;
-                self.project.loadObject(self.commit, function (err, commitObject) {
+            self._storage.openBranch(self.projectName, self.branchName, updateHandler, commitHandler,
+                function (err, branch) {
                     if (err) {
                         callback(err);
+                        return;
                     }
 
-                    self.rootHash = commitObject.root;
-                    self.core.loadRoot(self.rootHash, function (err, root) {
+                    self.branch = branch;
+                    self.project.loadObject(self.commit, function (err, commitObject) {
                         if (err) {
                             callback(err);
-                            return;
                         }
-                        self.root = root;
-                        self.running = true;
-                        callback(null);
+
+                        self.rootHash = commitObject.root;
+                        self.core.loadRoot(self.rootHash, function (err, root) {
+                            if (err) {
+                                callback(err);
+                                return;
+                            }
+                            self.root = root;
+                            self.running = true;
+                            callback(null);
+                        });
                     });
-                });
-            });
+                }
+            );
         });
 
     };
