@@ -7,6 +7,7 @@ var webgme = require('../../webgme'),
     program = require('commander'),
     FS = require('fs'),
     Q = require('q'),
+    MongoURI = require('mongo-uri'),
     cliStorage = null,
     gmeAuth = null,
     main,
@@ -56,6 +57,13 @@ main = function (argv) {
         .option('-o, --out [path]', 'the output path of the diff [by default it is printed to the console]')
         .parse(argv);
 
+    if (program.mongoDatabaseUri) {
+        // this line throws a TypeError for invalid databaseConnectionString
+        MongoURI.parse(program.mongoDatabaseUri);
+
+        gmeConfig.mongo.uri = program.mongoDatabaseUri;
+    }
+
     if (!program.projectIdentifier) {
         console.warn('project identifier is a mandatory parameter!');
         badArgument = true;
@@ -71,7 +79,7 @@ main = function (argv) {
 
     if (badArgument) {
         program.outputHelp();
-        mainDeferred.reject(new Error('missing argument'));
+        mainDeferred.reject(new SyntaxError('missing argument'));
         return mainDeferred.promise;
     }
 
@@ -107,11 +115,7 @@ main = function (argv) {
         })
         .then(function (diff) {
             if (program.out) {
-                try {
-                    FS.writeFileSync(program.out, JSON.stringify(diff, null, 2));
-                } catch (err) {
-                    console.warn('unable to create output file:', err);
-                }
+                FS.writeFileSync(program.out, JSON.stringify(diff, null, 2));
             } else {
                 console.log('generated diff:');
                 console.log(JSON.stringify(diff, null, 2));

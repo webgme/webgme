@@ -13,7 +13,7 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
             persisted = parameters.core.persist(parameters.root),
             newRootHash;
 
-        if (!persisted.objects) {
+        if (persisted.hasOwnProperty('objects') === false) {
             parameters.logger.warn('empty patch was inserted - not making commit');
             deferred.resolve({});
             return deferred.promise.nodeify(callback);
@@ -25,20 +25,15 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
             parameters.parents,
             newRootHash,
             persisted.objects,
-            parameters.msg,
-            function (err, saveResult) {
-                if (err) {
-                    deferred.reject(err);
-                    return;
-                }
-
+            parameters.msg)
+            .then(function (saveResult) {
                 //adding extra field that can be useful later
                 saveResult.root = parameters.root;
                 saveResult.rootHash = newRootHash;
 
                 deferred.resolve(saveResult);
-            }
-        );
+            })
+            .catch(deferred.reject);
 
         return deferred.promise.nodeify(callback);
     }
@@ -69,6 +64,7 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
                 });
             },
             result = {};
+
         if (REGEXP.HASH.test(parameters.id)) {
             loadCommit(parameters.id);
         } else {
@@ -81,7 +77,7 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
                     result.branchName = parameters.id;
                     loadCommit(branches[parameters.id]);
                 } else {
-                    deferred.reject('there is no branch [' + parameters.id + '] in the project');
+                    deferred.reject(new Error('there is no branch [' + parameters.id + '] in the project'));
                     return;
                 }
             });
@@ -91,7 +87,7 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
     }
 
     function diff(parameters, callback) {
-        var diffDeferred = Q.defer(),
+        var deferred = Q.defer(),
             core = new Core(parameters.project, {
                 globConf: parameters.gmeConfig,
                 logger: parameters.logger.fork('core')
@@ -104,15 +100,15 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
             .then(function (results) {
                 core.generateTreeDiff(results[0].root, results[1].root, function (err, diff) {
                     if (err) {
-                        diffDeferred.reject(err);
+                        deferred.reject(err);
                         return;
                     }
-                    diffDeferred.resolve(diff);
+                    deferred.resolve(diff);
                 });
             })
-            .catch(diffDeferred.reject);
+            .catch(deferred.reject);
 
-        return diffDeferred.promise.nodeify(callback);
+        return deferred.promise.nodeify(callback);
     }
 
     function apply(parameters, callback) {
@@ -122,6 +118,7 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
             }),
             applyDeferred = Q.defer(),
             branchName = null;
+
         getRoot({project: parameters.project, core: core, id: parameters.branchOrCommit})
             .then(function (result) {
                 var deferred = Q.defer();
@@ -161,7 +158,7 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
     }
 
     function merge(parameters, callback) {
-        var mergeDeferred = Q.defer(),
+        var deferred = Q.defer(),
             result = {},
             theirRoot = null,
             myRoot = null,
@@ -211,18 +208,17 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
 
                 result.conflict = core.tryToConcatChanges(result.diff.mine, result.diff.theirs);
                 if (!parameters.auto) {
-                    mergeDeferred.resolve(result);
+                    deferred.resolve(result);
                     return;
                 }
 
                 if (!result.conflict) {
-                    mergeDeferred.reject('error during merged patch calculation');
-                    return;
+                    throw new Error('error during merged patch calculation');
                 }
 
                 if (result.conflict.items.length > 0) {
                     //the user will find out that there were no update done
-                    mergeDeferred.resolve(result);
+                    deferred.resolve(result);
                     return;
                 }
 
@@ -240,7 +236,7 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
                 //we made the commit, but now we also have try to update the branch of necessary
                 result.finalCommitHash = applyResult.hash;
                 if (!branchName) {
-                    mergeDeferred.resolve(result);
+                    deferred.resolve(result);
                     return;
                 }
 
@@ -252,13 +248,13 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
                         if (!err) {
                             result.updatedBranch = branchName;
                         }
-                        mergeDeferred.resolve(result);
+                        deferred.resolve(result);
                     }
                 );
             })
-            .catch(mergeDeferred.reject);
+            .catch(deferred.reject);
 
-        return mergeDeferred.promise.nodeify(callback);
+        return deferred.promise.nodeify(callback);
     }
 
     return {
