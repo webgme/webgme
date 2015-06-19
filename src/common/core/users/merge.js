@@ -13,9 +13,12 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
             persisted = parameters.core.persist(parameters.root),
             newRootHash;
 
-        if (persisted.hasOwnProperty('objects') === false) {
+        if (persisted.hasOwnProperty('objects') === false || Object.keys(persisted.objects).length === 0) {
             parameters.logger.warn('empty patch was inserted - not making commit');
-            deferred.resolve({});
+            deferred.resolve({
+                hash: parameters.parents[0], //if there is no change, we return the first parent!!!
+                branchName: parameters.branchName
+            });
             return deferred.promise.nodeify(callback);
         }
 
@@ -138,6 +141,7 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
 
                     save({
                         project: parameters.project,
+                        logger: parameters.logger,
                         core: core,
                         root: result.root,
                         parents: parameters.parents || [result.commitHash],

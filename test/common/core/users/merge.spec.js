@@ -1,297 +1,215 @@
+/*jshint node:true, mocha:true */
+
 /**
  * @author kecso / https://github.com/kecso
  */
 
-//future place of merge util tests
+var testFixture = require('../../../_globals');
 
-describe.skip('merge utils', function () {
-    //coming from diffCLI test
-    describe('basic', function () {
-        describe('no diff', function () {
-            var jsonProject;
+describe('merge - library', function () {
+    'use strict';
+    var projectName = 'mergeLibrary',
+        Q = testFixture.Q,
+        gmeConfig = testFixture.getGmeConfig(),
+        logger = testFixture.logger.fork('apply.spec'),
+        expect = testFixture.expect,
+        merger = testFixture.requirejs('common/core/users/merge'),
+        storage,
+        context,
+        gmeAuth;
 
-            before(function (done) {
-                try {
-                    jsonProject = getJsonProject('./test/bin/diff/source001.json');
-                } catch (err) {
-                    done(err);
-                    return;
-                }
-                importCLI.import(storage,
-                    gmeConfig, diffCliTest, jsonProject, 'source', true, undefined, function (err) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        importCLI.import(storage,
-                            gmeConfig, diffCliTest, jsonProject, 'target', true, undefined, done);
-                    }
-                );
-            });
-
-            it('diff should be empty on identical project states source->target', function (done) {
-                diffCLI.generateDiff(storage, diffCliTest, 'source', 'target', undefined, function (err, diff) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    diff.should.be.empty;
-                    done();
+    before(function (done) {
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth__) {
+                gmeAuth = gmeAuth__;
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return storage.deleteProject({projectName: projectName});
+            })
+            .then(function () {
+                return testFixture.openContext(storage, gmeConfig, logger, {
+                    projectName: projectName,
+                    branchName: 'master',
+                    createProject: true,
+                    projectSeed: './test/common/core/users/merge/base.json'
                 });
-            });
-
-            it('diff should be empty on identical project states target->source', function (done) {
-                diffCLI.generateDiff(storage, diffCliTest, 'target', 'source', undefined, function (err, diff) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    diff.should.be.empty;
-                    done();
-                });
-            });
-        });
-
-        describe('simple node difference', function () {
-            var source,
-                target;
-
-            before(function (done) {
-                try {
-                    source = getJsonProject('./test/bin/diff/source001.json');
-                    target = getJsonProject('./test/bin/diff/target001.json');
-                } catch (err) {
-                    done(err);
-                    return;
-                }
-                importCLI.import(storage, gmeConfig, diffCliTest, source, 'source', true, undefined, function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    importCLI.import(storage, gmeConfig, diffCliTest, target, 'target', true, undefined, done);
-                });
-            });
-
-            it('new node should be visible in diff source->target', function (done) {
-                diffCLI.generateDiff(storage, diffCliTest, 'source', 'target', undefined, function (err, diff) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-
-                    diff.should.include.key('2');
-                    diff['2'].should.include.key('hash');
-                    diff['2'].should.include.key('removed');
-                    diff['2'].removed.should.be.equal(false);
-                    done();
-                });
-            });
-
-            it('node remove should be visible in diff target->source', function (done) {
-                diffCLI.generateDiff(storage, diffCliTest, 'target', 'source', undefined, function (err, diff) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    diff.should.include.key('2');
-                    diff['2'].should.include.key('removed');
-                    diff['2'].removed.should.be.equal(true);
-                    done();
-                });
-            });
-        });
-
-        describe('simple attribute change', function () {
-            var source,
-                target;
-
-            before(function (done) {
-                try {
-                    source = getJsonProject('./test/bin/diff/source001.json');
-                    target = JSON.parse(JSON.stringify(source));
-                    target.nodes['cd891e7b-e2ea-e929-f6cd-9faf4f1fc045'].attributes.name = 'FCOmodified';
-                } catch (err) {
-                    done(err);
-                    return;
-                }
-                importCLI.import(storage, gmeConfig, diffCliTest, source, 'source', true, undefined, function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    importCLI.import(storage, gmeConfig, diffCliTest, target, 'target', true, undefined, done);
-                });
-            });
-
-            it('changed attribute should be visible in diff source->target', function (done) {
-                diffCLI.generateDiff(storage, diffCliTest, 'source', 'target', undefined, function (err, diff) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-
-                    diff.should.include.key('1');
-                    diff['1'].should.include.key('attr');
-                    diff['1'].attr.should.include.key('name');
-                    diff['1'].attr.name.should.be.equal('FCOmodified');
-                    done();
-                });
-            });
-
-            it('changed attribute should be visible in diff target->source', function (done) {
-                diffCLI.generateDiff(storage, diffCliTest, 'target', 'source', undefined, function (err, diff) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    diff.should.include.key('1');
-                    diff['1'].should.include.key('attr');
-                    diff['1'].attr.should.include.key('name');
-                    diff['1'].attr.name.should.be.equal('FCO');
-                    done();
-                });
-            });
-        });
-
-        describe('simple registry change', function () {
-            var source,
-                target;
-
-            before(function (done) {
-                try {
-                    source = getJsonProject('./test/bin/diff/source001.json');
-                    target = JSON.parse(JSON.stringify(source));
-                    target.nodes['cd891e7b-e2ea-e929-f6cd-9faf4f1fc045'].registry.position = {x: 200, y: 200};
-                } catch (err) {
-                    done(err);
-                    return;
-                }
-                importCLI.import(storage, gmeConfig, diffCliTest, source, 'source', true, undefined, function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    importCLI.import(storage, gmeConfig, diffCliTest, target, 'target', true, undefined, done);
-                });
-            });
-
-            it('changed registry should be visible in diff source->target', function (done) {
-                diffCLI.generateDiff(storage, diffCliTest, 'source', 'target', undefined, function (err, diff) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-
-                    diff.should.include.key('1');
-                    diff['1'].should.include.key('reg');
-                    diff['1'].reg.should.include.key('position');
-                    diff['1'].reg.position.should.be.eql({x: 200, y: 200});
-                    done();
-                });
-            });
-
-            it('changed registry should be visible in diff target->source', function (done) {
-                diffCLI.generateDiff(storage, diffCliTest, 'target', 'source', undefined, function (err, diff) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-
-                    diff.should.include.key('1');
-                    diff['1'].should.include.key('reg');
-                    diff['1'].reg.should.include.key('position');
-                    diff['1'].reg.position.should.be.eql({x: 100, y: 100});
-                    done();
-                });
-            });
-        });
+            })
+            .then(function (result) {
+                context = result;
+                return Q.all([
+                    Q.nfcall(context.project.createBranch, 'other', result.commitHash),
+                    Q.nfcall(context.project.createBranch, 'empty', result.commitHash)
+                ]);
+            })
+            .nodeify(done);
     });
 
-    //coming from apply
-    describe('basic', function () {
-        var jsonBaseProject;
-
-        before(function () {
-            jsonBaseProject = getJsonProject('./test/bin/apply/base001.json');
-        });
-
-        beforeEach(function (done) {
-            importCLI.import(storage, gmeConfig, applyCliTestProject, jsonBaseProject, 'base', true, undefined, done);
-        });
-
-        it('project should remain the same after applying empty patch', function (done) {
-            var patch = {};
-            applyCLI.applyPatch(storage, applyCliTestProject, 'base', patch, false, undefined, function (err, commit) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                exportCLI.export(storage, applyCliTestProject, commit, undefined, function (err, jsonResultProject) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    jsonResultProject.should.be.eql(jsonBaseProject);
-                    done();
-                });
-            });
-        });
-
-        it('simple attribute change', function (done) {
-            var patch = {attr: {name: 'otherROOT'}};
-            applyCLI.applyPatch(storage, applyCliTestProject, 'base', patch, false, undefined, function (err, commit) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                exportCLI.export(storage, applyCliTestProject, commit, undefined, function (err, jsonResultProject) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    checkPath(jsonResultProject, '/nodes/03d36072-9e09-7866-cb4e-d0a36ff825f6/attributes/name',
-                        'otherROOT');
-                    done();
-                });
-            });
-        });
-
-        //TODO fix this issue now tests has been removed
-        it('multiple attribute change', function (done) {
-            var patch = {
-                attr: {name: 'ROOTy'},
-                1: {attr: {name: 'FCOy'}}
-            };
-            applyCLI.applyPatch(storage, applyCliTestProject, 'base', patch, false, undefined, function (err, commit) {
-                if (err) {
-                    return done(err);
-                }
-                exportCLI.export(storage, applyCliTestProject, commit, undefined, function (err, jsonResultProject) {
-                    if (err) {
-                        return done(err);
-                    }
-                    checkPath(jsonResultProject, '/nodes/03d36072-9e09-7866-cb4e-d0a36ff825f6/attributes/name',
-                        'ROOTy');
-                    checkPath(jsonResultProject, '/nodes/cd891e7b-e2ea-e929-f6cd-9faf4f1fc045/attributes/name', 'FCOy');
-                    done();
-                });
-            });
-        });
-        /*it('simple registry change',function(done){
-         applyCLI.applyPatch(mongoUri,
-         applyCliTestProject,'base',{1:{reg:{position:{x:200,y:200}}}},false,function(err,commit){
-         if(err){
-         return done(err);
-         }
-         exportCLI.export(mongoUri,applyCliTestProject,commit,function(err,jsonResultProject){
-         if(err){
-         return done(err);
-         }
-         checkPath(jsonResultProject,'/nodes/cd891e7b-e2ea-e929-f6cd-9faf4f1fc045/registry/position',{x:200,y:200});
-         done();
-         });
-         });
-         });*/
+    after(function (done) {
+        storage.deleteProject({projectName: projectName})
+            .then(function () {
+                return Q.all([
+                    storage.closeDatabase(),
+                    gmeAuth.unload()
+                ]);
+            })
+            .nodeify(done);
     });
+
+    it('should go fine to apply empty patch', function (done) {
+        merger.apply({
+            project: context.project,
+            logger: logger,
+            gmeConfig: gmeConfig,
+            patch: {},
+            branchOrCommit: 'empty',
+            noUpdate: true
+        }).nodeify(done);
+    });
+
+    it('should fail to get diff from unknown branch', function (done) {
+        merger.apply({
+            project: context.project,
+            logger: logger,
+            gmeConfig: gmeConfig,
+            patch: {},
+            branchOrCommit: 'unknownBranch',
+            noUpdate: true
+        })
+            .then(function (result) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err).not.to.equal(null);
+                done();
+            });
+    });
+
+    it('should fail to get diff from unknown commit', function (done) {
+        merger.apply({
+            project: context.project,
+            logger: logger,
+            gmeConfig: gmeConfig,
+            patch: {},
+            branchOrCommit: '#42424242424242',
+            noUpdate: true
+        })
+            .then(function (result) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err).not.to.equal(null);
+                done();
+            });
+    });
+
+    it('should merge identical branches without change keeping the target', function (done) {
+        merger.merge({
+            project: context.project,
+            logger: logger,
+            gmeConfig: gmeConfig,
+            myBranchOrCommit: 'empty',
+            theirBranchOrCommit: 'empty',
+            auto: true
+        })
+            .then(function (result) {
+                expect(result).not.to.equal(null);
+                expect(result.finalCommitHash).to.equal(context.commitHash);
+                expect(result.updatedBranch).to.equal('empty');
+                done();
+            })
+            .catch(done);
+    });
+
+    it('should merge identical commits without change keeping the target', function (done) {
+        merger.merge({
+            project: context.project,
+            logger: logger,
+            gmeConfig: gmeConfig,
+            myBranchOrCommit: context.commitHash,
+            theirBranchOrCommit: context.commitHash,
+            auto: true
+        })
+            .then(function (result) {
+                expect(result).not.to.equal(null);
+                expect(result.finalCommitHash).to.equal(context.commitHash);
+                expect(result.updatedBranch).to.equal(undefined);
+                done();
+            })
+            .catch(done);
+    });
+
+    it('should return the conflict object if there is conflicting changes', function (done) {
+        var masterContext,
+            otherContext,
+            masterPersisted,
+            otherPersisted;
+
+        Q.all([
+            testFixture.openContext(storage, gmeConfig, logger, {
+                projectName: projectName,
+                branchName: 'master'
+            }),
+            testFixture.openContext(storage, gmeConfig, logger, {
+                projectName: projectName,
+                branchName: 'other'
+            })
+        ])
+            .then(function (contexts) {
+                expect(contexts).not.to.equal(null);
+                expect(contexts).to.have.length(2);
+
+                masterContext = contexts[0];
+                otherContext = contexts[1];
+
+                masterContext.core.setRegistry(masterContext.rootNode, 'something', 'masterValue');
+                otherContext.core.setRegistry(otherContext.rootNode, 'something', 'otherValue');
+
+                masterPersisted = masterContext.core.persist(masterContext.rootNode);
+                otherPersisted = otherContext.core.persist(otherContext.rootNode);
+
+                return Q.all([
+                    masterContext.project.makeCommit(
+                        'master',
+                        [masterContext.commitHash],
+                        masterContext.core.getHash(masterContext.rootNode),
+                        masterPersisted.objects,
+                        'master setting core registry'),
+                    otherContext.project.makeCommit(
+                        'other',
+                        [otherContext.commitHash],
+                        otherContext.core.getHash(otherContext.rootNode),
+                        otherPersisted.objects,
+                        'other setting core registry')
+                ]);
+            })
+            .then(function (commitResults) {
+                expect(commitResults).not.to.equal(null);
+                expect(commitResults).to.have.length(2);
+
+                return merger.merge({
+                    project: context.project,
+                    logger: logger,
+                    gmeConfig: gmeConfig,
+                    myBranchOrCommit: 'other',
+                    theirBranchOrCommit: 'master',
+                    auto: true
+                });
+            })
+            .then(function (mergeResult) {
+                expect(mergeResult).not.to.equal(null);
+                expect(mergeResult).to.include.keys(['myCommitHash',
+                    'theirCommitHash', 'baseCommitHash', 'diff', 'conflict']);
+                expect(mergeResult.conflict.items).to.have.length(1);
+                expect(mergeResult.conflict.items[0]).to.include.keys(['selected','mine','theirs']);
+                expect(mergeResult.conflict.items[0].mine.path).to.equal('/reg/something');
+                expect(mergeResult.conflict.items[0].theirs.path).to.equal('/reg/something');
+                expect(mergeResult.conflict.items[0].mine.value).to.equal('otherValue');
+                expect(mergeResult.conflict.items[0].theirs.value).to.equal('masterValue');
+                done();
+            })
+            .catch(done);
+    });
+
 });
