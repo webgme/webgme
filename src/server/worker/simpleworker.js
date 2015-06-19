@@ -13,6 +13,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     PluginResult = requireJS('plugin/PluginResult'),
     PluginMessage = requireJS('plugin/PluginMessage'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
+    merger = requireJS('common/core/users/merge'),
 
     FS = require('fs'),
 
@@ -531,162 +532,26 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         logger.debug('autoMerge ' + projectName + ' ' + mine + ' -> ' + theirs);
 
         storage.open(function (networkState) {
-
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
-                //mergeProject(storage, projectName, mine, theirs, true, userName, finish);
                 storage.openProject(projectName, function (err, project, branches) {
                     if (err) {
                         finish(err);
                         return;
                     }
 
-                    var myCommit,
-                        theirCommit,
-                        myRoot,
-                        theirRoot,
-                        baseRoot,
-                        myDiff,
-                        theirDiff,
-                        core = new Core(project, {
-                            globConf: gmeConfig,
-                            logger: logger.fork('core')
-                        });
-
-                    if (!branches[theirs]) {
-                        finish('no target branch (' + theirs + ') was found');
-                        return;
-                    }
-
-                    if (!branches[mine]) {
-                        finish('no source branch (' + mine + ') was found');
-                        return;
-                    }
-
-                    myCommit = branches[mine];
-                    theirCommit = branches[theirs];
-
-                    project.getCommonAncestorCommit(myCommit, theirCommit,
-                        function (err, commit) {
-                            var needed = 3,
-                                error = null,
-                                loadRoot = function (commitHash, next) {
-                                    project.loadObject(commitHash, function (err, commitObject) {
-                                        if (err) {
-                                            next(err);
-                                            return;
-                                        }
-                                        core.loadRoot(commitObject.root, next);
-                                    });
-                                },
-                                diffsAreGenerated = function () {
-                                    if (error) {
-                                        finish(error);
-                                        return;
-                                    }
-
-                                    mergeResult.conflict = core.tryToConcatChanges(myDiff, theirDiff);
-
-                                    if (mergeResult.conflict !== null && mergeResult.conflict.items.length === 0) {
-                                        core.applyTreeDiff(baseRoot, mergeResult.conflict.merge, function (err) {
-                                            if (err) {
-                                                finish(err);
-                                                return;
-                                            }
-
-                                            var persisted = core.persist(baseRoot);
-                                            project.makeCommit(null,
-                                                [myCommit, theirCommit],
-                                                persisted.rootHash,
-                                                persisted.objects,
-                                                'merging [' + mine + '] into [' +
-                                                theirs + ']',
-                                                function (err, commitResult) {
-                                                    if (err) {
-                                                        logger.error('project.makeCommit failed.');
-                                                        finish(err);
-                                                        return;
-                                                    }
-
-                                                    mergeResult.finalCommitHash = commitResult.hash;
-
-                                                    project.setBranchHash(theirs, commitResult.hash, theirCommit,
-                                                        function (err /*, updateResult*/) {
-                                                            if (err) {
-                                                                logger.error('setBranchHash failed with error.');
-                                                                finish(err);
-                                                                return;
-                                                            }
-
-                                                            mergeResult.updatedBranch = theirs;
-                                                            logger.info('merge was done to branch [' + theirs + ']');
-                                                            finish(null);
-                                                        }
-                                                    );
-
-                                                }
-                                            );
-                                        });
-
-                                    } else {
-                                        finish(null);
-                                    }
-                                },
-                                allRootsLoaded = function () {
-                                    if (error) {
-                                        finish(err);
-                                        return;
-                                    }
-
-                                    needed = 2;
-
-                                    core.generateTreeDiff(baseRoot, myRoot, function (err, diff) {
-                                        error = error || err;
-                                        myDiff = diff;
-                                        if (--needed === 0) {
-                                            diffsAreGenerated();
-                                        }
-                                    });
-                                    core.generateTreeDiff(baseRoot, theirRoot, function (err, diff) {
-                                        error = error || err;
-                                        theirDiff = diff;
-                                        if (--needed === 0) {
-                                            diffsAreGenerated();
-                                        }
-                                    });
-                                };
-
-                            if (err) {
-                                finish(err);
-                                return;
-                            }
-
-                            mergeResult.baseCommitHash = commit;
-
-                            loadRoot(mergeResult.baseCommitHash, function (err, root) {
-                                error = error || err;
-                                baseRoot = root;
-                                if (--needed === 0) {
-                                    allRootsLoaded();
-                                }
-                            });
-                            loadRoot(myCommit, function (err, root) {
-                                error = error || err;
-                                myRoot = root;
-                                if (--needed === 0) {
-                                    allRootsLoaded();
-                                }
-                            });
-                            loadRoot(theirCommit, function (err, root) {
-                                error = error || err;
-                                theirRoot = root;
-                                if (--needed === 0) {
-                                    allRootsLoaded();
-                                }
-                            });
-
-                        }
-                    );
-
+                    merger.merge({
+                        project: project,
+                        gmeConfig: gmeConfig,
+                        logger: logger.fork('merge'),
+                        myBranchOrCommit: mine,
+                        theirBranchOrCommit: theirs,
+                        auto: true
+                    })
+                        .then(function (result) {
+                            mergeResult = result;
+                            finish(null);
+                        })
+                        .catch(finish);
                 });
             } else {
                 finish('unable to establish connection to webgme');
@@ -752,7 +617,12 @@ process.on('message', function (parameters) {
             if (typeof parameters.name === 'string' && typeof parameters.context === 'object') {
                 executePlugin(parameters.webGMESessionId, parameters.userId, parameters.name, parameters.context,
                     function (err, result) {
-                        safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: result});
+                        safeSend({
+                            pid: process.pid,
+                            type: CONSTANT.msgTypes.result,
+                            error: err,
+                            result: result
+                        });
                     }
                 );
             } else {

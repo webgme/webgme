@@ -63,11 +63,11 @@ define([
         };
 
         this.getCommits = function (before, number, callback) {
-            storage.getCommits(this.name, before, number, callback);
+            storage.getCommits(self.name, before, number, callback);
         };
 
         this.getCommonAncestorCommit = function (commitA, commitB, callback) {
-            storage.getCommonAncestorCommit(this.name, commitA, commitB, callback);
+            storage.getCommonAncestorCommit(self.name, commitA, commitB, callback);
         };
 
         // Functions forwarded to project cache.
