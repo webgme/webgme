@@ -42,9 +42,11 @@ define([
                 this._btnResolve.show();
             } else {
                 this._warningNoDiff.show();
+                this._btnOk.show();
             }
         } else {
             this._alertSuccess.show();
+            this._btnOk.show();
         }
 
         this._dialog.modal('show');
@@ -80,12 +82,14 @@ define([
         this._diffPlaceholder = this._dialog.find('.diff-placeholder');
 
         this._btnResolve = this._dialog.find('.btn-resolve');
+        this._btnOk = this._dialog.find('.btn-ok');
 
         this._alertSuccess.hide();
         this._alertFailed.hide();
 
         this._warningNoDiff.hide();
         this._btnResolve.hide();
+        this._btnOk.hide();
     };
 
     MergeDialog.prototype._addDiff = function (mergeResult) {
