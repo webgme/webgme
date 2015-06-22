@@ -58,13 +58,13 @@ Storage.prototype.deleteProject = function (data, callback) {
 
 Storage.prototype.createProject = function (data, callback) {
     var self = this;
-    return this.mongo.createProject(data.projectName)
+    return this.mongo.createProject(data.projectId)
         .then(function (project) {
             var eventData = {
-                projectName: data.projectName
+                projectId: data.projectId
             };
 
-            self.logger.debug('Project created will dispatch', data.projectName);
+            self.logger.debug('Project created will dispatch', data.projectId);
             if (self.gmeConfig.storage.broadcastProjectEvents) {
                 eventData.socket = data.socket;
             }

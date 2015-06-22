@@ -1,5 +1,5 @@
 /*globals requireJS*/
-/*jshint node:true*/
+/*jshint node:true, newcap:false*/
 
 /**
  * @author ksmyth / https://github.com/ksmyth
@@ -244,11 +244,11 @@ function GMEAuth(session, gmeConfig) {
 
     // type: 'create' 'delete'
     // rights: {read: true, write: true, delete: true}
-    function authorizeByUserId(userId, projectName, type, rights, callback) {
+    function authorizeByUserId(userId, projectId, type, rights, callback) {
         var update;
         if (type === 'create' || type === 'set') {
             update = {$set: {}};
-            update.$set['projects.' + projectName] = rights;
+            update.$set['projects.' + projectId] = rights;
             return collection.update({_id: userId}, update)
                 .spread(function (numUpdated) {
                     return numUpdated === 1;
@@ -256,7 +256,7 @@ function GMEAuth(session, gmeConfig) {
                 .nodeify(callback);
         } else if (type === 'delete') {
             update = {$unset: {}};
-            update.$unset['projects.' + projectName] = '';
+            update.$unset['projects.' + projectId] = '';
             return collection.update({_id: userId}, update)
                 .spread(function (numUpdated) {
                     // FIXME this is always true. Try findAndUpdate instead
@@ -497,14 +497,17 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-    function deleteProject(projectName, callback) {
+    function deleteProject(projectId, callback) {
         var update = {$unset: {}};
-        update.$unset['projects.' + projectName] = '';
+        update.$unset['projects.' + projectId] = '';
         return collection.update({}, update, {multi: true})
             .then(function () {
                 return organizationCollection.update({}, update, {multi: true});
             })
             .spread(function (/*numUpdated*/) {
+                return projectCollection.remove({_id: projectId});
+            })
+            .then(function () {
                 return true;
             })
             .nodeify(callback);
@@ -542,7 +545,7 @@ function GMEAuth(session, gmeConfig) {
         var data = {
             owner: orgOrUserId,
             name: projectName,
-            full_name: orgOrUserId + '/' + projectName,
+            fullName: orgOrUserId + '/' + projectName,
             info: info || {}
         };
         return projectCollection.update({_id: orgOrUserId + '.' + projectName}, data, {upsert: true})

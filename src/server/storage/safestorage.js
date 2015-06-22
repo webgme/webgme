@@ -1,14 +1,10 @@
 /*globals requireJS*/
 /*jshint node:true, newcap:false*/
 /**
- * This class calls the functions on the storage with additional checks:
- *  - the data object contains all necessary values.
- *  - TODO: Checks that the user is authorized to access/change the data.
- *  - TODO: Filters out the raw result based on authorization.
- *
- * TODO: The incoming data should contain the userId. Meaning the users (WebSocket or REST) should
- * TODO: get this information from the session-store and via the tokens when applicable.
- * TODO: Alternatively the sessionId can be passed.
+ * This class calls forwards function calls to the storage with additions:
+ *  - check that the data object contains all necessary values.
+ *  - checks that the user is authorized to access/change the data.
+ *  - updates the users and projects databases on delete/create project.
  *
  * @author pmeijer / https://github.com/pmeijer
  */
@@ -17,6 +13,7 @@
 
 var Q = require('q'),
 
+    CONSTANTS = requireJS('common/storage/constants'),
     REGEXP = requireJS('common/regexp'),
     ASSERT = requireJS('common/util/assert'),
     Storage = require('./storage');
@@ -204,11 +201,13 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false,
         userAuthInfo,
+        didExist,
         self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.');// ||
+    // TODO: Add back appropriate check
+    //check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectName failed regexp: ' + data.projectId);
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
@@ -226,7 +225,11 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
                     throw new Error('Not authorized: cannot delete project. ' + data.projectName);
                 }
             })
-            .then(function (didExist) {
+            .then(function (didExist_) {
+                didExist = didExist_;
+                return self.gmeAuth.deleteProject(data.projectId);
+            })
+            .then(function () {
                 deferred.resolve(didExist);
             })
             .catch(function (err) {
@@ -261,6 +264,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
     }
 
     if (rejected === false) {
+        data.projectId = data.username + CONSTANTS.PROJECT_ID_SEP + data.projectName;
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
@@ -279,9 +283,18 @@ SafeStorage.prototype.createProject = function (data, callback) {
                 });
             })
             .then(function () {
+                var info = {
+                    createdAt: (new Date()).toISOString()
+                    //TODO: populate with more data here, e.g. description
+                };
+
+                return self.gmeAuth.addProject(data.username, data.projectName, info);
+            })
+            .then(function () {
                 deferred.resolve(project);
             })
             .catch(function (err) {
+                // TODO: Clean up appropriately when failure to add to model, user or projects database.
                 deferred.reject(new Error(err));
             });
     }
