@@ -39,7 +39,11 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                 __test('base', typeof node.base === 'object');
                 return true;
             } catch (error) {
-                console.log('Wrong node', error.stack);
+                logger.error('invalid node', {
+                    stack: error.stack,
+                    node: node
+                });
+                //console.log('Wrong node', error.stack);
                 return false;
             }
         }
@@ -90,7 +94,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                 basechild = null;
             if (base) {
                 //the parent is inherited
-                if (oldcore.getChildrenRelids(base).indexOf(relid) !== -1) {
+                if (core.getChildrenRelids(base).indexOf(relid) !== -1) {
                     //inherited child
                     if (oldcore.getChildrenRelids(node).indexOf(relid) !== -1) {
                         //but it is overwritten so we should load it
@@ -103,9 +107,10 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                             child.base = b;
                             return child;
                         } else {
-                            child = core.getChild(n, r);
+                            child = oldcore.getChild(n, r);
                             core.setHashed(child, true, true);
                             child.base = b;
+
                             return child;
                         }
                     }, basechild, child, node, relid);
