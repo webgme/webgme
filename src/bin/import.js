@@ -176,6 +176,7 @@ if (require.main === module) {
         logger.warn('branch is not given, master will be used');
     }
 
+    // command line argument has precedence
     gmeConfig.mongo.uri = program.mongoDatabaseUri || gmeConfig.mongo.uri;
     //loading the project file and seeing if it is a valid JSON object
     try {

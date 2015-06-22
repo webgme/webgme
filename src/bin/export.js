@@ -74,6 +74,9 @@ if (require.main === module) {
         program.help();
     }
 
+    // command line argument has precedence
+    gmeConfig.mongo.uri = program.mongoDatabaseUri || gmeConfig.mongo.uri;
+
     webgme.getGmeAuth(gmeConfig)
         .then(function (gmeAuth__) {
             gmeAuth = gmeAuth__;
