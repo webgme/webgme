@@ -1750,6 +1750,20 @@ define([
                 }
             });
         };
+
+        this.resolve = function (mergeResult, callback) {
+            var command = {
+                command: 'resolve',
+                partial: mergeResult
+            };
+            storage.simpleRequest(command, function (err, resId) {
+                if (err) {
+                    callback(err);
+                } else {
+                    storage.simpleResult(resId, callback);
+                }
+            });
+        };
     }
 
 

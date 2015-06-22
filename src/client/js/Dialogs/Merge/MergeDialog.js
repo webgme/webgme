@@ -62,10 +62,15 @@ define([
         });
 
         this._btnResolve.on('click', function () {
-            self._logger.error('Not implemented yer. Apply this conflict resolution.', self.resolution);
-
             // TODO: update UI to reflect the applied conflict resolution
-            // TODO: create a new dialog with the newly applied conflict resolution
+
+            self._client.resolve(self.resolution, function (err/*, result*/) {
+                self._logger.error('resolve finished', err);
+
+                // TODO: create a new dialog with the newly applied conflict resolution
+                self._alertSuccess.show();
+                self._btnOk.show();
+            });
         });
     };
 
@@ -97,10 +102,10 @@ define([
             conflictsE,
             conflictItem,
             conflictItemTemplate = $('<div class="row conflict-item">' +
-                                     '<div class="col-md-6 path"></div>' +
-                                     '<div class="col-md-3 value-theirs"></div>' +
-                                     '<div class="col-md-3 value-mine"></div>' +
-                                     '</div>'),
+                '<div class="col-md-6 path"></div>' +
+                '<div class="col-md-3 value-theirs"></div>' +
+                '<div class="col-md-3 value-mine"></div>' +
+                '</div>'),
             conflictItemE,
             i;
 
@@ -109,13 +114,13 @@ define([
         diff.find('.base').text(mergeResult.baseCommitHash);
         diff.find('.mine').text(mergeResult.myCommitHash);
         diff.find('.theirs').text(mergeResult.theirCommitHash);
+        diff.find('.branch').text(mergeResult.targetBranchName);
 
         conflictsE = diff.find('.conflicts');
 
 
-
         if (mergeResult.hasOwnProperty('conflict') &&
-            mergeResult.conflict.hasOwnProperty('items') ) {
+            mergeResult.conflict.hasOwnProperty('items')) {
 
             // test ui scalability
             //for (i = 0; i < 100; i += 1) {

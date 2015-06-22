@@ -225,6 +225,10 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
 
                 if (result.conflict.items.length > 0) {
                     //the user will find out that there were no update done
+                    if (branchName) {
+                        result.targetBranchName = branchName;
+                    }
+                    result.projectName = parameters.project.name;
                     deferred.resolve(result);
                     return;
                 }
@@ -264,9 +268,56 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
         return deferred.promise.nodeify(callback);
     }
 
+    function resolve(parameters, callback) {
+        var deferred = Q.defer(),
+            core = new Core(parameters.project, {
+                globConf: parameters.gmeConfig,
+                logger: parameters.logger.fork('core')
+            }),
+            finalPatch = core.applyResolution(parameters.partial.conflict);
+
+        //TODO error handling should be checked - can the applyResolution fail???
+
+        apply({
+            gmeConfig: parameters.gmeConfig,
+            logger: parameters.logger,
+            project: parameters.project,
+            branchOrCommit: parameters.partial.targetBranchName,
+            noUpdate: true,
+            patch: finalPatch,
+            parents: [parameters.partial.theirCommitHash, parameters.partial.myCommitHash],
+            msg: 'merge with resolved conflicts'
+        })
+            .then(function (applyResult) {
+                var result = {
+                    hash: applyResult.hash
+                };
+                //we made the commit, but now we also have try to update the branch of necessary
+                if (!parameters.partial.targetBranchName) {
+                    deferred.resolve(applyResult.hash);
+                    return;
+                }
+
+                parameters.project.setBranchHash(
+                    parameters.partial.targetBranchName,
+                    applyResult.hash,
+                    parameters.partial.theirCommitHash,
+                    function (err) {
+                        if (!err) {
+                            result.updatedBranch = parameters.partial.targetBranchName;
+                        }
+                        deferred.resolve(result);
+                    }
+                );
+            })
+            .catch(deferred.reject);
+        return deferred.promise.nodeify(callback);
+    }
+
     return {
         merge: merge,
         diff: diff,
-        apply: apply
+        apply: apply,
+        resolve: resolve
     };
 });

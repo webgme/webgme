@@ -557,8 +557,41 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                 finish('unable to establish connection to webgme');
             }
         });
-    };
+    },
+    resolve = function (webGMESessionId, userName, partial, callback) {
+        var storage = getConnectedStorage(webGMESessionId),
+            result = {},
+            finish = function (err) {
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+        logger.debug('resolve ' + partial.projectName + ' ' + partial.baseCommitHash + ' -> ' + partial.branchName);
+        storage.open(function (networkState) {
+            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
+                storage.openProject(partial.projectName, function (err, project, branches) {
+                    if (err) {
+                        finish(err);
+                        return;
+                    }
 
+                    merger.resolve({
+                        project: project,
+                        gmeConfig: gmeConfig,
+                        logger: logger.fork('merge'),
+                        partial: partial
+                    })
+                        .then(function (resolve) {
+                            result = resolve;
+                            finish(null);
+                        })
+                        .catch(finish);
+                });
+            } else {
+                finish('unable to establish connection to webgme');
+            }
+        });
+    };
 //main message processing loop
 process.on('message', function (parameters) {
     var resultHandling = function (err, r) {
@@ -728,6 +761,12 @@ process.on('message', function (parameters) {
             parameters.project,
             parameters.mine,
             parameters.theirs,
+            resultHandling);
+    } else if (parameters.command === CONSTANT.workerCommands.resolve) {
+        safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+        resolve(parameters.webGMESessionId,
+            parameters.userId,
+            parameters.partial,
             resultHandling);
     } else {
         safeSend({

@@ -33,6 +33,7 @@ module.exports = {
         connectedWorkerQuery: 'connectedWorkerQuery',
         connectedWorkerStop: 'connectedworkerStop',
         seedProject: 'seedProject',
-        autoMerge: 'autoMerge'
+        autoMerge: 'autoMerge',
+        resolve: 'resolve'
     }
 };
