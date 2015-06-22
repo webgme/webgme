@@ -30,7 +30,7 @@ describe('apply CLI tests', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                return storage.deleteProject({projectName: applyCliTestProject});
+                return storage.deleteProject({projectId: applyCliTestProject});
             })
             .then(function () {
                 testFixture.importProject(storage, {

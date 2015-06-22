@@ -45,16 +45,16 @@ var webgme = require('../../webgme'),
                         closeContext(new Error('project already exists'));
                         return;
                     }
-                    return storage.openProject({username: username, projectName: projectId});
+                    return storage.openProject({username: username, projectId: projectId});
                 }
-                return storage.createProject({username: username, projectName: projectId});
+                return storage.createProject({username: username, projectId: projectId});
             })
             .then(function (dbProject) {
                 project = new Project(dbProject, storage, logger, gmeConfig);
                 project.setUser(username);
                 return storage.getBranchHash({
                     username: username,
-                    projectName: projectId,
+                    projectId: projectId,
                     branchName: branchName
                 });
             })
@@ -90,7 +90,7 @@ var webgme = require('../../webgme'),
                             storage.setBranchHash({
                                     username: username,
                                     branchName: branchName,
-                                    projectName: projectId,
+                                    projectId: projectId,
                                     oldHash: commitHash,
                                     newHash: commitResult.hash
                                 }, function (err, updateResult) {

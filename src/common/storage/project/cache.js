@@ -10,7 +10,7 @@
 
 define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CONSTANTS) {
     'use strict';
-    function ProjectCache(storage, projectName, mainLogger, gmeConfig) {
+    function ProjectCache(storage, projectId, mainLogger, gmeConfig) {
         var missing = {},
             backup = {},
             cache = {},
@@ -45,7 +45,7 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
                         obj = [callback];
                         missing[key] = obj;
                         logger.debug('object set to be loaded from storage');
-                        storage.loadObject(projectName, key, function (err, obj2) {
+                        storage.loadObject(projectId, key, function (err, obj2) {
                             ASSERT(typeof obj2 === 'object' || typeof obj2 === 'undefined');
 
                             if (obj.length !== 0) {

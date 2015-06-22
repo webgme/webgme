@@ -29,7 +29,7 @@ var exportProject = function (storage, projectId, branchOrCommit, userName, call
 
 
     contextParams = {
-        projectName: projectId,
+        projectId: projectId,
         branchOrCommit: branchOrCommit
     };
 

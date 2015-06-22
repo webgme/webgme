@@ -364,7 +364,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                 }
 
                                 var persisted = core.persist(root);
-                                storage.makeCommit(parameters.projectName,
+                                storage.makeCommit(project.name,
                                     null,
                                     [],
                                     persisted.rootHash,
@@ -383,7 +383,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                                 callback(err);
                                             }
                                             logger.info('seeding [' + parameters.seedName +
-                                                '] to [' + parameters.projectName + '] completed');
+                                                '] to [' + project.name + '] completed');
                                             finish(null);
                                         });
                                     }
@@ -463,8 +463,8 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         return requireJS('addon/' + name + '/' + name + '/' + name);
     },
 
-    initConnectedWorker = function (webGMESessionId, userId, addOnName, projectName, branchName, callback) {
-        if (!addOnName || !projectName || !branchName) {
+    initConnectedWorker = function (webGMESessionId, userId, addOnName, projectId, branchName, callback) {
+        if (!addOnName || !projectId || !branchName) {
             return setImmediate(callback, 'Required parameter was not provided');
         }
         var AddOn = getAddOn(addOnName),
@@ -476,7 +476,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
             if (networkStatus === STORAGE_CONSTANTS.CONNECTED) {
                 logger.debug('starting addon', {metadata: addOnName});
                 _addOn.start({
-                    projectName: projectName,
+                    projectId: projectId,
                     branchName: branchName,
                     logger: logger.fork(addOnName)
                 }, function (err) {
@@ -521,7 +521,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         }
     },
 
-    autoMerge = function (webGMESessionId, userName, projectName, mine, theirs, callback) {
+    autoMerge = function (webGMESessionId, userName, projectId, mine, theirs, callback) {
         var storage = getConnectedStorage(webGMESessionId),
             mergeResult = {},
             finish = function (err) {
@@ -529,11 +529,11 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     callback(err || closeErr, mergeResult);
                 });
             };
-        logger.debug('autoMerge ' + projectName + ' ' + mine + ' -> ' + theirs);
+        logger.debug('autoMerge ' + projectId + ' ' + mine + ' -> ' + theirs);
 
         storage.open(function (networkState) {
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
-                storage.openProject(projectName, function (err, project, branches) {
+                storage.openProject(projectId, function (err, project, branches) {
                     if (err) {
                         finish(err);
                         return;

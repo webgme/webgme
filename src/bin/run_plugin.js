@@ -53,13 +53,13 @@ main = function (argv, callback) {
         })
         .then(function () {
             logger.info('Database is opened.');
-            return storage.openProject({projectName: program.project});
+            return storage.openProject({projectId: program.project});
         })
         .then(function (dbProject) {
             logger.info('Project is opened.');
             project = new Project(dbProject, storage, logger, gmeConfig);
             return storage.getBranchHash({
-                projectName: program.project,
+                projectId: program.project,
                 branchName: program.branch
             });
         })

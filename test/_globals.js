@@ -145,12 +145,14 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
         .then(function () {
             var projectsToAuthorize = [],
                 projectName,
+                projectId,
                 i;
 
             if (typeof projectNameOrNames === 'string') {
                 projectName = projectNameOrNames;
+                projectId = guestAccount + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
                 projectsToAuthorize.push(
-                    gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
+                    gmeAuth.authorizeByUserId(guestAccount, projectId, 'create', {
                         read: true,
                         write: true,
                         delete: true
@@ -158,8 +160,9 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
                 );
             } else if (projectNameOrNames instanceof Array) {
                 for (i = 0; i < projectNameOrNames.length; i += 1) {
+                    projectId = guestAccount + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectNameOrNames[i];
                     projectsToAuthorize.push(
-                        gmeAuth.authorizeByUserId(guestAccount, projectNameOrNames[i], 'create', {
+                        gmeAuth.authorizeByUserId(guestAccount, projectId, 'create', {
                             read: true,
                             write: true,
                             delete: true
@@ -235,7 +238,7 @@ function importProject(storage, parameters, callback) {
 
                 var commitObject = project.createCommitObject([''], persisted.rootHash, 'test', 'project imported'),
                     commitData = {
-                        projectName: parameters.projectName,
+                        projectId: project.name,
                         branchName: branchName,
                         commitObject: commitObject,
                         coreObjects: persisted.objects
@@ -247,6 +250,7 @@ function importProject(storage, parameters, callback) {
                             branchName: branchName,
                             commitHash: commitObject._id,
                             project: project,
+                            projectId: project.name,
                             core: core,
                             jsonProject: projectJson,
                             rootNode: rootNode,

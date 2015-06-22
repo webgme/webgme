@@ -93,7 +93,7 @@ main = function (argv) {
         })
         .then(function () {
             var openProjectData = {
-                projectName: program.projectIdentifier
+                projectId: program.projectIdentifier
             };
             if (program.user) {
                 openProjectData.username = program.user;

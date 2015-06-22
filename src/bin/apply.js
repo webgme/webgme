@@ -92,7 +92,7 @@ main = function (argv) {
         })
         .then(function () {
             var params = {
-                projectName: program.projectIdentifier
+                projectId: program.projectIdentifier
             };
 
             if (program.user) {
