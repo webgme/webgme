@@ -450,16 +450,13 @@ define([
                 commitHandler = commitHandler || getDefaultCommitHandler();
                 storage.openBranch(state.project.name, branchName, getUpdateHandler(), commitHandler,
                     function (err, latestCommit) {
-                        if (err) {
-                            callback(new Error(err));
-                            return;
-                        }
                         var commitObject;
                         if (err) {
                             logger.error('storage.openBranch returned with error', err);
-                            callback(err);
+                            callback(new Error(err));
                             return;
                         }
+
                         commitObject = latestCommit.commitObject;
                         logger.debug('Branch opened latestCommit', latestCommit);
 
