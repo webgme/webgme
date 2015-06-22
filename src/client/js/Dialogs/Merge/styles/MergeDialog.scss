@@ -1,0 +1,12 @@
+.selected {
+  font-weight: bold;
+}
+
+.conflict-item {
+  cursor: pointer;
+}
+
+.commits {
+  /* Monospace stack */
+  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}

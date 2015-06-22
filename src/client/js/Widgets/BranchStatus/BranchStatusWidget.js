@@ -9,8 +9,9 @@ define([
     'js/logger',
     'js/Controls/DropDownMenu',
     'js/Controls/PopoverBox',
+    'js/Dialogs/Merge/MergeDialog',
     'js/Constants'
-], function (Logger, DropDownMenu, PopoverBox, CONSTANTS) {
+], function (Logger, DropDownMenu, PopoverBox, MergeDialog, CONSTANTS) {
 
     'use strict';
 
@@ -87,6 +88,7 @@ define([
                         });
                     } else {
                         self._client.autoMerge(projectName, forkName, branchName, function (err, result) {
+                            var mergeDialog = new MergeDialog(self.gmeClient);
                             if (err) {
                                 self._logger.error('Merging resulted in error', err);
                                 self._logger.info('Trying to select fork', forkName);
@@ -100,6 +102,7 @@ define([
                             }
                             if (result && result.conflict && result.conflict.items.length > 0) {
                                 //TODO create some user-friendly way to show this type of result
+                                // TODO: we may need to open the mergeDialog here: mergeDialog.show('merge ended in conflicts', result);
                                 self._logger.error('merge had conflicts', result.conflict);
                                 self._client.selectBranch(forkName, null, function (err) {
                                     if (err) {
@@ -114,6 +117,7 @@ define([
                                         self._logger.error('could not select the branch after merge', branchName);
                                         throw new Error(err);
                                     }
+                                    mergeDialog.show(null, result);
                                 });
                                 self._client.deleteBranch(projectName, forkName, forkHash, function (err) {
                                     if (err) {

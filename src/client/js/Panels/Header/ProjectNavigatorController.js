@@ -11,6 +11,7 @@ define([
     'angular',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
+    'js/Dialogs/Merge/MergeDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
     'isis-ui-components/simpleDialog/simpleDialog',
     'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html'
@@ -19,6 +20,7 @@ define([
              ng,
              ProjectsDialog,
              CommitDialog,
+             MergeDialog,
              ProjectRepositoryDialog,
              ConfirmDialog,
              DeleteDialogTemplate) {
@@ -581,16 +583,20 @@ define([
                 self.gmeClient.autoMerge(data.projectId,
                     data.branchId, self.$scope.navigator.items[self.navIdBranch].id,
                     function (err, result) {
+                        var mergeDialog = new MergeDialog(self.gmeClient);
                         if (err) {
                             self.logger.error('merge of branch failed', err);
+                            mergeDialog.show(err);
                             return;
                         }
 
                         if (result && result.conflict && result.conflict.items.length > 0) {
                             //TODO create some user-friendly way to show this type of result
-                            self.logger.error('merge ended in conflicts', result.conflict);
+                            self.logger.error('merge ended in conflicts', result);
+                            mergeDialog.show('merge ended in conflicts', result);
                         } else {
-                            self.logger.debug('successfull merge');
+                            self.logger.debug('successful merge');
+                            mergeDialog.show(null, result);
                         }
                     }
                 );
