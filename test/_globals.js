@@ -238,7 +238,7 @@ function importProject(storage, parameters, callback) {
 
                 var commitObject = project.createCommitObject([''], persisted.rootHash, 'test', 'project imported'),
                     commitData = {
-                        projectId: project.name,
+                        projectId: project.projectId,
                         branchName: branchName,
                         commitObject: commitObject,
                         coreObjects: persisted.objects
@@ -250,7 +250,7 @@ function importProject(storage, parameters, callback) {
                             branchName: branchName,
                             commitHash: commitObject._id,
                             project: project,
-                            projectId: project.name,
+                            projectId: project.projectId,
                             core: core,
                             jsonProject: projectJson,
                             rootNode: rootNode,

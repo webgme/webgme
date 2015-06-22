@@ -12,14 +12,14 @@ define([
 ], function (ProjectCache, Branch, CONSTANTS, ASSERT) {
     'use strict';
 
-    function Project(name, storage, mainLogger, gmeConfig) {
-        this.name = name;
+    function Project(projectId, storage, mainLogger, gmeConfig) {
+        this.projectId = projectId;
         this.branches = {};
         this.ID_NAME = CONSTANTS.MONGO_ID;
 
         var self = this,
-            logger = mainLogger.fork('Project:' + self.name),
-            projectCache = new ProjectCache(storage, self.name, logger, gmeConfig);
+            logger = mainLogger.fork('Project:' + self.projectId),
+            projectCache = new ProjectCache(storage, self.projectId, logger, gmeConfig);
 
         logger.debug('ctor');
         this.getBranch = function (branchName, shouldExist) {
@@ -47,27 +47,27 @@ define([
 
         // Functions forwarded to storage.
         this.setBranchHash = function (branchName, newHash, oldHash, callback) {
-            storage.setBranchHash(self.name, branchName, newHash, oldHash, callback);
+            storage.setBranchHash(self.projectId, branchName, newHash, oldHash, callback);
         };
 
         this.createBranch = function (branchName, newHash, callback) {
-            storage.createBranch(self.name, branchName, newHash, callback);
+            storage.createBranch(self.projectId, branchName, newHash, callback);
         };
 
         this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
-            return storage.makeCommit(self.name, branchName, parents, rootHash, coreObjects, msg, callback);
+            return storage.makeCommit(self.projectId, branchName, parents, rootHash, coreObjects, msg, callback);
         };
 
         this.getBranches = function (callback) {
-            storage.getBranches(self.name, callback);
+            storage.getBranches(self.projectId, callback);
         };
 
         this.getCommits = function (before, number, callback) {
-            storage.getCommits(self.name, before, number, callback);
+            storage.getCommits(self.projectId, before, number, callback);
         };
 
         this.getCommonAncestorCommit = function (commitA, commitB, callback) {
-            storage.getCommonAncestorCommit(self.name, commitA, commitB, callback);
+            storage.getCommonAncestorCommit(self.projectId, commitA, commitB, callback);
         };
 
         // Functions forwarded to project cache.

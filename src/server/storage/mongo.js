@@ -22,12 +22,12 @@ function Mongo(mainLogger, gmeConfig) {
     /**
      * Provides methods related to a specific project.
      *
-     * @param {string} name - Name of the project.
+     * @param {string} projectId - identifier of the project (ownerId + '.' + projectName).
      * @param {object} collection - Mongo collection connected to database.
      * @constructor
      */
-    function Project(name, collection) {
-        this.name = name;
+    function Project(projectId, collection) {
+        this.projectId = projectId;
 
         this.closeProject = function (callback) {
             var deferred = Q.defer();
@@ -384,10 +384,10 @@ function Mongo(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
-    function getProjectNames(callback) {
+    function getProjectIds(callback) {
         return Q.ninvoke(mongo, 'collectionNames')
             .then(function (collections) {
-                var names = [];
+                var projectId = [];
                 for (var i = 0; i < collections.length; i++) {
                     if (!REGEXP.PROJECT.test(collections[i].name)) {
                         continue;
@@ -395,22 +395,22 @@ function Mongo(mainLogger, gmeConfig) {
                     var p = collections[i].name.indexOf('.');
                     var n = collections[i].name.substring(p + 1);
                     if (n.indexOf('system') === -1 && n.indexOf('.') === -1 && n.indexOf('_') !== 0) {
-                        names.push(n);
+                        projectId.push(n);
                     }
                 }
-                return Q(names);
+                return Q(projectId);
             }).nodeify(callback);
     }
 
-    function deleteProject(name, callback) {
+    function deleteProject(projectId, callback) {
         var deferred = Q.defer();
-        Q.ninvoke(mongo, 'dropCollection', name)
+        Q.ninvoke(mongo, 'dropCollection', projectId)
             .then(function () {
                 deferred.resolve(true);
             })
             .catch(function (err) {
                 if (err.ok === 0) {
-                    logger.debug('deleteProject, project does not exist', name);
+                    logger.debug('deleteProject, project does not exist', projectId);
                     // http://docs.mongodb.org/manual/reference/method/db.collection.drop/
                     deferred.resolve(false);
                 } else {
@@ -421,11 +421,11 @@ function Mongo(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
-    function openProject(name, callback) {
+    function openProject(projectId, callback) {
         var collection;
-        logger.debug('openProject', name);
+        logger.debug('openProject', projectId);
 
-        return Q.ninvoke(mongo, 'collection', name)
+        return Q.ninvoke(mongo, 'collection', projectId)
             .then(function (result) {
                 collection = result;
                 return Q.ninvoke(result, 'findOne', {}, {_id: 1});
@@ -433,20 +433,20 @@ function Mongo(mainLogger, gmeConfig) {
             .then(function (something) {
                 var deferred = Q.defer();
                 if (!something) {
-                    deferred.reject('Project does not exist ' + name);
+                    deferred.reject('Project does not exist ' + projectId);
                 } else {
-                    deferred.resolve(new Project(name, collection));
+                    deferred.resolve(new Project(projectId, collection));
                 }
 
                 return deferred.promise;
             }).nodeify(callback);
     }
 
-    function createProject(name, callback) {
+    function createProject(projectId, callback) {
         var collection;
-        logger.debug('createProject', name);
+        logger.debug('createProject', projectId);
 
-        return Q.ninvoke(mongo, 'collection', name)
+        return Q.ninvoke(mongo, 'collection', projectId)
             .then(function (result) {
                 collection = result;
                 return Q.ninvoke(result, 'findOne', {}, {_id: 1});
@@ -454,11 +454,11 @@ function Mongo(mainLogger, gmeConfig) {
             .then(function (something) {
                 var deferred = Q.defer();
                 if (something) {
-                    deferred.reject('Project already exist ' + name);
+                    deferred.reject('Project already exist ' + projectId);
                 } else {
                     Q.ninvoke(collection, 'insert', {_id: CONSTANTS.EMPTY_PROJECT_DATA})
                         .then(function () {
-                            deferred.resolve(new Project(name, collection));
+                            deferred.resolve(new Project(projectId, collection));
                         })
                         .catch(function (err) {
                             deferred.reject(err);
@@ -472,7 +472,7 @@ function Mongo(mainLogger, gmeConfig) {
     this.openDatabase = openDatabase;
     this.closeDatabase = closeDatabase;
 
-    this.getProjectNames = getProjectNames;
+    this.getProjectIds = getProjectIds;
 
     this.openProject = openProject;
     this.deleteProject = deleteProject;

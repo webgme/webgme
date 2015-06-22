@@ -14,7 +14,7 @@ var ProjectCache = requireJS('common/storage/project/cache'),
 
 function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     var self = this,
-        logger = mainLogger.fork('UserProject:' + dbProject.name),
+        logger = mainLogger.fork('UserProject:' + dbProject.projectId),
         projectCache,
         objectLoader = {
             loadObject: function (projectId, key, callback) {
@@ -22,14 +22,14 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
             }
         };
 
-    this.name = dbProject.name;
+    this.projectId = dbProject.projectId;
     this.userName = gmeConfig.authentication.guestAccount;
 
     this.setUser = function (userName) {
         this.userName = userName;
     };
 
-    projectCache = new ProjectCache(objectLoader, this.name, logger, gmeConfig);
+    projectCache = new ProjectCache(objectLoader, this.projectId, logger, gmeConfig);
 
     this.insertObject = projectCache.insertObject;
     this.loadObject = projectCache.loadObject;
@@ -46,7 +46,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
         var self = this,
             data = {
                 username: self.userName,
-                projectId: self.name,
+                projectId: self.projectId,
                 commitObject: self.createCommitObject(parents, rootHash, null, msg),
                 coreObjects: coreObjects
             };
@@ -62,7 +62,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     this.getBranches = function (callback) {
         var data = {
             username: self.userName,
-            projectId: self.name
+            projectId: self.projectId
         };
 
         return storage.getBranches(data)
@@ -72,7 +72,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     this.setBranchHash = function (branchName, newHash, oldHash, callback) {
         var data = {
             username: self.userName,
-            projectId: self.name,
+            projectId: self.projectId,
             branchName: branchName,
             newHash: newHash,
             oldHash: oldHash
@@ -85,7 +85,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     this.getBranchHash = function (branchName, callback) {
         var data = {
             username: self.userName,
-            projectId: self.name,
+            projectId: self.projectId,
             branchName: branchName
         };
 
@@ -96,7 +96,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     this.createBranch = function (branchName, hash, callback) {
         var data = {
             username: self.userName,
-            projectId: self.name,
+            projectId: self.projectId,
             branchName: branchName,
             hash: hash
         };
@@ -108,7 +108,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     this.getCommits = function (before, number, callback) {
         var data = {
             username: self.userName,
-            projectId: self.name,
+            projectId: self.projectId,
             before: before,
             number: number
         };
@@ -120,7 +120,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     this.getCommonAncestorCommit = function (commitA, commitB, callback) {
         var data = {
             username: self.userName,
-            projectId: self.name,
+            projectId: self.projectId,
             commitA: commitA,
             commitB: commitB
         };

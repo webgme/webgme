@@ -39,6 +39,54 @@ SafeStorage.prototype = Object.create(Storage.prototype);
 SafeStorage.prototype.constructor = SafeStorage;
 
 /**
+ * Authorization: filter results based on read access for each projectName.
+ * @param data
+ * @param callback
+ * @returns {*}
+*/
+SafeStorage.prototype.getProjectIds = function (data, callback) {
+    var deferred = Q.defer(),
+        rejected = false,
+        userAuthInfo,
+        self = this;
+
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.');
+
+    if (data.hasOwnProperty('username')) {
+        rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
+    } else {
+        data.username = this.gmeConfig.authentication.guestAccount;
+    }
+
+    if (rejected === false) {
+        this.gmeAuth.getUser(data.username)
+            .then(function (user) {
+                userAuthInfo = user.projects;
+                return Storage.prototype.getProjectIds.call(self, data);
+            })
+            .then(function (result) {
+                var filteredResult = [],
+                    i,
+                    projectName;
+
+                for (i = 0; i < result.length; i += 1) {
+                    //For each projectName in result check if user has read access.
+                    projectName = result[i];
+                    if (userAuthInfo.hasOwnProperty(projectName) && userAuthInfo[projectName].read === true) {
+                        filteredResult.push(result[i]);
+                    }
+                }
+                deferred.resolve(filteredResult);
+            })
+            .catch(function (err) {
+                deferred.reject(new Error(err));
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
+/**
  * Authorization: result contains this information
  * @param data
  * @param callback
@@ -157,9 +205,8 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
         self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
-    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.');// ||
-    // TODO: Add back appropriate check
-    //check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId);
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId);
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
@@ -228,7 +275,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
             })
             .then(function (project_) {
                 project = project_;
-                return self.gmeAuth.authorizeByUserId(data.username, project.name, 'create', {
+                return self.gmeAuth.authorizeByUserId(data.username, project.projectId, 'create', {
                     read: true,
                     write: true,
                     delete: true

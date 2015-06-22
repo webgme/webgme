@@ -32,8 +32,8 @@ Storage.prototype.closeDatabase = function (callback) {
         .nodeify(callback);
 };
 
-Storage.prototype.getProjectNames = function (data, callback) {
-    return this.mongo.getProjectNames().nodeify(callback);
+Storage.prototype.getProjectIds = function (data, callback) {
+    return this.mongo.getProjectIds().nodeify(callback);
 };
 
 Storage.prototype.deleteProject = function (data, callback) {
