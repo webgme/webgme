@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe.only('Memory storage', function () {
+describe('Memory storage', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
@@ -125,7 +125,7 @@ describe.only('Memory storage', function () {
         it('should fail to open a project if not connected to database', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
 
-            memoryStorage.openProject({projectName: 'something'})
+            memoryStorage.openProject({projectId: 'something'})
                 .then(function () {
                     done(new Error('should have failed to openProject'));
                 })
@@ -144,7 +144,7 @@ describe.only('Memory storage', function () {
 
             memoryStorage.openDatabase()
                 .then(function () {
-                    return memoryStorage.openProject({projectName: 'something'});
+                    return memoryStorage.openProject({projectId: 'something'});
                 })
                 .then(function () {
                     done(new Error('should have failed to openProject'));
@@ -162,7 +162,7 @@ describe.only('Memory storage', function () {
         it('should fail to delete a project if not connected to database', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
 
-            memoryStorage.deleteProject({projectName: 'something'})
+            memoryStorage.deleteProject({projectId: 'something'})
                 .then(function () {
                     done(new Error('should have failed to deleteProject'));
                 })
@@ -179,7 +179,7 @@ describe.only('Memory storage', function () {
         it('should fail to create a project if not connected to database', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
 
-            memoryStorage.createProject({projectName: 'something'})
+            memoryStorage.createProject({projectId: 'something'})
                 .then(function () {
                     done(new Error('should have failed to createProject'));
                 })
@@ -198,14 +198,14 @@ describe.only('Memory storage', function () {
 
             memoryStorage.getProjectIds({})
                 .then(function () {
-                    done(new Error('should have failed to getProjectNames'));
+                    done(new Error('should have failed to getProjectIds'));
                 })
                 .catch(function (err) {
                     if (err instanceof Error) {
                         // TODO: check error message
                         done();
                     } else {
-                        done(new Error('should have failed to getProjectNames'));
+                        done(new Error('should have failed to getProjectIds'));
                     }
                 });
         });
@@ -255,8 +255,8 @@ describe.only('Memory storage', function () {
                 .then(function () {
                     return memoryStorage.getProjectIds({username: guestAccount});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
+                .then(function (projectIds) {
+                    expect(projectIds).deep.equal([]);
                     return memoryStorage.createProject({
                         username: guestAccount,
                         projectName: projectName + '_does_not_have_access'
@@ -265,8 +265,8 @@ describe.only('Memory storage', function () {
                 .then(function () {
                     return memoryStorage.getProjectIds({username: 'admin'});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
+                .then(function (projectIds) {
+                    expect(projectIds).deep.equal([]);
                     done();
                 })
                 .catch(done);
@@ -279,23 +279,22 @@ describe.only('Memory storage', function () {
                 .then(function () {
                     return memoryStorage.getProjectIds({});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
+                .then(function (projectIds) {
+                    expect(projectIds).deep.equal([]);
                     return memoryStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
                     return memoryStorage.getProjectIds({});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([projectName]);
+                .then(function (projectIds) {
+                    expect(projectIds).deep.equal([projectId]);
                     return memoryStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
                     done(new Error('should have failed to createProject'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
+                    if (err instanceof Error && err.message.indexOf('already exist') > -1) {
                         done();
                     } else {
                         done(new Error('should have failed to createProject'));
@@ -460,8 +459,7 @@ describe.only('Memory storage', function () {
                     done(new Error('should have failed'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
+                    if (err instanceof Error && err.message.indexOf('circular structure') > -1) {
                         done();
                     } else {
                         done(new Error('should have failed to openProject'));
@@ -474,11 +472,11 @@ describe.only('Memory storage', function () {
 
             memoryStorage.openDatabase()
                 .then(function () {
-                    return memoryStorage.getProjectNames({});
+                    return memoryStorage.getProjectIds({});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
-                    return memoryStorage.openProject({projectName: 'project_does_not_exist'});
+                .then(function (projectIds) {
+                    expect(projectIds).deep.equal([]);
+                    return memoryStorage.openProject({projectId: 'project_does_not_exist'});
                 })
                 .then(function () {
                     done(new Error('expected to fail'));
@@ -598,7 +596,7 @@ describe.only('Memory storage', function () {
                 .then(function (hash) {
                     return project.getBranchHash('master', hash);
                 })
-                .then(function (hash) {
+                .then(function (/*hash*/) {
                     done();
                 })
                 .catch(done);
@@ -687,8 +685,7 @@ describe.only('Memory storage', function () {
                     done(new Error('should have failed'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
+                    if (err instanceof Error && err.message.indexOf('branch has mismatch') > -1) {
                         done();
                     } else {
                         done(new Error('should have failed to openProject'));
@@ -713,8 +710,7 @@ describe.only('Memory storage', function () {
                     done(new Error('should have failed'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
+                    if (err instanceof Error && err.message.indexOf('branch has mismatch') > -1) {
                         done();
                     } else {
                         done(new Error('should have failed to openProject'));
