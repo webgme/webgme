@@ -1,4 +1,4 @@
-/*globals*/
+/*globals requireJS*/
 /*jshint node:true, newcap:false, mocha:true*/
 /**
  * @author lattmann / https://github.com/lattmann
@@ -58,7 +58,7 @@ describe('WebSocket', function () {
         openSocketIo = function (sessionId) {
             var io = require('socket.io-client');
             return Q.nfcall(logIn)
-                .then(function (res) {
+                .then(function (/*res*/) {
                     var socket,
                         socketReq = {url: serverBaseUrl},
                         defer = Q.defer(),
@@ -93,6 +93,10 @@ describe('WebSocket', function () {
                 });
         };
 
+    function projectName2Id(projectName) {
+        return guestAccount + testFixture.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
+    }
+
     describe('with valid sessionId as a guest user, auth turned on', function () {
         before(function (done) {
             var gmeConfigWithAuth = testFixture.getGmeConfig();
@@ -122,32 +126,32 @@ describe('WebSocket', function () {
                                 })
                         ]);
                     })
-                    .then(function () {
-                        var promises = [],
-                            i;
-
-                        for (i = 0; i < projects.length; i += 1) {
-                            promises.push(safeStorage.deleteProject({projectName: projects[i]}));
-                        }
-
-                        return Q.all(promises);
-                    })
-                    .then(function () {
-                        return Q.all([
-                            testFixture.importProject(safeStorage, {
-                                projectSeed: 'seeds/EmptyProject.json',
-                                projectName: projectName,
-                                gmeConfig: gmeConfigWithAuth,
-                                logger: logger
-                            }),
-                            testFixture.importProject(safeStorage, {
-                                projectSeed: 'seeds/EmptyProject.json',
-                                projectName: projectNameUnauthorized,
-                                gmeConfig: gmeConfigWithAuth,
-                                logger: logger
-                            })
-                        ]);
-                    })
+                    //.then(function () {
+                    //    var promises = [],
+                    //        i;
+                    //
+                    //    for (i = 0; i < projects.length; i += 1) {
+                    //        promises.push(safeStorage.deleteProject({projectId: projects[i]}));
+                    //    }
+                    //
+                    //    return Q.all(promises);
+                    //})
+                    //.then(function () {
+                    //    return Q.all([
+                    //        testFixture.importProject(safeStorage, {
+                    //            projectSeed: 'seeds/EmptyProject.json',
+                    //            projectName: projectName,
+                    //            gmeConfig: gmeConfigWithAuth,
+                    //            logger: logger
+                    //        }),
+                    //        testFixture.importProject(safeStorage, {
+                    //            projectSeed: 'seeds/EmptyProject.json',
+                    //            projectName: projectNameUnauthorized,
+                    //            gmeConfig: gmeConfigWithAuth,
+                    //            logger: logger
+                    //        })
+                    //    ]);
+                    //})
                     .then(function () {
                         return Q.all([
                             gmeAuth.authorizeByUserId(guestAccount, projectNameUnauthorized, 'create',
@@ -235,16 +239,16 @@ describe('WebSocket', function () {
                                 })
                         ]);
                     })
-                    .then(function () {
-                        var promises = [],
-                            i;
-
-                        for (i = 0; i < projects.length; i += 1) {
-                            promises.push(safeStorage.deleteProject({projectName: projects[i]}));
-                        }
-
-                        return Q.all(promises);
-                    })
+                    //.then(function () {
+                    //    var promises = [],
+                    //        i;
+                    //
+                    //    for (i = 0; i < projects.length; i += 1) {
+                    //        promises.push(safeStorage.deleteProject({projectId: projects[i]}));
+                    //    }
+                    //
+                    //    return Q.all(promises);
+                    //})
                     .then(function () {
                         return Q.all([
                             testFixture.importProject(safeStorage, {
@@ -287,7 +291,7 @@ describe('WebSocket', function () {
                     })
                     .then(function () {
                         return Q.all([
-                            gmeAuth.authorizeByUserId(guestAccount, projectNameUnauthorized, 'create',
+                            gmeAuth.authorizeByUserId(guestAccount, projectName2Id(projectNameUnauthorized), 'create',
                                 {
                                     read: false,
                                     write: false,
@@ -300,18 +304,36 @@ describe('WebSocket', function () {
         });
 
         after(function (done) {
-            server.stop(function (err) {
-                if (err) {
-                    done(new Error(err));
-                    return;
-                }
 
-                Q.all([
-                    gmeAuth.unload(),
-                    safeStorage.closeDatabase()
-                ])
-                    .nodeify(done);
-            });
+            gmeAuth.authorizeByUserId(guestAccount, projectName2Id(projectNameUnauthorized), 'create',
+                {
+                    read: true,
+                    write: true,
+                    delete: true
+                })
+            .then(function () {
+                    var promises = [],
+                        i;
+                    for (i = 0; i < projects.length; i += 1) {
+                        promises.push(safeStorage.deleteProject({projectId: projectName2Id(projects[i])}));
+                    }
+
+                    return Q.all(promises);
+                })
+            .finally(function () {
+                    server.stop(function (err) {
+                        if (err) {
+                            done(new Error(err));
+                            return;
+                        }
+
+                        Q.all([
+                            gmeAuth.unload(),
+                            safeStorage.closeDatabase()
+                        ])
+                            .nodeify(done);
+                    });
+                });
         });
 
         beforeEach(function () {
@@ -325,8 +347,11 @@ describe('WebSocket', function () {
                 })
                 .then(function (result) {
                     expect(result).to.equal(guestAccount);
+                    done();
                 })
-                .nodeify(done);
+                .catch(function (err) {
+                    done(new Error(err));
+                });
         });
 
         it('should fail to getUserId with invalid session id', function (done) {
@@ -349,17 +374,20 @@ describe('WebSocket', function () {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Project related tests
 
-        it('should getProjectNames', function (done) {
+        it('should getProjectIds', function (done) {
             openSocketIo()
                 .then(function (socket) {
                     var data = {};
 
-                    return Q.ninvoke(socket, 'emit', 'getProjectNames', data);
+                    return Q.ninvoke(socket, 'emit', 'getProjectIds', data);
                 })
                 .then(function (result) {
                     expect(result.length).to.equal(5);
+                    done();
                 })
-                .nodeify(done);
+                .catch(function (err) {
+                    done(new Error(err));
+                });
         });
 
         it('should getProjects', function (done) {
@@ -372,8 +400,11 @@ describe('WebSocket', function () {
                 .then(function (result) {
                     expect(result.length).to.greaterThan(1);
                     // TODO: add more specific check for the actual project existence
+                    done();
                 })
-                .nodeify(done);
+                .catch(function (err) {
+                    done(new Error(err));
+                });
         });
 
 
@@ -385,10 +416,13 @@ describe('WebSocket', function () {
                     return Q.ninvoke(socket, 'emit', 'getProjectsAndBranches', data);
                 })
                 .then(function (result) {
-                    expect(result.length).to.equal(5);
+                    expect(result.length).to.greaterThan(5);
                     expect(result[0].branches).to.have.property('master');
+                    done();
                 })
-                .nodeify(done);
+                .catch(function (err) {
+                    done(new Error(err));
+                });
         });
 
         it('should createProject', function (done) {
@@ -400,7 +434,12 @@ describe('WebSocket', function () {
                 .then(function (socket) {
                     return Q.ninvoke(socket, 'emit', 'createProject', data);
                 })
-                .nodeify(done);
+                .then(function () {
+                    done();
+                })
+                .catch(function (err) {
+                    done(new Error(err));
+                });
         });
 
         it('should create and delete a project', function (done) {
@@ -414,18 +453,24 @@ describe('WebSocket', function () {
                     socket = socket_;
                     return Q.ninvoke(socket, 'emit', 'createProject', data);
                 })
-                .then(function () {
+                .then(function (projectId) {
+                    expect(projectId).to.equal(projectName2Id('WebSocketTest_ProjectToBeDeleted'));
                     // assuming the project was successfully created
-                    return Q.ninvoke(socket, 'emit', 'deleteProject', data);
+                    return Q.ninvoke(socket, 'emit', 'deleteProject', {projectId: projectId});
                 })
-                .nodeify(done);
+                .then(function () {
+                    done();
+                })
+                .catch(function (err) {
+                    done(new Error(err));
+                });
         });
 
         it('should open an existing project and return with auth info for project', function (done) {
             openSocketIo()
                 .then(function (socket) {
                     var data = {
-                        projectName: projectName
+                        projectId: projectName2Id(projectName)
                     };
 
                     return Q.ninvoke(socket, 'emit', 'openProject', data);
@@ -443,7 +488,7 @@ describe('WebSocket', function () {
         it('should open and close an existing project', function (done) {
             var socket,
                 data = {
-                    projectName: projectName
+                    projectId: projectName2Id(projectName)
                 };
 
             openSocketIo()
@@ -456,10 +501,15 @@ describe('WebSocket', function () {
                     expect(callbackArgs[1]).to.include.keys('read', 'write', 'delete'); // access
                     return Q.ninvoke(socket, 'emit', 'closeProject', data);
                 })
-                .nodeify(done);
+                .then(function () {
+                    done();
+                })
+                .catch(function (err) {
+                    done(new Error(err));
+                });
         });
 
-        it.skip('should fail to open an existing project if data is not an object', function (done) {
+        it('should fail to open an existing project if data is not an object', function (done) {
             openSocketIo()
                 .then(function (socket) {
                     var data = projectName;
@@ -482,7 +532,7 @@ describe('WebSocket', function () {
             openSocketIo()
                 .then(function (socket) {
                     var data = {
-                        projectName: 'project_does_not_exist'
+                        projectId: 'project_does_not_exist'
                     };
 
                     return Q.ninvoke(socket, 'emit', 'openProject', data);
@@ -503,7 +553,7 @@ describe('WebSocket', function () {
             openSocketIo()
                 .then(function (socket) {
                     var data = {
-                        projectName: projectNameUnauthorized
+                        projectId: projectName2Id(projectNameUnauthorized)
                     };
 
                     return Q.ninvoke(socket, 'emit', 'openProject', data);
@@ -528,7 +578,7 @@ describe('WebSocket', function () {
             openSocketIo()
                 .then(function (socket) {
                     var data = {
-                        projectName: projectName,
+                        projectId: projectName2Id(projectName),
                         branchName: 'master'
                     };
 
@@ -536,7 +586,7 @@ describe('WebSocket', function () {
                 })
                 .then(function (result) {
                     expect(result.branchName).to.equal('master');
-                    expect(result.projectName).to.equal(projectName);
+                    expect(result.projectId).to.equal(projectName2Id(projectName));
                 })
                 .nodeify(done);
         });
@@ -545,7 +595,7 @@ describe('WebSocket', function () {
             openSocketIo()
                 .then(function (socket) {
                     var data = {
-                        projectName: projectName,
+                        projectId: projectName2Id(projectName),
                         branchName: 'branch_does_not_exist'
                     };
 
@@ -566,7 +616,7 @@ describe('WebSocket', function () {
         it('should open and close branch', function (done) {
             var socket,
                 data = {
-                    projectName: projectName,
+                    projectId: projectName2Id(projectName),
                     branchName: 'master'
                 };
 
@@ -577,31 +627,39 @@ describe('WebSocket', function () {
                 })
                 .then(function (result) {
                     expect(result.branchName).to.equal('master');
-                    expect(result.projectName).to.equal(projectName);
+                    expect(result.projectId).to.equal(projectName2Id(projectName));
                     return Q.ninvoke(socket, 'emit', 'closeBranch', data);
                 })
-                .nodeify(done);
+                .then(function () {
+                    done();
+                })
+                .catch(function (err) {
+                    done(new Error(err));
+                });
         });
 
         it('should getBranches', function (done) {
             openSocketIo()
                 .then(function (socket) {
                     var data = {
-                        projectName: projectName
+                        projectId: projectName2Id(projectName)
                     };
 
                     return Q.ninvoke(socket, 'emit', 'getBranches', data);
                 })
                 .then(function (result) {
                     expect(result).to.have.property('master');
+                    done();
                 })
-                .nodeify(done);
+                .catch(function (err) {
+                    done(new Error(err));
+                });
         });
 
         it('should create and delete branch using setBranchHash', function (done) {
             var socket,
                 data = {
-                    projectName: projectName,
+                    projectId: projectName2Id(projectName),
                     branchName: 'newBranch'
                 };
 
@@ -644,7 +702,7 @@ describe('WebSocket', function () {
             openSocketIo()
                 .then(function (socket) {
                     var data = {
-                        projectName: projectName,
+                        projectId: projectName2Id(projectName),
                         before: (new Date()).getTime(), // current time
                         number: 100
                     };
@@ -668,14 +726,14 @@ describe('WebSocket', function () {
             openSocketIo()
                 .then(function (socket) {
                     var data = {
-                        projectName: projectName,
+                        projectId: projectName2Id(projectName),
                         branchName: 'master'
                     };
 
                     return Q.ninvoke(socket, 'emit', 'getLatestCommitData', data);
                 })
                 .then(function (result) {
-                    expect(result.projectName).to.equal(projectName);
+                    expect(result.projectId).to.equal(projectName2Id(projectName));
                     expect(result.branchName).to.equal('master');
                     expect(result).to.have.property('commitObject');
                     expect(result).to.have.property('coreObjects');
@@ -695,7 +753,7 @@ describe('WebSocket', function () {
                 },
                 deferred = Q.defer(),
                 eventHandler = function (resultData) {
-                    expect(resultData.projectName).to.equal(data.projectName);
+                    expect(resultData.projectId).to.equal(projectName2Id(data.projectName));
 
                     data.join = false;
                     Q.ninvoke(socket, 'emit', 'watchDatabase', data)
@@ -723,13 +781,13 @@ describe('WebSocket', function () {
         it('should get PROJECT_DELETED event with watchDatabase', function (done) {
             var socket,
                 data = {
-                    projectName: 'WebSocketTest_PROJECT_DELETED',
+                    projectId: projectName2Id('WebSocketTest_PROJECT_DELETED'),
                     branchName: 'master',
                     join: true
                 },
                 deferred = Q.defer(),
                 eventHandler = function (resultData) {
-                    expect(resultData.projectName).to.equal(data.projectName);
+                    expect(resultData.projectId).to.equal(data.projectId);
 
                     data.join = false;
                     Q.ninvoke(socket, 'emit', 'watchDatabase', data)
@@ -746,7 +804,7 @@ describe('WebSocket', function () {
                     return Q.ninvoke(socket, 'emit', 'watchDatabase', data);
                 })
                 .then(function () {
-                    return Q.ninvoke(socket, 'emit', 'createProject', data);
+                    return Q.ninvoke(socket, 'emit', 'createProject', {projectName: 'WebSocketTest_PROJECT_DELETED'});
                 })
                 .then(function () {
                     return Q.ninvoke(socket, 'emit', 'deleteProject', data);
@@ -760,14 +818,14 @@ describe('WebSocket', function () {
         it('should get BRANCH_CREATED event with watchProject', function (done) {
             var socket,
                 data = {
-                    projectName: 'WebSocketTest_BRANCH_CREATED',
+                    projectId: projectName2Id('WebSocketTest_BRANCH_CREATED'),
                     branchName: 'new_branch',
                     join: true
                 },
                 deferred = Q.defer(),
                 newBranchHash,
                 eventHandler = function (resultData) {
-                    expect(resultData.projectName).to.equal(data.projectName);
+                    expect(resultData.projectId).to.equal(data.projectId);
                     expect(resultData.branchName).to.equal(data.branchName);
                     expect(resultData.newHash).to.equal(newBranchHash);
 
@@ -805,14 +863,14 @@ describe('WebSocket', function () {
         it('should get BRANCH_DELETED event with watchProject', function (done) {
             var socket,
                 data = {
-                    projectName: 'WebSocketTest_BRANCH_DELETED',
+                    projectId: projectName2Id('WebSocketTest_BRANCH_DELETED'),
                     branchName: 'master',
                     join: true
                 },
                 deferred = Q.defer(),
                 newBranchHash,
                 eventHandler = function (resultData) {
-                    expect(resultData.projectName).to.equal(data.projectName);
+                    expect(resultData.projectId).to.equal(data.projectId);
                     expect(resultData.branchName).to.equal(data.branchName);
                     expect(resultData.newHash).to.equal(newBranchHash);
 
@@ -849,14 +907,14 @@ describe('WebSocket', function () {
         it.skip('should get BRANCH_HASH_UPDATED event with watchProject', function (done) {
             var socket,
                 data = {
-                    projectName: 'WebSocketTest_BRANCH_HASH_UPDATED',
+                    projectId: projectName2Id('WebSocketTest_BRANCH_HASH_UPDATED'),
                     branchName: 'master',
                     join: true
                 },
                 deferred = Q.defer(),
                 newBranchHash,
                 eventHandler = function (resultData) {
-                    expect(resultData.projectName).to.equal(data.projectName);
+                    expect(resultData.projectId).to.equal(data.projectId);
                     expect(resultData.branchName).to.equal(data.branchName);
                     expect(resultData.newHash).to.equal(newBranchHash);
 

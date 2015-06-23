@@ -28,6 +28,17 @@ function check(cond, deferred, msg) {
     return rejected;
 }
 
+function filterArray(arr) {
+    var i,
+        filtered = [];
+    for (i = 0; i < arr.length; i += 1) {
+        if (typeof arr[i] !== 'undefined') {
+            filtered.push(arr[i]);
+        }
+    }
+    return filtered;
+}
+
 function SafeStorage(mongo, logger, gmeConfig, gmeAuth) {
     ASSERT(gmeAuth !== null && typeof gmeAuth === 'object', 'gmeAuth is a mandatory parameter');
     Storage.call(this, mongo, logger, gmeConfig);
@@ -119,9 +130,14 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                             projectDeferred.resolve(project);
                         })
                         .catch(function (err) {
-                            //TODO: clean up in _users here?
-                            self.logger.error('could not gmeAuth.getProject for ', projectId);
-                            projectDeferred.reject(err);
+                            if (err.message.indexOf('no such project') > -1) {
+                                //TODO: clean up in _users here?
+                                self.logger.error('Inconsistency: project exists in user "' + data.username +
+                                    '" but not in _projects: ', projectId);
+                                projectDeferred.resolve();
+                            } else {
+                                projectDeferred.reject(err);
+                            }
                         });
 
                     return projectDeferred.promise;
@@ -130,7 +146,7 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                 return Q.all(projectIds.map(getProjectAppendRights));
             })
             .then(function (projects) {
-                deferred.resolve(projects);
+                deferred.resolve(filterArray(projects));
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));
@@ -161,7 +177,7 @@ SafeStorage.prototype.getProjectsAndBranches = function (data, callback) {
                         branchesDeferred.resolve(project);
                     })
                     .catch(function (err) {
-                        //TODO: clean up in _projects and _users here?
+                        //TODO: clean up in _projects and _users here too?
                         self.logger.error('could not getBranches for', project._id);
                         branchesDeferred.reject(err);
                     });

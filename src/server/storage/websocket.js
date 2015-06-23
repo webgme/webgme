@@ -341,6 +341,24 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     });
             });
 
+            socket.on('getProjectIds', function (data, callback) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getProjectIds(data);
+                    })
+                    .then(function (projectIds) {
+                        callback(null, projectIds);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
             socket.on('getProjects', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
@@ -407,8 +425,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         data.username = userId;
                         return storage.createProject(data);
                     })
-                    .then(function (/*project*/) {
-                        callback(null);
+                    .then(function (project) {
+                        callback(null, project.projectId);
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {

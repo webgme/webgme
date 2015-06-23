@@ -561,7 +561,7 @@ function GMEAuth(session, gmeConfig) {
         return projectCollection.findOne({_id: projectId})
             .then(function (projectData) {
                 if (!projectData) {
-                    return Q.reject('no such project ' + projectData);
+                    return Q.reject(new Error('no such project ' + projectId));
                 }
                 return projectData;
             })

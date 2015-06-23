@@ -161,14 +161,12 @@ describe('Memory storage', function () {
 
         it('should fail to delete a project if not connected to database', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
-
             memoryStorage.deleteProject({projectId: 'something'})
                 .then(function () {
                     done(new Error('should have failed to deleteProject'));
                 })
                 .catch(function (err) {
                     if (err instanceof Error) {
-                        // TODO: check error message
                         done();
                     } else {
                         done(new Error('should have failed to deleteProject'));
@@ -333,16 +331,24 @@ describe('Memory storage', function () {
                 .catch(done);
         });
 
-        it.skip('should delete a non-existent project', function (done) {
+        it('should delete a non-existent project', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
 
-            memoryStorage.openDatabase()
+            gmeAuth.authorizeByUserId(guestAccount, 'something', 'create',
+                {
+                    read: true,
+                    write: true,
+                    delete: true
+                })
+                .then(function () {
+                    return memoryStorage.openDatabase();
+                })
                 .then(function () {
                     return memoryStorage.getProjectIds({});
                 })
                 .then(function (projectIds) {
                     expect(projectIds).deep.equal([]);
-                    return memoryStorage.deleteProject({projectId: projectId});
+                    return memoryStorage.deleteProject({projectId: 'something'});
                 })
                 .then(function (result) {
                     expect(result).to.equal(false);
