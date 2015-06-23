@@ -1,4 +1,4 @@
-/*globals define, console*/
+/*globals define*/
 /*jshint browser: true*/
 
 /**
@@ -17,47 +17,6 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
         this.autorouter = new AutoRouter();
         this.debugActionSequence = '[';
         this._clearRecords();
-        this.readyToDownload = false;
-
-        // Thanks to stack overflow for this next function
-        //
-        // If we are recording actions, allow the user to download
-        // the action sequence
-        if (this._recordActions) {
-            var self = this;
-            (function (console) {
-
-                console.save = function (data, filename) {
-
-                    if (!self.readyToDownload) {
-                        return;
-                    }
-                    if (!data) {
-                        console.error('Console.save: No data');
-                        return;
-                    }
-
-                    if (!filename) {
-                        filename = 'console.json';
-                    }
-
-                    if (typeof data === 'object') {
-                        data = JSON.stringify(data, undefined, 4);
-                    }
-
-                    var blob = new Blob([data], {type: 'text/json'}),
-                        e = document.createEvent('MouseEvents'),
-                        a = document.createElement('a');
-
-                    a.download = filename;
-                    a.href = window.URL.createObjectURL(blob);
-                    a.dataset.downloadurl = ['text/json', a.download, a.href].join(':');
-                    e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-                    a.dispatchEvent(e);
-                    self.readyToDownload = false;
-                };
-            })(console);
-        }
     };
 
     AutoRouterActionApplier.prototype._clearRecords = function () {
@@ -183,12 +142,6 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
 
         } catch (e) {
             this.logger.error('AutoRouter.' + command + ' failed with error: ' + e);
-
-            if (this._recordActions) {  // Can I just save and download this?
-                var filename = 'AR_bug_report' + new Date().getTime() + '.js';
-                console.save(this._getActionSequence(), filename);
-            }
-            return 'Error: '+e.message;
         }
     };
 

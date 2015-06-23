@@ -82,7 +82,12 @@ var startWorker = function() {
                            first: this._updatePaths.bind(this)}];
             }
 
-            result = this._invokeAutoRouterMethod.apply(this, msg.slice());
+            try {
+                result = this._invokeAutoRouterMethodUnsafe.apply(this, msg.slice());
+            } catch(e) {
+                // Send error message
+                worker.postMessage(['BugReplayList', this._getActionSequence()]);
+            }
 
             response.push(result);
             if (this.respondTo[msg[0]] || respondToAll) {
