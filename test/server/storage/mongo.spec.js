@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('Mongo storage', function () {
+describe.only('Mongo storage', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
@@ -174,87 +174,92 @@ describe('Mongo storage', function () {
                 mongoStorage.deleteProject({projectId: projectDoesNotHaveAccessId})
             ])
                 .finally(function () {
-                    done(); // Don't care if we can't delete the project or it doesn't exist
+                    // Don't care if we can't delete the project or it doesn't exist
+                    if (mongoStorage) {
+                        mongoStorage.closeDatabase(function (err) {
+                            mongoStorage = null;
+                            done(err);
+                        });
+                    } else {
+                        done();
+                    }
                 });
         });
 
-        after(function (done) {
-            if (mongoStorage) {
-                mongoStorage.closeDatabase(function (err) {
-                    mongoStorage = null;
-                    done(err);
-                });
-            } else {
-                done();
-            }
-        });
+        it('should fail to open a project if not connected to database', function (done) {
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
-        it.skip('should fail to open a project if not connected to database', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-
-            mongoStorage.openProject({projectId: projectId})
+            gmeAuth.authorizeByUserId(guestAccount, projectId, 'create',
+                {
+                    read: true,
+                    write: true,
+                    delete: true
+                })
+                .then(function () {
+                    return mongoStorage.openProject({projectId: projectId});
+                })
                 .then(function () {
                     done(new Error('should have failed to openProject'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to openProject'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.contain('Database is not open.');
+                    done();
+                })
+                .done();
         });
 
-        it.skip('should fail to delete a project if not connected to database', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+        it('should fail to delete a project if not connected to database', function (done) {
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
-            mongoStorage.deleteProject({projectId: 'something'})
+            gmeAuth.authorizeByUserId(guestAccount, projectId, 'create',
+                {
+                    read: true,
+                    write: true,
+                    delete: true
+                })
+                .then(function () {
+                    return mongoStorage.deleteProject({projectId: projectId});
+                })
                 .then(function () {
                     done(new Error('should have failed to deleteProject'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to deleteProject'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.contain('Database is not open.');
+                    done();
+                })
+                .done();
         });
 
-        it.skip('should fail to create a project if not connected to database', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+        it('should fail to create a project if not connected to database', function (done) {
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.createProject({projectName: 'something'})
                 .then(function () {
                     done(new Error('should have failed to createProject'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to createProject'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.contain('Database is not open.');
+                    done();
+                })
+                .done();
         });
 
-        it.skip('should fail to get project names if not connected to database', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+        it('should fail to get project ids if not connected to database', function (done) {
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
-            mongoStorage.getProjectNames({})
+            mongoStorage.getProjectIds({})
                 .then(function () {
                     done(new Error('should have failed to getProjectNames'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to getProjectNames'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.contain('Database is not open.');
+                    done();
+                })
+                .done();
         });
 
         it('should get project ids', function (done) {
@@ -435,11 +440,18 @@ describe('Mongo storage', function () {
                 .catch(done);
         });
 
-
         it('should fail to open a non-existing project', function (done) {
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
-            mongoStorage.openDatabase()
+            gmeAuth.authorizeByUserId(guestAccount, 'project_does_not_exist', 'create',
+                {
+                    read: true,
+                    write: true,
+                    delete: true
+                }).
+                then(function () {
+                    return mongoStorage.openDatabase();
+                })
                 .then(function () {
                     return mongoStorage.getProjectIds({});
                 })
@@ -451,13 +463,11 @@ describe('Mongo storage', function () {
                     done(new Error('expected to fail'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to openProject'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.contain('Project does not exist');
+                    done();
+                })
+                .done();
         });
 
         it('should import, open, and close a project', function (done) {
