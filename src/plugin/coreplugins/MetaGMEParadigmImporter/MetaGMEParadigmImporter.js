@@ -519,6 +519,7 @@ define([
             };
 
             // add element to one meta sheet
+            self.core.addMember(self.rootNode, 'MetaAspectSet', node);
             self.core.addMember(self.rootNode, sheetId, node);
             self.core.setMemberRegistry(self.rootNode,
                 sheetId,
