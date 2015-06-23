@@ -35,7 +35,7 @@ describe('WebSocket', function () {
         ],
 
         guestAccount = gmeConfig.authentication.guestAccount,
-
+        projectName2Id = testFixture.projectName2Id,
         safeStorage,
 
         server,
@@ -92,10 +92,6 @@ describe('WebSocket', function () {
                     return defer.promise;
                 });
         };
-
-    function projectName2Id(projectName) {
-        return guestAccount + testFixture.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
-    }
 
     describe('with valid sessionId as a guest user, auth turned on', function () {
         before(function (done) {

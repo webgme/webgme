@@ -330,6 +330,15 @@ function deleteProject(parameters, done) {
     });
 }
 
+/**
+ * This uses the guest account.
+ * @param projectName
+ * @returns {string}
+ */
+function projectName2Id(projectName) {
+    return gmeConfig.authentication.guestAccount + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
+}
+
 WebGME.addToRequireJsPaths(gmeConfig);
 
 // This is for the client side test-cases (only add paths here!)
@@ -381,6 +390,8 @@ module.exports = {
     exportProject: exportProject,
     deleteProject: deleteProject,
     saveChanges: saveChanges,
+    projectName2Id: projectName2Id,
+
 
     STORAGE_CONSTANTS: STORAGE_CONSTANTS,
     openContext: openContext.openContext
