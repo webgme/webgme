@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe.only('Mongo storage', function () {
+describe('Mongo storage', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
@@ -783,7 +783,7 @@ describe.only('Mongo storage', function () {
                     done(new Error('should have failed'));
                 })
                 .catch(function (err) {
-                    if (err === "branch hash mismatch") {
+                    if (err === 'branch hash mismatch') {
                         // TODO: check error message
                         done();
                     } else {
