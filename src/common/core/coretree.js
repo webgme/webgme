@@ -944,7 +944,7 @@ define([
 
                 return true;
             } catch (error) {
-                console.log('Wrong node', error.stack);
+                logger.error(error.message, {stack: error.stack, node: node});
                 return false;
             }
         };

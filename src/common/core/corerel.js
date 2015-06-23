@@ -54,7 +54,7 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
 
                 return true;
             } catch (error) {
-                console.log('Wrong node', error.stack);
+                logger.error(error.message, {stack: error.stack, node: node});
                 return false;
             }
         }
