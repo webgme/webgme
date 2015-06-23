@@ -11,6 +11,8 @@ var Mongodb = require('mongodb'),
 
     GUID = requireJS('common/util/guid'),
 
+    STORAGE_CONSTANTS = requireJS('common/storage/constants'),
+
     Logger = require('../../logger');
 
 function GMEAuth(session, gmeConfig) {
@@ -548,7 +550,21 @@ function GMEAuth(session, gmeConfig) {
             fullName: orgOrUserId + '/' + projectName,
             info: info || {}
         };
-        return projectCollection.update({_id: orgOrUserId + '.' + projectName}, data, {upsert: true})
+
+        return projectCollection.update({_id: orgOrUserId + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName},
+            data, {upsert: true}
+        )
+            .nodeify(callback);
+    }
+
+    function getProject(projectId, callback) {
+        return projectCollection.findOne({_id: projectId})
+            .then(function (projectData) {
+                if (!projectData) {
+                    return Q.reject('no such project ' + projectData);
+                }
+                return projectData;
+            })
             .nodeify(callback);
     }
 
@@ -721,6 +737,7 @@ function GMEAuth(session, gmeConfig) {
         getAuthorizationInfoByOrgId: getAuthorizationInfoByOrgId,
 
         addProject: addProject,
+        getProject: getProject,
         transferProject: transferProject
     };
 }

@@ -73,12 +73,15 @@ describe('SafeStorage', function () {
 
             safeStorage.getProjects(data)
                 .then(function (projects) {
-                    expect(projects).to.deep.equal([{
+                    expect(projects).to.have.property('length');
+                    expect(projects.length).to.equal(1);
+                    expect(projects[0]._id).to.equal(projectId);
+                    expect(projects[0].name).to.equal(projectName);
+                    expect(projects[0].rights).to.deep.equal({
                         delete: true,
-                        projectId: projectId,
                         read: true,
                         write: true
-                    }]);
+                    });
                 })
                 .nodeify(done);
         });
@@ -90,7 +93,7 @@ describe('SafeStorage', function () {
                 .then(function (projects) {
                     expect(projects).to.have.property('length');
                     expect(projects.length).to.equal(1);
-                    expect(projects[0].projectId).to.equal(projectId);
+                    expect(projects[0]._id).to.equal(projectId);
                     expect(projects[0].branches).to.have.property('master');
                 })
                 .nodeify(done);
@@ -329,7 +332,8 @@ describe('SafeStorage', function () {
                     expect(typeof err).to.equal('object');
                     expect(err.message).to.equal('Invalid argument, data.before is not a number nor a valid hash.');
                     done();
-                });
+                })
+                .done();
         });
 
         it('should fail getCommits using commitHash if hash does not exist', function (done) {
@@ -349,7 +353,8 @@ describe('SafeStorage', function () {
                     expect(typeof err).to.equal('object');
                     expect(err.message).to.equal('object does not exist ' + dummyHash);
                     done();
-                });
+                })
+                .done();
         });
     });
 });

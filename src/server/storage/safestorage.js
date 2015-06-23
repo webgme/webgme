@@ -94,9 +94,8 @@ SafeStorage.prototype.getProjectIds = function (data, callback) {
  */
 SafeStorage.prototype.getProjects = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        userAuthInfo,
-        self = this;
+        self = this,
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.');
 
@@ -109,32 +108,28 @@ SafeStorage.prototype.getProjects = function (data, callback) {
     if (rejected === false) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
-                userAuthInfo = user.projects;
-                return Storage.prototype.getProjectNames.call(self, data);
-            })
-            .then(function (result) {
-                var i,
-                    projects = [],
-                    projectId,
-                    projectAuthInfo;
+                var projectIds = Object.keys(user.projects);
+                self.logger.debug('user has rights to', projectIds);
 
-                for (i = 0; i < result.length; i += 1) {
-                    projectId = result[i];
-                    //FIXME: Currently we need to respond with all projects (although read=false).
-                    projectAuthInfo = {
-                        name: projectId,
-                        read: false,
-                        write: false,
-                        delete: false
-                    };
+                function getProjectAppendRights(projectId) {
+                    var projectDeferred = Q.defer();
+                    self.gmeAuth.getProject(projectId)
+                        .then(function (project) {
+                            project.rights = user.projects[projectId];
+                            projectDeferred.resolve(project);
+                        })
+                        .catch(function (err) {
+                            //TODO: clean up in _users here?
+                            self.logger.error('could not gmeAuth.getProject for ', projectId);
+                            projectDeferred.reject(err);
+                        });
 
-                    if (userAuthInfo.hasOwnProperty(projectId)) {
-                        projectAuthInfo.read = userAuthInfo[projectId].read;
-                        projectAuthInfo.write = userAuthInfo[projectId].write;
-                        projectAuthInfo.delete = userAuthInfo[projectId].delete;
-                    }
-                    projects.push(projectAuthInfo);
+                    return projectDeferred.promise;
                 }
+
+                return Q.all(projectIds.map(getProjectAppendRights));
+            })
+            .then(function (projects) {
                 deferred.resolve(projects);
             })
             .catch(function (err) {
@@ -157,28 +152,26 @@ SafeStorage.prototype.getProjectsAndBranches = function (data, callback) {
     this.getProjects(data)
         .then(function (projects) {
             self.logger.debug('getProjectsAndBranches: getProjects returned');
-            function getBranches(project) {
-                if (project.read === true) {
-                    // (project.name is coming from safe storage.)
-                    return Storage.prototype.getBranches.call(self, {projectId: project.name})
-                        .then(function (branches) {
-                            project.branches = branches;
-                            return Q(project);
-                        });
-                }
-            }
-            Q.all(projects.map(getBranches))
-                .then(function (branchResult) {
-                    var i,
-                        result = [];
-                    self.logger.debug('getProjectsAndBranches: branches were obtained');
-                    for (i = 0; i < branchResult.length; i += 1) {
-                        if (branchResult[i]) {
-                            result.push(branchResult[i]);
-                        }
-                    }
 
-                    deferred.resolve(result);
+            function getBranches(project) {
+                var branchesDeferred = Q.defer();
+                Storage.prototype.getBranches.call(self, {projectId: project._id})
+                    .then(function (branches) {
+                        project.branches = branches;
+                        branchesDeferred.resolve(project);
+                    })
+                    .catch(function (err) {
+                        //TODO: clean up in _projects and _users here?
+                        self.logger.error('could not getBranches for', project._id);
+                        branchesDeferred.reject(err);
+                    });
+
+                return branchesDeferred.promise;
+            }
+
+            Q.all(projects.map(getBranches))
+                .then(function (projectsAndBranches) {
+                    deferred.resolve(projectsAndBranches);
                 })
                 .catch(function (err) {
                     deferred.reject(err);
