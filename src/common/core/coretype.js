@@ -39,11 +39,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                 __test('base', typeof node.base === 'object');
                 return true;
             } catch (error) {
-                logger.error('invalid node', {
-                    stack: error.stack,
-                    node: node
-                });
-                //console.log('Wrong node', error.stack);
+                logger.error(error.message, {stack: error.stack, node: node});
                 return false;
             }
         }
