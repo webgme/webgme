@@ -64,12 +64,16 @@ define([
         this._btnResolve.on('click', function () {
             // TODO: update UI to reflect the applied conflict resolution
 
-            self._client.resolve(self.resolution, function (err/*, result*/) {
-                self._logger.error('resolve finished', err);
+            self._client.resolve(self.resolution, function (err, result) {
+                // FIXME: we might be able to reuse the current dialog instance ...
+                var mergeDialog = new MergeDialog(self._client);
+                if (err) {
+                    self._logger.error('resolve finished', err, result);
+                } else {
+                    self._logger.debug('resolve finished', result);
+                }
 
-                // TODO: create a new dialog with the newly applied conflict resolution
-                self._alertSuccess.show();
-                self._btnOk.show();
+                mergeDialog.show(err, result);
             });
         });
     };
