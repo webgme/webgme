@@ -1,0 +1,3035 @@
+{
+  "bases": {},
+  "root": {
+    "path": "",
+    "guid": "a738f8e6-47c5-1a0b-ff2e-79b032d6bf04"
+  },
+  "relids": {
+    "01ac8989-1c60-86b9-6302-3752cfadbaf9": "278939190",
+    "040d8d09-10fb-14a7-8e6e-4cf2632b73a5": "1964470101",
+    "0658f3a8-ec6c-ccdb-9de6-d74498ca268f": "937729389",
+    "0c2e6377-b47c-e2b7-daa9-f83fc5d6954d": "304835302",
+    "15fee409-ec8a-25de-2d12-1c61b45218fb": "590440676",
+    "1abb2afd-7c51-9dad-dc36-966c30523703": "1565394322",
+    "1cf8f503-b336-25c6-6bfe-67c65a22b1d1": "942229515",
+    "284e2a58-7e95-5543-06ae-e1b4731047fe": "1823079728",
+    "2ce5c596-845a-5331-4178-2daa85ab1f86": "545632512",
+    "32fef70f-d3e6-5908-2f1d-fdd0e8f2a876": "1742002143",
+    "4c96dd51-680b-b6e0-87e2-5d9fb8224cfc": "560591811",
+    "5c8c2288-e756-8b36-f9f6-1706a8f8d463": "248495870",
+    "61d8086e-cef6-a78f-5fe3-78bbb69731e0": "476359006",
+    "62fc9995-a00e-b220-8ac0-046a38da01d5": "1783089638",
+    "633287a6-8b8e-68a0-2b89-9b15a2183e55": "791928782",
+    "693e5667-6b5f-2016-6046-ed785d4f8625": "-3",
+    "6bce0f66-3db5-98e0-1e14-1c3424171594": "563233630",
+    "76a2e774-0007-3430-1632-557fa44f42c5": "247109022",
+    "80f23f1c-d190-6928-2a96-da28cd07dd7a": "-4",
+    "8bb0fd5f-80f1-f8f6-b329-86f3b9073247": "-31",
+    "901e245a-e449-c8cb-a191-a6ed27d976c4": "867181070",
+    "96424ae6-550b-5b0d-32a3-7e266484d530": "429589300",
+    "9a6033bc-e947-2353-a87e-d3973c31a090": "1806458316",
+    "9bf4c450-bdcb-6da7-1232-e1855b77e7f8": "1664885431",
+    "9c563a86-825d-408e-fc27-6dc6c854526f": "-2",
+    "a738f8e6-47c5-1a0b-ff2e-79b032d6bf04": null,
+    "b6f142f4-3d76-1661-72e4-caa18e0988e8": "-38",
+    "b6f6afea-c0ad-2d99-ebb2-b92881df421f": "1702539157",
+    "c769c484-499d-a648-0dce-8b6b84640cc3": "132556899",
+    "cb8f0f77-15d9-7a89-7300-b52a6afa113d": "-5",
+    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": "1",
+    "df2774ec-ffa4-79bd-d2e4-46557402965e": "368772267",
+    "e0f806a7-1501-3e3c-3e97-a9918864992b": "237591878",
+    "e3a0deeb-e382-8069-0638-07065502c5b7": "1636124539",
+    "e9af1cb3-c5fb-a91b-c76e-41d4f4ef29e9": "1649020335",
+    "e9c3dad0-d9fd-00df-6a47-f625a4a6b187": "1904724782",
+    "ea8d26c4-4daa-9e39-d840-dc5d8688eef9": "1617811796",
+    "fa00eedf-a133-7bed-dcbf-bfec69f8247b": "110339784",
+    "fb46b105-bbf4-14cf-7fd7-1744d0691d45": "975240320"
+  },
+  "containment": {
+    "b6f142f4-3d76-1661-72e4-caa18e0988e8": {
+      "01ac8989-1c60-86b9-6302-3752cfadbaf9": {},
+      "040d8d09-10fb-14a7-8e6e-4cf2632b73a5": {},
+      "0658f3a8-ec6c-ccdb-9de6-d74498ca268f": {},
+      "0c2e6377-b47c-e2b7-daa9-f83fc5d6954d": {},
+      "15fee409-ec8a-25de-2d12-1c61b45218fb": {},
+      "1abb2afd-7c51-9dad-dc36-966c30523703": {},
+      "1cf8f503-b336-25c6-6bfe-67c65a22b1d1": {},
+      "284e2a58-7e95-5543-06ae-e1b4731047fe": {},
+      "2ce5c596-845a-5331-4178-2daa85ab1f86": {},
+      "32fef70f-d3e6-5908-2f1d-fdd0e8f2a876": {},
+      "4c96dd51-680b-b6e0-87e2-5d9fb8224cfc": {},
+      "5c8c2288-e756-8b36-f9f6-1706a8f8d463": {},
+      "61d8086e-cef6-a78f-5fe3-78bbb69731e0": {},
+      "62fc9995-a00e-b220-8ac0-046a38da01d5": {},
+      "633287a6-8b8e-68a0-2b89-9b15a2183e55": {},
+      "693e5667-6b5f-2016-6046-ed785d4f8625": {},
+      "6bce0f66-3db5-98e0-1e14-1c3424171594": {},
+      "76a2e774-0007-3430-1632-557fa44f42c5": {},
+      "80f23f1c-d190-6928-2a96-da28cd07dd7a": {},
+      "8bb0fd5f-80f1-f8f6-b329-86f3b9073247": {},
+      "901e245a-e449-c8cb-a191-a6ed27d976c4": {},
+      "96424ae6-550b-5b0d-32a3-7e266484d530": {},
+      "9a6033bc-e947-2353-a87e-d3973c31a090": {},
+      "9bf4c450-bdcb-6da7-1232-e1855b77e7f8": {},
+      "9c563a86-825d-408e-fc27-6dc6c854526f": {},
+      "b6f6afea-c0ad-2d99-ebb2-b92881df421f": {},
+      "c769c484-499d-a648-0dce-8b6b84640cc3": {},
+      "cb8f0f77-15d9-7a89-7300-b52a6afa113d": {},
+      "df2774ec-ffa4-79bd-d2e4-46557402965e": {},
+      "e0f806a7-1501-3e3c-3e97-a9918864992b": {},
+      "e3a0deeb-e382-8069-0638-07065502c5b7": {},
+      "e9af1cb3-c5fb-a91b-c76e-41d4f4ef29e9": {},
+      "e9c3dad0-d9fd-00df-6a47-f625a4a6b187": {},
+      "ea8d26c4-4daa-9e39-d840-dc5d8688eef9": {},
+      "fa00eedf-a133-7bed-dcbf-bfec69f8247b": {},
+      "fb46b105-bbf4-14cf-7fd7-1744d0691d45": {}
+    },
+    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": {}
+  },
+  "nodes": {
+    "01ac8989-1c60-86b9-6302-3752cfadbaf9": {
+      "attributes": {
+        "MetaDoc": "C code",
+        "name": "Translation_Unit"
+      },
+      "base": "2ce5c596-845a-5331-4178-2daa85ab1f86",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "2ce5c596-845a-5331-4178-2daa85ab1f86"
+      },
+      "registry": {
+        "position": {
+          "x": 427,
+          "y": 199
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "040d8d09-10fb-14a7-8e6e-4cf2632b73a5": {
+      "attributes": {
+        "argument-expression-list": "",
+        "name": "call"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "argument-expression-list": {
+            "type": "string",
+            "default": ""
+          }
+        },
+        "pointers": {
+          "src": {
+            "items": [
+              "633287a6-8b8e-68a0-2b89-9b15a2183e55"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          },
+          "dst": {
+            "items": [
+              "0c2e6377-b47c-e2b7-daa9-f83fc5d6954d"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+        "dst": null,
+        "src": null
+      },
+      "registry": {
+        "lineEndArrow": "classic-xwide-xlong",
+        "position": {
+          "x": 1026,
+          "y": 138
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "0658f3a8-ec6c-ccdb-9de6-d74498ca268f": {
+      "attributes": {
+        "name": "List_Link"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "pointers": {
+          "dst": {
+            "items": [
+              "15fee409-ec8a-25de-2d12-1c61b45218fb"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          },
+          "src": {
+            "items": [
+              "15fee409-ec8a-25de-2d12-1c61b45218fb"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+        "dst": null,
+        "src": null
+      },
+      "registry": {
+        "isAbstract": true,
+        "lineEndArrow": "block-xwide-xlong",
+        "position": {
+          "x": 149,
+          "y": 941
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "0c2e6377-b47c-e2b7-daa9-f83fc5d6954d": {
+      "attributes": {
+        "name": "Command"
+      },
+      "base": "633287a6-8b8e-68a0-2b89-9b15a2183e55",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "arguments": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "633287a6-8b8e-68a0-2b89-9b15a2183e55"
+      },
+      "registry": {
+        "PortSVGIcon": "BluePort.svg",
+        "color": "#66b2ff",
+        "position": {
+          "x": 697,
+          "y": 618
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "15fee409-ec8a-25de-2d12-1c61b45218fb": {
+      "attributes": {
+        "head": false,
+        "name": "List_Element"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "head": {
+            "default": false,
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "isAbstract": true,
+        "position": {
+          "x": 149,
+          "y": 881
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "1abb2afd-7c51-9dad-dc36-966c30523703": {
+      "attributes": {
+        "name": "Link_Interface"
+      },
+      "base": "8bb0fd5f-80f1-f8f6-b329-86f3b9073247",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "dst_params": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "src_params": {
+            "default": "",
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "8bb0fd5f-80f1-f8f6-b329-86f3b9073247"
+      },
+      "registry": {
+        "DisplayFormat": "[$src_params]==[$dst_params]",
+        "color": "#66b2ff",
+        "isAbstract": false,
+        "lineEndArrow": "classic-xwide-xlong",
+        "lineStyle": "",
+        "lineType": "",
+        "lineWidth": 1,
+        "position": {
+          "x": 586,
+          "y": 143
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "1cf8f503-b336-25c6-6bfe-67c65a22b1d1": {
+      "attributes": {
+        "linked_projects": "",
+        "name": "Folder"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "linked_projects": {
+            "type": "string",
+            "default": ""
+          }
+        },
+        "children": {
+          "items": [
+            "1cf8f503-b336-25c6-6bfe-67c65a22b1d1",
+            "2ce5c596-845a-5331-4178-2daa85ab1f86",
+            "96424ae6-550b-5b0d-32a3-7e266484d530"
+          ],
+          "minItems": [
+            -1,
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            -1,
+            -1
+          ],
+          "min": "undefined",
+          "max": "undefined"
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "SVGIcon": "Folder2.svg",
+        "decorator": "SVGDecorator",
+        "position": {
+          "x": 114,
+          "y": 572
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "284e2a58-7e95-5543-06ae-e1b4731047fe": {
+      "attributes": {
+        "name": "Provides_Function"
+      },
+      "base": "633287a6-8b8e-68a0-2b89-9b15a2183e55",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "arguments": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "633287a6-8b8e-68a0-2b89-9b15a2183e55"
+      },
+      "registry": {
+        "isAbstract": false,
+        "position": {
+          "x": 247,
+          "y": 580
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "2ce5c596-845a-5331-4178-2daa85ab1f86": {
+      "attributes": {
+        "name": "Nesc_File",
+        "path": "",
+        "source": ""
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "isAbstract": true,
+        "position": {
+          "x": 254,
+          "y": 191
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "32fef70f-d3e6-5908-2f1d-fdd0e8f2a876": {
+      "attributes": {
+        "name": "Header_File"
+      },
+      "base": "96424ae6-550b-5b0d-32a3-7e266484d530",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "96424ae6-550b-5b0d-32a3-7e266484d530"
+      },
+      "registry": {
+        "isAbstract": false,
+        "position": {
+          "x": 78,
+          "y": 162
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "4c96dd51-680b-b6e0-87e2-5d9fb8224cfc": {
+      "attributes": {
+        "dst_params": "",
+        "name": "Wire_Function",
+        "src_params": ""
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "dst_params": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "src_params": {
+            "default": "",
+            "type": "string"
+          }
+        },
+        "pointers": {
+          "dst": {
+            "items": [
+              "284e2a58-7e95-5543-06ae-e1b4731047fe"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          },
+          "src": {
+            "items": [
+              "76a2e774-0007-3430-1632-557fa44f42c5"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+        "dst": null,
+        "src": null
+      },
+      "registry": {
+        "isAbstract": true,
+        "position": {
+          "x": 779,
+          "y": 207
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "5c8c2288-e756-8b36-f9f6-1706a8f8d463": {
+      "attributes": {
+        "MetaDoc": "Arguments with name and type for use in functions and generic components",
+        "name": "Argument",
+        "type": ""
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "default": "",
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 848,
+          "y": 411
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "61d8086e-cef6-a78f-5fe3-78bbb69731e0": {
+      "attributes": {
+        "name": "Generic_Configuration",
+        "parameters": ""
+      },
+      "base": "693e5667-6b5f-2016-6046-ed785d4f8625",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "attributes": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parameters": {
+            "default": "",
+            "type": "string"
+          },
+          "path": {
+            "default": "",
+            "type": "string"
+          },
+          "safe": {
+            "default": false,
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "693e5667-6b5f-2016-6046-ed785d4f8625"
+      },
+      "registry": {
+        "position": {
+          "x": 98,
+          "y": 406
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "62fc9995-a00e-b220-8ac0-046a38da01d5": {
+      "attributes": {
+        "name": "Link_Function"
+      },
+      "base": "4c96dd51-680b-b6e0-87e2-5d9fb8224cfc",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "dst_params": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "src_params": {
+            "default": "",
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "4c96dd51-680b-b6e0-87e2-5d9fb8224cfc"
+      },
+      "registry": {
+        "DisplayFormat": "<=>",
+        "color": "#66b2ff",
+        "isAbstract": false,
+        "position": {
+          "x": 780,
+          "y": 144
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "633287a6-8b8e-68a0-2b89-9b15a2183e55": {
+      "attributes": {
+        "MetaDoc": "C declarations",
+        "arguments": "",
+        "name": "Function_Declaration"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "arguments": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "isAbstract": false,
+        "isPort": true,
+        "position": {
+          "x": 702,
+          "y": 479
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "693e5667-6b5f-2016-6046-ed785d4f8625": {
+      "attributes": {
+        "name": "Configuration"
+      },
+      "base": "9c563a86-825d-408e-fc27-6dc6c854526f",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "default": "",
+            "type": "string"
+          },
+          "safe": {
+            "default": false,
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string",
+            "default": ""
+          }
+        },
+        "children": {
+          "items": [
+            "693e5667-6b5f-2016-6046-ed785d4f8625",
+            "80f23f1c-d190-6928-2a96-da28cd07dd7a",
+            "8bb0fd5f-80f1-f8f6-b329-86f3b9073247"
+          ],
+          "minItems": [
+            -1,
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            -1,
+            -1
+          ]
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "9c563a86-825d-408e-fc27-6dc6c854526f"
+      },
+      "registry": {
+        "color": "#ccffff",
+        "isAbstract": false,
+        "position": {
+          "x": 993,
+          "y": 329
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "6bce0f66-3db5-98e0-1e14-1c3424171594": {
+      "attributes": {
+        "name": "Generic_Interface_Definition"
+      },
+      "base": "cb8f0f77-15d9-7a89-7300-b52a6afa113d",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "attributes": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type_parameters": {
+            "default": "",
+            "type": "string"
+          },
+          "path": {
+            "type": "string",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cb8f0f77-15d9-7a89-7300-b52a6afa113d"
+      },
+      "registry": {
+        "DisplayFormat": "$name<$type>",
+        "position": {
+          "x": 550,
+          "y": 481
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "76a2e774-0007-3430-1632-557fa44f42c5": {
+      "attributes": {
+        "name": "Uses_Function"
+      },
+      "base": "633287a6-8b8e-68a0-2b89-9b15a2183e55",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "arguments": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "633287a6-8b8e-68a0-2b89-9b15a2183e55"
+      },
+      "registry": {
+        "isAbstract": false,
+        "position": {
+          "x": 252,
+          "y": 519
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "80f23f1c-d190-6928-2a96-da28cd07dd7a": {
+      "attributes": {
+        "name": "Module"
+      },
+      "base": "9c563a86-825d-408e-fc27-6dc6c854526f",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "default": "",
+            "type": "string"
+          },
+          "safe": {
+            "default": false,
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string",
+            "default": ""
+          }
+        },
+        "children": {
+          "items": [
+            "040d8d09-10fb-14a7-8e6e-4cf2632b73a5"
+          ],
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ]
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "9c563a86-825d-408e-fc27-6dc6c854526f"
+      },
+      "registry": {
+        "color": "#ffe6cc",
+        "isAbstract": false,
+        "position": {
+          "x": 403,
+          "y": 409
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "8bb0fd5f-80f1-f8f6-b329-86f3b9073247": {
+      "attributes": {
+        "dst_params": "",
+        "name": "Wire_Interface",
+        "src_params": ""
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "dst_params": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "src_params": {
+            "default": "",
+            "type": "string"
+          }
+        },
+        "pointers": {
+          "dst": {
+            "items": [
+              "e9c3dad0-d9fd-00df-6a47-f625a4a6b187"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          },
+          "src": {
+            "items": [
+              "e3a0deeb-e382-8069-0638-07065502c5b7"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+        "dst": null,
+        "src": null
+      },
+      "registry": {
+        "DisplayFormat": "$name",
+        "decorator": "ModelDecorator",
+        "isAbstract": true,
+        "lineEndArrow": "classic-xwide-xlong",
+        "lineWidth": 3,
+        "position": {
+          "x": 588,
+          "y": 214
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "901e245a-e449-c8cb-a191-a6ed27d976c4": {
+      "attributes": {
+        "name": "App"
+      },
+      "base": "693e5667-6b5f-2016-6046-ed785d4f8625",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "default": "",
+            "type": "string"
+          },
+          "safe": {
+            "default": false,
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "693e5667-6b5f-2016-6046-ed785d4f8625"
+      },
+      "registry": {
+        "position": {
+          "x": 253,
+          "y": 329
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "96424ae6-550b-5b0d-32a3-7e266484d530": {
+      "attributes": {
+        "name": "Source_File",
+        "source": ""
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "isAbstract": true,
+        "position": {
+          "x": 103,
+          "y": 83
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "9a6033bc-e947-2353-a87e-d3973c31a090": {
+      "attributes": {
+        "name": "Equate_Function"
+      },
+      "base": "4c96dd51-680b-b6e0-87e2-5d9fb8224cfc",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "dst_params": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "src_params": {
+            "default": "",
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "4c96dd51-680b-b6e0-87e2-5d9fb8224cfc"
+      },
+      "registry": {
+        "DisplayFormat": "==",
+        "color": "#ff6666",
+        "isAbstract": false,
+        "lineEndArrow": "none",
+        "lineStartArrow": "none",
+        "lineStyle": "-",
+        "lineWidth": 2,
+        "position": {
+          "x": 780,
+          "y": 66
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "9bf4c450-bdcb-6da7-1232-e1855b77e7f8": {
+      "attributes": {
+        "name": "Type_Parameters"
+      },
+      "base": "df2774ec-ffa4-79bd-d2e4-46557402965e",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "df2774ec-ffa4-79bd-d2e4-46557402965e"
+      },
+      "registry": {
+        "position": {
+          "x": 974,
+          "y": 555
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "9c563a86-825d-408e-fc27-6dc6c854526f": {
+      "attributes": {
+        "name": "Component",
+        "path": "",
+        "safe": false,
+        "source": ""
+      },
+      "base": "2ce5c596-845a-5331-4178-2daa85ab1f86",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "default": "",
+            "type": "string"
+          },
+          "safe": {
+            "default": false,
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string",
+            "default": ""
+          }
+        },
+        "children": {
+          "items": [
+            "633287a6-8b8e-68a0-2b89-9b15a2183e55",
+            "b6f6afea-c0ad-2d99-ebb2-b92881df421f"
+          ],
+          "minItems": [
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            -1
+          ],
+          "min": "undefined",
+          "max": "undefined"
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "2ce5c596-845a-5331-4178-2daa85ab1f86"
+      },
+      "registry": {
+        "isAbstract": true,
+        "position": {
+          "x": 843,
+          "y": 329
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "a738f8e6-47c5-1a0b-ff2e-79b032d6bf04": {
+      "attributes": {
+        "name": "ROOT"
+      },
+      "base": null,
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ],
+          "items": [
+            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+          ],
+          "min": "undefined",
+          "max": "undefined"
+        }
+      },
+      "parent": null,
+      "pointers": {
+        "base": null
+      },
+      "registry": {
+        "MetaSheets": [
+          {
+            "SetID": "MetaAspectSet_df6e388e-0e1a-9d9f-d62d-cdff0256f606",
+            "order": 0,
+            "title": "NesC"
+          },
+          {
+            "SetID": "MetaAspectSet_56ae1d15-f020-e43b-1a4e-d931e9e6a6b4",
+            "order": 1,
+            "title": "MetaContainers"
+          },
+          {
+            "SetID": "MetaAspectSet_6269af7a-6eaa-4557-85d2-05e772d7261c",
+            "order": 2,
+            "title": "App"
+          },
+          {
+            "SetID": "MetaAspectSet_cdfc218b-7c1a-4534-c74e-39d951cb5b0c",
+            "order": 3,
+            "title": "Generics"
+          },
+          {
+            "SetID": "MetaAspectSet_fc37f8ab-ec1d-c752-85e7-051a4a306d9c",
+            "order": 4,
+            "title": "Interfaces"
+          },
+          {
+            "SetID": "MetaAspectSet_793e5d18-0fe6-ea1b-35a9-754f6ae5247a",
+            "order": 5,
+            "title": "Containers"
+          },
+          {
+            "SetID": "MetaAspectSet_d01b58fa-46c0-278f-b9e9-1b50bd263d03",
+            "order": 6,
+            "title": "All"
+          }
+        ],
+        "ProjectRegistry": {
+          "FCO_ID": "/1"
+        },
+        "validPlugins": ""
+      },
+      "sets": {
+        "MetaAspectSet": [
+          {
+            "attributes": {},
+            "guid": "01ac8989-1c60-86b9-6302-3752cfadbaf9",
+            "registry": {
+              "position": {
+                "x": 610,
+                "y": 209
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "040d8d09-10fb-14a7-8e6e-4cf2632b73a5",
+            "registry": {
+              "position": {
+                "x": 1326,
+                "y": 371
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "0658f3a8-ec6c-ccdb-9de6-d74498ca268f",
+            "registry": {
+              "position": {
+                "x": 434,
+                "y": 419
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "0c2e6377-b47c-e2b7-daa9-f83fc5d6954d",
+            "registry": {
+              "position": {
+                "x": 776,
+                "y": 322
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "15fee409-ec8a-25de-2d12-1c61b45218fb",
+            "registry": {
+              "position": {
+                "x": 600,
+                "y": 418
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "1abb2afd-7c51-9dad-dc36-966c30523703",
+            "registry": {
+              "position": {
+                "x": 301,
+                "y": 829
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "1cf8f503-b336-25c6-6bfe-67c65a22b1d1",
+            "registry": {
+              "position": {
+                "x": 409,
+                "y": 327
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "284e2a58-7e95-5543-06ae-e1b4731047fe",
+            "registry": {
+              "position": {
+                "x": 452,
+                "y": 629
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "2ce5c596-845a-5331-4178-2daa85ab1f86",
+            "registry": {
+              "position": {
+                "x": 449,
+                "y": 179
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "32fef70f-d3e6-5908-2f1d-fdd0e8f2a876",
+            "registry": {
+              "position": {
+                "x": 297,
+                "y": 192
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "4c96dd51-680b-b6e0-87e2-5d9fb8224cfc",
+            "registry": {
+              "position": {
+                "x": 597,
+                "y": 898
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "5c8c2288-e756-8b36-f9f6-1706a8f8d463",
+            "registry": {
+              "position": {
+                "x": 756,
+                "y": 302
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "61d8086e-cef6-a78f-5fe3-78bbb69731e0",
+            "registry": {
+              "position": {
+                "x": 126,
+                "y": 704
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "62fc9995-a00e-b220-8ac0-046a38da01d5",
+            "registry": {
+              "position": {
+                "x": 438,
+                "y": 985
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "633287a6-8b8e-68a0-2b89-9b15a2183e55",
+            "registry": {
+              "position": {
+                "x": 603,
+                "y": 625
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "693e5667-6b5f-2016-6046-ed785d4f8625",
+            "registry": {
+              "position": {
+                "x": 552,
+                "y": 313
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "6bce0f66-3db5-98e0-1e14-1c3424171594",
+            "registry": {
+              "position": {
+                "x": 638,
+                "y": 593
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "76a2e774-0007-3430-1632-557fa44f42c5",
+            "registry": {
+              "position": {
+                "x": 577,
+                "y": 618
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "80f23f1c-d190-6928-2a96-da28cd07dd7a",
+            "registry": {
+              "position": {
+                "x": 127,
+                "y": 356
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "8bb0fd5f-80f1-f8f6-b329-86f3b9073247",
+            "registry": {
+              "position": {
+                "x": 773,
+                "y": 630
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "901e245a-e449-c8cb-a191-a6ed27d976c4",
+            "registry": {
+              "color": "#ffffff",
+              "position": {
+                "x": 155,
+                "y": 502
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "96424ae6-550b-5b0d-32a3-7e266484d530",
+            "registry": {
+              "position": {
+                "x": 334,
+                "y": 40
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9a6033bc-e947-2353-a87e-d3973c31a090",
+            "registry": {
+              "position": {
+                "x": 458,
+                "y": 1005
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9bf4c450-bdcb-6da7-1232-e1855b77e7f8",
+            "registry": {
+              "position": {
+                "x": 938,
+                "y": 893
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9c563a86-825d-408e-fc27-6dc6c854526f",
+            "registry": {
+              "position": {
+                "x": 434,
+                "y": 296
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+            "registry": {
+              "position": {
+                "x": 151,
+                "y": 157
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "b6f6afea-c0ad-2d99-ebb2-b92881df421f",
+            "registry": {
+              "position": {
+                "x": 491,
+                "y": 304
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "c769c484-499d-a648-0dce-8b6b84640cc3",
+            "registry": {
+              "position": {
+                "x": 458,
+                "y": 413
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cb8f0f77-15d9-7a89-7300-b52a6afa113d",
+            "registry": {
+              "position": {
+                "x": 496,
+                "y": 330
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+            "registry": {
+              "position": {
+                "x": 425,
+                "y": 144
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "df2774ec-ffa4-79bd-d2e4-46557402965e",
+            "registry": {
+              "position": {
+                "x": 552,
+                "y": 327
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e0f806a7-1501-3e3c-3e97-a9918864992b",
+            "registry": {
+              "position": {
+                "x": 558,
+                "y": 513
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e3a0deeb-e382-8069-0638-07065502c5b7",
+            "registry": {
+              "position": {
+                "x": 726,
+                "y": 279
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e9af1cb3-c5fb-a91b-c76e-41d4f4ef29e9",
+            "registry": {
+              "position": {
+                "x": 498,
+                "y": 453
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e9c3dad0-d9fd-00df-6a47-f625a4a6b187",
+            "registry": {
+              "position": {
+                "x": 753,
+                "y": 375
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "ea8d26c4-4daa-9e39-d840-dc5d8688eef9",
+            "registry": {
+              "position": {
+                "x": 898,
+                "y": 853
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "fa00eedf-a133-7bed-dcbf-bfec69f8247b",
+            "registry": {
+              "position": {
+                "x": 317,
+                "y": 692
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "fb46b105-bbf4-14cf-7fd7-1744d0691d45",
+            "registry": {
+              "position": {
+                "x": 281,
+                "y": 809
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_56ae1d15-f020-e43b-1a4e-d931e9e6a6b4": [
+          {
+            "attributes": {},
+            "guid": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+            "registry": {
+              "position": {
+                "x": 136,
+                "y": 205
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+            "registry": {
+              "position": {
+                "x": 425,
+                "y": 144
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_6269af7a-6eaa-4557-85d2-05e772d7261c": [
+          {
+            "attributes": {},
+            "guid": "693e5667-6b5f-2016-6046-ed785d4f8625",
+            "registry": {
+              "position": {
+                "x": 150,
+                "y": 228
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "901e245a-e449-c8cb-a191-a6ed27d976c4",
+            "registry": {
+              "position": {
+                "x": 164,
+                "y": 397
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_793e5d18-0fe6-ea1b-35a9-754f6ae5247a": [
+          {
+            "attributes": {},
+            "guid": "01ac8989-1c60-86b9-6302-3752cfadbaf9",
+            "registry": {
+              "position": {
+                "x": 718,
+                "y": 516
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "1cf8f503-b336-25c6-6bfe-67c65a22b1d1",
+            "registry": {
+              "position": {
+                "x": 355,
+                "y": 78
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "2ce5c596-845a-5331-4178-2daa85ab1f86",
+            "registry": {
+              "position": {
+                "x": 520,
+                "y": 224
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "32fef70f-d3e6-5908-2f1d-fdd0e8f2a876",
+            "registry": {
+              "position": {
+                "x": 670,
+                "y": 225
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "96424ae6-550b-5b0d-32a3-7e266484d530",
+            "registry": {
+              "position": {
+                "x": 587,
+                "y": 75
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9c563a86-825d-408e-fc27-6dc6c854526f",
+            "registry": {
+              "position": {
+                "x": 292,
+                "y": 519
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cb8f0f77-15d9-7a89-7300-b52a6afa113d",
+            "registry": {
+              "position": {
+                "x": 502,
+                "y": 509
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_cdfc218b-7c1a-4534-c74e-39d951cb5b0c": [
+          {
+            "attributes": {},
+            "guid": "0658f3a8-ec6c-ccdb-9de6-d74498ca268f",
+            "registry": {
+              "position": {
+                "x": 317,
+                "y": 420
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "15fee409-ec8a-25de-2d12-1c61b45218fb",
+            "registry": {
+              "position": {
+                "x": 569,
+                "y": 423
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "df2774ec-ffa4-79bd-d2e4-46557402965e",
+            "registry": {
+              "position": {
+                "x": 573,
+                "y": 293
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_d01b58fa-46c0-278f-b9e9-1b50bd263d03": [
+          {
+            "attributes": {},
+            "guid": "01ac8989-1c60-86b9-6302-3752cfadbaf9",
+            "registry": {
+              "position": {
+                "x": 810,
+                "y": 168
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "040d8d09-10fb-14a7-8e6e-4cf2632b73a5",
+            "registry": {
+              "position": {
+                "x": 750,
+                "y": 305
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "0658f3a8-ec6c-ccdb-9de6-d74498ca268f",
+            "registry": {
+              "position": {
+                "x": 1596,
+                "y": 861
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "0c2e6377-b47c-e2b7-daa9-f83fc5d6954d",
+            "registry": {
+              "position": {
+                "x": 892,
+                "y": 298
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "15fee409-ec8a-25de-2d12-1c61b45218fb",
+            "registry": {
+              "position": {
+                "x": 1607,
+                "y": 951
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "1abb2afd-7c51-9dad-dc36-966c30523703",
+            "registry": {
+              "position": {
+                "x": 1114,
+                "y": 845
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "1cf8f503-b336-25c6-6bfe-67c65a22b1d1",
+            "registry": {
+              "position": {
+                "x": 411,
+                "y": 49
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "284e2a58-7e95-5543-06ae-e1b4731047fe",
+            "registry": {
+              "position": {
+                "x": 1120,
+                "y": 434
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "2ce5c596-845a-5331-4178-2daa85ab1f86",
+            "registry": {
+              "position": {
+                "x": 769,
+                "y": 16
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "32fef70f-d3e6-5908-2f1d-fdd0e8f2a876",
+            "registry": {
+              "position": {
+                "x": 211,
+                "y": 159
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "4c96dd51-680b-b6e0-87e2-5d9fb8224cfc",
+            "registry": {
+              "position": {
+                "x": 1344,
+                "y": 651
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "5c8c2288-e756-8b36-f9f6-1706a8f8d463",
+            "registry": {
+              "position": {
+                "x": 816,
+                "y": 1092
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "61d8086e-cef6-a78f-5fe3-78bbb69731e0",
+            "registry": {
+              "position": {
+                "x": 355,
+                "y": 654
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "62fc9995-a00e-b220-8ac0-046a38da01d5",
+            "registry": {
+              "position": {
+                "x": 1320,
+                "y": 796
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "633287a6-8b8e-68a0-2b89-9b15a2183e55",
+            "registry": {
+              "position": {
+                "x": 957,
+                "y": 193
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "693e5667-6b5f-2016-6046-ed785d4f8625",
+            "registry": {
+              "position": {
+                "x": 391,
+                "y": 450
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "6bce0f66-3db5-98e0-1e14-1c3424171594",
+            "registry": {
+              "position": {
+                "x": 1321,
+                "y": 263
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "76a2e774-0007-3430-1632-557fa44f42c5",
+            "registry": {
+              "position": {
+                "x": 967,
+                "y": 405
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "80f23f1c-d190-6928-2a96-da28cd07dd7a",
+            "registry": {
+              "position": {
+                "x": 561,
+                "y": 320
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "8bb0fd5f-80f1-f8f6-b329-86f3b9073247",
+            "registry": {
+              "position": {
+                "x": 972,
+                "y": 670
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "901e245a-e449-c8cb-a191-a6ed27d976c4",
+            "registry": {
+              "position": {
+                "x": 291,
+                "y": 555
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "96424ae6-550b-5b0d-32a3-7e266484d530",
+            "registry": {
+              "position": {
+                "x": 221,
+                "y": 49
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9a6033bc-e947-2353-a87e-d3973c31a090",
+            "registry": {
+              "position": {
+                "x": 1451,
+                "y": 779
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9bf4c450-bdcb-6da7-1232-e1855b77e7f8",
+            "registry": {
+              "position": {
+                "x": 1444,
+                "y": 967
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9c563a86-825d-408e-fc27-6dc6c854526f",
+            "registry": {
+              "position": {
+                "x": 647,
+                "y": 167
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "b6f6afea-c0ad-2d99-ebb2-b92881df421f",
+            "registry": {
+              "position": {
+                "x": 851,
+                "y": 477
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "c769c484-499d-a648-0dce-8b6b84640cc3",
+            "registry": {
+              "position": {
+                "x": 965,
+                "y": 1093
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cb8f0f77-15d9-7a89-7300-b52a6afa113d",
+            "registry": {
+              "position": {
+                "x": 1215,
+                "y": 146
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "df2774ec-ffa4-79bd-d2e4-46557402965e",
+            "registry": {
+              "position": {
+                "x": 1455,
+                "y": 870
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e0f806a7-1501-3e3c-3e97-a9918864992b",
+            "registry": {
+              "position": {
+                "x": 1069,
+                "y": 568
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e3a0deeb-e382-8069-0638-07065502c5b7",
+            "registry": {
+              "position": {
+                "x": 972,
+                "y": 820
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e9af1cb3-c5fb-a91b-c76e-41d4f4ef29e9",
+            "registry": {
+              "position": {
+                "x": 1071,
+                "y": 296
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e9c3dad0-d9fd-00df-6a47-f625a4a6b187",
+            "registry": {
+              "position": {
+                "x": 640,
+                "y": 628
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "ea8d26c4-4daa-9e39-d840-dc5d8688eef9",
+            "registry": {
+              "position": {
+                "x": 798,
+                "y": 997
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "fa00eedf-a133-7bed-dcbf-bfec69f8247b",
+            "registry": {
+              "position": {
+                "x": 551,
+                "y": 460
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "fb46b105-bbf4-14cf-7fd7-1744d0691d45",
+            "registry": {
+              "position": {
+                "x": 709,
+                "y": 839
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_df6e388e-0e1a-9d9f-d62d-cdff0256f606": [
+          {
+            "attributes": {},
+            "guid": "61d8086e-cef6-a78f-5fe3-78bbb69731e0",
+            "registry": {
+              "position": {
+                "x": 391,
+                "y": 648
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "633287a6-8b8e-68a0-2b89-9b15a2183e55",
+            "registry": {
+              "position": {
+                "x": 803,
+                "y": 401
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "693e5667-6b5f-2016-6046-ed785d4f8625",
+            "registry": {
+              "position": {
+                "x": 443,
+                "y": 501
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "80f23f1c-d190-6928-2a96-da28cd07dd7a",
+            "registry": {
+              "position": {
+                "x": 613,
+                "y": 511
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "8bb0fd5f-80f1-f8f6-b329-86f3b9073247",
+            "registry": {
+              "position": {
+                "x": 187,
+                "y": 473
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9c563a86-825d-408e-fc27-6dc6c854526f",
+            "registry": {
+              "position": {
+                "x": 461,
+                "y": 301
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "b6f6afea-c0ad-2d99-ebb2-b92881df421f",
+            "registry": {
+              "position": {
+                "x": 803,
+                "y": 231
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "fa00eedf-a133-7bed-dcbf-bfec69f8247b",
+            "registry": {
+              "position": {
+                "x": 614,
+                "y": 639
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_fc37f8ab-ec1d-c752-85e7-051a4a306d9c": [
+          {
+            "attributes": {},
+            "guid": "1abb2afd-7c51-9dad-dc36-966c30523703",
+            "registry": {
+              "position": {
+                "x": 329,
+                "y": 779
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "284e2a58-7e95-5543-06ae-e1b4731047fe",
+            "registry": {
+              "position": {
+                "x": 492,
+                "y": 702
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "4c96dd51-680b-b6e0-87e2-5d9fb8224cfc",
+            "registry": {
+              "position": {
+                "x": 592,
+                "y": 812
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "62fc9995-a00e-b220-8ac0-046a38da01d5",
+            "registry": {
+              "position": {
+                "x": 654,
+                "y": 953
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "633287a6-8b8e-68a0-2b89-9b15a2183e55",
+            "registry": {
+              "position": {
+                "x": 582,
+                "y": 572
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "76a2e774-0007-3430-1632-557fa44f42c5",
+            "registry": {
+              "position": {
+                "x": 652,
+                "y": 702
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "8bb0fd5f-80f1-f8f6-b329-86f3b9073247",
+            "registry": {
+              "position": {
+                "x": 252,
+                "y": 615
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9a6033bc-e947-2353-a87e-d3973c31a090",
+            "registry": {
+              "position": {
+                "x": 489,
+                "y": 952
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "b6f6afea-c0ad-2d99-ebb2-b92881df421f",
+            "registry": {
+              "position": {
+                "x": 258,
+                "y": 286
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cb8f0f77-15d9-7a89-7300-b52a6afa113d",
+            "registry": {
+              "position": {
+                "x": 567,
+                "y": 297
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e3a0deeb-e382-8069-0638-07065502c5b7",
+            "registry": {
+              "position": {
+                "x": 158,
+                "y": 477
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e9c3dad0-d9fd-00df-6a47-f625a4a6b187",
+            "registry": {
+              "position": {
+                "x": 328,
+                "y": 484
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "fb46b105-bbf4-14cf-7fd7-1744d0691d45",
+            "registry": {
+              "position": {
+                "x": 139,
+                "y": 809
+              }
+            }
+          }
+        ]
+      },
+      "constraints": {}
+    },
+    "b6f142f4-3d76-1661-72e4-caa18e0988e8": {
+      "attributes": {
+        "name": "MetaContainer"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "items": [
+            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+          ],
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ],
+          "min": "undefined",
+          "max": "undefined"
+        }
+      },
+      "parent": "a738f8e6-47c5-1a0b-ff2e-79b032d6bf04",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "isAbstract": true,
+        "position": {
+          "x": 8,
+          "y": 154
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "b6f6afea-c0ad-2d99-ebb2-b92881df421f": {
+      "attributes": {
+        "MetaDoc": "The specification can be an interface  or a function that is used or provided",
+        "attributes": "",
+        "instance_parameters": "",
+        "name": "Interface_Type",
+        "type_arguments": ""
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "attributes": {
+            "default": "",
+            "type": "string"
+          },
+          "instance_parameters": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type_arguments": {
+            "default": "",
+            "type": "string"
+          }
+        },
+        "pointers": {
+          "interface": {
+            "items": [
+              "cb8f0f77-15d9-7a89-7300-b52a6afa113d"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+        "interface": null
+      },
+      "registry": {
+        "DisplayFormat": "$name<$type_arguments>",
+        "SVGIcon": "SmallRectangle.svg",
+        "decorator": "SVGDecorator",
+        "isAbstract": true,
+        "isPort": true,
+        "position": {
+          "x": 247,
+          "y": 438
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "c769c484-499d-a648-0dce-8b6b84640cc3": {
+      "attributes": {
+        "name": "Component_Ref"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 559,
+          "y": 565
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "cb8f0f77-15d9-7a89-7300-b52a6afa113d": {
+      "attributes": {
+        "attributes": "",
+        "name": "Interface_Definition",
+        "source": "",
+        "type_parameters": ""
+      },
+      "base": "2ce5c596-845a-5331-4178-2daa85ab1f86",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "attributes": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type_parameters": {
+            "default": "",
+            "type": "string"
+          },
+          "path": {
+            "type": "string",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "default": ""
+          }
+        },
+        "children": {
+          "items": [
+            "633287a6-8b8e-68a0-2b89-9b15a2183e55",
+            "9bf4c450-bdcb-6da7-1232-e1855b77e7f8"
+          ],
+          "minItems": [
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            1
+          ],
+          "min": "undefined",
+          "max": "undefined"
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "2ce5c596-845a-5331-4178-2daa85ab1f86"
+      },
+      "registry": {
+        "DisplayFormat": "$name",
+        "isAbstract": false,
+        "isPort": false,
+        "position": {
+          "x": 553,
+          "y": 409
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": {
+      "attributes": {
+        "MetaDoc": "",
+        "name": "FCO"
+      },
+      "base": null,
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "minItems": [],
+          "maxItems": [],
+          "items": []
+        }
+      },
+      "parent": "a738f8e6-47c5-1a0b-ff2e-79b032d6bf04",
+      "pointers": {
+        "base": null
+      },
+      "registry": {
+        "DisplayFormat": "$name",
+        "PortSVGIcon": "",
+        "SVGIcon": "",
+        "decorator": "",
+        "isAbstract": false,
+        "isPort": false,
+        "position": {
+          "x": 10,
+          "y": 74
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "df2774ec-ffa4-79bd-d2e4-46557402965e": {
+      "attributes": {
+        "MetaDoc": "Generic Linked List",
+        "name": "List"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "items": [
+            "0658f3a8-ec6c-ccdb-9de6-d74498ca268f",
+            "15fee409-ec8a-25de-2d12-1c61b45218fb"
+          ],
+          "minItems": [
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            -1
+          ],
+          "min": "undefined",
+          "max": "undefined"
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "isAbstract": true,
+        "position": {
+          "x": 149,
+          "y": 821
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "e0f806a7-1501-3e3c-3e97-a9918864992b": {
+      "attributes": {
+        "name": "Event"
+      },
+      "base": "633287a6-8b8e-68a0-2b89-9b15a2183e55",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "arguments": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "633287a6-8b8e-68a0-2b89-9b15a2183e55"
+      },
+      "registry": {
+        "PortSVGIcon": "RedPort.svg",
+        "color": "#ff6666",
+        "position": {
+          "x": 697,
+          "y": 558
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "e3a0deeb-e382-8069-0638-07065502c5b7": {
+      "attributes": {
+        "name": "Uses_Interface"
+      },
+      "base": "b6f6afea-c0ad-2d99-ebb2-b92881df421f",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "attributes": {
+            "default": "",
+            "type": "string"
+          },
+          "instance_parameters": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type_arguments": {
+            "default": "",
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "b6f6afea-c0ad-2d99-ebb2-b92881df421f"
+      },
+      "registry": {
+        "SVGIcon": "",
+        "color": "#ffffcc",
+        "decorator": "ModelDecorator",
+        "isAbstract": false,
+        "position": {
+          "x": 251,
+          "y": 713
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "e9af1cb3-c5fb-a91b-c76e-41d4f4ef29e9": {
+      "attributes": {
+        "MetaDoc": "Declaration of functions in an interface definition",
+        "name": "Declaration_List"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "items": [
+            "633287a6-8b8e-68a0-2b89-9b15a2183e55"
+          ],
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ],
+          "min": "undefined",
+          "max": "undefined"
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 405,
+          "y": 669
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "e9c3dad0-d9fd-00df-6a47-f625a4a6b187": {
+      "attributes": {
+        "name": "Provides_Interface"
+      },
+      "base": "b6f6afea-c0ad-2d99-ebb2-b92881df421f",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "attributes": {
+            "default": "",
+            "type": "string"
+          },
+          "instance_parameters": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type_arguments": {
+            "default": "",
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "b6f6afea-c0ad-2d99-ebb2-b92881df421f"
+      },
+      "registry": {
+        "SVGIcon": "",
+        "color": "#e6ffcc",
+        "decorator": "ModelDecorator",
+        "isAbstract": false,
+        "position": {
+          "x": 247,
+          "y": 650
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "ea8d26c4-4daa-9e39-d840-dc5d8688eef9": {
+      "attributes": {
+        "name": "Specification_List"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "isAbstract": true,
+        "position": {
+          "x": 409,
+          "y": 751
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "fa00eedf-a133-7bed-dcbf-bfec69f8247b": {
+      "attributes": {
+        "name": "Generic_Module",
+        "parameters": ""
+      },
+      "base": "80f23f1c-d190-6928-2a96-da28cd07dd7a",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "attributes": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parameters": {
+            "default": "",
+            "type": "string"
+          },
+          "path": {
+            "default": "",
+            "type": "string"
+          },
+          "safe": {
+            "default": false,
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "80f23f1c-d190-6928-2a96-da28cd07dd7a"
+      },
+      "registry": {
+        "position": {
+          "x": 698,
+          "y": 409
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "fb46b105-bbf4-14cf-7fd7-1744d0691d45": {
+      "attributes": {
+        "name": "Equate_Interface"
+      },
+      "base": "8bb0fd5f-80f1-f8f6-b329-86f3b9073247",
+      "meta": {
+        "attributes": {
+          "MetaDoc": {
+            "default": "",
+            "type": "string"
+          },
+          "dst_params": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "src_params": {
+            "default": "",
+            "type": "string"
+          }
+        },
+        "pointers": {
+          "dst": {
+            "items": [
+              "e3a0deeb-e382-8069-0638-07065502c5b7"
+            ],
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          },
+          "src": {
+            "items": [
+              "e9c3dad0-d9fd-00df-6a47-f625a4a6b187"
+            ],
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "b6f142f4-3d76-1661-72e4-caa18e0988e8",
+      "pointers": {
+        "base": "8bb0fd5f-80f1-f8f6-b329-86f3b9073247"
+      },
+      "registry": {
+        "DisplayFormat": "[$src_params]==[$dst_params]",
+        "color": "#ff6666",
+        "isAbstract": false,
+        "lineEndArrow": "none",
+        "lineStartArrow": "none",
+        "lineStyle": "-",
+        "lineWidth": 2,
+        "position": {
+          "x": 591,
+          "y": 75
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    }
+  },
+  "metaSheets": {}
+}
