@@ -18,7 +18,7 @@ describe('corerel', function () {
             return new Rel(new Tree(s, options), options);
         },
         projectName = 'coreRelTesting',
-        project,
+        projectId = testFixture.projectName2Id(projectName),
         core,
         root,
 
@@ -30,9 +30,6 @@ describe('corerel', function () {
                 gmeAuth = gmeAuth_;
                 storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
-            })
-            .then(function () {
-                return storage.deleteProject({projectName: projectName});
             })
             .nodeify(done);
     });
@@ -48,10 +45,10 @@ describe('corerel', function () {
     beforeEach(function (done) {
         storage.openDatabase()
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
+                return storage.deleteProject({projectId: projectId});
             })
             .then(function () {
-                return storage.createProject({projectName: projectName});
+                return storage.createProject({projectId: projectId});
             })
             .then(function (project) {
                 var child;

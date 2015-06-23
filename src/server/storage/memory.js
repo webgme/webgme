@@ -8,13 +8,13 @@
 var Q = require('q'),
 
     ASSERT = requireJS('common/util/assert'),
-    //CANON = requireJS('common/util/canon'),
+//CANON = requireJS('common/util/canon'),
     REGEXP = requireJS('common/regexp'),
 
     SEPARATOR = '$'; // MAGIC CONSTANT
 //STATUS_UNREACHABLE = 'storage unreachable', // MAGIC CONSTANT
 //STATUS_CONNECTED = 'connected', // MAGIC CONSTANT
-    //PROJECT_INFO_ID = '*info*'; // MAGIC CONSTANT
+//PROJECT_INFO_ID = '*info*'; // MAGIC CONSTANT
 
 /**
  * An in-memory implementation of backing the data for webgme.
@@ -74,7 +74,7 @@ function Memory(mainLogger, gmeConfig) {
             storage.setItem(database + SEPARATOR + projectId + SEPARATOR, this);
         }
         //else {
-            // TODO: error handling
+        // TODO: error handling
         //}
 
         this.closeProject = function (callback) {

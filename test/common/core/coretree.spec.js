@@ -16,8 +16,6 @@ describe('CoreTree', function () {
         projectName = 'CoreTreeTest',
         CoreTree = requirejs('common/core/coretree'),
 
-    // TODO: replace with in memory storage
-
         logger = testFixture.logger.fork('coretree.spec'),
         storage,
 
