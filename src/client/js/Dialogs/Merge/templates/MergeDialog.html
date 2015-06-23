@@ -1,0 +1,27 @@
+<div class="merge-dialog modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <h3>Merge results</h3>
+            </div>
+            <div class="modal-body">
+
+                <!-- Merge was successful -->
+                <div class="alert alert-success merge-success" role="alert">Successful merge</div>
+
+                <!-- Error placeholder -->
+                <div class="alert alert-danger merge-failed" role="alert">Failed</div>
+
+                <!-- Diff placeholder -->
+                <div class="alert alert-warning no-diff" role="alert">Diff information is not available.</div>
+
+                <div class="diff-placeholder"></div>
+            </div>
+            <div class="modal-footer">
+                <button href="#" class="btn btn-primary btn-resolve" data-dismiss="modal">Resolve</button>
+                <button href="#" class="btn btn-primary btn-ok" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
