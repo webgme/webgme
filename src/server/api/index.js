@@ -468,7 +468,7 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.get('/projects', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req);
-        safeStorage.getProjectNames({username: userId})
+        safeStorage.getProjectIds({username: userId})
             .then(function (result) {
                 res.json(result);
             })

@@ -411,18 +411,18 @@ describe('standalone server', function () {
                             .then(function (orgs_) {
                                 return Q.ninvoke(orgs_, 'remove');
                             }),
-                        Q.ninvoke(db, 'collection', 'ClientCreateProject')
+                        Q.ninvoke(db, 'collection', testFixture.projectName2Id('ClientCreateProject', 'user'))
                             .then(function (createdProject) {
                                 return Q.ninvoke(createdProject, 'remove');
                             }),
-                        Q.ninvoke(db, 'collection', 'project')
+                        Q.ninvoke(db, 'collection', testFixture.projectName2Id('project'))
                             .then(function (project) {
                                 return Q.ninvoke(project, 'remove')
                                     .then(function () {
                                         return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
                                     });
                             }),
-                        Q.ninvoke(db, 'collection', 'unauthorized_project')
+                        Q.ninvoke(db, 'collection', testFixture.projectName2Id('unauthorized_project'))
                             .then(function (project) {
                                 return Q.ninvoke(project, 'remove')
                                     .then(function () {
@@ -447,18 +447,22 @@ describe('standalone server', function () {
                     return gmeauth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true});
                 })
                 .then(function () {
-                    return gmeauth.authorizeByUserId('user', 'project', 'create', {
-                        read: true,
-                        write: true,
-                        delete: false
-                    });
+                    return gmeauth.authorizeByUserId('user', testFixture.projectName2Id('project'),
+                        'create', {
+                            read: true,
+                            write: true,
+                            delete: false
+                        }
+                    );
                 })
                 .then(function () {
-                    return gmeauth.authorizeByUserId('user', 'unauthorized_project', 'create', {
-                        read: false,
-                        write: false,
-                        delete: false
-                    });
+                    return gmeauth.authorizeByUserId('user', testFixture.projectName2Id('unauthorized_project'),
+                        'create', {
+                            read: false,
+                            write: false,
+                            delete: false
+                        }
+                    );
                 })
                 .nodeify(done);
         });
@@ -527,30 +531,31 @@ describe('standalone server', function () {
 
 
         it('should be able to open an authorized project', function (done) {
-            var projectName = 'project';
+            var projectName = 'project',
+                projectId = testFixture.projectName2Id(projectName);
             openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'openProject', {projectName: projectName})
+                    return Q.ninvoke(socket, 'emit', 'openProject', {projectId: projectId})
                         .finally(function () {
                             socket.disconnect();
                         });
                 }).then(function () {
-                    return gmeauth.getProjectAuthorizationByUserId('user', projectName);
+                    return gmeauth.getProjectAuthorizationByUserId('user', projectId);
                 }).then(function (authorized) {
                     authorized.should.deep.equal({read: true, write: true, delete: false});
                 }).nodeify(done);
         });
 
         it('should not be able to open an unauthorized project', function (done) {
-            var projectName = 'unauthorized_project';
+            var projectId = testFixture.projectName2Id('unauthorized_project');
             openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'openProject', {projectName: projectName})
+                    return Q.ninvoke(socket, 'emit', 'openProject', {projectId: projectId})
                         .finally(function () {
                             socket.disconnect();
                         });
                 }).then(function () {
-                    return gmeauth.getProjectAuthorizationByUserId('user', projectName);
+                    return gmeauth.getProjectAuthorizationByUserId('user', projectId);
                 }).then(function (authorized) {
                     authorized.should.deep.equal({read: true, write: true, delete: true});
                 }).nodeify(function (err) {
@@ -564,15 +569,19 @@ describe('standalone server', function () {
         });
 
         it('should grant perms to newly-created project', function (done) {
-            var projectName = 'ClientCreateProject';
+            var projectName = 'ClientCreateProject',
+                projectId;
             openSocketIo()
                 .then(function (socket) {
                     return Q.ninvoke(socket, 'emit', 'createProject', {projectName: projectName})
+                        .then(function (projectId_) {
+                            projectId = projectId_;
+                        })
                         .finally(function () {
                             socket.disconnect();
                         });
                 }).then(function () {
-                    return gmeauth.getProjectAuthorizationByUserId('user', projectName);
+                    return gmeauth.getProjectAuthorizationByUserId('user', projectId);
                 }).then(function (authorized) {
                     authorized.should.deep.equal({read: true, write: true, delete: true});
                 }).nodeify(done);
