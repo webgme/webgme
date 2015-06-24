@@ -45,13 +45,11 @@ describe('corerel', function () {
     beforeEach(function (done) {
         storage.openDatabase()
             .then(function () {
-                return storage.deleteProject({projectId: projectId});
+                return storage.createProject({projectName: projectName});
             })
-            .then(function () {
-                return storage.createProject({projectId: projectId});
-            })
-            .then(function (project) {
-                var child;
+            .then(function (dbProject) {
+                var child,
+                    project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
 
                 core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('corerel:core')});
                 root = core.createNode();
@@ -65,7 +63,7 @@ describe('corerel', function () {
     });
 
     afterEach(function (done) {
-        storage.deleteProject({projectName: projectName})
+        storage.deleteProject({projectId: projectId})
             .then(function () {
                 storage.closeDatabase(done);
             })

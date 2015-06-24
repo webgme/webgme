@@ -331,12 +331,14 @@ function deleteProject(parameters, done) {
 }
 
 /**
- * This uses the guest account.
- * @param projectName
- * @returns {string}
+ * This uses the guest account by default
+ * @param {string} projectName
+ * @param {string} [userId=gmeConfig.authentication.guestAccount]
+ * @returns {string} projectId
  */
-function projectName2Id(projectName) {
-    return gmeConfig.authentication.guestAccount + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
+function projectName2Id(projectName, userId) {
+    userId = userId || gmeConfig.authentication.guestAccount;
+    return userId + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
 }
 
 WebGME.addToRequireJsPaths(gmeConfig);
