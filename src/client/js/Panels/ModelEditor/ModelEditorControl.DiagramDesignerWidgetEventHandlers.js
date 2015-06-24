@@ -1042,7 +1042,7 @@ define(['js/logger',
             obj,
             nodeObj,
             cpData = {
-                project: this._client.getActiveProjectName(),
+                project: this._client.getActiveProjectId(),
                 items: []
             };
 
@@ -1073,7 +1073,7 @@ define(['js/logger',
             objDesc,
             parentID = this.currentNodeInfo.id,
             params = {parentId: parentID},
-            projectName = this._client.getActiveProjectName(),
+            projectName = this._client.getActiveProjectId(),
             childrenIDs = [],
             aspect = this._selectedAspect;
 

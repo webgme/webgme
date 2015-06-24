@@ -11,8 +11,6 @@ var webgme = require('../../webgme'),
     path = require('path'),
     Project = require('../../src/server/storage/userproject'),
 
-    openContext,
-    Serialization,
     jsonProject,
     gmeConfig = require(path.join(process.cwd(), 'config')),
     gmeAuth,

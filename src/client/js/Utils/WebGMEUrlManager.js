@@ -48,8 +48,8 @@ define([
     serializeStateToUrl = function () {
         var searchQuery = ''; // default if project is not open
 
-        if (WebGMEGlobal.State.getActiveProjectName()) {
-            searchQuery = 'project=' + WebGMEGlobal.State.getActiveProjectName();
+        if (WebGMEGlobal.State.getActiveProjectId()) {
+            searchQuery = 'project=' + WebGMEGlobal.State.getActiveProjectId();
 
             if (WebGMEGlobal.State.getActiveBranch()) {
                 searchQuery += '&branch=' + WebGMEGlobal.State.getActiveBranch();

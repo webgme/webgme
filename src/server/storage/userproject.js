@@ -2,46 +2,56 @@
 /*jshint node:true*/
 /**
  * This class is used when you need a project for e.g. core manipulations without going
- * through the web-sockets. This implies that it runs in same process as the storage.
+ * through the web-sockets. This implies that it runs in same process and has direct access to the storage on the server.
  *
  * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';
 
-var ProjectCache = requireJS('common/storage/project/cache'),
+var CONSTANTS = requireJS('common/storage/constants'),
     GENKEY = requireJS('common/util/key'),
-    CONSTANTS = requireJS('common/storage/constants');
+    ProjectInterface = requireJS('common/storage/project/interface');
 
 function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     var self = this,
-        logger = mainLogger.fork('UserProject:' + dbProject.projectId),
-        projectCache,
         objectLoader = {
             loadObject: function (projectId, key, callback) {
                 dbProject.loadObject(key, callback);
             }
         };
 
-    this.projectId = dbProject.projectId;
+    ProjectInterface.call(this, dbProject.projectId, objectLoader, mainLogger, gmeConfig);
     this.userName = gmeConfig.authentication.guestAccount;
 
     this.setUser = function (userName) {
         this.userName = userName;
     };
 
-    projectCache = new ProjectCache(objectLoader, this.projectId, logger, gmeConfig);
-
-    this.insertObject = projectCache.insertObject;
-    this.loadObject = projectCache.loadObject;
-    this.ID_NAME = CONSTANTS.MONGO_ID;
-
     this.getBranch = function () {
         return null;
-        // This is for the PluginManagerBase tests on the server.
-        // TODO: PluginManagerBase tests should run on the client.
     };
 
-    // Functions forwarded to storage
+    // Helper functions
+    this.createCommitObject = function (parents, rootHash, user, msg) {
+        user = user || self.userName || 'n/a';
+        msg = msg || 'n/a';
+
+        var commitObj = {
+                root: rootHash,
+                parents: parents,
+                updater: [user],
+                time: (new Date()).getTime(),
+                message: msg,
+                type: 'commit'
+            },
+            commitHash = '#' + GENKEY(commitObj, gmeConfig);
+
+        commitObj[CONSTANTS.MONGO_ID] = commitHash;
+
+        return commitObj;
+    };
+
+    // Functions defined in ProjectInterface
     this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
         var self = this,
             data = {
@@ -56,16 +66,6 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
         }
 
         return storage.makeCommit(data)
-            .nodeify(callback);
-    };
-
-    this.getBranches = function (callback) {
-        var data = {
-            username: self.userName,
-            projectId: self.projectId
-        };
-
-        return storage.getBranches(data)
             .nodeify(callback);
     };
 
@@ -105,6 +105,16 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
             .nodeify(callback);
     };
 
+    this.getBranches = function (callback) {
+        var data = {
+            username: self.userName,
+            projectId: self.projectId
+        };
+
+        return storage.getBranches(data)
+            .nodeify(callback);
+    };
+
     this.getCommits = function (before, number, callback) {
         var data = {
             username: self.userName,
@@ -127,26 +137,9 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
         return storage.getCommonAncestorCommit(data)
             .nodeify(callback);
     };
-
-    // Helper functions
-    this.createCommitObject = function (parents, rootHash, user, msg) {
-        user = user || self.userName || 'n/a';
-        msg = msg || 'n/a';
-
-        var commitObj = {
-                root: rootHash,
-                parents: parents,
-                updater: [user],
-                time: (new Date()).getTime(),
-                message: msg,
-                type: 'commit'
-            },
-            commitHash = '#' + GENKEY(commitObj, gmeConfig);
-
-        commitObj[CONSTANTS.MONGO_ID] = commitHash;
-
-        return commitObj;
-    };
 }
+
+UserProject.prototype = Object.create(ProjectInterface);
+UserProject.prototype.constructor = UserProject;
 
 module.exports = UserProject;

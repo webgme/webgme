@@ -49,7 +49,7 @@ define([
 
         this._ddBranchStatus.onItemClicked = function (value) {
             var branchName = self._client.getActiveBranchName(),
-                projectName = self._client.getActiveProjectName();
+                projectName = self._client.getActiveProjectId();
             if (value === ITEM_VALUE_FORK) {
                 self._client.forkCurrentBranch(null, null, function (err, forkName) {
                     if (err) {

@@ -196,7 +196,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         }
         return deferred.promise.nodeify(callback);
     },
-    dumpMoreNodes = function (webGMESessionId, name, hash, nodePaths, callback) {
+    dumpMoreNodes = function (webGMESessionId, projectId, hash, nodePaths, callback) {
 
         var storage = getConnectedStorage(webGMESessionId),
             finish = function (err, data) {
@@ -207,7 +207,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
         storage.open(function (networkStatus) {
             if (networkStatus === STORAGE_CONSTANTS.CONNECTED) {
-                storage.openProject(name, function (err, project/*, branches*/) {
+                storage.openProject(projectId, function (err, project/*, branches*/) {
 
                     if (err) {
                         finish(err);
@@ -247,7 +247,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
      * @param {string} userId
      * @param {string} pluginName
      * @param {object} context - where the plugin should execute.
-     * @param {string} context.project - name of project.
+     * @param {string} context.project - id of project.
      * @param {string} context.activeNode - path to activeNode.
      * @param {string} [context.activeSelection=[]] - paths to selected nodes.
      * @param {string} context.commit - commit hash to start the plugin from.
@@ -343,28 +343,36 @@ var WEBGME = require(__dirname + '/../../../webgme'),
             var jsonSeed,
                 seedReady = function () {
                     logger.debug('seedProject - seedReady');
-                    storage.createProject(parameters.projectName,
-                        function (err, project) {
+                    storage.createProject(parameters.projectName, function (err, projectId) {
+                        if (err) {
+                            logger.error('empty project creation failed', err);
+                            finish(err);
+                            return;
+                        }
+                        storage.openProject(projectId, function (err, project) {
+                            var core,
+                                rootNode;
                             if (err) {
-                                logger.error('empty project creation failed', err);
+                                logger.error('Failed to open createdProject', err);
                                 finish(err);
                                 return;
                             }
-                            var core = new Core(project, {
-                                    globConf: gmeConfig,
-                                    logger: logger.fork('core')
-                                }),
-                                root = core.createNode({parent: null, base: null});
 
-                            Serialization.import(core, root, jsonSeed, function (err) {
+                            core = new Core(project, {
+                                globConf: gmeConfig,
+                                logger: logger.fork('core')
+                            });
+                            rootNode = core.createNode({parent: null, base: null});
+
+                            Serialization.import(core, rootNode, jsonSeed, function (err) {
                                 if (err) {
                                     logger.error('import of seed failed', err);
                                     finish(err);
                                     return;
                                 }
 
-                                var persisted = core.persist(root);
-                                storage.makeCommit(project.name,
+                                var persisted = core.persist(rootNode);
+                                storage.makeCommit(project.projectId,
                                     null,
                                     [],
                                     persisted.rootHash,
@@ -383,15 +391,14 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                                 callback(err);
                                             }
                                             logger.info('seeding [' + parameters.seedName +
-                                                '] to [' + project.name + '] completed');
+                                                '] to [' + project.projectId + '] completed');
                                             finish(null);
                                         });
                                     }
                                 );
-
                             });
-
                         });
+                    });
                 };
 
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
@@ -566,10 +573,10 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     callback(err || closeErr, result);
                 });
             };
-        logger.debug('resolve ' + partial.projectName + ' ' + partial.baseCommitHash + ' -> ' + partial.branchName);
+        logger.debug('resolve ' + partial.projectId + ' ' + partial.baseCommitHash + ' -> ' + partial.branchName);
         storage.open(function (networkState) {
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
-                storage.openProject(partial.projectName, function (err, project, branches) {
+                storage.openProject(partial.projectId, function (err, project /*, branches*/) {
                     if (err) {
                         finish(err);
                         return;
@@ -625,11 +632,11 @@ process.on('message', function (parameters) {
 
     resultId = GUID();
     if (parameters.command === CONSTANT.workerCommands.dumpMoreNodes) {
-        if (typeof parameters.name === 'string' &&
+        if (typeof parameters.projectId === 'string' &&
             typeof parameters.hash === 'string' &&
             parameters.nodes && parameters.nodes.length) {
             safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            dumpMoreNodes(parameters.webGMESessionId, parameters.name, parameters.hash, parameters.nodes,
+            dumpMoreNodes(parameters.webGMESessionId, parameters.projectId, parameters.hash, parameters.nodes,
                 resultHandling);
         } else {
             initResult();

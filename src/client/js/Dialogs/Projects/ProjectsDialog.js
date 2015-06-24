@@ -364,7 +364,7 @@ define([
 
         this._client.getProjects(function (err, projectList) {
             var i;
-            self._activeProject = self._client.getActiveProjectName();
+            self._activeProject = self._client.getActiveProjectId();
             self._projectList = {};
             self._projectNames = [];
 

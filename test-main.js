@@ -57,7 +57,8 @@ function done() {
             jszip: './src/client/lib/jszip/jszip',
             debug: './src/client/lib/debug/debug',
             underscore: './src/client/lib/underscore/underscore',
-            Q: './src/client/lib/q/q',
+            Q: './src/client/lib/q/q', //FIXME: this should be removed
+            q: './src/client/lib/q/q',
 
             karmatest: './test-karma',
             aRtestCases: './test-karma/client/js/AutoRouter/testCases'

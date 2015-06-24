@@ -70,7 +70,7 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
                 self.logger.debug('context loaded');
                 pluginContext.project = project;
                 pluginContext.branch = null; // Branch is only applicable on client side.
-                pluginContext.projectName = project.name;
+                pluginContext.projectName = project.projectId;
                 pluginContext.core = self.core;
 
                 plugin.configure(pluginContext); // (This does not modify pluginContext.)

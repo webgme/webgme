@@ -24,7 +24,7 @@ define(['jquery',
     }
 
     function exportMultiple(objIDs) {
-        var fileName = client.getActiveProjectName() + '_' + client.getActiveBranchName() + '_multiple';
+        var fileName = client.getActiveProjectId() + '_' + client.getActiveBranchName() + '_multiple';
 
         if (_.isArray(objIDs) &&
             objIDs.length > 0) {
@@ -37,7 +37,7 @@ define(['jquery',
     }
 
     function exIntConf(objIDs) {
-        var fileName = client.getActiveProjectName() + '_' + client.getActiveBranchName() + '_conf';
+        var fileName = client.getActiveProjectId() + '_' + client.getActiveBranchName() + '_conf';
 
         if (_.isArray(objIDs) &&
             objIDs.length > 0) {
@@ -55,7 +55,7 @@ define(['jquery',
 
         if (typeof objID === 'string') {
             object = client.getNode(objID);
-            fileName = client.getActiveProjectName() + '_' + client.getActiveBranchName() + '_' +
+            fileName = client.getActiveProjectId() + '_' + client.getActiveBranchName() + '_' +
                            object.getAttribute('name') + '_lib';
 
             client.getExportLibraryUrl(objID, fileName, function (err, url) {

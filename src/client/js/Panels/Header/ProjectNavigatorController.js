@@ -206,7 +206,7 @@ define([
 
         self.gmeClient.addEventListener(CONSTANTS.CLIENT.BRANCH_CHANGED, function (client, branchId) {
             self.logger.debug(CONSTANTS.CLIENT.BRANCH_CHANGED, branchId);
-            self.selectBranch({projectId: self.gmeClient.getActiveProjectName(), branchId: branchId});
+            self.selectBranch({projectId: self.gmeClient.getActiveProjectId(), branchId: branchId});
         });
 
         angular.element(self.$window).on('keydown', function (e) {
@@ -326,7 +326,7 @@ define([
         if (self.gmeClient) {
             showHistory = function (data) {
                 var prd;
-                if (self.gmeClient.getActiveProjectName() === data.projectId) {
+                if (self.gmeClient.getActiveProjectId() === data.projectId) {
                     prd = new ProjectRepositoryDialog(self.gmeClient);
                     prd.show();
                 } else {
@@ -360,7 +360,7 @@ define([
                     dialogTitle: 'Confirm delete',
                     dialogContentTemplate: 'DeleteDialogTemplate.html',
                     onOk: function () {
-                        var activeProjectId = self.gmeClient.getActiveProjectName();
+                        var activeProjectId = self.gmeClient.getActiveProjectId();
 
                         self.gmeClient.deleteProject(data.projectId, function (err) {
                             if (err) {
@@ -809,7 +809,7 @@ define([
                 }
             }
 
-            if (projectId === self.gmeClient.getActiveProjectName()) {
+            if (projectId === self.gmeClient.getActiveProjectId()) {
                 self.selectProject({}); // redundant, we reload the entire page in postDelete
             }
 
@@ -897,7 +897,7 @@ define([
             self.projects[projectId].isSelected = true;
 
             if (self.gmeClient) {
-                if (projectId !== self.gmeClient.getActiveProjectName()) {
+                if (projectId !== self.gmeClient.getActiveProjectId()) {
                     self.gmeClient.selectProject(projectId, function (err) {
                         if (err) {
                             self.logger.error(err);

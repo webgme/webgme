@@ -59,31 +59,37 @@ define([
 
                 self.socket.on(CONSTANTS.PROJECT_DELETED, function (data) {
                     data.etype = CONSTANTS.PROJECT_DELETED;
+                    logger.debug('PROJECT_DELETED event', {metadata: data});
                     self.dispatchEvent(CONSTANTS.PROJECT_DELETED, data);
                 });
 
                 self.socket.on(CONSTANTS.PROJECT_CREATED, function (data) {
                     data.etype = CONSTANTS.PROJECT_CREATED;
+                    logger.debug('PROJECT_CREATED event', {metadata: data});
                     self.dispatchEvent(CONSTANTS.PROJECT_CREATED, data);
                 });
 
                 self.socket.on(CONSTANTS.BRANCH_CREATED, function (data) {
                     data.etype = CONSTANTS.BRANCH_CREATED;
-                    self.dispatchEvent(CONSTANTS.BRANCH_CREATED + data.projectName, data);
+                    logger.debug('BRANCH_CREATED event', {metadata: data});
+                    self.dispatchEvent(CONSTANTS.BRANCH_CREATED + data.projectId, data);
                 });
 
                 self.socket.on(CONSTANTS.BRANCH_DELETED, function (data) {
                     data.etype = CONSTANTS.BRANCH_DELETED;
-                    self.dispatchEvent(CONSTANTS.BRANCH_DELETED + data.projectName, data);
+                    logger.debug('BRANCH_DELETED event', {metadata: data});
+                    self.dispatchEvent(CONSTANTS.BRANCH_DELETED + data.projectId, data);
                 });
 
                 self.socket.on(CONSTANTS.BRANCH_HASH_UPDATED, function (data) {
                     data.etype = CONSTANTS.BRANCH_HASH_UPDATED;
-                    self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED + data.projectName, data);
+                    logger.debug('BRANCH_HASH_UPDATED event', {metadata: data});
+                    self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED + data.projectId, data);
                 });
 
                 self.socket.on(CONSTANTS.BRANCH_UPDATED, function (data) {
-                    self.dispatchEvent(self.getBranchUpdateEventName(data.projectName, data.branchName), data);
+                    logger.debug('BRANCH_UPDATED event', {metadata: data});
+                    self.dispatchEvent(self.getBranchUpdateEventName(data.projectId, data.branchName), data);
                 });
             });
         };
@@ -136,8 +142,8 @@ define([
         };
 
         // REST like functions
-        this.getProjectNames = function (data, callback) {
-            self.socket.emit('getProjectNames', data, callback);
+        this.getProjectIds = function (data, callback) {
+            self.socket.emit('getProjectIds', data, callback);
         };
 
         this.getProjects = function (data, callback) {
@@ -168,6 +174,10 @@ define([
             self.socket.emit('getLatestCommitData', data, callback);
         };
 
+        this.getCommonAncestorCommit = function (data, callback) {
+            self.socket.emit('getCommonAncestorCommit', data, callback);
+        };
+
         //temporary simple request / result functions
         this.simpleRequest = function (data, callback) {
             self.socket.emit('simpleRequest', data, callback);
@@ -179,10 +189,6 @@ define([
 
         this.simpleQuery = function (workerId, data, callback) {
             self.socket.emit('simpleQuery', workerId, data, callback);
-        };
-
-        this.getCommonAncestorCommit = function (data, callback) {
-            self.socket.emit('getCommonAncestorCommit', data, callback);
         };
 
         // Helper functions

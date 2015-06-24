@@ -125,7 +125,7 @@ define([
                             // TODO: If global config says try to merge branch then we
                             // TODO: should pass the name of the branch.
                             var config = {
-                                project: self._client.getActiveProjectName(),
+                                project: self._client.getActiveProjectId(),
                                 token: '',
                                 activeNode: activeNode, // active object in the editor
                                 activeSelection: activeSelection || [],
