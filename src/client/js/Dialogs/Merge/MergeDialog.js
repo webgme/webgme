@@ -117,7 +117,8 @@ define([
             valueTheirsE,
             linkTheirs,
             linkMine,
-            i;
+            i,
+            pathRegExp = /((\/\d+)*)/;
 
         this.resolution = mergeResult;
 
@@ -160,9 +161,10 @@ define([
                 conflictItemE = conflictItemTemplate.clone();
                 conflictItemE.find('.path').text(conflictItem.theirs.path);
 
-                linkTheirs = '?project=' + encodeURI(self._client.getActiveProjectName()) +
-                             '&commit=' + encodeURI(mergeResult.theirCommitHash).replace('#', '%23') +
-                             '&node=' + encodeURI('root'); // TODO: get the node path somehow...
+                linkTheirs = '?project=' + encodeURIComponent(self._client.getActiveProjectName()) +
+                             '&commit=' + encodeURIComponent(mergeResult.theirCommitHash) +
+                             // FIXME: regexp parses out the path
+                             '&node=' + encodeURIComponent(pathRegExp.exec(conflictItem.theirs.path)[0]);
 
                 valueTheirsE = $('<div>' +
                                  // FIXME: should we use fa-link instead ???
@@ -178,9 +180,9 @@ define([
                     mineText = conflictItem.mine.path + ': ' + JSON.stringify(conflictItem.mine.value);
                 }
 
-                linkMine = '?project=' + encodeURI(self._client.getActiveProjectName()) +
-                           '&commit=' + encodeURI(mergeResult.myCommitHash).replace('#', '%23') +
-                           '&node=' + encodeURI('root');  // TODO: get the node path somehow...
+                linkMine = '?project=' + encodeURIComponent(self._client.getActiveProjectName()) +
+                           '&commit=' + encodeURIComponent(mergeResult.myCommitHash) +
+                           '&node=' + encodeURIComponent(pathRegExp.exec(conflictItem.mine.path)[0]);  // FIXME: regexp parses out the path
 
                 valueMineE = $('<div>' +
                                // FIXME: should we use fa-link instead ???
