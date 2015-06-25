@@ -48,10 +48,9 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
      *
      * @param {StorageSimpleAPI~getProjectsCallback} callback
      */
-    StorageSimpleAPI.prototype.getProjects = function (callback) {
-        var data = {};
-        this.logger.debug('invoking getProjects', {metadata: data});
-        this.webSocket.getProjects(data, callback);
+    StorageSimpleAPI.prototype.getProjects = function (options, callback) {
+        this.logger.debug('invoking getProjects', {metadata: options});
+        this.webSocket.getProjects(options, callback);
     };
 
     /**

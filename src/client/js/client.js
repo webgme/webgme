@@ -806,12 +806,37 @@ define([
         // REST-like functions and forwarded to storage TODO: add these to separate base class
 
         //  Getters
-        this.getProjects = function (callback) {
+        this.getProjects = function (options, callback) {
+            var asObject;
             if (isConnected()) {
-                storage.getProjects(callback);
+                if (options.asObject) {
+                    asObject = true;
+                    delete options.asObject;
+                }
+                storage.getProjects(options, function (err, result) {
+                    var i,
+                        resultObj = {};
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    if (asObject === true) {
+                        for (i = 0; i < result.length; i += 1) {
+                            resultObj[result[i]._id] = result[i];
+                        }
+                        callback(null, resultObj);
+                    } else {
+                        callback(null, result);
+                    }
+                });
             } else {
                 callback(new Error('There is no open database connection!'));
             }
+        };
+
+        this.getProjectsAndBranches = function (asObject, callback) {
+            //This is kept for the tests.
+            self.getProjects({rights: true, branches: true, asObject: asObject}, callback);
         };
 
         this.getBranches = function (projectId, callback) {
@@ -833,38 +858,6 @@ define([
         this.getLatestCommitData = function (projectId, branchName, callback) {
             if (isConnected()) {
                 storage.getLatestCommitData(projectId, branchName, callback);
-            } else {
-                callback(new Error('There is no open database connection!'));
-            }
-        };
-
-        this.getProjectsAndBranches = function (asObject, callback) {
-            if (isConnected()) {
-                storage.getProjectsAndBranches(function (err, projectsWithBranches) {
-                    var i,
-                        result = {};
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-                    if (asObject === true) {
-                        //Move the result in the same format as before.
-                        for (i = 0; i < projectsWithBranches.length; i += 1) {
-                            result[projectsWithBranches[i].name] = {
-                                branches: projectsWithBranches[i].branches,
-                                rights: {
-                                    read: projectsWithBranches[i].read,
-                                    write: projectsWithBranches[i].write,
-                                    delete: projectsWithBranches[i].delete,
-                                }
-                            };
-                        }
-                        callback(null, result);
-                    } else {
-                        callback(null, projectsWithBranches);
-                    }
-
-                });
             } else {
                 callback(new Error('There is no open database connection!'));
             }

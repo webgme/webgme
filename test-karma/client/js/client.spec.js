@@ -314,7 +314,7 @@ describe('GME client', function () {
         });
 
         it('should fail to get getProjects', function (done) {
-            client.getProjects(function (err) {
+            client.getProjects({}, function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.contain('no open database');
 
@@ -480,10 +480,10 @@ describe('GME client', function () {
         });
 
         it('getProjects should return array of objects with project name and rights', function (done) {
-            client.getProjects(function (err, allProjects) {
+            client.getProjects({rights: true}, function (err, allProjects) {
                 expect(err).to.equal(null);
                 expect(allProjects instanceof Array).to.equal(true);
-                expect(allProjects[0]).to.include.keys('name', 'read', 'write', 'delete');
+                expect(allProjects[0]).to.include.keys('name', 'rights', '_id');
                 done();
             });
         });
@@ -509,7 +509,7 @@ describe('GME client', function () {
                 expect(err).to.equal(null);
                 expect(projects instanceof Array).to.equal(true);
                 for (i = 0; i < projects.length; i += 1) {
-                    expect(projects[i]).to.include.keys('branches', 'read', 'write', 'delete', 'name');
+                    expect(projects[i]).to.include.keys('branches', 'rights', 'name');
                     expect(typeof projects[i].branches).to.equal('object');
                 }
                 done();
@@ -541,16 +541,17 @@ describe('GME client', function () {
         });
 
         it('should delete a project', function (done) {
-            var testProjectName = 'deleteProject',
+            var testProjectName = 'deleteProjectKarma',
                 projectId;
 
-            client.createProject(testProjectName, function (err, projectId) {
+            client.createProject(testProjectName, function (err, projectId_) {
                 expect(err).to.equal(null);
+                projectId = projectId_;
 
                 client.getProjectsAndBranches(true, function (err, projects) {
                     expect(err).to.equal(null);
 
-                    //expect(projects).to.include.keys(testProjectName);
+                    expect(projects).to.include.keys(projectId_);
 
                     client.deleteProject(projectId, function (err) {
                         expect(err).to.equal(null);
@@ -558,7 +559,7 @@ describe('GME client', function () {
                         client.getProjectsAndBranches(true, function (err, projects) {
                             expect(err).to.equal(null);
 
-                            //expect(projects).not.to.include.keys(testProjectName);
+                            expect(projects).not.to.include.keys(projectId_);
                             done();
                         });
                     });
@@ -848,12 +849,16 @@ describe('GME client', function () {
         });
 
         it('should return a list of projects extended with the \'in collection\' meta data', function (done) {
+            var projectName = 'ProjectAndBranchOperationsTest',
+                projectId = projectName2Id(projectName, gmeConfig, client);
+
             client.getProjectsAndBranches(true, function (err, projectsAndInfo) {
                 expect(err).to.equal(null);
 
                 expect(projectsAndInfo).not.to.equal(null);
-                expect(projectsAndInfo).to.include.keys('ProjectAndBranchOperationsTest');
-                expect(projectsAndInfo.ProjectAndBranchOperationsTest).to.include.keys(/*'info',*/'branches', 'rights');
+                expect(projectsAndInfo).to.include.keys(projectId);
+                expect(projectsAndInfo[projectId]).to.include.keys('name', 'branches', 'rights');
+                expect(projectsAndInfo[projectId].name).to.equal(projectName);
                 done();
             });
 
@@ -882,9 +887,9 @@ describe('GME client', function () {
 
                                 expect(client.getActiveProjectId()).to.equal(actualProject);
                                 expect(info).not.to.equal(null);
-                                expect(info).to.include.keys(genericProjectName);
-                                expect(info[genericProjectName]).to.include.keys('branches');
-                                expect(info[genericProjectName].branches).to.include.keys('genericBranch');
+                                expect(info).to.include.keys(genericProjectId);
+                                expect(info[genericProjectId]).to.include.keys('branches');
+                                expect(info[genericProjectId].branches).to.include.keys('genericBranch');
 
                                 expect(err).to.equal(null);
                                 done();

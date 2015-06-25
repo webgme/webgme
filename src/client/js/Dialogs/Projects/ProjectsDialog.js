@@ -79,7 +79,7 @@ define([
             createType;
 
         function openProject(projectId) {
-            if (self._projectList[projectId].read === true) {
+            if (self._projectList[projectId].rights.read === true) {
                 self._client.selectProject(projectId, function () {
                     self._dialog.modal('hide');
                 });
@@ -118,7 +118,7 @@ define([
                 myScope = rootScope.$new(true);
 
 
-            if (self._projectList[projectId].delete === true) {
+            if (self._projectList[projectId].rights.delete === true) {
                 myScope.thingName = 'project "' + projectId + '"';
 
                 deleteProjectModal = ngConfirmDialog.open({
@@ -208,7 +208,7 @@ define([
             event.stopPropagation();
             event.preventDefault();
 
-            if (self._projectList[selectedId].read === true) {
+            if (self._projectList[selectedId].rights.read === true) {
                 self._ul.find('.active').removeClass('active');
                 $(this).addClass('active');
 
@@ -356,30 +356,33 @@ define([
     };
 
     ProjectsDialog.prototype._refreshProjectList = function () {
-        var self = this;
+        var self = this,
+            params = {
+                rights: true
+            };
 
         this._loader.start();
         this._btnRefresh.disable(true);
         this._btnRefresh.find('i').css('opacity', '0');
 
-        this._client.getProjects(function (err, projectList) {
+        this._client.getProjects(params, function (err, projectList) {
             var i;
             self._activeProject = self._client.getActiveProjectId();
             self._projectList = {};
             self._projectNames = [];
 
             for (i = 0; i < projectList.length; i += 1) {
-                self._projectNames.push(projectList[i].name);
-                self._projectList[projectList[i].name] = projectList[i];
+                self._projectNames.push(projectList[i]._id);
+                self._projectList[projectList[i]._id] = projectList[i];
                 //self._projectList[p].projectId = p;
             }
 
             function getProjectUserRightSortValue(projectRights) {
                 var val = 0;
 
-                if (projectRights.write === true) {
+                if (projectRights.rights.write === true) {
                     val = 2;
-                } else if (projectRights.read === true) {
+                } else if (projectRights.rights.read === true) {
                     val = 1;
                 }
 
@@ -423,7 +426,7 @@ define([
 
         if (enabled === true) {
             //btnOpen
-            if (this._projectList[projectId].read === true) {
+            if (this._projectList[projectId].rights.read === true) {
                 this._btnOpen.show();
                 this._btnOpen.disable(false);
             } else {
@@ -432,7 +435,7 @@ define([
             }
 
             //btnDelete
-            if (this._projectList[projectId].delete === true) {
+            if (this._projectList[projectId].rights.delete === true) {
                 this._btnDelete.show();
                 this._btnDelete.disable(false);
             } else {

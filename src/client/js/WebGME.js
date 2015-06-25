@@ -323,10 +323,15 @@ define([
                     logger.error('Failed to connect to database', err);
                     return;
                 }
-                client.getProjects(function (err, projectArray) {
+                client.getProjects({}, function (err, projectArray) {
                     var seedParameters,
                         projectExisted = false,
+                        userId = client.getUserId() === 'n/a' ?
+                            gmeConfig.authentication.guestAccount : client.getUserId(),
+                        newProjectId = userId + client.CONSTANTS.STORAGE.PROJECT_ID_SEP +
+                            initialThingsToDo.projectToLoad,
                         i;
+
                     if (err) {
                         logger.error(err);
                         openProjectLoadDialog(false);
@@ -334,7 +339,7 @@ define([
                     }
 
                     for (i = 0; i < projectArray.length; i += 1) {
-                        if (projectArray[i].name === initialThingsToDo.projectToLoad) {
+                        if (projectArray[i]._id === newProjectId) {
                             projectExisted = true;
                             break;
                         }
@@ -342,7 +347,7 @@ define([
 
                     if (projectExisted) {
                         // we fallback to loading
-                        client.selectProject(initialThingsToDo.projectToLoad, function (err) {
+                        client.selectProject(newProjectId, function (err) {
                             if (err) {
                                 logger.error(err);
                                 openProjectLoadDialog(false);
@@ -381,7 +386,7 @@ define([
                             }
                             //FIXME: this is not necessarily safe
                             setTimeout(function () {
-                                client.selectProject(initialThingsToDo.projectToLoad, function (err) {
+                                client.selectProject(newProjectId, function (err) {
                                     if (err) {
                                         logger.error(err);
                                         openProjectLoadDialog(false);

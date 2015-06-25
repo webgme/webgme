@@ -7,9 +7,9 @@
 define([
     'common/storage/project/interface',
     'common/storage/project/branch',
-    'common/util/assert',
-    'q'
-], function (ProjectInterface, Branch, ASSERT, Q) {
+    'common/util/assert'
+    //'q'
+], function (ProjectInterface, Branch, ASSERT) {
     'use strict';
 
     function Project(projectId, storage, mainLogger, gmeConfig) {
@@ -48,7 +48,7 @@ define([
         };
 
         this.setBranchHash = function (branchName, newHash, oldHash, callback) {
-            storage.setBranchHash(self.projectId, branchName, newHash, oldHash, callback);
+            return storage.setBranchHash(self.projectId, branchName, newHash, oldHash, callback);
         };
 
         this.getBranchHash = function (branchName, callback) {

@@ -88,7 +88,7 @@ define(['js/Loader/LoaderCircles',
 
         // get seed project list
         self._loader.start();
-        self._client.getProjectsAndBranches(false, function (err, projectList) {
+        self._client.getProjects({branches: true}, function (err, projectList) {
             var projectId,
                 branchId,
                 projectGroup,

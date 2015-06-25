@@ -67,7 +67,7 @@ require.config({
         superagent: 'lib/superagent/superagent-' + _superagentVersion,
         debug: 'lib/debug/debug',
         Q: 'lib/q/q', //FIXME: this should be removed
-        q: 'lib/q/q',
+        //q: 'lib/q/q',
 
 
         codemirror: 'lib/codemirror/codemirror.amd',

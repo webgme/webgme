@@ -270,10 +270,15 @@ define([
     };
 
     ProjectNavigatorController.prototype.updateProjectList = function () {
-        var self = this;
+        var self = this,
+            params = {
+                asObject: true,
+                rights: true,
+                branches: true
+            };
         self.logger.debug('updateProjectList');
         self.projects = {};
-        self.gmeClient.getProjectsAndBranches(true, function (err, projectList) {
+        self.gmeClient.getProjects(params, function (err, projectList) {
             var projectId,
                 branchId;
 
@@ -282,7 +287,7 @@ define([
                 return;
             }
 
-            self.logger.debug('getProjectsAndBranches', projectList);
+            self.logger.debug('getProjects', projectList);
 
             // clear project list
             self.projects = {};
