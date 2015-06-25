@@ -16,7 +16,8 @@ var webgme = require('../../webgme'),
     MongoURI = require('mongo-uri'),
     path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
-    logger = webgme.Logger.create('gme:bin:apply', gmeConfig.bin.log, false);
+    logger = webgme.Logger.create('gme:bin:apply', gmeConfig.bin.log, false),
+    STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants');
 
 webgme.addToRequireJsPaths(gmeConfig);
 
@@ -54,8 +55,9 @@ main = function (argv) {
         .version('0.1.0')
         .usage('<patch-file> [options]')
         .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
-        .option('-u, --user [string]', 'the user of the command')
-        .option('-p, --project-identifier [value]', 'project identifier')
+        .option('-u, --user [string]', 'the user of the command - if not given we use the default user')
+        .option('-p, --project-name [string]', 'project name')
+        .option('-o, --owner [string]', 'the owner of the project - by default, the user is the owner')
         .option('-t, --target [branch/commit]', 'the target where we should apply the patch')
         .option('-n, --no-update', 'show if we should not update the branch')
         .parse(argv);
@@ -67,7 +69,7 @@ main = function (argv) {
         gmeConfig.mongo.uri = program.mongoDatabaseUri;
     }
 
-    if (!program.projectIdentifier) {
+    if (!program.projectName) {
         logger.error('project identifier is a mandatory parameter!');
         syntaxFailure = true;
     }
@@ -92,8 +94,17 @@ main = function (argv) {
         })
         .then(function () {
             var params = {
-                projectId: program.projectIdentifier
+                projectId: ''
             };
+
+            if (program.owner) {
+                params.projectId = program.owner + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+            } else if (program.user) {
+                params.projectId = program.user + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+            } else {
+                params.projectId = gmeConfig.authentication.guestAccount +
+                    STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+            }
 
             if (program.user) {
                 params.username = program.user;
@@ -119,7 +130,7 @@ main = function (argv) {
         }).
         then(function () {
             logger.info('patch [' +
-                program.args[0] + '] applied successfully to project [' + program.projectIdentifier + ']');
+                program.args[0] + '] applied successfully to project [' + program.projectName + ']');
             finishUp(null);
         })
         .catch(finishUp);
