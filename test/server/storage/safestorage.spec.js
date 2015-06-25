@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('SafeStorage', function () {
+describe.only('SafeStorage', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
@@ -68,13 +68,52 @@ describe('SafeStorage', function () {
                 });
         });
 
-        it('should getProjects', function (done) {
+        it('should getProjects (no rights, no info, no branches)', function (done) {
             var data = {};
 
             safeStorage.getProjects(data)
                 .then(function (projects) {
                     expect(projects).to.have.property('length');
                     expect(projects.length).to.equal(1);
+                    expect(projects[0]).to.deep.equal({});
+                    expect(projects[0]._id).to.equal(projectId);
+                    expect(projects[0].name).to.equal(projectName);
+                })
+                .nodeify(done);
+        });
+
+        it('should getProjects (rights=true, no info, no branches)', function (done) {
+            var data = {
+                rights: true
+            };
+
+            safeStorage.getProjects(data)
+                .then(function (projects) {
+                    expect(projects).to.have.property('length');
+                    expect(projects.length).to.equal(1);
+                    expect(projects[0]._id).to.equal(projectId);
+                    expect(projects[0].name).to.equal(projectName);
+                    expect(projects[0]).to.deep.equal({});
+                    expect(projects[0].rights).to.deep.equal({
+                        delete: true,
+                        read: true,
+                        write: true
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should getProjects (rights=true, info=true, no branches)', function (done) {
+            var data = {
+                rights: true,
+                info: true
+            };
+
+            safeStorage.getProjects(data)
+                .then(function (projects) {
+                    expect(projects).to.have.property('length');
+                    expect(projects.length).to.equal(1);
+                    expect(projects[0]).to.deep.equal({});
                     expect(projects[0]._id).to.equal(projectId);
                     expect(projects[0].name).to.equal(projectName);
                     expect(projects[0].rights).to.deep.equal({
@@ -86,13 +125,18 @@ describe('SafeStorage', function () {
                 .nodeify(done);
         });
 
-        it('should getProjectsAndBranches', function (done) {
-            var data = {};
+        it('should getProjects (rights=true, info=true, branches=true)', function (done) {
+            var data = {
+                rights: true,
+                info: true,
+                branches: true
+            };
 
-            safeStorage.getProjectsAndBranches(data)
+            safeStorage.getProjects(data)
                 .then(function (projects) {
                     expect(projects).to.have.property('length');
                     expect(projects.length).to.equal(1);
+                    expect(projects[0]).to.deep.equal({});
                     expect(projects[0]._id).to.equal(projectId);
                     expect(projects[0].branches).to.have.property('master');
                 })

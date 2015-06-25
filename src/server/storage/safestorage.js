@@ -108,7 +108,13 @@ SafeStorage.prototype.getProjects = function (data, callback) {
         self = this,
         rejected = false;
 
-    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.');
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+        check(typeof data.info === 'undefined' || typeof data.info === 'boolean', deferred,
+            'data.info is not a boolean.') ||
+        check(typeof data.rights === 'undefined' || typeof data.rights === 'boolean', deferred,
+            'data.rights is not a boolean.') ||
+        check(typeof data.branches === 'undefined' || typeof data.branches === 'boolean', deferred,
+            'data.branches is not a boolean.');
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
@@ -126,8 +132,17 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                     var projectDeferred = Q.defer();
                     self.gmeAuth.getProject(projectId)
                         .then(function (project) {
-                            project.rights = user.projects[projectId];
-                            projectDeferred.resolve(project);
+                            if (user.projects[projectId].read === true) {
+                                if (data.rights === true) {
+                                    project.rights = user.projects[projectId];
+                                }
+                                if (!data.info) {
+                                    delete project.info;
+                                }
+                                projectDeferred.resolve(project);
+                            } else {
+                                projectDeferred.resolve();
+                            }
                         })
                         .catch(function (err) {
                             if (err.message.indexOf('no such project') > -1) {
@@ -146,56 +161,40 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                 return Q.all(projectIds.map(getProjectAppendRights));
             })
             .then(function (projects) {
-                deferred.resolve(filterArray(projects));
+                function getBranches(project) {
+                    var branchesDeferred = Q.defer();
+                    Storage.prototype.getBranches.call(self, {projectId: project._id})
+                        .then(function (branches) {
+                            project.branches = branches;
+                            branchesDeferred.resolve(project);
+                        })
+                        .catch(function (err) {
+                            if (err.message.indexOf('Project does not exist') > -1) {
+                                //TODO: clean up in _projects and _users here too?
+                                self.logger.error('Inconsistency: project exists in user "' + data.username +
+                                    '" and in _projects, but not as collection on its own: ', project._id);
+                                branchesDeferred.resolve();
+                            } else {
+                                branchesDeferred.reject(err);
+                            }
+                        });
+
+                    return branchesDeferred.promise;
+                }
+
+                if (data.branches === true) {
+                    return Q.all(projects.map(getBranches));
+                } else {
+                    deferred.resolve(filterArray(projects));
+                }
+            })
+            .then(function (projectsAndBranches) {
+                deferred.resolve(projectsAndBranches);
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));
             });
     }
-
-    return deferred.promise.nodeify(callback);
-};
-
-/**
- * Calls getProjects and if it had read access appends the data with the branches.
- * @param data
- * @param callback
- */
-SafeStorage.prototype.getProjectsAndBranches = function (data, callback) {
-    var self = this,
-        deferred = Q.defer();
-    self.logger.debug('getProjectsAndBranches invoked');
-    this.getProjects(data)
-        .then(function (projects) {
-            self.logger.debug('getProjectsAndBranches: getProjects returned');
-
-            function getBranches(project) {
-                var branchesDeferred = Q.defer();
-                Storage.prototype.getBranches.call(self, {projectId: project._id})
-                    .then(function (branches) {
-                        project.branches = branches;
-                        branchesDeferred.resolve(project);
-                    })
-                    .catch(function (err) {
-                        //TODO: clean up in _projects and _users here too?
-                        self.logger.error('could not getBranches for', project._id);
-                        branchesDeferred.reject(err);
-                    });
-
-                return branchesDeferred.promise;
-            }
-
-            Q.all(projects.map(getBranches))
-                .then(function (projectsAndBranches) {
-                    deferred.resolve(projectsAndBranches);
-                })
-                .catch(function (err) {
-                    deferred.reject(err);
-                });
-        })
-        .catch(function (err) {
-            deferred.reject(err);
-        });
 
     return deferred.promise.nodeify(callback);
 };
