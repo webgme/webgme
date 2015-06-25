@@ -107,10 +107,10 @@ define([
             conflictsE,
             conflictItem,
             conflictItemTemplate = $('<div class="row conflict-item">' +
-                '<div class="col-md-6 path"></div>' +
-                '<div class="col-md-3 value-theirs"></div>' +
-                '<div class="col-md-3 value-mine"></div>' +
-                '</div>'),
+                                     '<div class="col-md-6 path"></div>' +
+                                     '<div class="col-md-3 value-theirs"></div>' +
+                                     '<div class="col-md-3 value-mine"></div>' +
+                                     '</div>'),
             conflictItemE,
             mineText,
             valueMineE,
@@ -118,6 +118,11 @@ define([
             linkTheirs,
             linkMine,
             i,
+
+        // FIXME: HACK
+        // regular expression matching:
+        // /1/2/3/4/5/attr/name -> '/1/2/3/4/5' -> nodeId
+        // /attr/name -> '' -> root node
             pathRegExp = /((\/\d+)*)/;
 
         this.resolution = mergeResult;
@@ -168,9 +173,9 @@ define([
 
                 valueTheirsE = $('<div>' +
                                  // FIXME: should we use fa-link instead ???
-                               '<a class="fa fa-eye" href="' + linkTheirs + '" target="_blank" tooltip="Open"></a>' +
-                               '<span>' + JSON.stringify(conflictItem.theirs.value) + '</span>' +
-                               '</div>');
+                                 '<a class="fa fa-eye" href="' + linkTheirs + '" target="_blank" tooltip="Open"></a>' +
+                                 '<span>' + JSON.stringify(conflictItem.theirs.value) + '</span>' +
+                                 '</div>');
 
                 conflictItemE.find('.value-theirs').append(valueTheirsE);
 
