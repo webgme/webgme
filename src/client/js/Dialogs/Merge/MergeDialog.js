@@ -102,7 +102,8 @@ define([
     };
 
     MergeDialog.prototype._addDiff = function (mergeResult) {
-        var diff = $(diffTemplate),
+        var self = this,
+            diff = $(diffTemplate),
             conflictsE,
             conflictItem,
             conflictItemTemplate = $('<div class="row conflict-item">' +
@@ -111,6 +112,11 @@ define([
                 '<div class="col-md-3 value-mine"></div>' +
                 '</div>'),
             conflictItemE,
+            mineText,
+            valueMineE,
+            valueTheirsE,
+            linkTheirs,
+            linkMine,
             i;
 
         this.resolution = mergeResult;
@@ -153,8 +159,36 @@ define([
                 conflictItem = mergeResult.conflict.items[i];
                 conflictItemE = conflictItemTemplate.clone();
                 conflictItemE.find('.path').text(conflictItem.theirs.path);
-                conflictItemE.find('.value-theirs').text(JSON.stringify(conflictItem.theirs.value));
-                conflictItemE.find('.value-mine').text(JSON.stringify(conflictItem.mine.value));
+
+                linkTheirs = '?project=' + encodeURI(self._client.getActiveProjectName()) +
+                             '&commit=' + encodeURI(mergeResult.theirCommitHash).replace('#', '%23') +
+                             '&node=' + encodeURI('root'); // TODO: get the node path somehow...
+
+                valueTheirsE = $('<div>' +
+                                 // FIXME: should we use fa-link instead ???
+                               '<a class="fa fa-eye" href="' + linkTheirs + '" target="_blank" tooltip="Open"></a>' +
+                               '<span>' + JSON.stringify(conflictItem.theirs.value) + '</span>' +
+                               '</div>');
+
+                conflictItemE.find('.value-theirs').append(valueTheirsE);
+
+                if (conflictItem.theirs.path === conflictItem.mine.path) {
+                    mineText = JSON.stringify(conflictItem.mine.value);
+                } else {
+                    mineText = conflictItem.mine.path + ': ' + JSON.stringify(conflictItem.mine.value);
+                }
+
+                linkMine = '?project=' + encodeURI(self._client.getActiveProjectName()) +
+                           '&commit=' + encodeURI(mergeResult.myCommitHash).replace('#', '%23') +
+                           '&node=' + encodeURI('root');  // TODO: get the node path somehow...
+
+                valueMineE = $('<div>' +
+                               // FIXME: should we use fa-link instead ???
+                               '<a class="fa fa-eye" href="' + linkMine + '"  target="_blank" tooltip="Open"></a>' +
+                               '<span>' + mineText + '</span>' +
+                               '</div>');
+
+                conflictItemE.find('.value-mine').append(valueMineE);
 
                 this._updateSelection(conflictItem, conflictItemE);
                 this._addClickHandler(conflictItem, conflictItemE);
@@ -169,7 +203,13 @@ define([
     MergeDialog.prototype._addClickHandler = function (conflictItem, conflictItemE) {
         var self = this;
 
-        conflictItemE.on('click', function () {
+        conflictItemE.on('click', function (event) {
+
+            if (event.target.tagName === 'A') {
+                // clicked on an A tag we do not need to change the selection.
+                return;
+            }
+
             if (conflictItem.selected === 'mine') {
                 conflictItem.selected = 'theirs';
             } else if (conflictItem.selected === 'theirs') {
