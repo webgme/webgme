@@ -102,16 +102,28 @@ define([
     };
 
     MergeDialog.prototype._addDiff = function (mergeResult) {
-        var diff = $(diffTemplate),
+        var self = this,
+            diff = $(diffTemplate),
             conflictsE,
             conflictItem,
             conflictItemTemplate = $('<div class="row conflict-item">' +
-                '<div class="col-md-6 path"></div>' +
-                '<div class="col-md-3 value-theirs"></div>' +
-                '<div class="col-md-3 value-mine"></div>' +
-                '</div>'),
+                                     '<div class="col-md-6 path"></div>' +
+                                     '<div class="col-md-3 value-theirs"></div>' +
+                                     '<div class="col-md-3 value-mine"></div>' +
+                                     '</div>'),
             conflictItemE,
-            i;
+            mineText,
+            valueMineE,
+            valueTheirsE,
+            linkTheirs,
+            linkMine,
+            i,
+
+        // FIXME: HACK
+        // regular expression matching:
+        // /1/2/3/4/5/attr/name -> '/1/2/3/4/5' -> nodeId
+        // /attr/name -> '' -> root node
+            pathRegExp = /((\/\d+)*)/;
 
         this.resolution = mergeResult;
 
@@ -153,8 +165,37 @@ define([
                 conflictItem = mergeResult.conflict.items[i];
                 conflictItemE = conflictItemTemplate.clone();
                 conflictItemE.find('.path').text(conflictItem.theirs.path);
-                conflictItemE.find('.value-theirs').text(JSON.stringify(conflictItem.theirs.value));
-                conflictItemE.find('.value-mine').text(JSON.stringify(conflictItem.mine.value));
+
+                linkTheirs = '?project=' + encodeURIComponent(self._client.getActiveProjectName()) +
+                             '&commit=' + encodeURIComponent(mergeResult.theirCommitHash) +
+                             // FIXME: regexp parses out the path
+                             '&node=' + encodeURIComponent(pathRegExp.exec(conflictItem.theirs.path)[0]);
+
+                valueTheirsE = $('<div>' +
+                                 // FIXME: should we use fa-link instead ???
+                                 '<a class="fa fa-eye" href="' + linkTheirs + '" target="_blank" tooltip="Open"></a>' +
+                                 '<span>' + JSON.stringify(conflictItem.theirs.value) + '</span>' +
+                                 '</div>');
+
+                conflictItemE.find('.value-theirs').append(valueTheirsE);
+
+                if (conflictItem.theirs.path === conflictItem.mine.path) {
+                    mineText = JSON.stringify(conflictItem.mine.value);
+                } else {
+                    mineText = conflictItem.mine.path + ': ' + JSON.stringify(conflictItem.mine.value);
+                }
+
+                linkMine = '?project=' + encodeURIComponent(self._client.getActiveProjectName()) +
+                           '&commit=' + encodeURIComponent(mergeResult.myCommitHash) +
+                           '&node=' + encodeURIComponent(pathRegExp.exec(conflictItem.mine.path)[0]);  // FIXME: regexp parses out the path
+
+                valueMineE = $('<div>' +
+                               // FIXME: should we use fa-link instead ???
+                               '<a class="fa fa-eye" href="' + linkMine + '"  target="_blank" tooltip="Open"></a>' +
+                               '<span>' + mineText + '</span>' +
+                               '</div>');
+
+                conflictItemE.find('.value-mine').append(valueMineE);
 
                 this._updateSelection(conflictItem, conflictItemE);
                 this._addClickHandler(conflictItem, conflictItemE);
@@ -169,7 +210,13 @@ define([
     MergeDialog.prototype._addClickHandler = function (conflictItem, conflictItemE) {
         var self = this;
 
-        conflictItemE.on('click', function () {
+        conflictItemE.on('click', function (event) {
+
+            if (event.target.tagName === 'A') {
+                // clicked on an A tag we do not need to change the selection.
+                return;
+            }
+
             if (conflictItem.selected === 'mine') {
                 conflictItem.selected = 'theirs';
             } else if (conflictItem.selected === 'theirs') {
