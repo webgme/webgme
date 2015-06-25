@@ -1091,10 +1091,11 @@ describe('API', function () {
             });
 
             it('should not get branch information for non-existent branch', function (done) {
-                agent.get(server.getUrl() + '/api/projects/project/branches/does_not_exist').end(function (err, res) {
-                    expect(res.status).equal(404, err);
-                    done();
-                });
+                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches/does_not_exist')
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
             });
 
             it('should list commits for project /projects/:projectId/commits', function (done) {
