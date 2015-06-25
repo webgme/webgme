@@ -75,9 +75,12 @@ describe('SafeStorage', function () {
                 .then(function (projects) {
                     expect(projects).to.have.property('length');
                     expect(projects.length).to.equal(1);
-                    expect(projects[0]).to.deep.equal({});
-                    expect(projects[0]._id).to.equal(projectId);
-                    expect(projects[0].name).to.equal(projectName);
+                    expect(projects[0]).to.deep.equal({
+                        _id: 'guest+newProject',
+                        fullName: 'guest/newProject',
+                        name: 'newProject',
+                        owner: 'guest'
+                    });
                 })
                 .nodeify(done);
         });
@@ -91,13 +94,16 @@ describe('SafeStorage', function () {
                 .then(function (projects) {
                     expect(projects).to.have.property('length');
                     expect(projects.length).to.equal(1);
-                    expect(projects[0]._id).to.equal(projectId);
-                    expect(projects[0].name).to.equal(projectName);
-                    expect(projects[0]).to.deep.equal({});
-                    expect(projects[0].rights).to.deep.equal({
-                        delete: true,
-                        read: true,
-                        write: true
+                    expect(projects[0]).to.deep.equal({
+                        _id: 'guest+newProject',
+                        fullName: 'guest/newProject',
+                        name: 'newProject',
+                        owner: 'guest',
+                        rights: {
+                            delete: true,
+                            read: true,
+                            write: true
+                        }
                     });
                 })
                 .nodeify(done);
@@ -113,13 +119,18 @@ describe('SafeStorage', function () {
                 .then(function (projects) {
                     expect(projects).to.have.property('length');
                     expect(projects.length).to.equal(1);
-                    expect(projects[0]).to.deep.equal({});
-                    expect(projects[0]._id).to.equal(projectId);
-                    expect(projects[0].name).to.equal(projectName);
-                    expect(projects[0].rights).to.deep.equal({
-                        delete: true,
-                        read: true,
-                        write: true
+                    expect(typeof projects[0].info).to.equal('object');
+                    delete projects[0].info;
+                    expect(projects[0]).to.deep.equal({
+                        _id: 'guest+newProject',
+                        fullName: 'guest/newProject',
+                        name: 'newProject',
+                        owner: 'guest',
+                        rights: {
+                            delete: true,
+                            read: true,
+                            write: true
+                        }
                     });
                 })
                 .nodeify(done);
@@ -136,9 +147,22 @@ describe('SafeStorage', function () {
                 .then(function (projects) {
                     expect(projects).to.have.property('length');
                     expect(projects.length).to.equal(1);
-                    expect(projects[0]).to.deep.equal({});
-                    expect(projects[0]._id).to.equal(projectId);
-                    expect(projects[0].branches).to.have.property('master');
+                    expect(typeof projects[0].info).to.equal('object');
+                    expect(typeof projects[0].branches).to.equal('object');
+                    expect(projects[0].branches).to.include.keys('master');
+                    delete projects[0].info;
+                    delete projects[0].branches;
+                    expect(projects[0]).to.deep.equal({
+                        _id: 'guest+newProject',
+                        fullName: 'guest/newProject',
+                        name: 'newProject',
+                        owner: 'guest',
+                        rights: {
+                            delete: true,
+                            read: true,
+                            write: true
+                        }
+                    });
                 })
                 .nodeify(done);
         });

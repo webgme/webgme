@@ -56,7 +56,7 @@ describe('Mongo storage', function () {
 
         expect(mongoStorage).to.have.property('openDatabase');
         expect(mongoStorage).to.have.property('closeDatabase');
-        expect(mongoStorage).to.have.property('getProjectIds');
+        expect(mongoStorage).to.have.property('getProjects');
         expect(mongoStorage).to.have.property('openProject');
         expect(mongoStorage).to.have.property('deleteProject');
         expect(mongoStorage).to.have.property('createProject');
@@ -249,10 +249,21 @@ describe('Mongo storage', function () {
 
         it('should fail to get project ids if not connected to database', function (done) {
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-
-            mongoStorage.getProjectIds({})
+            gmeAuth.authorizeByUserId(guestAccount, testFixture.projectName2Id('something'),
+                'create',
+                {
+                    read: true,
+                    write: true,
+                    delete: true
+                })
                 .then(function () {
-                    done(new Error('should have failed to getProjectNames'));
+                    return gmeAuth.addProject(guestAccount, 'something', null);
+                })
+                .then(function () {
+                    return mongoStorage.getProjects({branches: true});
+                })
+                .then(function () {
+                    done(new Error('should have failed to getProjects'));
                 })
                 .catch(function (err) {
                     expect(err instanceof Error).to.equal(true);
@@ -262,15 +273,15 @@ describe('Mongo storage', function () {
                 .done();
         });
 
-        it('should get project ids', function (done) {
+        it('should get projects', function (done) {
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([]);
+                .then(function (projects) {
+                    expect(projects).deep.equal([]);
                     done();
                 })
                 .catch(done);
@@ -281,17 +292,17 @@ describe('Mongo storage', function () {
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([]);
+                .then(function (projects) {
+                    expect(projects).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([projectId]);
+                .then(function (projects) {
+                    expect(projects[0]._id).to.equal(projectId);
                     done();
                 })
                 .catch(done);
@@ -302,20 +313,20 @@ describe('Mongo storage', function () {
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectIds({username: guestAccount});
+                    return mongoStorage.getProjects({username: guestAccount, branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([]);
+                .then(function (projects) {
+                    expect(projects).deep.equal([]);
                     return mongoStorage.createProject({
                         username: guestAccount,
                         projectName: projectDoesNotHaveAccessName
                     });
                 })
                 .then(function () {
-                    return mongoStorage.getProjectIds({username: 'admin'});
+                    return mongoStorage.getProjects({username: 'admin', branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([]);
+                .then(function (projects) {
+                    expect(projects).deep.equal([]);
                 })
                 .nodeify(done);
         });
@@ -325,17 +336,17 @@ describe('Mongo storage', function () {
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([]);
+                .then(function (projects) {
+                    expect(projects).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([projectId]);
+                .then(function (projects) {
+                    expect(projects[0]._id).to.equal(projectId);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
@@ -355,24 +366,24 @@ describe('Mongo storage', function () {
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([]);
+                .then(function (projects) {
+                    expect(projects).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([projectId]);
+                .then(function (projects) {
+                    expect(projects[0]._id).deep.equal(projectId);
                     return mongoStorage.deleteProject({projectId: projectId});
                 })
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([]);
+                .then(function (projects) {
+                    expect(projects).deep.equal([]);
                     done();
                 })
                 .catch(done);
@@ -383,17 +394,17 @@ describe('Mongo storage', function () {
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([]);
+                .then(function (projects) {
+                    expect(projects).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([projectId]);
+                .then(function (projects) {
+                    expect(projects[0]._id).deep.equal(projectId);
                     return mongoStorage.getBranches({projectId: projectId});
                 })
                 .then(function (branches) {
@@ -409,17 +420,17 @@ describe('Mongo storage', function () {
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([]);
+                .then(function (projects) {
+                    expect(projects).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([projectId]);
+                .then(function (projects) {
+                    expect(projects[0]._id).deep.equal(projectId);
                     return mongoStorage.openProject({projectId: projectId});
                 })
                 .then(function (project) {
@@ -443,28 +454,28 @@ describe('Mongo storage', function () {
         it('should fail to open a non-existing project', function (done) {
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
-            gmeAuth.authorizeByUserId(guestAccount, 'project_does_not_exist', 'create',
-                {
-                    read: true,
-                    write: true,
-                    delete: true
-                }).
-                then(function () {
-                    return mongoStorage.openDatabase();
+            mongoStorage.openDatabase()
+                .then(function () {
+                    return gmeAuth.authorizeByUserId(guestAccount, testFixture.projectName2Id('project_does_not_exist'),
+                        'create',
+                        {
+                            read: true,
+                            write: true,
+                            delete: true
+                        });
                 })
                 .then(function () {
-                    return mongoStorage.getProjectIds({});
+                    return gmeAuth.addProject(guestAccount, 'project_does_not_exist', null);
                 })
-                .then(function (projectIds) {
-                    expect(projectIds).deep.equal([]);
-                    return mongoStorage.openProject({projectId: 'project_does_not_exist'});
+                .then(function () {
+                    return mongoStorage.openProject({projectId: testFixture.projectName2Id('project_does_not_exist')});
                 })
                 .then(function () {
                     done(new Error('expected to fail'));
                 })
                 .catch(function (err) {
                     expect(err instanceof Error).to.equal(true);
-                    expect(err.message).to.contain('Project does not exist');
+                    expect(err.message).to.include('Project does not exist');
                     done();
                 })
                 .done();

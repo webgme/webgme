@@ -49,51 +49,9 @@ function SafeStorage(mongo, logger, gmeConfig, gmeAuth) {
 SafeStorage.prototype = Object.create(Storage.prototype);
 SafeStorage.prototype.constructor = SafeStorage;
 
-/**
- * Authorization: filter results based on read access for each projectName.
- * @param data
- * @param callback
- * @returns {*}
-*/
 SafeStorage.prototype.getProjectIds = function (data, callback) {
-    var deferred = Q.defer(),
-        rejected = false,
-        userAuthInfo,
-        self = this;
-
-    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.');
-
-    if (data.hasOwnProperty('username')) {
-        rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
-    } else {
-        data.username = this.gmeConfig.authentication.guestAccount;
-    }
-
-    if (rejected === false) {
-        this.gmeAuth.getUser(data.username)
-            .then(function (user) {
-                userAuthInfo = user.projects;
-                return Storage.prototype.getProjectIds.call(self, data);
-            })
-            .then(function (result) {
-                var filteredResult = [],
-                    i,
-                    projectName;
-
-                for (i = 0; i < result.length; i += 1) {
-                    //For each projectName in result check if user has read access.
-                    projectName = result[i];
-                    if (userAuthInfo.hasOwnProperty(projectName) && userAuthInfo[projectName].read === true) {
-                        filteredResult.push(result[i]);
-                    }
-                }
-                deferred.resolve(filteredResult);
-            })
-            .catch(function (err) {
-                deferred.reject(new Error(err));
-            });
-    }
-
+    var deferred = Q.defer();
+    deferred.reject(new Error('getProjectIds is deprecated, use getProjects instead.'));
     return deferred.promise.nodeify(callback);
 };
 
@@ -183,13 +141,13 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                 }
 
                 if (data.branches === true) {
-                    return Q.all(projects.map(getBranches));
+                    return Q.all(filterArray(projects).map(getBranches));
                 } else {
                     deferred.resolve(filterArray(projects));
                 }
             })
             .then(function (projectsAndBranches) {
-                deferred.resolve(projectsAndBranches);
+                deferred.resolve(filterArray(projectsAndBranches));
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));

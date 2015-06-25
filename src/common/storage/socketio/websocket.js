@@ -142,16 +142,8 @@ define([
         };
 
         // REST like functions
-        this.getProjectIds = function (data, callback) {
-            self.socket.emit('getProjectIds', data, callback);
-        };
-
         this.getProjects = function (data, callback) {
             self.socket.emit('getProjects', data, callback);
-        };
-
-        this.getProjectsAndBranches = function (data, callback) {
-            self.socket.emit('getProjectsAndBranches', data, callback);
         };
 
         this.deleteProject = function (data, callback) {

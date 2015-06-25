@@ -1051,9 +1051,24 @@ describe('API', function () {
                 agent.get(server.getUrl() + '/api/projects').end(function (err, res) {
                     expect(res.status).equal(200, err);
                     expect(res.body.length).to.equal(3);
-                    expect(res.body).to.contain(projectName2Id(projectName));
-                    expect(res.body).to.contain(projectName2Id(unauthorizedProjectName));
-                    expect(res.body).to.contain(projectName2Id(toDeleteProjectName));
+                    expect(res.body).to.contain({
+                        _id: 'guest+unauthorized_project',
+                        fullName: 'guest/unauthorized_project',
+                        name: 'unauthorized_project',
+                        owner: 'guest'
+                    });
+                    expect(res.body).to.contain( {
+                        _id: 'guest+project_to_delete',
+                        fullName: 'guest/project_to_delete',
+                        name: 'project_to_delete',
+                        owner: 'guest'
+                    });
+                    expect(res.body).to.contain({
+                        _id: 'guest+project',
+                        fullName: 'guest/project',
+                        name: 'project',
+                        owner: 'guest'
+                    });
                     done();
                 });
             });

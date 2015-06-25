@@ -33,25 +33,6 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     StorageSimpleAPI.prototype.constructor = StorageSimpleAPI;
 
     /**
-     * Callback for getProjectIds.
-     *
-     * @callback StorageSimpleAPI~getProjectIdsCallback
-     * @param {string} err - error string.
-     * @param {string[]} projectNames - Names of all projects the user has at least read-access to.
-     */
-
-    /**
-     * Retrieves all the project names where the user has at least read access.
-     *
-     * @param {StorageSimpleAPI~getProjectIdsCallback} callback
-     */
-    StorageSimpleAPI.prototype.getProjectIds = function (callback) {
-        var data = {};
-        this.logger.debug('invoking getProjectNames', {metadata: data});
-        this.webSocket.getProjectNames(data, callback);
-    };
-
-    /**
      * Callback for getProjects.
      *
      * @callback StorageSimpleAPI~getProjectsCallback
@@ -92,17 +73,6 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
      * //    }
      * // }]
      */
-
-    /**
-     * Retrieves all the access info for all projects.
-     *
-     * @param {StorageSimpleAPI~getProjectsAndBranches} callback
-     */
-    StorageSimpleAPI.prototype.getProjectsAndBranches = function (callback) {
-        var data = {};
-        this.logger.debug('invoking getProjectsAndBranches', {metadata: data});
-        this.webSocket.getProjectsAndBranches(data, callback);
-    };
 
 
     StorageSimpleAPI.prototype.getBranches = function (projectId, callback) {

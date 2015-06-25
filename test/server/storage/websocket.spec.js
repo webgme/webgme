@@ -370,22 +370,6 @@ describe('WebSocket', function () {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Project related tests
 
-        it('should getProjectIds', function (done) {
-            openSocketIo()
-                .then(function (socket) {
-                    var data = {};
-
-                    return Q.ninvoke(socket, 'emit', 'getProjectIds', data);
-                })
-                .then(function (result) {
-                    expect(result.length).to.equal(5);
-                    done();
-                })
-                .catch(function (err) {
-                    done(new Error(err));
-                });
-        });
-
         it('should getProjects', function (done) {
             openSocketIo()
                 .then(function (socket) {
@@ -404,15 +388,17 @@ describe('WebSocket', function () {
         });
 
 
-        it('should getProjectsAndBranches', function (done) {
+        it('should getProjects and branches', function (done) {
             openSocketIo()
                 .then(function (socket) {
-                    var data = {};
+                    var data = {
+                        branches: true
+                    };
 
-                    return Q.ninvoke(socket, 'emit', 'getProjectsAndBranches', data);
+                    return Q.ninvoke(socket, 'emit', 'getProjects', data);
                 })
                 .then(function (result) {
-                    expect(result.length).to.greaterThan(5);
+                    expect(result.length).to.equal(5);
                     expect(result[0].branches).to.have.property('master');
                     done();
                 })
