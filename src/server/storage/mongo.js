@@ -479,7 +479,7 @@ function Mongo(mainLogger, gmeConfig) {
                 })
                 .then(function (something) {
                     if (something) {
-                        deferred.reject(new Error('Project already exist ' + projectId));
+                        deferred.reject(new Error('Project already exists ' + projectId));
                     } else {
                         return Q.ninvoke(collection, 'insert', {_id: CONSTANTS.EMPTY_PROJECT_DATA});
                     }

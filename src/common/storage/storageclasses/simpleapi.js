@@ -157,7 +157,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
                 callback(err);
                 return;
             }
-            this.logger.debug('Project created, projectId', projectId);
+            self.logger.debug('Project created, projectId', projectId);
 
             callback(err, projectId);
         });

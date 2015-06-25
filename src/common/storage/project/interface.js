@@ -1,5 +1,5 @@
 /*globals define*/
-/*jshint node:true*/
+/*jshint node:true, browser: true*/
 /**
  * This class defines the common interface for a storage-project
  * @author pmeijer / https://github.com/pmeijer
@@ -14,7 +14,7 @@ define([
     function ProjectInterface(projectId, storageObjectsAccessor, mainLogger, gmeConfig) {
         this.projectId = projectId;
         this.ID_NAME = CONSTANTS.MONGO_ID;
-        this.logger = mainLogger.fork('Project:' + this.projectId),
+        this.logger = mainLogger.fork('Project:' + this.projectId);
         this.projectCache = new ProjectCache(storageObjectsAccessor, this.projectId, this.logger, gmeConfig);
 
         this.getBranch = function (branchName, shouldExist) {

@@ -84,7 +84,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     },
 
 // Export and node-dumping functions
-    exportLibrary = function (webGMESessionId, name, hash, branch, commit, libraryRootPath, callback) {
+    exportLibrary = function (webGMESessionId, projectId, hash, branchName, commit, libraryRootPath, callback) {
 
         var storage = getConnectedStorage(webGMESessionId),
             project,
@@ -117,7 +117,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         storage.open(function (networkState) {
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
 
-                storage.openProject(name, function (err, project__, branches) {
+                storage.openProject(projectId, function (err, project__, branches) {
                     if (err) {
                         finish(err);
                         return;
@@ -130,7 +130,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                         return;
                     }
 
-                    commit = commit || branches[branch];
+                    commit = commit || branches[branchName];
 
                     if (!commit) {
                         finish('no such branch found in the project');
@@ -629,7 +629,7 @@ process.on('message', function (parameters) {
         return initialize(parameters);
     }
 
-
+    logger.debug('Incoming message:', {metadata: parameters});
     resultId = GUID();
     if (parameters.command === CONSTANT.workerCommands.dumpMoreNodes) {
         if (typeof parameters.projectId === 'string' &&
@@ -695,14 +695,14 @@ process.on('message', function (parameters) {
         }
     } else if (parameters.command === CONSTANT.workerCommands.exportLibrary) {
         logger.debug(parameters);
-        if (typeof parameters.name === 'string' &&
+        if (typeof parameters.projectId === 'string' &&
             (typeof parameters.hash === 'string' ||
-            typeof parameters.branch === 'string' ||
+            typeof parameters.branchName === 'string' ||
             typeof parameters.commit === 'string') &&
             typeof parameters.path === 'string') {
             safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            exportLibrary(parameters.webGMESessionId, parameters.name, parameters.hash,
-                parameters.branch, parameters.commit, parameters.path, resultHandling);
+            exportLibrary(parameters.webGMESessionId, parameters.projectId, parameters.hash,
+                parameters.branchName, parameters.commit, parameters.path, resultHandling);
         } else {
             initResult();
             safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});

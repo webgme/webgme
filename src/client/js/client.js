@@ -1608,10 +1608,10 @@ define([
         this.getExportLibraryUrl = function (libraryRootPath, filename, callback) {
             var command = {};
             command.command = 'exportLibrary';
-            command.name = state.project.projectId;
+            command.projectId = state.project.projectId;
             command.hash = state.root.current;
             command.path = libraryRootPath;
-            if (command.name && command.hash) {
+            if (command.projectId && command.hash) {
                 storage.simpleRequest(command, function (err, resId) {
                     if (err) {
                         callback(err);
