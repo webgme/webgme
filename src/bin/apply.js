@@ -54,12 +54,13 @@ main = function (argv) {
     program
         .version('0.1.0')
         .usage('<patch-file> [options]')
-        .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
-        .option('-u, --user [string]', 'the user of the command - if not given we use the default user')
-        .option('-p, --project-name [string]', 'project name')
-        .option('-o, --owner [string]', 'the owner of the project - by default, the user is the owner')
-        .option('-t, --target [branch/commit]', 'the target where we should apply the patch')
-        .option('-n, --no-update', 'show if we should not update the branch')
+        .option('-m, --mongo-database-uri [url]',
+        'URI of the MongoDB [by default we use the one from the configuration file]')
+        .option('-u, --user [string]', 'the user of the command [if not given we use the default user]')
+        .option('-p, --project-name [string]', 'project name [mandatory]')
+        .option('-o, --owner [string]', 'the owner of the project [by default, the user is the owner]')
+        .option('-t, --target [branch/commit]', 'the target where we should apply the patch [mandatory]')
+        .option('-n, --no-update', 'show if we should not update the branch [by default it is false]')
         .parse(argv);
 
     if (program.mongoDatabaseUri) {
