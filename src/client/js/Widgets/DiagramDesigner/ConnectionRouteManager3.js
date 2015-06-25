@@ -43,7 +43,7 @@ define([
 
 
         } else {
-            this._recordActions = DEBUG;
+            this.readyToDownload = false;
             // inherit from the ActionApplier
             window._.extend(this.prototype, ActionApplier.prototype);
         }
@@ -136,6 +136,13 @@ define([
                     // Resolve the promise
                     id = response[1][1];
                     this._deferredItems[id].resolve(response[2]);
+                    break;
+
+                case 'BugReplayList':
+                    if (DEBUG) {
+                        this.download('AR_bug_report'+new Date().getTime()+'.json', response[1]);
+                    }
+                    this.readyToDownload = false;
                     break;
             }
         }
@@ -575,6 +582,32 @@ define([
 
         return newBox;
     };
+
+    ConnectionRouteManager3.prototype.download = function (filename, data) {
+        if (!this.readyToDownload) {
+            return;
+        }
+
+        if (!filename) {
+            filename = 'console.json';
+        }
+
+        if (typeof data === 'object') {
+            data = JSON.stringify(data, undefined, 4);
+        }
+
+        var blob = new Blob([data], {type: 'text/json'}),
+        e = document.createEvent('MouseEvents'),
+        a = document.createElement('a');
+
+        a.download = filename;
+        a.href = window.URL.createObjectURL(blob);
+        a.dataset.downloadurl = ['text/json', a.download, a.href].join(':');
+        e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        a.dispatchEvent(e);
+        this.readyToDownload = false;
+    };
+
 
     return ConnectionRouteManager3;
 });
