@@ -5,7 +5,7 @@
 
 var testFixture = require('../_globals');
 
-describe('import CLI tests', function () {
+describe.skip('import CLI tests', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),

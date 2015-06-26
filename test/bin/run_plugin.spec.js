@@ -6,7 +6,7 @@
 
 var testFixture = require('../_globals');
 
-describe('Run plugin CLI', function () {
+describe.skip('Run plugin CLI', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -15,7 +15,7 @@ describe('Run plugin CLI', function () {
         storage,
         expect = testFixture.expect,
         filename = require('path').normalize('src/bin/run_plugin.js'),
-        projectName = 'aaa',
+        projectName = 'runPluginCLI',
         gmeAuth,
         Q = testFixture.Q;
 
@@ -28,7 +28,7 @@ describe('Run plugin CLI', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
+                return testFixture.forceDeleteProject(storage, gmeAuth, projectName);
             })
             .then(function () {
                 return testFixture.importProject(storage, {
@@ -43,7 +43,7 @@ describe('Run plugin CLI', function () {
     });
 
     after(function (done) {
-        storage.deleteProject({projectName: projectName})
+        testFixture.forceDeleteProject(storage, gmeAuth, projectName)
             .then(function () {
                 return Q.all([
                     storage.closeDatabase(),

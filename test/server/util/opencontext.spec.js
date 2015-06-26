@@ -5,7 +5,7 @@
 
 var testFixture = require('../../_globals');
 
-describe('openContext', function () {
+describe.skip('openContext', function () {
     'use strict';
 
     var expect = testFixture.expect,

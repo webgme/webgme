@@ -6,7 +6,7 @@
 
 var testFixture = require('../../../_globals');
 
-describe('merge - library', function () {
+describe.skip('merge - library', function () {
     'use strict';
     var projectName = 'mergeLibrary',
         projectId = testFixture.projectName2Id(projectName),

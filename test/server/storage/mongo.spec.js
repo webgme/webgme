@@ -170,8 +170,8 @@ describe('Mongo storage', function () {
 
         afterEach(function (done) {
             Q.all([
-                mongoStorage.deleteProject({projectId: projectId}),
-                mongoStorage.deleteProject({projectId: projectDoesNotHaveAccessId})
+                testFixture.forceDeleteProject(storage, gmeAuth, projectName),
+                testFixture.forceDeleteProject(storage, gmeAuth, projectDoesNotHaveAccessName)
             ])
                 .finally(function () {
                     // Don't care if we can't delete the project or it doesn't exist
