@@ -49,7 +49,7 @@ define([
         var searchQuery = ''; // default if project is not open
 
         if (WebGMEGlobal.State.getActiveProjectName()) {
-            searchQuery = 'project=' + WebGMEGlobal.State.getActiveProjectName();
+            searchQuery = 'project=' + encodeURIComponent(WebGMEGlobal.State.getActiveProjectName());
 
             if (WebGMEGlobal.State.getActiveBranch()) {
                 searchQuery += '&branch=' + WebGMEGlobal.State.getActiveBranch();
