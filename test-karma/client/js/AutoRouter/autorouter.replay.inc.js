@@ -111,6 +111,18 @@ define(['js/Widgets/DiagramDesigner/AutoRouter.ActionApplier',
         }.bind(this);
     };
 
+    /**
+     * Clean up resources used for testing (namely the web worker).
+     *
+     * @return {undefined}
+     */
+    AutoRouterBugPlayer.prototype.teardown = function () {
+        if (this._worker) {
+            this._worker.terminate();
+            this._worker = null;
+        }
+    };
+
     AutoRouterBugPlayer.prototype.testWithWebWorker = function (actions, options, callback) {
         var last;
 

@@ -979,6 +979,9 @@ describe('AutoRouter', function () {
                 bugPlayer.useWebWorker(true);
             });
             describe('Tests', replayTests);
+            after(function() {
+                bugPlayer.teardown();
+            });
         });
     });
 
