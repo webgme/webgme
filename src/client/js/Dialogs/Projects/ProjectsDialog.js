@@ -190,6 +190,8 @@ define([
         this._btnNewProjectImport = this._dialog.find('.btn-import');
 
         this._txtNewProjectName = this._dialog.find('.txt-project-name');
+        this._dialog.find('.username').text(this._client.getUserId());
+
 
         this._loader = new LoaderCircles({containerElement: this._btnRefresh});
         this._loader.setSize(14);
@@ -290,24 +292,25 @@ define([
         });
 
 
-        function isValidProjectName(aProjectName) {
+        function isValidProjectName(aProjectName, projectId) {
             var re = /^[0-9a-z_]+$/gi;
 
             return (
             re.test(aProjectName) &&
-            self._projectNames.indexOf(aProjectName) === -1
+            self._projectNames.indexOf(projectId) === -1
             );
         }
 
         this._txtNewProjectName.on('keyup', function () {
-            var val = self._txtNewProjectName.val();
+            var val = self._txtNewProjectName.val(),
+                projectId = StorageUtil.getProjectIdFromUserIdAndProjectName(self._dialog.find('.username').text(), val);
 
             if (val.length === 1) {
-                self._filter = [val.toUpperCase(), val.toUpperCase()];
+                self._filter = [projectId.toUpperCase()[0], projectId.toUpperCase()[0]];
                 self._updateProjectNameList();
             }
 
-            if (isValidProjectName(val) === false) {
+            if (isValidProjectName(val, projectId) === false) {
                 self._panelCreateNew.addClass('has-error');
                 self._btnNewProjectCreate.disable(true);
                 self._btnNewProjectImport.disable(true);
@@ -333,9 +336,11 @@ define([
         this._txtNewProjectName.on('keydown', function (event) {
 
             var enterPressed = event.which === 13,
-                newProjectName = self._txtNewProjectName.val();
+                newProjectName = self._txtNewProjectName.val(),
+                projectId =  StorageUtil.getProjectIdFromUserIdAndProjectName(self._dialog.find('.username').text(), newProjectName);
 
-            if (enterPressed && isValidProjectName(newProjectName)) {
+
+            if (enterPressed && isValidProjectName(newProjectName, projectId)) {
                 if (createType === CREATE_TYPE_EMPTY) {
                     doCreateProject(self._client);
                 } else if (createType === CREATE_TYPE_IMPORT) {

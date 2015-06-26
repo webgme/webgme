@@ -22,6 +22,9 @@ define([], function () {
             if (projectFullName) {
                 return projectFullName.replace('/', '+');
             }
+        },
+        getProjectIdFromUserIdAndProjectName: function (userId, projectName) {
+            return userId + '+' + projectName;
         }
     };
 });
