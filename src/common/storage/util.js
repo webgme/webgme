@@ -4,7 +4,7 @@
  * @author lattmann / https://github.com/lattmann
  */
 
-define(['constants'], function (CONSTANTS) {
+define(['common/storage/constants'], function (CONSTANTS) {
     'use strict';
     return {
 
