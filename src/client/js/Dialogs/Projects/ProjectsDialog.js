@@ -481,11 +481,11 @@ define([
                     }
 
                     //check to see if the user has READ access to this project
-                    if (this._projectList[this._projectNames[i]].read !== true) {
+                    if (this._projectList[this._projectNames[i]].rights.read !== true) {
                         li.disable(true);
                     } else {
                         //check if user has only READ rights for this project
-                        if (this._projectList[this._projectNames[i]].write !== true) {
+                        if (this._projectList[this._projectNames[i]].rights.write !== true) {
                             li.find('a.btn-env').append(READ_ONLY_BASE.clone());
                         }
                     }

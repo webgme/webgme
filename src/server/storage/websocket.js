@@ -455,6 +455,21 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     });
             });
 
+            socket.on('getCommonAncestorCommit', function (parameters, callback) {
+                getUserIdFromSocket(socket).
+                    then(function (userId) {
+                        parameters.username = userId;
+                        return storage.getCommonAncestorCommit(parameters, callback);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
             //worker commands
             socket.on('simpleRequest', function (parameters, callback) {
                 getUserIdFromSocket(socket).
@@ -464,6 +479,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         workerManager.request(parameters, callback);
                     })
                     .catch(function (err) {
+                        if (typeof err === 'string') {
+                            //FIXME: server-worker manager should return errors.
+                            callback(err);
+                            return;
+                        }
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
@@ -478,6 +498,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         workerManager.result(resultId, callback);
                     })
                     .catch(function (err) {
+                        if (typeof err === 'string') {
+                            //FIXME: server-worker manager should return errors.
+                            callback(err);
+                            return;
+                        }
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
@@ -494,21 +519,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         workerManager.query(workerId, parameters, callback);
                     })
                     .catch(function (err) {
-                        if (gmeConfig.debug) {
-                            callback(err.stack);
-                        } else {
-                            callback(err.message);
+                        if (typeof err === 'string') {
+                            //FIXME: server-worker manager should return errors.
+                            callback(err);
+                            return;
                         }
-                    });
-            });
-
-            socket.on('getCommonAncestorCommit', function (parameters, callback) {
-                getUserIdFromSocket(socket).
-                    then(function (userId) {
-                        parameters.username = userId;
-                        return storage.getCommonAncestorCommit(parameters, callback);
-                    })
-                    .catch(function (err) {
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {

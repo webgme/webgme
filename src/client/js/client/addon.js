@@ -19,7 +19,7 @@ define([], function () {
                 storage.simpleRequest({
                         command: 'connectedWorkerStart',
                         workerName: name,
-                        project: state.project.name,
+                        projectId: state.project.projectId,
                         branch: state.branchName
                     },
                     function (err, id) {

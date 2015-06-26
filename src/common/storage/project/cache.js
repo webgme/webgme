@@ -17,7 +17,7 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
             logger = mainLogger.fork('ProjectCache'),
             cacheSize = 0;
 
-        logger.debug('ctor');
+        logger.debug('ctor', projectId);
         function cacheInsert(key, obj) {
             ASSERT(typeof cache[key] === 'undefined' && obj[CONSTANTS.MONGO_ID] === key);
             logger.debug('cacheInsert', key);

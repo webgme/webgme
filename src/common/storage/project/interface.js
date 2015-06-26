@@ -15,6 +15,7 @@ define([
         this.projectId = projectId;
         this.ID_NAME = CONSTANTS.MONGO_ID;
         this.logger = mainLogger.fork('Project:' + this.projectId);
+        this.logger.debug('ctor', projectId);
         this.projectCache = new ProjectCache(storageObjectsAccessor, this.projectId, this.logger, gmeConfig);
 
         this.getBranch = function (branchName, shouldExist) {

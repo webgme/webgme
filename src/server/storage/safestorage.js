@@ -296,7 +296,7 @@ SafeStorage.prototype.getBranches = function (data, callback) {
                 if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].read) {
                     return Storage.prototype.getBranches.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectId);
+                    throw new Error('Not authorized to read project: ' + data.projectId);
                 }
             })
             .then(function (result) {
@@ -773,7 +773,7 @@ SafeStorage.prototype.openProject = function (data, callback) {
 
                     return Storage.prototype.openProject.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read or write project. ' + data.projectId);
+                    throw new Error('Not authorized to read or write project: ' + data.projectId);
                 }
             })
             .then(function (project) {

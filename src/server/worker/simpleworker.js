@@ -712,8 +712,8 @@ process.on('message', function (parameters) {
         seedProject(parameters, resultHandling);
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStart) {
         if (gmeConfig.addOn.enable === true) {
-            initConnectedWorker(parameters.webGMESessionId, parameters.usrId, parameters.workerName, parameters.project,
-                parameters.branch,
+            initConnectedWorker(parameters.webGMESessionId, parameters.userId, parameters.workerName,
+                parameters.projectId, parameters.branch,
                 function (err) {
                     if (err) {
                         safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: err, resid: null});
@@ -765,7 +765,7 @@ process.on('message', function (parameters) {
         safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
         autoMerge(parameters.webGMESessionId,
             parameters.userId,
-            parameters.project,
+            parameters.projectId,
             parameters.mine,
             parameters.theirs,
             resultHandling);
