@@ -306,6 +306,33 @@ function projectName2Id(projectName, userId) {
     return userId + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
 }
 
+/**
+ * Forces the deletion of the given projectName (N.B. not projectId).
+ * @param storage
+ * @param gmeAuth
+ * @param projectName
+ * @param [userId=gmeConfig.authentication.guestAccount]
+ * @param [callback]
+ * @returns {*}
+ */
+function forceDeleteProject(storage, gmeAuth, projectName, userId, callback) {
+    var projectId = projectName2Id(projectName, userId);
+
+    userId = userId || gmeConfig.authentication.guestAccount;
+
+    return gmeAuth.addProject(userId, projectName, null)
+        .then(function () {
+            return gmeAuth.authorizeByUserId(userId, projectId, 'create', {
+                read: true,
+                write: true,
+                delete: true
+            });
+        })
+        .then(function () {
+            return storage.deleteProject({projectId: projectId});
+        }).nodeify(callback);
+};
+
 WebGME.addToRequireJsPaths(gmeConfig);
 
 // This is for the client side test-cases (only add paths here!)
@@ -355,7 +382,7 @@ module.exports = {
     importProject: importProject,
     saveChanges: saveChanges,
     projectName2Id: projectName2Id,
-
+    forceDeleteProject: forceDeleteProject,
 
     STORAGE_CONSTANTS: STORAGE_CONSTANTS,
     openContext: openContext.openContext

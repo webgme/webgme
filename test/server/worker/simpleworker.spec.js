@@ -14,6 +14,7 @@ describe('Simple worker', function () {
     var WebGME = testFixture.WebGME,
         gmeConfig = testFixture.getGmeConfig(),
         guestAccount = gmeConfig.authentication.guestAccount,
+        deleteProject = testFixture.forceDeleteProject,
         Q = testFixture.Q,
         expect = testFixture.expect,
         agent = testFixture.superagent.agent(),
@@ -39,20 +40,6 @@ describe('Simple worker', function () {
         baseProjectJson = JSON.parse(
             testFixture.fs.readFileSync('test/server/worker/simpleworker/baseProject.json', 'utf8')
         ),
-        deleteProject = function (projectName, next) {
-            var projectId = testFixture.projectName2Id(projectName);
-            return gmeAuth.addProject(guestAccount, projectName, null)
-                .then(function () {
-                    return gmeAuth.authorizeByUserId(guestAccount, projectId, 'create', {
-                        read: true,
-                        write: true,
-                        delete: true
-                    });
-                })
-                .then(function () {
-                    return storage.deleteProject({projectId: projectId});
-                }).nodeify(next);
-        },
         serverBaseUrl,
         logIn = function (callback) {
             agent.post(serverBaseUrl + '/login?redirect=%2F')
@@ -125,7 +112,7 @@ describe('Simple worker', function () {
                     return storage.openDatabase();
                 })
                 .then(function () {
-                    return deleteProject(baseProjectContext.name);
+                    return deleteProject(storage, gmeAuth, baseProjectContext.name);
                 })
                 .then(function () {
                     return testFixture.importProject(storage,
@@ -152,7 +139,7 @@ describe('Simple worker', function () {
             if (err) {
                 logger.error(err);
             }
-            deleteProject(baseProjectContext.name)
+            deleteProject(storage, gmeAuth, baseProjectContext.name)
                 .then(function () {
                     return Q.all([
                         storage.closeDatabase(),
@@ -535,7 +522,7 @@ describe('Simple worker', function () {
             projectName = 'workerSeedFromDB',
             projectId = testFixture.projectName2Id(projectName);
 
-        deleteProject(projectName, function (err) {
+        deleteProject(storage, gmeAuth, projectName, guestAccount, function (err) {
             expect(err).equal(null);
 
             worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -587,7 +574,7 @@ describe('Simple worker', function () {
             projectName = 'workerSeedFromFile',
             projectId = testFixture.projectName2Id(projectName);
 
-        deleteProject(projectName, function (err) {
+        deleteProject(storage, gmeAuth, projectName, guestAccount, function (err) {
             expect(err).equal(null);
 
             worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -742,7 +729,7 @@ describe('Simple worker', function () {
             };
 
         gmeConfigCopy.plugin.allowServerExecution = false;
-        deleteProject(projectName, function (err) {
+        deleteProject(storage, gmeAuth, projectName, guestAccount, function (err) {
             expect(err).equal(null);
 
             worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfigCopy})
