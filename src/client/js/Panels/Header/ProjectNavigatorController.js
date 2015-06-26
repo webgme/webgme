@@ -13,6 +13,7 @@ define([
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/Merge/MergeDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
+    'common/storage/util',
     'isis-ui-components/simpleDialog/simpleDialog',
     'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html'
 ], function (Logger,
@@ -22,6 +23,7 @@ define([
              CommitDialog,
              MergeDialog,
              ProjectRepositoryDialog,
+             StorageUtil,
              ConfirmDialog,
              DeleteDialogTemplate) {
     'use strict';
@@ -320,7 +322,8 @@ define([
             deleteProject,
             selectProject,
             refreshPage,
-            updateProjectList;
+            updateProjectList,
+            projectDiplayedName;
 
         rights = rights || {
                 delete: true,
@@ -407,10 +410,12 @@ define([
             self.selectProject(data);
         };
 
+        projectDiplayedName = StorageUtil.getProjectDisplayedNameFromProjectId(projectId);
+
         // create a new project object
         self.projects[projectId] = {
             id: projectId,
-            label: projectId,
+            label: projectDiplayedName,
             iconClass: rights.write ? '' : 'glyphicon glyphicon-lock',
             iconPullRight: !rights.write,
             disabled: !rights.read,

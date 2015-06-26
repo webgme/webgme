@@ -13,6 +13,7 @@ define([
     'js/Utils/GMEConcepts',
     'js/Dialogs/Import/ImportDialog',
     'js/Dialogs/CreateFromSeed/CreateFromSeedDialog',
+    'common/storage/util',
     'text!./templates/ProjectsDialog.html',
 
     'isis-ui-components/simpleDialog/simpleDialog',
@@ -20,13 +21,13 @@ define([
 
     'css!./styles/ProjectsDialog.css'
 
-], function (ng, Logger, LoaderCircles, GMEConcepts, ImportDialog, CreateFromSeedDialog,
+], function (ng, Logger, LoaderCircles, GMEConcepts, ImportDialog, CreateFromSeedDialog, StorageUtil,
              projectsDialogTemplate, ConfirmDialog, DeleteDialogTemplate) {
 
     'use strict';
 
     var ProjectsDialog,
-        DATA_PROJECT_NAME = 'PROJECT_NAME',
+        DATA_PROJECT_ID = 'PROJECT_ID',
         CREATE_TYPE_EMPTY = 'create_empty',
         CREATE_TYPE_IMPORT = 'create_import',
         LI_BASE = $('<li class="center pointer"><a class="btn-env"></a>'),
@@ -203,7 +204,7 @@ define([
 
         //hook up event handlers - SELECT project in the list
         this._ul.on('click', 'li:not(.disabled)', function (event) {
-            selectedId = $(this).data(DATA_PROJECT_NAME);
+            selectedId = $(this).data(DATA_PROJECT_ID);
 
             event.stopPropagation();
             event.preventDefault();
@@ -222,7 +223,7 @@ define([
 
         //open on double click
         this._ul.on('dblclick', 'li:not(.disabled)', function (event) {
-            selectedId = $(this).data(DATA_PROJECT_NAME);
+            selectedId = $(this).data(DATA_PROJECT_ID);
 
             event.stopPropagation();
             event.preventDefault();
@@ -456,6 +457,7 @@ define([
             i,
             li,
             displayProject,
+            projectDiplayedName,
             count = 0,
             emptyLi = $('<li class="center"><i>No projects in this group...</i></li>');
 
@@ -473,8 +475,9 @@ define([
 
                 if (displayProject) {
                     li = LI_BASE.clone();
-                    li.find('a').text(this._projectNames[i]);
-                    li.data(DATA_PROJECT_NAME, this._projectNames[i]);
+                    projectDiplayedName = StorageUtil.getProjectDisplayedNameFromProjectId(this._projectNames[i]);
+                    li.find('a').text(projectDiplayedName);
+                    li.data(DATA_PROJECT_ID, this._projectNames[i]);
 
                     if (this._projectNames[i] === this._activeProject) {
                         li.addClass('active');
