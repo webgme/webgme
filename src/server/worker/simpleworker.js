@@ -333,9 +333,10 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         var storage = getConnectedStorage(parameters.webGMESessionId),
             finish = function (err) {
                 storage.close(function (closeErr) {
-                    callback(err || closeErr);
+                    callback(err || closeErr, result);
                 });
-            };
+            },
+            result = {};
         logger.debug('seedProject');
 
         storage.open(function (networkState) {
@@ -392,6 +393,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                             }
                                             logger.info('seeding [' + parameters.seedName +
                                                 '] to [' + project.projectId + '] completed');
+                                            result = {
+                                                projectId: projectId
+                                            };
                                             finish(null);
                                         });
                                     }
@@ -540,7 +544,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
         storage.open(function (networkState) {
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
-                storage.openProject(projectId, function (err, project, branches) {
+                storage.openProject(projectId, function (err, project /*, branches*/) {
                     if (err) {
                         finish(err);
                         return;

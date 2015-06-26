@@ -537,13 +537,13 @@ define([
         // TODO: remove these two lines once the create seed API is implemented and functional
         loader.start();
 
-        self._client.seedProject(parameters, function (err) {
+        self._client.seedProject(parameters, function (err, result) {
             if (err) {
                 self._logger.error('Cannot create seed project', err);
                 loader.stop();
             } else {
                 self._logger.debug('Created new project from seed');
-                self._client.selectProject(projectName, function (err) {
+                self._client.selectProject(result.projectId, function (err) {
                     if (err) {
                         self._logger.error('Cannot select project', err);
                     } else {

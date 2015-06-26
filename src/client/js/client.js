@@ -1545,6 +1545,7 @@ define([
 
         //seed
         this.seedProject = function (parameters, callback) {
+            logger.debug('seeding project', parameters);
             parameters.command = 'seedProject';
             storage.simpleRequest(parameters, function (err, id) {
                 if (err) {
