@@ -1122,7 +1122,7 @@ define([
             assert(nnnedge.startpointPrev.equals(npoint) && nnnedge.startpoint.equals(nnpoint),
                 'ARGraph.deleteTwoEdgesAt: nnnedge.startpointPrev.equals(npoint)' +
                 '&& nnnedge.startpoint.equals(nnpoint) FAILED');
-            nnnedge.setStartPointPrev(ppoint);
+            nnnedge.startpointPrev = ppoint;
         }
 
         if (nnpoint.equals(newpoint)) {
@@ -1194,14 +1194,14 @@ define([
             'ARGraph.deleteSamePointsAt: nnedge.startpoint.equals(npoint) && nnedge.startpointPrev.equals(point)' +
             ' FAILED');
         nnedge.setStartPoint(ppoint);
-        nnedge.setStartPointPrev(pppoint);
+        nnedge.startpointPrev = pppoint;
 
         if (nnnpointpos < points.length) {
             var nnnedge = vlist.getEdgeByPointer(nnpoint, (nnnpointpos)); //&*
             assert(nnnedge !== null && nnnedge.startpointPrev.equals(npoint) && nnnedge.startpoint.equals(nnpoint),
                 'ARGraph.deleteSamePointsAt: nnnedge !== null && nnnedge.startpointPrev.equals(npoint) && ' +
                 'nnnedge.startpoint.equals(nnpoint) FAILED');
-            nnnedge.setStartPointPrev(ppoint);
+            nnnedge.startpointPrev = ppoint;
         }
 
         if (CONSTANTS.DEBUG_DEEP) {
