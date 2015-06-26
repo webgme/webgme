@@ -18,6 +18,7 @@ describe('Simple worker', function () {
         Q = testFixture.Q,
         expect = testFixture.expect,
         agent = testFixture.superagent.agent(),
+        openSocketIo = testFixture.openSocketIo,
         webGMESessionId,
         CONSTANTS = require('./../../../src/server/worker/constants'),
         server,
@@ -40,52 +41,6 @@ describe('Simple worker', function () {
         baseProjectJson = JSON.parse(
             testFixture.fs.readFileSync('test/server/worker/simpleworker/baseProject.json', 'utf8')
         ),
-        serverBaseUrl,
-        logIn = function (callback) {
-            agent.post(serverBaseUrl + '/login?redirect=%2F')
-                .type('form')
-                .send({username: guestAccount})
-                .send({password: guestAccount})
-                .end(function (err, res) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    expect(res.status).to.equal(200);
-                    callback(err, res);
-                });
-        },
-        openSocketIo = function () {
-            var io = require('socket.io-client');
-
-            return Q.nfcall(logIn)
-                    .then(function (/*res*/) {
-                var socket,
-                    socketReq = {url: serverBaseUrl},
-                    defer = Q.defer();
-
-
-                agent.attachCookies(socketReq);
-                webGMESessionId = /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1];
-                logger.debug('webGMESessionId', webGMESessionId);
-                socket = io.connect(serverBaseUrl,
-                    {
-                        query: 'webGMESessionId=' + webGMESessionId,
-                        transports: gmeConfig.socketIO.transports,
-                        multiplex: false
-                    });
-
-                socket.on('error', function (err) {
-                    logger.error(err);
-                    defer.reject(err || 'could not connect');
-                    socket.disconnect();
-                });
-                socket.on('connect', function () {
-                    defer.resolve(socket);
-                });
-
-                return defer.promise;
-            });
-        },
 
         oldSend = process.send,
         oldOn = process.on,
@@ -102,8 +57,6 @@ describe('Simple worker', function () {
         server = WebGME.standaloneServer(gmeConfig);
         server.start(function (err) {
             expect(err).to.equal(null);
-
-            serverBaseUrl = server.getUrl();
 
             testFixture.clearDBAndGetGMEAuth(gmeConfig, usedProjectNames)
                 .then(function (gmeAuth_) {
@@ -128,7 +81,10 @@ describe('Simple worker', function () {
                     baseProjectContext.commitHash = result.commitHash;
                     baseProjectContext.id = result.project.projectId;
                     baseProjectContext.rootHash = result.core.getHash(result.rootNode);
-                    return openSocketIo();
+                    return openSocketIo(server, agent, guestAccount, guestAccount);
+                })
+                .then(function (result) {
+                    webGMESessionId = result.webGMESessionId;
                 })
                 .nodeify(done);
         });

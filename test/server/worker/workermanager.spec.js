@@ -5,62 +5,80 @@
 
 var testFixture = require('../../_globals.js');
 
-describe.skip('ServerWorkerManager', function () {
+describe('ServerWorkerManager', function () {
     'use strict';
-    function sessionToUser(/*sessionID*/) {
-        return [true, 'testUser'];
-    }
 
-    var WebGME = testFixture.WebGME,
-        logger = testFixture.logger.fork('workermanager.spec'),
+    var logger = testFixture.logger.fork('workermanager.spec'),
         expect = testFixture.expect,
         Q = testFixture.Q,
         gmeConfig = testFixture.getGmeConfig(),
+        agent = testFixture.superagent.agent(),
+        guestAccount = gmeConfig.authentication.guestAccount,
         storage,
+        webGMESessionId,
+        server,
         workerConstants = require('../../../src/server/worker/constants'),
         ServerWorkerManager = require('../../../src/server/worker/serverworkermanager'),
         workerManagerParameters = {
-            sessionToUser: sessionToUser,
             globConf: gmeConfig,
             logger: logger,
         },
         projectName = 'SWMProject',
+        projectId = testFixture.projectName2Id(projectName),
         gmeAuth;
 
-    gmeConfig.server.maxWorkers = 5;
+    gmeConfig.server.maxWorkers = 3;
+    gmeConfig.addOn.enable = true;
 
     before(function (done) {
         //adding some project to the database
-        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
-            .then(function (gmeAuth_) {
-                gmeAuth = gmeAuth_;
-                storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-                return storage.openDatabase();
-            })
-            .then(function () {
-                return storage.deleteProject({projectName: projectName});
-            })
-            .then(function () {
-                return testFixture.importProject(storage, {
-                    projectSeed: 'test/server/worker/workermanager/basicProject.json',
-                    projectName: projectName,
-                    branchName: 'master',
-                    gmeConfig: gmeConfig,
-                    logger: logger
-                });
-            })
-            .nodeify(done);
+        server = testFixture.WebGME.standaloneServer(gmeConfig);
+
+        server.start(function (err) {
+            expect(err).to.equal(null);
+
+            testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+                .then(function (gmeAuth_) {
+                    gmeAuth = gmeAuth_;
+                    storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                    return storage.openDatabase();
+                })
+                .then(function () {
+                    return testFixture.forceDeleteProject(storage, gmeAuth, projectName);
+                })
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: 'test/server/worker/workermanager/basicProject.json',
+                        projectName: projectName,
+                        branchName: 'master',
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (/*result*/) {
+                    return testFixture.openSocketIo(server, agent, guestAccount, guestAccount);
+                })
+                .then(function (result) {
+                    webGMESessionId = result.webGMESessionId;
+                })
+                .nodeify(done);
+        });
     });
 
     after(function (done) {
-        storage.deleteProject({projectName: projectName})
-            .then(function () {
-                return Q.all([
-                    storage.closeDatabase(),
-                    gmeAuth.unload()
-                ]);
-            })
-            .nodeify(done);
+        server.stop(function (err) {
+            if (err) {
+                logger.error(err);
+            }
+            testFixture.forceDeleteProject(storage, gmeAuth, projectName)
+                .then(function () {
+                    return Q.all([
+                        storage.closeDatabase(),
+                        gmeAuth.unload()
+                    ]);
+                })
+                .nodeify(done);
+        });
     });
 
     describe('open-close handling', function () {
@@ -131,11 +149,12 @@ describe.skip('ServerWorkerManager', function () {
             });
         });
 
-        it('should fail to start addOn as it is disabled', function (done) {
+        it.skip('should fail to start addOn as it is disabled', function (done) {
             var addOnRequest = {
                 command: 'connectedWorkerStart',
                 workerName: 'TestAddOn',
-                project: 'SWMProject',
+                projectId: projectId,
+                webGMESessionId: webGMESessionId,
                 branch: 'master'
             };
 
@@ -161,14 +180,19 @@ describe.skip('ServerWorkerManager', function () {
 
     describe('simple request-result handling', function () {
 
-        function getAllProjectsInfo(next) {
-            swm.request({command: workerConstants.workerCommands.getAllProjectsInfo}, function (err, resultId) {
+        function exportLibrary(next) {
+            swm.request({
+                command: workerConstants.workerCommands.exportLibrary,
+                branchName: 'master',
+                webGMESessionId: webGMESessionId,
+                projectId: projectId,
+                path: '/323573539'
+            }, function (err, resultId) {
                 expect(err).to.equal(null);
+
                 swm.result(resultId, function (err, result) {
                     expect(err).to.equal(null);
-
-                    expect(result).to.include.keys('SWMProject');
-                    expect(result.SWMProject).to.include.keys('branches', 'rights');
+                    expect(result).to.include.keys('bases', 'root', 'relids', 'containment', 'nodes', 'metaSheets');
                     next();
                 });
             });
@@ -187,7 +211,7 @@ describe.skip('ServerWorkerManager', function () {
         });
 
         it('should handle a single request', function (done) {
-            getAllProjectsInfo(done);
+            exportLibrary(done);
         });
 
         it('should handle multiple requests', function (done) {
@@ -201,12 +225,12 @@ describe.skip('ServerWorkerManager', function () {
                 };
 
             for (i = 0; i < needed; i += 1) {
-                getAllProjectsInfo(requestHandled);
+                exportLibrary(requestHandled);
             }
         });
 
         it('should handle more requests simultaneously than workers allowed', function (done) {
-            var needed = gmeConfig.server.maxWorkers * 2,
+            var needed = gmeConfig.server.maxWorkers + 1,
                 i,
                 requestHandled = function () {
                     needed -= 1;
@@ -216,50 +240,38 @@ describe.skip('ServerWorkerManager', function () {
                 };
 
             for (i = 0; i < needed; i += 1) {
-                getAllProjectsInfo(requestHandled);
+                exportLibrary(requestHandled);
             }
         });
     });
 
     describe('connected worker handling', function () {
-        var server,
-            swm,
-            modifiedGmeConfig = JSON.parse(JSON.stringify(gmeConfig)),
-            modifiedWorkerManagerParameters = JSON.parse(JSON.stringify(workerManagerParameters)),
-            connectedWorkerStartRequest = {
-                command: 'connectedWorkerStart',
-                workerName: 'TestAddOn',
-                project: 'SWMProject',
-                branch: 'master'
+        var swm,
+            getConnectedWorkerStartRequest = function () {
+                return {
+                    command: workerConstants.workerCommands.connectedWorkerStart,
+                    workerName: 'TestAddOn',
+                    projectId: projectId,
+                    webGMESessionId: webGMESessionId,
+                    branch: 'master'
+                };
             };
 
-        modifiedGmeConfig.addOn.enable = true;
-        modifiedWorkerManagerParameters.globConf = modifiedGmeConfig;
-        before(function (done) {
-            server = WebGME.standaloneServer(modifiedGmeConfig);
-            server.start(function () {
-                swm = new ServerWorkerManager(modifiedWorkerManagerParameters);
-                done();
-            });
+        before(function () {
+            swm = new ServerWorkerManager(workerManagerParameters);
         });
 
-        beforeEach(function () {
+        beforeEach(function (done) {
             swm.start();
+            setTimeout(done, 100);
         });
 
         afterEach(function (done) {
             swm.stop(done);
         });
 
-        after(function (done) {
-            server.stop(function (err) {
-                expect(err).to.equal(null);
-                done();
-            });
-        });
-
         it('should start and stop connected worker', function (done) {
-            swm.request(connectedWorkerStartRequest, function (err, id) {
+            swm.request(getConnectedWorkerStartRequest(), function (err, id) {
                 expect(err).to.equal(null);
                 swm.result(id, function (err) {
                     expect(err).to.equal(null);
@@ -271,7 +283,7 @@ describe.skip('ServerWorkerManager', function () {
 
         it('should proxy the query to the connected worker', function (done) {
 
-            swm.request(connectedWorkerStartRequest, function (err, id) {
+            swm.request(getConnectedWorkerStartRequest(), function (err, id) {
                 expect(err).to.equal(null);
                 swm.query(id, {}, function (err/*, result*/) {
                     expect(err).to.equal(null);
@@ -287,7 +299,7 @@ describe.skip('ServerWorkerManager', function () {
 
         it('should fail to proxy queries after swm stop', function (done) {
 
-            swm.request(connectedWorkerStartRequest, function (err, id) {
+            swm.request(getConnectedWorkerStartRequest(), function (err, id) {
                 expect(err).to.equal(null);
                 swm.query(id, {}, function (err/*, result*/) {
                     expect(err).to.equal(null);
@@ -307,7 +319,7 @@ describe.skip('ServerWorkerManager', function () {
 
         it('should fail to proxy connected worker close after swm stop', function (done) {
 
-            swm.request(connectedWorkerStartRequest, function (err, id) {
+            swm.request(getConnectedWorkerStartRequest(), function (err, id) {
                 expect(err).to.equal(null);
 
                 swm.query(id, {}, function (err/*, result*/) {

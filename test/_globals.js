@@ -331,7 +331,67 @@ function forceDeleteProject(storage, gmeAuth, projectName, userId, callback) {
         .then(function () {
             return storage.deleteProject({projectId: projectId});
         }).nodeify(callback);
-};
+}
+
+function logIn(server, agent, userName, password) {
+    var serverBaseUrl = server.getUrl(),
+        deferred = Q.defer();
+
+    agent.post(serverBaseUrl + '/login?redirect=%2F')
+        .type('form')
+        .send({username: userName})
+        .send({password: password})
+        .end(function (err, res) {
+            if (err) {
+                deferred.reject(new Error(err));
+            } else if (res.status !== 200) {
+                deferred.reject(new Error('Status code was not 200'));
+            } else {
+                deferred.resolve(res);
+            }
+        });
+
+    return deferred.promise;
+}
+
+function openSocketIo(server, agent, userName, password) {
+    var io = require('socket.io-client'),
+        serverBaseUrl = server.getUrl(),
+        deferred = Q.defer(),
+        socket,
+        socketReq = {url: serverBaseUrl},
+        webGMESessionId;
+
+    logIn(server, agent, userName, password)
+        .then(function (/*res*/) {
+            agent.attachCookies(socketReq);
+            webGMESessionId = /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1];
+
+            socket = io.connect(serverBaseUrl,
+                {
+                    query: 'webGMESessionId=' + webGMESessionId,
+                    transports: gmeConfig.socketIO.transports,
+                    multiplex: false
+                });
+
+            socket.on('error', function (err) {
+                logger.error(err);
+                deferred.reject(err || 'could not connect');
+                socket.disconnect();
+            });
+
+            socket.on('connect', function () {
+                deferred.resolve({socket: socket, webGMESessionId: webGMESessionId});
+            });
+        })
+        .catch(function (err) {
+            deferred.reject(err);
+        });
+
+
+    return deferred.promise;
+}
+
 
 WebGME.addToRequireJsPaths(gmeConfig);
 
@@ -383,6 +443,8 @@ module.exports = {
     saveChanges: saveChanges,
     projectName2Id: projectName2Id,
     forceDeleteProject: forceDeleteProject,
+    logIn: logIn,
+    openSocketIo: openSocketIo,
 
     STORAGE_CONSTANTS: STORAGE_CONSTANTS,
     openContext: openContext.openContext
