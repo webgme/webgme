@@ -295,41 +295,6 @@ function saveChanges(parameters, done) {
     });
 }
 
-function checkWholeProject(/*parameters, done*/) {
-    //TODO this should export the given project and check against a file or a jsonObject to be deeply equal
-}
-
-function exportProject(/*parameters, done*/) {
-    //TODO gives back a jsonObject which is the export of the project
-    //should work with project object, or mongoUri as well
-    //in case of mongoUri it should open the connection before and close after - or just simply use the exportCLI
-}
-
-function deleteProject(parameters, done) {
-    /*
-     parameters:
-     storage - a storage object, where the project should be created (if not given and mongoUri is not defined we
-     create a new local one and use it
-     projectName - the name of the project
-     */
-
-    if (!parameters.storage) {
-        return done(new Error('cannot delete project without database'));
-    }
-
-    if (!parameters.projectName) {
-        return done(new Error('no project name was given'));
-    }
-
-    parameters.storage.openDatabase(function (err) {
-        if (err) {
-            return done(err);
-        }
-
-        parameters.storage.deleteProject({projectName:parameters.projectName}, done);
-    });
-}
-
 /**
  * This uses the guest account by default
  * @param {string} projectName
@@ -388,9 +353,6 @@ module.exports = {
 
     loadJsonFile: loadJsonFile,
     importProject: importProject,
-    checkWholeProject: checkWholeProject,
-    exportProject: exportProject,
-    deleteProject: deleteProject,
     saveChanges: saveChanges,
     projectName2Id: projectName2Id,
 

@@ -89,6 +89,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         var storage = getConnectedStorage(webGMESessionId),
             project,
             finish = function (err, data) {
+                if (err) {
+                    logger.error('exportLibrary: ', err);
+                }
                 storage.close(function (closeErr) {
                     callback(err || closeErr, data);
                 });
@@ -119,6 +122,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
                 storage.openProject(projectId, function (err, project__, branches) {
                     if (err) {
+                        logger.error('openProject failed', projectId, err);
                         finish(err);
                         return;
                     }
@@ -126,20 +130,20 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     project = project__;
 
                     if (hash) {
-                        gotHash(project);
+                        gotHash();
                         return;
                     }
 
                     commit = commit || branches[branchName];
 
                     if (!commit) {
-                        finish('no such branch found in the project');
+                        finish('Branch not found, projectId: "' + projectId + '", branchName: "' + branchName + '".');
                         return;
                     }
 
                     project.loadObject(commit, function (err, commitObject) {
                         if (err) {
-                            finish(err);
+                            finish('Failed loading commitHash: ' + err);
                             return;
                         }
 
@@ -644,7 +648,11 @@ process.on('message', function (parameters) {
                 resultHandling);
         } else {
             initResult();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
+            safeSend({
+                pid: process.pid,
+                type: CONSTANT.msgTypes.request,
+                error: 'invalid parameters: ' + JSON.stringify(parameters)
+            });
         }
     } else if (parameters.command === CONSTANT.workerCommands.getResult) {
         if (resultReady === true) {
@@ -674,7 +682,7 @@ process.on('message', function (parameters) {
                 safeSend({
                     pid: process.pid,
                     type: CONSTANT.msgTypes.result,
-                    error: 'invalid parameters',
+                    error: 'invalid parameters: ' + JSON.stringify(parameters),
                     result: {}
                 });
             }
@@ -709,7 +717,11 @@ process.on('message', function (parameters) {
                 parameters.branchName, parameters.commit, parameters.path, resultHandling);
         } else {
             initResult();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
+            safeSend({
+                pid: process.pid,
+                type: CONSTANT.msgTypes.request,
+                error: 'invalid parameters: ' + JSON.stringify(parameters)
+            });
         }
     } else if (parameters.command === CONSTANT.workerCommands.seedProject) {
         safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
