@@ -536,27 +536,26 @@ describe('AutoRouter', function () {
                 assert(path.points.length >= 2, 'Path missing temporary points');
             });
 
-            it('routeAsync should stop optimizing if path is disconnected', function (done) {
+            it('should reconnect paths disconnected during routeAsync', function (done) {
                 var boxes = utils.addBoxes([[100, 100], [200, 200], [300, 300]]),
-                    called = false,
-                    testFn = function () {
-                        assert(called, 'Callback (redrawing connections) was not called!');
-                        done();
-                    },
+                    first = true,
                     path;
 
                 utils.connectAll(boxes);
                 router.routeAsync({
                     update: function () {
-                        path = router.graph.paths[0];
-                        router.graph.disconnect(path);
+                        if (first) {
+                            path = router.graph.paths[0];
+                            router.graph.disconnect(path);
+                            first = false;
+                        }
                     },
                     callback: function (/* paths */) {
-                        called = true;
+                        // Check that the disconnected path has been connected
+                        assert(router.graph.paths[0].points.length > 0);
+                        done();
                     }
                 });
-
-                setTimeout(testFn, 100);
             });
         });
 
