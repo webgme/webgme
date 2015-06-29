@@ -570,13 +570,10 @@ describe('standalone server', function () {
 
         it('should grant perms to newly-created project', function (done) {
             var projectName = 'ClientCreateProject',
-                projectId;
+                projectId = testFixture.projectName2Id(projectName, 'user');
             openSocketIo()
                 .then(function (socket) {
                     return Q.ninvoke(socket, 'emit', 'createProject', {projectName: projectName})
-                        .then(function (projectId_) {
-                            projectId = projectId_;
-                        })
                         .finally(function () {
                             socket.disconnect();
                         });
