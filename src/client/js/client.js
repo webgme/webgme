@@ -1480,8 +1480,6 @@ define([
 
         //create from file
         this.createProjectFromFile = function (projectName, jProject, callback) {
-            //TODO somehow the export / import should contain the INFO field
-            // so the tags and description could come from it
             storage.createProject(projectName, function (err, projectId) {
                 if (err) {
                     callback(err);
@@ -1522,18 +1520,26 @@ define([
                                     callback(err);
                                     return;
                                 }
-
-                                self.selectProject(projectId, function (err) {
+                                storage.closeProject(projectId, function (err) {
                                     if (err) {
+                                        logger.error('Closing temporary project failed in project creation from file',
+                                            err);
                                         callback(err);
                                         return;
                                     }
 
-                                    Serialization.import(state.core, state.root.object, jProject, function (err) {
+                                    self.selectProject(projectId, function (err) {
                                         if (err) {
-                                            return callback(err);
+                                            callback(err);
+                                            return;
                                         }
-                                        saveRoot('project created from file', callback);
+
+                                        Serialization.import(state.core, state.root.object, jProject, function (err) {
+                                            if (err) {
+                                                return callback(err);
+                                            }
+                                            saveRoot('project created from file', callback);
+                                        });
                                     });
                                 });
                             });

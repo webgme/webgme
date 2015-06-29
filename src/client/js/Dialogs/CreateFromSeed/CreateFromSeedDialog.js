@@ -5,8 +5,9 @@
  */
 
 define(['js/Loader/LoaderCircles',
+    'common/storage/util',
     'text!./templates/CreateFromSeed.html'
-], function (LoaderCircles, createFromSeedDialogTemplate) {
+], function (LoaderCircles, StorageUtil, createFromSeedDialogTemplate) {
 
     'use strict';
 
@@ -90,6 +91,7 @@ define(['js/Loader/LoaderCircles',
         self._loader.start();
         self._client.getProjects({branches: true}, function (err, projectList) {
             var projectId,
+                displayedProjectName,
                 branchId,
                 projectGroup,
                 i,
@@ -110,11 +112,12 @@ define(['js/Loader/LoaderCircles',
             }
 
             for (i = 0; i < projectList.length; i += 1) {
-                projectId = projectList[i].name;
+                projectId = projectList[i]._id;
+                displayedProjectName = StorageUtil.getProjectDisplayedNameFromProjectId(projectId);
                 if (Object.keys(projectList[i].branches).length === 1) {
                     branchId = Object.keys(projectList[i].branches)[0];
                     self._optGroupDb.append($('<option>', {
-                            text: projectId + ' (' + branchId + ' ' +
+                            text: displayedProjectName + ' (' + branchId + ' ' +
                             projectList[i].branches[branchId].slice(0, 8) + ')',
                             value: 'db:' + projectId + projectList[i].branches[branchId]
                         }
@@ -125,7 +128,7 @@ define(['js/Loader/LoaderCircles',
                 } else {
                     // more than one branches
                     projectGroup = $('<optgroup>', {
-                            label: projectId
+                            label: displayedProjectName
                         }
                     );
                     self._option.append(projectGroup);
@@ -133,7 +136,7 @@ define(['js/Loader/LoaderCircles',
                     for (branchId in projectList[i].branches) {
                         if (projectList[i].branches.hasOwnProperty(branchId)) {
                             projectGroup.append($('<option>', {
-                                    text: projectId + ' (' + branchId + ' ' +
+                                    text: displayedProjectName + ' (' + branchId + ' ' +
                                     projectList[i].branches[branchId].slice(0, 8) + ')',
                                     value: 'db:' + projectId +
                                     projectList[i].branches[branchId]

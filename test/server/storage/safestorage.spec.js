@@ -290,6 +290,23 @@ describe('SafeStorage', function () {
                 .nodeify(done);
         });
 
+        it('should return after deleteBranch when it did not exist', function (done) {
+            var data = {
+                projectId: projectId,
+                branchName: 'doesNotExist'
+            };
+
+            safeStorage.deleteBranch(data)
+                .then(function (result) {
+                    expect(result).to.deep.equal({status: 'SYNCH'});
+                    return safeStorage.getBranches(data);
+                })
+                .then(function (result) {
+                    expect(result).to.not.have.property(data.branchName);
+                })
+                .nodeify(done);
+        });
+
         it('should loadObjects', function (done) {
             var data = {
                     projectId: projectId,
