@@ -1950,8 +1950,13 @@ define([
             time = options.time || 5,
             optimizeFn = function (state) {
 
+                // If a path has been disconnected, start the routing over
+                if (!self.completelyConnected) {
+                    return setTimeout(startRouting, time);
+                }
+
                 updateFn(self.paths);
-                if (state.finished || !self.completelyConnected) {
+                if (state.finished) {
                     return callbackFn(self.paths);
                 } else {
                     state = self._optimize(state);
