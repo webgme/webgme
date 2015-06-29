@@ -635,7 +635,7 @@ define([
         this.forkCurrentBranch = function (newName, commitHash, callback) {
             var self = this,
                 activeBranchName = self.getActiveBranchName(),
-                activeProjectName = self.getActiveProjectId(),
+                activeProjectId = self.getActiveProjectId(),
                 forkName;
 
             logger.debug('forkCurrentBranch', newName, commitHash);
@@ -648,7 +648,7 @@ define([
                 return;
             }
             forkName = newName || activeBranchName + '_' + (new Date()).getTime();
-            storage.forkBranch(activeProjectName, activeBranchName, forkName, commitHash,
+            storage.forkBranch(activeProjectId, activeBranchName, forkName, commitHash,
                 function (err, forkHash) {
                     if (err) {
                         logger.error('Could not fork branch:', newName, err);
@@ -1567,6 +1567,7 @@ define([
             if (command.projectId && command.branchName) {
                 storage.simpleRequest(command, function (err, resId) {
                     if (err) {
+                        logger.error('getExportProjectBranchUrl failed with error', err);
                         callback(err);
                     } else {
                         callback(null,

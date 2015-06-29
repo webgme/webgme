@@ -166,7 +166,7 @@ define([
                 conflictItemE = conflictItemTemplate.clone();
                 conflictItemE.find('.path').text(conflictItem.theirs.path);
 
-                linkTheirs = '?project=' + encodeURIComponent(self._client.getActiveProjectName()) +
+                linkTheirs = '?project=' + encodeURIComponent(self._client.getActiveProjectId()) +
                              '&commit=' + encodeURIComponent(mergeResult.theirCommitHash) +
                              // FIXME: regexp parses out the path
                              '&node=' + encodeURIComponent(pathRegExp.exec(conflictItem.theirs.path)[0]);
@@ -185,7 +185,7 @@ define([
                     mineText = conflictItem.mine.path + ': ' + JSON.stringify(conflictItem.mine.value);
                 }
 
-                linkMine = '?project=' + encodeURIComponent(self._client.getActiveProjectName()) +
+                linkMine = '?project=' + encodeURIComponent(self._client.getActiveProjectId()) +
                            '&commit=' + encodeURIComponent(mergeResult.myCommitHash) +
                            '&node=' + encodeURIComponent(pathRegExp.exec(conflictItem.mine.path)[0]);  // FIXME: regexp parses out the path
 

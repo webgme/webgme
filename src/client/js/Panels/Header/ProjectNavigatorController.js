@@ -173,9 +173,9 @@ define([
                 self.gmeClient.watchDatabase(function (emitter, data) {
                     self.logger.debug('watchDatabase event', data);
                     if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_CREATED) {
-                        self.addProject(data.projectName);
+                        self.addProject(data.projectId);
                     } else if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_DELETED) {
-                        self.removeProject(data.projectName);
+                        self.removeProject(data.projectId);
                     } else {
                         self.logger.error('Unexpected event type', data.etype);
                     }

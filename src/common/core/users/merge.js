@@ -190,7 +190,7 @@ define([
                     if (branchName) {
                         result.targetBranchName = branchName;
                     }
-                    result.projectName = parameters.project.name;
+                    result.projectId = parameters.project.projectId;
                     deferred.resolve(result);
                     return;
                 }
