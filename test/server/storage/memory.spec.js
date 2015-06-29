@@ -13,26 +13,15 @@ describe('Memory storage', function () {
         logger = testFixture.logger.fork('memory'),
         Q = testFixture.Q,
 
-        projectName = 'newProject',
-        projectId = gmeConfig.authentication.guestAccount + testFixture.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName,
         gmeAuth,
-
         guestAccount = gmeConfig.authentication.guestAccount;
 
 
     before(function (done) {
-        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, null)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
-                return Q.all([
-                    gmeAuth.authorizeByUserId(guestAccount, testFixture.projectName2Id('something'), 'create',
-                        {
-                            read: true,
-                            write: true,
-                            delete: true
-                        }),
-                    gmeAuth.addProject(guestAccount, 'something', null)
-                    ]);
+                return Q();
             })
             .nodeify(done);
     });
@@ -123,10 +112,38 @@ describe('Memory storage', function () {
 
     describe('project operations', function () {
 
-        it('should fail to open a project if not connected to database', function (done) {
-            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+        function importProjectAndClose(storage, projectName) {
+            var deferred = Q.defer(),
+                projectId;
+            storage.openDatabase()
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: 'seeds/EmptyProject.json',
+                        projectName: projectName,
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (result) {
+                    projectId = result.projectId;
+                    return storage.closeDatabase();
+                })
+                .then(function () {
+                    deferred.resolve(projectId);
+                })
+                .catch(deferred.reject);
 
-            memoryStorage.openProject({projectId: testFixture.projectName2Id('something')})
+            return deferred.promise;
+        }
+
+        it('should fail to open a project if not connected to database', function (done) {
+            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
+                projectName = 'something';
+
+            importProjectAndClose(memoryStorage, projectName)
+                .then(function (projectId) {
+                    return memoryStorage.openProject({projectId: projectId});
+                })
                 .then(function () {
                     done(new Error('should have failed to openProject'));
                 })
@@ -139,28 +156,41 @@ describe('Memory storage', function () {
         });
 
         it('should fail to open a project if project does not exist', function (done) {
-            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
+                projectName = 'doesNotExist',
+                projectId = testFixture.projectName2Id(projectName);
 
             memoryStorage.openDatabase()
                 .then(function () {
-                    return memoryStorage.openProject({projectId: testFixture.projectName2Id('something')});
+                    return gmeAuth.authorizeByUserId(guestAccount, projectId, 'create',
+                        {
+                            read: true,
+                            write: true,
+                            delete: true
+                        });
+                })
+                .then(function () {
+                    return memoryStorage.openProject({projectId: projectId});
                 })
                 .then(function () {
                     done(new Error('should have failed to openProject'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to openProject'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.include('Project does not exist');
+                    done();
+                })
+                .done();
         });
 
         it('should fail to delete a project if not connected to database', function (done) {
-            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
-            memoryStorage.deleteProject({projectId: testFixture.projectName2Id('something')})
+            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
+                projectName = 'willNotBeDeleted';
+
+            importProjectAndClose(memoryStorage, projectName)
+                .then(function (projectId) {
+                    return memoryStorage.deleteProject({projectId: projectId});
+                })
                 .then(function () {
                     done(new Error('should have failed to deleteProject'));
                 })
@@ -173,9 +203,10 @@ describe('Memory storage', function () {
         });
 
         it('should fail to create a project if not connected to database', function (done) {
-            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
+                projectName = 'somethingElse';
 
-            memoryStorage.createProject({projectName: 'somethingElse'})
+            memoryStorage.createProject({projectName: projectName})
                 .then(function () {
                     done(new Error('should have failed to createProject'));
                 })
@@ -188,9 +219,13 @@ describe('Memory storage', function () {
         });
 
         it('should fail to get projects and branches if not connected to database', function (done) {
-            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
+                projectName = 'something';
 
-            memoryStorage.getProjects({branches: true})
+            importProjectAndClose(memoryStorage, projectName)
+                .then(function (/*projectId*/) {
+                    return memoryStorage.getProjects({branches: true});
+                })
                 .then(function () {
                     done(new Error('should have failed to getProjects'));
                 })
@@ -216,10 +251,10 @@ describe('Memory storage', function () {
                 .catch(done);
         });
 
-
         it('should create a project', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
-                projectId;
+                projectId,
+                projectName = 'something';
 
             memoryStorage.openDatabase()
                 .then(function () {
@@ -231,7 +266,7 @@ describe('Memory storage', function () {
                 })
                 .then(function (dbProject) {
                     projectId = dbProject.projectId;
-                    return memoryStorage.getProjects({});
+                    return memoryStorage.getProjects({branches: true});
                 })
                 .then(function (projects) {
                     expect(projects[0]._id).to.equal(projectId);
@@ -241,7 +276,8 @@ describe('Memory storage', function () {
         });
 
         it('should not have access to project', function (done) {
-            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
+                projectName = 'something';
 
             memoryStorage.openDatabase()
                 .then(function () {
@@ -255,7 +291,7 @@ describe('Memory storage', function () {
                     });
                 })
                 .then(function () {
-                    return memoryStorage.getProjects({username: 'admin'});
+                    return memoryStorage.getProjects({username: 'admin', branches: true});
                 })
                 .then(function (projects) {
                     expect(projects).deep.equal([]);
@@ -265,7 +301,8 @@ describe('Memory storage', function () {
         });
 
         it('should fail to create a project if it already exists', function (done) {
-            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
+                projectName = 'something';
 
             memoryStorage.openDatabase()
                 .then(function () {
@@ -279,7 +316,7 @@ describe('Memory storage', function () {
                     return memoryStorage.getProjects({branches: true});
                 })
                 .then(function (projects) {
-                    expect(projects.length).to.equal(1);
+                    expect(projects.length).to.equal(1, 'getProject should have returned with one.');
                     return memoryStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
@@ -295,7 +332,8 @@ describe('Memory storage', function () {
 
         it('should create and delete a project', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
-                projectId;
+                projectId,
+                projectName = 'something';
 
             memoryStorage.openDatabase()
                 .then(function () {
@@ -307,9 +345,10 @@ describe('Memory storage', function () {
                 })
                 .then(function (dbProject) {
                     projectId = dbProject.projectId;
-                    return memoryStorage.getProjects({});
+                    return memoryStorage.getProjects({branches: true});
                 })
                 .then(function (projects) {
+                    expect(projects.length).to.equal(1, 'getProject should have returned with one.');
                     expect(projects[0]._id).to.equal(projectId);
                     return memoryStorage.deleteProject({projectId: projectId});
                 })
@@ -356,7 +395,8 @@ describe('Memory storage', function () {
 
         it('should open an existing project', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
-                projectId;
+                projectId,
+                projectName = 'createdAndExisting';
 
             memoryStorage.openDatabase()
                 .then(function () {
@@ -371,6 +411,7 @@ describe('Memory storage', function () {
                     return memoryStorage.getProjects({branches: true});
                 })
                 .then(function (projects) {
+                    expect(projects.length).to.equal(1, 'getProject should have returned with one.');
                     expect(projects[0]._id).deep.equal(projectId);
                     return memoryStorage.getBranches({projectId: projectId});
                 })
@@ -384,7 +425,8 @@ describe('Memory storage', function () {
 
         it('should get an existing project', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
-                projectId;
+                projectId,
+                projectName = 'createdAndGettable';
 
             memoryStorage.openDatabase()
                 .then(function () {
@@ -399,6 +441,7 @@ describe('Memory storage', function () {
                     return memoryStorage.getProjects({branches: true});
                 })
                 .then(function (projects) {
+                    expect(projects.length).to.equal(1, 'getProject should have returned with one.');
                     expect(projects[0]._id).to.equal(projectId);
                     return memoryStorage.openProject({projectId: projectId});
                 })
@@ -422,7 +465,8 @@ describe('Memory storage', function () {
 
         it('should fail to insert object with circular references to an existing project', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
-                projectId;
+                projectId,
+                projectName = 'circularReference';
 
             memoryStorage.openDatabase()
                 .then(function () {
@@ -437,6 +481,7 @@ describe('Memory storage', function () {
                     return memoryStorage.getProjects({branches: true});
                 })
                 .then(function (projects) {
+                    expect(projects.length).to.equal(1, 'getProject should have returned with one.');
                     expect(projects[0]._id).to.equal(projectId);
                     return memoryStorage.openProject({projectId: projectId});
                 })
@@ -465,43 +510,11 @@ describe('Memory storage', function () {
                 .done();
         });
 
-        it('should fail to open a non-existing project', function (done) {
-            var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
-
-            memoryStorage.openDatabase()
-                .then(function () {
-                    return gmeAuth.authorizeByUserId(guestAccount, testFixture.projectName2Id('project_does_not_exist'),
-                        'create',
-                    {
-                        read: true,
-                        write: true,
-                        delete: true
-                    });
-                })
-                .then(function () {
-                    return gmeAuth.addProject(guestAccount, 'project_does_not_exist', null);
-                })
-                .then(function () {
-                    return memoryStorage.openProject({projectId: testFixture.projectName2Id('project_does_not_exist')});
-                })
-                .then(function () {
-                    done(new Error('expected to fail'));
-                })
-                .catch(function (err) {
-                    expect(err instanceof Error).to.equal(true);
-                    expect(err.message).to.include('Project does not exist');
-                    done();
-                })
-                .done();
-        });
-
         it('should import, open, and close a project', function (done) {
-            var storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+            var storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
+                projectName = 'imported';
 
             storage.openDatabase()
-                .then(function () {
-                    return storage.deleteProject({projectId: projectId});
-                })
                 .then(function () {
                     return testFixture.importProject(storage, {
                         projectSeed: 'seeds/EmptyProject.json',
@@ -511,8 +524,8 @@ describe('Memory storage', function () {
                     });
                 })
                 .then(function (result) {
-                    expect(result.projectId).to.equal(projectId);
-                    return storage.openProject({projectId: projectId});
+                    expect(result.projectId).to.equal(testFixture.projectName2Id(projectName));
+                    return storage.openProject({projectId: result.projectId});
                 })
                 .then(function (project) {
                     return project.closeProject();
@@ -522,17 +535,15 @@ describe('Memory storage', function () {
         });
     });
 
-
     describe('project specific functions', function () {
-        var project;
+        var project,
+            projectName = 'MemoryProjectSpecificFunctions',
+            projectId = testFixture.projectName2Id(projectName);
 
         before(function (done) {
             var storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
 
             storage.openDatabase()
-                .then(function () {
-                    return storage.deleteProject({projectId: projectId});
-                })
                 .then(function () {
                     return testFixture.importProject(storage, {
                         projectSeed: 'seeds/EmptyProject.json',
@@ -725,9 +736,8 @@ describe('Memory storage', function () {
 
     describe('complex chain', function () {
         var project,
-            projectName = 'complexChainTest',
-            projectId = gmeConfig.authentication.guestAccount + testFixture.STORAGE_CONSTANTS.PROJECT_ID_SEP +
-                projectName,
+            projectName = 'MemoryComplexChainTest',
+            projectId = testFixture.projectName2Id(projectName),
             storage,
             commitChain = [];
 
