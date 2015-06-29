@@ -205,6 +205,13 @@ describe('AutoRouter', function () {
             });
         });
 
+        it('issue/404_setStartPointPrev_is_not_a_function', function (done) {
+            requirejs(['text!aRtestCases/issue404.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
         it('should not move box that doesn\'t exist', function (done) {
             requirejs(['text!aRtestCases/finding_correct_buffer_box.json'], function (actions) {
                 bugPlayer.expectedErrors.push(/Box does not exist/);
@@ -964,7 +971,7 @@ describe('AutoRouter', function () {
 
     });
 
-    describe.skip('Replay tests', function() {
+    describe('Replay tests', function() {
         describe('Standard', function () {
             // Set up the Autorouter as a web worker
             before(function() {
@@ -973,7 +980,7 @@ describe('AutoRouter', function () {
             describe('Tests', replayTests);
         });
 
-        describe('Web Worker', function () {
+        describe.skip('Web Worker', function () {
             // Set up the Autorouter as a web worker
             before(function() {
                 bugPlayer.useWebWorker(true);
