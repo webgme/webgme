@@ -111,6 +111,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     core.loadByPath(root, libraryRootPath, function (err, libraryRoot) {
                         if (err) {
                             finish(err);
+                            return;
                         }
                         Serialization.export(core, libraryRoot, finish);
                     });
@@ -706,7 +707,6 @@ process.on('message', function (parameters) {
             });
         }
     } else if (parameters.command === CONSTANT.workerCommands.exportLibrary) {
-        logger.debug(parameters);
         if (typeof parameters.projectId === 'string' &&
             (typeof parameters.hash === 'string' ||
             typeof parameters.branchName === 'string' ||

@@ -1608,6 +1608,7 @@ define([
             if (command.projectId && command.hash) {
                 storage.simpleRequest(command, function (err, resId) {
                     if (err) {
+                        logger.error('getExportLibraryUrl failed with error', err);
                         callback(err);
                     } else {
                         callback(null,
