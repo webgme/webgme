@@ -153,38 +153,44 @@ main = function (argv, callback) {
             .nodeify(cb);
     }
 
-    function doUpgrade(upgradeInfo, gmeAuth) {
-        var promises = [];
+    function doUpgrade(upgradeInfo) {
+        var promises = [],
+            promise;
 
-        throw new Error('Not implemented yet.');
         upgradeInfo.map(function (info) {
-            var newProjectId = StorageUtil.getProjectIdFromUserIdAndProjectName(info.owner, info.collectionName),
-                deferred = Q.defer();
+            var newProjectId = StorageUtil.getProjectIdFromUserIdAndProjectName(info.owner, info.collectionName);
 
-            promises.push(
-                Q.allSettled([
-                    // renameCollection
-                    Q.ninvoke(db, 'renameCollection', info.collectionName, newProjectId),
-                    // add project ownership info
-                    gmeAuth.addProject(info.owner, info.collectionName),
-                    deferred.promise
-                ])
-            );
+            promise = Q.ninvoke(db, 'collection', info.collectionName)
+                .then(function (collection) {
+                    return Q.ninvoke(collection, 'rename', newProjectId);
+                })
+                .then(function () {
+                    return gmeAuth.addProject(info.owner, info.collectionName, {} /*info*/);
+                })
+                .then(function () {
+                    var authorizePromises = [],
+                        authorizePromise;
 
-            users.map(function (user) {
-                if (user.projects.hasOwnProperty(info.collectionName)) {
-                    logger.info('Authorizing ' + user._id + ' for ' + newProjectId);
-                    gmeAuth.authorizeByUserId(user._id, newProjectId, 'create', user.projects[info.collectionName])
-                        .then(function () {
-                            return gmeAuth.authorizeByUserId(user._id, info.collectionName, 'delete');
-                        })
-                        .then(deferred.resolve)
-                        .catch(deferred.reject);
-                }
-            });
+                    users.map(function (user) {
+                        if (user.projects.hasOwnProperty(info.collectionName)) {
+                            logger.info('Authorizing ' + user._id + ' for ' + newProjectId);
+
+                            authorizePromise = gmeAuth.authorizeByUserId(user._id, newProjectId, 'create', user.projects[info.collectionName])
+                                .then(function () {
+                                    return gmeAuth.authorizeByUserId(user._id, info.collectionName, 'delete');
+                                });
+
+                            authorizePromises.push(authorizePromise);
+                        }
+                    });
+
+                    return Q.allSettled(authorizePromises);
+                });
+
+            promises.push(promise);
         });
 
-        return Q.all(promises);
+        return Q.allSettled(promises);
     }
 };
 
