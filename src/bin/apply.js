@@ -128,13 +128,14 @@ main = function (argv) {
                 noUpdate: program.noUpdate || false
             });
 
-        }).
-        then(function () {
+        })
+        .then(function () {
             logger.info('patch [' +
                 program.args[0] + '] applied successfully to project [' + program.projectName + ']');
             finishUp(null);
         })
         .catch(finishUp);
+
     return mainDeferred.promise;
 };
 
