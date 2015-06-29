@@ -491,7 +491,7 @@ describe('WebSocket', function () {
                 });
         });
 
-        it('should fail to open an existing project if data is not an object', function (done) {
+        it.skip('should fail to open an existing project if data is not an object', function (done) {
             openSocketIo()
                 .then(function (socket) {
                     var data = projectName;

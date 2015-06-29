@@ -544,16 +544,16 @@ function GMEAuth(session, gmeConfig) {
     }
 
     function addProject(orgOrUserId, projectName, info, callback) {
-        var data = {
-            owner: orgOrUserId,
-            name: projectName,
-            fullName: orgOrUserId + '/' + projectName,
-            info: info || {}
-        };
+        var id = orgOrUserId + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName,
+            data = {
+                _id: id,
+                owner: orgOrUserId,
+                name: projectName,
+                fullName: orgOrUserId + '/' + projectName,
+                info: info || {}
+            };
 
-        return projectCollection.update({_id: orgOrUserId + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName},
-            data, {upsert: true}
-        )
+        return projectCollection.update({_id: id}, data, {upsert: true})
             .nodeify(callback);
     }
 
