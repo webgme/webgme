@@ -73,13 +73,11 @@ main = function (argv, callback) {
                 return doUpgrade(upgradeInfo);
             }
         })
-        .then(function (details) {
-            if (details) {
-                logger.info(details);
-                //details.map(function (detail) {
-                //    // print out upgrade details.
-                //    logger.info(detail.collectionName + ' will be owned by ' + detail.owner);
-                //});
+        .then(function () {
+            if (dryRun) {
+                logger.warn('Database did not get migrated. This was only a dry run.');
+            } else {
+                logger.info('Database got migrated.');
             }
         })
         .catch(function (err) {
