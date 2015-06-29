@@ -59,7 +59,7 @@ var testFixture = require('./test/_globals.js'),
         .then(function () {
             // Delete the projects to be imported
             function deleteProject(projectInfo) {
-                return storage.deleteProject({projectId: testFixture.projectName2Id(projectInfo.name)});
+                return testFixture.forceDeleteProject(storage, gmeAuth, projectInfo.name);
             }
 
             return Q.all(PROJECTS_TO_IMPORT.map(deleteProject));
