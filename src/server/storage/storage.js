@@ -334,6 +334,9 @@ Storage.prototype.setBranchHash = function (data, callback) {
                             .catch(function (err) {
                                 deferred.reject(new Error('Failed loading objects for events' + err));
                             });
+                    } else {
+                        //setting empty branch to empty
+                        deferred.resolve({status: CONSTANTS.SYNCH});
                     }
                 })
                 .catch(function (err) {
