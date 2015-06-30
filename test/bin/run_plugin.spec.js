@@ -6,7 +6,7 @@
 
 var testFixture = require('../_globals');
 
-describe.skip('Run plugin CLI', function () {
+describe('Run plugin CLI', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),

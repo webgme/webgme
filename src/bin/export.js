@@ -53,7 +53,7 @@ main = function (argv) {
         };
 
     program
-        .version('0.1.0')
+        .version('0.2.0')
         .option('-m, --mongo-database-uri [url]',
         'URI of the MongoDB [by default we use the one from the configuration file]')
         .option('-u, --user [string]', 'the user of the command [if not given we use the default user]')

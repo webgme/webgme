@@ -9,36 +9,51 @@ var main;
 main = function (argv, callback) {
     'use strict';
     var path = require('path'),
-        gmeConfig = require(path.join(process.cwd(), 'config'));
-    var webgme = require('../../webgme'),
+        gmeConfig = require(path.join(process.cwd(), 'config')),
+        webgme = require('../../webgme'),
+        MongoURI = require('mongo-uri'),
         Command = require('commander').Command,
         logger = webgme.Logger.create('gme:bin:import', gmeConfig.bin.log),
-        program = new Command();
-    var storage,
+        program = new Command(),
+        storage,
+        STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
         PluginCliManager = require('../../src/plugin/climanager'),
         Project = require('../../src/server/storage/userproject'),
         project,
         pluginConfig;
 
-    callback = callback || function () {};
+    callback = callback || function () {
+        };
 
     webgme.addToRequireJsPaths(gmeConfig);
 
-    program.option('-p, --project <name><mandatory>', 'Name of the project.');
-    program.option('-b, --branch <name>', 'Name of the branch.', 'master');
-    program.option('-j, --pluginConfigPath <name>',
-        'Path to json file with plugin options that should be overwritten.', '');
-    program.option('-n, --pluginName <name><mandatory>', 'Path to given plugin.');
-    program.option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '');
-    program.parse(argv);
+    program
+        .version('0.2.0')
+        .option('-p, --project-name [string]', 'project name [mandatory]')
+        .option('-n, --pluginName [string]', 'Path to given plugin.')
+        .option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '')
+        .option('-m, --mongo-database-uri [url]',
+        'URI of the MongoDB [default from the configuration file]', gmeConfig.mongo.uri)
+        .option('-u, --user [string]', 'the user of the command [if not given we use the default user]',
+        gmeConfig.authentication.guestAccount)
+        .option('-o, --owner [string]', 'the owner of the project [by default, the user is the owner]')
+        .option('-b, --branchName [string]', 'Name of the branch.', 'master')
+        .option('-j, --pluginConfigPath [string]',
+        'Path to json file with plugin options that should be overwritten.', '')
+        .parse(argv);
 
-    if (!(program.pluginName && program.project)) {
+    if (!(program.pluginName && program.projectName)) {
         program.help();
         logger.error('A project and pluginName must be specified.');
     }
 
-    logger.info('Executing ' + program.pluginName + ' plugin on ' + program.project + ' in branch ' +
-    program.branch + '.');
+    // this line throws a TypeError for invalid databaseConnectionString
+    MongoURI.parse(program.mongoDatabaseUri);
+
+    gmeConfig.mongo.uri = program.mongoDatabaseUri;
+
+    logger.info('Executing ' + program.pluginName + ' plugin on ' + program.projectName + ' in branch ' +
+        program.branchName + '.');
 
     if (program.pluginConfigPath) {
         pluginConfig = require(path.resolve(program.pluginConfigPath));
@@ -52,15 +67,26 @@ main = function (argv, callback) {
             return storage.openDatabase();
         })
         .then(function () {
+            var params = {
+                projectId: '',
+                username: program.user
+            };
             logger.info('Database is opened.');
-            return storage.openProject({projectId: program.project});
+
+            if (program.owner) {
+                params.projectId = program.owner + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+            } else {
+                params.projectId = program.user + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+            }
+
+            return storage.openProject(params);
         })
         .then(function (dbProject) {
             logger.info('Project is opened.');
             project = new Project(dbProject, storage, logger, gmeConfig);
             return storage.getBranchHash({
-                projectId: program.project,
-                branchName: program.branch
+                projectId: project.projectId,
+                branchName: program.branchName
             });
         })
         .then(function (commitHash) {
@@ -69,7 +95,7 @@ main = function (argv, callback) {
                 context = {
                     activeNode: program.selectedObjID,
                     activeSelection: [], //TODO: Enable passing this from command line.
-                    branchName: program.branch,
+                    branchName: program.branchName,
                     commitHash: commitHash,
                 };
 

@@ -52,7 +52,7 @@ main = function (argv) {
         };
 
     program
-        .version('0.1.0')
+        .version('0.2.0')
         .usage('<patch-file> [options]')
         .option('-m, --mongo-database-uri [url]',
         'URI of the MongoDB [by default we use the one from the configuration file]')
