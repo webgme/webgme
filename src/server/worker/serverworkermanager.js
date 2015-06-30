@@ -51,7 +51,7 @@ function ServerWorkerManager(_parameters) {
             _workers[worker.pid] = {worker: worker, state: CONSTANTS.workerStates.initializing, type: null, cb: null};
             logger.debug('workerPid forked ' + worker.pid);
             worker.on('message', messageHandling);
-            worker.on('exit', function(code, signal) {
+            worker.on('exit', function (code, signal) {
                 logger.debug('worker has exited: ' + worker.pid);
                 if (code !== null && !signal) {
                     logger.warn('worker ' + worker.pid + ' has exited abnormally with code ' + code);
@@ -63,9 +63,12 @@ function ServerWorkerManager(_parameters) {
     }
 
     function freeWorker(workerPid) {
+        logger.debug('freeWorker', workerPid);
         if (_workers[workerPid]) {
             _workers[workerPid].worker.kill('SIGINT');
             delete _workers[workerPid];
+        } else {
+            logger.warn('freeWorker - worker did not exist', workerPid);
         }
     }
 
@@ -102,6 +105,7 @@ function ServerWorkerManager(_parameters) {
         if (_waitingRequests.length > 0) {
             if (_workers[workerPid].state === CONSTANTS.workerStates.free) {
                 var request = _waitingRequests.shift();
+                logger.debug('Worker will handle waiting request', workerPid, {metadata: request});
                 _workers[workerPid].state = CONSTANTS.workerStates.working;
                 _workers[workerPid].cb = request.cb;
                 _workers[workerPid].resid = null;
@@ -140,6 +144,8 @@ function ServerWorkerManager(_parameters) {
                     }
                     if (cFunction) {
                         cFunction(msg.error, msg.resid);
+                    } else {
+                        logger.warn('No callback associated with', worker.resid);
                     }
                     break;
                 case CONSTANTS.msgTypes.result:
@@ -188,6 +194,7 @@ function ServerWorkerManager(_parameters) {
     }
 
     function request(parameters, callback) {
+        logger.debug('Adding new request', {metadata: parameters});
         _waitingRequests.push({request: parameters, cb: callback});
         reserveWorkerIfNecessary();
     }
@@ -252,8 +259,11 @@ function ServerWorkerManager(_parameters) {
     }
 
     function queueManager() {
-        var i, workerPids, initializingWorkers = 0,
+        var i,
+            workerPids,
+            initializingWorkers = 0,
             firstIdleWorker;
+
         if (_waitingRequests.length > 0) {
 
             workerPids = Object.keys(_workers);

@@ -73,9 +73,11 @@ define([
                 logger.debug('inside afterProjectClosed projectCnt', projectCnt);
                 if (projectCnt === 0) {
                     // Remove the handler for the socket.io events 'connect' and 'disconnect'.
+                    logger.debug('Removing connect and disconnect events');
                     webSocket.socket.removeAllListeners('connect');
                     webSocket.socket.removeAllListeners('disconnect');
                     // Disconnect from the server.
+                    logger.debug('Disconnecting web-socket');
                     webSocket.disconnect();
                     self.connected = false;
                     // Remove all local event-listeners.

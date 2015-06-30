@@ -9,13 +9,16 @@
 define(['socket.io-client'], function (io) {
     'use strict';
 
-    function IoClient(host, webGMESessionId, gmeConfig) {
+    function IoClient(host, webGMESessionId, mainLogger, gmeConfig) {
+        var logger = mainLogger.fork('socketio-nodeclient');
+
         this.connect = function (callback) {
             var socketIoOptions = JSON.parse(JSON.stringify(gmeConfig.socketIO)),
                 protocol = gmeConfig.server.https.enable ? 'https' : 'http',
                 hostUrl = protocol + '://' + host + ':' + gmeConfig.server.port;
 
             socketIoOptions.query = {webGMESessionId: webGMESessionId};
+            logger.debug('Connecting to "' + hostUrl + '" with options', {metadata: socketIoOptions});
 
             callback(null, io.connect(hostUrl, socketIoOptions));
         };
