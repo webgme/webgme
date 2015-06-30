@@ -177,8 +177,8 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                             data[names[i]][targets[j]] = {attr: {}, reg: {}};
                             keys = _core.getMemberOwnAttributeNames(node, names[i], targets[j]);
                             for (k = 0; k < keys.length; k++) {
-                                data[names[i]][targets[j]].attr[keys[i]] = _core.getMemberAttribute(node,
-                                    names[i], targets[j], keys[i]);
+                                data[names[i]][targets[j]].attr[keys[k]] = _core.getMemberAttribute(node,
+                                    names[i], targets[j], keys[k]);
                             }
                             keys = _core.getMemberRegistryNames(node, names[i], targets[j]);
                             for (k = 0; k < keys.length; k++) {
@@ -334,7 +334,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         }
 
         function getPathOfDiff(diff, path) {
-            var pathArray = (path || '').split('/'),
+            var pathArray = path.split('/'),
                 i;
             pathArray.shift();
             for (i = 0; i < pathArray.length; i++) {
@@ -413,14 +413,11 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                     if (child) {
                         guid = _core.getGuid(child);
                         base = _core.getBase(child);
-                        if (base) {
-                            base = _core.getPath(base);
-                        }
                         diff[tDiff[i].relid] = {
                             guid: guid,
                             removed: false,
                             hash: _core.getHash(child),
-                            pointer: {source: {}, target: {base: base}}
+                            pointer: {source: {}, target: {base: base === null ? null : _core.getPath(base)}}
                         };
                         _yetToCompute[guid] = _yetToCompute[guid] || {};
                         _yetToCompute[guid].to = child;
@@ -594,15 +591,15 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         }
 
         function removePathFromDiff(diff, path) {
-            var relId, i;
+            var relId, i, pathArray;
             if (path === '') {
                 diff = null;
             } else {
-                path = path.split('/');
-                path.shift();
-                relId = path.pop();
-                for (i = 0; i < path.length; i++) {
-                    diff = diff[path[i]];
+                pathArray = path.split('/');
+                pathArray.shift();
+                relId = pathArray.pop();
+                for (i = 0; i < pathArray.length; i++) {
+                    diff = diff[pathArray[i]];
                 }
                 delete diff[relId];
             }
@@ -633,7 +630,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                     }
                 }
             };
-            _shrink(rootDiff, false);
+            _shrink(rootDiff);
         }
 
         function checkRound() {
@@ -690,9 +687,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                     }
                 }
             }
-            return TASYNC.call(function () {
-                return checkRound();
-            }, done);
+            return TASYNC.call(checkRound, done);
         }
 
         _core.nodeDiff = function (source, target) {
@@ -770,19 +765,18 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         function getAncestor(node, path) {
             var ownPath = _core.getPath(node),
                 ancestorPath = '',
-                i;
-            path = path.split('/');
-            ownPath = ownPath.split('/');
-            ownPath.shift();
-            path.shift();
-            for (i = 0; i < ownPath.length; i++) {
-                if (ownPath[i] === path[i]) {
-                    ancestorPath = ancestorPath + '/' + ownPath[i];
+                i, ownPathArray, pathArray;
+            pathArray = path.split('/');
+            ownPathArray = ownPath.split('/');
+            ownPathArray.shift();
+            pathArray.shift();
+            for (i = 0; i < ownPathArray.length; i++) {
+                if (ownPathArray[i] === pathArray[i]) {
+                    ancestorPath = ancestorPath + '/' + ownPathArray[i];
                 } else {
                     break;
                 }
             }
-            ownPath = _core.getPath(node);
             while (ownPath !== ancestorPath) {
                 node = _core.getParent(node);
                 ownPath = _core.getPath(node);
@@ -1171,16 +1165,16 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         };
 
         function getNodeByGuid(diff, guid) {
-            var relids, i, temp;
+            var relids, i, node;
             if (diff.guid === guid) {
                 return diff;
             }
 
             relids = getDiffChildrenRelids(diff);
             for (i = 0; i < relids.length; i++) {
-                temp = getNodeByGuid(diff[relids[i]], guid);
-                if (temp) {
-                    return temp;
+                node = getNodeByGuid(diff[relids[i]], guid);
+                if (node) {
+                    return node;
                 }
             }
             return null;
@@ -1793,7 +1787,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                                     };
                                 _conflictTheirs[tPath].conflictingPaths[tPath] = true;
                             } else {
-                                bData.max = eData.min;
+                                bData.min = eData.min;
                             }
                         }
                         //targets
