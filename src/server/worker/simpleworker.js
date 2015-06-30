@@ -294,7 +294,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                 if (closeErr) {
                                     logger.error('error closing storage', closeErr);
                                 }
-                                callback(err, result.serialize());
+                                callback(err, result ? result.serialize() : null);
                             });
                         }
                     );
