@@ -25,6 +25,8 @@ describe('corediff-base', function () {
                 chainLength = 1000; // FIXME: Do we really need 1000 commits?
 
             before(function (done) {
+                this.timeout(4000); // creating 1000 commits on windows times out if tests are running with coverage.
+
                 testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
                     .then(function (gmeAuth_) {
                         gmeAuth = gmeAuth_;
