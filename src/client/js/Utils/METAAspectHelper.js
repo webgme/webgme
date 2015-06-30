@@ -47,7 +47,7 @@ define([
         }
 
         //there is an open project
-        if (_client.getActiveProjectName()) {
+        if (_client.getActiveProjectId()) {
             _territoryId = _client.addUI(_territoryUI, function (/*events*/) {
                 _processMetaContainer();
                 _territoryUI.dispatchEvent(_events.META_ASPECT_CHANGED);

@@ -13,6 +13,7 @@ define([
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/Merge/MergeDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
+    'common/storage/util',
     'isis-ui-components/simpleDialog/simpleDialog',
     'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html'
 ], function (Logger,
@@ -22,6 +23,7 @@ define([
              CommitDialog,
              MergeDialog,
              ProjectRepositoryDialog,
+             StorageUtil,
              ConfirmDialog,
              DeleteDialogTemplate) {
     'use strict';
@@ -171,9 +173,9 @@ define([
                 self.gmeClient.watchDatabase(function (emitter, data) {
                     self.logger.debug('watchDatabase event', data);
                     if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_CREATED) {
-                        self.addProject(data.projectName);
+                        self.addProject(data.projectId);
                     } else if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_DELETED) {
-                        self.removeProject(data.projectName);
+                        self.removeProject(data.projectId);
                     } else {
                         self.logger.error('Unexpected event type', data.etype);
                     }
@@ -206,7 +208,7 @@ define([
 
         self.gmeClient.addEventListener(CONSTANTS.CLIENT.BRANCH_CHANGED, function (client, branchId) {
             self.logger.debug(CONSTANTS.CLIENT.BRANCH_CHANGED, branchId);
-            self.selectBranch({projectId: self.gmeClient.getActiveProjectName(), branchId: branchId});
+            self.selectBranch({projectId: self.gmeClient.getActiveProjectId(), branchId: branchId});
         });
 
         angular.element(self.$window).on('keydown', function (e) {
@@ -270,10 +272,15 @@ define([
     };
 
     ProjectNavigatorController.prototype.updateProjectList = function () {
-        var self = this;
+        var self = this,
+            params = {
+                asObject: true,
+                rights: true,
+                branches: true
+            };
         self.logger.debug('updateProjectList');
         self.projects = {};
-        self.gmeClient.getProjectsAndBranches(true, function (err, projectList) {
+        self.gmeClient.getProjects(params, function (err, projectList) {
             var projectId,
                 branchId;
 
@@ -282,7 +289,7 @@ define([
                 return;
             }
 
-            self.logger.debug('getProjectsAndBranches', projectList);
+            self.logger.debug('getProjects', projectList);
 
             // clear project list
             self.projects = {};
@@ -315,7 +322,8 @@ define([
             deleteProject,
             selectProject,
             refreshPage,
-            updateProjectList;
+            updateProjectList,
+            projectDiplayedName;
 
         rights = rights || {
                 delete: true,
@@ -326,7 +334,7 @@ define([
         if (self.gmeClient) {
             showHistory = function (data) {
                 var prd;
-                if (self.gmeClient.getActiveProjectName() === data.projectId) {
+                if (self.gmeClient.getActiveProjectId() === data.projectId) {
                     prd = new ProjectRepositoryDialog(self.gmeClient);
                     prd.show();
                 } else {
@@ -360,7 +368,7 @@ define([
                     dialogTitle: 'Confirm delete',
                     dialogContentTemplate: 'DeleteDialogTemplate.html',
                     onOk: function () {
-                        var activeProjectId = self.gmeClient.getActiveProjectName();
+                        var activeProjectId = self.gmeClient.getActiveProjectId();
 
                         self.gmeClient.deleteProject(data.projectId, function (err) {
                             if (err) {
@@ -402,10 +410,12 @@ define([
             self.selectProject(data);
         };
 
+        projectDiplayedName = StorageUtil.getProjectDisplayedNameFromProjectId(projectId);
+
         // create a new project object
         self.projects[projectId] = {
             id: projectId,
-            label: projectId,
+            label: projectDiplayedName,
             iconClass: rights.write ? '' : 'glyphicon glyphicon-lock',
             iconPullRight: !rights.write,
             disabled: !rights.read,
@@ -809,7 +819,7 @@ define([
                 }
             }
 
-            if (projectId === self.gmeClient.getActiveProjectName()) {
+            if (projectId === self.gmeClient.getActiveProjectId()) {
                 self.selectProject({}); // redundant, we reload the entire page in postDelete
             }
 
@@ -897,7 +907,7 @@ define([
             self.projects[projectId].isSelected = true;
 
             if (self.gmeClient) {
-                if (projectId !== self.gmeClient.getActiveProjectName()) {
+                if (projectId !== self.gmeClient.getActiveProjectId()) {
                     self.gmeClient.selectProject(projectId, function (err) {
                         if (err) {
                             self.logger.error(err);

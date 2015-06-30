@@ -59,7 +59,6 @@ var WebGME = require('../webgme'),
 
     ExecutorClient = requireJS('common/executor/ExecutorClient'),
     BlobClient = requireJS('blob/BlobClient'),
-    openContext = require('../src/server/util/opencontext'),
     Project = require('../src/server/storage/userproject'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
 
@@ -145,12 +144,14 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
         .then(function () {
             var projectsToAuthorize = [],
                 projectName,
+                projectId,
                 i;
 
             if (typeof projectNameOrNames === 'string') {
                 projectName = projectNameOrNames;
+                projectId = guestAccount + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
                 projectsToAuthorize.push(
-                    gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
+                    gmeAuth.authorizeByUserId(guestAccount, projectId, 'create', {
                         read: true,
                         write: true,
                         delete: true
@@ -158,8 +159,9 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
                 );
             } else if (projectNameOrNames instanceof Array) {
                 for (i = 0; i < projectNameOrNames.length; i += 1) {
+                    projectId = guestAccount + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectNameOrNames[i];
                     projectsToAuthorize.push(
-                        gmeAuth.authorizeByUserId(guestAccount, projectNameOrNames[i], 'create', {
+                        gmeAuth.authorizeByUserId(guestAccount, projectId, 'create', {
                             read: true,
                             write: true,
                             delete: true
@@ -235,7 +237,7 @@ function importProject(storage, parameters, callback) {
 
                 var commitObject = project.createCommitObject([''], persisted.rootHash, 'test', 'project imported'),
                     commitData = {
-                        projectName: parameters.projectName,
+                        projectId: project.projectId,
                         branchName: branchName,
                         commitObject: commitObject,
                         coreObjects: persisted.objects
@@ -247,6 +249,7 @@ function importProject(storage, parameters, callback) {
                             branchName: branchName,
                             commitHash: commitObject._id,
                             project: project,
+                            projectId: project.projectId,
                             core: core,
                             jsonProject: projectJson,
                             rootNode: rootNode,
@@ -291,40 +294,103 @@ function saveChanges(parameters, done) {
     });
 }
 
-function checkWholeProject(/*parameters, done*/) {
-    //TODO this should export the given project and check against a file or a jsonObject to be deeply equal
+/**
+ * This uses the guest account by default
+ * @param {string} projectName
+ * @param {string} [userId=gmeConfig.authentication.guestAccount]
+ * @returns {string} projectId
+ */
+function projectName2Id(projectName, userId) {
+    userId = userId || gmeConfig.authentication.guestAccount;
+    return userId + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
 }
 
-function exportProject(/*parameters, done*/) {
-    //TODO gives back a jsonObject which is the export of the project
-    //should work with project object, or mongoUri as well
-    //in case of mongoUri it should open the connection before and close after - or just simply use the exportCLI
+/**
+ * Forces the deletion of the given projectName (N.B. not projectId).
+ * @param storage
+ * @param gmeAuth
+ * @param projectName
+ * @param [userId=gmeConfig.authentication.guestAccount]
+ * @param [callback]
+ * @returns {*}
+ */
+function forceDeleteProject(storage, gmeAuth, projectName, userId, callback) {
+    var projectId = projectName2Id(projectName, userId);
+
+    userId = userId || gmeConfig.authentication.guestAccount;
+
+    return gmeAuth.addProject(userId, projectName, null)
+        .then(function () {
+            return gmeAuth.authorizeByUserId(userId, projectId, 'create', {
+                read: true,
+                write: true,
+                delete: true
+            });
+        })
+        .then(function () {
+            return storage.deleteProject({projectId: projectId});
+        }).nodeify(callback);
 }
 
-function deleteProject(parameters, done) {
-    /*
-     parameters:
-     storage - a storage object, where the project should be created (if not given and mongoUri is not defined we
-     create a new local one and use it
-     projectName - the name of the project
-     */
+function logIn(server, agent, userName, password) {
+    var serverBaseUrl = server.getUrl(),
+        deferred = Q.defer();
 
-    if (!parameters.storage) {
-        return done(new Error('cannot delete project without database'));
-    }
+    agent.post(serverBaseUrl + '/login?redirect=%2F')
+        .type('form')
+        .send({username: userName})
+        .send({password: password})
+        .end(function (err, res) {
+            if (err) {
+                deferred.reject(new Error(err));
+            } else if (res.status !== 200) {
+                deferred.reject(new Error('Status code was not 200'));
+            } else {
+                deferred.resolve(res);
+            }
+        });
 
-    if (!parameters.projectName) {
-        return done(new Error('no project name was given'));
-    }
-
-    parameters.storage.openDatabase(function (err) {
-        if (err) {
-            return done(err);
-        }
-
-        parameters.storage.deleteProject({projectName:parameters.projectName}, done);
-    });
+    return deferred.promise;
 }
+
+function openSocketIo(server, agent, userName, password) {
+    var io = require('socket.io-client'),
+        serverBaseUrl = server.getUrl(),
+        deferred = Q.defer(),
+        socket,
+        socketReq = {url: serverBaseUrl},
+        webGMESessionId;
+
+    logIn(server, agent, userName, password)
+        .then(function (/*res*/) {
+            agent.attachCookies(socketReq);
+            webGMESessionId = /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1];
+
+            socket = io.connect(serverBaseUrl,
+                {
+                    query: 'webGMESessionId=' + webGMESessionId,
+                    transports: gmeConfig.socketIO.transports,
+                    multiplex: false
+                });
+
+            socket.on('error', function (err) {
+                logger.error(err);
+                deferred.reject(err || 'could not connect');
+                socket.disconnect();
+            });
+
+            socket.on('connect', function () {
+                deferred.resolve({socket: socket, webGMESessionId: webGMESessionId});
+            });
+        })
+        .catch(function (err) {
+            deferred.reject(err);
+        });
+
+
+    return deferred.promise;
+}
+
 
 WebGME.addToRequireJsPaths(gmeConfig);
 
@@ -373,11 +439,11 @@ module.exports = {
 
     loadJsonFile: loadJsonFile,
     importProject: importProject,
-    checkWholeProject: checkWholeProject,
-    exportProject: exportProject,
-    deleteProject: deleteProject,
     saveChanges: saveChanges,
+    projectName2Id: projectName2Id,
+    forceDeleteProject: forceDeleteProject,
+    logIn: logIn,
+    openSocketIo: openSocketIo,
 
-    STORAGE_CONSTANTS: STORAGE_CONSTANTS,
-    openContext: openContext.openContext
+    STORAGE_CONSTANTS: STORAGE_CONSTANTS
 };

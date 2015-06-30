@@ -14,9 +14,8 @@ describe('CoreTree', function () {
         should = require('chai').should(),
         requirejs = require('requirejs'),
         projectName = 'CoreTreeTest',
+        projectId = testFixture.projectName2Id(projectName),
         CoreTree = requirejs('common/core/coretree'),
-
-    // TODO: replace with in memory storage
 
         logger = testFixture.logger.fork('coretree.spec'),
         storage,
@@ -33,12 +32,10 @@ describe('CoreTree', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
-            })
-            .then(function () {
                 return storage.createProject({projectName: projectName});
             })
-            .then(function (project) {
+            .then(function (dbProject) {
+                var project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
                 coreTree = new CoreTree(project, {
                     globConf: gmeConfig,
                     logger: testFixture.logger.fork('CoreTree:core')
@@ -49,7 +46,7 @@ describe('CoreTree', function () {
     });
 
     after(function (done) {
-        storage.deleteProject({projectName: projectName})
+        storage.deleteProject({projectId: projectId})
             .then(function () {
                 return Q.all([
                     storage.closeDatabase(),

@@ -47,7 +47,7 @@ define([
 
     ProjectTitleWidget.prototype._refresh = function () {
         var client = this._client,
-            actualProject = client.getActiveProjectName(),
+            actualProject = client.getActiveProjectId(),
             actualBranch = client.getActiveBranchName(),
             readOnly = client.isProjectReadOnly() || client.isCommitReadOnly(),
             titleText = actualProject + ' @ ' + actualBranch,

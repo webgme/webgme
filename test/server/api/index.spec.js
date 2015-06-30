@@ -20,6 +20,7 @@ describe('API', function () {
         Q = testFixture.Q,
 
         superagent = testFixture.superagent,
+        projectName2Id = testFixture.projectName2Id,
 
         auth,
         dbConn,
@@ -627,7 +628,9 @@ describe('API', function () {
                                     agent.get(server.getUrl() + '/api/v1/users/admin')
                                         .end(function (err, res2) {
                                             expect(res.status).equal(200, err);
-                                            expect(res.body).deep.equal(res2.body); // make sure we did not lose any users
+
+                                            // make sure we did not lose any users
+                                            expect(res.body).deep.equal(res2.body);
 
                                             done();
                                         });
@@ -648,7 +651,9 @@ describe('API', function () {
                                     agent.get(server.getUrl() + '/api/v1/users/guest')
                                         .end(function (err, res2) {
                                             expect(res.status).equal(200, err);
-                                            expect(res.body).deep.equal(res2.body); // make sure we did not lose any users
+
+                                            // make sure we did not lose any users
+                                            expect(res.body).deep.equal(res2.body);
 
                                             done();
                                         });
@@ -980,9 +985,9 @@ describe('API', function () {
                         })
                         .then(function () {
                             return Q.all([
-                                safeStorage.deleteProject({projectName: projectName}),
-                                safeStorage.deleteProject({projectName: unauthorizedProjectName}),
-                                safeStorage.deleteProject({projectName: toDeleteProjectName})
+                                safeStorage.deleteProject({projectId: projectName2Id(projectName)}),
+                                safeStorage.deleteProject({projectId: projectName2Id(unauthorizedProjectName)}),
+                                safeStorage.deleteProject({projectId: projectName2Id(toDeleteProjectName)})
                             ]);
                         })
                         .then(function () {
@@ -1009,12 +1014,13 @@ describe('API', function () {
                         })
                         .then(function () {
                             return Q.all([
-                                gmeAuth.authorizeByUserId(guestAccount, unauthorizedProjectName, 'create',
-                                    {
+                                gmeAuth.authorizeByUserId(guestAccount, projectName2Id(unauthorizedProjectName),
+                                    'create', {
                                         read: true,
                                         write: false,
                                         delete: false
-                                    })
+                                    }
+                                )
                             ]);
                         })
                         .nodeify(done);
@@ -1045,19 +1051,35 @@ describe('API', function () {
                 agent.get(server.getUrl() + '/api/projects').end(function (err, res) {
                     expect(res.status).equal(200, err);
                     expect(res.body.length).to.equal(3);
-                    expect(res.body).to.contain(projectName);
-                    expect(res.body).to.contain(unauthorizedProjectName);
-                    expect(res.body).to.contain(toDeleteProjectName);
+                    expect(res.body).to.contain({
+                        _id: 'guest+unauthorized_project',
+                        fullName: 'guest/unauthorized_project',
+                        name: 'unauthorized_project',
+                        owner: 'guest'
+                    });
+                    expect(res.body).to.contain( {
+                        _id: 'guest+project_to_delete',
+                        fullName: 'guest/project_to_delete',
+                        name: 'project_to_delete',
+                        owner: 'guest'
+                    });
+                    expect(res.body).to.contain({
+                        _id: 'guest+project',
+                        fullName: 'guest/project',
+                        name: 'project',
+                        owner: 'guest'
+                    });
                     done();
                 });
             });
 
             it('should branches for project /projects/:projectId/branches', function (done) {
-                agent.get(server.getUrl() + '/api/projects/project/branches').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    expect(res.body).to.have.property('master');
-                    done();
-                });
+                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches')
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.have.property('master');
+                        done();
+                    });
             });
 
             it('should not get branches for non-existent project', function (done) {
@@ -1068,41 +1090,43 @@ describe('API', function () {
             });
 
             it('should get branch information for project /projects/:projectId/branches/master', function (done) {
-                agent.get(server.getUrl() + '/api/projects/' + projectName + '/branches/master').end(function (err,
-                                                                                                               res) {
-                    expect(res.status).equal(200, err);
-                    expect(res.body).to.have.property('projectName');
-                    expect(res.body).to.have.property('branchName');
-                    expect(res.body).to.have.property('commitObject');
-                    expect(res.body).to.have.property('coreObjects');
+                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches/master')
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.have.property('projectId');
+                        expect(res.body).to.have.property('branchName');
+                        expect(res.body).to.have.property('commitObject');
+                        expect(res.body).to.have.property('coreObjects');
 
-                    expect(res.body.projectName).to.equal(projectName);
-                    expect(res.body.branchName).to.equal('master');
+                        expect(res.body.projectId).to.equal(projectName2Id(projectName));
+                        expect(res.body.branchName).to.equal('master');
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it('should not get branch information for non-existent branch', function (done) {
-                agent.get(server.getUrl() + '/api/projects/project/branches/does_not_exist').end(function (err, res) {
-                    expect(res.status).equal(404, err);
-                    done();
-                });
+                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches/does_not_exist')
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
             });
 
             it('should list commits for project /projects/:projectId/commits', function (done) {
-                agent.get(server.getUrl() + '/api/projects/project/commits').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    expect(res.body.length).to.equal(1);
-                    expect(res.body[0]).to.have.property('message');
-                    expect(res.body[0]).to.have.property('parents');
-                    expect(res.body[0]).to.have.property('root');
-                    expect(res.body[0]).to.have.property('time');
-                    expect(res.body[0]).to.have.property('type');
-                    expect(res.body[0]).to.have.property('updater');
-                    expect(res.body[0]).to.have.property('_id');
-                    done();
-                });
+                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/commits')
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body.length).to.equal(1);
+                        expect(res.body[0]).to.have.property('message');
+                        expect(res.body[0]).to.have.property('parents');
+                        expect(res.body[0]).to.have.property('root');
+                        expect(res.body[0]).to.have.property('time');
+                        expect(res.body[0]).to.have.property('type');
+                        expect(res.body[0]).to.have.property('updater');
+                        expect(res.body[0]).to.have.property('_id');
+                        done();
+                    });
             });
 
             it('should not get commits for non-existent project', function (done) {
@@ -1113,10 +1137,11 @@ describe('API', function () {
             });
 
             it('should delete a project by id /projects/project_to_delete', function (done) {
-                agent.del(server.getUrl() + '/api/projects/project_to_delete').end(function (err, res) {
-                    expect(res.status).equal(204, err);
-                    done();
-                });
+                agent.del(server.getUrl() + '/api/projects/' + projectName2Id(toDeleteProjectName))
+                    .end(function (err, res) {
+                        expect(res.status).equal(204, err);
+                        done();
+                    });
             });
 
             it('should fail to delete a non-existent project', function (done) {

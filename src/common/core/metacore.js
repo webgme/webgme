@@ -9,9 +9,8 @@ define([
     'common/util/assert',
     'common/core/core',
     'common/core/tasync',
-    'common/util/jjv',
     'common/util/canon'
-], function (ASSERT, Core, TASYNC, JsonValidator, CANON) {
+], function (ASSERT, Core, TASYNC, CANON) {
     'use strict';
 
     // ----------------- CoreType -----------------

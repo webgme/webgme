@@ -11,6 +11,7 @@ describe('Plugin', function () {
         gmeConfig,
         client,
         projectName = 'pluginProject',
+        projectId,
         InterpreterManager,
         currentBranchName,
         currentBranchHash,
@@ -28,6 +29,8 @@ describe('Plugin', function () {
             Client = Client_;
             gmeConfig = JSON.parse(gmeConfigJSON);
             client = new Client(gmeConfig);
+            projectId = gmeConfig.authentication.guestAccount + client.CONSTANTS.STORAGE.PROJECT_ID_SEP +
+                projectName;
             InterpreterManager = InterpreterManager_;
             window.WebGMEGlobal = {};
             window.WebGMEGlobal.plugins = {};
@@ -39,7 +42,7 @@ describe('Plugin', function () {
                         allPlugins = res.body.allPlugins;
                         client.connectToDatabase(function (err) {
                             expect(err).to.equal(null);
-                            client.selectProject(projectName, function (err) {
+                            client.selectProject(projectId, function (err) {
                                 expect(err).to.equal(null);
 
                                 originalCommitHash = client.getActiveCommitHash();
@@ -56,7 +59,7 @@ describe('Plugin', function () {
     afterEach(function (done) {
         if (currentBranchName) {
             client.selectBranch('master', null, function (err) {
-                client.deleteBranch(projectName, currentBranchName, currentBranchHash, function (err2) {
+                client.deleteBranch(projectId, currentBranchName, currentBranchHash, function (err2) {
                     currentBranchName = null;
                     done(err || err2);
                 });
@@ -71,7 +74,7 @@ describe('Plugin', function () {
     });
 
     function createSelectBranch(branchName, callback) {
-        client.createBranch(projectName, branchName, originalCommitHash, function (err) {
+        client.createBranch(projectId, branchName, originalCommitHash, function (err) {
             expect(err).to.equal(null);
             client.selectBranch(branchName, null, callback);
         });
@@ -127,7 +130,7 @@ describe('Plugin', function () {
         var name = 'PluginGenerator',
             context = {
                 managerConfig: {
-                    project: projectName,
+                    project: projectId,
                     activeNode: '',
                     commit: originalCommitHash,
                     branchName: 'master'
@@ -207,7 +210,7 @@ describe('Plugin', function () {
                 expect(pluginResult.commits[0].status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
                 expect(pluginResult.commits[1].branchName).to.include('MinimalWorkingExample1');
                 expect(pluginResult.commits[1].status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
-                client.getBranches(projectName, function (err, branches) {
+                client.getBranches(projectId, function (err, branches) {
                     expect(err).to.equal(null);
                     expect(Object.keys(branches).length).to.equal(2);
                     done();
@@ -265,18 +268,18 @@ describe('Plugin', function () {
                 expect(pluginResult.commits[0].status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
                 expect(pluginResult.commits[1].branchName).to.equal('PluginForked1Fork');
                 expect(pluginResult.commits[1].status).to.equal(client.CONSTANTS.STORAGE.FORKED);
-                client.getBranches(projectName, function (err, branches) {
+                client.getBranches(projectId, function (err, branches) {
                     expect(err).to.equal(null);
 
                     expect(Object.keys(branches).length).to.equal(3);
                     expect(branches).to.include.keys('master', branchName, 'PluginForked1Fork');
-                    client.deleteBranch(projectName, 'PluginForked1Fork', branches.PluginForked1Fork, function (err) {
+                    client.deleteBranch(projectId, 'PluginForked1Fork', branches.PluginForked1Fork, function (err) {
                         expect(err).to.equal(null);
 
                         client.selectBranch('master', null, function (err) {
                             expect(err).to.equal(null);
 
-                            client.deleteBranch(projectName, branchName, branches[branchName], function (err) {
+                            client.deleteBranch(projectId, branchName, branches[branchName], function (err) {
                                 expect(err).to.equal(null);
 
                                 done();
@@ -322,18 +325,18 @@ describe('Plugin', function () {
                 expect(pluginResult.commits[1].branchName).to.equal('PluginForked2Fork');
                 expect(pluginResult.commits[1].status).to.equal(client.CONSTANTS.STORAGE.FORKED);
                 client.completeTransaction('stopping');
-                client.getBranches(projectName, function (err, branches) {
+                client.getBranches(projectId, function (err, branches) {
                     expect(err).to.equal(null);
 
                     expect(Object.keys(branches).length).to.equal(3);
                     expect(branches).to.include.keys('master', branchName, 'PluginForked2Fork');
-                    client.deleteBranch(projectName, 'PluginForked2Fork', branches.PluginForked2Fork, function (err) {
+                    client.deleteBranch(projectId, 'PluginForked2Fork', branches.PluginForked2Fork, function (err) {
                         expect(err).to.equal(null);
 
                         client.selectBranch('master', null, function (err) {
                             expect(err).to.equal(null);
 
-                            client.deleteBranch(projectName, branchName, branches[branchName], function (err) {
+                            client.deleteBranch(projectId, branchName, branches[branchName], function (err) {
                                 expect(err).to.equal(null);
 
                                 done();

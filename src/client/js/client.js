@@ -156,7 +156,7 @@ define([
             } else {
                 lightState = {
                     connection: self.getNetworkStatus(),
-                    projectName: self.getActiveProjectName(),
+                    projectId: self.getActiveProjectId(),
                     branchName: self.getActiveBranchName(),
                     branchStatus: self.getBranchStatus(),
                     commitHash: self.getActiveCommitHash(),
@@ -217,7 +217,7 @@ define([
 
                     beforeLoading = false;
                     newCommitObject = storage.makeCommit(
-                        state.project.name,
+                        state.project.projectId,
                         state.branchName,
                         [state.commit.current],
                         persisted.rootHash,
@@ -323,7 +323,7 @@ define([
 
             if (isConnected()) {
                 if (state.project) {
-                    closeProject(state.project.name, closeStorage);
+                    closeProject(state.project.projectId, closeStorage);
                 } else {
                     closeStorage(null);
                 }
@@ -333,11 +333,11 @@ define([
             }
         };
 
-        this.selectProject = function (projectName, callback) {
+        this.selectProject = function (projectId, callback) {
             if (isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
             }
-            var prevProjectName,
+            var prevProjectId,
                 branchToOpen = 'master';
 
             function projectOpened(err, project, branches, access) {
@@ -353,11 +353,11 @@ define([
                 });
                 self.meta.initialize(state.core, state.metaNodes, saveRoot);
                 logState('info', 'projectOpened');
-                self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectName);
+                self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectId);
 
                 if (branches.hasOwnProperty('master') === false) {
                     branchToOpen = Object.keys(branches)[0] || null;
-                    logger.debug('Project "' + projectName + '" did not have a master branch, picked:', branchToOpen);
+                    logger.debug('Project "' + projectId + '" did not have a master branch, picked:', branchToOpen);
                 }
                 ASSERT(branchToOpen, 'No branch avaliable in project'); // TODO: Deal with this
                 self.selectBranch(branchToOpen, null, function (err) {
@@ -372,31 +372,31 @@ define([
             }
 
             if (state.project) {
-                prevProjectName = state.project.name;
-                logger.debug('A project was open, closing it', prevProjectName);
+                prevProjectId = state.project.projectId;
+                logger.debug('A project was open, closing it', prevProjectId);
 
-                if (prevProjectName === projectName) {
-                    logger.warn('projectName is already opened', projectName);
+                if (prevProjectId === projectId) {
+                    logger.warn('projectId is already opened', projectId);
                     callback(null);
                     return;
                 }
-                closeProject(prevProjectName, function (err) {
+                closeProject(prevProjectId, function (err) {
                     if (err) {
                         logger.error('problems closing previous project', err);
                         callback(err);
                         return;
                     }
-                    storage.openProject(projectName, projectOpened);
+                    storage.openProject(projectId, projectOpened);
                 });
             } else {
-                storage.openProject(projectName, projectOpened);
+                storage.openProject(projectId, projectOpened);
             }
         };
 
-        function closeProject(projectName, callback) {
+        function closeProject(projectId, callback) {
             state.project = null;
             //TODO what if for some reason we are in transaction?
-            storage.closeProject(projectName, function (err) {
+            storage.closeProject(projectId, function (err) {
                 if (err) {
                     callback(err);
                     return;
@@ -417,7 +417,7 @@ define([
                 state.msg = '';
 
                 cleanUsersTerritories();
-                self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, projectName);
+                self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, projectId);
                 callback(null);
             });
         }
@@ -448,7 +448,7 @@ define([
                     return;
                 }
                 commitHandler = commitHandler || getDefaultCommitHandler();
-                storage.openBranch(state.project.name, branchName, getUpdateHandler(), commitHandler,
+                storage.openBranch(state.project.projectId, branchName, getUpdateHandler(), commitHandler,
                     function (err, latestCommit) {
                         var commitObject;
                         if (err) {
@@ -489,7 +489,7 @@ define([
             if (state.branchName !== null) {
                 logger.debug('Branch was open, closing it first', state.branchName);
                 prevBranchName = state.branchName;
-                storage.closeBranch(state.project.name, prevBranchName, openBranch);
+                storage.closeBranch(state.project.projectId, prevBranchName, openBranch);
             } else {
                 openBranch(null);
             }
@@ -548,7 +548,7 @@ define([
                 prevBranchName = state.branchName;
                 state.branchName = null;
                 //state.branchStatus = null;
-                storage.closeBranch(state.project.name, prevBranchName, openCommit);
+                storage.closeBranch(state.project.projectId, prevBranchName, openCommit);
             } else {
                 openCommit(null);
             }
@@ -586,7 +586,7 @@ define([
         function getUpdateHandler() {
             return function (updateQueue, eventData, callback) {
                 var commitHash = eventData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
-                logger.debug('updateHandler invoked. project, branch', eventData.projectName, eventData.branchName);
+                logger.debug('updateHandler invoked. project, branch', eventData.projectId, eventData.branchName);
                 if (state.inTransaction) {
                     logger.warn('Is in transaction, will not load in changes');
                     callback(true); // aborted: true
@@ -635,7 +635,7 @@ define([
         this.forkCurrentBranch = function (newName, commitHash, callback) {
             var self = this,
                 activeBranchName = self.getActiveBranchName(),
-                activeProjectName = self.getActiveProjectName(),
+                activeProjectId = self.getActiveProjectId(),
                 forkName;
 
             logger.debug('forkCurrentBranch', newName, commitHash);
@@ -648,7 +648,7 @@ define([
                 return;
             }
             forkName = newName || activeBranchName + '_' + (new Date()).getTime();
-            storage.forkBranch(activeProjectName, activeBranchName, forkName, commitHash,
+            storage.forkBranch(activeProjectId, activeBranchName, forkName, commitHash,
                 function (err, forkHash) {
                     if (err) {
                         logger.error('Could not fork branch:', newName, err);
@@ -669,8 +669,8 @@ define([
             return state.branchStatus;
         };
 
-        this.getActiveProjectName = function () {
-            return state.project && state.project.name;
+        this.getActiveProjectId = function () {
+            return state.project && state.project.projectId;
         };
 
         this.getActiveBranchName = function () {
@@ -756,7 +756,7 @@ define([
             self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
             self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
             logState('info', 'undo [before setBranchHash]');
-            storage.setBranchHash(state.project.name,
+            storage.setBranchHash(state.project.projectId,
                 state.branchName, state.undoRedoChain.commit, state.commit.current, function (err) {
                     if (err) {
                         //TODO do we need to handle this? How?
@@ -789,7 +789,7 @@ define([
             self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
             self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
             logState('info', 'redo [before setBranchHash]');
-            storage.setBranchHash(state.project.name,
+            storage.setBranchHash(state.project.projectId,
                 state.branchName, state.undoRedoChain.commit, state.commit.current, function (err) {
                     if (err) {
                         //TODO do we need to handle this? How?
@@ -806,65 +806,58 @@ define([
         // REST-like functions and forwarded to storage TODO: add these to separate base class
 
         //  Getters
-        this.getProjects = function (callback) {
+        this.getProjects = function (options, callback) {
+            var asObject;
             if (isConnected()) {
-                storage.getProjects(callback);
-            } else {
-                callback(new Error('There is no open database connection!'));
-            }
-        };
-
-        this.getBranches = function (projectName, callback) {
-            if (isConnected()) {
-                storage.getBranches(projectName, callback);
-            } else {
-                callback(new Error('There is no open database connection!'));
-            }
-        };
-
-        this.getCommits = function (projectName, before, number, callback) {
-            if (isConnected()) {
-                storage.getCommits(projectName, before, number, callback);
-            } else {
-                callback(new Error('There is no open database connection!'));
-            }
-        };
-
-        this.getLatestCommitData = function (projectName, branchName, callback) {
-            if (isConnected()) {
-                storage.getLatestCommitData(projectName, branchName, callback);
+                if (options.asObject) {
+                    asObject = true;
+                    delete options.asObject;
+                }
+                storage.getProjects(options, function (err, result) {
+                    var i,
+                        resultObj = {};
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    if (asObject === true) {
+                        for (i = 0; i < result.length; i += 1) {
+                            resultObj[result[i]._id] = result[i];
+                        }
+                        callback(null, resultObj);
+                    } else {
+                        callback(null, result);
+                    }
+                });
             } else {
                 callback(new Error('There is no open database connection!'));
             }
         };
 
         this.getProjectsAndBranches = function (asObject, callback) {
-            if (isConnected()) {
-                storage.getProjectsAndBranches(function (err, projectsWithBranches) {
-                    var i,
-                        result = {};
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-                    if (asObject === true) {
-                        //Move the result in the same format as before.
-                        for (i = 0; i < projectsWithBranches.length; i += 1) {
-                            result[projectsWithBranches[i].name] = {
-                                branches: projectsWithBranches[i].branches,
-                                rights: {
-                                    read: projectsWithBranches[i].read,
-                                    write: projectsWithBranches[i].write,
-                                    delete: projectsWithBranches[i].delete,
-                                }
-                            };
-                        }
-                        callback(null, result);
-                    } else {
-                        callback(null, projectsWithBranches);
-                    }
+            //This is kept for the tests.
+            self.getProjects({rights: true, branches: true, asObject: asObject}, callback);
+        };
 
-                });
+        this.getBranches = function (projectId, callback) {
+            if (isConnected()) {
+                storage.getBranches(projectId, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
+        this.getCommits = function (projectId, before, number, callback) {
+            if (isConnected()) {
+                storage.getCommits(projectId, before, number, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
+        this.getLatestCommitData = function (projectId, branchName, callback) {
+            if (isConnected()) {
+                storage.getLatestCommitData(projectId, branchName, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
             }
@@ -879,9 +872,9 @@ define([
             }
         };
 
-        this.deleteProject = function (projectName, callback) {
+        this.deleteProject = function (projectId, callback) {
             if (isConnected()) {
-                storage.deleteProject(projectName, function (err, didExist) {
+                storage.deleteProject(projectId, function (err, didExist) {
                     if (err) {
                         callback(new Error(err));
                         return;
@@ -893,17 +886,17 @@ define([
             }
         };
 
-        this.createBranch = function (projectName, branchName, newHash, callback) {
+        this.createBranch = function (projectId, branchName, newHash, callback) {
             if (isConnected()) {
-                storage.createBranch(projectName, branchName, newHash, callback);
+                storage.createBranch(projectId, branchName, newHash, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
             }
         };
 
-        this.deleteBranch = function (projectName, branchName, oldHash, callback) {
+        this.deleteBranch = function (projectId, branchName, oldHash, callback) {
             if (isConnected()) {
-                storage.deleteBranch(projectName, branchName, oldHash, callback);
+                storage.deleteBranch(projectId, branchName, oldHash, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
             }
@@ -915,7 +908,7 @@ define([
          *
          * eventData = {
          *    etype: PROJECT_CREATED||DELETED,
-         *    projectName: %name of project%
+         *    projectId: %id of project%
          * }
          *
          * @param {function} eventHandler
@@ -941,37 +934,37 @@ define([
 
         /**
          * Triggers eventHandler(storage, eventData) on BRANCH_CREATED, BRANCH_DELETED and BRANCH_HASH_UPDATED
-         * for the given projectName.
+         * for the given projectId.
          *
          *
          * eventData = {
          *    etype: BRANCH_CREATED||DELETED||HASH_UPDATED,
-         *    projectName: %name of project%,
+         *    projectId: %id of project%,
          *    branchName: %name of branch%,
          *    newHash: %new commitHash (='' when DELETED)%
          *    oldHash: %previous commitHash (='' when CREATED)%
          * }
          *
-         * @param {string} projectName
+         * @param {string} projectId
          * @param {function} eventHandler
          * @param {function} [callback]
          */
-        this.watchProject = function (projectName, eventHandler, callback) {
+        this.watchProject = function (projectId, eventHandler, callback) {
             callback = callback || function (err) {
                     if (err) {
-                        logger.error('Problems watching project room', projectName);
+                        logger.error('Problems watching project room', projectId);
                     }
                 };
-            storage.watchProject(projectName, eventHandler, callback);
+            storage.watchProject(projectId, eventHandler, callback);
         };
 
-        this.unwatchProject = function (projectName, eventHandler, callback) {
+        this.unwatchProject = function (projectId, eventHandler, callback) {
             callback = callback || function (err) {
                     if (err) {
-                        logger.error('Problems unwatching project room', projectName);
+                        logger.error('Problems unwatching project room', projectId);
                     }
                 };
-            storage.unwatchProject(projectName, eventHandler, callback);
+            storage.unwatchProject(projectId, eventHandler, callback);
         };
 
         // Internal functions
@@ -1487,68 +1480,78 @@ define([
 
         //create from file
         this.createProjectFromFile = function (projectName, jProject, callback) {
-            //TODO somehow the export / import should contain the INFO field
-            // so the tags and description could come from it
-            storage.createProject(projectName, function (err, project) {
+            storage.createProject(projectName, function (err, projectId) {
                 if (err) {
                     callback(err);
                     return;
                 }
+                storage.openProject(projectId, function (err, project) {
+                    var core,
+                        rootNode,
+                        persisted;
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
 
-                var core = new Core(project, {
+                    core = new Core(project, {
                         globConf: gmeConfig,
                         logger: logger.fork('core')
-                    }),
-                    root = core.createNode({parent: null, base: null}),
-                    persisted = core.persist(root);
+                    });
+                    rootNode = core.createNode({parent: null, base: null});
+                    persisted = core.persist(rootNode);
 
-                storage.makeCommit(projectName,
-                    null,
-                    [],
-                    persisted.rootHash,
-                    persisted.objects,
-                    'creating project from a file',
-                    function (err, commitResult) {
-                        if (err) {
-                            logger.error('cannot make initial commit for project creation from file');
-                            callback(err);
-                            return;
-                        }
-
-                        project.createBranch('master', commitResult.hash, function (err) {
+                    storage.makeCommit(projectId,
+                        null,
+                        [],
+                        persisted.rootHash,
+                        persisted.objects,
+                        'creating project from a file',
+                        function (err, commitResult) {
                             if (err) {
-                                logger.error('cannot set branch \'master\' for project creation from file');
+                                logger.error('cannot make initial commit for project creation from file');
                                 callback(err);
                                 return;
                             }
 
-                            storage.closeProject(projectName, function (err) {
+                            project.createBranch('master', commitResult.hash, function (err) {
                                 if (err) {
+                                    logger.error('cannot set branch \'master\' for project creation from file');
                                     callback(err);
                                     return;
                                 }
-                                self.selectProject(projectName, function (err) {
+                                storage.closeProject(projectId, function (err) {
                                     if (err) {
+                                        logger.error('Closing temporary project failed in project creation from file',
+                                            err);
                                         callback(err);
                                         return;
                                     }
 
-                                    Serialization.import(state.core, state.root.object, jProject, function (err) {
+                                    self.selectProject(projectId, function (err) {
                                         if (err) {
-                                            return callback(err);
+                                            callback(err);
+                                            return;
                                         }
-                                        saveRoot('project created from file', callback);
+
+                                        Serialization.import(state.core, state.root.object, jProject, function (err) {
+                                            if (err) {
+                                                return callback(err);
+                                            }
+                                            saveRoot('project created from file', callback);
+                                        });
                                     });
                                 });
                             });
-                        });
-                    }
-                );
+                        }
+                    );
+                });
             });
         };
 
         //seed
         this.seedProject = function (parameters, callback) {
+            logger.debug('seeding project', parameters);
             parameters.command = 'seedProject';
             storage.simpleRequest(parameters, function (err, id) {
                 if (err) {
@@ -1561,15 +1564,16 @@ define([
         };
 
         //export branch
-        this.getExportProjectBranchUrl = function (projectName, branchName, fileName, callback) {
+        this.getExportProjectBranchUrl = function (projectId, branchName, fileName, callback) {
             var command = {};
             command.command = 'exportLibrary';
-            command.name = projectName;
-            command.branch = branchName;
+            command.projectId = projectId;
+            command.branchName = branchName;
             command.path = ROOT_PATH;
-            if (command.name && command.branch) {
+            if (command.projectId && command.branchName) {
                 storage.simpleRequest(command, function (err, resId) {
                     if (err) {
+                        logger.error('getExportProjectBranchUrl failed with error', err);
                         callback(err);
                     } else {
                         callback(null,
@@ -1586,7 +1590,7 @@ define([
         this.getExportItemsUrl = function (paths, filename, callback) {
             storage.simpleRequest({
                     command: 'dumpMoreNodes',
-                    name: state.project.name,
+                    projectId: state.project.projectId,
                     hash: state.root.current,
                     nodes: paths
                 },
@@ -1605,12 +1609,13 @@ define([
         this.getExportLibraryUrl = function (libraryRootPath, filename, callback) {
             var command = {};
             command.command = 'exportLibrary';
-            command.name = state.project.name;
+            command.projectId = state.project.projectId;
             command.hash = state.root.current;
             command.path = libraryRootPath;
-            if (command.name && command.hash) {
+            if (command.projectId && command.hash) {
                 storage.simpleRequest(command, function (err, resId) {
                     if (err) {
+                        logger.error('getExportLibraryUrl failed with error', err);
                         callback(err);
                     } else {
                         callback(null,
@@ -1655,7 +1660,7 @@ define([
          * @param {string} name - name of plugin.
          * @param {object} context
          * @param {object} context.managerConfig - where the plugin should execute.
-         * @param {string} context.managerConfig.project - name of project.
+         * @param {string} context.managerConfig.project - id of project.
          * @param {string} context.managerConfig.activeNode - path to activeNode.
          * @param {string} [context.managerConfig.activeSelection=[]] - paths to selected nodes.
          * @param {string} context.managerConfig.commit - commit hash to start the plugin from.
@@ -1735,10 +1740,10 @@ define([
         };
 
         //automerge
-        this.autoMerge = function (projectName, mine, theirs, callback) {
+        this.autoMerge = function (projectId, mine, theirs, callback) {
             var command = {
                 command: 'autoMerge',
-                project: projectName,
+                projectId: projectId,
                 mine: mine,
                 theirs: theirs
             };
@@ -1767,7 +1772,7 @@ define([
     }
 
 
-// Inherit from the EventDispatcher
+    // Inherit from the EventDispatcher
     Client.prototype = Object.create(EventDispatcher.prototype);
     Client.prototype.constructor = Client;
 

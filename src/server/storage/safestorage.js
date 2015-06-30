@@ -1,14 +1,10 @@
 /*globals requireJS*/
 /*jshint node:true, newcap:false*/
 /**
- * This class calls the functions on the storage with additional checks:
- *  - the data object contains all necessary values.
- *  - TODO: Checks that the user is authorized to access/change the data.
- *  - TODO: Filters out the raw result based on authorization.
- *
- * TODO: The incoming data should contain the userId. Meaning the users (WebSocket or REST) should
- * TODO: get this information from the session-store and via the tokens when applicable.
- * TODO: Alternatively the sessionId can be passed.
+ * This class calls forwards function calls to the storage with additions:
+ *  - check that the data object contains all necessary values.
+ *  - checks that the user is authorized to access/change the data.
+ *  - updates the users and projects databases on delete/create project.
  *
  * @author pmeijer / https://github.com/pmeijer
  */
@@ -17,6 +13,7 @@
 
 var Q = require('q'),
 
+    CONSTANTS = requireJS('common/storage/constants'),
     REGEXP = requireJS('common/regexp'),
     ASSERT = requireJS('common/util/assert'),
     Storage = require('./storage');
@@ -31,6 +28,17 @@ function check(cond, deferred, msg) {
     return rejected;
 }
 
+function filterArray(arr) {
+    var i,
+        filtered = [];
+    for (i = 0; i < arr.length; i += 1) {
+        if (typeof arr[i] !== 'undefined') {
+            filtered.push(arr[i]);
+        }
+    }
+    return filtered;
+}
+
 function SafeStorage(mongo, logger, gmeConfig, gmeAuth) {
     ASSERT(gmeAuth !== null && typeof gmeAuth === 'object', 'gmeAuth is a mandatory parameter');
     Storage.call(this, mongo, logger, gmeConfig);
@@ -41,51 +49,9 @@ function SafeStorage(mongo, logger, gmeConfig, gmeAuth) {
 SafeStorage.prototype = Object.create(Storage.prototype);
 SafeStorage.prototype.constructor = SafeStorage;
 
-/**
- * Authorization: filter results based on read access for each projectName.
- * @param data
- * @param callback
- * @returns {*}
- */
-SafeStorage.prototype.getProjectNames = function (data, callback) {
-    var deferred = Q.defer(),
-        rejected = false,
-        userAuthInfo,
-        self = this;
-
-    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.');
-
-    if (data.hasOwnProperty('username')) {
-        rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
-    } else {
-        data.username = this.gmeConfig.authentication.guestAccount;
-    }
-
-    if (rejected === false) {
-        this.gmeAuth.getUser(data.username)
-            .then(function (user) {
-                userAuthInfo = user.projects;
-                return Storage.prototype.getProjectNames.call(self, data);
-            })
-            .then(function (result) {
-                var filteredResult = [],
-                    i,
-                    projectName;
-
-                for (i = 0; i < result.length; i += 1) {
-                    //For each projectName in result check if user has read access.
-                    projectName = result[i];
-                    if (userAuthInfo.hasOwnProperty(projectName) && userAuthInfo[projectName].read === true) {
-                        filteredResult.push(result[i]);
-                    }
-                }
-                deferred.resolve(filteredResult);
-            })
-            .catch(function (err) {
-                deferred.reject(new Error(err));
-            });
-    }
-
+SafeStorage.prototype.getProjectIds = function (data, callback) {
+    var deferred = Q.defer();
+    deferred.reject(new Error('getProjectIds is deprecated, use getProjects instead.'));
     return deferred.promise.nodeify(callback);
 };
 
@@ -97,11 +63,16 @@ SafeStorage.prototype.getProjectNames = function (data, callback) {
  */
 SafeStorage.prototype.getProjects = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        userAuthInfo,
-        self = this;
+        self = this,
+        rejected = false;
 
-    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.');
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+        check(typeof data.info === 'undefined' || typeof data.info === 'boolean', deferred,
+            'data.info is not a boolean.') ||
+        check(typeof data.rights === 'undefined' || typeof data.rights === 'boolean', deferred,
+            'data.rights is not a boolean.') ||
+        check(typeof data.branches === 'undefined' || typeof data.branches === 'boolean', deferred,
+            'data.branches is not a boolean.');
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
@@ -112,33 +83,71 @@ SafeStorage.prototype.getProjects = function (data, callback) {
     if (rejected === false) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
-                userAuthInfo = user.projects;
-                return Storage.prototype.getProjectNames.call(self, data);
-            })
-            .then(function (result) {
-                var i,
-                    projects = [],
-                    projectName,
-                    projectAuthInfo;
+                var projectIds = Object.keys(user.projects);
+                self.logger.debug('user has rights to', projectIds);
 
-                for (i = 0; i < result.length; i += 1) {
-                    projectName = result[i];
-                    //FIXME: Currently we need to respond with all projects (although read=false).
-                    projectAuthInfo = {
-                        name: projectName,
-                        read: false,
-                        write: false,
-                        delete: false
-                    };
+                function getProjectAppendRights(projectId) {
+                    var projectDeferred = Q.defer();
+                    self.gmeAuth.getProject(projectId)
+                        .then(function (project) {
+                            if (user.projects[projectId].read === true) {
+                                if (data.rights === true) {
+                                    project.rights = user.projects[projectId];
+                                }
+                                if (!data.info) {
+                                    delete project.info;
+                                }
+                                projectDeferred.resolve(project);
+                            } else {
+                                projectDeferred.resolve();
+                            }
+                        })
+                        .catch(function (err) {
+                            if (err.message.indexOf('no such project') > -1) {
+                                //TODO: clean up in _users here?
+                                self.logger.error('Inconsistency: project exists in user "' + data.username +
+                                    '" but not in _projects: ', projectId);
+                                projectDeferred.resolve();
+                            } else {
+                                projectDeferred.reject(err);
+                            }
+                        });
 
-                    if (userAuthInfo.hasOwnProperty(projectName)) {
-                        projectAuthInfo.read = userAuthInfo[projectName].read;
-                        projectAuthInfo.write = userAuthInfo[projectName].write;
-                        projectAuthInfo.delete = userAuthInfo[projectName].delete;
-                    }
-                    projects.push(projectAuthInfo);
+                    return projectDeferred.promise;
                 }
-                deferred.resolve(projects);
+
+                return Q.all(projectIds.map(getProjectAppendRights));
+            })
+            .then(function (projects) {
+                function getBranches(project) {
+                    var branchesDeferred = Q.defer();
+                    Storage.prototype.getBranches.call(self, {projectId: project._id})
+                        .then(function (branches) {
+                            project.branches = branches;
+                            branchesDeferred.resolve(project);
+                        })
+                        .catch(function (err) {
+                            if (err.message.indexOf('Project does not exist') > -1) {
+                                //TODO: clean up in _projects and _users here too?
+                                self.logger.error('Inconsistency: project exists in user "' + data.username +
+                                    '" and in _projects, but not as collection on its own: ', project._id);
+                                branchesDeferred.resolve();
+                            } else {
+                                branchesDeferred.reject(err);
+                            }
+                        });
+
+                    return branchesDeferred.promise;
+                }
+
+                if (data.branches === true) {
+                    return Q.all(filterArray(projects).map(getBranches));
+                } else {
+                    deferred.resolve(filterArray(projects));
+                }
+            })
+            .then(function (projectsAndBranches) {
+                deferred.resolve(filterArray(projectsAndBranches));
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));
@@ -149,53 +158,7 @@ SafeStorage.prototype.getProjects = function (data, callback) {
 };
 
 /**
- * Calls getProjects and if it had read access appends the data with the branches.
- * @param data
- * @param callback
- */
-SafeStorage.prototype.getProjectsAndBranches = function (data, callback) {
-    var self = this,
-        deferred = Q.defer();
-    self.logger.debug('getProjectsAndBranches invoked');
-    this.getProjects(data)
-        .then(function (projects) {
-            self.logger.debug('getProjectsAndBranches: getProjects returned');
-            function getBranches(project) {
-                if (project.read === true) {
-                    // (project.name is coming from safe storage.)
-                    return Storage.prototype.getBranches.call(self, {projectName: project.name})
-                        .then(function (branches) {
-                            project.branches = branches;
-                            return Q(project);
-                        });
-                }
-            }
-            Q.all(projects.map(getBranches))
-                .then(function (branchResult) {
-                    var i,
-                        result = [];
-                    self.logger.debug('getProjectsAndBranches: branches were obtained');
-                    for (i = 0; i < branchResult.length; i += 1) {
-                        if (branchResult[i]) {
-                            result.push(branchResult[i]);
-                        }
-                    }
-
-                    deferred.resolve(result);
-                })
-                .catch(function (err) {
-                    deferred.reject(err);
-                });
-        })
-        .catch(function (err) {
-            deferred.reject(err);
-        });
-
-    return deferred.promise.nodeify(callback);
-};
-
-/**
- * Authorization: delete access for data.projectName
+ * Authorization: delete access for data.projectId
  * @param data
  * @param callback
  * @returns {*}
@@ -204,11 +167,12 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false,
         userAuthInfo,
+        didExist,
         self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId);
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
@@ -220,13 +184,17 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
-                if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].delete) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].delete) {
                     return Storage.prototype.deleteProject.call(self, data);
                 } else {
-                    throw new Error('Not authorized: cannot delete project. ' + data.projectName);
+                    throw new Error('Not authorized: cannot delete project. ' + data.projectId);
                 }
             })
-            .then(function (didExist) {
+            .then(function (didExist_) {
+                didExist = didExist_;
+                return self.gmeAuth.deleteProject(data.projectId);
+            })
+            .then(function () {
                 deferred.resolve(didExist);
             })
             .catch(function (err) {
@@ -261,6 +229,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
     }
 
     if (rejected === false) {
+        data.projectId = data.username + CONSTANTS.PROJECT_ID_SEP + data.projectName;
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
@@ -272,16 +241,25 @@ SafeStorage.prototype.createProject = function (data, callback) {
             })
             .then(function (project_) {
                 project = project_;
-                return self.gmeAuth.authorizeByUserId(data.username, project.name, 'create', {
+                return self.gmeAuth.authorizeByUserId(data.username, project.projectId, 'create', {
                     read: true,
                     write: true,
                     delete: true
                 });
             })
             .then(function () {
+                var info = {
+                    createdAt: (new Date()).toISOString()
+                    //TODO: populate with more data here, e.g. description
+                };
+
+                return self.gmeAuth.addProject(data.username, data.projectName, info);
+            })
+            .then(function () {
                 deferred.resolve(project);
             })
             .catch(function (err) {
+                // TODO: Clean up appropriately when failure to add to model, user or projects database.
                 deferred.reject(new Error(err));
             });
     }
@@ -290,7 +268,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
 };
 
 /**
- * Authorization: read access for data.projectName
+ * Authorization: read access for data.projectId
  * @param data
  * @param callback
  * @returns {*}
@@ -302,8 +280,8 @@ SafeStorage.prototype.getBranches = function (data, callback) {
         self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId);
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
@@ -315,10 +293,10 @@ SafeStorage.prototype.getBranches = function (data, callback) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
-                if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].read) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].read) {
                     return Storage.prototype.getBranches.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectName);
+                    throw new Error('Not authorized to read project: ' + data.projectId);
                 }
             })
             .then(function (result) {
@@ -333,9 +311,9 @@ SafeStorage.prototype.getBranches = function (data, callback) {
 };
 
 /**
- * Authorization: read access for data.projectName
+ * Authorization: read access for data.projectId
  * @param {object} - data
- * @param {string} - data.projectName
+ * @param {string} - data.projectId
  * @param {number} - data.number - Number of commits to load.
  * @param {string|number} - data.before - Timestamp or commitHash to load history from. When number given it will load
  *  data.number of commits strictly before data.before, when commitHash given it will return that commit too.
@@ -349,8 +327,8 @@ SafeStorage.prototype.getCommits = function (data, callback) {
         self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
     check(typeof data.before === 'number' || typeof data.before === 'string', deferred,
         'data.before is not a number nor string') ||
     check(typeof data.number === 'number', deferred, 'data.number is not a number');
@@ -370,10 +348,10 @@ SafeStorage.prototype.getCommits = function (data, callback) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
-                if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].read) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].read) {
                     return Storage.prototype.getCommits.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectName);
+                    throw new Error('Not authorized to read project. ' + data.projectId);
                 }
             })
             .then(function (result) {
@@ -388,7 +366,7 @@ SafeStorage.prototype.getCommits = function (data, callback) {
 };
 
 /**
- * Authorization: read access for data.projectName
+ * Authorization: read access for data.projectId
  * @param data
  * @param callback
  * @returns {*}
@@ -400,8 +378,8 @@ SafeStorage.prototype.getLatestCommitData = function (data, callback) {
         self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
     check(typeof data.branchName === 'string', deferred, 'data.branchName is not a string.') ||
     check(REGEXP.BRANCH.test(data.branchName), deferred, 'data.branchName failed regexp: ' + data.branchName);
 
@@ -415,10 +393,10 @@ SafeStorage.prototype.getLatestCommitData = function (data, callback) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
-                if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].read) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].read) {
                     return Storage.prototype.getLatestCommitData.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectName);
+                    throw new Error('Not authorized to read project. ' + data.projectId);
                 }
             })
             .then(function (result) {
@@ -433,7 +411,7 @@ SafeStorage.prototype.getLatestCommitData = function (data, callback) {
 };
 
 /**
- * Authorization: write access for data.projectName
+ * Authorization: write access for data.projectId
  * @param data
  * @param callback
  * @returns {*}
@@ -446,8 +424,8 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
 
     check(data.commitObject !== null && typeof data.commitObject === 'object', deferred,
         'data.commitObject not an object.') ||
@@ -484,10 +462,10 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
-                if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].write) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].write) {
                     return Storage.prototype.makeCommit.call(self, data);
                 } else {
-                    throw new Error('Not authorized to write project. ' + data.projectName);
+                    throw new Error('Not authorized to write project. ' + data.projectId);
                 }
             })
             .then(function (result) {
@@ -502,7 +480,7 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
 };
 
 /**
- * Authorization: read access for data.projectName
+ * Authorization: read access for data.projectId
  * @param data
  * @param callback
  * @returns {*}
@@ -515,8 +493,8 @@ SafeStorage.prototype.getBranchHash = function (data, callback) {
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
 
     check(typeof data.branchName === 'string', deferred, 'data.branchName is not a string.') ||
     check(REGEXP.BRANCH.test(data.branchName), deferred, 'data.branchName failed regexp: ' + data.branchName);
@@ -531,10 +509,10 @@ SafeStorage.prototype.getBranchHash = function (data, callback) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
-                if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].read) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].read) {
                     return Storage.prototype.getBranchHash.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectName);
+                    throw new Error('Not authorized to read project. ' + data.projectId);
                 }
             })
             .then(function (result) {
@@ -549,7 +527,7 @@ SafeStorage.prototype.getBranchHash = function (data, callback) {
 };
 
 /**
- * Authorization: write access for data.projectName
+ * Authorization: write access for data.projectId
  * @param data
  * @param callback
  * @returns {*}
@@ -562,8 +540,8 @@ SafeStorage.prototype.setBranchHash = function (data, callback) {
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
 
     check(typeof data.branchName === 'string', deferred, 'data.branchName is not a string.') ||
     check(REGEXP.BRANCH.test(data.branchName), deferred, 'data.branchName failed regexp: ' + data.branchName) ||
@@ -585,10 +563,10 @@ SafeStorage.prototype.setBranchHash = function (data, callback) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
-                if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].write) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].write) {
                     return Storage.prototype.setBranchHash.call(self, data);
                 } else {
-                    throw new Error('Not authorized to write project. ' + data.projectName);
+                    throw new Error('Not authorized to write project. ' + data.projectId);
                 }
             })
             .then(function (result) {
@@ -603,7 +581,7 @@ SafeStorage.prototype.setBranchHash = function (data, callback) {
 };
 
 /**
- * Authorization: read access for data.projectName
+ * Authorization: read access for data.projectId
  * @param data
  * @param callback
  * @returns {*}
@@ -616,8 +594,8 @@ SafeStorage.prototype.getCommonAncestorCommit = function (data, callback) {
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
 
     check(typeof data.commitA === 'string', deferred, 'data.commitA is not a string.') ||
     check(data.commitA === '' || REGEXP.HASH.test(data.commitA), deferred,
@@ -636,10 +614,10 @@ SafeStorage.prototype.getCommonAncestorCommit = function (data, callback) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
-                if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].read) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].read) {
                     return Storage.prototype.getCommonAncestorCommit.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectName);
+                    throw new Error('Not authorized to read project. ' + data.projectId);
                 }
             })
             .then(function (commonHash) {
@@ -654,7 +632,7 @@ SafeStorage.prototype.getCommonAncestorCommit = function (data, callback) {
 };
 
 /**
- * Authorization: write access for data.projectName
+ * Authorization: write access for data.projectId
  * @param data
  * @param callback
  * @returns {*}
@@ -667,8 +645,8 @@ SafeStorage.prototype.createBranch = function (data, callback) {
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
 
     check(typeof data.branchName === 'string', deferred, 'data.branchName is not a string.') ||
     check(REGEXP.BRANCH.test(data.branchName), deferred, 'data.branchName failed regexp: ' + data.branchName) ||
@@ -690,10 +668,10 @@ SafeStorage.prototype.createBranch = function (data, callback) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
-                if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].write) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].write) {
                     return Storage.prototype.setBranchHash.call(self, data);
                 } else {
-                    throw new Error('Not authorized to write project. ' + data.projectName);
+                    throw new Error('Not authorized to write project. ' + data.projectId);
                 }
             })
             .then(function (result) {
@@ -708,7 +686,7 @@ SafeStorage.prototype.createBranch = function (data, callback) {
 };
 
 /**
- * Authorization: write access for data.projectName
+ * Authorization: write access for data.projectId
  * @param data
  * @param callback
  * @returns {*}
@@ -721,8 +699,8 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
 
     check(typeof data.branchName === 'string', deferred, 'data.branchName is not a string.') ||
     check(REGEXP.BRANCH.test(data.branchName), deferred, 'data.branchName failed regexp: ' + data.branchName);
@@ -739,18 +717,18 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
             .then(function (user) {
                 userAuthInfo = user.projects;
                 data.newHash = '';
-                if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].read) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].read) {
                     return Storage.prototype.getBranchHash.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectName);
+                    throw new Error('Not authorized to read project. ' + data.projectId);
                 }
             })
             .then(function (branchHash) {
                 data.oldHash = branchHash;
-                if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].write) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].write) {
                     return Storage.prototype.setBranchHash.call(self, data);
                 } else {
-                    throw new Error('Not authorized to write project. ' + data.projectName);
+                    throw new Error('Not authorized to write project. ' + data.projectId);
                 }
             })
             .then(function (result) {
@@ -765,7 +743,7 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
 };
 
 /**
- * Authorization: TODO: read or write access for data.projectName
+ * Authorization: TODO: read or write access for data.projectId
  * @param data
  * @param callback
  * @returns {*}
@@ -777,8 +755,8 @@ SafeStorage.prototype.openProject = function (data, callback) {
         self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId);
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
@@ -790,12 +768,12 @@ SafeStorage.prototype.openProject = function (data, callback) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
-                if (userAuthInfo.hasOwnProperty(data.projectName) &&
-                    (userAuthInfo[data.projectName].read || userAuthInfo[data.projectName].write)) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) &&
+                    (userAuthInfo[data.projectId].read || userAuthInfo[data.projectId].write)) {
 
                     return Storage.prototype.openProject.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read or write project. ' + data.projectName);
+                    throw new Error('Not authorized to read or write project: ' + data.projectId);
                 }
             })
             .then(function (project) {
@@ -810,7 +788,7 @@ SafeStorage.prototype.openProject = function (data, callback) {
 };
 
 /**
- * Authorization: TODO: read access for data.projectName
+ * Authorization: TODO: read access for data.projectId
  * @param data
  * @param callback
  * @returns {*}
@@ -822,8 +800,8 @@ SafeStorage.prototype.loadObjects = function (data, callback) {
         self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
-    check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName) ||
+    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
     check(data.hashes instanceof Array, deferred, 'data.hashes is not an array: ' + JSON.stringify(data.hashes));
 
     if (data.hasOwnProperty('username')) {
@@ -837,11 +815,11 @@ SafeStorage.prototype.loadObjects = function (data, callback) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
                 userAuthInfo = user.projects;
-                if (userAuthInfo.hasOwnProperty(data.projectName) && userAuthInfo[data.projectName].read) {
+                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].read) {
 
                     return Storage.prototype.loadObjects.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectName);
+                    throw new Error('Not authorized to read project. ' + data.projectId);
                 }
             })
             .then(function (project) {

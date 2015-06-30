@@ -1,7 +1,7 @@
 /*jshint node:true, mocha:true*/
 /**
-* @author kecso / https://github.com/kecso
-*/
+ * @author kecso / https://github.com/kecso
+ */
 var testFixture = require('../../_globals.js');
 
 describe('core.intrapersist', function () {
@@ -31,13 +31,14 @@ describe('core.intrapersist', function () {
         }
     }
 
-//global variables of the test
+    //global variables of the test
     var commit = '',
         baseCommit = '',
         root = null,
         rootHash = '',
         core = null,
         projectName = 'coreIntrapersistTest',
+        projectId = testFixture.projectName2Id(projectName),
         project = null,
 
         gmeAuth;
@@ -50,7 +51,7 @@ describe('core.intrapersist', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
+                return storage.deleteProject({projectId: projectId});
             })
             .then(function () {
                 return testFixture.importProject(storage, {

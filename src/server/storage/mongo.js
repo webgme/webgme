@@ -22,12 +22,12 @@ function Mongo(mainLogger, gmeConfig) {
     /**
      * Provides methods related to a specific project.
      *
-     * @param {string} name - Name of the project.
+     * @param {string} projectId - identifier of the project (ownerId + '.' + projectName).
      * @param {object} collection - Mongo collection connected to database.
      * @constructor
      */
-    function Project(name, collection) {
-        this.name = name;
+    function Project(projectId, collection) {
+        this.projectId = projectId;
 
         this.closeProject = function (callback) {
             var deferred = Q.defer();
@@ -384,95 +384,122 @@ function Mongo(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
-    function getProjectNames(callback) {
-        return Q.ninvoke(mongo, 'collectionNames')
-            .then(function (collections) {
-                var names = [];
-                for (var i = 0; i < collections.length; i++) {
-                    if (!REGEXP.PROJECT.test(collections[i].name)) {
-                        continue;
-                    }
-                    var p = collections[i].name.indexOf('.');
-                    var n = collections[i].name.substring(p + 1);
-                    if (n.indexOf('system') === -1 && n.indexOf('.') === -1 && n.indexOf('_') !== 0) {
-                        names.push(n);
-                    }
-                }
-                return Q(names);
-            }).nodeify(callback);
-    }
-
-    function deleteProject(name, callback) {
+    function getProjectIds(callback) {
         var deferred = Q.defer();
-        Q.ninvoke(mongo, 'dropCollection', name)
-            .then(function () {
-                deferred.resolve(true);
-            })
-            .catch(function (err) {
-                if (err.ok === 0) {
-                    logger.debug('deleteProject, project does not exist', name);
-                    // http://docs.mongodb.org/manual/reference/method/db.collection.drop/
-                    deferred.resolve(false);
-                } else {
-                    deferred.reject(err);
-                }
-            });
+
+        if (mongo) {
+            Q.ninvoke(mongo, 'collectionNames')
+                .then(function (collections) {
+                    var projectIds = [],
+                        i, p, n;
+
+                    for (i = 0; i < collections.length; i++) {
+                        if (!REGEXP.PROJECT.test(collections[i].name)) {
+                            continue;
+                        }
+                        p = collections[i].name.indexOf('.');
+                        n = collections[i].name.substring(p + 1);
+                        if (n.indexOf('system') === -1 && n.indexOf('.') === -1 && n.indexOf('_') !== 0) {
+                            projectIds.push(n);
+                        }
+                    }
+
+                    deferred.resolve(projectIds);
+                })
+                .catch(deferred.reject);
+        } else {
+            deferred.reject(new Error('Database is not open.'));
+        }
 
         return deferred.promise.nodeify(callback);
     }
 
-    function openProject(name, callback) {
-        var collection;
-        logger.debug('openProject', name);
+    function deleteProject(projectId, callback) {
+        var deferred = Q.defer();
 
-        return Q.ninvoke(mongo, 'collection', name)
-            .then(function (result) {
-                collection = result;
-                return Q.ninvoke(result, 'findOne', {}, {_id: 1});
-            })
-            .then(function (something) {
-                var deferred = Q.defer();
-                if (!something) {
-                    deferred.reject('Project does not exist ' + name);
-                } else {
-                    deferred.resolve(new Project(name, collection));
-                }
+        if (mongo) {
+            Q.ninvoke(mongo, 'dropCollection', projectId)
+                .then(function () {
+                    deferred.resolve(true);
+                })
+                .catch(function (err) {
+                    if (err.ok === 0) { // http://docs.mongodb.org/manual/reference/method/db.collection.drop/
+                        logger.debug('deleteProject, project does not exist', projectId);
+                        deferred.resolve(false);
+                    } else {
+                        deferred.reject(err);
+                    }
+                });
+        } else {
+            deferred.reject(new Error('Database is not open.'));
+        }
 
-                return deferred.promise;
-            }).nodeify(callback);
+        return deferred.promise.nodeify(callback);
     }
 
-    function createProject(name, callback) {
-        var collection;
-        logger.debug('createProject', name);
+    function openProject(projectId, callback) {
+        var collection,
+            deferred = Q.defer();
 
-        return Q.ninvoke(mongo, 'collection', name)
-            .then(function (result) {
-                collection = result;
-                return Q.ninvoke(result, 'findOne', {}, {_id: 1});
-            })
-            .then(function (something) {
-                var deferred = Q.defer();
-                if (something) {
-                    deferred.reject('Project already exist ' + name);
-                } else {
-                    Q.ninvoke(collection, 'insert', {_id: CONSTANTS.EMPTY_PROJECT_DATA})
-                        .then(function () {
-                            deferred.resolve(new Project(name, collection));
-                        })
-                        .catch(function (err) {
-                            deferred.reject(err);
-                        });
-                }
+        logger.debug('openProject', projectId);
 
-                return deferred.promise;
-            }).nodeify(callback);
+        if (mongo) {
+            Q.ninvoke(mongo, 'collection', projectId)
+                .then(function (result) {
+                    collection = result;
+                    return Q.ninvoke(result, 'findOne', {}, {_id: 1});
+                })
+                .then(function (something) {
+                    if (!something) {
+                        deferred.reject(new Error('Project does not exist ' + projectId));
+                    } else {
+                        deferred.resolve(new Project(projectId, collection));
+                    }
+                })
+                .catch(deferred.reject);
+
+        } else {
+            deferred.reject(new Error('Database is not open.'));
+        }
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function createProject(projectId, callback) {
+        var collection,
+            deferred = Q.defer();
+
+        logger.debug('createProject', projectId);
+
+        if (mongo) {
+            Q.ninvoke(mongo, 'collection', projectId)
+                .then(function (result) {
+                    collection = result;
+                    return Q.ninvoke(result, 'findOne', {}, {_id: 1});
+                })
+                .then(function (something) {
+                    if (something) {
+                        deferred.reject(new Error('Project already exists ' + projectId));
+                    } else {
+                        return Q.ninvoke(collection, 'insert', {_id: CONSTANTS.EMPTY_PROJECT_DATA});
+                    }
+                })
+                .then(function () {
+                    deferred.resolve(new Project(projectId, collection));
+                })
+                .catch(deferred.reject);
+
+        } else {
+            deferred.reject(new Error('Database is not open.'));
+        }
+
+        return deferred.promise.nodeify(callback);
     }
 
     this.openDatabase = openDatabase;
     this.closeDatabase = closeDatabase;
 
-    this.getProjectNames = getProjectNames;
+    this.getProjectIds = getProjectIds;
 
     this.openProject = openProject;
     this.deleteProject = deleteProject;

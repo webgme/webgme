@@ -13,7 +13,8 @@ var Q = require('q'),
     merger = webgme.requirejs('common/core/users/merge'),
     cliStorage,
     gmeAuth,
-    logger = webgme.Logger.create('gme:bin:merge', gmeConfig.bin.log);
+    logger = webgme.Logger.create('gme:bin:merge', gmeConfig.bin.log),
+    STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants');
 
 
 var main = function (argv) {
@@ -25,13 +26,15 @@ var main = function (argv) {
 
     logger.debug(argv);
     program
-        .version('0.1.0')
-        .option('-m, --mongo-database-uri [uri]', 'URI to connect to mongoDB where the project is stored')
-        .option('-u, --user [string]', 'the user of the command')
-        .option('-p, --project-identifier [value]', 'project identifier')
+        .version('0.2.0')
+        .option('-m, --mongo-database-uri [url]',
+        'URI of the MongoDB [by default we use the one from the configuration file]')
+        .option('-u, --user [string]', 'the user of the command [if not given we use the default user]')
+        .option('-p, --project-name [string]', 'project name [mandatory]')
+        .option('-o, --owner [string]', 'the owner of the project [by default, the user is the owner]')
         .option('-M, --mine [branch/commit]', 'my version of the project')
         .option('-T, --theirs [branch/commit]', 'their version of the project')
-        .option('-P, --path-prefix [value]', 'path prefix for the output diff files')
+        .option('-f, --file-path-prefix [value]', 'path prefix for the output diff files')
         .option('-a, --auto-merge', 'if given then we try to automatically merge into their branch/commit')
         .parse(argv);
 
@@ -43,8 +46,8 @@ var main = function (argv) {
         gmeConfig.mongo.uri = program.mongoDatabaseUri;
     }
 
-    if (program.hasOwnProperty('projectIdentifier') === false) {
-        logger.error('project identifier is a mandatory parameter!');
+    if (program.hasOwnProperty('projectName') === false) {
+        logger.error('project name is a mandatory parameter!');
         syntaxFailure = true;
     }
 
@@ -71,13 +74,24 @@ var main = function (argv) {
             return cliStorage.openDatabase();
         })
         .then(function () {
-            var openProjectData = {
-                projectName: program.projectIdentifier
+            var params = {
+                projectId: ''
             };
-            if (program.user) {
-                openProjectData.username = program.user;
+
+            if (program.owner) {
+                params.projectId = program.owner + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+            } else if (program.user) {
+                params.projectId = program.user + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+            } else {
+                params.projectId = gmeConfig.authentication.guestAccount +
+                    STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
             }
-            return cliStorage.openProject(openProjectData);
+
+            if (program.user) {
+                params.username = program.user;
+            }
+
+            return cliStorage.openProject(params);
         })
         .then(function (dbProject) {
             var project = new Project(dbProject, cliStorage, logger.fork('project'), gmeConfig);
@@ -95,16 +109,16 @@ var main = function (argv) {
             });
         })
         .then(function (mergeResult) {
-            if (program.pathPrefix) {
+            if (program.filePathPrefix) {
                 if (mergeResult.diff) {
-                    FS.writeFileSync(
-                        program.pathPrefix + '.mine.json', JSON.stringify(mergeResult.diff.mine || {}, null, 2));
-                    FS.writeFileSync(
-                        program.pathPrefix + '.theirs.json', JSON.stringify(mergeResult.diff.theirs || {}, null, 2));
+                    FS.writeFileSync(program.filePathPrefix +
+                        '.mine.json', JSON.stringify(mergeResult.diff.mine || {}, null, 2));
+                    FS.writeFileSync(program.filePathPrefix +
+                        '.theirs.json', JSON.stringify(mergeResult.diff.theirs || {}, null, 2));
                 }
                 if (mergeResult.conflict) {
                     FS.writeFileSync(
-                        program.pathPrefix + '.conflict.json', JSON.stringify(mergeResult.conflict, null, 2));
+                        program.filePathPrefix + '.conflict.json', JSON.stringify(mergeResult.conflict, null, 2));
                 }
             } else {
                 console.log('merge result:');

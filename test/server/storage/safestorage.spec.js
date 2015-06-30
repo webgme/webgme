@@ -15,7 +15,7 @@ describe('SafeStorage', function () {
 
         gmeAuth,
         projectName = 'newProject',
-        guestAccount = gmeConfig.authentication.guestAccount;
+        projectId = gmeConfig.authentication.guestAccount + testFixture.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
 
 
     before(function (done) {
@@ -40,11 +40,7 @@ describe('SafeStorage', function () {
 
         before(function (done) {
             safeStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
-
             safeStorage.openDatabase()
-                .then(function () {
-                    return safeStorage.deleteProject({projectName: projectName});
-                })
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
                         projectSeed: 'seeds/EmptyProject.json',
@@ -54,6 +50,7 @@ describe('SafeStorage', function () {
                     });
                 })
                 .then(function (result) {
+                    expect(result.projectId).to.equal(projectId);
                     commitHash = result.commitHash;
                     return Q();
                 })
@@ -61,54 +58,129 @@ describe('SafeStorage', function () {
         });
 
         after(function (done) {
-            Q.all([
-                safeStorage.closeDatabase()
-            ])
-                .nodeify(done);
+            safeStorage.deleteProject({projectId: projectId})
+                .then(function () {
+                    safeStorage.closeDatabase(done);
+                })
+                .catch(function (err) {
+                    logger.error(err);
+                    safeStorage.closeDatabase(done);
+                });
         });
 
-        it('should getProjects', function (done) {
+        it('should getProjects (no rights, no info, no branches)', function (done) {
             var data = {};
 
             safeStorage.getProjects(data)
                 .then(function (projects) {
-                    expect(projects).to.deep.equal([{
-                        delete: true,
-                        name: projectName,
-                        read: true,
-                        write: true
-                    }]);
+                    expect(projects).to.have.property('length');
+                    expect(projects.length).to.equal(1);
+                    expect(projects[0]).to.deep.equal({
+                        _id: 'guest+newProject',
+                        fullName: 'guest/newProject',
+                        name: 'newProject',
+                        owner: 'guest'
+                    });
                 })
                 .nodeify(done);
         });
 
-        it('should getProjectsAndBranches', function (done) {
-            var data = {};
+        it('should getProjects (rights=true, no info, no branches)', function (done) {
+            var data = {
+                rights: true
+            };
 
-            safeStorage.getProjectsAndBranches(data)
+            safeStorage.getProjects(data)
                 .then(function (projects) {
                     expect(projects).to.have.property('length');
                     expect(projects.length).to.equal(1);
-                    expect(projects[0].name).to.equal(projectName);
-                    expect(projects[0].branches).to.have.property('master');
+                    expect(projects[0]).to.deep.equal({
+                        _id: 'guest+newProject',
+                        fullName: 'guest/newProject',
+                        name: 'newProject',
+                        owner: 'guest',
+                        rights: {
+                            delete: true,
+                            read: true,
+                            write: true
+                        }
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should getProjects (rights=true, info=true, no branches)', function (done) {
+            var data = {
+                rights: true,
+                info: true
+            };
+
+            safeStorage.getProjects(data)
+                .then(function (projects) {
+                    expect(projects).to.have.property('length');
+                    expect(projects.length).to.equal(1);
+                    expect(typeof projects[0].info).to.equal('object');
+                    delete projects[0].info;
+                    expect(projects[0]).to.deep.equal({
+                        _id: 'guest+newProject',
+                        fullName: 'guest/newProject',
+                        name: 'newProject',
+                        owner: 'guest',
+                        rights: {
+                            delete: true,
+                            read: true,
+                            write: true
+                        }
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should getProjects (rights=true, info=true, branches=true)', function (done) {
+            var data = {
+                rights: true,
+                info: true,
+                branches: true
+            };
+
+            safeStorage.getProjects(data)
+                .then(function (projects) {
+                    expect(projects).to.have.property('length');
+                    expect(projects.length).to.equal(1);
+                    expect(typeof projects[0].info).to.equal('object');
+                    expect(typeof projects[0].branches).to.equal('object');
+                    expect(projects[0].branches).to.include.keys('master');
+                    delete projects[0].info;
+                    delete projects[0].branches;
+                    expect(projects[0]).to.deep.equal({
+                        _id: 'guest+newProject',
+                        fullName: 'guest/newProject',
+                        name: 'newProject',
+                        owner: 'guest',
+                        rights: {
+                            delete: true,
+                            read: true,
+                            write: true
+                        }
+                    });
                 })
                 .nodeify(done);
         });
 
         it('should getLatestCommitData', function (done) {
             var data = {
-                projectName: projectName,
+                projectId: projectId,
                 branchName: 'master'
             };
 
             safeStorage.getLatestCommitData(data)
                 .then(function (commitData) {
-                    expect(commitData).to.have.property('projectName');
+                    expect(commitData).to.have.property('projectId');
                     expect(commitData).to.have.property('branchName');
                     expect(commitData).to.have.property('commitObject');
                     expect(commitData).to.have.property('coreObjects');
 
-                    expect(commitData.projectName).to.equal(projectName);
+                    expect(commitData.projectId).to.equal(projectId);
                     expect(commitData.branchName).to.equal('master');
 
                     expect(commitData.commitObject).to.have.property('message');
@@ -123,7 +195,7 @@ describe('SafeStorage', function () {
 
         it('should getBranchHash', function (done) {
             var data = {
-                projectName: projectName,
+                projectId: projectId,
                 branchName: 'master'
             };
 
@@ -137,7 +209,7 @@ describe('SafeStorage', function () {
 
         it('should setBranchHash', function (done) {
             var data = {
-                projectName: projectName,
+                projectId: projectId,
                 branchName: 'master'
             };
 
@@ -160,7 +232,7 @@ describe('SafeStorage', function () {
 
         it('should createBranch', function (done) {
             var data = {
-                projectName: projectName,
+                projectId: projectId,
                 branchName: 'master'
             };
 
@@ -186,7 +258,7 @@ describe('SafeStorage', function () {
 
         it('should deleteBranch', function (done) {
             var data = {
-                projectName: projectName,
+                projectId: projectId,
                 branchName: 'master'
             };
 
@@ -218,9 +290,26 @@ describe('SafeStorage', function () {
                 .nodeify(done);
         });
 
+        it('should return after deleteBranch when it did not exist', function (done) {
+            var data = {
+                projectId: projectId,
+                branchName: 'doesNotExist'
+            };
+
+            safeStorage.deleteBranch(data)
+                .then(function (result) {
+                    expect(result).to.deep.equal({status: 'SYNCH'});
+                    return safeStorage.getBranches(data);
+                })
+                .then(function (result) {
+                    expect(result).to.not.have.property(data.branchName);
+                })
+                .nodeify(done);
+        });
+
         it('should loadObjects', function (done) {
             var data = {
-                    projectName: projectName,
+                    projectId: projectId,
                     branchName: 'master'
                 },
                 commitId,
@@ -255,9 +344,6 @@ describe('SafeStorage', function () {
 
             safeStorage.openDatabase()
                 .then(function () {
-                    return safeStorage.deleteProject({projectName: projectName});
-                })
-                .then(function () {
                     return testFixture.importProject(safeStorage, {
                         projectSeed: 'seeds/EmptyProject.json',
                         projectName: projectName,
@@ -272,9 +358,20 @@ describe('SafeStorage', function () {
                 .nodeify(done);
         });
 
+        after(function (done) {
+            safeStorage.deleteProject({projectId: projectId})
+                .then(function () {
+                    safeStorage.closeDatabase(done);
+                })
+                .catch(function (err) {
+                    logger.error(err);
+                    safeStorage.closeDatabase(done);
+                });
+        });
+
         it('should getCommits using timestamp', function (done) {
             var data = {
-                projectName: projectName,
+                projectId: projectId,
                 number: 10,
                 before: (new Date()).getTime() + 1
             };
@@ -290,7 +387,7 @@ describe('SafeStorage', function () {
 
         it('should getCommits using commitHash', function (done) {
             var data = {
-                projectName: projectName,
+                projectId: projectId,
                 number: 10,
                 before: commitHash
             };
@@ -306,7 +403,7 @@ describe('SafeStorage', function () {
 
         it('should fail getCommits using commitHash if invalid hash given', function (done) {
             var data = {
-                projectName: projectName,
+                projectId: projectId,
                 number: 10,
                 before: 'invalidHash'
             };
@@ -320,13 +417,14 @@ describe('SafeStorage', function () {
                     expect(typeof err).to.equal('object');
                     expect(err.message).to.equal('Invalid argument, data.before is not a number nor a valid hash.');
                     done();
-                });
+                })
+                .done();
         });
 
         it('should fail getCommits using commitHash if hash does not exist', function (done) {
             var dummyHash = '#12312312312313123',
                 data = {
-                    projectName: projectName,
+                    projectId: projectId,
                     number: 10,
                     before: dummyHash
                 };
@@ -340,7 +438,8 @@ describe('SafeStorage', function () {
                     expect(typeof err).to.equal('object');
                     expect(err.message).to.equal('object does not exist ' + dummyHash);
                     done();
-                });
+                })
+                .done();
         });
     });
 });

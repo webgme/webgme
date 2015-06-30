@@ -84,11 +84,14 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     },
 
 // Export and node-dumping functions
-    exportLibrary = function (webGMESessionId, name, hash, branch, commit, libraryRootPath, callback) {
+    exportLibrary = function (webGMESessionId, projectId, hash, branchName, commit, libraryRootPath, callback) {
 
         var storage = getConnectedStorage(webGMESessionId),
             project,
             finish = function (err, data) {
+                if (err) {
+                    logger.error('exportLibrary: ', err);
+                }
                 storage.close(function (closeErr) {
                     callback(err || closeErr, data);
                 });
@@ -108,6 +111,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     core.loadByPath(root, libraryRootPath, function (err, libraryRoot) {
                         if (err) {
                             finish(err);
+                            return;
                         }
                         Serialization.export(core, libraryRoot, finish);
                     });
@@ -117,8 +121,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         storage.open(function (networkState) {
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
 
-                storage.openProject(name, function (err, project__, branches) {
+                storage.openProject(projectId, function (err, project__, branches) {
                     if (err) {
+                        logger.error('openProject failed', projectId, err);
                         finish(err);
                         return;
                     }
@@ -126,20 +131,20 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     project = project__;
 
                     if (hash) {
-                        gotHash(project);
+                        gotHash();
                         return;
                     }
 
-                    commit = commit || branches[branch];
+                    commit = commit || branches[branchName];
 
                     if (!commit) {
-                        finish('no such branch found in the project');
+                        finish('Branch not found, projectId: "' + projectId + '", branchName: "' + branchName + '".');
                         return;
                     }
 
                     project.loadObject(commit, function (err, commitObject) {
                         if (err) {
-                            finish(err);
+                            finish('Failed loading commitHash: ' + err);
                             return;
                         }
 
@@ -196,7 +201,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         }
         return deferred.promise.nodeify(callback);
     },
-    dumpMoreNodes = function (webGMESessionId, name, hash, nodePaths, callback) {
+    dumpMoreNodes = function (webGMESessionId, projectId, hash, nodePaths, callback) {
 
         var storage = getConnectedStorage(webGMESessionId),
             finish = function (err, data) {
@@ -207,7 +212,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
         storage.open(function (networkStatus) {
             if (networkStatus === STORAGE_CONSTANTS.CONNECTED) {
-                storage.openProject(name, function (err, project/*, branches*/) {
+                storage.openProject(projectId, function (err, project/*, branches*/) {
 
                     if (err) {
                         finish(err);
@@ -247,7 +252,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
      * @param {string} userId
      * @param {string} pluginName
      * @param {object} context - where the plugin should execute.
-     * @param {string} context.project - name of project.
+     * @param {string} context.project - id of project.
      * @param {string} context.activeNode - path to activeNode.
      * @param {string} [context.activeSelection=[]] - paths to selected nodes.
      * @param {string} context.commit - commit hash to start the plugin from.
@@ -333,9 +338,10 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         var storage = getConnectedStorage(parameters.webGMESessionId),
             finish = function (err) {
                 storage.close(function (closeErr) {
-                    callback(err || closeErr);
+                    callback(err || closeErr, result);
                 });
-            };
+            },
+            result = {};
         logger.debug('seedProject');
 
         storage.open(function (networkState) {
@@ -343,28 +349,36 @@ var WEBGME = require(__dirname + '/../../../webgme'),
             var jsonSeed,
                 seedReady = function () {
                     logger.debug('seedProject - seedReady');
-                    storage.createProject(parameters.projectName,
-                        function (err, project) {
+                    storage.createProject(parameters.projectName, function (err, projectId) {
+                        if (err) {
+                            logger.error('empty project creation failed', err);
+                            finish(err);
+                            return;
+                        }
+                        storage.openProject(projectId, function (err, project) {
+                            var core,
+                                rootNode;
                             if (err) {
-                                logger.error('empty project creation failed', err);
+                                logger.error('Failed to open createdProject', err);
                                 finish(err);
                                 return;
                             }
-                            var core = new Core(project, {
-                                    globConf: gmeConfig,
-                                    logger: logger.fork('core')
-                                }),
-                                root = core.createNode({parent: null, base: null});
 
-                            Serialization.import(core, root, jsonSeed, function (err) {
+                            core = new Core(project, {
+                                globConf: gmeConfig,
+                                logger: logger.fork('core')
+                            });
+                            rootNode = core.createNode({parent: null, base: null});
+
+                            Serialization.import(core, rootNode, jsonSeed, function (err) {
                                 if (err) {
                                     logger.error('import of seed failed', err);
                                     finish(err);
                                     return;
                                 }
 
-                                var persisted = core.persist(root);
-                                storage.makeCommit(parameters.projectName,
+                                var persisted = core.persist(rootNode);
+                                storage.makeCommit(project.projectId,
                                     null,
                                     [],
                                     persisted.rootHash,
@@ -383,15 +397,17 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                                 callback(err);
                                             }
                                             logger.info('seeding [' + parameters.seedName +
-                                                '] to [' + parameters.projectName + '] completed');
+                                                '] to [' + project.projectId + '] completed');
+                                            result = {
+                                                projectId: projectId
+                                            };
                                             finish(null);
                                         });
                                     }
                                 );
-
                             });
-
                         });
+                    });
                 };
 
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
@@ -463,8 +479,8 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         return requireJS('addon/' + name + '/' + name + '/' + name);
     },
 
-    initConnectedWorker = function (webGMESessionId, userId, addOnName, projectName, branchName, callback) {
-        if (!addOnName || !projectName || !branchName) {
+    initConnectedWorker = function (webGMESessionId, userId, addOnName, projectId, branchName, callback) {
+        if (!addOnName || !projectId || !branchName) {
             return setImmediate(callback, 'Required parameter was not provided');
         }
         var AddOn = getAddOn(addOnName),
@@ -476,7 +492,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
             if (networkStatus === STORAGE_CONSTANTS.CONNECTED) {
                 logger.debug('starting addon', {metadata: addOnName});
                 _addOn.start({
-                    projectName: projectName,
+                    projectId: projectId,
                     branchName: branchName,
                     logger: logger.fork(addOnName)
                 }, function (err) {
@@ -521,7 +537,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
         }
     },
 
-    autoMerge = function (webGMESessionId, userName, projectName, mine, theirs, callback) {
+    autoMerge = function (webGMESessionId, userName, projectId, mine, theirs, callback) {
         var storage = getConnectedStorage(webGMESessionId),
             mergeResult = {},
             finish = function (err) {
@@ -529,11 +545,11 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     callback(err || closeErr, mergeResult);
                 });
             };
-        logger.debug('autoMerge ' + projectName + ' ' + mine + ' -> ' + theirs);
+        logger.debug('autoMerge ' + projectId + ' ' + mine + ' -> ' + theirs);
 
         storage.open(function (networkState) {
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
-                storage.openProject(projectName, function (err, project, branches) {
+                storage.openProject(projectId, function (err, project /*, branches*/) {
                     if (err) {
                         finish(err);
                         return;
@@ -566,10 +582,10 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     callback(err || closeErr, result);
                 });
             };
-        logger.debug('resolve ' + partial.projectName + ' ' + partial.baseCommitHash + ' -> ' + partial.branchName);
+        logger.debug('resolve ' + partial.projectId + ' ' + partial.baseCommitHash + ' -> ' + partial.branchName);
         storage.open(function (networkState) {
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
-                storage.openProject(partial.projectName, function (err, project, branches) {
+                storage.openProject(partial.projectId, function (err, project /*, branches*/) {
                     if (err) {
                         finish(err);
                         return;
@@ -622,18 +638,22 @@ process.on('message', function (parameters) {
         return initialize(parameters);
     }
 
-
+    logger.debug('Incoming message:', {metadata: parameters});
     resultId = GUID();
     if (parameters.command === CONSTANT.workerCommands.dumpMoreNodes) {
-        if (typeof parameters.name === 'string' &&
+        if (typeof parameters.projectId === 'string' &&
             typeof parameters.hash === 'string' &&
             parameters.nodes && parameters.nodes.length) {
             safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            dumpMoreNodes(parameters.webGMESessionId, parameters.name, parameters.hash, parameters.nodes,
+            dumpMoreNodes(parameters.webGMESessionId, parameters.projectId, parameters.hash, parameters.nodes,
                 resultHandling);
         } else {
             initResult();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
+            safeSend({
+                pid: process.pid,
+                type: CONSTANT.msgTypes.request,
+                error: 'invalid parameters: ' + JSON.stringify(parameters)
+            });
         }
     } else if (parameters.command === CONSTANT.workerCommands.getResult) {
         if (resultReady === true) {
@@ -663,7 +683,7 @@ process.on('message', function (parameters) {
                 safeSend({
                     pid: process.pid,
                     type: CONSTANT.msgTypes.result,
-                    error: 'invalid parameters',
+                    error: 'invalid parameters: ' + JSON.stringify(parameters),
                     result: {}
                 });
             }
@@ -687,26 +707,29 @@ process.on('message', function (parameters) {
             });
         }
     } else if (parameters.command === CONSTANT.workerCommands.exportLibrary) {
-        logger.debug(parameters);
-        if (typeof parameters.name === 'string' &&
+        if (typeof parameters.projectId === 'string' &&
             (typeof parameters.hash === 'string' ||
-            typeof parameters.branch === 'string' ||
+            typeof parameters.branchName === 'string' ||
             typeof parameters.commit === 'string') &&
             typeof parameters.path === 'string') {
             safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-            exportLibrary(parameters.webGMESessionId, parameters.name, parameters.hash,
-                parameters.branch, parameters.commit, parameters.path, resultHandling);
+            exportLibrary(parameters.webGMESessionId, parameters.projectId, parameters.hash,
+                parameters.branchName, parameters.commit, parameters.path, resultHandling);
         } else {
             initResult();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
+            safeSend({
+                pid: process.pid,
+                type: CONSTANT.msgTypes.request,
+                error: 'invalid parameters: ' + JSON.stringify(parameters)
+            });
         }
     } else if (parameters.command === CONSTANT.workerCommands.seedProject) {
         safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
         seedProject(parameters, resultHandling);
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStart) {
         if (gmeConfig.addOn.enable === true) {
-            initConnectedWorker(parameters.webGMESessionId, parameters.usrId, parameters.workerName, parameters.project,
-                parameters.branch,
+            initConnectedWorker(parameters.webGMESessionId, parameters.userId, parameters.workerName,
+                parameters.projectId, parameters.branch,
                 function (err) {
                     if (err) {
                         safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: err, resid: null});
@@ -758,7 +781,7 @@ process.on('message', function (parameters) {
         safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
         autoMerge(parameters.webGMESessionId,
             parameters.userId,
-            parameters.project,
+            parameters.projectId,
             parameters.mine,
             parameters.theirs,
             resultHandling);

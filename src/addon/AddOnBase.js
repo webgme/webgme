@@ -15,7 +15,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.logger = logger__;
         this.project = null;
         this.branchName = '';
-        this.projectName = '';
+        this.projectId = '';
         this.branch = null;
         this.commit = null;
         this.root = null;
@@ -57,15 +57,15 @@ define(['common/storage/constants'], function (CONSTANTS) {
         // This is the part of the start process which should always be done,
         // so this function should be always called from the start.
         self.logger.debug('Initializing');
-        if (!(parameters.projectName && parameters.branchName)) {
+        if (!(parameters.projectId && parameters.branchName)) {
             callback(new Error('Failed to initialize'));
             return;
         }
 
-        self.projectName = parameters.projectName;
+        self.projectId = parameters.projectId;
         self.branchName = parameters.branchName;
         //we should open the project and the branch
-        this._storage.openProject(self.projectName, function (err, project, branches) {
+        this._storage.openProject(self.projectId, function (err, project, branches) {
             if (err) {
                 callback(err);
                 return;
@@ -85,7 +85,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             // time to wait in ms for this amount after stop is called and before we kill the addon
             self.waitTimeForPendingEvents = parameters.waitTimeForPendingEvents || 1500;
 
-            self._storage.openBranch(self.projectName, self.branchName, updateHandler, commitHandler,
+            self._storage.openBranch(self.projectId, self.branchName, updateHandler, commitHandler,
                 function (err, branch) {
                     if (err) {
                         callback(err);
@@ -96,6 +96,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
                     self.project.loadObject(self.commit, function (err, commitObject) {
                         if (err) {
                             callback(err);
+                            return;
                         }
 
                         self.rootHash = commitObject.root;

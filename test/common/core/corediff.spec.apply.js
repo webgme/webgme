@@ -10,6 +10,7 @@ describe('corediff apply', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         projectName = 'coreDiffApply',
+        projectId = testFixture.projectName2Id(projectName),
         project,
         core,
         rootNode,
@@ -32,7 +33,7 @@ describe('corediff apply', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
+                return storage.deleteProject({projectId: projectId});
             })
             .then(function () {
                 return testFixture.importProject(storage, {
@@ -53,7 +54,7 @@ describe('corediff apply', function () {
     });
 
     after(function (done) {
-        storage.deleteProject({projectName: projectName})
+        storage.deleteProject({projectId: projectId})
             .then(function () {
                 return Q.all([
                     storage.closeDatabase(),

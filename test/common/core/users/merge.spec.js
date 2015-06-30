@@ -6,9 +6,10 @@
 
 var testFixture = require('../../../_globals');
 
-describe('merge - library', function () {
+describe.skip('merge - library', function () {
     'use strict';
     var projectName = 'mergeLibrary',
+        projectId = testFixture.projectName2Id(projectName),
         Q = testFixture.Q,
         gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('apply.spec'),
@@ -24,9 +25,6 @@ describe('merge - library', function () {
                 gmeAuth = gmeAuth__;
                 storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
-            })
-            .then(function () {
-                return storage.deleteProject({projectName: projectName});
             })
             .then(function () {
                 return testFixture.openContext(storage, gmeConfig, logger, {
@@ -47,7 +45,7 @@ describe('merge - library', function () {
     });
 
     after(function (done) {
-        storage.deleteProject({projectName: projectName})
+        storage.deleteProject({projectId: projectId})
             .then(function () {
                 return Q.all([
                     storage.closeDatabase(),

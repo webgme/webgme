@@ -18,6 +18,7 @@ describe('merge CLI test', function () {
         database,
         gmeAuth,
         projectName = 'mergeCliTest',
+        projectId = testFixture.projectName2Id(projectName),
         oldProcessExit = process.exit,
         oldConsoleLog = console.log,
         oldConsoleError = console.error,
@@ -56,19 +57,22 @@ describe('merge CLI test', function () {
                 return database.openDatabase();
             })
             .then(function () {
-                return database.deleteProject({projectName: projectName});
+                return database.deleteProject({projectId: projectId});
             })
             .then(function () {
-                return testFixture.openContext(database, gmeConfig, logger, {
+                return testFixture.importProject(database, {
                     projectName: projectName,
+                    logger: logger.fork('import'),
+                    gmeConfig: gmeConfig,
                     branchName: 'master',
-                    createProject: true,
-                    projectSeed: './test/bin/merge/base.json'
+                    userName: gmeConfig.authentication.guestAccount,
+                    projectSeed: './test/bin/merge/base.json',
+
                 });
             })
             .then(function (result) {
                 context = result;
-                return Q.nfcall(context.project.createBranch, 'other', result.commitHash);
+                return result.project.createBranch('other', result.commitHash);
             })
             .then(function () {
                 return Q.all([
@@ -98,7 +102,7 @@ describe('merge CLI test', function () {
     });
 
     after(function (done) {
-        database.deleteProject({projectName: projectName})
+        database.deleteProject({projectId: projectId})
             .then(function () {
                 return Q.all([
                     gmeAuth.unload(),
@@ -129,9 +133,30 @@ describe('merge CLI test', function () {
             .catch(function (err) {
                 expect(err).not.to.equal(null);
                 expect(err instanceof  SyntaxError).to.equal(true);
-                expect(err.toString()).to.contain('invalid parameter');
+                expect(err.message).to.contain('invalid parameter');
                 done();
-            });
+            })
+            .done();
+    });
+
+    it('should fail with wrong owner', function (done) {
+        mergeCli.main(['node', filename,
+            '-p', projectName,
+            '-M', 'master',
+            '-T', 'other',
+            '-m', gmeConfig.mongo.uri,
+            '-u', gmeConfig.authentication.guestAccount,
+            '-o','badOwner',
+            '-f', './test-tmp/mergeCli'])
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err).not.to.equal(null);
+                expect(err.message).to.contain('badOwner');
+                done();
+            })
+            .done();
     });
 
     it('should go create files if prefix is given', function (done) {
@@ -141,7 +166,7 @@ describe('merge CLI test', function () {
             '-T', 'other',
             '-m', gmeConfig.mongo.uri,
             '-u', gmeConfig.authentication.guestAccount,
-            '-P', './test-tmp/mergeCli'])
+            '-f', './test-tmp/mergeCli'])
             .then(function () {
                 done();
             })
@@ -159,8 +184,7 @@ describe('merge CLI test', function () {
             '-p', projectName,
             '-M', 'master',
             '-T', 'other',
-            '-m', gmeConfig.mongo.uri,
-            '-u', gmeConfig.authentication.guestAccount])
+            '-m', gmeConfig.mongo.uri])
             .then(function () {
                 done();
             })

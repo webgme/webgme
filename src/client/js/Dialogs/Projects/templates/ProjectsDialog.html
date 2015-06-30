@@ -23,8 +23,26 @@
                     <button class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
                 <div class="panel-create-new control-group">
-                    <input type="text" class="input-xlarge pull-left txt-project-name form-control"
-                           placeholder="Project name..."/>
+                    <div class="input-group">
+                        <div class="input-group-btn">
+                            <button type="button" class="btn btn-default dropdown-toggle disabled" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="username">Username</span>
+                                <!--<span class="caret"></span>-->
+                            </button>
+                            <ul class="dropdown-menu">
+                                <!--<li><a href="#">Username</a></li>-->
+                                <!--<li><a href="#">Another action</a></li>-->
+                                <!--<li><a href="#">Something else here</a></li>-->
+                                <!--<li role="separator" class="divider"></li>-->
+                                <!--<li><a href="#">Separated link</a></li>-->
+                            </ul>
+                        </div><!-- /btn-group -->
+                        <input type="text" class="input-xlarge txt-project-name form-control"
+                               placeholder="Project name..." />
+                    </div><!-- /input-group -->
+
+
+
                     <button class="btn btn-primary btn-save" disabled>Create</button>
                     <button class="btn btn-primary btn-import" disabled>Import file...</button>
                     <button class="btn btn-default btn-cancel">Cancel</button>

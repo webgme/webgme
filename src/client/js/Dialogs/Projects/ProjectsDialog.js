@@ -13,6 +13,7 @@ define([
     'js/Utils/GMEConcepts',
     'js/Dialogs/Import/ImportDialog',
     'js/Dialogs/CreateFromSeed/CreateFromSeedDialog',
+    'common/storage/util',
     'text!./templates/ProjectsDialog.html',
 
     'isis-ui-components/simpleDialog/simpleDialog',
@@ -20,13 +21,13 @@ define([
 
     'css!./styles/ProjectsDialog.css'
 
-], function (ng, Logger, LoaderCircles, GMEConcepts, ImportDialog, CreateFromSeedDialog,
+], function (ng, Logger, LoaderCircles, GMEConcepts, ImportDialog, CreateFromSeedDialog, StorageUtil,
              projectsDialogTemplate, ConfirmDialog, DeleteDialogTemplate) {
 
     'use strict';
 
     var ProjectsDialog,
-        DATA_PROJECT_NAME = 'PROJECT_NAME',
+        DATA_PROJECT_ID = 'PROJECT_ID',
         CREATE_TYPE_EMPTY = 'create_empty',
         CREATE_TYPE_IMPORT = 'create_import',
         LI_BASE = $('<li class="center pointer"><a class="btn-env"></a>'),
@@ -79,7 +80,7 @@ define([
             createType;
 
         function openProject(projectId) {
-            if (self._projectList[projectId].read === true) {
+            if (self._projectList[projectId].rights.read === true) {
                 self._client.selectProject(projectId, function () {
                     self._dialog.modal('hide');
                 });
@@ -118,7 +119,7 @@ define([
                 myScope = rootScope.$new(true);
 
 
-            if (self._projectList[projectId].delete === true) {
+            if (self._projectList[projectId].rights.delete === true) {
                 myScope.thingName = 'project "' + projectId + '"';
 
                 deleteProjectModal = ngConfirmDialog.open({
@@ -189,6 +190,8 @@ define([
         this._btnNewProjectImport = this._dialog.find('.btn-import');
 
         this._txtNewProjectName = this._dialog.find('.txt-project-name');
+        this._dialog.find('.username').text(this._client.getUserId());
+
 
         this._loader = new LoaderCircles({containerElement: this._btnRefresh});
         this._loader.setSize(14);
@@ -203,12 +206,12 @@ define([
 
         //hook up event handlers - SELECT project in the list
         this._ul.on('click', 'li:not(.disabled)', function (event) {
-            selectedId = $(this).data(DATA_PROJECT_NAME);
+            selectedId = $(this).data(DATA_PROJECT_ID);
 
             event.stopPropagation();
             event.preventDefault();
 
-            if (self._projectList[selectedId].read === true) {
+            if (self._projectList[selectedId].rights.read === true) {
                 self._ul.find('.active').removeClass('active');
                 $(this).addClass('active');
 
@@ -222,7 +225,7 @@ define([
 
         //open on double click
         this._ul.on('dblclick', 'li:not(.disabled)', function (event) {
-            selectedId = $(this).data(DATA_PROJECT_NAME);
+            selectedId = $(this).data(DATA_PROJECT_ID);
 
             event.stopPropagation();
             event.preventDefault();
@@ -289,24 +292,25 @@ define([
         });
 
 
-        function isValidProjectName(aProjectName) {
+        function isValidProjectName(aProjectName, projectId) {
             var re = /^[0-9a-z_]+$/gi;
 
             return (
             re.test(aProjectName) &&
-            self._projectNames.indexOf(aProjectName) === -1
+            self._projectNames.indexOf(projectId) === -1
             );
         }
 
         this._txtNewProjectName.on('keyup', function () {
-            var val = self._txtNewProjectName.val();
+            var val = self._txtNewProjectName.val(),
+                projectId = StorageUtil.getProjectIdFromUserIdAndProjectName(self._dialog.find('.username').text(), val);
 
             if (val.length === 1) {
-                self._filter = [val.toUpperCase(), val.toUpperCase()];
+                self._filter = [projectId.toUpperCase()[0], projectId.toUpperCase()[0]];
                 self._updateProjectNameList();
             }
 
-            if (isValidProjectName(val) === false) {
+            if (isValidProjectName(val, projectId) === false) {
                 self._panelCreateNew.addClass('has-error');
                 self._btnNewProjectCreate.disable(true);
                 self._btnNewProjectImport.disable(true);
@@ -332,9 +336,11 @@ define([
         this._txtNewProjectName.on('keydown', function (event) {
 
             var enterPressed = event.which === 13,
-                newProjectName = self._txtNewProjectName.val();
+                newProjectName = self._txtNewProjectName.val(),
+                projectId =  StorageUtil.getProjectIdFromUserIdAndProjectName(self._dialog.find('.username').text(), newProjectName);
 
-            if (enterPressed && isValidProjectName(newProjectName)) {
+
+            if (enterPressed && isValidProjectName(newProjectName, projectId)) {
                 if (createType === CREATE_TYPE_EMPTY) {
                     doCreateProject(self._client);
                 } else if (createType === CREATE_TYPE_IMPORT) {
@@ -356,30 +362,33 @@ define([
     };
 
     ProjectsDialog.prototype._refreshProjectList = function () {
-        var self = this;
+        var self = this,
+            params = {
+                rights: true
+            };
 
         this._loader.start();
         this._btnRefresh.disable(true);
         this._btnRefresh.find('i').css('opacity', '0');
 
-        this._client.getProjects(function (err, projectList) {
+        this._client.getProjects(params, function (err, projectList) {
             var i;
-            self._activeProject = self._client.getActiveProjectName();
+            self._activeProject = self._client.getActiveProjectId();
             self._projectList = {};
             self._projectNames = [];
 
             for (i = 0; i < projectList.length; i += 1) {
-                self._projectNames.push(projectList[i].name);
-                self._projectList[projectList[i].name] = projectList[i];
+                self._projectNames.push(projectList[i]._id);
+                self._projectList[projectList[i]._id] = projectList[i];
                 //self._projectList[p].projectId = p;
             }
 
             function getProjectUserRightSortValue(projectRights) {
                 var val = 0;
 
-                if (projectRights.write === true) {
+                if (projectRights.rights.write === true) {
                     val = 2;
-                } else if (projectRights.read === true) {
+                } else if (projectRights.rights.read === true) {
                     val = 1;
                 }
 
@@ -423,7 +432,7 @@ define([
 
         if (enabled === true) {
             //btnOpen
-            if (this._projectList[projectId].read === true) {
+            if (this._projectList[projectId].rights.read === true) {
                 this._btnOpen.show();
                 this._btnOpen.disable(false);
             } else {
@@ -432,7 +441,7 @@ define([
             }
 
             //btnDelete
-            if (this._projectList[projectId].delete === true) {
+            if (this._projectList[projectId].rights.delete === true) {
                 this._btnDelete.show();
                 this._btnDelete.disable(false);
             } else {
@@ -453,6 +462,7 @@ define([
             i,
             li,
             displayProject,
+            projectDiplayedName,
             count = 0,
             emptyLi = $('<li class="center"><i>No projects in this group...</i></li>');
 
@@ -470,19 +480,20 @@ define([
 
                 if (displayProject) {
                     li = LI_BASE.clone();
-                    li.find('a').text(this._projectNames[i]);
-                    li.data(DATA_PROJECT_NAME, this._projectNames[i]);
+                    projectDiplayedName = StorageUtil.getProjectDisplayedNameFromProjectId(this._projectNames[i]);
+                    li.find('a').text(projectDiplayedName);
+                    li.data(DATA_PROJECT_ID, this._projectNames[i]);
 
                     if (this._projectNames[i] === this._activeProject) {
                         li.addClass('active');
                     }
 
                     //check to see if the user has READ access to this project
-                    if (this._projectList[this._projectNames[i]].read !== true) {
+                    if (this._projectList[this._projectNames[i]].rights.read !== true) {
                         li.disable(true);
                     } else {
                         //check if user has only READ rights for this project
-                        if (this._projectList[this._projectNames[i]].write !== true) {
+                        if (this._projectList[this._projectNames[i]].rights.write !== true) {
                             li.find('a.btn-env').append(READ_ONLY_BASE.clone());
                         }
                     }
@@ -534,13 +545,13 @@ define([
         // TODO: remove these two lines once the create seed API is implemented and functional
         loader.start();
 
-        self._client.seedProject(parameters, function (err) {
+        self._client.seedProject(parameters, function (err, result) {
             if (err) {
                 self._logger.error('Cannot create seed project', err);
                 loader.stop();
             } else {
                 self._logger.debug('Created new project from seed');
-                self._client.selectProject(projectName, function (err) {
+                self._client.selectProject(result.projectId, function (err) {
                     if (err) {
                         self._logger.error('Cannot select project', err);
                     } else {

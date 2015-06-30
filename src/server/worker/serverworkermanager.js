@@ -7,11 +7,7 @@
 
 var Child = require('child_process'),
     process = require('process'),
-    CONSTANTS = require('./constants'),
-
-    ASSERT = requireJS('common/util/assert'),
-
-    Logger = require('../logger');
+    CONSTANTS = require('./constants');
 
 
 function ServerWorkerManager(_parameters) {

@@ -7,14 +7,12 @@
 
 define([
     'common/util/sha1',
-    'common/util/zssha1.min',
     'common/util/assert',
     'common/util/canon'
-], function (SHA1, ZS, ASSERT, CANON) {
+], function (SHA1, ASSERT, CANON) {
     'use strict';
 
-    var keyType = null,
-        ZSSHA = new ZS();
+    var keyType = null;
 
     function rand160Bits() {
         var result = '',
@@ -34,8 +32,6 @@ define([
         switch (keyType) {
             case 'rand160Bits':
                 return rand160Bits();
-            case 'ZSSHA':
-                return ZSSHA.getHash(CANON.stringify(object));
             default: //plainSHA1
                 return SHA1(CANON.stringify(object));
         }

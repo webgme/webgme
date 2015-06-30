@@ -19,7 +19,7 @@ describe('coretype', function () {
             return new Type(new Rel(new Tree(s, options), options), options);
         },
         projectName = 'coreTypeTesting',
-        project,
+        projectId = testFixture.projectName2Id(projectName),
         core,
         root,
 
@@ -31,9 +31,6 @@ describe('coretype', function () {
                 gmeAuth = gmeAuth_;
                 storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
-            })
-            .then(function () {
-                return storage.deleteProject({projectName: projectName});
             })
             .nodeify(done);
     });
@@ -49,15 +46,13 @@ describe('coretype', function () {
     beforeEach(function (done) {
         storage.openDatabase()
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
-            })
-            .then(function () {
                 return storage.createProject({projectName: projectName});
             })
-            .then(function (project) {
+            .then(function (dbProject) {
                 var base,
                     bChild,
-                    instance;
+                    instance,
+                    project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
 
                 core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('coretype:core')});
                 root = core.createNode();
@@ -77,7 +72,7 @@ describe('coretype', function () {
     });
 
     afterEach(function (done) {
-        storage.deleteProject({projectName: projectName})
+        storage.deleteProject({projectId: projectId})
             .then(function () {
                 storage.closeDatabase(done);
             })

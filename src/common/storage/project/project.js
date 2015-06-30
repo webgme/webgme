@@ -5,23 +5,20 @@
  */
 
 define([
-    'common/storage/project/cache',
+    'common/storage/project/interface',
     'common/storage/project/branch',
-    'common/storage/constants',
     'common/util/assert'
-], function (ProjectCache, Branch, CONSTANTS, ASSERT) {
+    //'q'
+], function (ProjectInterface, Branch, ASSERT) {
     'use strict';
 
-    function Project(name, storage, mainLogger, gmeConfig) {
-        this.name = name;
+    function Project(projectId, storage, mainLogger, gmeConfig) {
+        var self = this;
         this.branches = {};
-        this.ID_NAME = CONSTANTS.MONGO_ID;
 
-        var self = this,
-            logger = mainLogger.fork('Project:' + self.name),
-            projectCache = new ProjectCache(storage, self.name, logger, gmeConfig);
+        ProjectInterface.call(this, projectId, storage, mainLogger, gmeConfig);
 
-        logger.debug('ctor');
+        // Functions for client specific branch handling
         this.getBranch = function (branchName, shouldExist) {
 
             if (shouldExist === true) {
@@ -31,7 +28,7 @@ define([
             }
 
             if (this.branches.hasOwnProperty(branchName) === false) {
-                this.branches[branchName] = new Branch(branchName, logger);
+                this.branches[branchName] = new Branch(branchName, self.logger);
             }
 
             return this.branches[branchName];
@@ -45,40 +42,38 @@ define([
             return existed;
         };
 
-        // Functions forwarded to storage.
+        // Functions defined in ProjectInterface
+        this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
+            return storage.makeCommit(self.projectId, branchName, parents, rootHash, coreObjects, msg, callback);
+        };
+
         this.setBranchHash = function (branchName, newHash, oldHash, callback) {
-            storage.setBranchHash(self.name, branchName, newHash, oldHash, callback);
+            return storage.setBranchHash(self.projectId, branchName, newHash, oldHash, callback);
+        };
+
+        this.getBranchHash = function (branchName, callback) {
+            storage.setBranchHash(self.projectId, branchName, callback);
         };
 
         this.createBranch = function (branchName, newHash, callback) {
-            storage.createBranch(self.name, branchName, newHash, callback);
-        };
-
-        this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
-            return storage.makeCommit(self.name, branchName, parents, rootHash, coreObjects, msg, callback);
+            storage.createBranch(self.projectId, branchName, newHash, callback);
         };
 
         this.getBranches = function (callback) {
-            storage.getBranches(self.name, callback);
+            storage.getBranches(self.projectId, callback);
         };
 
         this.getCommits = function (before, number, callback) {
-            storage.getCommits(self.name, before, number, callback);
+            storage.getCommits(self.projectId, before, number, callback);
         };
 
         this.getCommonAncestorCommit = function (commitA, commitB, callback) {
-            storage.getCommonAncestorCommit(self.name, commitA, commitB, callback);
-        };
-
-        // Functions forwarded to project cache.
-        this.insertObject = function (obj, stageBucket) {
-            projectCache.insertObject(obj, stageBucket);
-        };
-
-        this.loadObject = function (key, callback) {
-            projectCache.loadObject(key, callback);
+            storage.getCommonAncestorCommit(self.projectId, commitA, commitB, callback);
         };
     }
+
+    Project.prototype = Object.create(ProjectInterface);
+    Project.prototype.constructor = Project;
 
     return Project;
 });

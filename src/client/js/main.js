@@ -66,7 +66,8 @@ require.config({
         jszip: 'lib/jszip/jszip',
         superagent: 'lib/superagent/superagent-' + _superagentVersion,
         debug: 'lib/debug/debug',
-        Q: 'lib/q/q',
+        Q: 'lib/q/q', //FIXME: this should be removed
+        //q: 'lib/q/q',
 
 
         codemirror: 'lib/codemirror/codemirror.amd',

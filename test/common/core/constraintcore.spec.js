@@ -14,6 +14,7 @@ describe('constraint.core', function () {
         TASYNC = testFixture.requirejs('common/core/tasync'),
         project,
         projectName = 'coreConstraintTesting',
+        projectId = testFixture.projectName2Id(projectName),
         core,
         rootNode,
 
@@ -27,7 +28,7 @@ describe('constraint.core', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
+                return storage.deleteProject({projectId: projectId});
             })
             .nodeify(done);
     });
@@ -75,7 +76,7 @@ describe('constraint.core', function () {
     });
 
     afterEach(function (done) {
-        storage.deleteProject({projectName: projectName}, done);
+        storage.deleteProject({projectId: projectId}, done);
     });
 
     it('gives back null for unknown constraint', function () {

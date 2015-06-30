@@ -1,5 +1,5 @@
 /*globals requireJS*/
-/*jshint node:true*/
+/*jshint node:true, newcap:false*/
 
 /**
  * @author ksmyth / https://github.com/ksmyth
@@ -10,6 +10,8 @@ var Mongodb = require('mongodb'),
     bcrypt = require('bcrypt'),
 
     GUID = requireJS('common/util/guid'),
+
+    STORAGE_CONSTANTS = requireJS('common/storage/constants'),
 
     Logger = require('../../logger');
 
@@ -244,11 +246,11 @@ function GMEAuth(session, gmeConfig) {
 
     // type: 'create' 'delete'
     // rights: {read: true, write: true, delete: true}
-    function authorizeByUserId(userId, projectName, type, rights, callback) {
+    function authorizeByUserId(userId, projectId, type, rights, callback) {
         var update;
         if (type === 'create' || type === 'set') {
             update = {$set: {}};
-            update.$set['projects.' + projectName] = rights;
+            update.$set['projects.' + projectId] = rights;
             return collection.update({_id: userId}, update)
                 .spread(function (numUpdated) {
                     return numUpdated === 1;
@@ -256,7 +258,7 @@ function GMEAuth(session, gmeConfig) {
                 .nodeify(callback);
         } else if (type === 'delete') {
             update = {$unset: {}};
-            update.$unset['projects.' + projectName] = '';
+            update.$unset['projects.' + projectId] = '';
             return collection.update({_id: userId}, update)
                 .spread(function (numUpdated) {
                     // FIXME this is always true. Try findAndUpdate instead
@@ -497,14 +499,17 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-    function deleteProject(projectName, callback) {
+    function deleteProject(projectId, callback) {
         var update = {$unset: {}};
-        update.$unset['projects.' + projectName] = '';
+        update.$unset['projects.' + projectId] = '';
         return collection.update({}, update, {multi: true})
             .then(function () {
                 return organizationCollection.update({}, update, {multi: true});
             })
             .spread(function (/*numUpdated*/) {
+                return projectCollection.remove({_id: projectId});
+            })
+            .then(function () {
                 return true;
             })
             .nodeify(callback);
@@ -539,13 +544,27 @@ function GMEAuth(session, gmeConfig) {
     }
 
     function addProject(orgOrUserId, projectName, info, callback) {
-        var data = {
-            owner: orgOrUserId,
-            name: projectName,
-            full_name: orgOrUserId + '/' + projectName,
-            info: info || {}
-        };
-        return projectCollection.update({_id: orgOrUserId + '.' + projectName}, data, {upsert: true})
+        var id = orgOrUserId + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName,
+            data = {
+                _id: id,
+                owner: orgOrUserId,
+                name: projectName,
+                fullName: orgOrUserId + '/' + projectName,
+                info: info || {}
+            };
+
+        return projectCollection.update({_id: id}, data, {upsert: true})
+            .nodeify(callback);
+    }
+
+    function getProject(projectId, callback) {
+        return projectCollection.findOne({_id: projectId})
+            .then(function (projectData) {
+                if (!projectData) {
+                    return Q.reject(new Error('no such project ' + projectId));
+                }
+                return projectData;
+            })
             .nodeify(callback);
     }
 
@@ -718,6 +737,7 @@ function GMEAuth(session, gmeConfig) {
         getAuthorizationInfoByOrgId: getAuthorizationInfoByOrgId,
 
         addProject: addProject,
+        getProject: getProject,
         transferProject: transferProject
     };
 }
