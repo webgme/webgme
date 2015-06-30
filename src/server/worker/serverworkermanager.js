@@ -51,18 +51,21 @@ function ServerWorkerManager(_parameters) {
             _workers[worker.pid] = {worker: worker, state: CONSTANTS.workerStates.initializing, type: null, cb: null};
             logger.debug('workerPid forked ' + worker.pid);
             worker.on('message', messageHandling);
+            worker.on('exit', function(code, signal) {
+                logger.debug('worker has exited: ' + worker.pid);
+                if (code !== null && !signal) {
+                    logger.warn('worker ' + worker.pid + ' has exited abnormally with code ' + code);
+                }
+                delete _workers[worker.pid];
+                reserveWorkerIfNecessary();
+            });
         }
     }
 
     function freeWorker(workerPid) {
-        //FIXME it would be better if we would have a global function that listens to all close events of the children
-        //because that way we could be able to get child-freeze and reuse the slot
         if (_workers[workerPid]) {
-            _workers[workerPid].worker.on('close', function (/*code, signal*/) {
-                logger.debug('worker have been freed: ' + workerPid);
-                delete _workers[workerPid];
-            });
             _workers[workerPid].worker.kill('SIGINT');
+            delete _workers[workerPid];
         }
     }
 
@@ -71,6 +74,7 @@ function ServerWorkerManager(_parameters) {
         var len = Object.keys(_workers).length;
         logger.debug('there are ' + len + ' worker to close');
         Object.keys(_workers).forEach(function (workerPid) {
+            _workers[workerPid].worker.removeAllListeners('exit');
             _workers[workerPid].worker.on('close', function (/*code, signal*/) {
                 logger.debug('workerPid closed: ' + workerPid);
                 delete _workers[workerPid];
@@ -185,6 +189,10 @@ function ServerWorkerManager(_parameters) {
 
     function request(parameters, callback) {
         _waitingRequests.push({request: parameters, cb: callback});
+        reserveWorkerIfNecessary();
+    }
+
+    function reserveWorkerIfNecessary() {
         var workerIds = Object.keys(_workers || {}),
             i, initializingWorkers = 0,
             freeWorkers = 0;
@@ -197,7 +205,7 @@ function ServerWorkerManager(_parameters) {
             }
         }
 
-        if (_waitingRequests.length > initializingWorkers + freeWorkers &&
+        if (_waitingRequests.length + 1 /* keep a spare */ > initializingWorkers + freeWorkers &&
             workerIds.length < gmeConfig.server.maxWorkers) {
             reserveWorker();
         }
@@ -259,7 +267,7 @@ function ServerWorkerManager(_parameters) {
 
             if (i < workerPids.length) {
                 assignRequest(workerPids[i]);
-            } else if (_waitingRequests.length > initializingWorkers &&
+            } else if (_waitingRequests.length + 1 /* keep a spare */ > initializingWorkers &&
                 Object.keys(_workers || {}).length < gmeConfig.server.maxWorkers) {
                 reserveWorker();
             }
@@ -280,7 +288,7 @@ function ServerWorkerManager(_parameters) {
         if (_managerId === null) {
             _managerId = setInterval(queueManager, 10);
         }
-        reserveWorker();
+        reserveWorkerIfNecessary();
     }
 
     return {
