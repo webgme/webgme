@@ -59,7 +59,6 @@ var WebGME = require('../webgme'),
 
     ExecutorClient = requireJS('common/executor/ExecutorClient'),
     BlobClient = requireJS('blob/BlobClient'),
-    openContext = require('../src/server/util/opencontext'),
     Project = require('../src/server/storage/userproject'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
 
@@ -446,6 +445,5 @@ module.exports = {
     logIn: logIn,
     openSocketIo: openSocketIo,
 
-    STORAGE_CONSTANTS: STORAGE_CONSTANTS,
-    openContext: openContext.openContext
+    STORAGE_CONSTANTS: STORAGE_CONSTANTS
 };

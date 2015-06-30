@@ -125,7 +125,6 @@ main = function (argv) {
                     STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
             }
 
-
             if (program.user) {
                 params.username = program.user;
             }
