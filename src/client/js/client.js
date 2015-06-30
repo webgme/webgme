@@ -519,6 +519,7 @@ define([
                 state.project.loadObject(commitHash, function (err, commitObj) {
                     if (!err && commitObj) {
                         logState('info', 'selectCommit loaded commit');
+                        self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
                         loading(commitObj.root, function (err, aborted) {
                             if (err) {
                                 logger.error('loading returned error', commitObj.root, err);
