@@ -5,7 +5,7 @@
 
 var testFixture = require('./../_globals.js');
 
-describe.only('issue410 testing', function () {
+describe('issue410 testing', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
