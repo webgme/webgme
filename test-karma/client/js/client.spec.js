@@ -620,12 +620,27 @@ describe('GME client', function () {
 
                 client.selectBranch('master', null, function (err) {
                     expect(err).to.equal(null);
+                    expect(client.getActiveBranchName()).to.equal('master');
                     done();
                 });
             });
         });
 
-        it('should select a nonexistent branch of the opened project', function (done) {
+        it('should select the given branch of the opened project when specified in selectProject', function (done) {
+            client.selectProject('reset', null, function (err) {
+                expect(client.getActiveProjectId()).to.equal(null);
+                expect(err.message).to.include('Not authorized to read project: reset');
+                //TODO: FIXOTHERS: Reset all tests like this.
+
+                client.selectProject(projectId, 'master', function (err) {
+                    expect(err).to.equal(null);
+                    expect(client.getActiveBranchName()).to.equal('master');
+                    done();
+                });
+            });
+        });
+
+        it('should return error when selecting a nonexistent branch of the opened project', function (done) {
             client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
@@ -634,6 +649,17 @@ describe('GME client', function () {
                         'exist in project "');
                     done();
                 });
+            });
+        });
+
+        it('should return error when selecting a nonexistent branch in selectProject', function (done) {
+            var projectName = 'branchWatcher',
+                projectId = projectName2Id(projectName, gmeConfig, client);
+            //FIXME: All these tests should select different projects or even have different client instances.
+            client.selectProject(projectId, 'branch_does_not_exist', function (err) {
+                expect(err.message).to.contain('Given branch does not exist "branch_does_not_exist"');
+                expect(client.getActiveProjectId()).to.equal(null);
+                done();
             });
         });
 
@@ -3942,18 +3968,18 @@ describe('GME client', function () {
 
             client.seedProject(seedConfig, function (err) {
                 expect(err).to.equal(null);
-                console.log('1');
+
                 client.getExportProjectBranchUrl(projectId, 'master', 'seedTestOutPut',
                     function (err, url) {
                         expect(err).to.equal(null);
-                        console.log('2');
+
                         superagent.get(url, function (err, result) {
                             expect(err).to.equal(null);
 
                             expect(result.body).to.deep.equal(refNodeProj);
                             client.deleteProject(projectId, function (err /*, didExist*/) {
                                 expect(err).to.equal(null, 'deleteProject returned error');
-                                console.log('3');
+
                                 done();
                             });
                         });

@@ -361,11 +361,11 @@ define([
                 if (branches.hasOwnProperty(branchToOpen) === false) {
                     if (branchName) {
                         logger.error('Given branch does not exist "' + branchName + '"');
-                        self.closeProject(projectId, function (err) {
+                        closeProject(projectId, function (err) {
                             if (err) {
                                 logger.error('closeProject after missing branch failed with err', err);
                             }
-                            callback('Given branch does not exist "' + branchName + '"');
+                            callback(new Error('Given branch does not exist "' + branchName + '"'));
                         });
                         return;
                     }
@@ -399,7 +399,7 @@ define([
                 closeProject(prevProjectId, function (err) {
                     if (err) {
                         logger.error('problems closing previous project', err);
-                        callback(err);
+                        callback(new Error(err));
                         return;
                     }
                     storage.openProject(projectId, projectOpened);
