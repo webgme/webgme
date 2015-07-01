@@ -925,9 +925,11 @@ function StandAloneServer(gmeConfig) {
     logger.debug('creating server-worker related routing rules');
     __app.get('/worker/simpleResult/*', function (req, res) {
         var urlArray = req.url.split('/');
+        logger.debug('worker/simpleResult requested, urlArray', {metadata: urlArray});
         if (urlArray.length > 3) {
             __workerManager.result(urlArray[3], function (err, result) {
                 if (err) {
+                    logger.error('worker/simpleResult err', err);
                     res.sendStatus(500);
                 } else {
                     var filename = 'exportedNodes.json';

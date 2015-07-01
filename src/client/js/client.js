@@ -1571,15 +1571,16 @@ define([
             command.projectId = projectId;
             command.branchName = branchName;
             command.path = ROOT_PATH;
+            logger.debug('getExportProjectBranchUrl, command', command);
             if (command.projectId && command.branchName) {
                 storage.simpleRequest(command, function (err, resId) {
+                    var resultUrl = window.location.origin + '/worker/simpleResult/' + resId + '/' + fileName;
+                    logger.debug('getExportProjectBranchUrl', resultUrl);
                     if (err) {
                         logger.error('getExportProjectBranchUrl failed with error', err);
                         callback(err);
                     } else {
-                        callback(null,
-                            window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
-                            resId + '/' + fileName);
+                        callback(null, resultUrl);
                     }
                 });
             } else {

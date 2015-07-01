@@ -93,6 +93,12 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     logger.error('exportLibrary: ', err);
                 }
                 storage.close(function (closeErr) {
+                    if (closeErr) {
+                        logger.error('storage close returned error', closeErr);
+                    } else {
+                        logger.debug('storage was closed with no errors');
+                    }
+
                     callback(err || closeErr, data);
                 });
             },
@@ -612,10 +618,17 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 process.on('message', function (parameters) {
     var resultHandling = function (err, r) {
         r = r || null;
+        logger.debug('resultHandling invoked');
+        if (err) {
+            logger.error('resultHandling called with error', err);
+        }
+
         if (resultRequested === true) {
+            logger.debug('result was requested, result:', {metadata: r});
             initResult();
             safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
         } else {
+            logger.debug('result was NOT requested, result:', {metadata: r});
             resultReady = true;
             error = err;
             result = r;

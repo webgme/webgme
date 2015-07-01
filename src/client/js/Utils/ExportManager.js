@@ -30,7 +30,7 @@ define(['jquery',
             objIDs.length > 0) {
             client.getExportItemsUrl(objIDs, fileName, function (err, url) {
                 if (!err) {
-                    window.location = url;
+                    window.open(url);
                 }
             });
         }
@@ -43,7 +43,7 @@ define(['jquery',
             objIDs.length > 0) {
             client.getExternalInterpreterConfigUrlAsync(objIDs, fileName, function (err, url) {
                 if (!err) {
-                    window.location = url;
+                    window.open(url);
                 }
             });
         }
@@ -60,7 +60,7 @@ define(['jquery',
 
             client.getExportLibraryUrl(objID, fileName, function (err, url) {
                 if (!err) {
-                    window.location = url;
+                    window.open(url);
                 }
             });
         }

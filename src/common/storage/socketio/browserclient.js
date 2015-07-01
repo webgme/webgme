@@ -7,18 +7,27 @@
 define([], function () {
     'use strict';
 
-    function IoClient (gmeConfig) {
+    function IoClient (mainLogger, gmeConfig) {
+        var logger = mainLogger.fork('socketio-browserclient');
+
         this.connect = function (callback) {
-            var hostAddress = window.location.protocol + '//' + window.location.host;
+            var hostAddress = window.location.protocol + '//' + window.location.host,
+                socketIoUrl;
 
             if (window.__karma__) {
                 // TRICKY: karma uses web sockets too, we need to use the gme server's port
                 hostAddress = window.location.protocol + '//localhost:' + gmeConfig.server.port;
             }
 
-            require([hostAddress + '/socket.io/socket.io.js'], function (io_) {
+            socketIoUrl = hostAddress + '/socket.io/socket.io.js';
+            logger.debug('Will require socketIO from', socketIoUrl);
+
+            require([socketIoUrl], function (io_) {
                 var io = io_ || window.io,
-                    socket = io.connect(hostAddress, gmeConfig.socketIO);
+                    socket;
+
+                logger.debug('Connecting to "' + hostAddress + '" with options', gmeConfig.socketIO);
+                socket = io.connect(hostAddress, gmeConfig.socketIO);
                 callback(null, socket);
             });
         };
