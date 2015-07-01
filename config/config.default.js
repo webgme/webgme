@@ -162,7 +162,7 @@ var path = require('path'),
             'connect timeout': 10,
             'reconnection delay': 1,
             'force new connection': true,
-            transports: ['websocket']
+            transports: ['websocket', 'polling']
         },
 
         storage: {
