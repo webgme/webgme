@@ -1,0 +1,257 @@
+{
+  "bases": {},
+  "root": {
+    "path": "",
+    "guid": "03d36072-9e09-7866-cb4e-d0a36ff825f6"
+  },
+  "relids": {
+    "03d36072-9e09-7866-cb4e-d0a36ff825f6": null,
+    "0b9363b7-e5d1-013c-2f02-bf3326d8f56a": "1025357586",
+    "99e3409f-68a8-f9f7-0eec-362d9971e375": "1916673620",
+    "bae6518b-3f25-5655-67e5-5a263ce9faeb": "299756971",
+    "cafbde8a-9323-0843-0745-ffec81670aaa": "441671358",
+    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": "1"
+  },
+  "containment": {
+    "0b9363b7-e5d1-013c-2f02-bf3326d8f56a": {},
+    "bae6518b-3f25-5655-67e5-5a263ce9faeb": {},
+    "cafbde8a-9323-0843-0745-ffec81670aaa": {
+      "99e3409f-68a8-f9f7-0eec-362d9971e375": {}
+    },
+    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": {}
+  },
+  "nodes": {
+    "03d36072-9e09-7866-cb4e-d0a36ff825f6": {
+      "attributes": {
+        "name": "ROOT"
+      },
+      "base": null,
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ],
+          "items": [
+            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+          ]
+        }
+      },
+      "parent": null,
+      "pointers": {
+        "base": null
+      },
+      "registry": {
+        "MetaSheets": [
+          {
+            "SetID": "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d",
+            "order": 0,
+            "title": "META"
+          }
+        ],
+        "ProjectRegistry": {
+          "FCO_ID": "/1"
+        },
+        "usedAddOns": "ConstraintAddOn",
+        "validDecorators": "ModelDecorator CircleDecorator MetaDecorator SVGDecorator UMLStateMachineDecorator DefaultDecorator",
+        "validPlugins": "",
+        "validVisualizers": "ModelEditor METAAspect"
+      },
+      "sets": {
+        "MetaAspectSet": [
+          {
+            "attributes": {},
+            "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+            "registry": {
+              "position": {
+                "x": 100,
+                "y": 100
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": [
+          {
+            "attributes": {},
+            "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+            "registry": {
+              "position": {
+                "x": 100,
+                "y": 100
+              }
+            }
+          }
+        ]
+      },
+      "constraints": {}
+    },
+    "0b9363b7-e5d1-013c-2f02-bf3326d8f56a": {
+      "attributes": {
+        "name": "c1"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 80,
+          "y": 253
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "99e3409f-68a8-f9f7-0eec-362d9971e375": {
+      "attributes": {
+        "name": "s"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "cafbde8a-9323-0843-0745-ffec81670aaa",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+        "ptr": "bae6518b-3f25-5655-67e5-5a263ce9faeb"
+      },
+      "registry": {
+        "position": {
+          "x": 293,
+          "y": 158
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "bae6518b-3f25-5655-67e5-5a263ce9faeb": {
+      "attributes": {
+        "name": "t"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 582,
+          "y": 257
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "cafbde8a-9323-0843-0745-ffec81670aaa": {
+      "attributes": {
+        "name": "c2"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 293,
+          "y": 253
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": {
+      "attributes": {
+        "name": "FCO"
+      },
+      "base": null,
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ],
+          "items": [
+            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+          ]
+        },
+        "pointers": {
+          "ptr": {
+            "items": [
+              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+      "pointers": {
+        "base": null,
+        "ptr": null
+      },
+      "registry": {
+        "DisplayFormat": "$name",
+        "PortSVGIcon": "",
+        "SVGIcon": "",
+        "decorator": "",
+        "isAbstract": false,
+        "isPort": false,
+        "position": {
+          "x": 100,
+          "y": 100
+        },
+        "validVisualizers": "ModelEditor METAAspect SetEditor Crosscut GraphViz"
+      },
+      "sets": {},
+      "constraints": {}
+    }
+  },
+  "metaSheets": {}
+}
