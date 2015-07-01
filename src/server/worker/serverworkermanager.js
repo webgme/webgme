@@ -7,7 +7,9 @@
 
 var Child = require('child_process'),
     process = require('process'),
-    CONSTANTS = require('./constants');
+    path = require('path'),
+    CONSTANTS = require('./constants'),
+    SIMPLE_WORKER_JS = path.join(__dirname, 'simpleworker.js');
 
 
 function ServerWorkerManager(_parameters) {
@@ -20,10 +22,7 @@ function ServerWorkerManager(_parameters) {
         logger = _parameters.logger.fork('serverworkermanager');
 
     //helping functions
-    //TODO always check if this works properly
-    function getBaseDir() {
-        return requireJS.s.contexts._.config.baseUrl;
-    }
+    logger.debug('SIMPLE_WORKER_JS:', SIMPLE_WORKER_JS);
 
     function reserveWorker() {
         var debug = false,
@@ -47,7 +46,7 @@ function ServerWorkerManager(_parameters) {
         logger.debug('execArgv for new child process', execArgv);
 
         if (Object.keys(_workers || {}).length < gmeConfig.server.maxWorkers) {
-            var worker = Child.fork(getBaseDir() + '/server/worker/simpleworker.js', [], {execArgv: execArgv});
+            var worker = Child.fork(SIMPLE_WORKER_JS, [], {execArgv: execArgv});
             _workers[worker.pid] = {worker: worker, state: CONSTANTS.workerStates.initializing, type: null, cb: null};
             logger.debug('workerPid forked ' + worker.pid);
             worker.on('message', messageHandling);
@@ -105,7 +104,8 @@ function ServerWorkerManager(_parameters) {
         if (_waitingRequests.length > 0) {
             if (_workers[workerPid].state === CONSTANTS.workerStates.free) {
                 var request = _waitingRequests.shift();
-                logger.debug('Worker will handle waiting request', workerPid, {metadata: request});
+                logger.debug('Request will be handled, request left in queue: ', _waitingRequests.length);
+                logger.debug('Worker "' + workerPid + '" will handle request: ', {metadata: request});
                 _workers[workerPid].state = CONSTANTS.workerStates.working;
                 _workers[workerPid].cb = request.cb;
                 _workers[workerPid].resid = null;
@@ -122,7 +122,10 @@ function ServerWorkerManager(_parameters) {
     function messageHandling(msg) {
         var worker = _workers[msg.pid],
             cFunction = null;
+        logger.debug('Message received from worker', {metadata: msg});
+
         if (worker) {
+            logger.debug('Worker will handle message', {metadata: worker});
             switch (msg.type) {
                 case CONSTANTS.msgTypes.request:
                     //this is the first response to the request
@@ -165,6 +168,8 @@ function ServerWorkerManager(_parameters) {
 
                     if (cFunction) {
                         cFunction(msg.error, msg.result);
+                    } else {
+                        logger.warn('No callback associated with', worker.resid);
                     }
                     break;
                 case CONSTANTS.msgTypes.initialize:
@@ -187,6 +192,8 @@ function ServerWorkerManager(_parameters) {
                     worker.cb = null;
                     if (cFunction) {
                         cFunction(msg.error, msg.result);
+                    } else {
+                        logger.warn('No callback associated with', worker.resid);
                     }
                     break;
             }
