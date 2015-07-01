@@ -908,7 +908,7 @@ define([
 
             if (self.gmeClient) {
                 if (projectId !== self.gmeClient.getActiveProjectId()) {
-                    self.gmeClient.selectProject(projectId, function (err) {
+                    self.gmeClient.selectProject(projectId, null, function (err) {
                         if (err) {
                             self.logger.error(err);
                             callback(err);

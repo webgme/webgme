@@ -42,7 +42,7 @@ describe('Plugin', function () {
                         allPlugins = res.body.allPlugins;
                         client.connectToDatabase(function (err) {
                             expect(err).to.equal(null);
-                            client.selectProject(projectId, function (err) {
+                            client.selectProject(projectId, null, function (err) {
                                 expect(err).to.equal(null);
 
                                 originalCommitHash = client.getActiveCommitHash();
