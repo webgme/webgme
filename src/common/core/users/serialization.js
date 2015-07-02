@@ -126,7 +126,6 @@ define(['common/util/assert'], function (ASSERT) {
                 }
             }
         }
-        console.log('sheets', sheets);
         return sheets;
     }
 
