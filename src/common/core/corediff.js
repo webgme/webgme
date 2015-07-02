@@ -1607,7 +1607,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
 
         function gatherFullMetaConflicts(diffMeta, mine, path, opposingPath) {
             var conflict, opposingConflict,
-                relids, i, j, keys, tPath;
+                relids, i, j, keys, tPath, key;
 
             if (mine) {
                 conflict = _conflictMine;
@@ -1673,12 +1673,13 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                 } else {
                     keys = Object.keys(diffMeta.attributes);
                     for (i = 0; i < keys.length; i++) {
-                        conflict[path + '/attributes/' + keys[i]] = conflict[path + '/attributes/' + keys[i]] || {
+                        key = path + '/attributes/' + keys[i];
+                        conflict[key] = conflict[key] || {
                                 value: diffMeta.attributes[keys[i]],
                                 conflictingPaths: {}
                             };
-                        conflict[path + '/attributes'].conflictingPaths[opposingPath] = true;
-                        opposingConflict.conflictingPaths[path + '/attributes'] = true;
+                        conflict[key].conflictingPaths[opposingPath] = true;
+                        opposingConflict.conflictingPaths[key] = true;
                     }
                 }
             }
