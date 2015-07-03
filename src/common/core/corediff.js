@@ -44,6 +44,10 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
             }
             var keys = Object.keys(obj),
                 i;
+            if (JSON.stringify(obj.set) === JSON.stringify({})) {
+                delete obj.set;
+            }
+
             for (i = 0; i < keys.length; i++) {
                 /*if (Array.isArray(obj[keys[i]])) {
                  if (obj[keys[i]].length === 0) {
@@ -53,8 +57,8 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                     //do nothing, leave the array as is
                 } else if (obj[keys[i]] === undefined) {
                     delete obj[keys[i]]; //there cannot be undefined in the object
-                } else if(keys[i] === 'set'){
-                    //do nothing with set, as they can be emoty as well
+                } else if (keys[i] === 'set') {
+                    //do nothing with set as it can include empty set's as well
                 } else if (typeof obj[keys[i]] === 'object') {
                     normalize(obj[keys[i]]);
                     if (obj[keys[i]] && Object.keys(obj[keys[i]]).length === 0) {
@@ -1007,7 +1011,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                 if (setDiff[setNames[i]] === TODELETESTRING) {
                     _core.deleteSet(node, setNames[i]);
                 } else {
-                    _core.createSet(node,setNames[i]);
+                    _core.createSet(node, setNames[i]);
                     elements = Object.keys(setDiff[setNames[i]]);
                     for (j = 0; j < elements.length; j++) {
                         if (setDiff[setNames[i]][elements[j]] === TODELETESTRING) {
