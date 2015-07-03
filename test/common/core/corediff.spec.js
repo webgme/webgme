@@ -1385,6 +1385,344 @@ describe('core diff', function () {
             });
         });
 
+        it('should apply delete a containment rule from meta, and change min and max items', function (done) {
+            var resultConflict,
+                resultPatch,
+                diff1 = {
+                    "175547009": {
+                        "meta": {"children": "*to*delete*"},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "meta": {"children": {"/1": {"min": 1, "max": 1}}},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            resultPatch = core.applyResolution(resultConflict);
+
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+                .then(function () {
+                    // TODO: check if it was successful
+                })
+                .nodeify(done);
+
+        });
+
+        it('should apply conflicting attribute type changes in meta', function (done) {
+            var resultConflict,
+                resultPatch,
+                diff1 = {
+                    "175547009": {
+                        "attr": {"newAttr": 0},
+                        "meta": {"attributes": {"newAttr": {"type": "integer", "default": 0}}},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "attr": {"newAttr": true},
+                        "meta": {"attributes": {"newAttr": {"type": "boolean", "default": true}}},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "set": {
+                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {
+                            "/175547009": {
+                                "reg": {
+                                    "position": {
+                                        "x": 389,
+                                        "y": 110
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            resultPatch = core.applyResolution(resultConflict);
+
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+                .then(function () {
+                    // TODO: check if it was successful
+                })
+                .nodeify(done);
+
+        });
+
+        it('should apply conflicting attribute changes in meta deleted one attribute', function (done) {
+            var resultConflict,
+                resultPatch,
+                diff1 = {
+                    "175547009": {
+                        "meta": {"attributes": {"newAttr": "*to*delete*"}},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "attr": {"newAttr": true},
+                        "meta": {"attributes": {"newAttr": {"type": "boolean", "default": true}}},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "set": {
+                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {
+                            "/175547009": {
+                                "reg": {
+                                    "position": {
+                                        "x": 389,
+                                        "y": 110
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            resultPatch = core.applyResolution(resultConflict);
+
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+                .then(function () {
+                    // TODO: check if it was successful
+                })
+                .nodeify(done);
+
+        });
+
+        it('should apply conflicting attribute changes in meta deleted all attributes', function (done) {
+            var resultConflict,
+                resultPatch,
+                diff1 = {
+                    "175547009": {
+                        "meta": {"attributes": "*to*delete*"},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "attr": {"newAttr": true},
+                        "meta": {"attributes": {"newAttr": {"type": "boolean", "default": true}}},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "set": {
+                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {
+                            "/175547009": {
+                                "reg": {
+                                    "position": {
+                                        "x": 389,
+                                        "y": 110
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            resultPatch = core.applyResolution(resultConflict);
+
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+                .then(function () {
+                    // TODO: check if it was successful
+                })
+                .nodeify(done);
+
+        });
+
+        it('should apply non conflicting aspect changes in meta', function (done) {
+            var resultConflict,
+                resultPatch,
+                diff1 = {
+                    "175547009": {
+                        "set": {"a": {}},
+                        "meta": {"aspects": {"a": ["/175547009", "/175547009/471466181"]}},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "set": {"a": {}},
+                        "meta": {"aspects": {"a": ["/175547009/471466181", "/175547009/1104061497", "/175547009/1817665259"]}},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            resultPatch = core.applyResolution(resultConflict);
+
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+                .then(function () {
+                    // TODO: check if it was successful
+                })
+                .nodeify(done);
+
+        });
+
+        it('should apply conflicting aspect changes in meta delete one aspect', function (done) {
+            var resultConflict,
+                resultPatch,
+                diff1 = {
+                    "175547009": {
+                        "meta": {"aspects": {"a": "*to*delete*"}},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "set": {"a": {}},
+                        "meta": {"aspects": {"a": ["/175547009/471466181", "/175547009/1104061497", "/175547009/1817665259"]}},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            resultPatch = core.applyResolution(resultConflict);
+
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+                .then(function () {
+                    // TODO: check if it was successful
+                })
+                .nodeify(done);
+
+        });
+
+        it('should apply conflicting aspect changes in meta delete all aspects', function (done) {
+            var resultConflict,
+                resultPatch,
+                diff1 = {
+                    "175547009": {
+                        "meta": {"aspects": "*to*delete*"},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "set": {"a": {}},
+                        "meta": {"aspects": {"a": ["/175547009/471466181", "/175547009/1104061497", "/175547009/1817665259"]}},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            resultPatch = core.applyResolution(resultConflict);
+
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+                .then(function () {
+                    // TODO: check if it was successful
+                })
+                .nodeify(done);
+
+        });
+
         it('should apply: pointer spec change in meta', function (done) {
             var resultPatch,
                 resultConflict,
@@ -1461,13 +1799,191 @@ describe('core diff', function () {
                     var i;
                     validTargets.push(node);
 
-                    for(i=0;i<validTargets.length;i+=1){
-                        expect(core.isValidTargetOf(validTargets[i],sourceNode,'src')).to.equal(true);
+                    for (i = 0; i < validTargets.length; i += 1) {
+                        expect(core.isValidTargetOf(validTargets[i], sourceNode, 'src')).to.equal(true);
                     }
 
                     done();
                 })
                 .catch(done);
+        });
+
+        it('should apply: pointer spec change in meta min and max', function (done) {
+            var resultPatch,
+                resultConflict,
+                diff1 = {
+                    "175547009": {
+                        "pointer": {"src": null},
+                        "meta": {
+                            "pointers": {
+                                "src": {
+                                    "/175547009/471466181": {
+                                        min: -1,
+                                        max: 1
+                                    },
+                                    "min": 1,
+                                    "max": 1
+                                }
+                            }
+                        },
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "pointer": {"src": null},
+                        "meta": {
+                            "pointers": {
+                                "src": {
+                                    "/175547009/1817665259": {
+                                        min: 2,
+                                        max: 4
+                                    },
+                                    "min": 1,
+                                    "max": 6
+                                }
+                            }
+                        },
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            resultPatch = core.applyResolution(resultConflict);
+
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+                .then(function () {
+                    // TODO: check if everything is ok
+                })
+                .nodeify(done);
+        });
+
+        it('should apply: pointer spec change pointer deleted', function (done) {
+            var resultPatch,
+                resultConflict,
+                diff1 = {
+                    "175547009": {
+                        "meta": {
+                            "pointers": {
+                                "src": "*to*delete*"
+                            }
+                        },
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "pointer": {"src": null},
+                        "meta": {
+                            "pointers": {
+                                "src": {
+                                    "/175547009/1817665259": {
+                                        min: 2,
+                                        max: 4
+                                    },
+                                    "min": 1,
+                                    "max": 6
+                                }
+                            }
+                        },
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            resultPatch = core.applyResolution(resultConflict);
+
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+                .then(function () {
+                    // TODO: check if everything is ok
+                })
+                .nodeify(done);
+        });
+
+
+        it('should apply: pointer spec change in meta all pointers were deleted', function (done) {
+            var resultPatch,
+                resultConflict,
+                diff1 = {
+                    "175547009": {
+                        "meta": {
+                            "pointers": "*to*delete*"
+                        },
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "pointer": {"src": null},
+                        "meta": {
+                            "pointers": {
+                                "src": {
+                                    "/175547009/1817665259": {
+                                        min: 2,
+                                        max: 4
+                                    },
+                                    "min": 1,
+                                    "max": 6
+                                }
+                            }
+                        },
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            resultPatch = core.applyResolution(resultConflict);
+
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+                .then(function () {
+                    // TODO: check if everything is ok
+                })
+                .nodeify(done);
         });
     });
 });
