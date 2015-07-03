@@ -53,6 +53,8 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                     //do nothing, leave the array as is
                 } else if (obj[keys[i]] === undefined) {
                     delete obj[keys[i]]; //there cannot be undefined in the object
+                } else if(keys[i] === 'set'){
+                    //do nothing with set, as they can be emoty as well
                 } else if (typeof obj[keys[i]] === 'object') {
                     normalize(obj[keys[i]]);
                     if (obj[keys[i]] && Object.keys(obj[keys[i]]).length === 0) {
@@ -235,8 +237,43 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         }
 
         function metaDiff(source, target) {
-            var sMeta = _core.getOwnJsonMeta(source),
-                tMeta = _core.getOwnJsonMeta(target);
+            //TODO jsonMeta format should be changed in all places!!!
+            var convertJsonMeta = function (jsonMeta) {
+                    var i, j, names, itemsObject;
+                    //children
+                    if (jsonMeta.children) {
+                        itemsObject = jsonMeta.children;
+                        for (i = 0; i < itemsObject.items.length; i += 1) {
+                            itemsObject[itemsObject.items[i]] = {
+                                min: itemsObject.minItems[i],
+                                max: itemsObject.maxItems[i]
+                            };
+                        }
+                        delete itemsObject.items;
+                        delete itemsObject.minItems;
+                        delete itemsObject.maxItems;
+                    }
+                    //ptr
+                    if (jsonMeta.pointers) {
+                        names = Object.keys(jsonMeta.pointers);
+
+                        for (j = 0; j < names.length; j += 1) {
+                            itemsObject = jsonMeta.pointers[names[j]];
+                            for (i = 0; i < itemsObject.items.length; i += 1) {
+                                itemsObject[itemsObject.items[i]] = {
+                                    min: itemsObject.minItems[i],
+                                    max: itemsObject.maxItems[i]
+                                };
+                            }
+                            delete itemsObject.items;
+                            delete itemsObject.minItems;
+                            delete itemsObject.maxItems;
+                        }
+                    }
+                    return jsonMeta;
+                },
+                sMeta = convertJsonMeta(_core.getOwnJsonMeta(source)),
+                tMeta = convertJsonMeta(_core.getOwnJsonMeta(target));
             if (CANON.stringify(sMeta) !== CANON.stringify(tMeta)) {
                 return {source: sMeta, target: tMeta};
             }
@@ -970,6 +1007,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                 if (setDiff[setNames[i]] === TODELETESTRING) {
                     _core.deleteSet(node, setNames[i]);
                 } else {
+                    _core.createSet(node,setNames[i]);
                     elements = Object.keys(setDiff[setNames[i]]);
                     for (j = 0; j < elements.length; j++) {
                         if (setDiff[setNames[i]][elements[j]] === TODELETESTRING) {
@@ -1125,7 +1163,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                 if (metaAspectsDiff[names[i]] === TODELETESTRING) {
                     _core.delAspectMeta(node, names[i]);
                 } else {
-                    targets = Object.keys(metaAspectsDiff[names[i]]);
+                    targets = metaAspectsDiff[names[i]];
                     for (j = 0; j < targets.length; j++) {
                         if (metaAspectsDiff[names[i]][targets[j]] === TODELETESTRING) {
                             _core.delAspectMetaTarget(node, names[i], targets[j]);
