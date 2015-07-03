@@ -139,12 +139,11 @@ describe('core diff', function () {
                         return done(err);
                     }
 
-                    // TODO: check if changes happened as expected.
+                    expect(diff).to.deep.equal(patch);
                     done();
                 });
             });
         });
-
 
         it('should generate diff if an object is created', function (done) {
             var patch = {
@@ -211,7 +210,12 @@ describe('core diff', function () {
                         return done(err);
                     }
 
-                    // TODO: check if changes happened as expected.
+                    //complete diff comparison only possible if patch is used in forward order
+                    expect(diff).not.to.equal(null);
+                    expect(diff).to.include.keys('1303043463');
+                    expect(diff['1303043463']).to.include.keys('removed');
+                    expect(diff['1303043463'].removed).to.equal(false);
+
                     done();
                 });
             });
@@ -227,168 +231,59 @@ describe('core diff', function () {
             });
         });
 
-        it('should add a new object with patch', function (done) {
-            var patch = {
-                "175547009": {
-                    "471466181": {
-                        "guid": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e",
-                        "oGuids": {
-                            "be36b1a1-8d82-8aba-9eda-03d655a8bf3e": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
-                        }
-                    },
-                    "871430202": {
-                        "guid": "18eb3c1d-c951-b757-c8c4-0ea8736c2470",
-                        "oGuids": {
-                            "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
-                        }
-                    },
-                    "1104061497": {
-                        "guid": "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb",
-                        "oGuids": {
-                            "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
-                        }
-                    },
-                    "1817665259": {
-                        "guid": "5f73946c-68aa-9de1-7979-736d884171af",
-                        "oGuids": {
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
-                        }
-                    },
-                    "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                    "oGuids": {
-                        "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                        "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
-                    }
-                },
-                "1303043463": {"guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42", "removed": true},
-                "childrenListChanged": true,
-                "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
-            };
+    });
 
-            core.applyTreeDiff(rootNode, patch, function (err) {
-                if (err) {
-                    return done(err);
-                }
+    describe('tryToConcatChanges', function () {
 
-                core.persist(rootNode);
-
-                // N.B: load project, delete object, generate diff in reverse, then apply
-                core.generateTreeDiff(rootNode, originalRootNode, function (err, diff) {
-                    if (err) {
-                        return done(err);
-                    }
-
-                    core.applyTreeDiff(rootNode, diff, function (err) {
-                        if (err) {
-                            return done(err);
-                        }
-                        // TODO: check if changes happened as expected.
-                        done();
+        beforeEach(function (done) {
+            storage.deleteProject({projectId: projectId})
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: 'seeds/ActivePanels.json',
+                        projectName: projectName,
+                        branchName: 'base',
+                        gmeConfig: gmeConfig,
+                        logger: logger
                     });
-                });
-            });
+                })
+                .then(function (result) {
+                    project = result.project;
+                    core = result.core;
+                    rootNode = result.rootNode;
+                    originalRootHash = result.rootHash;
+                    commit = result.commitHash;
+                    return Q.nfcall(core.loadRoot, originalRootHash);
+                })
+                .then(function (originalRootNode_) {
+                    originalRootNode = originalRootNode_;
+                })
+                .nodeify(done);
         });
 
-        it('should create a new META attribute', function (done) {
-            var patch = {
-                "1": {
-                    "attr": {"newAttr": ""},
-                    "meta": {"attributes": {"newAttr": {"type": "string", "default": "", "enum": ["a", "b", "c"]}}},
-                    "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
-                    "oGuids": {
-                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-                        "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true
-                    }
-                },
-                "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
-            };
+        // FIXME: there is an issue if we try to delete non-existent project, it complains about auth issues.
+        //afterEach(function (done) {
+        //    storage.deleteProject({projectId: projectId})
+        //        .nodeify(done);
+        //});
 
-            core.applyTreeDiff(rootNode, patch, function (err) {
-                if (err) {
-                    return done(err);
-                }
-
-                core.persist(rootNode);
-
-                // N.B: load project, delete object, generate diff in reverse, then apply
-                core.generateTreeDiff(rootNode, originalRootNode, function (err, diff) {
-                    if (err) {
-                        return done(err);
-                    }
-
-                    core.applyTreeDiff(rootNode, diff, function (err) {
-                        if (err) {
-                            return done(err);
-                        }
-                        // TODO: check if changes happened as expected.
-                        done();
-                    });
-                });
-            });
-        });
-
-        it('should create a new META attribute', function (done) {
-            var patch = {
-                "1": {
-                    "attr": {"newAttr": ""},
-                    "meta": {"attributes": {"newAttr": {"type": "string", "default": "", "enum": ["a", "b", "c"]}}},
-                    "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
-                    "oGuids": {
-                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-                        "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true
-                    }
-                },
-                "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
-            };
-
-            core.applyTreeDiff(rootNode, patch, function (err) {
-                if (err) {
-                    return done(err);
-                }
-
-                core.persist(rootNode);
-
-                // N.B: load project, delete object, generate diff in reverse, then apply
-                core.generateTreeDiff(rootNode, originalRootNode, function (err, diff) {
-                    if (err) {
-                        return done(err);
-                    }
-
-                    core.applyTreeDiff(rootNode, diff, function (err) {
-                        if (err) {
-                            return done(err);
-                        }
-                        // TODO: check if changes happened as expected.
-                        done();
-                    });
-                });
-            });
-        });
-
-
-        it('should tryToConcatChanges empty diff and meta change', function () {
+        it('should concat empty diff and meta change', function () {
             var result,
-                diff1 = {},
+                diff1 = {
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
                 diff2 = {
                     "1": {
                         "attr": {"newAttr": ""},
-                        "meta": {"attributes": {"newAttr": {"type": "string", "default": "", "enum": ["a", "b", "c"]}}},
+                        "meta": {
+                            "attributes": {
+                                "newAttr": {
+                                    "type": "string",
+                                    "default": "",
+                                    "enum": ["a", "b", "c"]
+                                }
+                            }
+                        },
                         "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
                         "oGuids": {
                             "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
@@ -400,10 +295,11 @@ describe('core diff', function () {
                 };
 
             result = core.tryToConcatChanges(diff1, diff2);
-            // TODO: check if changes happened as expected.
+
+            expect(result.merge).to.deep.equal(diff2);
         });
 
-        it('should tryToConcatChanges change an element, and delete the same element', function () {
+        it('should combine change an element, and delete the same element', function () {
             var result,
                 diff1 = {
                     "1303043463": {
@@ -472,10 +368,18 @@ describe('core diff', function () {
                 };
 
             result = core.tryToConcatChanges(diff1, diff2);
-            // TODO: check if changes happened as expected.
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(1);
+            expect(result.items[0]).to.include.keys('mine', 'theirs');
+            expect(result.items[0].theirs.path).to.equal('/1303043463/removed');
+            expect(result.items[0].theirs.value).to.equal(true);
+            expect(result.items[0].mine.path).to.equal('/1303043463/reg/position');
+
         });
 
-        it('should tryToConcatChanges delete an element, and change the same element', function () {
+        it('should combine delete an element, and change the same element', function () {
             var result,
                 diff1 = {
                     "1303043463": {
@@ -545,11 +449,17 @@ describe('core diff', function () {
 
             // same as before other way around
             result = core.tryToConcatChanges(diff2, diff1);
-            // TODO: check if changes happened as expected.
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(1);
+            expect(result.items[0]).to.include.keys('mine', 'theirs');
+            expect(result.items[0].mine.path).to.equal('/1303043463/removed');
+            expect(result.items[0].mine.value).to.equal(true);
+            expect(result.items[0].theirs.path).to.equal('/1303043463/reg/position');
         });
 
-
-        it('should tryToConcatChanges change a set element, and delete the same element from the set', function () {
+        it('should combine change a set element, and delete the same element from the set', function () {
             var result,
                 diff1 = {
                     "1303043463": {
@@ -617,10 +527,18 @@ describe('core diff', function () {
 
 
             result = core.tryToConcatChanges(diff1, diff2);
-            // TODO: check if changes happened as expected.
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(1);
+            expect(result.items[0]).to.include.keys('mine', 'theirs');
+            expect(result.items[0].theirs.path).to.equal('/1303043463/2119137141/set/setPtr//1303043463/1448030591//');
+            expect(result.items[0].theirs.value).to.equal('*to*delete*');
+            expect(result.items[0].mine.path)
+                .to.equal('/1303043463/2119137141/set/setPtr//1303043463/1448030591///reg/position');
         });
 
-        it('should tryToConcatChanges delete a set element, and change the same element in the set', function () {
+        it('should combine delete a set element, and change the same element in the set', function () {
             var result,
                 diff1 = {
                     "1303043463": {
@@ -688,11 +606,18 @@ describe('core diff', function () {
 
             // same as before other way around
             result = core.tryToConcatChanges(diff2, diff1);
-            // TODO: check if changes happened as expected.
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(1);
+            expect(result.items[0]).to.include.keys('mine', 'theirs');
+            expect(result.items[0].mine.path).to.equal('/1303043463/2119137141/set/setPtr//1303043463/1448030591//');
+            expect(result.items[0].mine.value).to.equal('*to*delete*');
+            expect(result.items[0].theirs.path)
+                .to.equal('/1303043463/2119137141/set/setPtr//1303043463/1448030591///reg/position');
         });
 
-
-        it('should tryToConcatChanges change a set element, and delete the set pointer', function () {
+        it('should combine change a set element, and delete the set pointer', function () {
             var result,
                 diff1 = {
                     "1303043463": {
@@ -760,7 +685,15 @@ describe('core diff', function () {
 
 
             result = core.tryToConcatChanges(diff1, diff2);
-            // TODO: check if changes happened as expected.
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(1);
+            expect(result.items[0]).to.include.keys('mine', 'theirs');
+            expect(result.items[0].mine.path)
+                .to.equal('/1303043463/2119137141/set/setPtr//1303043463/1448030591//reg/position');
+            expect(result.items[0].theirs.path).to.equal('/1303043463/2119137141/set/setPtr');
+            expect(result.items[0].theirs.value).to.equal('*to*delete*');
         });
 
         //it('should tryToConcatChanges does nothing, and delete the set pointer', function () {
@@ -798,13 +731,22 @@ describe('core diff', function () {
         //    // TODO: check if changes happened as expected.
         //});
 
-
-        it('should tryToConcatChanges delete a meta rule, and add a new attribute to meta', function () {
+        it('should combine delete a meta rule, and add a new attribute to meta', function () {
             var result,
+                combinedMeta = {
+                    "children": "*to*delete*",
+                    "attributes": {
+                        "newAttribute": {
+                            "type": "string",
+                            "default": "a",
+                            "enum": ["a", "b", "c", "d"]
+                        }
+                    }
+                },
                 diff1 = {
                     "175547009": {
                         "attr": {"newAttribute": "a"},
-                        "meta": {"children": "*to*delete*"},
+                        "meta": {"children": combinedMeta.children},
                         "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
                         "oGuids": {
                             "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
@@ -823,13 +765,7 @@ describe('core diff', function () {
                     "175547009": {
                         "attr": {"newAttribute": "a"},
                         "meta": {
-                            "attributes": {
-                                "newAttribute": {
-                                    "type": "string",
-                                    "default": "a",
-                                    "enum": ["a", "b", "c", "d"]
-                                }
-                            }
+                            "attributes": combinedMeta.attributes
                         },
                         "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
                         "oGuids": {
@@ -844,11 +780,16 @@ describe('core diff', function () {
 
 
             result = core.tryToConcatChanges(diff1, diff2);
-            // TODO: check if changes happened as expected.
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(0);
+            expect(result.merge).to.include.keys('175547009');
+            expect(result.merge['175547009'].meta).to.deep.equal(combinedMeta);
+
         });
 
-
-        it('should tryToConcatChanges delete an element from meta sheet, and add a new attribute to meta', function () {
+        it('should combine delete an element from meta sheet, and add a new attribute to meta', function () {
             var result,
                 diff1 = {
                     "175547009": {
@@ -893,11 +834,53 @@ describe('core diff', function () {
 
 
             result = core.tryToConcatChanges(diff1, diff2);
-            // TODO: check if changes happened as expected.
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(1);
+            expect(result.items[0]).to.include.keys('mine', 'theirs');
+            expect(result.items[0].mine.path).to.equal('/175547009/meta');
+            expect(result.items[0].mine.value).to.equal('*to*delete*');
+            expect(result.items[0].theirs.path).to.equal('/175547009/meta/attributes/newAttribute');
+
         });
 
+    });
 
-        it('should tryToConcatChanges and resolve: rename and move + rename', function () {
+    describe('resolve', function () {
+
+        beforeEach(function (done) {
+            storage.deleteProject({projectId: projectId})
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: 'seeds/ActivePanels.json',
+                        projectName: projectName,
+                        branchName: 'base',
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (result) {
+                    project = result.project;
+                    core = result.core;
+                    rootNode = result.rootNode;
+                    originalRootHash = result.rootHash;
+                    commit = result.commitHash;
+                    return Q.nfcall(core.loadRoot, originalRootHash);
+                })
+                .then(function (originalRootNode_) {
+                    originalRootNode = originalRootNode_;
+                })
+                .nodeify(done);
+        });
+
+        // FIXME: there is an issue if we try to delete non-existent project, it complains about auth issues.
+        //afterEach(function (done) {
+        //    storage.deleteProject({projectId: projectId})
+        //        .nodeify(done);
+        //});
+
+        it('should combine and resolve: rename and move + rename', function () {
             var resultPatch,
                 resultConflict,
                 diff1 = {
@@ -1201,24 +1184,224 @@ describe('core diff', function () {
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultConflict.items[0].selected = 'theirs';
             resultPatch = core.applyResolution(resultConflict);
-            // TODO: check if changes happened as expected.
+
+            expect(resultPatch).not.to.equal(null);
+            expect(resultPatch).to.include.keys('1303043463');
+            expect(resultPatch['1303043463']).to.include.keys('1823288916');
+            expect(resultPatch['1303043463']['1823288916'].attr.name).to.equal('ModelEditor3');
+            expect(resultPatch['1303043463']).to.include.keys('1763546084');
+            expect(resultPatch['1303043463']['1763546084']).not.to.include.keys('1823288916');
+
+        });
+    });
+
+    describe('patch', function () {
+        beforeEach(function (done) {
+            storage.deleteProject({projectId: projectId})
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: 'seeds/ActivePanels.json',
+                        projectName: projectName,
+                        branchName: 'base',
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (result) {
+                    project = result.project;
+                    core = result.core;
+                    rootNode = result.rootNode;
+                    originalRootHash = result.rootHash;
+                    commit = result.commitHash;
+                    return Q.nfcall(core.loadRoot, originalRootHash);
+                })
+                .then(function (originalRootNode_) {
+                    originalRootNode = originalRootNode_;
+                })
+                .nodeify(done);
         });
 
+        // FIXME: there is an issue if we try to delete non-existent project, it complains about auth issues.
+        //afterEach(function (done) {
+        //    storage.deleteProject({projectId: projectId})
+        //        .nodeify(done);
+        //});
 
-        it.skip('should applyTreeDiff: pointer spec change in meta', function () {
+        it('should add a new object with patch', function (done) {
+            var patch = {
+                "175547009": {
+                    "471466181": {
+                        "guid": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e",
+                        "oGuids": {
+                            "be36b1a1-8d82-8aba-9eda-03d655a8bf3e": true,
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "871430202": {
+                        "guid": "18eb3c1d-c951-b757-c8c4-0ea8736c2470",
+                        "oGuids": {
+                            "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "1104061497": {
+                        "guid": "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb",
+                        "oGuids": {
+                            "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "1817665259": {
+                        "guid": "5f73946c-68aa-9de1-7979-736d884171af",
+                        "oGuids": {
+                            "5f73946c-68aa-9de1-7979-736d884171af": true,
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                    "oGuids": {
+                        "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                        "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    }
+                },
+                "1303043463": {"guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42", "removed": true},
+                "childrenListChanged": true,
+                "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+            };
+
+            core.applyTreeDiff(rootNode, patch, function (err) {
+                if (err) {
+                    return done(err);
+                }
+
+                core.persist(rootNode);
+
+                // N.B: load project, delete object, generate diff in reverse, then apply
+                core.generateTreeDiff(rootNode, originalRootNode, function (err, diff) {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    core.applyTreeDiff(rootNode, diff, function (err) {
+                        if (err) {
+                            return done(err);
+                        }
+
+                        Q.nfcall(core.loadByPath, rootNode, '/1303043463')
+                            .then(function (node) {
+                                expect(core.getGuid(node)).to.equal('ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42');
+                                done();
+                            })
+                            .catch(done);
+                    });
+                });
+            });
+        });
+
+        it('should create a new META attribute', function (done) {
+            var newAttributeMetaRule = {"type": "string", "default": "", "enum": ["a", "b", "c"]},
+                patch = {
+                    "1": {
+                        "attr": {"newAttr": ""},
+                        "meta": {"attributes": {"newAttr": newAttributeMetaRule}},
+                        "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+                        "oGuids": {
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+            core.applyTreeDiff(rootNode, patch, function (err) {
+                if (err) {
+                    return done(err);
+                }
+
+                core.persist(rootNode);
+
+                Q.nfcall(core.loadByPath, rootNode, '/1')
+                    .then(function (node) {
+                        expect(core.getValidAttributeNames(node)).to.include('newAttr');
+                        expect(core.getAttributeMeta(node, 'newAttr')).to.deep.equal(newAttributeMetaRule);
+                        done();
+                    })
+                    .catch(done);
+            });
+        });
+
+        it('should remove a META attribute', function (done) {
+            var patch = {
+                "1": {
+                    "attr": {"newAttr": ""},
+                    "meta": {"attributes": {"newAttr": {"type": "string", "default": "", "enum": ["a", "b", "c"]}}},
+                    "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+                    "oGuids": {
+                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
+                        "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true
+                    }
+                },
+                "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+            };
+
+            core.applyTreeDiff(rootNode, patch, function (err) {
+                if (err) {
+                    return done(err);
+                }
+
+                core.persist(rootNode);
+
+                // N.B: load project, delete object, generate diff in reverse, then apply
+                core.generateTreeDiff(rootNode, originalRootNode, function (err, diff) {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    core.applyTreeDiff(rootNode, diff, function (err) {
+                        if (err) {
+                            return done(err);
+                        }
+
+                        Q.nfcall(core.loadByPath, rootNode, '/1')
+                            .then(function (node) {
+                                expect(core.getValidAttributeNames(node)).not.to.include('newAttr');
+                                done();
+                            })
+                            .catch(done);
+                    });
+                });
+            });
+        });
+
+        it('should apply: pointer spec change in meta', function (done) {
             var resultPatch,
                 resultConflict,
+                sourceNode,
+                validTargets = [],
                 diff1 = {
                     "175547009": {
                         "pointer": {"src": null},
                         "meta": {
                             "pointers": {
                                 "src": {
-                                    "items": ["/175547009/471466181"],
+                                    "/175547009/471466181": {
+                                        min: -1,
+                                        max: 1
+                                    },
                                     "min": 1,
-                                    "max": 1,
-                                    "minItems": [-1],
-                                    "maxItems": [1]
+                                    "max": 1
                                 }
                             }
                         },
@@ -1238,11 +1421,12 @@ describe('core diff', function () {
                         "meta": {
                             "pointers": {
                                 "src": {
-                                    "items": ["/175547009/1817665259"],
+                                    "/175547009/1817665259": {
+                                        min: -1,
+                                        max: 1
+                                    },
                                     "min": 1,
-                                    "max": 1,
-                                    "minItems": [-1],
-                                    "maxItems": [1]
+                                    "max": 1
                                 }
                             }
                         },
@@ -1260,10 +1444,30 @@ describe('core diff', function () {
 
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
-            console.log(JSON.stringify(resultPatch, null, 4));
-            core.applyTreeDiff(rootNode, resultPatch); // FIXME: what if it results in an error?
 
-            // TODO: check if changes happened as expected.
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+                .then(function () {
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009');
+                })
+                .then(function (node) {
+                    sourceNode = node;
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009/1817665259');
+                })
+                .then(function (node) {
+                    validTargets.push(node);
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009/471466181');
+                })
+                .then(function (node) {
+                    var i;
+                    validTargets.push(node);
+
+                    for(i=0;i<validTargets.length;i+=1){
+                        expect(core.isValidTargetOf(validTargets[i],sourceNode,'src')).to.equal(true);
+                    }
+
+                    done();
+                })
+                .catch(done);
         });
     });
 });
