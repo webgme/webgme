@@ -35,7 +35,7 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
                         result = null;
                     } else {
                         refValue = refValue.split('/');
-                        result = URL.removeSpecialChars(refValue[refValue.length - 1]);
+                        result = decodeURIComponent(refValue[refValue.length - 1]);
                     }
                     break;
                 case _refTypes.path:

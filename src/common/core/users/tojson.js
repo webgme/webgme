@@ -65,7 +65,7 @@ define(['common/core/users/meta', 'common/util/url'], function (BaseMeta, URL) {
                 if (path === null) {
                     result = URL.urlToRefObject(null);
                 } else {
-                    result = URL.urlToRefObject(urlPrefix + '&path=' + URL.addSpecialChars(path));
+                    result = URL.urlToRefObject(urlPrefix + '&path=' + encodeURIComponent(path));
                 }
                 break;
             case _refTypes.path:
@@ -92,7 +92,7 @@ define(['common/core/users/meta', 'common/util/url'], function (BaseMeta, URL) {
                 if (path === null) {
                     result = URL.urlToRefObject(null);
                 } else {
-                    result = URL.urlToRefObject(urlPrefix + '&path=' + URL.addSpecialChars(path));
+                    result = URL.urlToRefObject(urlPrefix + '&path=' + encodeURIComponent(path));
                 }
                 break;
             case _refTypes.path:
@@ -118,7 +118,7 @@ define(['common/core/users/meta', 'common/util/url'], function (BaseMeta, URL) {
                 if (path === null) {
                     callback(null, URL.urlToRefObject(null));
                 }
-                callback(null, URL.urlToRefObject(urlPrefix + '&path=' + URL.addSpecialChars(path)));
+                callback(null, URL.urlToRefObject(urlPrefix + '&path=' + encodeURIComponent(path)));
                 break;
             case _refTypes.path:
                 callback(null, URL.urlToRefObject(path));
