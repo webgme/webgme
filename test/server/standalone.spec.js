@@ -76,6 +76,7 @@ describe('standalone server', function () {
             {code: 200, url: '/listAllDecorators'},
             {code: 200, url: '/listAllPlugins'},
             {code: 200, url: '/listAllVisualizerDescriptors'},
+            {code: 200, url: '/listAllSeeds'},
 
             {code: 401, url: '/login/client/fail'},
 
