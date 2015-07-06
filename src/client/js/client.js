@@ -334,6 +334,10 @@ define([
         };
 
         this.selectProject = function (projectId, branchName, callback) {
+            if (callback === undefined && typeof branchName === 'function') {
+                callback = branchName;
+                branchName = undefined;
+            }
             if (isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
             }
