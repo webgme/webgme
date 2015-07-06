@@ -15,7 +15,7 @@ describe.skip('issue 350 client crashes when manipulating a node that has a mode
         options = {};
 
     function buildUpForTest(testId, next) {
-        client.selectProject(projectName, function (err) {
+        client.selectProject(projectName, null, function (err) {
             expect(err).to.equal(null);
 
             client.selectBranch('master', null, function (err) {

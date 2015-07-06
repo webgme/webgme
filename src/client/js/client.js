@@ -333,12 +333,18 @@ define([
             }
         };
 
-        this.selectProject = function (projectId, callback) {
+        this.selectProject = function (projectId, branchName, callback) {
+            if (callback === undefined && typeof branchName === 'function') {
+                callback = branchName;
+                branchName = undefined;
+            }
             if (isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
             }
             var prevProjectId,
-                branchToOpen = 'master';
+                branchToOpen = branchName || 'master';
+
+            logger.debug('selectProject', projectId, branchToOpen);
 
             function projectOpened(err, project, branches, access) {
                 if (err) {
@@ -353,13 +359,27 @@ define([
                 });
                 self.meta.initialize(state.core, state.metaNodes, saveRoot);
                 logState('info', 'projectOpened');
+                logger.debug('projectOpened, branches: ', branches);
                 self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectId);
 
-                if (branches.hasOwnProperty('master') === false) {
+                if (branches.hasOwnProperty(branchToOpen) === false) {
+                    if (branchName) {
+                        logger.error('Given branch does not exist "' + branchName + '"');
+                        closeProject(projectId, function (err) {
+                            if (err) {
+                                logger.error('closeProject after missing branch failed with err', err);
+                            }
+                            callback(new Error('Given branch does not exist "' + branchName + '"'));
+                        });
+                        return;
+                    }
+                    logger.warn('Project "' + projectId + '" did not have branch', branchToOpen);
                     branchToOpen = Object.keys(branches)[0] || null;
-                    logger.debug('Project "' + projectId + '" did not have a master branch, picked:', branchToOpen);
+                    logger.debug('Picked "' + branchToOpen + '".');
                 }
-                ASSERT(branchToOpen, 'No branch avaliable in project'); // TODO: Deal with this
+
+                ASSERT(branchToOpen, 'No branch avaliable in project');
+
                 self.selectBranch(branchToOpen, null, function (err) {
                     if (err) {
                         callback(err);
@@ -383,7 +403,7 @@ define([
                 closeProject(prevProjectId, function (err) {
                     if (err) {
                         logger.error('problems closing previous project', err);
-                        callback(err);
+                        callback(new Error(err));
                         return;
                     }
                     storage.openProject(projectId, projectOpened);
@@ -1529,7 +1549,7 @@ define([
                                         return;
                                     }
 
-                                    self.selectProject(projectId, function (err) {
+                                    self.selectProject(projectId, null, function (err) {
                                         if (err) {
                                             callback(err);
                                             return;

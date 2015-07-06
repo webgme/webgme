@@ -278,7 +278,7 @@ describe('GME client', function () {
             projectId = projectName2Id(projectName, gmeConfig, client);
             client.connectToDatabase(function (err) {
                 expect(err).to.equal(null);
-                client.selectProject(projectId, function (err) {
+                client.selectProject(projectId, null, function (err) {
                     expect(err).to.equal(null);
 
                     expect(client.getActiveProjectId()).to.equal(projectId);
@@ -332,7 +332,7 @@ describe('GME client', function () {
         });
 
         it('should fail to select project', function (done) {
-            client.selectProject('any project', function (err) {
+            client.selectProject('any project', null, function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.contain('no open database');
 
@@ -471,7 +471,7 @@ describe('GME client', function () {
         });
 
         it('should return the valid textual id of the opened project', function (done) {
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 expect(client.getActiveProjectId()).to.equal(projectId);
@@ -517,7 +517,7 @@ describe('GME client', function () {
         });
 
         it('should selects a given project', function (done) {
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 expect(client.getActiveProjectId()).to.equal(projectId);
@@ -527,7 +527,7 @@ describe('GME client', function () {
         });
 
         it('should fail to select an unknown project', function (done) {
-            client.selectProject('unknown_project', function (err) {
+            client.selectProject('unknown_project', null, function (err) {
                 expect(err.message).to.contain('Not authorized to read project');
                 done();
             });
@@ -598,7 +598,7 @@ describe('GME client', function () {
         it('should list the available branches of the opened project', function (done) {
             var actualBranch,
                 actualCommit;
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 actualBranch = client.getActiveBranchName();
@@ -615,18 +615,33 @@ describe('GME client', function () {
         });
 
         it('should select the given branch of the opened project', function (done) {
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 client.selectBranch('master', null, function (err) {
                     expect(err).to.equal(null);
+                    expect(client.getActiveBranchName()).to.equal('master');
                     done();
                 });
             });
         });
 
-        it('should select a nonexistent branch of the opened project', function (done) {
-            client.selectProject(projectId, function (err) {
+        it('should select the given branch of the opened project when specified in selectProject', function (done) {
+            client.selectProject('reset', null, function (err) {
+                expect(client.getActiveProjectId()).to.equal(null);
+                expect(err.message).to.include('Not authorized to read project: reset');
+                //TODO: FIXOTHERS: Reset all tests like this.
+
+                client.selectProject(projectId, 'master', function (err) {
+                    expect(err).to.equal(null);
+                    expect(client.getActiveBranchName()).to.equal('master');
+                    done();
+                });
+            });
+        });
+
+        it('should return error when selecting a nonexistent branch of the opened project', function (done) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 client.selectBranch('does_not_exist', null, function (err) {
@@ -637,8 +652,19 @@ describe('GME client', function () {
             });
         });
 
+        it('should return error when selecting a nonexistent branch in selectProject', function (done) {
+            var projectName = 'branchWatcher',
+                projectId = projectName2Id(projectName, gmeConfig, client);
+            //FIXME: All these tests should select different projects or even have different client instances.
+            client.selectProject(projectId, 'branch_does_not_exist', function (err) {
+                expect(err.message).to.contain('Given branch does not exist "branch_does_not_exist"');
+                expect(client.getActiveProjectId()).to.equal(null);
+                done();
+            });
+        });
+
         it('should select a given commit', function (done) {
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 client.selectBranch('master', null, function (err) {
@@ -656,7 +682,7 @@ describe('GME client', function () {
         });
 
         it('should fail to select an unknown commit', function (done) {
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 client.selectCommit('#unknown', function (err) {
@@ -668,7 +694,7 @@ describe('GME client', function () {
         });
 
         it('should return the latest n commits using time-stamp', function (done) {
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 client.getCommits(projectId, (new Date()).getTime(), 10, function (err, commits) {
@@ -685,7 +711,7 @@ describe('GME client', function () {
         });
 
         it('should return the latest n commits using commitHash and include it too.', function (done) {
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 var commitHash = client.getActiveCommitHash();
 
                 expect(err).to.equal(null);
@@ -704,7 +730,7 @@ describe('GME client', function () {
         });
 
         it('should return the actual commit hash', function (done) {
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 client.selectBranch('master', null, function (err) {
@@ -718,7 +744,7 @@ describe('GME client', function () {
         });
 
         it('should return the name of the actual branch', function (done) {
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 client.selectBranch('master', null, function (err) {
@@ -738,7 +764,7 @@ describe('GME client', function () {
         });
 
         it('should return the current branch state', function (done) {
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
                 expect(client.getBranchStatus()).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
 
@@ -750,7 +776,7 @@ describe('GME client', function () {
             var actualBranch,
                 actualCommit,
                 newBranch = 'newBranch';
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 actualBranch = client.getActiveBranchName();
@@ -781,7 +807,7 @@ describe('GME client', function () {
             var actualBranch,
                 actualCommit,
                 newBranch = 'deleteBranch';
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 actualBranch = client.getActiveBranchName();
@@ -823,7 +849,7 @@ describe('GME client', function () {
 
         it.skip('should create a new -no change- commit with the given message', function (done) {
             var oldCommit;
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
                 oldCommit = client.getActiveCommitHash();
 
@@ -838,7 +864,7 @@ describe('GME client', function () {
         });
 
         it('should give back the project object (which can be used to create core objects)', function (done) {
-            client.selectProject(projectId, function (/*err*/) {
+            client.selectProject(projectId, null, function (/*err*/) {
                 var projectObject = client.getProjectObject();
 
                 expect(projectObject).not.to.equal(null);
@@ -868,7 +894,7 @@ describe('GME client', function () {
             var actualProject,
                 genericProjectName = 'createGenericBranch',
                 genericProjectId = projectName2Id(genericProjectName, gmeConfig, client);
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 actualProject = client.getActiveProjectId();
@@ -906,7 +932,7 @@ describe('GME client', function () {
                 genericProjectName = 'removeGenericBranch',
                 genericProjectId = projectName2Id(genericProjectName, gmeConfig, client);
 
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
 
                 actualProject = client.getActiveProjectId();
@@ -960,7 +986,7 @@ describe('GME client', function () {
                 forkName = 'forked',
                 commitHash;
 
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
                 activeBranchName = client.getActiveBranchName();
                 commitHash = client.getActiveCommitHash();
@@ -986,7 +1012,7 @@ describe('GME client', function () {
             var activeBranchName,
                 commitHash;
 
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
                 activeBranchName = client.getActiveBranchName();
                 commitHash = client.getActiveCommitHash();
@@ -1010,7 +1036,7 @@ describe('GME client', function () {
                 forkName = 'myForkWithGivenHash',
                 commitHash;
 
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
                 activeBranchName = client.getActiveBranchName();
                 commitHash = client.getActiveCommitHash();
@@ -1040,7 +1066,7 @@ describe('GME client', function () {
                 forkName = 'willNotBeForked',
                 commitHash = '#abc123';
 
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
                 activeBranchName = client.getActiveBranchName();
 
@@ -1083,7 +1109,7 @@ describe('GME client', function () {
                     client.connectToDatabase(function (err) {
                         expect(err).to.equal(null);
 
-                        client.selectProject(projectId, function (err) {
+                        client.selectProject(projectId, null, function (err) {
                             expect(err).to.equal(null);
                             masterHash = client.getActiveCommitHash();
                             expect(masterHash).to.include('#');
@@ -1256,7 +1282,7 @@ describe('GME client', function () {
                 projectId = projectName2Id(projectName, gmeConfig, client);
                 client.connectToDatabase(function (err) {
                     expect(err).to.equal(null);
-                    client.selectProject(projectId, function (err) {
+                    client.selectProject(projectId, null, function (err) {
                         var user = {},
                             userPattern = {},
                             userGuid,
@@ -1506,7 +1532,7 @@ describe('GME client', function () {
             baseCommitHash;
 
         function buildUpForTest(branchName, next) {
-            client.selectProject(projectId, function (err) {
+            client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
                 client.createBranch(projectId, branchName, baseCommitHash, function (err) {
                     expect(err).to.equal(null);
@@ -1528,7 +1554,7 @@ describe('GME client', function () {
                 projectId = projectName2Id(projectName, gmeConfig, client);
                 client.connectToDatabase(function (err) {
                     expect(err).to.equal(null);
-                    client.selectProject(projectId, function (err) {
+                    client.selectProject(projectId, null, function (err) {
                         expect(err).to.equal(null);
 
                         baseCommitHash = client.getActiveCommitHash();
@@ -1807,7 +1833,7 @@ describe('GME client', function () {
                 projectId = projectName2Id(projectName, gmeConfig, client);
                 client.connectToDatabase(function (err) {
                     expect(err).to.equal(null);
-                    client.selectProject(projectId, function (err) {
+                    client.selectProject(projectId, null, function (err) {
                         expect(err).to.equal(null);
                         baseCommitHash = client.getActiveCommitHash();
                         console.log('ProjectName, branchName, commitHash',
@@ -3415,7 +3441,7 @@ describe('GME client', function () {
                 projectId = projectName2Id(projectName, gmeConfig, client);
                 client.connectToDatabase(function (err) {
                     expect(err).to.equal(null);
-                    client.selectProject(projectId, function (err) {
+                    client.selectProject(projectId, null, function (err) {
                         expect(err).to.equal(null);
 
                         baseCommitHash = client.getActiveCommitHash();
@@ -3545,7 +3571,7 @@ describe('GME client', function () {
                 client.connectToDatabase(function (err) {
                     expect(err).to.equal(null);
 
-                    client.selectProject(projectId, function (err) {
+                    client.selectProject(projectId, null, function (err) {
                         expect(err).to.equal(null);
 
                         client.addUI({}, function (events) {
@@ -3692,7 +3718,7 @@ describe('GME client', function () {
                 projectId = projectName2Id(projectName, gmeConfig, client);
                 client.connectToDatabase(function (err) {
                     expect(err).to.equal(null);
-                    client.selectProject(projectId, function (err) {
+                    client.selectProject(projectId, null, function (err) {
                         expect(err).to.equal(null);
 
                         baseCommitHash = client.getActiveCommitHash();
@@ -3942,18 +3968,18 @@ describe('GME client', function () {
 
             client.seedProject(seedConfig, function (err) {
                 expect(err).to.equal(null);
-                console.log('1');
+
                 client.getExportProjectBranchUrl(projectId, 'master', 'seedTestOutPut',
                     function (err, url) {
                         expect(err).to.equal(null);
-                        console.log('2');
+
                         superagent.get(url, function (err, result) {
                             expect(err).to.equal(null);
 
                             expect(result.body).to.deep.equal(refNodeProj);
                             client.deleteProject(projectId, function (err /*, didExist*/) {
                                 expect(err).to.equal(null, 'deleteProject returned error');
-                                console.log('3');
+
                                 done();
                             });
                         });

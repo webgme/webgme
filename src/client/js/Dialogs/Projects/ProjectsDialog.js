@@ -81,7 +81,7 @@ define([
 
         function openProject(projectId) {
             if (self._projectList[projectId].rights.read === true) {
-                self._client.selectProject(projectId, function () {
+                self._client.selectProject(projectId, null, function () {
                     self._dialog.modal('hide');
                 });
             }
@@ -551,7 +551,7 @@ define([
                 loader.stop();
             } else {
                 self._logger.debug('Created new project from seed');
-                self._client.selectProject(result.projectId, function (err) {
+                self._client.selectProject(result.projectId, null, function (err) {
                     if (err) {
                         self._logger.error('Cannot select project', err);
                     } else {

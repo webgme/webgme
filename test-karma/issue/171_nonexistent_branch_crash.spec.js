@@ -68,7 +68,7 @@ describe.skip('issue 171 server crashes when trying to switch to non-existent br
                 client.createProject(projectName, info, function (err) {
                     expect(err).to.equal(null);
 
-                    client.selectProject(projectName, function (err) {
+                    client.selectProject(projectName, null, function (err) {
                         expect(err).to.equal(null);
 
                         client.getBranches(projectName, function (err, names) {

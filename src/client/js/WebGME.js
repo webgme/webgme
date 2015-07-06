@@ -188,15 +188,14 @@ define([
                                     logger.error('Failed to connect to database', err);
                                     return;
                                 }
-                                client.selectProject(initialThingsToDo.projectToLoad, function (err) {
+                                client.selectProject(initialThingsToDo.projectToLoad, initialThingsToDo.branchToLoad,
+                                    function (err) {
                                     if (err) {
                                         logger.error(err);
                                         openProjectLoadDialog(false);
                                         return;
                                     }
-                                    if (initialThingsToDo.branchToLoad) {
-                                        loadBranch(initialThingsToDo.branchToLoad);
-                                    } else if (initialThingsToDo.commitToLoad) {
+                                    if (initialThingsToDo.commitToLoad) {
                                         client.selectCommit(initialThingsToDo.commitToLoad, function (err) {
                                             if (err) {
                                                 logger.error(err);
@@ -347,15 +346,13 @@ define([
 
                     if (projectExisted) {
                         // we fallback to loading
-                        client.selectProject(newProjectId, function (err) {
+                        client.selectProject(newProjectId, initialThingsToDo.branchToLoad, function (err) {
                             if (err) {
                                 logger.error(err);
                                 openProjectLoadDialog(false);
                                 return;
                             }
-                            if (initialThingsToDo.branchToLoad) {
-                                loadBranch(initialThingsToDo.branchToLoad);
-                            } else if (initialThingsToDo.commitToLoad && initialThingsToDo.commitToLoad !== '') {
+                            if (initialThingsToDo.commitToLoad && initialThingsToDo.commitToLoad !== '') {
                                 client.selectCommit(initialThingsToDo.commitToLoad, function (err) {
                                     if (err) {
                                         logger.error(err);
@@ -386,7 +383,7 @@ define([
                             }
                             //FIXME: this is not necessarily safe
                             setTimeout(function () {
-                                client.selectProject(newProjectId, function (err) {
+                                client.selectProject(newProjectId, null, function (err) {
                                     if (err) {
                                         logger.error(err);
                                         openProjectLoadDialog(false);
