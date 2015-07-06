@@ -6,13 +6,13 @@
 
 var testFixture = require('../../../_globals');
 
-describe.skip('merge - library', function () {
+describe('merge - library', function () {
     'use strict';
     var projectName = 'mergeLibrary',
         projectId = testFixture.projectName2Id(projectName),
         Q = testFixture.Q,
         gmeConfig = testFixture.getGmeConfig(),
-        logger = testFixture.logger.fork('apply.spec'),
+        logger = testFixture.logger.fork('merger.spec'),
         expect = testFixture.expect,
         merger = testFixture.requirejs('common/core/users/merge'),
         storage,
@@ -26,11 +26,16 @@ describe.skip('merge - library', function () {
                 storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
             })
+            .then(function(){
+                return storage.deleteProject({projectId:projectId});
+            })
             .then(function () {
-                return testFixture.openContext(storage, gmeConfig, logger, {
+                return testFixture.importProject(storage, {
                     projectName: projectName,
+                    logger: logger.fork('import'),
+                    gmeConfig: gmeConfig,
                     branchName: 'master',
-                    createProject: true,
+                    userName: gmeConfig.authentication.guestAccount,
                     projectSeed: './test/common/core/users/merge/base.json'
                 });
             })
@@ -138,7 +143,7 @@ describe.skip('merge - library', function () {
             .catch(done);
     });
 
-    it('should return the conflict object if there is conflicting changes', function (done) {
+    it.skip('should return the conflict object if there is conflicting changes', function (done) {
         var masterContext,
             otherContext,
             masterPersisted,
