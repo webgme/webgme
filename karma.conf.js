@@ -184,6 +184,11 @@ module.exports = function (config) {
         browsers: ['Chrome', 'Firefox'],
 
 
+        // to avoid DISCONNECTED messages
+        browserDisconnectTimeout: 10000, // default 2000
+        browserDisconnectTolerance: 1, // default 0
+        browserNoActivityTimeout: 60000, //default 10000
+
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
         singleRun: false,
