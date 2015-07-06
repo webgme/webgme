@@ -845,6 +845,145 @@ describe('core diff', function () {
 
         });
 
+        it('should combine add a new attribute to meta, and delete an element from meta sheet', function () {
+            var result,
+                diff1 = {
+                    "175547009": {
+                        "attr": {"newAttribute": "a"},
+                        "meta": "*to*delete*", // FIXME: diff is generated incorrectly
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "set": {
+                        "MetaAspectSet": {"/175547009": "*to*delete*"},
+                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {"/175547009": "*to*delete*"}
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "attr": {"newAttribute": "a"},
+                        "meta": {
+                            "attributes": {
+                                "newAttribute": {
+                                    "type": "string",
+                                    "default": "a",
+                                    "enum": ["a", "b", "c", "d"]
+                                }
+                            }
+                        },
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            result = core.tryToConcatChanges(diff2, diff1);
+
+            // TODO: check result
+        });
+
+        it('should combine delete meta, and add a new pointer to meta', function () {
+            var result,
+                diff1 = {
+                    "175547009": {
+                        "meta": "*to*delete*",
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "set": {
+                        "MetaAspectSet": {"/175547009": "*to*delete*"},
+                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {"/175547009": "*to*delete*"}
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "pointer": {"src": null},
+                        "meta": {
+                            "pointers": {
+                                "src": {
+                                    "/175547009/471466181": {
+                                        min: -1,
+                                        max: 1
+                                    },
+                                    "min": 1,
+                                    "max": 1
+                                }
+                            }
+                        },
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            result = core.tryToConcatChanges(diff1, diff2);
+
+            // TODO: check result
+        });
+
+        it('should combine delete meta, and add new children to meta', function () {
+            var result,
+                diff1 = {
+                    "175547009": {
+                        "meta": "*to*delete*",
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "set": {
+                        "MetaAspectSet": {"/175547009": "*to*delete*"},
+                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {"/175547009": "*to*delete*"}
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                },
+                diff2 = {
+                    "175547009": {
+                        "meta": {"children": {"/1": {"min": 1, "max": 1}}},
+                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
+                        "oGuids": {
+                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
+                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                };
+
+
+            result = core.tryToConcatChanges(diff1, diff2);
+
+            // TODO: check result
+        });
+
     });
 
     describe('resolve', function () {
