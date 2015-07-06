@@ -31,6 +31,9 @@ function createAPI(app, mountPath, middlewareOpts) {
         gmeAuth = middlewareOpts.gmeAuth,
         safeStorage = middlewareOpts.safeStorage,
         ensureAuthenticated = middlewareOpts.ensureAuthenticated,
+        webgme = require('../../../webgme'),
+        ServerUserProject = require('../storage/userproject'),
+        merge = webgme.requirejs('common/core/users/merge'),
 
         versionedAPIPath = mountPath + '/v1',
         latestAPIPath = mountPath;
@@ -520,6 +523,38 @@ function createAPI(app, mountPath, middlewareOpts) {
         safeStorage.getCommits(data)
             .then(function (result) {
                 res.json(result);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+
+    router.get('/projects/:projectId/compare/:branchOrCommitA...:branchOrCommitB', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req),
+            loggerCompare = logger.fork('compare'),
+            data = {
+                username: userId,
+                projectId: req.params.projectId
+            };
+
+
+        safeStorage.openProject(data)
+            .then(function (dbProject) {
+                var serverUserProject = new ServerUserProject(dbProject, safeStorage, loggerCompare, middlewareOpts.gmeConfig);
+
+                return merge.diff({
+                    project: serverUserProject,
+                    branchOrCommitA: req.params.branchOrCommitA,
+                    branchOrCommitB: req.params.branchOrCommitB,
+                    logger: loggerCompare,
+                    gmeConfig: middlewareOpts.gmeConfig
+
+                });
+
+            })
+            .then(function (diff) {
+                res.json(diff);
             })
             .catch(function (err) {
                 next(err);

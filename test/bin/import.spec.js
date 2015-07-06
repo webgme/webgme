@@ -21,6 +21,9 @@ describe('import CLI tests', function () {
         logger = testFixture.logger.fork('import.spec'),
         storage,
         gmeAuth,
+        oldLogFunction = console.log,
+        oldWarnFunction = console.warn,
+        oldStdOutFunction = process.stdout.write,
         jsonProject;
 
     function checkBranch(pId, branchArray) {
@@ -62,16 +65,6 @@ describe('import CLI tests', function () {
 
     });
 
-    afterEach(function (done) {
-        if (projectId) {
-            storage.deleteProject({projectId: projectId})
-                .nodeify(done);
-        } else {
-            done();
-        }
-
-    });
-
     after(function (done) {
         storage.deleteProject({projectId: existingProjectId}).
             then(function () {
@@ -81,6 +74,28 @@ describe('import CLI tests', function () {
                 ]);
             })
             .nodeify(done);
+    });
+
+    beforeEach(function () {
+        console.log = function () {
+        };
+        process.stdout.write = function () {
+        };
+        console.warn = function () {
+
+        };
+    });
+
+    afterEach(function (done) {
+        console.log = oldLogFunction;
+        console.warn = oldWarnFunction;
+        process.stdout.write = oldStdOutFunction;
+        if (projectId) {
+            storage.deleteProject({projectId: projectId})
+                .nodeify(done);
+        } else {
+            done();
+        }
     });
 
     it('should have a main', function () {

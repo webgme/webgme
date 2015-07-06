@@ -539,13 +539,14 @@ function StandAloneServer(gmeConfig) {
                 logger.debug('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
                     ' - /rest/external/' + keys[i]);
                 if (restComponent.hasOwnProperty('initialize') && restComponent.hasOwnProperty('router')) {
+                    // FIXME: initialize may return with a promise
                     restComponent.initialize(middlewareOpts);
                     __app.use('/rest/external/' + keys[i], restComponent.router);
                 } else {
                     __app.use('/rest/external/' + keys[i], restComponent(gmeConfig, ensureAuthenticated, logger));
                 }
             } else {
-                throw new Error('Loading ' + gmeConfig.rest.components[keys[i]] + ' failed.');
+                throw new Error('Loading rest component ' + gmeConfig.rest.components[keys[i]] + ' failed.');
             }
         }
     }

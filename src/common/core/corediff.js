@@ -44,6 +44,10 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
             }
             var keys = Object.keys(obj),
                 i;
+            if (JSON.stringify(obj.set) === JSON.stringify({})) {
+                delete obj.set;
+            }
+
             for (i = 0; i < keys.length; i++) {
                 /*if (Array.isArray(obj[keys[i]])) {
                  if (obj[keys[i]].length === 0) {
@@ -53,6 +57,8 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                     //do nothing, leave the array as is
                 } else if (obj[keys[i]] === undefined) {
                     delete obj[keys[i]]; //there cannot be undefined in the object
+                } else if (keys[i] === 'set') {
+                    //do nothing with set as it can include empty set's as well
                 } else if (typeof obj[keys[i]] === 'object') {
                     normalize(obj[keys[i]]);
                     if (obj[keys[i]] && Object.keys(obj[keys[i]]).length === 0) {
@@ -177,8 +183,8 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                             data[names[i]][targets[j]] = {attr: {}, reg: {}};
                             keys = _core.getMemberOwnAttributeNames(node, names[i], targets[j]);
                             for (k = 0; k < keys.length; k++) {
-                                data[names[i]][targets[j]].attr[keys[i]] = _core.getMemberAttribute(node,
-                                    names[i], targets[j], keys[i]);
+                                data[names[i]][targets[j]].attr[keys[k]] = _core.getMemberAttribute(node,
+                                    names[i], targets[j], keys[k]);
                             }
                             keys = _core.getMemberRegistryNames(node, names[i], targets[j]);
                             for (k = 0; k < keys.length; k++) {
@@ -235,8 +241,43 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         }
 
         function metaDiff(source, target) {
-            var sMeta = _core.getOwnJsonMeta(source),
-                tMeta = _core.getOwnJsonMeta(target);
+            //TODO jsonMeta format should be changed in all places!!!
+            var convertJsonMeta = function (jsonMeta) {
+                    var i, j, names, itemsObject;
+                    //children
+                    if (jsonMeta.children) {
+                        itemsObject = jsonMeta.children;
+                        for (i = 0; i < itemsObject.items.length; i += 1) {
+                            itemsObject[itemsObject.items[i]] = {
+                                min: itemsObject.minItems[i],
+                                max: itemsObject.maxItems[i]
+                            };
+                        }
+                        delete itemsObject.items;
+                        delete itemsObject.minItems;
+                        delete itemsObject.maxItems;
+                    }
+                    //ptr
+                    if (jsonMeta.pointers) {
+                        names = Object.keys(jsonMeta.pointers);
+
+                        for (j = 0; j < names.length; j += 1) {
+                            itemsObject = jsonMeta.pointers[names[j]];
+                            for (i = 0; i < itemsObject.items.length; i += 1) {
+                                itemsObject[itemsObject.items[i]] = {
+                                    min: itemsObject.minItems[i],
+                                    max: itemsObject.maxItems[i]
+                                };
+                            }
+                            delete itemsObject.items;
+                            delete itemsObject.minItems;
+                            delete itemsObject.maxItems;
+                        }
+                    }
+                    return jsonMeta;
+                },
+                sMeta = convertJsonMeta(_core.getOwnJsonMeta(source)),
+                tMeta = convertJsonMeta(_core.getOwnJsonMeta(target));
             if (CANON.stringify(sMeta) !== CANON.stringify(tMeta)) {
                 return {source: sMeta, target: tMeta};
             }
@@ -334,7 +375,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         }
 
         function getPathOfDiff(diff, path) {
-            var pathArray = (path || '').split('/'),
+            var pathArray = path.split('/'),
                 i;
             pathArray.shift();
             for (i = 0; i < pathArray.length; i++) {
@@ -413,14 +454,11 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                     if (child) {
                         guid = _core.getGuid(child);
                         base = _core.getBase(child);
-                        if (base) {
-                            base = _core.getPath(base);
-                        }
                         diff[tDiff[i].relid] = {
                             guid: guid,
                             removed: false,
                             hash: _core.getHash(child),
-                            pointer: {source: {}, target: {base: base}}
+                            pointer: {source: {}, target: {base: base === null ? null : _core.getPath(base)}}
                         };
                         _yetToCompute[guid] = _yetToCompute[guid] || {};
                         _yetToCompute[guid].to = child;
@@ -594,15 +632,15 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         }
 
         function removePathFromDiff(diff, path) {
-            var relId, i;
+            var relId, i, pathArray;
             if (path === '') {
                 diff = null;
             } else {
-                path = path.split('/');
-                path.shift();
-                relId = path.pop();
-                for (i = 0; i < path.length; i++) {
-                    diff = diff[path[i]];
+                pathArray = path.split('/');
+                pathArray.shift();
+                relId = pathArray.pop();
+                for (i = 0; i < pathArray.length; i++) {
+                    diff = diff[pathArray[i]];
                 }
                 delete diff[relId];
             }
@@ -633,7 +671,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                     }
                 }
             };
-            _shrink(rootDiff, false);
+            _shrink(rootDiff);
         }
 
         function checkRound() {
@@ -690,9 +728,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                     }
                 }
             }
-            return TASYNC.call(function () {
-                return checkRound();
-            }, done);
+            return TASYNC.call(checkRound, done);
         }
 
         _core.nodeDiff = function (source, target) {
@@ -770,19 +806,18 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         function getAncestor(node, path) {
             var ownPath = _core.getPath(node),
                 ancestorPath = '',
-                i;
-            path = path.split('/');
-            ownPath = ownPath.split('/');
-            ownPath.shift();
-            path.shift();
-            for (i = 0; i < ownPath.length; i++) {
-                if (ownPath[i] === path[i]) {
-                    ancestorPath = ancestorPath + '/' + ownPath[i];
+                i, ownPathArray, pathArray;
+            pathArray = path.split('/');
+            ownPathArray = ownPath.split('/');
+            ownPathArray.shift();
+            pathArray.shift();
+            for (i = 0; i < ownPathArray.length; i++) {
+                if (ownPathArray[i] === pathArray[i]) {
+                    ancestorPath = ancestorPath + '/' + ownPathArray[i];
                 } else {
                     break;
                 }
             }
-            ownPath = _core.getPath(node);
             while (ownPath !== ancestorPath) {
                 node = _core.getParent(node);
                 ownPath = _core.getPath(node);
@@ -976,6 +1011,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                 if (setDiff[setNames[i]] === TODELETESTRING) {
                     _core.deleteSet(node, setNames[i]);
                 } else {
+                    _core.createSet(node, setNames[i]);
                     elements = Object.keys(setDiff[setNames[i]]);
                     for (j = 0; j < elements.length; j++) {
                         if (setDiff[setNames[i]][elements[j]] === TODELETESTRING) {
@@ -1131,7 +1167,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                 if (metaAspectsDiff[names[i]] === TODELETESTRING) {
                     _core.delAspectMeta(node, names[i]);
                 } else {
-                    targets = Object.keys(metaAspectsDiff[names[i]]);
+                    targets = metaAspectsDiff[names[i]];
                     for (j = 0; j < targets.length; j++) {
                         if (metaAspectsDiff[names[i]][targets[j]] === TODELETESTRING) {
                             _core.delAspectMetaTarget(node, names[i], targets[j]);
@@ -1171,16 +1207,16 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         };
 
         function getNodeByGuid(diff, guid) {
-            var relids, i, temp;
+            var relids, i, node;
             if (diff.guid === guid) {
                 return diff;
             }
 
             relids = getDiffChildrenRelids(diff);
             for (i = 0; i < relids.length; i++) {
-                temp = getNodeByGuid(diff[relids[i]], guid);
-                if (temp) {
-                    return temp;
+                node = getNodeByGuid(diff[relids[i]], guid);
+                if (node) {
+                    return node;
                 }
             }
             return null;
@@ -1613,7 +1649,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
 
         function gatherFullMetaConflicts(diffMeta, mine, path, opposingPath) {
             var conflict, opposingConflict,
-                relids, i, j, keys, tPath;
+                relids, i, j, keys, tPath, key;
 
             if (mine) {
                 conflict = _conflictMine;
@@ -1679,12 +1715,13 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                 } else {
                     keys = Object.keys(diffMeta.attributes);
                     for (i = 0; i < keys.length; i++) {
-                        conflict[path + '/attributes/' + keys[i]] = conflict[path + '/attributes/' + keys[i]] || {
+                        key = path + '/attributes/' + keys[i];
+                        conflict[key] = conflict[key] || {
                                 value: diffMeta.attributes[keys[i]],
                                 conflictingPaths: {}
                             };
-                        conflict[path + '/attributes'].conflictingPaths[opposingPath] = true;
-                        opposingConflict.conflictingPaths[path + '/attributes'] = true;
+                        conflict[key].conflictingPaths[opposingPath] = true;
+                        opposingConflict.conflictingPaths[key] = true;
                     }
                 }
             }
@@ -1793,7 +1830,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                                     };
                                 _conflictTheirs[tPath].conflictingPaths[tPath] = true;
                             } else {
-                                bData.max = eData.min;
+                                bData.min = eData.min;
                             }
                         }
                         //targets
