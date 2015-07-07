@@ -887,41 +887,41 @@ function StandAloneServer(gmeConfig) {
         }
     });
 
-    logger.debug('creating token related routing rules');
-    __app.get('/gettoken', ensureAuthenticated, function (req, res) {
-        if (gmeConfig.rest.secure) {
-            __gmeAuth.getToken(req.session.id, function (err, token) {
-                if (err) {
-                    res.send(err);
-                } else {
-                    res.send(token);
-                }
-            });
-        } else {
-            res.sendStatus(410); //special error for the interpreters to know there is no need for token
-        }
-    });
-    __app.get('/checktoken/:token', function (req, res) {
-        if (gmeConfig.authentication.enable === true) {
-            if (__canCheckToken === true) {
-                setTimeout(function () {
-                    __canCheckToken = true;
-                }, 10000);
-                __canCheckToken = false;
-                __gmeAuth.checkToken(req.params.token, function (isValid) {
-                    if (isValid === true) {
-                        res.sendStatus(200);
-                    } else {
-                        res.sendStatus(403);
-                    }
-                });
-            } else {
-                res.sendStatus(403);
-            }
-        } else {
-            res.sendStatus(410); //special error for the interpreters to know there is no need for token
-        }
-    });
+    //logger.debug('creating token related routing rules');
+    //__app.get('/gettoken', ensureAuthenticated, function (req, res) {
+    //    if (gmeConfig.rest.secure) {
+    //        __gmeAuth.getToken(req.session.id, function (err, token) {
+    //            if (err) {
+    //                res.send(err);
+    //            } else {
+    //                res.send(token);
+    //            }
+    //        });
+    //    } else {
+    //        res.sendStatus(410); //special error for the interpreters to know there is no need for token
+    //    }
+    //});
+    //__app.get('/checktoken/:token', function (req, res) {
+    //    if (gmeConfig.authentication.enable === true) {
+    //        if (__canCheckToken === true) {
+    //            setTimeout(function () {
+    //                __canCheckToken = true;
+    //            }, 10000);
+    //            __canCheckToken = false;
+    //            __gmeAuth.checkToken(req.params.token, function (isValid) {
+    //                if (isValid === true) {
+    //                    res.sendStatus(200);
+    //                } else {
+    //                    res.sendStatus(403);
+    //                }
+    //            });
+    //        } else {
+    //            res.sendStatus(403);
+    //        }
+    //    } else {
+    //        res.sendStatus(410); //special error for the interpreters to know there is no need for token
+    //    }
+    //});
 
     logger.debug('creating API related routing rules');
 
@@ -929,31 +929,33 @@ function StandAloneServer(gmeConfig) {
 
 
     logger.debug('creating server-worker related routing rules');
-    __app.get('/worker/simpleResult/*', function (req, res) {
-        var urlArray = req.url.split('/');
-        logger.debug('worker/simpleResult requested, urlArray', {metadata: urlArray});
-        if (urlArray.length > 3) {
-            __workerManager.result(urlArray[3], function (err, result) {
-                if (err) {
-                    logger.error('worker/simpleResult err', err);
-                    res.sendStatus(500);
-                } else {
-                    var filename = 'exportedNodes.json';
-                    if (urlArray[4]) {
-                        filename = urlArray[4];
-                    }
-                    if (filename.indexOf('.') === -1) {
-                        filename += '.json';
-                    }
-                    res.header('Content-Type', 'application/json');
-                    res.header('Content-Disposition', 'attachment;filename=\'' + filename + '\'');
-                    res.status(200);
-                    res.end(JSON.stringify(result, null, 2));
-                }
-            });
-        } else {
-            res.sendStatus(404);
+
+    function sendSimpleResult(res, resultId, filename) {
+        logger.debug('worker/simpleResult requested, urlArray', {metadata: {id: resultId, filename: filename}});
+
+        __workerManager.result(resultId, function (err, result) {
+            if (err) {
+                logger.error('worker/simpleResult err', err);
+                res.sendStatus(500);
+            } else {
+                res.header('Content-Disposition', 'attachment;filename=\'' + filename + '\'');
+                res.json(result);
+            }
+        });
+    }
+
+    __app.get('/worker/simpleResult/:resultId', function (req, res) {
+        var filename = 'simpleResult-' + req.params.resultId + '.json';
+        sendSimpleResult(res, req.params.resultId, filename);
+    });
+
+    // FIXME: filename should be in query string
+    __app.get('/worker/simpleResult/:resultId/:filename', function (req, res) {
+        var filename = req.params.filename;
+        if (filename.indexOf('.json') === -1) {
+            filename += '.json';
         }
+        sendSimpleResult(res, req.params.resultId, filename);
     });
 
 
@@ -1027,15 +1029,11 @@ function StandAloneServer(gmeConfig) {
 
     // catches all next(new Error()) from previous rules, you can set res.status() before you call next(new Error())
     __app.use(function (err, req, res, next) {
-        if (err) {
-            if (res.statusCode === 200) {
-                res.status(err.status || 500);
-            }
-            res.sendStatus(res.statusCode);
-            //res.send(err.stack ? err.stack : err); // FIXME: in dev mode
-        } else {
-            return next();
+        if (res.statusCode === 200) {
+            res.status(err.status || 500);
         }
+        res.sendStatus(res.statusCode);
+        //res.send(err.stack ? err.stack : err); // FIXME: in dev mode
     });
 
     // everything else is 404

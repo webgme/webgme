@@ -218,17 +218,19 @@ main = function (argv) {
             read: options.authorize.indexOf('r') !== -1,
             write: options.authorize.indexOf('w') !== -1,
             delete: options.authorize.indexOf('d') !== -1
-        };
+        },
+            type = 'create';
 
         setupGMEAuth(options.parent.db, function (/*err*/) {
 
             if (options.deauthorize) {
                 // deauthorize
                 rights = {};
+                type = 'delete';
             }
 
             // authorize
-            auth[fn].call(this, id, projectname, 'create', rights)
+            auth[fn].call(this, id, projectname, type, rights)
                 .then(mainDeferred.resolve)
                 .catch(mainDeferred.reject)
                 .finally(auth.unload);
