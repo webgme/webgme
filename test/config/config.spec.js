@@ -11,7 +11,7 @@ describe('configuration', function () {
         path = require('path'),
         getClientConfig = require('../../config/getclientconfig'),
         configPath = path.join(__dirname, '..', '..', 'config'),
-        validateConfig = require('../../config/validator'),
+        validateConfig,
         unloadConfigs = function () {
             // clear the cached files
             var key,
@@ -83,6 +83,8 @@ describe('configuration', function () {
         var config;
         process.env.NODE_ENV = 'test';
         config = require('../../config');
+        unloadConfigs();
+        validateConfig = require('../../config/validator');
 
         (function () {
             config.extraKey = 'something';
@@ -94,6 +96,8 @@ describe('configuration', function () {
         var config;
         process.env.NODE_ENV = 'test';
         config = require('../../config');
+        unloadConfigs();
+        validateConfig = require('../../config/validator');
 
         (function () {
             config.plugin.basePaths = 'something';
