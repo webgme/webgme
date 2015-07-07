@@ -15,6 +15,7 @@ describe('merge - library', function () {
         logger = testFixture.logger.fork('merger.spec'),
         expect = testFixture.expect,
         merger = testFixture.requirejs('common/core/users/merge'),
+        getRoot = testFixture.requirejs('common/core/users/getroot'),
         storage,
         context,
         gmeAuth;
@@ -26,8 +27,8 @@ describe('merge - library', function () {
                 storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
             })
-            .then(function(){
-                return storage.deleteProject({projectId:projectId});
+            .then(function () {
+                return storage.deleteProject({projectId: projectId});
             })
             .then(function () {
                 return testFixture.importProject(storage, {
@@ -143,28 +144,40 @@ describe('merge - library', function () {
             .catch(done);
     });
 
-    it.skip('should return the conflict object if there is conflicting changes', function (done) {
+    it('should return the conflict object if there are conflicting changes and resolve them', function (done) {
         var masterContext,
             otherContext,
             masterPersisted,
-            otherPersisted;
+            otherPersisted,
+            getContext = function (branchName) {
+                var deferred = Q.defer(),
+                    branchContext = {};
+                branchContext.core = context.core;
+                branchContext.project = context.project;
+                branchContext.commitHash = context.commitHash;
+                branchContext.id = branchName;
+                getRoot(branchContext)
+                    .then(function (result) {
+                        branchContext.rootNode = result.root;
+
+                        deferred.resolve(branchContext);
+                    })
+                    .catch(deferred.reject);
+                return deferred.promise;
+            };
 
         Q.allSettled([
-            testFixture.openContext(storage, gmeConfig, logger, {
-                projectName: projectName,
-                branchName: 'master'
-            }),
-            testFixture.openContext(storage, gmeConfig, logger, {
-                projectName: projectName,
-                branchName: 'other'
-            })
+            getContext('master'),
+            getContext('other')
         ])
             .then(function (contexts) {
                 expect(contexts).not.to.equal(null);
                 expect(contexts).to.have.length(2);
+                expect(contexts[0].state).to.equal('fulfilled');
+                expect(contexts[1].state).to.equal('fulfilled');
 
-                masterContext = contexts[0];
-                otherContext = contexts[1];
+                masterContext = contexts[0].value;
+                otherContext = contexts[1].value;
 
                 masterContext.core.setRegistry(masterContext.rootNode, 'something', 'masterValue');
                 otherContext.core.setRegistry(otherContext.rootNode, 'something', 'otherValue');
@@ -205,11 +218,29 @@ describe('merge - library', function () {
                 expect(mergeResult).to.include.keys(['myCommitHash',
                     'theirCommitHash', 'baseCommitHash', 'diff', 'conflict']);
                 expect(mergeResult.conflict.items).to.have.length(1);
-                expect(mergeResult.conflict.items[0]).to.include.keys(['selected','mine','theirs']);
+                expect(mergeResult.conflict.items[0]).to.include.keys(['selected', 'mine', 'theirs']);
                 expect(mergeResult.conflict.items[0].mine.path).to.equal('/reg/something');
                 expect(mergeResult.conflict.items[0].theirs.path).to.equal('/reg/something');
                 expect(mergeResult.conflict.items[0].mine.value).to.equal('otherValue');
                 expect(mergeResult.conflict.items[0].theirs.value).to.equal('masterValue');
+
+                mergeResult.conflict.items[0].selected = 'theirs';
+
+                return merger.resolve({
+                    project: context.project,
+                    logger: logger,
+                    gmeConfig: gmeConfig,
+                    partial: mergeResult
+                });
+            })
+            .then(function (result) {
+                expect(result).not.to.equal(null);
+                expect(result).to.include.keys('hash', 'updatedBranch');
+
+                return getContext('master');
+            })
+            .then(function (finalContext) {
+                expect(finalContext.core.getRegistry(finalContext.rootNode, 'something')).to.equal('masterValue');
                 done();
             })
             .catch(done);
