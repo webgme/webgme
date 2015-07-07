@@ -54,7 +54,7 @@ describe('export CLI tests', function () {
     after(function (done) {
         storage.deleteProject({projectId: projectId}).
             then(function () {
-                return Q.all([
+                return Q.allSettled([
                     gmeAuth.unload(),
                     storage.closeDatabase(),
                     Q.nfcall(testFixture.rimraf, outputPath)

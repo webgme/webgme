@@ -213,7 +213,7 @@ describe('standalone server', function () {
                 dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
                     .then(function (db_) {
                         db = db_;
-                        return Q.all([
+                        return Q.allSettled([
                             Q.ninvoke(db, 'collection', '_users')
                                 .then(function (collection_) {
                                     return Q.ninvoke(collection_, 'remove');
@@ -249,7 +249,7 @@ describe('standalone server', function () {
                 serverBaseUrl = server.getUrl();
                 server.start(serverReady.makeNodeResolver());
 
-                Q.all([serverReady, dbConn])
+                Q.allSettled([serverReady, dbConn])
                     .then(function () {
                         return auth.connect();
                     })
@@ -402,7 +402,7 @@ describe('standalone server', function () {
             dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
                 .then(function (db_) {
                     db = db_;
-                    return Q.all([
+                    return Q.allSettled([
                         Q.ninvoke(db, 'collection', '_users')
                             .then(function (collection_) {
                                 collection = collection_;
@@ -439,7 +439,7 @@ describe('standalone server', function () {
             serverBaseUrl = server.getUrl();
             server.start(serverReady.makeNodeResolver());
 
-            Q.all([serverReady, dbConn])
+            Q.allSettled([serverReady, dbConn])
                 .then(function () {
                     return auth.connect();
                 })

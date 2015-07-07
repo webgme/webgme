@@ -33,7 +33,7 @@ describe('API', function () {
         dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
             .then(function (db_) {
                 db = db_;
-                return Q.all([
+                return Q.allSettled([
                     Q.ninvoke(db, 'collection', '_users')
                         .then(function (collection_) {
                             return Q.ninvoke(collection_, 'remove');
@@ -67,12 +67,12 @@ describe('API', function () {
                 ]);
             });
 
-        Q.all([dbConn])
+        Q.allSettled([dbConn])
             .then(function () {
                 return auth.connect();
             })
             .then(function () {
-                return Q.all([
+                return Q.allSettled([
                     auth.addUser('guest', 'guest@example.com', 'guest', true, {overwrite: true}),
                     auth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true}),
                     auth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true}),
@@ -84,7 +84,7 @@ describe('API', function () {
                 ]);
             })
             .then(function () {
-                return Q.all([
+                return Q.allSettled([
                     auth.authorizeByUserId('user', 'project', 'create', {
                         read: true,
                         write: true,
@@ -984,14 +984,14 @@ describe('API', function () {
                             return safeStorage.openDatabase();
                         })
                         .then(function () {
-                            return Q.all([
+                            return Q.allSettled([
                                 safeStorage.deleteProject({projectId: projectName2Id(projectName)}),
                                 safeStorage.deleteProject({projectId: projectName2Id(unauthorizedProjectName)}),
                                 safeStorage.deleteProject({projectId: projectName2Id(toDeleteProjectName)})
                             ]);
                         })
                         .then(function () {
-                            return Q.all([
+                            return Q.allSettled([
                                 testFixture.importProject(safeStorage, {
                                     projectSeed: 'seeds/EmptyProject.json',
                                     projectName: projectName,
@@ -1013,7 +1013,7 @@ describe('API', function () {
                             ]);
                         })
                         .then(function () {
-                            return Q.all([
+                            return Q.allSettled([
                                 gmeAuth.authorizeByUserId(guestAccount, projectName2Id(unauthorizedProjectName),
                                     'create', {
                                         read: true,
@@ -1034,7 +1034,7 @@ describe('API', function () {
                         return;
                     }
 
-                    Q.all([
+                    Q.allSettled([
                         gmeAuth.unload(),
                         safeStorage.closeDatabase()
                     ])

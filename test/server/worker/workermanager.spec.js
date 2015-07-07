@@ -72,7 +72,7 @@ describe('ServerWorkerManager', function () {
             }
             testFixture.forceDeleteProject(storage, gmeAuth, projectName)
                 .then(function () {
-                    return Q.all([
+                    return Q.allSettled([
                         storage.closeDatabase(),
                         gmeAuth.unload()
                     ]);

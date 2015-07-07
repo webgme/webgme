@@ -34,7 +34,7 @@ describe('constraint.core', function () {
     });
 
     after(function (done) {
-        Q.all([
+        Q.allSettled([
             storage.closeDatabase(),
             gmeAuth.unload()
         ])

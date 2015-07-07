@@ -75,7 +75,7 @@ describe('merge CLI test', function () {
                 return result.project.createBranch('other', result.commitHash);
             })
             .then(function () {
-                return Q.all([
+                return Q.allSettled([
                     merger.apply({
                         gmeConfig: gmeConfig,
                         logger: logger.fork('apply'),
@@ -104,7 +104,7 @@ describe('merge CLI test', function () {
     after(function (done) {
         database.deleteProject({projectId: projectId})
             .then(function () {
-                return Q.all([
+                return Q.allSettled([
                     gmeAuth.unload(),
                     database.closeDatabase(),
                     Q.nfcall(rimraf, './test-tmp/mergeCli*')

@@ -41,7 +41,7 @@ describe('merge - library', function () {
             })
             .then(function (result) {
                 context = result;
-                return Q.all([
+                return Q.allSettled([
                     Q.nfcall(context.project.createBranch, 'other', result.commitHash),
                     Q.nfcall(context.project.createBranch, 'empty', result.commitHash)
                 ]);
@@ -52,7 +52,7 @@ describe('merge - library', function () {
     after(function (done) {
         storage.deleteProject({projectId: projectId})
             .then(function () {
-                return Q.all([
+                return Q.allSettled([
                     storage.closeDatabase(),
                     gmeAuth.unload()
                 ]);
@@ -149,7 +149,7 @@ describe('merge - library', function () {
             masterPersisted,
             otherPersisted;
 
-        Q.all([
+        Q.allSettled([
             testFixture.openContext(storage, gmeConfig, logger, {
                 projectName: projectName,
                 branchName: 'master'
@@ -172,7 +172,7 @@ describe('merge - library', function () {
                 masterPersisted = masterContext.core.persist(masterContext.rootNode);
                 otherPersisted = otherContext.core.persist(otherContext.rootNode);
 
-                return Q.all([
+                return Q.allSettled([
                     masterContext.project.makeCommit(
                         'master',
                         [masterContext.commitHash],

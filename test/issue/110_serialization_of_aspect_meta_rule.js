@@ -31,7 +31,7 @@ describe('issue110 testing', function () {
     });
 
     after(function (done) {
-        Q.all([
+        Q.allSettled([
             storage.closeDatabase(),
             gmeAuth.unload()
         ])

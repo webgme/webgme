@@ -97,7 +97,7 @@ describe('Simple worker', function () {
             }
             deleteProject(storage, gmeAuth, baseProjectContext.name)
                 .then(function () {
-                    return Q.all([
+                    return Q.allSettled([
                         storage.closeDatabase(),
                         gmeAuth.unload()
                     ]);

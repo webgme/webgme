@@ -46,7 +46,7 @@ describe('issue436 testing', function () {
     after(function (done) {
         storage.deleteProject({projectId: projectId})
             .then(function () {
-                return Q.all([
+                return Q.allSettled([
                     storage.closeDatabase(),
                     gmeAuth.unload()
                 ]);
