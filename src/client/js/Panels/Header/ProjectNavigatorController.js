@@ -474,8 +474,6 @@ define([
                     currentProject = self.$scope.navigator.items[self.navIdProject];
                     currentBranch = self.$scope.navigator.items[self.navIdBranch];
                     if (currentBranch.id === data.branchName && currentProject.id === projectId) {
-                        //FIXME: This seems wrong, shouldn't it be gmeClient.selectProject??
-                        //self.selectProject(projectId);
                         self.gmeClient.selectCommit(self.gmeClient.getActiveCommitHash(), function (err) {
                             if (err) {
                                 self.logger.error('cannot select latest commit', {metadata: {error: err}});
