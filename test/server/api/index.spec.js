@@ -26,6 +26,7 @@ describe('API', function () {
         dbConn,
         db;
 
+
     before(function (done) {
 
         auth = new GMEAuth(null, gmeConfig);
@@ -964,6 +965,11 @@ describe('API', function () {
                 gmeAuth,
                 guestAccount = gmeConfig.authentication.guestAccount;
 
+            function projectName2APIPath(projectName, user) {
+                user = user || guestAccount;
+                return guestAccount + '/' + projectName;
+            }
+
             before(function (done) {
                 var gmeConfig = testFixture.getGmeConfig();
                 gmeConfig.authentication.enable = false;
@@ -1057,7 +1063,7 @@ describe('API', function () {
                         name: 'unauthorized_project',
                         owner: 'guest'
                     });
-                    expect(res.body).to.contain( {
+                    expect(res.body).to.contain({
                         _id: 'guest+project_to_delete',
                         fullName: 'guest/project_to_delete',
                         name: 'project_to_delete',
@@ -1073,8 +1079,8 @@ describe('API', function () {
                 });
             });
 
-            it('should branches for project /projects/:projectId/branches', function (done) {
-                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches')
+            it('should branches for project /projects/:ownerId/:projectId/branches', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body).to.have.property('master');
@@ -1083,38 +1089,42 @@ describe('API', function () {
             });
 
             it('should not get branches for non-existent project', function (done) {
-                agent.get(server.getUrl() + '/api/projects/does_not_exist/branches').end(function (err, res) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath('does_not_exist') +
+                          '/branches').end(function (err, res) {
                     expect(res.status).equal(403, err);
                     done();
                 });
             });
 
-            it('should get branch information for project /projects/:projectId/branches/master', function (done) {
-                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches/master')
-                    .end(function (err, res) {
-                        expect(res.status).equal(200, err);
-                        expect(res.body).to.have.property('projectId');
-                        expect(res.body).to.have.property('branchName');
-                        expect(res.body).to.have.property('commitObject');
-                        expect(res.body).to.have.property('coreObjects');
+            it('should get branch information for project /projects/:ownerId/:projectId/branches/master',
+                function (done) {
+                    agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                              '/branches/master')
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body).to.have.property('projectId');
+                            expect(res.body).to.have.property('branchName');
+                            expect(res.body).to.have.property('commitObject');
+                            expect(res.body).to.have.property('coreObjects');
 
-                        expect(res.body.projectId).to.equal(projectName2Id(projectName));
-                        expect(res.body.branchName).to.equal('master');
+                            expect(res.body.projectId).to.equal(projectName2Id(projectName));
+                            expect(res.body.branchName).to.equal('master');
 
-                        done();
-                    });
-            });
+                            done();
+                        });
+                });
 
             it('should not get branch information for non-existent branch', function (done) {
-                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches/does_not_exist')
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                          '/branches/does_not_exist')
                     .end(function (err, res) {
                         expect(res.status).equal(404, err);
                         done();
                     });
             });
 
-            it('should list commits for project /projects/:projectId/commits', function (done) {
-                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/commits')
+            it('should list commits for project /projects/:ownerId/:projectId/commits', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body.length).to.equal(1);
@@ -1129,16 +1139,18 @@ describe('API', function () {
                     });
             });
 
-            it('should create branch for project /projects/:projectId/branches/newBranch', function (done) {
-                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches/master')
+            it('should create branch for project /projects/:ownerId/:projectId/branches/newBranch', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches/master')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
 
-                        agent.put(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches/newBranch')
+                        agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                                  '/branches/newBranch')
                             .send({hash: res.body.commitObject._id})
                             .end(function (err, res) {
                                 expect(res.status).equal(201, err);
-                                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches')
+                                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                                          '/branches')
                                     .end(function (err, res) {
                                         expect(res.status).equal(200, err);
                                         expect(res.body).to.have.property('master');
@@ -1150,102 +1162,117 @@ describe('API', function () {
             });
 
 
-            it('should delete a branch for project /projects/:projectId/branches/newBranchToDelete', function (done) {
-                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches/master')
-                    .end(function (err, res) {
-                        var hash;
-                        expect(res.status).equal(200, err);
-                        hash =  res.body.commitObject._id;
+            it('should delete a branch for project /projects/:ownerId/:projectId/branches/newBranchToDelete',
+                function (done) {
+                    agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                              '/branches/master')
+                        .end(function (err, res) {
+                            var hash;
+                            expect(res.status).equal(200, err);
+                            hash = res.body.commitObject._id;
 
-                        agent.put(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches/newBranchToDelete')
-                            .send({hash: hash})
-                            .end(function (err, res) {
-                                expect(res.status).equal(201, err);
+                            agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                                      '/branches/newBranchToDelete')
+                                .send({hash: hash})
+                                .end(function (err, res) {
+                                    expect(res.status).equal(201, err);
 
-                                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches')
-                                    .end(function (err, res) {
-                                        expect(res.status).equal(200, err);
-                                        expect(res.body).to.have.property('master');
-                                        expect(res.body).to.have.property('newBranchToDelete');
-                                        expect(res.body.newBranchToDelete).to.equal(hash);
-                                        
-                                        agent.del(server.getUrl() + '/api/projects/' + projectName2Id(projectName) +
-                                                  '/branches/newBranchToDelete')
-                                            .end(function (err, res) {
-                                                expect(res.status).equal(204, err);
+                                    agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                                              '/branches')
+                                        .end(function (err, res) {
+                                            expect(res.status).equal(200, err);
+                                            expect(res.body).to.have.property('master');
+                                            expect(res.body).to.have.property('newBranchToDelete');
+                                            expect(res.body.newBranchToDelete).to.equal(hash);
 
-                                                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches')
-                                                    .end(function (err, res) {
-                                                        expect(res.status).equal(200, err);
-                                                        expect(res.body).to.have.property('master');
-                                                        expect(res.body).to.not.have.property('newBranchToDelete');
-                                                        done();
-                                                    });
-                                            });
-                                    });
-                            });
-                    });
-            });
+                                            agent.del(server.getUrl() + '/api/projects/' +
+                                                      projectName2APIPath(projectName) +
+                                                      '/branches/newBranchToDelete')
+                                                .end(function (err, res) {
+                                                    expect(res.status).equal(204, err);
+
+                                                    agent.get(server.getUrl() + '/api/projects/' +
+                                                              projectName2APIPath(projectName) + '/branches')
+                                                        .end(function (err, res) {
+                                                            expect(res.status).equal(200, err);
+                                                            expect(res.body).to.have.property('master');
+                                                            expect(res.body).to.not.have.property('newBranchToDelete');
+                                                            done();
+                                                        });
+                                                });
+                                        });
+                                });
+                        });
+                });
 
 
-            it.skip('should patch a branch for project /projects/:projectId/branches/newBranchToPatch', function (done) {
-                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches/master')
-                    .end(function (err, res) {
-                        var hash;
-                        expect(res.status).equal(200, err);
-                        hash =  res.body.commitObject._id;
+            it.skip('should patch a branch for project /projects/:ownerId/:projectId/branches/newBranchToPatch',
+                function (done) {
+                    agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                              '/branches/master')
+                        .end(function (err, res) {
+                            var hash;
+                            expect(res.status).equal(200, err);
+                            hash = res.body.commitObject._id;
 
-                        agent.put(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches/newBranchToPatch')
-                            .send({hash: hash})
-                            .end(function (err, res) {
-                                expect(res.status).equal(201, err);
+                            agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                                      '/branches/newBranchToPatch')
+                                .send({hash: hash})
+                                .end(function (err, res) {
+                                    expect(res.status).equal(201, err);
 
-                                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches')
-                                    .end(function (err, res) {
-                                        expect(res.status).equal(200, err);
-                                        expect(res.body).to.have.property('master');
-                                        expect(res.body).to.have.property('newBranchToPatch');
-                                        expect(res.body.newBranchToPatch).to.equal(hash);
+                                    agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                                              '/branches')
+                                        .end(function (err, res) {
+                                            expect(res.status).equal(200, err);
+                                            expect(res.body).to.have.property('master');
+                                            expect(res.body).to.have.property('newBranchToPatch');
+                                            expect(res.body.newBranchToPatch).to.equal(hash);
 
-                                        agent.patch(server.getUrl() + '/api/projects/' + projectName2Id(projectName) +
-                                                  '/branches/newBranchToPatch')
-                                            .send({hash: '#fd22b3c71857a1cfde65f1c1bf5045a984150e68'})
-                                            .end(function (err, res) {
-                                                expect(res.status).equal(200, err);
+                                            agent.patch(server.getUrl() + '/api/projects/' +
+                                                        projectName2APIPath(projectName) +
+                                                        '/branches/newBranchToPatch')
+                                                .send({hash: '#fd22b3c71857a1cfde65f1c1bf5045a984150e68'})
+                                                .end(function (err, res) {
+                                                    expect(res.status).equal(200, err);
 
-                                                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/branches')
-                                                    .end(function (err, res) {
-                                                        expect(res.status).equal(200, err);
-                                                        expect(res.body).to.have.property('master');
-                                                        expect(res.body).to.have.property('newBranchToPatch');
-                                                        expect(res.body.newBranchToPatch).to.equal('#fd22b3c71857a1cfde65f1c1bf5045a984150e68');
-                                                        done();
-                                                    });
-                                            });
-                                    });
-                            });
-                    });
-            });
+                                                    agent.get(server.getUrl() + '/api/projects/' +
+                                                              projectName2APIPath(projectName) + '/branches')
+                                                        .end(function (err, res) {
+                                                            expect(res.status).equal(200, err);
+                                                            expect(res.body).to.have.property('master');
+                                                            expect(res.body).to.have.property('newBranchToPatch');
+                                                            expect(res.body.newBranchToPatch).to.equal('#fd22b3c71857a1cfde65f1c1bf5045a984150e68');
+                                                            done();
+                                                        });
+                                                });
+                                        });
+                                });
+                        });
+                });
 
-            it('should compare branches for project /projects/:projectId/compare/master...master', function (done) {
-                agent.get(server.getUrl() + '/api/projects/' + projectName2Id(projectName) + '/compare/master...master')
-                    .end(function (err, res) {
-                        expect(res.status).equal(200, err);
-                        // expecting empty diff
-                        expect(res.body).to.deep.equal({});
-                        done();
-                    });
-            });
+            it('should compare branches for project /projects/:ownerId/:projectId/compare/master...master',
+                function (done) {
+                    agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                              '/compare/master...master')
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            // expecting empty diff
+                            expect(res.body).to.deep.equal({});
+                            done();
+                        });
+                });
 
             it('should not get commits for non-existent project', function (done) {
-                agent.get(server.getUrl() + '/api/projects/does_not_exist/commits').end(function (err, res) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath('does_not_exist') +
+                          '/commits').end(function (err, res) {
                     expect(res.status).equal(403, err);
                     done();
                 });
             });
 
             it('should delete a project by id /projects/project_to_delete', function (done) {
-                agent.del(server.getUrl() + '/api/projects/' + projectName2Id(toDeleteProjectName))
+                agent.del(server.getUrl() + '/api/projects/' + projectName2APIPath(toDeleteProjectName))
                     .end(function (err, res) {
                         expect(res.status).equal(204, err);
                         done();
@@ -1253,7 +1280,8 @@ describe('API', function () {
             });
 
             it('should fail to delete a non-existent project', function (done) {
-                agent.del(server.getUrl() + '/api/projects/does_not_exist').end(function (err, res) {
+                agent.del(server.getUrl() + '/api/projects/' + projectName2APIPath('does_not_exist')).end(function (err,
+                                                                                                                    res) {
                     expect(res.status).equal(403, err);
                     done();
                 });

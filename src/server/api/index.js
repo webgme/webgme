@@ -34,6 +34,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         webgme = require('../../../webgme'),
         ServerUserProject = require('../storage/userproject'),
         merge = webgme.requirejs('common/core/users/merge'),
+        StorageUtil = webgme.requirejs('common/storage/util'),
 
         versionedAPIPath = mountPath + '/v1',
         latestAPIPath = mountPath;
@@ -435,39 +436,8 @@ function createAPI(app, mountPath, middlewareOpts) {
     //});
 
 
-// ORGANIZATIONS
-//    router.get('/organizations', function (req, res) {
-//
-//        gmeAuth.listOrganizations(null, function (err, data) {
-//            if (err) {
-//                res.status(404);
-//                res.json({
-//                    message: 'Requested resource was not found',
-//                    error: err
-//                });
-//                return;
-//            }
-//
-//            res.json(data);
-//        });
-//    });
-//
-//    router.get('/orgs/:org', function (req, res) {
-//
-//        res.json({
-//            message: 'Not implemented yet'
-//        });
-//    });
-//
-//    router.patch('/orgs/:org', function (req, res) {
-//
-//        res.json({
-//            message: 'Not implemented yet'
-//        });
-//    });
 
-
-// PROJECTS
+    // PROJECTS
 
     router.get('/projects', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req);
@@ -480,26 +450,12 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    //
-    //router.get('/projects/:owner/:project', function (req, res) {
-    //
-    //    res.json({
-    //        message: 'Not implemented yet ' + req.params.owner
-    //    });
-    //});
-    //
-    //router.patch('/projects/:owner/:project', function (req, res) {
-    //
-    //    res.json({
-    //        message: 'Not implemented yet ' + req.params.owner
-    //    });
-    //});
 
-    router.delete('/projects/:projectId', function (req, res, next) {
+    router.delete('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),
             data = {
                 username: userId,
-                projectId: req.params.projectId
+                projectId: StorageUtil.getProjectIdFromUserIdAndProjectName(req.params.ownerId, req.params.projectName)
             };
 
         safeStorage.deleteProject(data)
@@ -511,11 +467,11 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/projects/:projectId/commits', ensureAuthenticated, function (req, res, next) {
+    router.get('/projects/:ownerId/:projectName/commits', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
             data = {
                 username: userId,
-                projectId: req.params.projectId,
+                projectId: StorageUtil.getProjectIdFromUserIdAndProjectName(req.params.ownerId, req.params.projectName),
                 before: (new Date()).getTime(), // current time
                 number: 100 // asks for the last 100 commits from the time specified above
             };
@@ -530,12 +486,12 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
 
-    router.get('/projects/:projectId/compare/:branchOrCommitA...:branchOrCommitB', ensureAuthenticated, function (req, res, next) {
+    router.get('/projects/:ownerId/:projectName/compare/:branchOrCommitA...:branchOrCommitB', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
             loggerCompare = logger.fork('compare'),
             data = {
                 username: userId,
-                projectId: req.params.projectId
+                projectId: StorageUtil.getProjectIdFromUserIdAndProjectName(req.params.ownerId, req.params.projectName)
             };
 
 
@@ -561,11 +517,11 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/projects/:projectId/branches', ensureAuthenticated, function (req, res, next) {
+    router.get('/projects/:ownerId/:projectName/branches', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
             data = {
                 username: userId,
-                projectId: req.params.projectId
+                projectId: StorageUtil.getProjectIdFromUserIdAndProjectName(req.params.ownerId, req.params.projectName)
             };
 
         safeStorage.getBranches(data)
@@ -578,11 +534,11 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
 
-    router.get('/projects/:projectId/branches/:branchId', ensureAuthenticated, function (req, res, next) {
+    router.get('/projects/:ownerId/:projectName/branches/:branchId', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
             data = {
                 username: userId,
-                projectId: req.params.projectId,
+                projectId: StorageUtil.getProjectIdFromUserIdAndProjectName(req.params.ownerId, req.params.projectName),
                 branchName: req.params.branchId
             };
 
@@ -598,11 +554,11 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.patch('/projects/:projectId/branches/:branchId', function (req, res, next) {
+    router.patch('/projects/:ownerId/:projectName/branches/:branchId', function (req, res, next) {
         var userId = getUserId(req),
             data = {
                 username: userId,
-                projectId: req.params.projectId,
+                projectId: StorageUtil.getProjectIdFromUserIdAndProjectName(req.params.ownerId, req.params.projectName),
                 branchName: req.params.branchId,
                 hash: req.body.hash
             };
@@ -616,11 +572,11 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.put('/projects/:projectId/branches/:branchId', function (req, res, next) {
+    router.put('/projects/:ownerId/:projectName/branches/:branchId', function (req, res, next) {
         var userId = getUserId(req),
             data = {
                 username: userId,
-                projectId: req.params.projectId,
+                projectId: StorageUtil.getProjectIdFromUserIdAndProjectName(req.params.ownerId, req.params.projectName),
                 branchName: req.params.branchId,
                 hash: req.body.hash
             };
@@ -634,11 +590,11 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.delete('/projects/:projectId/branches/:branchId', function (req, res, next) {
+    router.delete('/projects/:ownerId/:projectName/branches/:branchId', function (req, res, next) {
         var userId = getUserId(req),
             data = {
                 username: userId,
-                projectId: req.params.projectId,
+                projectId: StorageUtil.getProjectIdFromUserIdAndProjectName(req.params.ownerId, req.params.projectName),
                 branchName: req.params.branchId
             };
 
@@ -651,47 +607,47 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-//// FIXME: requires auth
-//    router.get('/projects/:owner/:project/collaborators', function (req, res) {
-//        // array of users with permissions
-//
-//        res.json({
-//            message: 'Not implemented yet'
-//        });
-//    });
-//
-//
-//    router.patch('/projects/:owner/:project/collaborators', function (req, res) {
-//
-//
-//        res.json({
-//            message: 'Not implemented yet'
-//        });
-//    });
-//
-//// FIXME: requires auth
-//    router.get('/projects/:owner/:project/collaborators/:username', function (req, res) {
-//
-//        res.json({
-//            message: 'Not implemented yet'
-//        });
-//    });
-//
-//
-//    router.put('/projects/:owner/:project/collaborators/:username', function (req, res) {
-//
-//        res.json({
-//            message: 'Not implemented yet'
-//        });
-//    });
-//
-//
-//    router.delete('/projects/:owner/:project/collaborators/:username', function (req, res) {
-//
-//        res.json({
-//            message: 'Not implemented yet'
-//        });
-//    });
+    //// FIXME: requires auth
+    //    router.get('/projects/:owner/:project/collaborators', function (req, res) {
+    //        // array of users with permissions
+    //
+    //        res.json({
+    //            message: 'Not implemented yet'
+    //        });
+    //    });
+    //
+    //
+    //    router.patch('/projects/:owner/:project/collaborators', function (req, res) {
+    //
+    //
+    //        res.json({
+    //            message: 'Not implemented yet'
+    //        });
+    //    });
+    //
+    //// FIXME: requires auth
+    //    router.get('/projects/:owner/:project/collaborators/:username', function (req, res) {
+    //
+    //        res.json({
+    //            message: 'Not implemented yet'
+    //        });
+    //    });
+    //
+    //
+    //    router.put('/projects/:owner/:project/collaborators/:username', function (req, res) {
+    //
+    //        res.json({
+    //            message: 'Not implemented yet'
+    //        });
+    //    });
+    //
+    //
+    //    router.delete('/projects/:owner/:project/collaborators/:username', function (req, res) {
+    //
+    //        res.json({
+    //            message: 'Not implemented yet'
+    //        });
+    //    });
 
     router.use('*', function (req, res, next) {
         res.status(404);

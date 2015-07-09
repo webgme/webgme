@@ -250,7 +250,7 @@ Currently authenticated user's information.
 # Group Organizations
 Organization related resources of *WebGME API*.
 
-__Will be available in 0.10+ release__
+__Will be available in 0.14+ release__
 
 
 # Group Projects
@@ -268,10 +268,11 @@ Project related resources of *WebGME API*.
             "username23/projectId3"
         ]
 
-# Project [/projects/{projectId}]
+# Project [/projects/{ownerId}/{projectName}]
 
 + Parameters
-    + projectId (required, string) - id of the project
+    + ownerId (required, string) - owner of the project
+    + projectName (required, string) - name of the project
 
 ## Get project information [GET]
 
@@ -295,7 +296,7 @@ Project related resources of *WebGME API*.
             "message": "No sufficient role",
         }
 
-## Project branches [/projects/{projectId}/branches]
+## Project branches [/projects/{ownerId}/{projectName}/branches]
 
 
 ### List branches [GET]
@@ -314,10 +315,10 @@ Project related resources of *WebGME API*.
         }
 
 
-## Project commits [/projects/{projectId}/commits]
+## Project commits [/projects/{ownerId}/{projectName}/commits]
 
 
-### List branches [GET]
+### List commits [GET]
 
 Returns with the most recent 100 commits
 
@@ -338,3 +339,33 @@ Returns with the most recent 100 commits
                 "type": "commit"
             }
         ]
+        
+## Project compare versions [/projects/{ownerId}/{projectName}/compare/{branchOrHashA}...{branchOrHashB}]
+
+
+### Gets the diff [GET]
+
+Returns with the difference between A and B.
+
++ Response 200
+
+        {
+            "1":{
+                "reg":{
+                    "DisplayFormat":"$name - 1",
+                    "position":{
+                        "x":214,
+                        "y":94
+                    }
+                },
+                "guid":"cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+                "oGuids":{
+                    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045":true,
+                    "86236510-f1c7-694f-1c76-9bad3a2aa4e0":true
+                }
+            },
+            "guid":"86236510-f1c7-694f-1c76-9bad3a2aa4e0",
+            "oGuids":{
+                "86236510-f1c7-694f-1c76-9bad3a2aa4e0":true
+            }
+        }
