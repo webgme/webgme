@@ -36,8 +36,8 @@ define(['common/util/sax'], function (sax) {
         // TODO make this configurable
         self.nsMap = {
             'http://www.w3.org/2001/XMLSchema-instance': 'xsi',
-            'http://www.w3.org/2001/XMLSchema': 'xsd',
-            };
+            'http://www.w3.org/2001/XMLSchema': 'xsd'
+        };
 
         self.parser.ontext = function (text) {
             if (self.stack.length > 0) {
@@ -165,7 +165,7 @@ define(['common/util/sax'], function (sax) {
      * @param xmlBuffer {ArrayBuffer} - xml to convert.
      * @param options {object} - optional options.
      * @param options.segmentSize {int} - length of string segments, default 10000.
-     * @param options.encoding {TypedArray constructor} - encoding of the ArrayBuffer, default Uint8Array.
+     * @param options.encoding {function(new:TypedArray)} - encoding of the ArrayBuffer, default Uint8Array.
      * @returns {object|Error} - Javascript object inferred from the xml, Error object if failed.
      */
     XML2JSON.prototype.convertFromBuffer = function (xmlBuffer, options) {

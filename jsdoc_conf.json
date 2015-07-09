@@ -1,0 +1,13 @@
+{
+  "source": {
+    "include": [ "src/addon", "src/bin", "src/client/js/client.js", "src/client/js/client", "src/common", "src/server" ],
+    "exclude": [ "src/server/middleware/executor/worker/node_worker.classes.build.js" ],
+    "includePattern": ".+\\.js(doc)?$",
+    "excludePattern": "(^|\\/|\\\\)_"
+  },
+  "opts": {
+    "encoding": "utf8",
+    "destination": "./docs/source",
+    "recurse": true
+  }
+}

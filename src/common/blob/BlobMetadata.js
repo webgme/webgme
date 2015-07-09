@@ -63,7 +63,7 @@ define(['blob/BlobConfig'], function (BlobConfig) {
      *  size: number,
      *  mime: string,
      *  tags: Array.<string>,
-     *  content: (string|Object},
+     *  content: (string|Object),
      *  contentType: string}}
      */
     BlobMetadata.prototype.serialize = function () {

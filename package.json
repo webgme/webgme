@@ -72,6 +72,7 @@
     "istanbul": "=0.3.15",
     "jscoverage": "=0.5.9",
     "jscs": "=1.13.1",
+    "jsdoc": "=3.3.2",
     "jshint-stylish": "=2.0.0",
     "karma": "=0.12.36",
     "karma-chai": "=0.1.0",
@@ -93,6 +94,7 @@
   },
   "main": "webgme",
   "scripts": {
+    "docs": "./node_modules/.bin/jsdoc -c jsdoc_conf.json",
     "start": "node ./src/bin/start_server.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test",
     "test_travis": "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test",

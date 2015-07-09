@@ -40,3 +40,5 @@ webgme-*.tgz
 executor-temp/
 jobList.nedb
 workerList.nedb
+
+docs/source/
