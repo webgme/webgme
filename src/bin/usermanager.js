@@ -171,6 +171,9 @@ main = function (argv) {
         .command('organizationadd <organizationname>')
         .description('adds a new organization')
         .action(function (organizationname, options) {
+
+            console.log('[WARNING] Do not use organizations functionality yet.');
+
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (organizationname) {
@@ -194,6 +197,9 @@ main = function (argv) {
         .command('organizationdel <organizationname>')
         .description('deletes an existing organization')
         .action(function (organizationname, options) {
+
+            console.log('[WARNING] Do not use organizations functionality yet.');
+
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (organizationname) {
@@ -267,6 +273,9 @@ main = function (argv) {
         .option('-a, --authorize <mode>', 'mode is rwd, read, write, delete', 'rwd')
         .option('-d, --deauthorize', 'deauthorizes user', false)
         .action(function (orgname, projectname, options) {
+
+            console.log('[WARNING] Do not use organizations functionality yet.');
+
             if (orgname && projectname) {
                 authUserOrGroup(orgname, projectname, options, 'authorizeOrganization');
             } else {
@@ -281,6 +290,9 @@ main = function (argv) {
         .command('usermod_organization_add <username> <organizationname>')
         .description('adds a user to an existing organization')
         .action(function (username, organizationname, options) {
+
+            console.log('[WARNING] Do not use organizations functionality yet.');
+
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (username && organizationname) {
@@ -304,6 +316,9 @@ main = function (argv) {
         .command('usermod_organization_del <username> <organizationname>')
         .description('removes a user from an existing organization')
         .action(function (username, organizationname, options) {
+
+            console.log('[WARNING] Do not use organizations functionality yet.');
+
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (username && organizationname) {
