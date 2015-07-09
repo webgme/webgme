@@ -169,7 +169,6 @@ describe('meta', function () {
                 expect(meta.getMeta('/1')).not.to.deep.equal(fileMeta);
             } else if (savePhase === 'empty') {
                 savePhase = 'done';
-                logger.error('end', meta.getMeta('/1'));
                 expect(meta.getValidAttributeNames('/1')).to.deep.equal([]);
                 expect(meta.getValidChildrenItems('/1')).to.deep.equal([]);
                 done();

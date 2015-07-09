@@ -438,7 +438,6 @@ define([], function () {
                     for (var i = 0; i < childrenMeta.items.length; i++) {
                         var child = {};
                         child.id = refObjectToPath(childrenMeta.items[i]);
-                        console.error(rawMeta);
                         if (rawMeta.children.minItems) {
                             child.min = rawMeta.children.minItems[i] === -1 ? undefined : rawMeta.children.minItems[i];
                         }
