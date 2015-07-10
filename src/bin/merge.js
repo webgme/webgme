@@ -1,5 +1,6 @@
 /*jshint node: true*/
 /**
+ * @module Bin:Merge
  * @author kecso / https://github.com/kecso
  */
 

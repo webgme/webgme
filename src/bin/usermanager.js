@@ -2,6 +2,7 @@
 /**
  * NOTE: Expected to be run only under nodejs.
  *
+ * @module Bin:UserManager
  * @author kecso / https://github.com/kecso
  * @author ksmyth / https://github.com/ksmyth
  * @author lattmann / https://github.com/lattmann
@@ -171,6 +172,9 @@ main = function (argv) {
         .command('organizationadd <organizationname>')
         .description('adds a new organization')
         .action(function (organizationname, options) {
+
+            console.log('[WARNING] Do not use organizations functionality yet.');
+
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (organizationname) {
@@ -194,6 +198,9 @@ main = function (argv) {
         .command('organizationdel <organizationname>')
         .description('deletes an existing organization')
         .action(function (organizationname, options) {
+
+            console.log('[WARNING] Do not use organizations functionality yet.');
+
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (organizationname) {
@@ -218,17 +225,19 @@ main = function (argv) {
             read: options.authorize.indexOf('r') !== -1,
             write: options.authorize.indexOf('w') !== -1,
             delete: options.authorize.indexOf('d') !== -1
-        };
+        },
+            type = 'create';
 
         setupGMEAuth(options.parent.db, function (/*err*/) {
 
             if (options.deauthorize) {
                 // deauthorize
                 rights = {};
+                type = 'delete';
             }
 
             // authorize
-            auth[fn].call(this, id, projectname, 'create', rights)
+            auth[fn].call(this, id, projectname, type, rights)
                 .then(mainDeferred.resolve)
                 .catch(mainDeferred.reject)
                 .finally(auth.unload);
@@ -265,6 +274,9 @@ main = function (argv) {
         .option('-a, --authorize <mode>', 'mode is rwd, read, write, delete', 'rwd')
         .option('-d, --deauthorize', 'deauthorizes user', false)
         .action(function (orgname, projectname, options) {
+
+            console.log('[WARNING] Do not use organizations functionality yet.');
+
             if (orgname && projectname) {
                 authUserOrGroup(orgname, projectname, options, 'authorizeOrganization');
             } else {
@@ -279,6 +291,9 @@ main = function (argv) {
         .command('usermod_organization_add <username> <organizationname>')
         .description('adds a user to an existing organization')
         .action(function (username, organizationname, options) {
+
+            console.log('[WARNING] Do not use organizations functionality yet.');
+
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (username && organizationname) {
@@ -302,6 +317,9 @@ main = function (argv) {
         .command('usermod_organization_del <username> <organizationname>')
         .description('removes a user from an existing organization')
         .action(function (username, organizationname, options) {
+
+            console.log('[WARNING] Do not use organizations functionality yet.');
+
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (username && organizationname) {
@@ -342,51 +360,4 @@ if (require.main === module) {
             'use strict';
             console.error('ERROR : ' + err);
         });
-
-    //commands
-    //function infoPrint(userName) {
-    //    return gmeauth.getAllUserAuthInfo(userName)
-    //        .then(function printUser(userObject) {
-    //            var outstring = '',
-    //                userProjects = userObject.projects,
-    //                i,
-    //                mode,
-    //                end;
-    //
-    //            outstring += 'userName: ' + padString(userObject._id) + ' | ';
-    //            outstring += 'canCreate: ' + userObject.canCreate + ' | ';
-    //            outstring += 'projects: ';
-    //
-    //            for (i in userProjects) {
-    //                mode = '';
-    //                if (userProjects[i].read) {
-    //                    mode += 'r';
-    //                } else {
-    //                    mode += '_';
-    //                }
-    //                if (userProjects[i].write) {
-    //                    mode += 'w';
-    //                } else {
-    //                    mode += '_';
-    //                }
-    //                if (userProjects[i].delete) {
-    //                    mode += 'd';
-    //                } else {
-    //                    mode += '_';
-    //                }
-    //                outstring += padString(i + '(' + mode + ')', 20) + ' ; ';
-    //            }
-    //
-    //            end = outstring.lastIndexOf(';');
-    //            if (end !== -1) {
-    //                outstring = outstring.substring(0, end - 1);
-    //            }
-    //            return outstring;
-    //        });
-    //}
-    //
-    //function generateToken() {
-    //    return gmeauth.generateTokenForUserId(userId)
-    //        .then(console.log);
-    //}
 }

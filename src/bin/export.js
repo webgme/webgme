@@ -1,5 +1,6 @@
 /*jshint node: true*/
 /**
+ * @module Bin:Export
  * @author kecso / https://github.com/kecso
  */
 'use strict';

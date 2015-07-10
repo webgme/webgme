@@ -45,7 +45,7 @@ describe('Run plugin CLI', function () {
     after(function (done) {
         testFixture.forceDeleteProject(storage, gmeAuth, projectName)
             .then(function () {
-                return Q.all([
+                return Q.allSettled([
                     storage.closeDatabase(),
                     gmeAuth.unload()
                 ]);

@@ -67,7 +67,7 @@ describe('diff CLI tests', function () {
     });
 
     after(function (done) {
-        Q.all([
+        Q.allSettled([
             gmeAuth.unload(),
             storage.closeDatabase(),
             Q.nfcall(rimraf, './test-tmp/diffCli.out')

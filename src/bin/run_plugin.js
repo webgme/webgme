@@ -1,5 +1,6 @@
 /*jshint node: true*/
 /**
+ * @module Bin:RunPlugin
  * @author lattmann / https://github.com/lattmann
  * @author pmeijer / https://github.com/pmeijer
  */
@@ -13,7 +14,7 @@ main = function (argv, callback) {
         webgme = require('../../webgme'),
         MongoURI = require('mongo-uri'),
         Command = require('commander').Command,
-        logger = webgme.Logger.create('gme:bin:import', gmeConfig.bin.log),
+        logger = webgme.Logger.create('gme:bin:runplugin', gmeConfig.bin.log),
         program = new Command(),
         storage,
         STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),

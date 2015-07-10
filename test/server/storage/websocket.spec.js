@@ -112,7 +112,7 @@ describe('WebSocket', function () {
                         gmeAuth = gmeAuth_;
                         safeStorage = testFixture.getMongoStorage(logger, gmeConfigWithAuth, gmeAuth);
 
-                        return Q.all([
+                        return Q.allSettled([
                             safeStorage.openDatabase(),
                             gmeAuth.authorizeByUserId(guestAccount, 'project_does_not_exist', 'create',
                                 {
@@ -149,7 +149,7 @@ describe('WebSocket', function () {
                     //    ]);
                     //})
                     .then(function () {
-                        return Q.all([
+                        return Q.allSettled([
                             gmeAuth.authorizeByUserId(guestAccount, projectNameUnauthorized, 'create',
                                 {
                                     read: false,
@@ -169,7 +169,7 @@ describe('WebSocket', function () {
                     return;
                 }
 
-                Q.all([
+                Q.allSettled([
                     gmeAuth.unload(),
                     safeStorage.closeDatabase()
                 ])
@@ -225,7 +225,7 @@ describe('WebSocket', function () {
                         gmeAuth = gmeAuth_;
                         safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
-                        return Q.all([
+                        return Q.allSettled([
                             safeStorage.openDatabase(),
                             gmeAuth.authorizeByUserId(guestAccount, 'project_does_not_exist', 'create',
                                 {
@@ -246,7 +246,7 @@ describe('WebSocket', function () {
                     //    return Q.all(promises);
                     //})
                     .then(function () {
-                        return Q.all([
+                        return Q.allSettled([
                             testFixture.importProject(safeStorage, {
                                 projectSeed: 'seeds/EmptyProject.json',
                                 projectName: projectName,
@@ -286,7 +286,7 @@ describe('WebSocket', function () {
                         ]);
                     })
                     .then(function () {
-                        return Q.all([
+                        return Q.allSettled([
                             gmeAuth.authorizeByUserId(guestAccount, projectName2Id(projectNameUnauthorized), 'create',
                                 {
                                     read: false,
@@ -314,7 +314,7 @@ describe('WebSocket', function () {
                         promises.push(safeStorage.deleteProject({projectId: projectName2Id(projects[i])}));
                     }
 
-                    return Q.all(promises);
+                    return Q.allSettled(promises);
                 })
             .finally(function () {
                     server.stop(function (err) {
@@ -323,7 +323,7 @@ describe('WebSocket', function () {
                             return;
                         }
 
-                        Q.all([
+                        Q.allSettled([
                             gmeAuth.unload(),
                             safeStorage.closeDatabase()
                         ])

@@ -21,6 +21,7 @@ describe('core diff', function () {
         expect = testFixture.expect,
         logger = testFixture.logger.fork('coreDiff.spec'),
         storage,
+        TO_DELETE = '*to*delete*',
 
         gmeAuth;
 
@@ -35,7 +36,7 @@ describe('core diff', function () {
     });
 
     after(function (done) {
-        Q.all([
+        Q.allSettled([
             storage.closeDatabase(),
             gmeAuth.unload()
         ]).nodeify(done);
@@ -77,54 +78,54 @@ describe('core diff', function () {
 
         it('should generate diff if an object is deleted', function (done) {
             var patch = {
-                "175547009": {
-                    "471466181": {
-                        "guid": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e",
-                        "oGuids": {
-                            "be36b1a1-8d82-8aba-9eda-03d655a8bf3e": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                175547009: {
+                    471466181: {
+                        guid: 'be36b1a1-8d82-8aba-9eda-03d655a8bf3e',
+                        oGuids: {
+                            'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "871430202": {
-                        "guid": "18eb3c1d-c951-b757-c8c4-0ea8736c2470",
-                        "oGuids": {
-                            "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    871430202: {
+                        guid: '18eb3c1d-c951-b757-c8c4-0ea8736c2470',
+                        oGuids: {
+                            '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "1104061497": {
-                        "guid": "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb",
-                        "oGuids": {
-                            "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1104061497: {
+                        guid: 'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb',
+                        oGuids: {
+                            'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "1817665259": {
-                        "guid": "5f73946c-68aa-9de1-7979-736d884171af",
-                        "oGuids": {
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1817665259: {
+                        guid: '5f73946c-68aa-9de1-7979-736d884171af',
+                        oGuids: {
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                    "oGuids": {
-                        "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                        "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                    oGuids: {
+                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                     }
                 },
-                "1303043463": {"guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42", "removed": true},
-                "childrenListChanged": true,
-                "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                1303043463: {guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42', removed: true},
+                childrenListChanged: true,
+                guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
             };
 
             core.applyTreeDiff(rootNode, patch, function (err) {
@@ -147,54 +148,54 @@ describe('core diff', function () {
 
         it('should generate diff if an object is created', function (done) {
             var patch = {
-                "175547009": {
-                    "471466181": {
-                        "guid": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e",
-                        "oGuids": {
-                            "be36b1a1-8d82-8aba-9eda-03d655a8bf3e": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                175547009: {
+                    471466181: {
+                        guid: 'be36b1a1-8d82-8aba-9eda-03d655a8bf3e',
+                        oGuids: {
+                            'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "871430202": {
-                        "guid": "18eb3c1d-c951-b757-c8c4-0ea8736c2470",
-                        "oGuids": {
-                            "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    871430202: {
+                        guid: '18eb3c1d-c951-b757-c8c4-0ea8736c2470',
+                        oGuids: {
+                            '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "1104061497": {
-                        "guid": "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb",
-                        "oGuids": {
-                            "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1104061497: {
+                        guid: 'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb',
+                        oGuids: {
+                            'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "1817665259": {
-                        "guid": "5f73946c-68aa-9de1-7979-736d884171af",
-                        "oGuids": {
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1817665259: {
+                        guid: '5f73946c-68aa-9de1-7979-736d884171af',
+                        oGuids: {
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                    "oGuids": {
-                        "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                        "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                    oGuids: {
+                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                     }
                 },
-                "1303043463": {"guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42", "removed": true},
-                "childrenListChanged": true,
-                "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                1303043463: {guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42', removed: true},
+                childrenListChanged: true,
+                guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
             };
 
             core.applyTreeDiff(rootNode, patch, function (err) {
@@ -269,29 +270,29 @@ describe('core diff', function () {
         it('should concat empty diff and meta change', function () {
             var result,
                 diff1 = {
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "1": {
-                        "attr": {"newAttr": ""},
-                        "meta": {
-                            "attributes": {
-                                "newAttr": {
-                                    "type": "string",
-                                    "default": "",
-                                    "enum": ["a", "b", "c"]
+                    1: {
+                        attr: {newAttr: ''},
+                        meta: {
+                            attributes: {
+                                newAttr: {
+                                    type: 'string',
+                                    default: '',
+                                    enum: ['a', 'b', 'c']
                                 }
                             }
                         },
-                        "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
-                        "oGuids": {
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true
+                        guid: 'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045',
+                        oGuids: {
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
             result = core.tryToConcatChanges(diff1, diff2);
@@ -302,69 +303,69 @@ describe('core diff', function () {
         it('should combine change an element, and delete the same element', function () {
             var result,
                 diff1 = {
-                    "1303043463": {
-                        "reg": {"position": {"x": 38, "y": 407}},
-                        "guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
-                        "oGuids": {
-                            "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1303043463: {
+                        reg: {position: {x: 38, y: 407}},
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                        oGuids: {
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "471466181": {
-                            "guid": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e",
-                            "oGuids": {
-                                "be36b1a1-8d82-8aba-9eda-03d655a8bf3e": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        471466181: {
+                            guid: 'be36b1a1-8d82-8aba-9eda-03d655a8bf3e',
+                            oGuids: {
+                                'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "871430202": {
-                            "guid": "18eb3c1d-c951-b757-c8c4-0ea8736c2470",
-                            "oGuids": {
-                                "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        871430202: {
+                            guid: '18eb3c1d-c951-b757-c8c4-0ea8736c2470',
+                            oGuids: {
+                                '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1104061497": {
-                            "guid": "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb",
-                            "oGuids": {
-                                "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1104061497: {
+                            guid: 'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb',
+                            oGuids: {
+                                'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1817665259": {
-                            "guid": "5f73946c-68aa-9de1-7979-736d884171af",
-                            "oGuids": {
-                                "5f73946c-68aa-9de1-7979-736d884171af": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1817665259: {
+                            guid: '5f73946c-68aa-9de1-7979-736d884171af',
+                            oGuids: {
+                                '5f73946c-68aa-9de1-7979-736d884171af': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "1303043463": {"guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42", "removed": true},
-                    "childrenListChanged": true,
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    1303043463: {guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42', removed: true},
+                    childrenListChanged: true,
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
             result = core.tryToConcatChanges(diff1, diff2);
@@ -382,69 +383,69 @@ describe('core diff', function () {
         it('should combine delete an element, and change the same element', function () {
             var result,
                 diff1 = {
-                    "1303043463": {
-                        "reg": {"position": {"x": 38, "y": 407}},
-                        "guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
-                        "oGuids": {
-                            "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1303043463: {
+                        reg: {position: {x: 38, y: 407}},
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                        oGuids: {
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "471466181": {
-                            "guid": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e",
-                            "oGuids": {
-                                "be36b1a1-8d82-8aba-9eda-03d655a8bf3e": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        471466181: {
+                            guid: 'be36b1a1-8d82-8aba-9eda-03d655a8bf3e',
+                            oGuids: {
+                                'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "871430202": {
-                            "guid": "18eb3c1d-c951-b757-c8c4-0ea8736c2470",
-                            "oGuids": {
-                                "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        871430202: {
+                            guid: '18eb3c1d-c951-b757-c8c4-0ea8736c2470',
+                            oGuids: {
+                                '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1104061497": {
-                            "guid": "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb",
-                            "oGuids": {
-                                "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1104061497: {
+                            guid: 'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb',
+                            oGuids: {
+                                'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1817665259": {
-                            "guid": "5f73946c-68aa-9de1-7979-736d884171af",
-                            "oGuids": {
-                                "5f73946c-68aa-9de1-7979-736d884171af": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1817665259: {
+                            guid: '5f73946c-68aa-9de1-7979-736d884171af',
+                            oGuids: {
+                                '5f73946c-68aa-9de1-7979-736d884171af': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "1303043463": {"guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42", "removed": true},
-                    "childrenListChanged": true,
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    1303043463: {guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42', removed: true},
+                    childrenListChanged: true,
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
             // same as before other way around
@@ -462,67 +463,67 @@ describe('core diff', function () {
         it('should combine change a set element, and delete the same element from the set', function () {
             var result,
                 diff1 = {
-                    "1303043463": {
-                        "2119137141": {
-                            "set": {
-                                "setPtr": {
-                                    "/1303043463/1448030591": {
-                                        "reg": {
-                                            "position": {
-                                                "x": 352,
-                                                "y": 156
+                    1303043463: {
+                        2119137141: {
+                            set: {
+                                setPtr: {
+                                    '/1303043463/1448030591': {
+                                        reg: {
+                                            position: {
+                                                x: 352,
+                                                y: 156
                                             }
                                         }
                                     }
                                 }
                             },
-                            "guid": "45657d4d-f82d-13ce-1acb-0aadebb5c8b5",
-                            "oGuids": {
-                                "45657d4d-f82d-13ce-1acb-0aadebb5c8b5": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+                            oGuids: {
+                                '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
-                        "oGuids": {
-                            "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                        oGuids: {
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "1303043463": {
-                        "2119137141": {
-                            "set": {"setPtr": {"/1303043463/1448030591": "*to*delete*"}},
-                            "guid": "45657d4d-f82d-13ce-1acb-0aadebb5c8b5",
-                            "oGuids": {
-                                "45657d4d-f82d-13ce-1acb-0aadebb5c8b5": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1303043463: {
+                        2119137141: {
+                            set: {setPtr: {'/1303043463/1448030591': TO_DELETE}},
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+                            oGuids: {
+                                '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
-                        "oGuids": {
-                            "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                        oGuids: {
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -541,67 +542,67 @@ describe('core diff', function () {
         it('should combine delete a set element, and change the same element in the set', function () {
             var result,
                 diff1 = {
-                    "1303043463": {
-                        "2119137141": {
-                            "set": {
-                                "setPtr": {
-                                    "/1303043463/1448030591": {
-                                        "reg": {
-                                            "position": {
-                                                "x": 352,
-                                                "y": 156
+                    1303043463: {
+                        2119137141: {
+                            set: {
+                                setPtr: {
+                                    '/1303043463/1448030591': {
+                                        reg: {
+                                            position: {
+                                                x: 352,
+                                                y: 156
                                             }
                                         }
                                     }
                                 }
                             },
-                            "guid": "45657d4d-f82d-13ce-1acb-0aadebb5c8b5",
-                            "oGuids": {
-                                "45657d4d-f82d-13ce-1acb-0aadebb5c8b5": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+                            oGuids: {
+                                '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
-                        "oGuids": {
-                            "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                        oGuids: {
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "1303043463": {
-                        "2119137141": {
-                            "set": {"setPtr": {"/1303043463/1448030591": "*to*delete*"}},
-                            "guid": "45657d4d-f82d-13ce-1acb-0aadebb5c8b5",
-                            "oGuids": {
-                                "45657d4d-f82d-13ce-1acb-0aadebb5c8b5": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1303043463: {
+                        2119137141: {
+                            set: {setPtr: {'/1303043463/1448030591': TO_DELETE}},
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+                            oGuids: {
+                                '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
-                        "oGuids": {
-                            "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                        oGuids: {
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
             // same as before other way around
@@ -620,67 +621,67 @@ describe('core diff', function () {
         it('should combine change a set element, and delete the set pointer', function () {
             var result,
                 diff1 = {
-                    "1303043463": {
-                        "2119137141": {
-                            "set": {
-                                "setPtr": {
-                                    "/1303043463/1448030591": {
-                                        "reg": {
-                                            "position": {
-                                                "x": 352,
-                                                "y": 156
+                    1303043463: {
+                        2119137141: {
+                            set: {
+                                setPtr: {
+                                    '/1303043463/1448030591': {
+                                        reg: {
+                                            position: {
+                                                x: 352,
+                                                y: 156
                                             }
                                         }
                                     }
                                 }
                             },
-                            "guid": "45657d4d-f82d-13ce-1acb-0aadebb5c8b5",
-                            "oGuids": {
-                                "45657d4d-f82d-13ce-1acb-0aadebb5c8b5": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+                            oGuids: {
+                                '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
-                        "oGuids": {
-                            "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                        oGuids: {
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "1303043463": {
-                        "2119137141": {
-                            "set": {"setPtr": "*to*delete*"}, // WARNING: this cannot be generated by the UI.
-                            "guid": "45657d4d-f82d-13ce-1acb-0aadebb5c8b5",
-                            "oGuids": {
-                                "45657d4d-f82d-13ce-1acb-0aadebb5c8b5": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1303043463: {
+                        2119137141: {
+                            set: {setPtr: TO_DELETE}, // WARNING: this cannot be generated by the UI.
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+                            oGuids: {
+                                '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
-                        "oGuids": {
-                            "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                        oGuids: {
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -700,30 +701,30 @@ describe('core diff', function () {
         //    var result,
         //        diff1 = {},
         //        diff2 = {
-        //            "1303043463": {
-        //                "2119137141": {
-        //                    "set": {"setPtr": "*to*delete*"}, // WARNING: this cannot be generated by the UI.
-        //                    "guid": "45657d4d-f82d-13ce-1acb-0aadebb5c8b5",
-        //                    "oGuids": {
-        //                        "45657d4d-f82d-13ce-1acb-0aadebb5c8b5": true,
-        //                        "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-        //                        "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-        //                        "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-        //                        "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-        //                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+        //            1303043463: {
+        //                2119137141: {
+        //                    set: {setPtr: TO_DELETE}, // WARNING: this cannot be generated by the UI.
+        //                    guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+        //                    oGuids: {
+        //                        '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+        //                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+        //                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+        //                        'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+        //                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+        //                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
         //                    }
         //                },
-        //                "guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
-        //                "oGuids": {
-        //                    "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-        //                    "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-        //                    "5f73946c-68aa-9de1-7979-736d884171af": true,
-        //                    "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-        //                    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+        //                guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+        //                oGuids: {
+        //                    'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+        //                    '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+        //                    '5f73946c-68aa-9de1-7979-736d884171af': true,
+        //                    'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+        //                    'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
         //                }
         //            },
-        //            "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-        //            "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+        //            guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+        //            oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
         //        };
         //
         //
@@ -734,48 +735,48 @@ describe('core diff', function () {
         it('should combine delete a meta rule, and add a new attribute to meta', function () {
             var result,
                 combinedMeta = {
-                    "children": "*to*delete*",
-                    "attributes": {
-                        "newAttribute": {
-                            "type": "string",
-                            "default": "a",
-                            "enum": ["a", "b", "c", "d"]
+                    children: TO_DELETE,
+                    attributes: {
+                        newAttribute: {
+                            type: 'string',
+                            default: 'a',
+                            enum: ['a', 'b', 'c', 'd']
                         }
                     }
                 },
                 diff1 = {
-                    "175547009": {
-                        "attr": {"newAttribute": "a"},
-                        "meta": {"children": combinedMeta.children},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        attr: {newAttribute: 'a'},
+                        meta: {children: combinedMeta.children},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "set": {
-                        "MetaAspectSet": {"/175547009": "*to*delete*"},
-                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {"/175547009": "*to*delete*"}
+                    set: {
+                        MetaAspectSet: {'/175547009': TO_DELETE},
+                        'MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866': {'/175547009': TO_DELETE}
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "attr": {"newAttribute": "a"},
-                        "meta": {
-                            "attributes": combinedMeta.attributes
+                    175547009: {
+                        attr: {newAttribute: 'a'},
+                        meta: {
+                            attributes: combinedMeta.attributes
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -792,44 +793,44 @@ describe('core diff', function () {
         it('should combine delete an element from meta sheet, and add a new attribute to meta', function () {
             var result,
                 diff1 = {
-                    "175547009": {
-                        "attr": {"newAttribute": "a"},
-                        "meta": "*to*delete*", // FIXME: diff is generated incorrectly
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        attr: {newAttribute: 'a'},
+                        meta: TO_DELETE, // FIXME: diff is generated incorrectly
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "set": {
-                        "MetaAspectSet": {"/175547009": "*to*delete*"},
-                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {"/175547009": "*to*delete*"}
+                    set: {
+                        MetaAspectSet: {'/175547009': TO_DELETE},
+                        'MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866': {'/175547009': TO_DELETE}
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "attr": {"newAttribute": "a"},
-                        "meta": {
-                            "attributes": {
-                                "newAttribute": {
-                                    "type": "string",
-                                    "default": "a",
-                                    "enum": ["a", "b", "c", "d"]
+                    175547009: {
+                        attr: {newAttribute: 'a'},
+                        meta: {
+                            attributes: {
+                                newAttribute: {
+                                    type: 'string',
+                                    default: 'a',
+                                    enum: ['a', 'b', 'c', 'd']
                                 }
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -848,44 +849,44 @@ describe('core diff', function () {
         it('should combine add a new attribute to meta, and delete an element from meta sheet', function () {
             var result,
                 diff1 = {
-                    "175547009": {
-                        "attr": {"newAttribute": "a"},
-                        "meta": "*to*delete*", // FIXME: diff is generated incorrectly
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        attr: {newAttribute: 'a'},
+                        meta: TO_DELETE, // FIXME: diff is generated incorrectly
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "set": {
-                        "MetaAspectSet": {"/175547009": "*to*delete*"},
-                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {"/175547009": "*to*delete*"}
+                    set: {
+                        MetaAspectSet: {'/175547009': TO_DELETE},
+                        'MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866': {'/175547009': TO_DELETE}
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "attr": {"newAttribute": "a"},
-                        "meta": {
-                            "attributes": {
-                                "newAttribute": {
-                                    "type": "string",
-                                    "default": "a",
-                                    "enum": ["a", "b", "c", "d"]
+                    175547009: {
+                        attr: {newAttribute: 'a'},
+                        meta: {
+                            attributes: {
+                                newAttribute: {
+                                    type: 'string',
+                                    default: 'a',
+                                    enum: ['a', 'b', 'c', 'd']
                                 }
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -897,46 +898,46 @@ describe('core diff', function () {
         it('should combine delete meta, and add a new pointer to meta', function () {
             var result,
                 diff1 = {
-                    "175547009": {
-                        "meta": "*to*delete*",
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        meta: TO_DELETE,
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "set": {
-                        "MetaAspectSet": {"/175547009": "*to*delete*"},
-                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {"/175547009": "*to*delete*"}
+                    set: {
+                        MetaAspectSet: {'/175547009': TO_DELETE},
+                        'MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866': {'/175547009': TO_DELETE}
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "pointer": {"src": null},
-                        "meta": {
-                            "pointers": {
-                                "src": {
-                                    "/175547009/471466181": {
+                    175547009: {
+                        pointer: {src: null},
+                        meta: {
+                            pointers: {
+                                src: {
+                                    '/175547009/471466181': {
                                         min: -1,
                                         max: 1
                                     },
-                                    "min": 1,
-                                    "max": 1
+                                    min: 1,
+                                    max: 1
                                 }
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -948,34 +949,34 @@ describe('core diff', function () {
         it('should combine delete meta, and add new children to meta', function () {
             var result,
                 diff1 = {
-                    "175547009": {
-                        "meta": "*to*delete*",
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        meta: TO_DELETE,
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "set": {
-                        "MetaAspectSet": {"/175547009": "*to*delete*"},
-                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {"/175547009": "*to*delete*"}
+                    set: {
+                        MetaAspectSet: {'/175547009': TO_DELETE},
+                        'MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866': {'/175547009': TO_DELETE}
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "meta": {"children": {"/1": {"min": 1, "max": 1}}},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        meta: {children: {'/1': {min: 1, max: 1}}},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -1023,300 +1024,300 @@ describe('core diff', function () {
             var resultPatch,
                 resultConflict,
                 diff1 = {
-                    "175547009": {
-                        "471466181": {
-                            "guid": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e",
-                            "oGuids": {
-                                "be36b1a1-8d82-8aba-9eda-03d655a8bf3e": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        471466181: {
+                            guid: 'be36b1a1-8d82-8aba-9eda-03d655a8bf3e',
+                            oGuids: {
+                                'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "871430202": {
-                            "guid": "18eb3c1d-c951-b757-c8c4-0ea8736c2470",
-                            "oGuids": {
-                                "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        871430202: {
+                            guid: '18eb3c1d-c951-b757-c8c4-0ea8736c2470',
+                            oGuids: {
+                                '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1104061497": {
-                            "guid": "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb",
-                            "oGuids": {
-                                "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1104061497: {
+                            guid: 'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb',
+                            oGuids: {
+                                'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1817665259": {
-                            "guid": "5f73946c-68aa-9de1-7979-736d884171af",
-                            "oGuids": {
-                                "5f73946c-68aa-9de1-7979-736d884171af": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1817665259: {
+                            guid: '5f73946c-68aa-9de1-7979-736d884171af',
+                            oGuids: {
+                                '5f73946c-68aa-9de1-7979-736d884171af': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "1303043463": {
-                        "902088723": {
-                            "guid": "d8f6c058-f180-f9ea-a0fc-5909e42811ae",
-                            "oGuids": {
-                                "d8f6c058-f180-f9ea-a0fc-5909e42811ae": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "5f73946c-68aa-9de1-7979-736d884171af": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1303043463: {
+                        902088723: {
+                            guid: 'd8f6c058-f180-f9ea-a0fc-5909e42811ae',
+                            oGuids: {
+                                'd8f6c058-f180-f9ea-a0fc-5909e42811ae': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                '5f73946c-68aa-9de1-7979-736d884171af': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1044885565": {
-                            "guid": "138e7076-9c15-edf6-aea4-23effabebb86",
-                            "oGuids": {
-                                "138e7076-9c15-edf6-aea4-23effabebb86": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1044885565: {
+                            guid: '138e7076-9c15-edf6-aea4-23effabebb86',
+                            oGuids: {
+                                '138e7076-9c15-edf6-aea4-23effabebb86': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1448030591": {
-                            "guid": "be71f6dc-6eec-7552-f3c0-5cc64423f290",
-                            "oGuids": {
-                                "be71f6dc-6eec-7552-f3c0-5cc64423f290": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1448030591: {
+                            guid: 'be71f6dc-6eec-7552-f3c0-5cc64423f290',
+                            oGuids: {
+                                'be71f6dc-6eec-7552-f3c0-5cc64423f290': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1763546084": {
-                            "249902827": {
-                                "guid": "bbaf81cd-07b8-c4c6-b333-280cae75ff4a",
-                                "oGuids": {
-                                    "bbaf81cd-07b8-c4c6-b333-280cae75ff4a": true,
-                                    "cbfe379c-c527-700e-3041-a0c22ca2a5d6": true,
-                                    "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                    "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                    "5f73946c-68aa-9de1-7979-736d884171af": true,
-                                    "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1763546084: {
+                            249902827: {
+                                guid: 'bbaf81cd-07b8-c4c6-b333-280cae75ff4a',
+                                oGuids: {
+                                    'bbaf81cd-07b8-c4c6-b333-280cae75ff4a': true,
+                                    'cbfe379c-c527-700e-3041-a0c22ca2a5d6': true,
+                                    'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                    '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                    '5f73946c-68aa-9de1-7979-736d884171af': true,
+                                    'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                    'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                                 }
                             },
-                            "childrenListChanged": true,
-                            "guid": "cbfe379c-c527-700e-3041-a0c22ca2a5d6",
-                            "oGuids": {
-                                "cbfe379c-c527-700e-3041-a0c22ca2a5d6": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "be36b1a1-8d82-8aba-9eda-03d655a8bf3e": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                            childrenListChanged: true,
+                            guid: 'cbfe379c-c527-700e-3041-a0c22ca2a5d6',
+                            oGuids: {
+                                'cbfe379c-c527-700e-3041-a0c22ca2a5d6': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "2119137141": {
-                            "guid": "45657d4d-f82d-13ce-1acb-0aadebb5c8b5",
-                            "oGuids": {
-                                "45657d4d-f82d-13ce-1acb-0aadebb5c8b5": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        2119137141: {
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+                            oGuids: {
+                                '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
-                        "oGuids": {
-                            "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                        oGuids: {
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "1823288916": {
-                        "attr": {"name": "ModelEditor3"},
-                        "guid": "56213d7f-3e44-6a23-3e2b-95adaf702b4d",
-                        "oGuids": {
-                            "56213d7f-3e44-6a23-3e2b-95adaf702b4d": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1823288916: {
+                        attr: {name: 'ModelEditor3'},
+                        guid: '56213d7f-3e44-6a23-3e2b-95adaf702b4d',
+                        oGuids: {
+                            '56213d7f-3e44-6a23-3e2b-95adaf702b4d': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         },
-                        "movedFrom": "/1303043463/1763546084/1823288916",
-                        "ooGuids": {
-                            "56213d7f-3e44-6a23-3e2b-95adaf702b4d": true,
-                            "cbfe379c-c527-700e-3041-a0c22ca2a5d6": true,
-                            "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        movedFrom: '/1303043463/1763546084/1823288916',
+                        ooGuids: {
+                            '56213d7f-3e44-6a23-3e2b-95adaf702b4d': true,
+                            'cbfe379c-c527-700e-3041-a0c22ca2a5d6': true,
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "childrenListChanged": true,
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    childrenListChanged: true,
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "471466181": {
-                            "guid": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e",
-                            "oGuids": {
-                                "be36b1a1-8d82-8aba-9eda-03d655a8bf3e": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        471466181: {
+                            guid: 'be36b1a1-8d82-8aba-9eda-03d655a8bf3e',
+                            oGuids: {
+                                'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "871430202": {
-                            "guid": "18eb3c1d-c951-b757-c8c4-0ea8736c2470",
-                            "oGuids": {
-                                "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        871430202: {
+                            guid: '18eb3c1d-c951-b757-c8c4-0ea8736c2470',
+                            oGuids: {
+                                '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1104061497": {
-                            "guid": "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb",
-                            "oGuids": {
-                                "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1104061497: {
+                            guid: 'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb',
+                            oGuids: {
+                                'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1817665259": {
-                            "guid": "5f73946c-68aa-9de1-7979-736d884171af",
-                            "oGuids": {
-                                "5f73946c-68aa-9de1-7979-736d884171af": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1817665259: {
+                            guid: '5f73946c-68aa-9de1-7979-736d884171af',
+                            oGuids: {
+                                '5f73946c-68aa-9de1-7979-736d884171af': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "1303043463": {
-                        "902088723": {
-                            "guid": "d8f6c058-f180-f9ea-a0fc-5909e42811ae",
-                            "oGuids": {
-                                "d8f6c058-f180-f9ea-a0fc-5909e42811ae": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "5f73946c-68aa-9de1-7979-736d884171af": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1303043463: {
+                        902088723: {
+                            guid: 'd8f6c058-f180-f9ea-a0fc-5909e42811ae',
+                            oGuids: {
+                                'd8f6c058-f180-f9ea-a0fc-5909e42811ae': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                '5f73946c-68aa-9de1-7979-736d884171af': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1044885565": {
-                            "guid": "138e7076-9c15-edf6-aea4-23effabebb86",
-                            "oGuids": {
-                                "138e7076-9c15-edf6-aea4-23effabebb86": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1044885565: {
+                            guid: '138e7076-9c15-edf6-aea4-23effabebb86',
+                            oGuids: {
+                                '138e7076-9c15-edf6-aea4-23effabebb86': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1448030591": {
-                            "guid": "be71f6dc-6eec-7552-f3c0-5cc64423f290",
-                            "oGuids": {
-                                "be71f6dc-6eec-7552-f3c0-5cc64423f290": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1448030591: {
+                            guid: 'be71f6dc-6eec-7552-f3c0-5cc64423f290',
+                            oGuids: {
+                                'be71f6dc-6eec-7552-f3c0-5cc64423f290': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1763546084": {
-                            "249902827": {
-                                "guid": "bbaf81cd-07b8-c4c6-b333-280cae75ff4a",
-                                "oGuids": {
-                                    "bbaf81cd-07b8-c4c6-b333-280cae75ff4a": true,
-                                    "cbfe379c-c527-700e-3041-a0c22ca2a5d6": true,
-                                    "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                    "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                    "5f73946c-68aa-9de1-7979-736d884171af": true,
-                                    "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1763546084: {
+                            249902827: {
+                                guid: 'bbaf81cd-07b8-c4c6-b333-280cae75ff4a',
+                                oGuids: {
+                                    'bbaf81cd-07b8-c4c6-b333-280cae75ff4a': true,
+                                    'cbfe379c-c527-700e-3041-a0c22ca2a5d6': true,
+                                    'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                    '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                    '5f73946c-68aa-9de1-7979-736d884171af': true,
+                                    'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                    'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                                 }
                             },
-                            "childrenListChanged": true,
-                            "guid": "cbfe379c-c527-700e-3041-a0c22ca2a5d6",
-                            "oGuids": {
-                                "cbfe379c-c527-700e-3041-a0c22ca2a5d6": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "be36b1a1-8d82-8aba-9eda-03d655a8bf3e": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                            childrenListChanged: true,
+                            guid: 'cbfe379c-c527-700e-3041-a0c22ca2a5d6',
+                            oGuids: {
+                                'cbfe379c-c527-700e-3041-a0c22ca2a5d6': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "1823288916": {
-                            "guid": "56213d7f-3e44-6a23-3e2b-95adaf702b4d",
-                            "oGuids": {
-                                "56213d7f-3e44-6a23-3e2b-95adaf702b4d": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "5f73946c-68aa-9de1-7979-736d884171af": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        1823288916: {
+                            guid: '56213d7f-3e44-6a23-3e2b-95adaf702b4d',
+                            oGuids: {
+                                '56213d7f-3e44-6a23-3e2b-95adaf702b4d': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                '5f73946c-68aa-9de1-7979-736d884171af': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             },
-                            "movedFrom": "/1303043463/1763546084/1823288916",
-                            "ooGuids": {
-                                "56213d7f-3e44-6a23-3e2b-95adaf702b4d": true,
-                                "cbfe379c-c527-700e-3041-a0c22ca2a5d6": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "5f73946c-68aa-9de1-7979-736d884171af": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                            movedFrom: '/1303043463/1763546084/1823288916',
+                            ooGuids: {
+                                '56213d7f-3e44-6a23-3e2b-95adaf702b4d': true,
+                                'cbfe379c-c527-700e-3041-a0c22ca2a5d6': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                '5f73946c-68aa-9de1-7979-736d884171af': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "2119137141": {
-                            "guid": "45657d4d-f82d-13ce-1acb-0aadebb5c8b5",
-                            "oGuids": {
-                                "45657d4d-f82d-13ce-1acb-0aadebb5c8b5": true,
-                                "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                                "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                                "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                                "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                                "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        2119137141: {
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+                            oGuids: {
+                                '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                                'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                             }
                         },
-                        "childrenListChanged": true,
-                        "guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
-                        "oGuids": {
-                            "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        childrenListChanged: true,
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                        oGuids: {
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -1368,54 +1369,54 @@ describe('core diff', function () {
 
         it('should add a new object with patch', function (done) {
             var patch = {
-                "175547009": {
-                    "471466181": {
-                        "guid": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e",
-                        "oGuids": {
-                            "be36b1a1-8d82-8aba-9eda-03d655a8bf3e": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                175547009: {
+                    471466181: {
+                        guid: 'be36b1a1-8d82-8aba-9eda-03d655a8bf3e',
+                        oGuids: {
+                            'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "871430202": {
-                        "guid": "18eb3c1d-c951-b757-c8c4-0ea8736c2470",
-                        "oGuids": {
-                            "18eb3c1d-c951-b757-c8c4-0ea8736c2470": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    871430202: {
+                        guid: '18eb3c1d-c951-b757-c8c4-0ea8736c2470',
+                        oGuids: {
+                            '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "1104061497": {
-                        "guid": "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb",
-                        "oGuids": {
-                            "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1104061497: {
+                        guid: 'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb',
+                        oGuids: {
+                            'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "1817665259": {
-                        "guid": "5f73946c-68aa-9de1-7979-736d884171af",
-                        "oGuids": {
-                            "5f73946c-68aa-9de1-7979-736d884171af": true,
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    1817665259: {
+                        guid: '5f73946c-68aa-9de1-7979-736d884171af',
+                        oGuids: {
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                    "oGuids": {
-                        "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                        "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                    oGuids: {
+                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                     }
                 },
-                "1303043463": {"guid": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42", "removed": true},
-                "childrenListChanged": true,
-                "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                1303043463: {guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42', removed: true},
+                childrenListChanged: true,
+                guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
             };
 
             core.applyTreeDiff(rootNode, patch, function (err) {
@@ -1448,19 +1449,19 @@ describe('core diff', function () {
         });
 
         it('should create a new META attribute', function (done) {
-            var newAttributeMetaRule = {"type": "string", "default": "", "enum": ["a", "b", "c"]},
+            var newAttributeMetaRule = {type: 'string', default: '', enum: ['a', 'b', 'c']},
                 patch = {
-                    "1": {
-                        "attr": {"newAttr": ""},
-                        "meta": {"attributes": {"newAttr": newAttributeMetaRule}},
-                        "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
-                        "oGuids": {
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true
+                    1: {
+                        attr: {newAttr: ''},
+                        meta: {attributes: {newAttr: newAttributeMetaRule}},
+                        guid: 'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045',
+                        oGuids: {
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
             core.applyTreeDiff(rootNode, patch, function (err) {
@@ -1482,17 +1483,17 @@ describe('core diff', function () {
 
         it('should remove a META attribute', function (done) {
             var patch = {
-                "1": {
-                    "attr": {"newAttr": ""},
-                    "meta": {"attributes": {"newAttr": {"type": "string", "default": "", "enum": ["a", "b", "c"]}}},
-                    "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
-                    "oGuids": {
-                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-                        "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true
+                1: {
+                    attr: {newAttr: ''},
+                    meta: {attributes: {newAttr: {type: 'string', default: '', enum: ['a', 'b', 'c']}}},
+                    guid: 'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045',
+                    oGuids: {
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
+                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true
                     }
                 },
-                "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
             };
 
             core.applyTreeDiff(rootNode, patch, function (err) {
@@ -1528,30 +1529,30 @@ describe('core diff', function () {
             var resultConflict,
                 resultPatch,
                 diff1 = {
-                    "175547009": {
-                        "meta": {"children": "*to*delete*"},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        meta: {children: TO_DELETE},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "meta": {"children": {"/1": {"min": 1, "max": 1}}},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        meta: {children: {'/1': {min: 1, max: 1}}},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -1570,44 +1571,44 @@ describe('core diff', function () {
             var resultConflict,
                 resultPatch,
                 diff1 = {
-                    "175547009": {
-                        "attr": {"newAttr": 0},
-                        "meta": {"attributes": {"newAttr": {"type": "integer", "default": 0}}},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        attr: {newAttr: 0},
+                        meta: {attributes: {newAttr: {type: 'integer', default: 0}}},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "attr": {"newAttr": true},
-                        "meta": {"attributes": {"newAttr": {"type": "boolean", "default": true}}},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        attr: {newAttr: true},
+                        meta: {attributes: {newAttr: {type: 'boolean', default: true}}},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "set": {
-                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {
-                            "/175547009": {
-                                "reg": {
-                                    "position": {
-                                        "x": 389,
-                                        "y": 110
+                    set: {
+                        'MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866': {
+                            '/175547009': {
+                                reg: {
+                                    position: {
+                                        x: 389,
+                                        y: 110
                                     }
                                 }
                             }
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -1626,43 +1627,43 @@ describe('core diff', function () {
             var resultConflict,
                 resultPatch,
                 diff1 = {
-                    "175547009": {
-                        "meta": {"attributes": {"newAttr": "*to*delete*"}},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        meta: {attributes: {newAttr: TO_DELETE}},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "attr": {"newAttr": true},
-                        "meta": {"attributes": {"newAttr": {"type": "boolean", "default": true}}},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        attr: {newAttr: true},
+                        meta: {attributes: {newAttr: {type: 'boolean', default: true}}},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "set": {
-                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {
-                            "/175547009": {
-                                "reg": {
-                                    "position": {
-                                        "x": 389,
-                                        "y": 110
+                    set: {
+                        'MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866': {
+                            '/175547009': {
+                                reg: {
+                                    position: {
+                                        x: 389,
+                                        y: 110
                                     }
                                 }
                             }
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -1681,43 +1682,43 @@ describe('core diff', function () {
             var resultConflict,
                 resultPatch,
                 diff1 = {
-                    "175547009": {
-                        "meta": {"attributes": "*to*delete*"},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        meta: {attributes: TO_DELETE},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "attr": {"newAttr": true},
-                        "meta": {"attributes": {"newAttr": {"type": "boolean", "default": true}}},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        attr: {newAttr: true},
+                        meta: {attributes: {newAttr: {type: 'boolean', default: true}}},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "set": {
-                        "MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866": {
-                            "/175547009": {
-                                "reg": {
-                                    "position": {
-                                        "x": 389,
-                                        "y": 110
+                    set: {
+                        'MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866': {
+                            '/175547009': {
+                                reg: {
+                                    position: {
+                                        x: 389,
+                                        y: 110
                                     }
                                 }
                             }
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -1736,32 +1737,34 @@ describe('core diff', function () {
             var resultConflict,
                 resultPatch,
                 diff1 = {
-                    "175547009": {
-                        "set": {"a": {}},
-                        "meta": {"aspects": {"a": ["/175547009", "/175547009/471466181"]}},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        set: {a: {}},
+                        meta: {aspects: {a: ['/175547009', '/175547009/471466181']}},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "set": {"a": {}},
-                        "meta": {"aspects": {"a": ["/175547009/471466181", "/175547009/1104061497", "/175547009/1817665259"]}},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        set: {a: {}},
+                        meta: {
+                            aspects: {a: ['/175547009/471466181', '/175547009/1104061497', '/175547009/1817665259']}
+                        },
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -1780,31 +1783,33 @@ describe('core diff', function () {
             var resultConflict,
                 resultPatch,
                 diff1 = {
-                    "175547009": {
-                        "meta": {"aspects": {"a": "*to*delete*"}},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        meta: {aspects: {a: TO_DELETE}},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "set": {"a": {}},
-                        "meta": {"aspects": {"a": ["/175547009/471466181", "/175547009/1104061497", "/175547009/1817665259"]}},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        set: {a: {}},
+                        meta: {
+                            aspects: {a: ['/175547009/471466181', '/175547009/1104061497', '/175547009/1817665259']}
+                        },
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -1823,31 +1828,33 @@ describe('core diff', function () {
             var resultConflict,
                 resultPatch,
                 diff1 = {
-                    "175547009": {
-                        "meta": {"aspects": "*to*delete*"},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        meta: {aspects: TO_DELETE},
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "set": {"a": {}},
-                        "meta": {"aspects": {"a": ["/175547009/471466181", "/175547009/1104061497", "/175547009/1817665259"]}},
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    175547009: {
+                        set: {a: {}},
+                        meta: {
+                            aspects: {a: ['/175547009/471466181', '/175547009/1104061497', '/175547009/1817665259']}
+                        },
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -1868,54 +1875,54 @@ describe('core diff', function () {
                 sourceNode,
                 validTargets = [],
                 diff1 = {
-                    "175547009": {
-                        "pointer": {"src": null},
-                        "meta": {
-                            "pointers": {
-                                "src": {
-                                    "/175547009/471466181": {
+                    175547009: {
+                        pointer: {src: null},
+                        meta: {
+                            pointers: {
+                                src: {
+                                    '/175547009/471466181': {
                                         min: -1,
                                         max: 1
                                     },
-                                    "min": 1,
-                                    "max": 1
+                                    min: 1,
+                                    max: 1
                                 }
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "pointer": {"src": null},
-                        "meta": {
-                            "pointers": {
-                                "src": {
-                                    "/175547009/1817665259": {
+                    175547009: {
+                        pointer: {src: null},
+                        meta: {
+                            pointers: {
+                                src: {
+                                    '/175547009/1817665259': {
                                         min: -1,
                                         max: 1
                                     },
-                                    "min": 1,
-                                    "max": 1
+                                    min: 1,
+                                    max: 1
                                 }
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -1951,54 +1958,54 @@ describe('core diff', function () {
             var resultPatch,
                 resultConflict,
                 diff1 = {
-                    "175547009": {
-                        "pointer": {"src": null},
-                        "meta": {
-                            "pointers": {
-                                "src": {
-                                    "/175547009/471466181": {
+                    175547009: {
+                        pointer: {src: null},
+                        meta: {
+                            pointers: {
+                                src: {
+                                    '/175547009/471466181': {
                                         min: -1,
                                         max: 1
                                     },
-                                    "min": 1,
-                                    "max": 1
+                                    min: 1,
+                                    max: 1
                                 }
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "pointer": {"src": null},
-                        "meta": {
-                            "pointers": {
-                                "src": {
-                                    "/175547009/1817665259": {
+                    175547009: {
+                        pointer: {src: null},
+                        meta: {
+                            pointers: {
+                                src: {
+                                    '/175547009/1817665259': {
                                         min: 2,
                                         max: 4
                                     },
-                                    "min": 1,
-                                    "max": 6
+                                    min: 1,
+                                    max: 6
                                 }
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -2016,46 +2023,46 @@ describe('core diff', function () {
             var resultPatch,
                 resultConflict,
                 diff1 = {
-                    "175547009": {
-                        "meta": {
-                            "pointers": {
-                                "src": "*to*delete*"
+                    175547009: {
+                        meta: {
+                            pointers: {
+                                src: TO_DELETE
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "pointer": {"src": null},
-                        "meta": {
-                            "pointers": {
-                                "src": {
-                                    "/175547009/1817665259": {
+                    175547009: {
+                        pointer: {src: null},
+                        meta: {
+                            pointers: {
+                                src: {
+                                    '/175547009/1817665259': {
                                         min: 2,
                                         max: 4
                                     },
-                                    "min": 1,
-                                    "max": 6
+                                    min: 1,
+                                    max: 6
                                 }
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 
@@ -2074,44 +2081,44 @@ describe('core diff', function () {
             var resultPatch,
                 resultConflict,
                 diff1 = {
-                    "175547009": {
-                        "meta": {
-                            "pointers": "*to*delete*"
+                    175547009: {
+                        meta: {
+                            pointers: TO_DELETE
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 },
                 diff2 = {
-                    "175547009": {
-                        "pointer": {"src": null},
-                        "meta": {
-                            "pointers": {
-                                "src": {
-                                    "/175547009/1817665259": {
+                    175547009: {
+                        pointer: {src: null},
+                        meta: {
+                            pointers: {
+                                src: {
+                                    '/175547009/1817665259': {
                                         min: 2,
                                         max: 4
                                     },
-                                    "min": 1,
-                                    "max": 6
+                                    min: 1,
+                                    max: 6
                                 }
                             }
                         },
-                        "guid": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
-                        "oGuids": {
-                            "d926b4e8-676d-709b-e10e-a6fe730e71f5": true,
-                            "86236510-f1c7-694f-1c76-9bad3a2aa4e0": true,
-                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                         }
                     },
-                    "guid": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
-                    "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
 

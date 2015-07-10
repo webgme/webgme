@@ -2,6 +2,7 @@
 /*jshint node:true, newcap:false*/
 
 /**
+ * @module Server:Storage:Mongo
  * @author mmaroti / https://github.com/mmaroti
  * @author pmeijer / https://github.com/pmeijer
  */

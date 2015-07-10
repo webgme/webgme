@@ -125,6 +125,7 @@ function createExpressBlob(options) {
             } catch (e) {
                 res.status(500);
                 res.send(e);
+                return;
             }
             blobBackend.putMetadata(metadata, function (err, hash) {
                 if (err) {

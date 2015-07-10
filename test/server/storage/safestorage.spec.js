@@ -27,7 +27,7 @@ describe('SafeStorage', function () {
     });
 
     after(function (done) {
-        Q.all([
+        Q.allSettled([
             gmeAuth.unload()
         ])
             .nodeify(done);

@@ -79,7 +79,7 @@ function clearDatabase(gmeConfigParameter, callback) {
     Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfigParameter.mongo.uri, gmeConfigParameter.mongo.options)
         .then(function (db_) {
             db = db_;
-            return Q.all([
+            return Q.allSettled([
                 Q.ninvoke(db, 'collection', '_users')
                     .then(function (collection_) {
                         return Q.ninvoke(collection_, 'remove');
@@ -136,7 +136,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
         })
         .then(function (gmeAuth_) {
             gmeAuth = gmeAuth_;
-            return Q.all([
+            return Q.allSettled([
                 gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
                 gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
             ]);
@@ -172,7 +172,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
                 logger.warn('No projects to authorize...', projectNameOrNames);
             }
 
-            return Q.all(projectsToAuthorize);
+            return Q.allSettled(projectsToAuthorize);
         })
         .then(function () {
             deferred.resolve(gmeAuth);

@@ -1,6 +1,7 @@
 /*globals requireJS*/
 /*jshint node:true, newcap: false*/
 /**
+ * @module Server:WebSockets
  * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';

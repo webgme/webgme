@@ -172,5 +172,19 @@ describe('Session store', function () {
             });
         });
     });
-    
+
+
+    describe('Unknown', function () {
+
+        var gmeConfig = testFixture.getGmeConfig(),
+            server;
+
+        gmeConfig.server.sessionStore.type = 'Unknown';
+        it('should throw an expection if session store is unknown', function () {
+            var fn = function () {
+                server = new WebGME.standaloneServer(gmeConfig);
+            };
+            expect(fn).to.throw(Error);
+        });
+    });
 });

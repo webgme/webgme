@@ -2,9 +2,11 @@
 /*jshint browser: true, node:true*/
 
 /**
+ * A module representing a PluginResult.
+ *
+ * @module PluginResult
  * @author lattmann / https://github.com/lattmann
  */
-
 
 define(['plugin/PluginMessage'], function (PluginMessage) {
     'use strict';
@@ -15,6 +17,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
      *
      * @param config - deserializes an existing configuration to this object.
      * @constructor
+     * @alias PluginResult
      */
     var PluginResult = function (config) {
         var pluginMessage,

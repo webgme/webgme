@@ -1,6 +1,11 @@
 /*globals requireJS*/
 /*jshint node:true*/
 
+/**
+ * @module Server.SimpleWorker
+ * @author kecso / https://github.com/kecso
+ */
+
 'use strict';
 
 var WEBGME = require(__dirname + '/../../../webgme'),

@@ -6,6 +6,7 @@
  *  - checks that the user is authorized to access/change the data.
  *  - updates the users and projects databases on delete/create project.
  *
+ * @module Server:SafeStorage
  * @author pmeijer / https://github.com/pmeijer
  */
 
@@ -39,6 +40,14 @@ function filterArray(arr) {
     return filtered;
 }
 
+/**
+ *
+ * @param mongo
+ * @param logger
+ * @param gmeConfig
+ * @param gmeAuth
+ * @constructor
+ */
 function SafeStorage(mongo, logger, gmeConfig, gmeAuth) {
     ASSERT(gmeAuth !== null && typeof gmeAuth === 'object', 'gmeAuth is a mandatory parameter');
     Storage.call(this, mongo, logger, gmeConfig);

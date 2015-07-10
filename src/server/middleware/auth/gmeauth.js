@@ -2,6 +2,7 @@
 /*jshint node:true, newcap:false*/
 
 /**
+ * @module Server:GMEAuth
  * @author ksmyth / https://github.com/ksmyth
  */
 
@@ -15,6 +16,13 @@ var Mongodb = require('mongodb'),
 
     Logger = require('../../logger');
 
+/**
+ *
+ * @param session
+ * @param gmeConfig
+ * @returns {{authenticate: authenticate, authenticateUserById: authenticateUserById, authorize: authorizeBySession, deleteProject: deleteProject, getUserIdBySession: getUserIdBySession, getProjectAuthorizationBySession: getProjectAuthorizationBySession, getProjectAuthorizationByUserId: getProjectAuthorizationByUserId, tokenAuthorization: tokenAuthorization, generateToken: generateTokenBySession, generateTokenForUserId: generateTokenByUserId, getToken: getToken, checkToken: checkToken, tokenAuth: tokenAuth, getUserAuthInfo: getUserAuthInfo, getAllUserAuthInfo: getAllUserAuthInfo, getAllUserAuthInfoBySession: getAllUserAuthInfoBySession, authorizeByUserId: authorizeByUserId, getAuthorizationInfoByUserId: getAuthorizationInfoByUserId, unload: unload, connect: connect, _getProjectNames: _getProjectNames, addUser: addUser, updateUser: updateUser, deleteUser: deleteUser, getUser: getUser, listUsers: listUsers, addOrganization: addOrganization, getOrganization: getOrganization, listOrganizations: listOrganizations, removeOrganizationByOrgId: removeOrganizationByOrgId, addUserToOrganization: addUserToOrganization, removeUserFromOrganization: removeUserFromOrganization, authorizeOrganization: authorizeOrganization, getAuthorizationInfoByOrgId: getAuthorizationInfoByOrgId, addProject: addProject, getProject: getProject, transferProject: transferProject}}
+ * @constructor
+ */
 function GMEAuth(session, gmeConfig) {
     'use strict';
     // TODO: make sure that gmeConfig passes all config
@@ -101,41 +109,14 @@ function GMEAuth(session, gmeConfig) {
     addMongoOpsToPromize(organizationCollection);
     addMongoOpsToPromize(projectCollection);
 
-    function connect(callback) {
-        var self = this;
-        return Q.ninvoke(Mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
-            .then(function (db_) {
-                db = db_;
-                return Q.ninvoke(db, 'collection', _collectionName);
-            })
-            .then(function (collection_) {
-                collectionDeferred.resolve(collection_);
-                return _prepareGuestAccount();
-            })
-            .then(function () {
-                return Q.ninvoke(db, 'collection', _organizationCollectionName);
-            })
-            .then(function (organizationCollection_) {
-                organizationCollectionDeferred.resolve(organizationCollection_);
-                return Q.ninvoke(db, 'collection', _projectCollectionName);
-            })
-            .then(function (projectCollection_) {
-                projectCollectionDeferred.resolve(projectCollection_);
-                return self;
-            })
-            .catch(function (err) {
-                logger.error(err);
-                collectionDeferred.reject(err);
-            })
-            .nodeify(callback);
-    }
 
-    function unload(callback) {
-        return collection
-            .finally(function () {
-                return Q.ninvoke(db, 'close');
-            })
-            .nodeify(callback);
+    function _getProjection(/*args*/) {
+        var ret = {},
+            i;
+        for (i = 0; i < arguments.length; i += 1) {
+            ret[arguments[i]] = 1;
+        }
+        return ret;
     }
 
     function _prepareGuestAccount(callback) {
@@ -174,6 +155,63 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param callback
+     * @returns {*}
+     */
+    function connect(callback) {
+        var self = this;
+        return Q.ninvoke(Mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
+            .then(function (db_) {
+                db = db_;
+                return Q.ninvoke(db, 'collection', _collectionName);
+            })
+            .then(function (collection_) {
+                collectionDeferred.resolve(collection_);
+                return _prepareGuestAccount();
+            })
+            .then(function () {
+                return Q.ninvoke(db, 'collection', _organizationCollectionName);
+            })
+            .then(function (organizationCollection_) {
+                organizationCollectionDeferred.resolve(organizationCollection_);
+                return Q.ninvoke(db, 'collection', _projectCollectionName);
+            })
+            .then(function (projectCollection_) {
+                projectCollectionDeferred.resolve(projectCollection_);
+                return self;
+            })
+            .catch(function (err) {
+                logger.error(err);
+                collectionDeferred.reject(err);
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param callback
+     * @returns {*}
+     */
+    function unload(callback) {
+        return collection
+            .finally(function () {
+                return Q.ninvoke(db, 'close');
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param userId
+     * @param password
+     * @param type
+     * @param returnUrlFailedLogin
+     * @param req
+     * @param res
+     * @param next
+     */
     function authenticateUserById(userId, password, type, returnUrlFailedLogin, req, res, next) {
         var query = {};
         returnUrlFailedLogin = returnUrlFailedLogin || '/';
@@ -190,7 +228,7 @@ function GMEAuth(session, gmeConfig) {
                 if (type === 'gmail') {
                     req.session.udmId = userData._id;
                     req.session.authenticated = true;
-                    req.session.userType = 'GME';
+                    req.session.userType = 'GME'; // FIXME: should this be another userType? gmail
                     next();
                 } else {
                     if (!password) {
@@ -203,7 +241,7 @@ function GMEAuth(session, gmeConfig) {
                                 } else {
                                     req.session.udmId = userData._id;
                                     req.session.authenticated = true;
-                                    req.session.userType = 'GME';
+                                    req.session.userType = 'GME'; // FIXME: uppercase or lowercase?
                                     next();
                                 }
                             });
@@ -221,6 +259,12 @@ function GMEAuth(session, gmeConfig) {
             });
     }
 
+    /**
+     *
+     * @param req
+     * @param res
+     * @param next
+     */
     function authenticate(req, res, next) {
         var userId = req.body[_userField],
             password = req.body[_passwordField],
@@ -229,6 +273,7 @@ function GMEAuth(session, gmeConfig) {
             type;
         delete req.__gmeAuthFailUrl__;
         //gmail based authentication - no authentication just user search
+        // TODO: this does not work yet.
         if (userId === null || userId === undefined) {
             userId = req.query['openid.ext1.value.email'];
             password = null;
@@ -244,8 +289,15 @@ function GMEAuth(session, gmeConfig) {
         authenticateUserById(userId, password, type, returnUrl, req, res, next);
     }
 
-    // type: 'create' 'delete'
-    // rights: {read: true, write: true, delete: true}
+    /**
+     *
+     * @param userId {string}
+     * @param projectId {string}
+     * @param type {string} 'create' or 'delete'
+     * @param rights {object} {read: true, write: true, delete: true}
+     * @param callback
+     * @returns {*}
+     */
     function authorizeByUserId(userId, projectId, type, rights, callback) {
         var update;
         if (type === 'create' || type === 'set') {
@@ -282,6 +334,13 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param userId {string}
+     * @param projectName {string}
+     * @param callback
+     * @returns {*}
+     */
     function getAuthorizationInfoByUserId(userId, projectName, callback) {
         var projection = {};
         projection['projects.' + projectName] = 1;
@@ -292,14 +351,13 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-    function _getProjection(/*args*/) {
-        var ret = {};
-        for (var i = 0; i < arguments.length; i += 1) {
-            ret[arguments[i]] = 1;
-        }
-        return ret;
-    }
-
+    /**
+     *
+     * @param userId {string}
+     * @param projectName {string}
+     * @param callback
+     * @returns {*}
+     */
     function getProjectAuthorizationByUserId(userId, projectName, callback) {
         var ops = ['read', 'write', 'delete'];
         return collection.findOne({_id: userId}, _getProjection('orgs', 'projects.' + projectName))
@@ -327,6 +385,13 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param sessionId {string}
+     * @param projectName {string}
+     * @param callback
+     * @returns {*}
+     */
     function getProjectAuthorizationBySession(sessionId, projectName, callback) {
         return Q.ninvoke(_session, 'getSessionUser', sessionId)
             .then(function (userId) {
@@ -407,6 +472,12 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param userId {string}
+     * @param callback
+     * @returns {*}
+     */
     function getUserAuthInfo(userId, callback) {
         return collection.findOne({_id: userId})
             .then(function (userData) {
@@ -418,11 +489,23 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param userId {string}
+     * @param callback
+     * @returns {*}
+     */
     function getAllUserAuthInfo(userId, callback) {
         logger.warn('getAllUserAuthInfo is deprecated use getUser');
         return getUser(userId, callback);
     }
 
+    /**
+     *
+     * @param userId {string}
+     * @param callback
+     * @returns {*}
+     */
     function getUser(userId, callback) {
         return collection.findOne({_id: userId})
             .then(function (userData) {
@@ -435,11 +518,24 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param userId {string}
+     * @param callback
+     * @returns {*}
+     */
     function deleteUser(userId, callback) {
         return collection.remove({_id: userId})
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param userId {string}
+     * @param data
+     * @param callback
+     * @returns {*}
+     */
     function updateUser(userId, data, callback) {
         return collection.findOne({_id: userId})
             .then(function (userData) {
@@ -472,6 +568,12 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param query
+     * @param callback
+     * @returns {*}
+     */
     function listUsers(query, callback) {
         // FIXME: query can paginate, or filter users
         return collection.find({})
@@ -488,6 +590,12 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param sessionId {string}
+     * @param callback
+     * @returns {*}
+     */
     function getAllUserAuthInfoBySession(sessionId, callback) {
         return Q.ninvoke(_session, 'getSessionUser', sessionId)
             .then(function (userId) {
@@ -499,6 +607,12 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param projectId
+     * @param callback
+     * @returns {*}
+     */
     function deleteProject(projectId, callback) {
         var update = {$unset: {}};
         update.$unset['projects.' + projectId] = '';
@@ -515,6 +629,16 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param userId
+     * @param email
+     * @param password
+     * @param canCreate
+     * @param options
+     * @param callback
+     * @returns {*}
+     */
     function addUser(userId, email, password, canCreate, options, callback) {
         // TODO: check user/orgId collision
         // FIXME: this will not update the users correctly
@@ -543,6 +667,14 @@ function GMEAuth(session, gmeConfig) {
         return Q.ninvoke(db, 'collectionNames').nodeify(callback);
     }
 
+    /**
+     *
+     * @param orgOrUserId
+     * @param projectName
+     * @param info
+     * @param callback
+     * @returns {*}
+     */
     function addProject(orgOrUserId, projectName, info, callback) {
         var id = orgOrUserId + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName,
             data = {
@@ -557,6 +689,12 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param projectId
+     * @param callback
+     * @returns {*}
+     */
     function getProject(projectId, callback) {
         return projectCollection.findOne({_id: projectId})
             .then(function (projectData) {
@@ -572,12 +710,24 @@ function GMEAuth(session, gmeConfig) {
         callback(new Error('Not implemented yet.'));
     }
 
+    /**
+     *
+     * @param orgId
+     * @param callback
+     * @returns {*}
+     */
     function addOrganization(orgId, callback) {
         // TODO: check user/orgId collision
         return organizationCollection.insert({_id: orgId, projects: {}})
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param orgId
+     * @param callback
+     * @returns {*}
+     */
     function getOrganization(orgId, callback) {
         return organizationCollection.findOne({_id: orgId})
             .then(function (org) {
@@ -598,6 +748,12 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param query
+     * @param callback
+     * @returns {*}
+     */
     function listOrganizations(query, callback) {
         return organizationCollection.find({})
             .then(function (orgs) {
@@ -610,6 +766,12 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param orgId
+     * @param callback
+     * @returns {*}
+     */
     function removeOrganizationByOrgId(orgId, callback) {
         return organizationCollection.remove({_id: orgId})
             .then(function (count) {
@@ -621,6 +783,13 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param userId
+     * @param orgId
+     * @param callback
+     * @returns {*}
+     */
     function addUserToOrganization(userId, orgId, callback) {
         return organizationCollection.findOne({_id: orgId})
             .then(function (org) {
@@ -639,6 +808,13 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param userId
+     * @param orgId
+     * @param callback
+     * @returns {*}
+     */
     function removeUserFromOrganization(userId, orgId, callback) {
         return organizationCollection.findOne({_id: orgId})
             .then(function (org) {
@@ -652,8 +828,15 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-    // type: 'create' 'delete' or 'read'
-    // rights: {read: true, write: true, delete: true}
+    /**
+     *
+     * @param orgId
+     * @param projectName
+     * @param type {string} 'create' 'delete' or 'read'
+     * @param rights {object} {read: true, write: true, delete: true}
+     * @param callback
+     * @returns {*}
+     */
     function authorizeOrganization(orgId, projectName, type, rights, callback) {
         var update;
         if (type === 'create' || type === 'set') {
@@ -682,6 +865,13 @@ function GMEAuth(session, gmeConfig) {
         }
     }
 
+    /**
+     *
+     * @param orgId
+     * @param projectName
+     * @param callback
+     * @returns {*}
+     */
     function getAuthorizationInfoByOrgId(orgId, projectName, callback) {
         var projection = {};
         projection['projects.' + projectName] = 1;

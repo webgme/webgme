@@ -244,7 +244,7 @@ define([
             gmeConfig: parameters.gmeConfig,
             logger: parameters.logger,
             project: parameters.project,
-            branchOrCommit: parameters.partial.targetBranchName,
+            branchOrCommit: parameters.partial.baseCommitHash,
             noUpdate: true,
             patch: finalPatch,
             parents: [parameters.partial.theirCommitHash, parameters.partial.myCommitHash],

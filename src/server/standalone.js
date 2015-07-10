@@ -2,6 +2,7 @@
 /*jshint node:true*/
 
 /**
+ * @module Server:StandAlone
  * @author kecso / https://github.com/kecso
  */
 
@@ -193,37 +194,6 @@ function StandAloneServer(gmeConfig) {
             });
         });
 
-
-        //creating the proper storage for the standalone server
-        //__storageOptions = {
-        //    combined: __httpServer,
-        //    logger: logger.fork('storage')
-        //};
-        //if (true === gmeConfig.authentication.enable) {
-        //    __storageOptions.sessioncheck = __sessionStore.check;
-        //    __storageOptions.authorization = globalAuthorization;
-        //    __storageOptions.authDeleteProject = __gmeAuth.deleteProject;
-        //    __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
-        //}
-        //
-        //
-        //__storageOptions.getToken = __gmeAuth.getToken;
-        //
-        //__storageOptions.sessionToUser = __sessionStore.getSessionUser;
-        //
-        //__storageOptions.workerManager = __workerManager;
-        //
-        //__storageOptions.globConf = gmeConfig;
-        //__storage = new Storage(__storageOptions);
-        ////end of storage creation
-        //__storage.open(function (err) {
-        //    if (err) {
-        //        storageDeferred.reject(err);
-        //    } else {
-        //        storageDeferred.resolve();
-        //    }
-        //});
-
         __storage.openDatabase(function (err) {
             if (err) {
                 storageDeferred.reject(err);
@@ -245,7 +215,7 @@ function StandAloneServer(gmeConfig) {
 
         __workerManager.start();
 
-        Q.all([serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise, apiReady])
+        Q.allSettled([serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise, apiReady])
             .nodeify(function (err) {
                 self.isRunning = true;
                 callback(err);
@@ -307,41 +277,6 @@ function StandAloneServer(gmeConfig) {
 
 
     //internal functions
-    function globalAuthorization(sessionId, projectName, type, callback) {
-        __sessionStore.get(sessionId, function (err, data) {
-            if (!err && data) {
-                switch (data.userType) {
-                    case 'GME':
-                        if (type === 'create') {
-                            __gmeAuth.getAllUserAuthInfoBySession(sessionId)
-                                .then(function (authInfo) {
-                                    if (authInfo.canCreate !== true) {
-                                        return false;
-                                    }
-                                    return __gmeAuth.authorize(sessionId, projectName, 'create')
-                                        .then(function () {
-                                            return true;
-                                        });
-                                }).nodeify(callback);
-                        } else {
-                            __gmeAuth.getProjectAuthorizationBySession(sessionId,
-                                projectName,
-                                function (err, authInfo) {
-                                    callback(err, authInfo[type] === true);
-                                }
-                            );
-                        }
-                        break;
-                    default:
-                        callback('unknown user type', false);
-                }
-            } else {
-                err = err || 'session not found';
-                callback(err, false);
-            }
-        });
-    }
-
     function getRedirectUrlParameter(req) {
         //return '?redirect=' + URL.addSpecialChars(req.url);
         return '?redirect=' + encodeURIComponent(req.originalUrl);
@@ -357,23 +292,24 @@ function StandAloneServer(gmeConfig) {
     }
 
 
-    function checkGoogleAuthentication(req, res, next) {
-        if (__googleAuthenticationSet === true) {
-            return next();
-        } else {
-            var protocolPrefix = gmeConfig.server.https.enable === true ? 'https://' : 'http://';
-            Passport.use(new PassGoogle.Strategy({
-                    returnURL: protocolPrefix + req.headers.host + '/login/google/return',
-                    realm: protocolPrefix + req.headers.host
-                },
-                function (identifier, profile, done) {
-                    return done(null, {id: profile.emails[0].value});
-                }
-            ));
-            __googleAuthenticationSet = true;
-            return next();
-        }
-    }
+    // TODO: add this back, when google authentication works again
+    //function checkGoogleAuthentication(req, res, next) {
+    //    if (__googleAuthenticationSet === true) {
+    //        return next();
+    //    } else {
+    //        var protocolPrefix = gmeConfig.server.https.enable === true ? 'https://' : 'http://';
+    //        Passport.use(new PassGoogle.Strategy({
+    //                returnURL: protocolPrefix + req.headers.host + '/login/google/return',
+    //                realm: protocolPrefix + req.headers.host
+    //            },
+    //            function (identifier, profile, done) {
+    //                return done(null, {id: profile.emails[0].value});
+    //            }
+    //        ));
+    //        __googleAuthenticationSet = true;
+    //        return next();
+    //    }
+    //}
 
     function ensureAuthenticated(req, res, next) {
         var authorization = req.get('Authorization'),
@@ -403,6 +339,7 @@ function StandAloneServer(gmeConfig) {
             } else {
                 //client oriented new session
                 if (req.headers.webgmeclientsession) {
+                    // FIXME: used by blob/plugin/executor ???
                     __sessionStore.get(req.headers.webgmeclientsession, function (err, clientSession) {
                         if (!err) {
                             if (clientSession.authenticated) {
@@ -415,18 +352,6 @@ function StandAloneServer(gmeConfig) {
                             }
                         } else {
                             res.sendStatus(401); //TODO find proper error code
-                        }
-                    });
-                } else if (req.headers.webGMEToken) {
-                    //request which use token may be authenticated directly
-                    __gmeAuth.checkToken(req.headers.webGMEToken, function (isOk, userId) {
-                        if (isOk) {
-                            req.session.authenticated = true;
-                            req.session.udmId = userId;
-                            res.cookie('webgme', req.session.udmId);
-                            return next();
-                        } else {
-                            res.sendStatus(401); //no use for redirecting in this case
                         }
                     });
                 } else if (gmeConfig.authentication.allowGuests) {
@@ -452,11 +377,6 @@ function StandAloneServer(gmeConfig) {
             res.cookie('webgme', req.session.udmId);
             return next();
         }
-    }
-
-    function prepClientLogin(req, res, next) {
-        req.__gmeAuthFailUrl__ = '/login/client/fail';
-        next();
     }
 
     function isGoodExtraAsset(name, path) {
@@ -724,7 +644,7 @@ function StandAloneServer(gmeConfig) {
     });
     __app.get('/logout', function (req, res) {
         res.clearCookie('webgme');
-        res.clearCookie('isisforge'); //todo is this really needed
+        res.clearCookie('isisforge'); // TODO is this really needed
         req.logout();
         req.session.authenticated = false;
         req.session.userType = 'loggedout';
@@ -736,8 +656,8 @@ function StandAloneServer(gmeConfig) {
         expressFileSending(res, __clientBaseDir + '/login.html');
     });
     __app.post('/login', function (req, res, next) {
-        var queryParams = [];
-        var url = URL.parse(req.url, true);
+        var queryParams = [],
+            url = URL.parse(req.url, true);
         if (req.body && req.body.username) {
             queryParams.push('username=' + encodeURIComponent(req.body.username));
         }
@@ -754,19 +674,13 @@ function StandAloneServer(gmeConfig) {
         res.cookie('webgme', req.session.udmId);
         redirectUrl(req, res);
     });
-    __app.post('/login/client', prepClientLogin, __gmeAuth.authenticate, function (req, res) {
-        res.cookie('webgme', req.session.udmId);
-        res.sendStatus(200);
-    });
-    __app.get('/login/client/fail', function (req, res) {
-        res.clearCookie('webgme');
-        res.sendStatus(401);
-    });
-    __app.get('/login/google', checkGoogleAuthentication, Passport.authenticate('google'));
-    __app.get('/login/google/return', __gmeAuth.authenticate, function (req, res) {
-        res.cookie('webgme', req.session.udmId);
-        redirectUrl(req, res);
-    });
+
+    // TODO: review/revisit this part when google authentication is used.
+    //__app.get('/login/google', checkGoogleAuthentication, Passport.authenticate('google'));
+    //__app.get('/login/google/return', __gmeAuth.authenticate, function (req, res) {
+    //    res.cookie('webgme', req.session.udmId);
+    //    redirectUrl(req, res);
+    //});
 
     //TODO: only node_worker/index.html and common/util/common are using this
     //logger.debug('creating decorator specific routing rules');
@@ -887,41 +801,41 @@ function StandAloneServer(gmeConfig) {
         }
     });
 
-    logger.debug('creating token related routing rules');
-    __app.get('/gettoken', ensureAuthenticated, function (req, res) {
-        if (gmeConfig.rest.secure) {
-            __gmeAuth.getToken(req.session.id, function (err, token) {
-                if (err) {
-                    res.send(err);
-                } else {
-                    res.send(token);
-                }
-            });
-        } else {
-            res.sendStatus(410); //special error for the interpreters to know there is no need for token
-        }
-    });
-    __app.get('/checktoken/:token', function (req, res) {
-        if (gmeConfig.authentication.enable === true) {
-            if (__canCheckToken === true) {
-                setTimeout(function () {
-                    __canCheckToken = true;
-                }, 10000);
-                __canCheckToken = false;
-                __gmeAuth.checkToken(req.params.token, function (isValid) {
-                    if (isValid === true) {
-                        res.sendStatus(200);
-                    } else {
-                        res.sendStatus(403);
-                    }
-                });
-            } else {
-                res.sendStatus(403);
-            }
-        } else {
-            res.sendStatus(410); //special error for the interpreters to know there is no need for token
-        }
-    });
+    //logger.debug('creating token related routing rules');
+    //__app.get('/gettoken', ensureAuthenticated, function (req, res) {
+    //    if (gmeConfig.rest.secure) {
+    //        __gmeAuth.getToken(req.session.id, function (err, token) {
+    //            if (err) {
+    //                res.send(err);
+    //            } else {
+    //                res.send(token);
+    //            }
+    //        });
+    //    } else {
+    //        res.sendStatus(410); //special error for the interpreters to know there is no need for token
+    //    }
+    //});
+    //__app.get('/checktoken/:token', function (req, res) {
+    //    if (gmeConfig.authentication.enable === true) {
+    //        if (__canCheckToken === true) {
+    //            setTimeout(function () {
+    //                __canCheckToken = true;
+    //            }, 10000);
+    //            __canCheckToken = false;
+    //            __gmeAuth.checkToken(req.params.token, function (isValid) {
+    //                if (isValid === true) {
+    //                    res.sendStatus(200);
+    //                } else {
+    //                    res.sendStatus(403);
+    //                }
+    //            });
+    //        } else {
+    //            res.sendStatus(403);
+    //        }
+    //    } else {
+    //        res.sendStatus(410); //special error for the interpreters to know there is no need for token
+    //    }
+    //});
 
     logger.debug('creating API related routing rules');
 
@@ -929,31 +843,33 @@ function StandAloneServer(gmeConfig) {
 
 
     logger.debug('creating server-worker related routing rules');
-    __app.get('/worker/simpleResult/*', function (req, res) {
-        var urlArray = req.url.split('/');
-        logger.debug('worker/simpleResult requested, urlArray', {metadata: urlArray});
-        if (urlArray.length > 3) {
-            __workerManager.result(urlArray[3], function (err, result) {
-                if (err) {
-                    logger.error('worker/simpleResult err', err);
-                    res.sendStatus(500);
-                } else {
-                    var filename = 'exportedNodes.json';
-                    if (urlArray[4]) {
-                        filename = urlArray[4];
-                    }
-                    if (filename.indexOf('.') === -1) {
-                        filename += '.json';
-                    }
-                    res.header('Content-Type', 'application/json');
-                    res.header('Content-Disposition', 'attachment;filename=\'' + filename + '\'');
-                    res.status(200);
-                    res.end(JSON.stringify(result, null, 2));
-                }
-            });
-        } else {
-            res.sendStatus(404);
+
+    function sendSimpleResult(res, resultId, filename) {
+        logger.debug('worker/simpleResult requested, urlArray', {metadata: {id: resultId, filename: filename}});
+
+        __workerManager.result(resultId, function (err, result) {
+            if (err) {
+                logger.error('worker/simpleResult err', err);
+                res.sendStatus(500);
+            } else {
+                res.header('Content-Disposition', 'attachment;filename=\'' + filename + '\'');
+                res.json(result);
+            }
+        });
+    }
+
+    __app.get('/worker/simpleResult/:resultId', function (req, res) {
+        var filename = 'simpleResult-' + req.params.resultId + '.json';
+        sendSimpleResult(res, req.params.resultId, filename);
+    });
+
+    // FIXME: filename should be in query string
+    __app.get('/worker/simpleResult/:resultId/:filename', function (req, res) {
+        var filename = req.params.filename;
+        if (filename.indexOf('.json') === -1) {
+            filename += '.json';
         }
+        sendSimpleResult(res, req.params.resultId, filename);
     });
 
 
@@ -1027,15 +943,11 @@ function StandAloneServer(gmeConfig) {
 
     // catches all next(new Error()) from previous rules, you can set res.status() before you call next(new Error())
     __app.use(function (err, req, res, next) {
-        if (err) {
-            if (res.statusCode === 200) {
-                res.status(err.status || 500);
-            }
-            res.sendStatus(res.statusCode);
-            //res.send(err.stack ? err.stack : err); // FIXME: in dev mode
-        } else {
-            return next();
+        if (res.statusCode === 200) {
+            res.status(err.status || 500);
         }
+        res.sendStatus(res.statusCode);
+        //res.send(err.stack ? err.stack : err); // FIXME: in dev mode
     });
 
     // everything else is 404
@@ -1045,9 +957,7 @@ function StandAloneServer(gmeConfig) {
     });
 
 
-    if (gmeConfig.debug === true) {
-        logger.debug('gmeConfig of webgme server', {metadata: gmeConfig});
-    }
+    logger.debug('gmeConfig of webgme server', {metadata: gmeConfig});
     var networkIfs = OS.networkInterfaces(),
         addresses = 'Valid addresses of gme web server: ',
         forEveryNetIf = function (netIf) {

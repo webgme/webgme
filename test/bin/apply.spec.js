@@ -51,7 +51,7 @@ describe('apply CLI tests', function () {
             projectId: projectId
         })
             .then(function () {
-                return Q.all([
+                return Q.allSettled([
                     gmeAuth.unload(),
                     storage.closeDatabase()
                 ]);

@@ -2,6 +2,9 @@
 /*jshint browser: true, node:true*/
 
 /**
+ * A module representing a PluginNodeDescription.
+ *
+ * @module PluginNodeDescription
  * @author lattmann / https://github.com/lattmann
  */
 
@@ -15,6 +18,7 @@ define([], function () {
      *
      * @param config - deserializes an existing configuration to this object.
      * @constructor
+     * @alias PluginNodeDescription
      */
     var PluginNodeDescription = function (config) {
         if (config) {

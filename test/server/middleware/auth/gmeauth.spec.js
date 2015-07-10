@@ -27,7 +27,7 @@ describe('GME authentication', function () {
         dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
             .then(function (db_) {
                 db = db_;
-                return Q.all([
+                return Q.allSettled([
                     Q.ninvoke(db, 'collection', '_users')
                         .then(function (collection_) {
                             var collection = collection_;
@@ -374,11 +374,15 @@ describe('GME authentication', function () {
     it('should auth with a new token', function (done) {
         auth.generateTokenForUserId('user')
             .then(function (tokenId) {
-                return Q.all([auth.tokenAuthorization(tokenId, 'project'),
+                return Q.allSettled([auth.tokenAuthorization(tokenId, 'project'),
                     auth.tokenAuthorization(tokenId, 'unauthorized_project'),
                     auth.tokenAuthorization(tokenId, 'doesnt_exist_project')]);
             }).then(function (authorized) {
-                authorized.should.deep.equal([true, false, false]);
+                authorized.should.deep.equal([
+                    {state: 'fulfilled', value: true},
+                    {state: 'fulfilled', value: false},
+                    {state: 'fulfilled', value: false}
+                ]);
             }).nodeify(done);
     });
 
@@ -420,6 +424,30 @@ describe('GME authentication', function () {
                 return auth.getOrganization(orgName);
             }).then(function (org) {
                 org.users.should.deep.equal(['user']);
+            }).nodeify(done);
+    });
+
+    it('should be able to list organization', function (done) {
+        var orgName = 'org1',
+            otherOrgName = 'otherOrgName';
+        Q.allSettled([
+            auth.addOrganization(orgName),
+            auth.addOrganization(otherOrgName)
+        ])
+            .then(function () {
+                return auth.listOrganizations({});
+            }).then(function (organizations) {
+                var expectedResult = [
+                    {
+                        _id: orgName,
+                        projects: {}
+                    },
+                    {
+                        _id: otherOrgName,
+                        projects: {}
+                    }
+                ];
+                expect(organizations).to.deep.equal(expectedResult);
             }).nodeify(done);
     });
 

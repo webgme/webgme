@@ -5,7 +5,7 @@
 
 var testFixture = require('../../_globals');
 
-describe.skip('TestAddOn', function () {
+describe('TestAddOn', function () {
     'use strict';
 
     var expect = testFixture.expect,
@@ -19,20 +19,15 @@ describe.skip('TestAddOn', function () {
         storage,
         webgmeSessionId,
         socket,
+        projectName = 'TestAddOn',
+        projectId = testFixture.projectName2Id(projectName),
         Q = testFixture.Q,
         gmeConfig = testFixture.getGmeConfig(),
-        importParam = {
-            projectSeed: './test/addon/core/TestAddOn/project.json',
-            projectName: 'TestAddOn',
-            branchName: 'master',
-            gmeConfig: gmeConfig,
-            logger: logger
-        },
         logIn = function (callback) {
-            agent.post(serverBaseUrl + '/login?redirect=%2F')
+            agent.post(serverBaseUrl + '/login')
                 .type('form')
                 .send({username: gmeConfig.authentication.guestAccount})
-                .send({password: 'plaintext'})
+                .send({password: 'guest'})
                 .end(function (err, res) {
                     if (err) {
                         return callback(err);
@@ -51,7 +46,10 @@ describe.skip('TestAddOn', function () {
 
                     agent.attachCookies(socketReq);
                     webgmeSessionId = /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1];
+
                     logger.debug('session', webgmeSessionId);
+                    //FIXME this socket does not needed as the storage created
+                    // during the test would be sufficient to check the update
                     socket = io.connect(serverBaseUrl,
                         {
                             query: 'webGMESessionId=' + webgmeSessionId,
@@ -78,17 +76,24 @@ describe.skip('TestAddOn', function () {
         gmeAuth;
 
     before(function (done) {
-        testFixture.clearDBAndGetGMEAuth(gmeConfig, importParam.projectName)
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
                 safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                 return safeStorage.openDatabase();
             })
             .then(function () {
-                return safeStorage.deleteProject({projectName: importParam.projectName});
+                return safeStorage.deleteProject({projectId: projectId});
             })
             .then(function () {
-                return testFixture.importProject(safeStorage, importParam);
+                return testFixture.importProject(safeStorage, {
+                    projectName: projectName,
+                    logger: logger.fork('import'),
+                    gmeConfig: gmeConfig,
+                    branchName: 'master',
+                    userName: gmeConfig.authentication.guestAccount,
+                    projectSeed: './test/addon/core/TestAddOn/project.json'
+                });
             })
             .then(function () {
                 server = WebGME.standaloneServer(gmeConfig);
@@ -102,26 +107,27 @@ describe.skip('TestAddOn', function () {
                 socket = socket_;
                 done();
             })
-            .catch(function (err) {
-                done(err);
-            });
+            .catch(done);
     });
 
     after(function (done) {
-        storage.close();
-        server.stop(done);
+        if (server) {
+            server.stop(done);
+        } else {
+            done();
+        }
     });
 
-    //TODO: We need a corresponding WebGMESessionId.
-    it('should start, update and stop', function (done) {
+    //TODO we need meaningful update function that can be checked
+    it('should start, query and stop', function (done) {
         var _addOn,
             startParam = {
-                projectName: 'TestAddOn',
+                projectId: projectId,
                 branchName: 'master',
                 logger: logger.fork(TestAddOn)
             };
 
-        storage = testFixture.NodeStorage.createStorage(server.getUrl(), webgmeSessionId, logger, gmeConfig);
+        storage = testFixture.NodeStorage.createStorage('127.0.0.1', webgmeSessionId, logger, gmeConfig);
         _addOn = new TestAddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName),
             gmeConfig.authentication.guestAccount);
 
@@ -129,12 +135,31 @@ describe.skip('TestAddOn', function () {
             if (networkStatus === testFixture.STORAGE_CONSTANTS.CONNECTED) {
                 logger.debug('starting addon', {metadata: addOnName});
 
-                _addOn.start(startParam, function (err) {
+                //start
+                Q.ninvoke(_addOn, 'start', startParam)
+                    .then(function () {
+                        return Q.ninvoke(_addOn,'query','test');
+                    })
+                    .then(function(result){
+                        expect(result).to.equal('test');
 
-                });
+                        return Q.ninvoke(_addOn,'stop');
+
+                    })
+                    .then(function(){
+                        storage.close(function () {
+                            done();
+                        });
+                    })
+                    .catch(function (err) {
+                        storage.close(function () {
+                            done(err);
+                        });
+                    });
             } else {
-                storage.close();
-                done('unable to connect storage');
+                storage.close(function () {
+                    done('unable to connect storage');
+                });
             }
         });
     });

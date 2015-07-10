@@ -1,5 +1,6 @@
 /* jshint node:true */
 /**
+ * @module Bin:Import
  * @author kecso / https://github.com/kecso
  */
 

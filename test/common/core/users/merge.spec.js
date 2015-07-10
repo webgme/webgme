@@ -6,15 +6,16 @@
 
 var testFixture = require('../../../_globals');
 
-describe.skip('merge - library', function () {
+describe('merge - library', function () {
     'use strict';
     var projectName = 'mergeLibrary',
         projectId = testFixture.projectName2Id(projectName),
         Q = testFixture.Q,
         gmeConfig = testFixture.getGmeConfig(),
-        logger = testFixture.logger.fork('apply.spec'),
+        logger = testFixture.logger.fork('merger.spec'),
         expect = testFixture.expect,
         merger = testFixture.requirejs('common/core/users/merge'),
+        getRoot = testFixture.requirejs('common/core/users/getroot'),
         storage,
         context,
         gmeAuth;
@@ -27,16 +28,21 @@ describe.skip('merge - library', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                return testFixture.openContext(storage, gmeConfig, logger, {
+                return storage.deleteProject({projectId: projectId});
+            })
+            .then(function () {
+                return testFixture.importProject(storage, {
                     projectName: projectName,
+                    logger: logger.fork('import'),
+                    gmeConfig: gmeConfig,
                     branchName: 'master',
-                    createProject: true,
+                    userName: gmeConfig.authentication.guestAccount,
                     projectSeed: './test/common/core/users/merge/base.json'
                 });
             })
             .then(function (result) {
                 context = result;
-                return Q.all([
+                return Q.allSettled([
                     Q.nfcall(context.project.createBranch, 'other', result.commitHash),
                     Q.nfcall(context.project.createBranch, 'empty', result.commitHash)
                 ]);
@@ -47,7 +53,7 @@ describe.skip('merge - library', function () {
     after(function (done) {
         storage.deleteProject({projectId: projectId})
             .then(function () {
-                return Q.all([
+                return Q.allSettled([
                     storage.closeDatabase(),
                     gmeAuth.unload()
                 ]);
@@ -75,7 +81,7 @@ describe.skip('merge - library', function () {
             branchOrCommit: 'unknownBranch',
             noUpdate: true
         })
-            .then(function (result) {
+            .then(function (/*result*/) {
                 done(new Error('missing error handling'));
             })
             .catch(function (err) {
@@ -93,7 +99,7 @@ describe.skip('merge - library', function () {
             branchOrCommit: '#42424242424242',
             noUpdate: true
         })
-            .then(function (result) {
+            .then(function (/*result*/) {
                 done(new Error('missing error handling'));
             })
             .catch(function (err) {
@@ -138,28 +144,48 @@ describe.skip('merge - library', function () {
             .catch(done);
     });
 
-    it('should return the conflict object if there is conflicting changes', function (done) {
-        var masterContext,
+    it('should return the conflict object if there are conflicting changes and resolve them', function (done) {
+        var masterBranch = 'resolveMaster',
+            otherBranch = 'resolveOther',
+            masterContext,
             otherContext,
             masterPersisted,
-            otherPersisted;
+            otherPersisted,
+            getContext = function (branchName) {
+                var deferred = Q.defer(),
+                    branchContext = {};
+                branchContext.core = context.core;
+                branchContext.project = context.project;
+                branchContext.commitHash = context.commitHash;
+                branchContext.id = branchName;
+                getRoot(branchContext)
+                    .then(function (result) {
+                        branchContext.rootNode = result.root;
 
-        Q.all([
-            testFixture.openContext(storage, gmeConfig, logger, {
-                projectName: projectName,
-                branchName: 'master'
-            }),
-            testFixture.openContext(storage, gmeConfig, logger, {
-                projectName: projectName,
-                branchName: 'other'
-            })
+                        deferred.resolve(branchContext);
+                    })
+                    .catch(deferred.reject);
+                return deferred.promise;
+            };
+
+        Q.allSettled([
+            Q.nfcall(context.project.createBranch, masterBranch, context.commitHash),
+            Q.nfcall(context.project.createBranch, otherBranch, context.commitHash)
         ])
+            .then(function () {
+                return Q.allSettled([
+                    getContext(masterBranch),
+                    getContext(otherBranch)
+                ]);
+            })
             .then(function (contexts) {
                 expect(contexts).not.to.equal(null);
                 expect(contexts).to.have.length(2);
+                expect(contexts[0].state).to.equal('fulfilled');
+                expect(contexts[1].state).to.equal('fulfilled');
 
-                masterContext = contexts[0];
-                otherContext = contexts[1];
+                masterContext = contexts[0].value;
+                otherContext = contexts[1].value;
 
                 masterContext.core.setRegistry(masterContext.rootNode, 'something', 'masterValue');
                 otherContext.core.setRegistry(otherContext.rootNode, 'something', 'otherValue');
@@ -167,15 +193,15 @@ describe.skip('merge - library', function () {
                 masterPersisted = masterContext.core.persist(masterContext.rootNode);
                 otherPersisted = otherContext.core.persist(otherContext.rootNode);
 
-                return Q.all([
+                return Q.allSettled([
                     masterContext.project.makeCommit(
-                        'master',
+                        masterBranch,
                         [masterContext.commitHash],
                         masterContext.core.getHash(masterContext.rootNode),
                         masterPersisted.objects,
                         'master setting core registry'),
                     otherContext.project.makeCommit(
-                        'other',
+                        otherBranch,
                         [otherContext.commitHash],
                         otherContext.core.getHash(otherContext.rootNode),
                         otherPersisted.objects,
@@ -190,8 +216,8 @@ describe.skip('merge - library', function () {
                     project: context.project,
                     logger: logger,
                     gmeConfig: gmeConfig,
-                    myBranchOrCommit: 'other',
-                    theirBranchOrCommit: 'master',
+                    myBranchOrCommit: otherBranch,
+                    theirBranchOrCommit: masterBranch,
                     auto: true
                 });
             })
@@ -200,11 +226,145 @@ describe.skip('merge - library', function () {
                 expect(mergeResult).to.include.keys(['myCommitHash',
                     'theirCommitHash', 'baseCommitHash', 'diff', 'conflict']);
                 expect(mergeResult.conflict.items).to.have.length(1);
-                expect(mergeResult.conflict.items[0]).to.include.keys(['selected','mine','theirs']);
+                expect(mergeResult.conflict.items[0]).to.include.keys(['selected', 'mine', 'theirs']);
                 expect(mergeResult.conflict.items[0].mine.path).to.equal('/reg/something');
                 expect(mergeResult.conflict.items[0].theirs.path).to.equal('/reg/something');
                 expect(mergeResult.conflict.items[0].mine.value).to.equal('otherValue');
                 expect(mergeResult.conflict.items[0].theirs.value).to.equal('masterValue');
+
+                mergeResult.conflict.items[0].selected = 'theirs';
+
+                return merger.resolve({
+                    project: context.project,
+                    logger: logger,
+                    gmeConfig: gmeConfig,
+                    partial: mergeResult
+                });
+            })
+            .then(function (result) {
+                expect(result).not.to.equal(null);
+                expect(result).to.include.keys('hash', 'updatedBranch');
+
+                return getContext(masterBranch);
+            })
+            .then(function (finalContext) {
+                expect(finalContext.core.getRegistry(finalContext.rootNode, 'something')).to.equal('masterValue');
+                done();
+            })
+            .catch(done);
+    });
+
+    it('should resolve to a commit if no target branch is given', function (done) {
+        var masterBranch = 'resolveMasterNoBranch',
+            otherBranch = 'resolveOtherNoBranch',
+            masterContext,
+            otherContext,
+            masterPersisted,
+            otherPersisted,
+            getContext = function (branchName) {
+                var deferred = Q.defer(),
+                    branchContext = {};
+                branchContext.core = context.core;
+                branchContext.project = context.project;
+                branchContext.commitHash = context.commitHash;
+                branchContext.id = branchName;
+                getRoot(branchContext)
+                    .then(function (result) {
+                        branchContext.rootNode = result.root;
+
+                        deferred.resolve(branchContext);
+                    })
+                    .catch(deferred.reject);
+                return deferred.promise;
+            };
+
+        Q.allSettled([
+            Q.nfcall(context.project.createBranch, masterBranch, context.commitHash),
+            Q.nfcall(context.project.createBranch, otherBranch, context.commitHash)
+        ])
+            .then(function () {
+                return Q.allSettled([
+                    getContext(masterBranch),
+                    getContext(otherBranch)
+                ]);
+            })
+            .then(function (contexts) {
+                expect(contexts).not.to.equal(null);
+                expect(contexts).to.have.length(2);
+                expect(contexts[0].state).to.equal('fulfilled');
+                expect(contexts[1].state).to.equal('fulfilled');
+
+                masterContext = contexts[0].value;
+                otherContext = contexts[1].value;
+
+                masterContext.core.setRegistry(masterContext.rootNode, 'something', 'masterValue');
+                otherContext.core.setRegistry(otherContext.rootNode, 'something', 'otherValue');
+
+                masterPersisted = masterContext.core.persist(masterContext.rootNode);
+                otherPersisted = otherContext.core.persist(otherContext.rootNode);
+
+                return Q.allSettled([
+                    masterContext.project.makeCommit(
+                        masterBranch,
+                        [masterContext.commitHash],
+                        masterContext.core.getHash(masterContext.rootNode),
+                        masterPersisted.objects,
+                        'master setting core registry'),
+                    otherContext.project.makeCommit(
+                        otherBranch,
+                        [otherContext.commitHash],
+                        otherContext.core.getHash(otherContext.rootNode),
+                        otherPersisted.objects,
+                        'other setting core registry')
+                ]);
+            })
+            .then(function (commitResults) {
+                expect(commitResults).not.to.equal(null);
+                expect(commitResults).to.have.length(2);
+
+                return merger.merge({
+                    project: context.project,
+                    logger: logger,
+                    gmeConfig: gmeConfig,
+                    myBranchOrCommit: otherBranch,
+                    theirBranchOrCommit: masterBranch,
+                    auto: true
+                });
+            })
+            .then(function (mergeResult) {
+                expect(mergeResult).not.to.equal(null);
+                expect(mergeResult).to.include.keys(['myCommitHash',
+                    'theirCommitHash', 'baseCommitHash', 'diff', 'conflict']);
+                expect(mergeResult.conflict.items).to.have.length(1);
+                expect(mergeResult.conflict.items[0]).to.include.keys(['selected', 'mine', 'theirs']);
+                expect(mergeResult.conflict.items[0].mine.path).to.equal('/reg/something');
+                expect(mergeResult.conflict.items[0].theirs.path).to.equal('/reg/something');
+                expect(mergeResult.conflict.items[0].mine.value).to.equal('otherValue');
+                expect(mergeResult.conflict.items[0].theirs.value).to.equal('masterValue');
+
+                mergeResult.conflict.items[0].selected = 'theirs';
+
+                delete mergeResult.targetBranchName;
+
+                return merger.resolve({
+                    project: context.project,
+                    logger: logger,
+                    gmeConfig: gmeConfig,
+                    partial: mergeResult
+                });
+            })
+            .then(function (result) {
+                expect(result).not.to.equal(null);
+                expect(result).to.contain('#');
+
+                return getRoot({
+                    core: context.core,
+                    project: context.project,
+                    id: result
+                });
+            })
+            .then(function (rootResult) {
+                expect(context.core.getRegistry(rootResult.root, 'something')).to.equal('masterValue');
                 done();
             })
             .catch(done);

@@ -30,7 +30,7 @@ describe('Mongo storage', function () {
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
                 storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-                return Q.all([
+                return Q.allSettled([
                     storage.openDatabase(),
                     gmeAuth.authorizeByUserId(guestAccount, projectDoesNotHaveAccessId, 'create',
                         {
@@ -44,7 +44,7 @@ describe('Mongo storage', function () {
     });
 
     after(function (done) {
-        Q.all([
+        Q.allSettled([
             gmeAuth.unload(),
             storage.closeDatabase()
         ])
@@ -169,7 +169,7 @@ describe('Mongo storage', function () {
         var mongoStorage;
 
         afterEach(function (done) {
-            Q.all([
+            Q.allSettled([
                 testFixture.forceDeleteProject(storage, gmeAuth, projectName),
                 testFixture.forceDeleteProject(storage, gmeAuth, projectDoesNotHaveAccessName)
             ])
@@ -682,10 +682,10 @@ describe('Mongo storage', function () {
         });
 
         it('should insert object multiple times if the content is the same', function (done) {
-            Q.all([
-                project.insertObject({_id: '#blabla22', num: 42, str: '35', arr: ['', 'ss']}),
-                project.insertObject({_id: '#blabla22', num: 42, str: '35', arr: ['', 'ss']})
-            ])
+            project.insertObject({_id: '#blabla22', num: 42, str: '35', arr: ['', 'ss']})
+                .then(function () {
+                    return project.insertObject({_id: '#blabla22', num: 42, str: '35', arr: ['', 'ss']})
+                })
                 .then(function () {
                     done();
                 })
@@ -693,10 +693,10 @@ describe('Mongo storage', function () {
         });
 
         it('should fail to insert object multiple times if the content is different', function (done) {
-            Q.all([
-                project.insertObject({_id: '#blabla223', num: 42, str: '35', arr: ['', 'ss']}),
-                project.insertObject({_id: '#blabla223', num: 4200, str: 'different', arr: ['', 'ss']})
-            ])
+            project.insertObject({_id: '#blabla223', num: 42, str: '35', arr: ['', 'ss']})
+                .then(function () {
+                    return project.insertObject({_id: '#blabla223', num: 4200, str: 'different', arr: ['', 'ss']});
+                })
                 .then(function () {
                     done(new Error('should have failed to insertObject'));
                 })
@@ -904,7 +904,7 @@ describe('Mongo storage', function () {
                         return mongoStorage.makeCommit(commitData);
                     }
 
-                    return Q.all(commitDatas.map(makeCommit));
+                    return Q.allSettled(commitDatas.map(makeCommit));
                 })
                 .then(function (/*commitResults*/) {
                     done();
