@@ -1,6 +1,7 @@
 /*globals requireJS*/
 /*jshint node: true*/
 /**
+ * @module Server:ServerWorkerManager
  * @author kecso / https://github.com/kecso
  */
 'use strict';

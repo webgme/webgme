@@ -1,5 +1,6 @@
 /*jshint node: true*/
 /**
+ * @module Bin:Apply
  * @author kecso / https://github.com/kecso
  */
 

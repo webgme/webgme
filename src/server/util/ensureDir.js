@@ -1,8 +1,9 @@
 /*jshint node: true*/
 
 /**
+ * @module EnsureDir
  * @author lattmann / https://github.com/lattmann
- * https://github.com/samxxu/ensureDir
+ * @author https://github.com/samxxu/ensureDir
  */
 
 var path = require('path'),

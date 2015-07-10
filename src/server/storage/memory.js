@@ -1,6 +1,7 @@
 /*globals requireJS*/
 /*jshint node:true, newcap:false*/
 /**
+ * @module Server:Storage:Memory
  * @author lattmann / https://github.com/lattmann
  */
 'use strict';

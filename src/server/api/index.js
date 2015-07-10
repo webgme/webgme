@@ -1,6 +1,7 @@
 /*jshint node:true*/
 
 /**
+ * @module Server:API
  * @author lattmann / https://github.com/lattmann
  */
 

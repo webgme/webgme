@@ -2,6 +2,7 @@
 /*jshint node:true*/
 
 /**
+ * @module Server:StandAlone
  * @author kecso / https://github.com/kecso
  */
 

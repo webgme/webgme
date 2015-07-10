@@ -4,6 +4,7 @@
  * This class is used when you need a project for e.g. core manipulations without going
  * through the web-sockets. This implies that it runs in same process and has direct access to the storage on the server.
  *
+ * @module Server:UserProject
  * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';

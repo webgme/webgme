@@ -2,6 +2,7 @@
 /*jshint node:true, newcap:false*/
 
 /**
+ * @module Server:Storage
  * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';

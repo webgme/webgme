@@ -6,6 +6,7 @@
  *  - checks that the user is authorized to access/change the data.
  *  - updates the users and projects databases on delete/create project.
  *
+ * @module Server:SafeStorage
  * @author pmeijer / https://github.com/pmeijer
  */
 

@@ -1,5 +1,6 @@
 /*jshint node: true*/
 /**
+ * @module Bin:RunPlugin
  * @author lattmann / https://github.com/lattmann
  * @author pmeijer / https://github.com/pmeijer
  */

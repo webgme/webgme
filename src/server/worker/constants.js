@@ -1,5 +1,6 @@
 /*jshint node:true*/
 /**
+ * @module Server:WorkerConstants
  * @author kecso / https://github.com/kecso
  */
 'use strict';

@@ -1,5 +1,6 @@
 /*jshint node: true*/
 /**
+ * @module Bin:Diff
  * @author kecso / https://github.com/kecso
  */
 'use strict';

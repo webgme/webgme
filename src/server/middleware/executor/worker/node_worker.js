@@ -1,6 +1,7 @@
 /*globals define*/
 /*jshint node:true*/
 /**
+ * @module Executor:NodeWorker
  * @author lattmann / https://github.com/lattmann
  * @author ksmyth / https://github.com/ksmyth
  */

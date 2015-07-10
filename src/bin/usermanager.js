@@ -2,6 +2,7 @@
 /**
  * NOTE: Expected to be run only under nodejs.
  *
+ * @module Bin:UserManager
  * @author kecso / https://github.com/kecso
  * @author ksmyth / https://github.com/ksmyth
  * @author lattmann / https://github.com/lattmann
