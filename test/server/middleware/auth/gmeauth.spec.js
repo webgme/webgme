@@ -427,6 +427,30 @@ describe('GME authentication', function () {
             }).nodeify(done);
     });
 
+    it('should be able to list organization', function (done) {
+        var orgName = 'org1',
+            otherOrgName = 'otherOrgName';
+        Q.allSettled([
+            auth.addOrganization(orgName),
+            auth.addOrganization(otherOrgName)
+        ])
+            .then(function () {
+                return auth.listOrganizations({});
+            }).then(function (organizations) {
+                var expectedResult = [
+                    {
+                        _id: orgName,
+                        projects: {}
+                    },
+                    {
+                        _id: otherOrgName,
+                        projects: {}
+                    }
+                ];
+                expect(organizations).to.deep.equal(expectedResult);
+            }).nodeify(done);
+    });
+
     it('should fail to add dup organization', function (done) {
         var orgName = 'org1';
         auth.addOrganization(orgName)

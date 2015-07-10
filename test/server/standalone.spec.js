@@ -43,6 +43,19 @@ describe('standalone server', function () {
         });
     });
 
+    it('should start and start and stop', function (done) {
+        this.timeout(5000);
+        // we have to set the config here
+        var gmeConfig = testFixture.getGmeConfig();
+
+        server = WebGME.standaloneServer(gmeConfig);
+        server.start(function () {
+            server.start(function () {
+                server.stop(done);
+            });
+        });
+    });
+
     scenarios = [{
         type: 'http',
         authentication: false,
@@ -50,7 +63,7 @@ describe('standalone server', function () {
         requests: [
             {code: 200, url: '/'},
             {code: 200, url: '/login'},
-            {code: 200, url: '/login/google/return', redirectUrl: '/'},
+            //{code: 200, url: '/login/google/return', redirectUrl: '/'},
             {code: 200, url: '/logout', redirectUrl: '/login'},
             {code: 200, url: '/bin/getconfig.js'},
             {code: 200, url: '/gmeConfig.json'},
@@ -80,10 +93,11 @@ describe('standalone server', function () {
             {code: 200, url: '/listAllVisualizerDescriptors'},
             {code: 200, url: '/listAllSeeds'},
 
-            {code: 401, url: '/login/client/fail'},
+            //{code: 401, url: '/login/client/fail'},
 
             {code: 404, url: '/login/forge'},
-            {code: 404, url: '/extlib/does_not_exist'},
+            {code: 404, url: '/extlib/does_not_exist'}, // ending without a forward slash
+            {code: 404, url: '/extlib/does_not_exist/'}, // ending with a forward slash
             //{code: 404, url: '/pluginoutput/does_not_exist'},
             {code: 404, url: '/plugin'},
             {code: 404, url: '/plugin/'},
@@ -96,7 +110,6 @@ describe('standalone server', function () {
             {code: 404, url: '/rest'},
             {code: 404, url: '/rest/etf'},
             {code: 404, url: '/worker/simpleResult'},
-            {code: 404, url: '/login/client'},
             {code: 404, url: '/docs/'},
             {code: 404, url: '/index2.html'},
             {code: 404, url: '/does_not_exist'},

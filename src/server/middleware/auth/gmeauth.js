@@ -190,7 +190,7 @@ function GMEAuth(session, gmeConfig) {
                 if (type === 'gmail') {
                     req.session.udmId = userData._id;
                     req.session.authenticated = true;
-                    req.session.userType = 'GME';
+                    req.session.userType = 'GME'; // FIXME: should this be another userType? gmail
                     next();
                 } else {
                     if (!password) {
@@ -203,7 +203,7 @@ function GMEAuth(session, gmeConfig) {
                                 } else {
                                     req.session.udmId = userData._id;
                                     req.session.authenticated = true;
-                                    req.session.userType = 'GME';
+                                    req.session.userType = 'GME'; // FIXME: uppercase or lowercase?
                                     next();
                                 }
                             });
@@ -229,6 +229,7 @@ function GMEAuth(session, gmeConfig) {
             type;
         delete req.__gmeAuthFailUrl__;
         //gmail based authentication - no authentication just user search
+        // TODO: this does not work yet.
         if (userId === null || userId === undefined) {
             userId = req.query['openid.ext1.value.email'];
             password = null;

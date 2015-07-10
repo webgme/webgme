@@ -206,6 +206,15 @@ describe('API', function () {
                     });
             });
 
+            it('should fail with no password and no username basic authentication GET /api/v1/user', function (done) {
+                agent.get(server.getUrl() + '/api/v1/user')
+                    .set('Authorization', 'Basic ' + new Buffer('').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(401, err);
+                        done();
+                    });
+            });
+
             it('should fail with wrong password basic authentication GET /api/v1/user', function (done) {
                 agent.get(server.getUrl() + '/api/v1/user')
                     .set('Authorization', 'Basic ' + new Buffer('guest:wrong_password').toString('base64'))
@@ -289,6 +298,7 @@ describe('API', function () {
             it('should update user with valid data PATCH /api/v1/users/user_to_modify', function (done) {
                 var updates = {
                     email: 'new_email_address',
+                    password: 'newPlainPassword',
                     canCreate: false
                 };
 
