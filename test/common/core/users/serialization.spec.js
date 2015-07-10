@@ -62,6 +62,9 @@ describe('serialization', function () {
     after(function (done) {
         storage.deleteProject({projectId: projectIdFrom})
             .then(function () {
+                return storage.deleteProject({projectId: projectIdTo});
+            })
+            .then(function () {
                 return Q.allSettled([
                     storage.closeDatabase(),
                     gmeAuth.unload()
@@ -84,7 +87,7 @@ describe('serialization', function () {
 
                 //before checks
                 expect(contextTo.core.getChildrenRelids(contextTo.rootNode)).to.have.length(1);
-                expect(contextTo.core.getMemberPaths(contextTo.rootNode,'MetaAspectSet')).to.have.length(1);
+                expect(contextTo.core.getMemberPaths(contextTo.rootNode, 'MetaAspectSet')).to.have.length(1);
 
                 return Q.nfcall(contextTo.core.loadByPath, contextTo.rootNode, '/1');
             })
@@ -97,11 +100,100 @@ describe('serialization', function () {
                 //after checks
                 //TODO check if really all member of the sheets have been inserted
                 expect(contextTo.core.getChildrenRelids(contextTo.rootNode)).to.have.length(2);
-                expect(contextTo.core.getMemberPaths(contextTo.rootNode,'MetaAspectSet')).to.have.length.above(1);
+                expect(contextTo.core.getMemberPaths(contextTo.rootNode, 'MetaAspectSet')).to.have.length.above(1);
                 done();
             })
             .catch(done);
     });
 
-    //TODO add example when the library update removes some nodes
+    it('should import a library update where some items are removed', function (done) {
+        var testProjectName = 'libraryItemRemovalTest',
+            testProjectId = testFixture.projectName2Id(testProjectName),
+            jsonLibrary,
+            testContext;
+
+        storage.getProjects({})
+            .then(function (ids) {
+                if (ids[testProjectId]) {
+                    return storage.deleteProject({projectId: testProjectId});
+                } else {
+                    return Q();
+                }
+            })
+            .then(function () {
+                return testFixture.importProject(storage, {
+                    projectName: testProjectName,
+                    logger: logger.fork('import'),
+                    gmeConfig: gmeConfig,
+                    branchName: 'master',
+                    userName: gmeConfig.authentication.guestAccount,
+                    projectSeed: './seeds/SignalFlowSystem.json'
+                });
+            })
+            .then(function (testContext_) {
+                testContext = testContext_;
+                jsonLibrary = JSON.parse(
+                    testFixture.fs.readFileSync('./test/common/core/users/serialization/libraryRemove.json', 'utf8'));
+
+                return Q.nfcall(testContext.core.loadByPath, testContext.rootNode, '/-2');
+            })
+            .then(function (libraryContainerNode) {
+                return Q.nfcall(Serialization.import, testContext.core, libraryContainerNode, jsonLibrary);
+            })
+            .then(function () {
+                expect(testContext.core.getMemberPaths(testContext.rootNode, 'MetaAspectSet'))
+                    .not.to.include('/-2/-16');
+                expect(testContext.core.getMemberPaths(testContext.rootNode, 'MetaAspectSet'))
+                    .not.to.include('/-2/-17');
+            })
+            .then(function () {
+                return storage.deleteProject({projectId: testProjectId});
+            })
+            .nodeify(done);
+    });
+
+    it('should update library with external nodes', function (done) {
+        var testProjectName = 'externalBasesTest',
+            testProjectId = testFixture.projectName2Id(testProjectName),
+            jsonLibrary,
+            testContext;
+
+        storage.getProjects({})
+            .then(function (ids) {
+                if (ids[testProjectId]) {
+                    return storage.deleteProject({projectId: testProjectId});
+                } else {
+                    return Q();
+                }
+            })
+            .then(function () {
+                return testFixture.importProject(storage, {
+                    projectName: testProjectName,
+                    logger: logger.fork('import'),
+                    gmeConfig: gmeConfig,
+                    branchName: 'master',
+                    userName: gmeConfig.authentication.guestAccount,
+                    projectSeed: './test/common/core/users/serialization/externalBasesProject.json'
+                });
+            })
+            .then(function (testContext_) {
+                testContext = testContext_;
+                jsonLibrary = JSON.parse(
+                    testFixture.fs.readFileSync('./test/common/core/users/serialization/externalBasesLibrary.json',
+                        'utf8'));
+
+                return Q.nfcall(testContext.core.loadByPath, testContext.rootNode, '/1156857239');
+            })
+            .then(function (libraryContainerNode) {
+                return Q.nfcall(Serialization.import, testContext.core, libraryContainerNode, jsonLibrary);
+            })
+            .then(function () {
+                expect(testContext.core.getMemberPaths(testContext.rootNode, 'MetaAspectSet'))
+                    .to.include('/1156857239/443867365');
+            })
+            .then(function () {
+                return storage.deleteProject({projectId: testProjectId});
+            })
+            .nodeify(done);
+    });
 });
