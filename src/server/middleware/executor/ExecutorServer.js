@@ -7,9 +7,9 @@
  *
  curl http://localhost:8855/rest/executor/info/77704f10a36aa4214f5b0095ba8099e729a10f46
  curl -X POST -H "Content-Type: application/json"
-    -d {} http://localhost:8855/rest/executor/create/77704f10a36aa4214f5b0095ba8099e729a10f46
+ -d {} http://localhost:8855/rest/executor/create/77704f10a36aa4214f5b0095ba8099e729a10f46
  curl -X POST -H "Content-Type: application/json"
-    -d {\"status\":\"CREATED\"} http://localhost:8855/rest/executor/update/77704f10a36aa4214f5b0095ba8099e729a10f46
+ -d {\"status\":\"CREATED\"} http://localhost:8855/rest/executor/update/77704f10a36aa4214f5b0095ba8099e729a10f46
  */
 
 'use strict';
@@ -42,37 +42,37 @@ function executorRESTCreate(req, res/*, next*/) {
 
     if (url.length < 3 || !url[2]) {
         res.sendStatus(404);
-        return;
+    } else {
+        var hash = url[2];
+
+        var info = req.body;
+        info.hash = hash;
+        info.createTime = new Date().toISOString();
+        info.status = info.status || 'CREATED'; // TODO: define a constant for this
+        var jobInfo = new JobInfo(info);
+        // TODO: check if hash ok
+        jobList.find({hash: hash}, function (err, docs) {
+            if (err) {
+                logger.error('err');
+                res.sendStatus(500);
+            } else if (docs.length === 0) {
+                jobList.update({hash: hash}, jobInfo, {upsert: true}, function (err) {
+                    if (err) {
+                        logger.error(err);
+                        res.sendStatus(500);
+                    } else {
+                        delete jobInfo._id;
+                        res.send(jobInfo);
+                    }
+                });
+            } else {
+                delete docs[0]._id;
+                res.send(docs[0]);
+            }
+        });
+
+        // TODO: get job description
     }
-    var hash = url[2];
-
-    var info = req.body;
-    info.hash = hash;
-    info.createTime = new Date().toISOString();
-    info.status = info.status || 'CREATED'; // TODO: define a constant for this
-    var jobInfo = new JobInfo(info);
-    // TODO: check if hash ok
-    jobList.find({hash: hash}, function (err, docs) {
-        if (err) {
-            logger.error('err');
-            res.sendStatus(500);
-        } else if (docs.length === 0) {
-            jobList.update({hash: hash}, jobInfo, {upsert: true}, function (err) {
-                if (err) {
-                    logger.error(err);
-                    res.sendStatus(500);
-                } else {
-                    delete jobInfo._id;
-                    res.send(jobInfo);
-                }
-            });
-        } else {
-            delete docs[0]._id;
-            res.send(docs[0]);
-        }
-    });
-
-    // TODO: get job description
 }
 
 function executorRESTUpdate(req, res/*, next*/) {
@@ -83,47 +83,39 @@ function executorRESTUpdate(req, res/*, next*/) {
 
     if (url.length < 3 || !url[2]) {
         res.sendStatus(404);
-        return;
-    }
-    var hash = url[2];
-
-    if (hash) {
     } else {
-        logger.error('no hash given');
-        res.sendStatus(500);
-        return;
-    }
+        var hash = url[2];
 
-    jobList.find({hash: hash}, function (err, docs) {
-        if (err) {
-            logger.error(err);
-            res.sendStatus(500);
-        } else if (docs.length) {
-            var jobInfo = new JobInfo(docs[0]);
-            var jobInfoUpdate = new JobInfo(req.body);
-            jobInfoUpdate.hash = hash;
-            for (var i in jobInfoUpdate) {
-                if (jobInfoUpdate[i] !== null && (!(jobInfoUpdate[i] instanceof Array) ||
-                    jobInfoUpdate[i].length !== 0)) {
+        jobList.find({hash: hash}, function (err, docs) {
+            if (err) {
+                logger.error(err);
+                res.sendStatus(500);
+            } else if (docs.length) {
+                var jobInfo = new JobInfo(docs[0]);
+                var jobInfoUpdate = new JobInfo(req.body);
+                jobInfoUpdate.hash = hash;
+                for (var i in jobInfoUpdate) {
+                    if (jobInfoUpdate[i] !== null && (!(jobInfoUpdate[i] instanceof Array) ||
+                                                      jobInfoUpdate[i].length !== 0)) {
 
-                    jobInfo[i] = jobInfoUpdate[i];
+                        jobInfo[i] = jobInfoUpdate[i];
+                    }
                 }
+                jobList.update({hash: hash}, jobInfo, function (err, numReplaced) {
+                    if (err) {
+                        logger.error(err);
+                        res.sendStatus(500);
+                    } else if (numReplaced !== 1) {
+                        res.sendStatus(404);
+                    } else {
+                        res.sendStatus(200);
+                    }
+                });
+            } else {
+                res.sendStatus(404);
             }
-            jobList.update({hash: hash}, jobInfo, function (err, numReplaced) {
-                if (err) {
-                    logger.error(err);
-                    res.sendStatus(500);
-                } else if (numReplaced !== 1) {
-                    res.sendStatus(404);
-                } else {
-                    res.sendStatus(200);
-                }
-            });
-        } else {
-            res.sendStatus(404);
-        }
-    });
-
+        });
+    }
 }
 
 function executorRESTWorkerGET(req, res/*, next*/) {
@@ -165,11 +157,6 @@ function executorRESTWorkerAPI(req, res, next) {
 
     var url = require('url').parse(req.url);
     var pathParts = url.pathname.split('/');
-
-    if (pathParts.length < 2) {
-        res.sendStatus(404);
-        return;
-    }
 
     var serverResponse = new WorkerInfo.ServerResponse({refreshPeriod: workerRefreshInterval});
     serverResponse.labelJobs = labelJobs;
@@ -232,18 +219,17 @@ function executorRESTCancel(req, res/*, next*/) {
     if (url.length < 3 || !url[2]) {
         logger.error('ExecutorRESTCancel wrong format of url', url);
         res.sendStatus(500);
-        return;
-    }
-
-    var hash = url[2];
-
-    if (false) {
-        // TODO
-        executorBackend.cancelJob(hash);
-
-        res.sendStatus(200);
     } else {
-        res.sendStatus(500);
+        var hash = url[2];
+
+        if (false) {
+            // TODO
+            executorBackend.cancelJob(hash);
+
+            res.sendStatus(200);
+        } else {
+            res.sendStatus(500);
+        }
     }
 
 }
@@ -259,12 +245,9 @@ function executorRESTInfo(req, res/*, next*/) {
     if (url.length < 3 || !url[2]) {
         logger.error('ExecutorRESTInfo wrong format of url', url);
         res.sendStatus(500);
-        return;
-    }
+    } else {
+        var hash = url[2];
 
-    var hash = url[2];
-
-    if (hash) {
         jobList.find({hash: hash}, function (err, docs) {
             if (err) {
                 logger.error(err);
@@ -275,9 +258,6 @@ function executorRESTInfo(req, res/*, next*/) {
                 res.sendStatus(404);
             }
         });
-    } else {
-        logger.error('hash not given');
-        res.sendStatus(500);
     }
 }
 
@@ -303,11 +283,6 @@ function executorREST(req, res, next) {
 
     var url = require('url').parse(req.url);
     var pathParts = url.pathname.split('/');
-
-    if (pathParts.length < 2) {
-        res.sendStatus(404);
-        return;
-    }
 
     if (pathParts.length === 2 && pathParts[1] === '') {
         //next should be always called / the response should be sent otherwise this thread will stop without and end
