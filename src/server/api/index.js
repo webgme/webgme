@@ -560,10 +560,11 @@ function createAPI(app, mountPath, middlewareOpts) {
                 username: userId,
                 projectId: StorageUtil.getProjectIdFromUserIdAndProjectName(req.params.ownerId, req.params.projectName),
                 branchName: req.params.branchId,
-                hash: req.body.hash
+                oldHash: req.body.oldHash,
+                newHash: req.body.newHash
             };
 
-        safeStorage.createBranch(data)
+        safeStorage.setBranchHash(data)
             .then(function () {
                 res.sendStatus(200);
             })
