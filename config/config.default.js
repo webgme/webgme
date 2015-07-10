@@ -81,8 +81,8 @@ var path = require('path'),
                 },
                 server: {
                     auto_reconnect: true,
-                    socketOptions: {keepAlive: 1},
-                    poolSize: 20
+                    socketOptions: {keepAlive: 1}
+                    //poolSize: 5 // default pool size is 5
                 }
             }
         },
