@@ -75,12 +75,14 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
         };
 
         this.webSocket.loadObjects(data, function (err, result) {
-            if (err) {
-                throw new Error(err);
-            }
+            //if (err) {
+            //    throw new Error(err);
+            //}
             self.logger.debug('loadObjects returned', {metadata: result});
             for (i = 0; i < hashedObjects.length; i++) {
-                if (typeof result[hashedObjects[i].hash] === 'string') {
+                if (err) {
+                    hashedObjects[i].cb(err);
+                } else if (typeof result[hashedObjects[i].hash] === 'string') {
                     self.logger.error(result[hashedObjects[i].hash]);
                     hashedObjects[i].cb(result[hashedObjects[i].hash]);
                 } else {

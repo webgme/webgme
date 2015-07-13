@@ -92,6 +92,15 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         this.webSocket.getCommits(data, callback);
     };
 
+    StorageSimpleAPI.prototype.getBranchHash = function (projectId, branchName, callback) {
+        var data = {
+            projectId: projectId,
+            branchName: branchName
+        };
+        this.logger.debug('invoking getBranchHash', {metadata: data});
+        this.webSocket.getBranchHash(data, callback);
+    };
+
     StorageSimpleAPI.prototype.getLatestCommitData = function (projectId, branchName, callback) {
         var data = {
             projectId: projectId,

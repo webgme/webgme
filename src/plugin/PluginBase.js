@@ -322,7 +322,7 @@ define([
                                 return;
                             }
                             self.currentHash = commitResult.hash;
-                            if (updateResult.status === STORAGE_CONSTANTS.SYNCH) {
+                            if (updateResult.status === STORAGE_CONSTANTS.SYNCED) {
                                 self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
                                     '(Successive saves will try to save to this new branch.)');
                                 self.branchName = forkName;
@@ -359,12 +359,12 @@ define([
                     }
                     self.currentHash = commmitResult.hash;
 
-                    if (commmitResult.status === STORAGE_CONSTANTS.SYNCH) {
+                    if (commmitResult.status === STORAGE_CONSTANTS.SYNCED) {
                         self.logger.info('"' + self.branchName + '" was updated to the new commit.');
 
-                        self.addCommitToResult(STORAGE_CONSTANTS.SYNCH);
+                        self.addCommitToResult(STORAGE_CONSTANTS.SYNCED);
 
-                        callback(null, {status: STORAGE_CONSTANTS.SYNCH});
+                        callback(null, {status: STORAGE_CONSTANTS.SYNCED});
                     } else if (commmitResult.status === STORAGE_CONSTANTS.FORKED) {
                         self.logger.warn('Plugin and client are forked from "' + self.branchName + '". ');
                         // Set the branch to null - from now on the plugin is detached from the client branch.
@@ -413,12 +413,12 @@ define([
                             return;
                         }
                         self.currentHash = commitResult.hash;
-                        if (updateResult.status === STORAGE_CONSTANTS.SYNCH) {
+                        if (updateResult.status === STORAGE_CONSTANTS.SYNCED) {
                             self.logger.info('"' + self.branchName + '" was updated to the new commit.');
 
-                            self.addCommitToResult(STORAGE_CONSTANTS.SYNCH);
+                            self.addCommitToResult(STORAGE_CONSTANTS.SYNCED);
 
-                            callback(null, {status: STORAGE_CONSTANTS.SYNCH});
+                            callback(null, {status: STORAGE_CONSTANTS.SYNCED});
                         } else if (updateResult.status === STORAGE_CONSTANTS.FORKED) {
                             self._createFork(callback);
                         } else {
@@ -443,7 +443,7 @@ define([
                 callback(err);
                 return;
             }
-            if (forkResult.status === STORAGE_CONSTANTS.SYNCH) {
+            if (forkResult.status === STORAGE_CONSTANTS.SYNCED) {
                 self.branchName = forkName;
                 self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
                     '(Successive saves will try to save to this new branch.)');
@@ -528,7 +528,7 @@ define([
 
         this.result = new PluginResult();
 
-        this.addCommitToResult(STORAGE_CONSTANTS.SYNCH);
+        this.addCommitToResult(STORAGE_CONSTANTS.SYNCED);
 
         this.isConfigured = true;
     };

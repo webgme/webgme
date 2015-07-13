@@ -93,7 +93,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             } else {
                 callback(null);
             }
-        } else if (this.watchers.database < 0) {
+        } else if (this.watchers.projects[projectId] < 0) {
             this.logger.error('Number of project watchers became negative!:', projectId);
             callback('Number of project watchers became negative!');
         } else {

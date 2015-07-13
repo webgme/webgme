@@ -185,9 +185,6 @@ function ServerWorkerManager(_parameters) {
                     worker.state = CONSTANTS.workerStates.free;
                     //assignRequest(msg.pid);
                     break;
-                case CONSTANTS.msgTypes.info:
-                    logger.debug(msg.info);
-                    break;
                 case CONSTANTS.msgTypes.query:
                     cFunction = worker.cb;
                     worker.cb = null;

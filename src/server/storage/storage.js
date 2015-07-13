@@ -145,7 +145,7 @@ Storage.prototype.makeCommit = function (data, callback) {
                                     var newHash = data.commitObject[CONSTANTS.MONGO_ID],
                                         oldHash = data.commitObject.parents[0],
                                         result = {
-                                            status: null, // SYNCH, FORKED, (MERGED)
+                                            status: null, // SYNCED, FORKED, (MERGED)
                                             hash: newHash
                                         };
                                     project.setBranchHash(data.branchName, oldHash, newHash)
@@ -168,7 +168,7 @@ Storage.prototype.makeCommit = function (data, callback) {
                                                     eventData.socket = data.socket;
                                                 }
                                             }
-                                            result.status = CONSTANTS.SYNCH;
+                                            result.status = CONSTANTS.SYNCED;
                                             self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
                                             self.dispatchEvent(CONSTANTS.BRANCH_UPDATED, fullEventData);
                                             self.logger.debug('Branch update succeeded.');
@@ -315,10 +315,10 @@ Storage.prototype.setBranchHash = function (data, callback) {
 
                     if (data.oldHash === '' && data.newHash !== '') {
                         self.dispatchEvent(CONSTANTS.BRANCH_CREATED, eventData);
-                        deferred.resolve({status: CONSTANTS.SYNCH});
+                        deferred.resolve({status: CONSTANTS.SYNCED});
                     } else if (data.newHash === '' && data.oldHash !== '') {
                         self.dispatchEvent(CONSTANTS.BRANCH_DELETED, eventData);
-                        deferred.resolve({status: CONSTANTS.SYNCH});
+                        deferred.resolve({status: CONSTANTS.SYNCED});
                     } else if (data.newHash !== '' && data.oldHash !== '') {
                         // Load the necessary objects for BRANCH_UPDATED event.
                         project.loadObject(data.newHash)
@@ -330,14 +330,14 @@ Storage.prototype.setBranchHash = function (data, callback) {
                                 fullEventData.coreObjects.push(rootObject);
                                 self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
                                 self.dispatchEvent(CONSTANTS.BRANCH_UPDATED, fullEventData);
-                                deferred.resolve({status: CONSTANTS.SYNCH});
+                                deferred.resolve({status: CONSTANTS.SYNCED});
                             })
                             .catch(function (err) {
                                 deferred.reject(new Error('Failed loading objects for events' + err));
                             });
                     } else {
                         //setting empty branch to empty
-                        deferred.resolve({status: CONSTANTS.SYNCH});
+                        deferred.resolve({status: CONSTANTS.SYNCED});
                     }
                 })
                 .catch(function (err) {

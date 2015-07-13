@@ -342,6 +342,24 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     });
             });
 
+            socket.on('getBranchHash', function (data, callback) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getBranchHash(data);
+                    })
+                    .then(function (result) {
+                        callback(null, result);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
             socket.on('getProjects', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {

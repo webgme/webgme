@@ -19,6 +19,10 @@ describe('standalone server', function () {
 
         agent = superagent.agent(),
 
+        http = require('http'),
+        https = require('https'),
+        fs = require('fs'),
+
         server,
         serverBaseUrl,
 
@@ -52,6 +56,58 @@ describe('standalone server', function () {
         server.start(function () {
             server.start(function () {
                 server.stop(done);
+            });
+        });
+    });
+
+    it('should stop if not started', function (done) {
+        this.timeout(5000);
+        // we have to set the config here
+        var gmeConfig = testFixture.getGmeConfig();
+
+        server = WebGME.standaloneServer(gmeConfig);
+        server.stop(done);
+    });
+
+
+    it('should fail to start http server if port is in use', function (done) {
+        this.timeout(5000);
+        // we have to set the config here
+        var gmeConfig = testFixture.getGmeConfig(),
+            httpServer = http.createServer();
+
+        gmeConfig.server.port = gmeConfig.server.port + 1;
+
+        httpServer.listen(gmeConfig.server.port, function (err) {
+            expect(err).to.equal(undefined);
+
+            server = WebGME.standaloneServer(gmeConfig);
+            server.start(function (err) {
+                expect(err.code).to.equal('EADDRINUSE');
+                httpServer.close(done);
+            });
+        });
+    });
+
+    it('should fail to start https server if port is in use', function (done) {
+        this.timeout(5000);
+        // we have to set the config here
+        var gmeConfig = testFixture.getGmeConfig(),
+            httpServer = https.createServer({
+                key: fs.readFileSync(gmeConfig.server.https.keyFile),
+                cert: fs.readFileSync(gmeConfig.server.https.certificateFile)
+            });
+
+        gmeConfig.server.type = 'https';
+        gmeConfig.server.port = gmeConfig.server.port + 1;
+
+        httpServer.listen(gmeConfig.server.port, function (err) {
+            expect(err).to.equal(undefined);
+
+            server = WebGME.standaloneServer(gmeConfig);
+            server.start(function (err) {
+                expect(err.code).to.equal('EADDRINUSE');
+                httpServer.close(done);
             });
         });
     });

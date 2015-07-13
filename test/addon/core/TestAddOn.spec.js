@@ -14,6 +14,7 @@ describe('TestAddOn', function () {
         logger = testFixture.logger.fork('TestAddOn.spec'),
         superagent = testFixture.superagent,
         agent = superagent.agent(),
+        importResult,
         serverBaseUrl,
         server,
         storage,
@@ -75,6 +76,22 @@ describe('TestAddOn', function () {
         safeStorage,
         gmeAuth;
 
+    // FIXME: duplicated code from project.spec.js
+    function makeCommitPromise(project, branchName, parents, rootHash, coreObjects, msg) {
+        var deferred = Q.defer(),
+            synchronousData; // This is not returned here...
+
+        synchronousData = project.makeCommit(branchName, parents, rootHash, coreObjects, msg, function (err, result) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve(result);
+            }
+        });
+
+        return deferred.promise;
+    }
+
     before(function (done) {
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
@@ -95,7 +112,8 @@ describe('TestAddOn', function () {
                     projectSeed: './test/addon/core/TestAddOn/project.json'
                 });
             })
-            .then(function () {
+            .then(function (result) {
+                importResult = result;
                 server = WebGME.standaloneServer(gmeConfig);
                 serverBaseUrl = server.getUrl();
                 return Q.ninvoke(server, 'start');
@@ -118,8 +136,7 @@ describe('TestAddOn', function () {
         }
     });
 
-    //TODO we need meaningful update function that can be checked
-    it('should start, query and stop', function (done) {
+    it('should start, query, update, query, and stop', function (done) {
         var _addOn,
             startParam = {
                 projectId: projectId,
@@ -131,6 +148,8 @@ describe('TestAddOn', function () {
         _addOn = new TestAddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName),
             gmeConfig.authentication.guestAccount);
 
+        expect(_addOn.getName()).to.equal('TestAddOn');
+
         storage.open(function (networkStatus) {
             if (networkStatus === testFixture.STORAGE_CONSTANTS.CONNECTED) {
                 logger.debug('starting addon', {metadata: addOnName});
@@ -138,27 +157,187 @@ describe('TestAddOn', function () {
                 //start
                 Q.ninvoke(_addOn, 'start', startParam)
                     .then(function () {
-                        return Q.ninvoke(_addOn,'query','test');
+                        return Q.ninvoke(_addOn, 'query', 'test');
                     })
-                    .then(function(result){
-                        expect(result).to.equal('test');
-
-                        return Q.ninvoke(_addOn,'stop');
-
+                    .then(function (result) {
+                        expect(result[0]).to.equal('test');
+                        expect(result[1]).to.equal(0);
+                        // update model
+                        return makeCommitPromise(_addOn.project, null, [importResult.commitHash], importResult.rootHash, {}, 'new commit');
                     })
-                    .then(function(){
+                    .then(function (result) {
+                        // updating master to the new branch
+                        return Q.nfcall(_addOn.project.setBranchHash, 'master', result.hash, importResult.commitHash);
+                    })
+                    .then(function () {
+                        return Q.ninvoke(_addOn, 'query', 'test2');
+                    })
+                    .then(function (result) {
+                        expect(result[0]).to.equal('test2');
+                        expect(result[1]).to.equal(1); // update was called once
+
+                        return Q.ninvoke(_addOn, 'stop');
+                    })
+                    .then(function () {
                         storage.close(function () {
                             done();
                         });
                     })
                     .catch(function (err) {
                         storage.close(function () {
-                            done(err);
+                            done(new Error(err));
                         });
                     });
             } else {
                 storage.close(function () {
-                    done('unable to connect storage');
+                    done(new Error('unable to connect storage'));
+                });
+            }
+        });
+    });
+
+    it('should fail to start if project id is not given', function (done) {
+        var _addOn,
+            startParam = {
+                branchName: 'master',
+                logger: logger.fork(TestAddOn)
+            };
+
+        storage = testFixture.NodeStorage.createStorage('127.0.0.1', webgmeSessionId, logger, gmeConfig);
+        _addOn = new TestAddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName),
+            gmeConfig.authentication.guestAccount);
+
+
+        storage.open(function (networkStatus) {
+            if (networkStatus === testFixture.STORAGE_CONSTANTS.CONNECTED) {
+                logger.debug('starting addon', {metadata: addOnName});
+
+                //start
+                Q.ninvoke(_addOn, 'start', startParam)
+                    .then(function () {
+                        done(new Error('should have failed to initialize'));
+                    })
+                    .catch(function (err) {
+                        storage.close(function () {
+                            expect(err).to.match(/Failed to initialize/);
+                            done();
+                        });
+                    });
+            } else {
+                storage.close(function () {
+                    done(new Error('unable to connect storage'));
+                });
+            }
+        });
+    });
+
+
+    it('should fail to start if branch name is not given', function (done) {
+        var _addOn,
+            startParam = {
+                projectId: projectId,
+                logger: logger.fork(TestAddOn)
+            };
+
+        storage = testFixture.NodeStorage.createStorage('127.0.0.1', webgmeSessionId, logger, gmeConfig);
+        _addOn = new TestAddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName),
+            gmeConfig.authentication.guestAccount);
+
+
+        storage.open(function (networkStatus) {
+            if (networkStatus === testFixture.STORAGE_CONSTANTS.CONNECTED) {
+                logger.debug('starting addon', {metadata: addOnName});
+
+                //start
+                Q.ninvoke(_addOn, 'start', startParam)
+                    .then(function () {
+                        done(new Error('should have failed to initialize'));
+                    })
+                    .catch(function (err) {
+                        storage.close(function () {
+                            expect(err).to.match(/Failed to initialize/);
+                            done();
+                        });
+                    });
+            } else {
+                storage.close(function () {
+                    done(new Error('unable to connect storage'));
+                });
+            }
+        });
+    });
+
+
+    it('should fail to start if branch does not exist', function (done) {
+        var _addOn,
+            startParam = {
+                projectId: projectId,
+                branchName: 'does_not_exist',
+                logger: logger.fork(TestAddOn)
+            };
+
+        storage = testFixture.NodeStorage.createStorage('127.0.0.1', webgmeSessionId, logger, gmeConfig);
+        _addOn = new TestAddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName),
+            gmeConfig.authentication.guestAccount);
+
+
+        storage.open(function (networkStatus) {
+            if (networkStatus === testFixture.STORAGE_CONSTANTS.CONNECTED) {
+                logger.debug('starting addon', {metadata: addOnName});
+
+                //start
+                Q.ninvoke(_addOn, 'start', startParam)
+                    .then(function () {
+                        done(new Error('should have failed to initialize'));
+                    })
+                    .catch(function (err) {
+                        storage.close(function () {
+                            expect(err).to.match(/no such branch/);
+                            done();
+                        });
+                    });
+            } else {
+                storage.close(function () {
+                    done(new Error('unable to connect storage'));
+                });
+            }
+        });
+    });
+
+    it('should fail if start is called multiple times', function (done) {
+        var _addOn,
+            startParam = {
+                projectId: projectId,
+                branchName: 'master',
+                logger: logger.fork(TestAddOn)
+            };
+
+        storage = testFixture.NodeStorage.createStorage('127.0.0.1', webgmeSessionId, logger, gmeConfig);
+        _addOn = new TestAddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName),
+            gmeConfig.authentication.guestAccount);
+
+
+        storage.open(function (networkStatus) {
+            if (networkStatus === testFixture.STORAGE_CONSTANTS.CONNECTED) {
+                logger.debug('starting addon', {metadata: addOnName});
+
+                //start
+                Q.ninvoke(_addOn, 'start', startParam)
+                    .then(function () {
+                        return Q.ninvoke(_addOn, 'start', startParam)
+                    })
+                    .then(function () {
+                        done(new Error('should have failed to initialize'));
+                    })
+                    .catch(function (err) {
+                        storage.close(function () {
+                            expect(err).to.match(/project is already open/);
+                            done();
+                        });
+                    });
+            } else {
+                storage.close(function () {
+                    done(new Error('unable to connect storage'));
                 });
             }
         });

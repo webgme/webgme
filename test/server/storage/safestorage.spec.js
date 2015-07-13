@@ -225,7 +225,7 @@ describe('SafeStorage', function () {
                     return safeStorage.setBranchHash(data);
                 })
                 .then(function (result) {
-                    expect(result).to.deep.equal({status: 'SYNCH'});
+                    expect(result).to.deep.equal({status: 'SYNCED'});
                 })
                 .nodeify(done);
         });
@@ -247,7 +247,7 @@ describe('SafeStorage', function () {
                     return safeStorage.createBranch(data);
                 })
                 .then(function (result) {
-                    expect(result).to.deep.equal({status: 'SYNCH'});
+                    expect(result).to.deep.equal({status: 'SYNCED'});
                     return safeStorage.getBranches(data);
                 })
                 .then(function (result) {
@@ -273,7 +273,7 @@ describe('SafeStorage', function () {
                     return safeStorage.createBranch(data);
                 })
                 .then(function (result) {
-                    expect(result).to.deep.equal({status: 'SYNCH'});
+                    expect(result).to.deep.equal({status: 'SYNCED'});
                     return safeStorage.getBranches(data);
                 })
                 .then(function (result) {
@@ -281,7 +281,7 @@ describe('SafeStorage', function () {
                     return safeStorage.deleteBranch(data);
                 })
                 .then(function (result) {
-                    expect(result).to.deep.equal({status: 'SYNCH'});
+                    expect(result).to.deep.equal({status: 'SYNCED'});
                     return safeStorage.getBranches(data);
                 })
                 .then(function (result) {
@@ -298,7 +298,7 @@ describe('SafeStorage', function () {
 
             safeStorage.deleteBranch(data)
                 .then(function (result) {
-                    expect(result).to.deep.equal({status: 'SYNCH'});
+                    expect(result).to.deep.equal({status: 'SYNCED'});
                     return safeStorage.getBranches(data);
                 })
                 .then(function (result) {

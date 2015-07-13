@@ -76,8 +76,8 @@ describe('Run PluginForked', function () {
         pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
             expect(err).to.equal(null);
             expect(result.commits.length).to.equal(2);
-            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
-            expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
+            expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
             expect(result.commits[1].branchName).to.equal('master');
 
             storage.getBranches({projectId: projectId})
@@ -106,7 +106,7 @@ describe('Run PluginForked', function () {
         pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
             expect(err).to.equal(null);
             expect(result.commits.length).to.equal(2);
-            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
             expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.FORKED);
             expect(result.commits[1].branchName).not.to.equal('master');
             storage.getBranches({projectId: projectId})
@@ -147,7 +147,7 @@ describe('Run PluginForked', function () {
         pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
             expect(err).to.equal(null);
             expect(result.commits.length).to.equal(2);
-            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
             expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.FORKED);
             expect(result.commits[1].branchName).to.equal('fork');
 
@@ -177,12 +177,12 @@ describe('Run PluginForked', function () {
         storage.createBranch({projectId: projectId, branchName: 'fork', hash: commitHash})
             .then(function (result) {
                 expect(typeof result).to.equal('object');
-                expect(result.status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+                expect(result.status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
 
                 pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
                     expect(err).to.equal('Plugin got forked from "master". And got forked from "fork" too.');
                     expect(result.commits.length).to.equal(2);
-                    expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+                    expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
                     expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.FORKED);
                     expect(result.commits[1].branchName).to.equal(null);
                     done();

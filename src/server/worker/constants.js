@@ -9,7 +9,6 @@ module.exports = {
     msgTypes: {
         request: 'request',
         result: 'result',
-        info: 'info',
         initialize: 'initialize',
         initialized: 'initialized',
         query: 'query'

@@ -14,7 +14,7 @@ function throwTypeMiss(name, value, typeStr) {
     } else {
         msg = 'In configuration';
     }
-    msg +=  ': ' + name + ' must be a(n) ' + typeStr + '. Got: "' + value + '".';
+    msg += ': ' + name + ' must be a(n) ' + typeStr + '. Got: "' + value + '".';
     throw new Error(msg);
 }
 
@@ -56,7 +56,7 @@ function assertArray(name, value) {
 }
 
 // We will fail as early as possible
-function validateConfig (configOrFileName) {
+function validateConfig(configOrFileName) {
     'use strict';
     var config,
         errMsg,
@@ -164,10 +164,10 @@ function validateConfig (configOrFileName) {
 
     assertString('config.server.sessionCookieId', config.server.sessionCookieId);
     assertString('config.server.sessionCookieSecret', config.server.sessionCookieSecret);
-        // server log
+    // server log
     assertObject('config.server.log', config.server.log);
     assertArray('config.server.log.transports', config.server.log.transports);
-        // server https
+    // server https
     assertObject('config.server.https', config.server.https);
     assertBoolean('config.server.https.enable', config.server.https.enable);
     assertString('config.server.https.certificateFile', config.server.https.certificateFile);

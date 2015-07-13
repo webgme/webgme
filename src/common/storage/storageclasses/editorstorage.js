@@ -211,6 +211,7 @@ define([
 
                     if (branch.getCommitQueue().length === 0) {
                         if (branch.getUpdateQueue().length === 1) {
+                            // The localUpdateHandler will be invoked here
                             self._pullNextQueuedCommit(projectId, branchName);
                         }
                     } else {

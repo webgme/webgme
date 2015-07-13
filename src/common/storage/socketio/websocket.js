@@ -141,6 +141,10 @@ define([
             self.socket.emit('setBranchHash', data, callback);
         };
 
+        this.getBranchHash = function (data, callback) {
+            self.socket.emit('getBranchHash', data, callback);
+        };
+
         // REST like functions
         this.getProjects = function (data, callback) {
             self.socket.emit('getProjects', data, callback);
@@ -184,8 +188,8 @@ define([
         };
 
         // Helper functions
-        this.getBranchUpdateEventName = function (projectName, branchName) {
-            return CONSTANTS.BRANCH_UPDATED + projectName + CONSTANTS.ROOM_DIVIDER + branchName;
+        this.getBranchUpdateEventName = function (projectId, branchName) {
+            return CONSTANTS.BRANCH_UPDATED + projectId + CONSTANTS.ROOM_DIVIDER + branchName;
         };
     }
 

@@ -156,7 +156,7 @@ main = function (argv, callback) {
             promise;
 
         upgradeInfo.map(function (info) {
-            var newProjectId = StorageUtil.getProjectIdFromUserIdAndProjectName(info.owner, info.collectionName);
+            var newProjectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(info.owner, info.collectionName);
 
             promise = Q.ninvoke(db, 'collection', info.collectionName)
                 .then(function (collection) {
