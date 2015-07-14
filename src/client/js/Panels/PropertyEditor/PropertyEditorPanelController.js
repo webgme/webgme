@@ -261,7 +261,7 @@ define(['js/logger',
 
         buildCommonAttrMeta = function (node, initPhase) {
             var nodeId = node.getId(),
-                nodeAttributeNames = _client.getValidAttributeNames(nodeId) || [],
+                nodeAttributeNames = node.getAttributeNames(nodeId) || [],
                 len = nodeAttributeNames.length,
                 attrMetaDescriptor,
                 attrName,
@@ -284,7 +284,7 @@ define(['js/logger',
             //if type is enum, the common types should be the intersection of the individual enum types
             while (len--) {
                 attrName = nodeAttributeNames[len];
-                attrMetaDescriptor = _client.getAttributeSchema(nodeId, attrName);
+                attrMetaDescriptor = _client.getAttributeSchema(nodeId, attrName) || {type: 'string'};
                 if (commonAttrMeta.hasOwnProperty(attrName)) {
                     isCommon = true;
                     //this attribute already exist in the attribute meta map
@@ -369,42 +369,33 @@ define(['js/logger',
             }
 
             _isResetableAttribute = function (attrName) {
-                var resetable = true,
-                    i = selectionLength,
+                var i = selectionLength,
                     ownAttrNames,
+                    validNames,
+                    baseValidNames,
                     baseNode;
 
                 while (i--) {
                     cNode = _client.getNode(selectedObjIDs[i]);
 
                     if (cNode) {
-                        //get parentnode
-                        baseNode = _client.getNode(cNode.getBaseId());
 
-                        //get own attribute names
+                        baseNode = _client.getNode(cNode.getBaseId());
+                        validNames = _client.getValidAttributeNames(selectedObjIDs[i]);
+                        baseValidNames = baseNode !== null ? _client.getValidAttributeNames(baseNode.getId()) : [];
                         ownAttrNames = cNode.getOwnAttributeNames();
 
-                        if (ownAttrNames.indexOf(attrName) !== -1) {
-                            //there are 1 options:
-                            //#1: the attribute is defined on this level, and that's why it is in the onwAttributeNames
-                            //#2: the attribute is inherited and overridden on this level
-                            //      (but defined somewhere up in the hierarchy)
-                            if (baseNode) {
-                                resetable = baseNode.getAttributeNames().indexOf(attrName) !== -1;
-                            } else {
-                                resetable = false;
-                            }
-                        } else {
-                            resetable = false;
+                        if (ownAttrNames.indexOf(attrName) === -1) {
+                            return false;
                         }
-                    }
 
-                    if (!resetable) {
-                        break;
+                        if (baseValidNames.indexOf(attrName) === -1 && validNames.indexOf(attrName) !== -1) {
+                            return false;
+                        }
                     }
                 }
 
-                return resetable;
+                return true;
             };
 
             _isResetableRegistry = function (regName) {
@@ -656,7 +647,7 @@ define(['js/logger',
                 setterFn = 'setAttributes';
                 getterFn = 'getEditableAttribute';
             } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_PREFERENCES ||
-                       keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
+                keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
                 setterFn = 'setRegistry';
                 getterFn = 'getEditableRegistry';
             }
@@ -710,10 +701,10 @@ define(['js/logger',
             if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_ATTRIBUTES) {
                 delFn = 'delAttributes';
             } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_PREFERENCES ||
-                       keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
+                keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
                 delFn = 'delRegistry';
             } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_POINTERS &&
-                       NON_RESETABLE_POINTRS.indexOf(keyArr[1]) === -1) {
+                NON_RESETABLE_POINTRS.indexOf(keyArr[1]) === -1) {
                 delFn = 'delPointer';
             }
 
