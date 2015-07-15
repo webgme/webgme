@@ -83,7 +83,18 @@ define([
                 'value': 'master',
                 'valueType': 'string',
                 'readOnly': false
+            },
+            {
+                'name': 'createNewBranch',
+                'displayName': 'Create a new branch for target',
+                //'regex': '^[a-zA-Z]+$', // TODO: verify branch or hash
+                //'regexMessage': 'Name can only contain English characters!',
+                'description': 'Creates a new branch for "to" first then merges changes "from"',
+                'value': false,
+                'valueType': 'boolean',
+                'readOnly': true
             }
+
         ];
     };
 
@@ -127,11 +138,10 @@ define([
 
                 if (result.conflict.items.length === 0) {
                     // FIXME: what if it could not update the branch or got a commit hash
-                    self.result.setSuccess(true);
-                    callback(null, self.result);
+                    return result;
                 } else {
                     // there was a conflict
-                    // TODO: change conflict object as necessary
+                    // TODO: change conflict object as necessary select theirs or mine for resolution
 
                     // resolve
                     return merge.resolve({
@@ -147,8 +157,19 @@ define([
 
             })
             .then(function (result) {
+                // if merged without any conflicts the result structure is
+                // result.baseCommitHash
+                // result.conflict
+                // result.diff
+                // result.myCommitHash
+                // result.projectId
+                // result.targetBranchName
+                // result.theirCommitHash
+
+                // if resolved the result structure as follows
                 // result.updatedBranch
                 // result.hash
+
                 // FIXME: what if it could not update the branch or got a commit hash
                 self.logger.info(result);
 
