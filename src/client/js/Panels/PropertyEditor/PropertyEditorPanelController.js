@@ -379,10 +379,9 @@ define(['js/logger',
                     cNode = _client.getNode(selectedObjIDs[i]);
 
                     if (cNode) {
-
                         baseNode = _client.getNode(cNode.getBaseId());
                         validNames = _client.getValidAttributeNames(selectedObjIDs[i]);
-                        baseValidNames = baseNode !== null ? _client.getValidAttributeNames(baseNode.getId()) : [];
+                        baseValidNames = baseNode === null ? [] : _client.getValidAttributeNames(baseNode.getId());
                         ownAttrNames = cNode.getOwnAttributeNames();
 
                         if (ownAttrNames.indexOf(attrName) === -1) {
@@ -399,81 +398,60 @@ define(['js/logger',
             };
 
             _isResetableRegistry = function (regName) {
-                var resetable = true,
-                    i = selectionLength,
+                var i = selectionLength,
                     ownRegistryNames,
+                    baseRegistryNames,
                     baseNode;
 
                 while (i--) {
                     cNode = _client.getNode(selectedObjIDs[i]);
 
                     if (cNode) {
-                        //get parentnode
                         baseNode = _client.getNode(cNode.getBaseId());
-
-                        //get own registry names
                         ownRegistryNames = cNode.getOwnRegistryNames();
+                        baseRegistryNames = baseNode === null ? [] : baseNode.getRegistryNames();
 
-                        if (ownRegistryNames.indexOf(regName) !== -1) {
-                            //there are 1 options:
-                            //#1: the registry is defined on this level, and that's why it is in the ownRegistryNames
-                            //#2: the registry is inherited and overridden on this level
-                            //      (but defined somewhere up in the hierarchy)
-                            if (baseNode) {
-                                resetable = baseNode.getRegistryNames().indexOf(regName) !== -1;
-                            } else {
-                                resetable = false;
-                            }
-                        } else {
-                            resetable = false;
+                        if (ownRegistryNames.indexOf(regName) === -1) {
+                            return false;
                         }
-                    }
 
-                    if (!resetable) {
-                        break;
+                        if (baseRegistryNames.indexOf(regName) === -1) {
+                            return false;
+                        }
+
                     }
                 }
-
-                return resetable;
+                return true;
             };
 
             _isResetablePointer = function (pointerName) {
-                var resetable = true,
-                    i = selectionLength,
+                var i = selectionLength,
                     ownPointerNames,
+                    validNames,
+                    baseValidNames,
                     baseNode;
 
                 while (i--) {
                     cNode = _client.getNode(selectedObjIDs[i]);
 
                     if (cNode) {
-                        //get parentnode
                         baseNode = _client.getNode(cNode.getBaseId());
-
-                        //get own registry names
                         ownPointerNames = cNode.getOwnPointerNames();
+                        validNames = cNode.getValidPointerNames();
+                        baseValidNames = baseNode === null ? [] : baseNode.getValidPointerNames();
 
-                        if (ownPointerNames.indexOf(pointerName) !== -1) {
-                            //there are 1 options:
-                            //#1: the registry is defined on this level, and that's why it is in the ownRegistryNames
-                            //#2: the registry is inherited and overridden on this level
-                            //      (but defined somewhere up in the hierarchy)
-                            if (baseNode) {
-                                resetable = baseNode.getPointerNames().indexOf(pointerName) !== -1;
-                            } else {
-                                resetable = false;
-                            }
-                        } else {
-                            resetable = false;
+                        if (ownPointerNames.indexOf(pointerName) === -1) {
+                            return false;
                         }
-                    }
 
-                    if (!resetable) {
-                        break;
+                        if (baseValidNames.indexOf(pointerName) === -1 && validNames.indexOf(pointerName) !== -1) {
+                            return false;
+                        }
+
                     }
                 }
 
-                return resetable;
+                return true;
             };
 
             _addItemsToResultList = function (srcList, prefix, dstList, isAttribute, isRegistry, isPointer) {

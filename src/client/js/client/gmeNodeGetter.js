@@ -173,6 +173,14 @@ define(['common/core/users/tojson'], function (toJson) {
             return meta.getValidChildrenTypes(_id);
         }
 
+        function getValidAttributeNames() {
+            return state.core.getValidAttributeNames(state.nodes[_id].node);
+        }
+
+        function getValidPointerNames() {
+            return state.core.getValidPointerNames(state.nodes[_id].node);
+        }
+
         //constraint functions
         function getConstraintNames() {
             return state.core.getConstraintNames(state.nodes[_id].node);
@@ -239,6 +247,8 @@ define(['common/core/users/tojson'], function (toJson) {
 
                 //META functions
                 getValidChildrenTypes: getValidChildrenTypes,
+                geValidAttributeNames: getValidAttributeNames,
+                getValidPointerNames: getValidPointerNames,
 
                 //constraint functions
                 getConstraintNames: getConstraintNames,
