@@ -201,7 +201,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
             //invalid
             if (propertyDesc.options.invalid === true) {
                 actionBtn = INVALID_BUTTON_BASE.clone();
-                
+
             } else if (propertyDesc.options.resetable === true) {
                 actionBtn = RESET_BUTTON_BASE.clone();
             }

@@ -43,6 +43,29 @@ define(['js/logger',
 
         /*OVERRIDE DESIGNER CANVAS METHODS*/
         this.diagramDesigner.onCreateNewConnection = function (params) {
+            var sourceId = self._ComponentID2GMEID[params.src],
+                targetId = self._ComponentID2GMEID[params.dst],
+                node,
+                baseNode;
+            if (self._connType === MetaRelations.META_RELATIONS.INHERITANCE) {
+                //check if base will be changed so we should notify user about it
+                node = self._client.getNode(targetId);
+                if (node) {
+                    if (sourceId !== node.getBaseId()) {
+                        //TODO probably come up with some detailed list,
+                        // what will the target loose and what will it gain
+                        dialog.confirm('Confirm base change',
+                            'Changing a base can cause invalid data in the target node and its descendants!',
+                            function () {
+                                self._onCreateNewConnection(params);
+                            }
+                        );
+                    }
+                }
+                return;
+            }
+
+            //not inheritance type connection creation
             self._onCreateNewConnection(params);
         };
 
@@ -144,8 +167,7 @@ define(['js/logger',
                     //return true if there is at least one item among the dragged ones that is not on the sheet yet
                     if (gmeIDList.length > 0 && gmeIDList.indexOf(CONSTANTS.PROJECT_ROOT_ID) === -1) {
                         for (i = 0; i < gmeIDList.length; i += 1) {
-                            if (this._metaAspectMembersPerSheet[this._selectedMetaAspectSet].indexOf(gmeIDList[i]) ===
-                                -1) {
+                            if (this._metaAspectMembersPerSheet[this._selectedMetaAspectSet].indexOf(gmeIDList[i]) === -1) {
                                 accept = true;
                                 break;
                             }
@@ -421,7 +443,7 @@ define(['js/logger',
         if (metaInfoToBeLost.length > 0) {
             //need user confirmation because there is some meta info to be lost
             confirmMsg = 'The following items you are about to delete are not present on any other sheet and will ' +
-            'be permanently removed from the META aspect:<br><br>';
+                'be permanently removed from the META aspect:<br><br>';
             itemNames = [];
             len = metaInfoToBeLost.length;
             while (len--) {
@@ -436,7 +458,7 @@ define(['js/logger',
             itemNames.sort();
             for (len = 0; len < itemNames.length; len += 1) {
                 confirmMsg += '- <b>' + itemNames[len] +
-                              '</b>  (all associated meta rules will be deleted for this element)<br>';
+                    '</b>  (all associated meta rules will be deleted for this element)<br>';
             }
             confirmMsg += '<br>Are you sure you want to delete?';
             dialog.confirm('Confirm delete', confirmMsg, function () {
@@ -720,7 +742,7 @@ define(['js/logger',
         if (metaAspectMemberToBeLost.length > 0) {
             //need user confirmation because there is some meta info to be lost
             confirmMsg = 'You are about to delete a sheet that contains the following items that are not present ' +
-            'on any other sheet and will be permanently removed from the META aspect:<br><br>';
+                'on any other sheet and will be permanently removed from the META aspect:<br><br>';
             itemNames = [];
             len = metaAspectMemberToBeLost.length;
             while (len--) {
@@ -735,7 +757,7 @@ define(['js/logger',
             itemNames.sort();
             for (len = 0; len < itemNames.length; len += 1) {
                 confirmMsg += '- <b>' + itemNames[len] +
-                              '</b> (all associated meta rules will be deleted for this element)<br>';
+                    '</b> (all associated meta rules will be deleted for this element)<br>';
             }
             confirmMsg += '<br>Are you sure you want to delete the sheet anyway?';
             dialog.confirm('Confirm delete', confirmMsg, function () {
