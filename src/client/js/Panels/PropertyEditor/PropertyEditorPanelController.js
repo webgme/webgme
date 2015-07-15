@@ -40,8 +40,7 @@ define(['js/logger',
             REGISTRY_KEYS.DISPLAY_FORMAT,
             REGISTRY_KEYS.SVG_ICON,
             REGISTRY_KEYS.PORT_SVG_ICON],
-
-        NON_RESETABLE_POINTRS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
+        NON_INVALID_PTRS = [CONSTANTS.POINTER_BASE];
 
     PropertyEditorController = function (client, propertyGrid) {
         this._client = client;
@@ -154,14 +153,16 @@ define(['js/logger',
             _getNodeAttributeValues, //fn
             _getNodeRegistryValues, //fn
             _filterCommon, //fn
-            _addItemsToResultList,  //fn
+            _addItemsToResultList, //fn
             _getPointerInfo,
             commonAttrMeta = {},
-            buildCommonAttrMeta,     //fn
+            buildCommonAttrMeta, //fn
             _client = this._client,
-            _isResetableAttribute,
-            _isResetableRegistry,
-            _isResetablePointer,
+            _isResetableAttribute, //fn
+            _isResetableRegistry, //fn
+            _isResetablePointer, //fn
+            _isInvalidAttribute, //fn
+            _isInvalidPointer, //fn
             rootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID),
             validDecorators = null,
             decoratorNames = WebGMEGlobal.allDecorators;
@@ -397,6 +398,24 @@ define(['js/logger',
                 return true;
             };
 
+            _isInvalidAttribute = function (attrName) {
+                var i = selectionLength,
+                    validNames;
+
+                while (i--) {
+                    cNode = _client.getNode(selectedObjIDs[i]);
+                    if (cNode) {
+                        validNames = cNode.getValidAttributeNames();
+
+                        if (validNames.indexOf(attrName) !== -1) {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            };
+
             _isResetableRegistry = function (regName) {
                 var i = selectionLength,
                     ownRegistryNames,
@@ -454,6 +473,24 @@ define(['js/logger',
                 return true;
             };
 
+            _isInvalidPointer = function (pointerName) {
+                var i = selectionLength,
+                    validNames;
+
+                while (i--) {
+                    cNode = _client.getNode(selectedObjIDs[i]);
+                    if (cNode) {
+                        validNames = cNode.getValidPointerNames();
+
+                        if (validNames.indexOf(pointerName) !== -1 || NON_INVALID_PTRS.indexOf(pointerName) !== -1) {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            };
+
             _addItemsToResultList = function (srcList, prefix, dstList, isAttribute, isRegistry, isPointer) {
                 var i,
                     extKey,
@@ -502,11 +539,23 @@ define(['js/logger',
                                 dstList[extKey].options.resetable = true;
                             }
 
+                            //if it is an attribute it might be invalid according the current meta rules
+                            if (isAttribute && _isInvalidAttribute(keyParts[0])) {
+                                dstList[extKey].options = dstList[extKey].options || {};
+                                dstList[extKey].options.invalid = true;
+                            }
+
                             if (isPointer &&
-                                NON_RESETABLE_POINTRS.indexOf(keyParts[0]) === -1 &&
+                                NON_INVALID_PTRS.indexOf(keyParts[0]) === -1 && //what is non_invalid, cannot be reset
                                 _isResetablePointer(keyParts[0])) {
                                 dstList[extKey].options = dstList[extKey].options || {};
                                 dstList[extKey].options.resetable = true;
+                            }
+
+                            //if it is a pointer it might be invalid according the current meta rules
+                            if (isPointer && _isInvalidPointer(keyParts[0])) {
+                                dstList[extKey].options = dstList[extKey].options || {};
+                                dstList[extKey].options.invalid = true;
                             }
 
                             //decorator value should be rendered as an option list
@@ -681,8 +730,7 @@ define(['js/logger',
             } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_PREFERENCES ||
                 keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
                 delFn = 'delRegistry';
-            } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_POINTERS &&
-                NON_RESETABLE_POINTRS.indexOf(keyArr[1]) === -1) {
+            } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_POINTERS) {
                 delFn = 'delPointer';
             }
 

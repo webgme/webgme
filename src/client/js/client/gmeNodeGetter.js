@@ -247,7 +247,7 @@ define(['common/core/users/tojson'], function (toJson) {
 
                 //META functions
                 getValidChildrenTypes: getValidChildrenTypes,
-                geValidAttributeNames: getValidAttributeNames,
+                getValidAttributeNames: getValidAttributeNames,
                 getValidPointerNames: getValidPointerNames,
 
                 //constraint functions
