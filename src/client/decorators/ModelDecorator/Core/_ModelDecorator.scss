@@ -60,7 +60,6 @@ $abstract-class-name-color: #AAAAAA;
       font-size: 10px;
       min-height: 1px;
       width: $ports-width * 2 + $ports-separator-width + $padding * 2;
-      z-index: 10;
       position: relative;
 
       .left {

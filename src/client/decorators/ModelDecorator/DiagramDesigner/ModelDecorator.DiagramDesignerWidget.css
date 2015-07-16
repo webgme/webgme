@@ -38,7 +38,6 @@
     font-size: 10px;
     min-height: 1px;
     width: 121px;
-    z-index: 10;
     position: relative; }
     .model-decorator .ports .left {
       display: inline-block;
