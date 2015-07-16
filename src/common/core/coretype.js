@@ -636,6 +636,15 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             ASSERT(isValidNode(node) && (base === undefined || base === null || isValidNode(base)));
             ASSERT(!base || core.getPath(core.getParent(node)) !== core.getPath(base));
             ASSERT(!base || core.getPath(node) !== core.getPath(base));
+
+            var oldBase = core.getBase(node);
+
+            //TODO this restriction should be removed after clarification of the different scenarios and outcomes
+            //changing base from or to a node which has children is not allowed currently
+            ASSERT((base === null || oldBase === null) ||
+                (core.getChildrenRelids(base).length === 0 && core.getChildrenRelids(oldBase).length === 0));
+
+
             if (!!base) {
                 //TODO maybe this is not the best way, needs to be double checked
                 node.base = base;
