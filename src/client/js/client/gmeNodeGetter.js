@@ -194,14 +194,6 @@ define(['common/core/users/tojson'], function (toJson) {
             return state.core.getConstraint(state.nodes[_id].node, name);
         }
 
-        function printData() {
-            //probably we will still use it for test purposes, but now it goes officially
-            // into printing the node's json representation
-            toJson(state.core, state.nodes[_id].node, '', 'guid', function (err, jNode) {
-                state.logger.debug('node in JSON format[status = ', err, ']:', jNode);
-            });
-        }
-
         function toString() {
             return state.core.getAttribute(state.nodes[_id].node, 'name') + ' (' + _id + ')';
         }
@@ -255,7 +247,6 @@ define(['common/core/users/tojson'], function (toJson) {
                 getOwnConstraintNames: getOwnConstraintNames,
                 getConstraint: getConstraint,
 
-                printData: printData,
                 toString: toString,
 
                 getCollectionPaths: getCollectionPaths
