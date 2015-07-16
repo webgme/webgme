@@ -38,7 +38,8 @@ define(['js/logger',
             WebGMEGlobal.gmeConfig.client.log);
     };
 
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype.attachDiagramDesignerWidgetEventHandlers = function () {
+    MetaEditorControlDiagramDesignerWidgetEventHandlers
+        .prototype.attachDiagramDesignerWidgetEventHandlers = function () {
         var self = this;
 
         /*OVERRIDE DESIGNER CANVAS METHODS*/
@@ -46,20 +47,47 @@ define(['js/logger',
             var sourceId = self._ComponentID2GMEID[params.src],
                 targetId = self._ComponentID2GMEID[params.dst],
                 node,
-                baseNode;
+                baseNode,
+                oldBaseNode;
+
             if (self._connType === MetaRelations.META_RELATIONS.INHERITANCE) {
                 //check if base will be changed so we should notify user about it
                 node = self._client.getNode(targetId);
                 if (node) {
+                    if (sourceId === targetId) {
+                        dialog.alert('Invalid base modification',
+                            'The base of an object cannot be itself!',
+                            function () {
+                            }
+                        );
+                        return;
+                    }
+
                     if (sourceId !== node.getBaseId()) {
                         //TODO probably come up with some detailed list,
                         // what will the target loose and what will it gain
-                        dialog.confirm('Confirm base change',
-                            'Changing a base can cause invalid data in the target node and its descendants!',
-                            function () {
-                                self._onCreateNewConnection(params);
+
+                        baseNode = self._client.getNode(sourceId);
+                        oldBaseNode = self._client.getNode(node.getBaseId());
+
+                        if (baseNode && oldBaseNode) {
+                            if (baseNode.getChildrenIds().length > 0 || oldBaseNode.getChildrenIds().length > 0) {
+                                dialog.alert('Invalid base modification',
+                                    'Currently, modification from or to a base which has children is not allowed!',
+                                    function () {
+
+                                    }
+                                );
+                                return;
                             }
-                        );
+
+                            dialog.confirm('Confirm base change',
+                                'Changing a base can cause invalid data in the target node and its descendants!',
+                                function () {
+                                    self._onCreateNewConnection(params);
+                                }
+                            );
+                        }
                     }
                 }
                 return;
@@ -167,7 +195,8 @@ define(['js/logger',
                     //return true if there is at least one item among the dragged ones that is not on the sheet yet
                     if (gmeIDList.length > 0 && gmeIDList.indexOf(CONSTANTS.PROJECT_ROOT_ID) === -1) {
                         for (i = 0; i < gmeIDList.length; i += 1) {
-                            if (this._metaAspectMembersPerSheet[this._selectedMetaAspectSet].indexOf(gmeIDList[i]) === -1) {
+                            if (this._metaAspectMembersPerSheet[this._selectedMetaAspectSet]
+                                    .indexOf(gmeIDList[i]) === -1) {
                                 accept = true;
                                 break;
                             }
@@ -807,23 +836,23 @@ define(['js/logger',
     };
 
 
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements,
-                                                                                                           color) {
+    MetaEditorControlDiagramDesignerWidgetEventHandlers
+        .prototype._onSelectionFillColorChanged = function (selectedElements, color) {
         this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.COLOR);
     };
 
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionBorderColorChanged = function (selectedElements,
-                                                                                                             color) {
+    MetaEditorControlDiagramDesignerWidgetEventHandlers
+        .prototype._onSelectionBorderColorChanged = function (selectedElements, color) {
         this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.BORDER_COLOR);
     };
 
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionTextColorChanged = function (selectedElements,
-                                                                                                           color) {
+    MetaEditorControlDiagramDesignerWidgetEventHandlers
+        .prototype._onSelectionTextColorChanged = function (selectedElements, color) {
         this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.TEXT_COLOR);
     };
 
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionSetColor = function (selectedIds, color,
-                                                                                                   regKey) {
+    MetaEditorControlDiagramDesignerWidgetEventHandlers
+        .prototype._onSelectionSetColor = function (selectedIds, color, regKey) {
         var i = selectedIds.length,
             gmeID;
 
