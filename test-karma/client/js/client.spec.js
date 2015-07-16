@@ -1300,6 +1300,7 @@ describe('GME client', function () {
                                 alreadyHandled = true;
                                 clientNode = client.getNode(clientNodePath);
                                 expect(clientNode).not.to.equal(null);
+                                client.startTransaction(); //to ensure that nothing will be saved
                                 done();
                             }
                         }
@@ -1315,6 +1316,10 @@ describe('GME client', function () {
 
         afterEach(function () {
             console.log = factoryConsoleLog;
+        });
+
+        after(function () {
+            client.completeTransaction();
         });
 
         it('should return the path as identification of the node', function () {
@@ -1353,16 +1358,35 @@ describe('GME client', function () {
             expect(names).to.include('value');
         });
 
-        it('should return the list of attribute names that has value defined on this level oof inheritance',
+        it('should return the list of attribute names that has value defined on this level of inheritance',
             function () {
                 var names = clientNode.getOwnAttributeNames();
                 expect(names).to.have.length(1);
                 expect(names).to.contain('name');
-            });
+            }
+        );
+
+        it('should return the list of META-defined attribute names', function () {
+            expect(clientNode.getValidAttributeNames()).to.have.members(['name', 'value']);
+        });
 
         it('should return the value of the attribute under the defined name', function () {
             expect(clientNode.getAttribute('name')).to.equal('check');
             expect(clientNode.getAttribute('value')).to.equal(10);
+        });
+
+        it('should create and return the value of complex attribute without saving, then remove it', function () {
+            var attribute = {
+                text: 'something',
+                number: 1
+            };
+
+            client.setAttributes(clientNodePath, 'newAttr', attribute);
+            expect(clientNode.getAttributeNames()).to.include.members(['newAttr']);
+            expect(clientNode.getAttribute('newAttr')).to.eql(attribute);
+            expect(clientNode.getEditableAttribute('newAttr')).to.eql(attribute);
+            expect(clientNode.getOwnEditableAttribute('newAttr')).to.eql(attribute);
+            client.delAttributes(clientNodePath, 'newAttr');
         });
 
         it('in case of unknown attribute the result should be undefined', function () {
@@ -1421,12 +1445,24 @@ describe('GME client', function () {
             expect(clientNode.getOwnEditableRegistry('position')).to.deep.equal({x: 300, y: 466});
         });
 
-        it('should return the names of available pointers', function () {
-            var names = clientNode.getPointerNames();
-            expect(names).to.have.length(2);
-            expect(names).to.include('ptr');
-            expect(names).to.include('base');
+        it('should create and return the value of a simple registry without saving, then remove it', function () {
+            var registryItem = 'something';
+
+            client.setRegistry(clientNodePath, 'newReg', registryItem);
+            expect(clientNode.getRegistryNames()).to.include.members(['newReg']);
+            expect(clientNode.getRegistry('newReg')).to.eql(registryItem);
+            expect(clientNode.getEditableRegistry('newReg')).to.eql(registryItem);
+            expect(clientNode.getOwnEditableRegistry('newReg')).to.eql(registryItem);
+            client.delRegistry(clientNodePath, 'newReg');
         });
+        
+        it('should return the names of available pointers', function () {
+            expect(clientNode.getPointerNames()).to.have.members(['ptr', 'base']);
+        });
+
+        it('should return the list of META-defined pointers', function () {
+            expect(clientNode.getValidPointerNames()).to.have.members(['ptr']);
+        })
 
         it('should return the names of available pointers which has a target on this inheritance level',
             function () {
@@ -1521,6 +1557,10 @@ describe('GME client', function () {
             expect(clientNode.toString()).to.contain('check');
             expect(clientNode.toString()).to.contain('/323573539');
         });
+
+        it('should log the textual representation of the node',function(){
+
+        })
     });
 
     describe('basic territory tests', function () {
