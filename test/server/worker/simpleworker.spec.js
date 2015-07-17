@@ -1399,8 +1399,8 @@ describe('Simple worker', function () {
 
                 return worker.send({command: CONSTANTS.workerCommands.getResult});
             })
-            .then(function (/*msg*/) {
-                done();
+            .then(function (msg) {
+                expect(msg).not.to.equal(null);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
