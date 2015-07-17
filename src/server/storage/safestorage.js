@@ -1,10 +1,10 @@
 /*globals requireJS*/
 /*jshint node:true, newcap:false*/
 /**
- * This class calls forwards function calls to the storage with additions:
- *  - check that the data object contains all necessary values.
- *  - checks that the user is authorized to access/change the data.
- *  - updates the users and projects databases on delete/create project.
+ * This class forwards function calls to the storage and in addition:
+ *  - checks that input data is of correct format.
+ *  - checks that users are authorized to access/change projects.
+ *  - updates _users and _projects collections on delete/createProject.
  *
  * @module Server:SafeStorage
  * @author pmeijer / https://github.com/pmeijer
@@ -65,10 +65,20 @@ SafeStorage.prototype.getProjectIds = function (data, callback) {
 };
 
 /**
- * Authorization: result contains this information
- * @param data
- * @param callback
- * @returns {*}
+ * Returns and array of dictionaries for each project the user has at least read access to.
+ * If branches is set, the returned array will be filtered based on if the projects really do exist as
+ * collections on their own. If branches is not set, there is no guarantee that the returned projects
+ * really exist.
+ *
+ * Authorization level: read access for each returned project.
+ *
+ * @param {object} data - input parameters
+ * @param {boolean} [data.info] - include the info field from the _projects collection.
+ * @param {boolean} [data.rights] - include users' authorization information for each project.
+ * @param {boolean} [data.branches] - include a dictionary with all branches and their hash.
+ * @param {string} [data.username=gmeConfig.authentication.guestAccount]
+ * @param {function} [callback]
+ * @returns {promise} //TODO: jsdocify this
  */
 SafeStorage.prototype.getProjects = function (data, callback) {
     var deferred = Q.defer(),
@@ -139,7 +149,7 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                             if (err.message.indexOf('Project does not exist') > -1) {
                                 //TODO: clean up in _projects and _users here too?
                                 self.logger.error('Inconsistency: project exists in user "' + data.username +
-                                    '" and in _projects, but not as collection on its own: ', project._id);
+                                    '" and in _projects, but not as a collection on its own: ', project._id);
                                 branchesDeferred.resolve();
                             } else {
                                 branchesDeferred.reject(err);
@@ -167,10 +177,16 @@ SafeStorage.prototype.getProjects = function (data, callback) {
 };
 
 /**
- * Authorization: delete access for data.projectId
- * @param data
- * @param callback
- * @returns {*}
+ * Deletes a project from the _projects collection, deletes the collection for the the project and removes
+ * the rights from all users.
+ *
+ * Authorization level: delete access for project
+ *
+ * @param {object} data - input parameters
+ * @param {string} data.projectId - identifier for project.
+ * @param {string} [data.username=gmeConfig.authentication.guestAccount]
+ * @param {function} [callback]
+ * @returns {promise} //TODO: jsdocify this
  */
 SafeStorage.prototype.deleteProject = function (data, callback) {
     var deferred = Q.defer(),
@@ -215,10 +231,16 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
 };
 
 /**
- * Authorization: canCreate
- * @param data
- * @param callback
- * @returns {*}
+ * Creates a project and assigns a projectId by concatenating the username and the provided project name.
+ * The user with the given username becomes the owner of the project.
+ *
+ * Authorization level: canCreate
+ *
+ * @param {object} data - input parameters
+ * @param {string} data.projectName - name of new project.
+ * @param {string} [data.username=gmeConfig.authentication.guestAccount]
+ * @param {function} [callback]
+ * @returns {promise} //TODO: jsdocify this
  */
 SafeStorage.prototype.createProject = function (data, callback) {
     var deferred = Q.defer(),
@@ -277,10 +299,19 @@ SafeStorage.prototype.createProject = function (data, callback) {
 };
 
 /**
- * Authorization: read access for data.projectId
- * @param data
- * @param callback
- * @returns {*}
+ * Returns a dictionary with all the branches and their hashes within a project.
+ * Example: {
+ *   master: '#someHash',
+ *   b1: '#someOtherHash'
+ * }
+ *
+ * Authorization level: read access for project
+ *
+ * @param {object} data - input parameters
+ * @param {string} data.projectId - identifier for project.
+ * @param {string} [data.username=gmeConfig.authentication.guestAccount]
+ * @param {function} [callback]
+ * @returns {promise} //TODO: jsdocify this
  */
 SafeStorage.prototype.getBranches = function (data, callback) {
     var deferred = Q.defer(),
@@ -320,14 +351,18 @@ SafeStorage.prototype.getBranches = function (data, callback) {
 };
 
 /**
- * Authorization: read access for data.projectId
- * @param {object} - data
- * @param {string} - data.projectId
- * @param {number} - data.number - Number of commits to load.
- * @param {string|number} - data.before - Timestamp or commitHash to load history from. When number given it will load
- *  data.number of commits strictly before data.before, when commitHash given it will return that commit too.
- * @param callback
- * @returns {*}
+ * Returns an array of commits for a project.
+ *
+ * Authorization level: read access for project
+ *
+ * @param {object} data - input parameters
+ * @param {string} data.projectId - identifier for project.
+ * @param {number} data.number - number of commits to load.
+ * @param {string|number} data.before - timestamp or commitHash to load history from. When number given it will load
+ *  data.number of commits strictly before data.before, when commitHash is given it will return that commit too.
+ * @param {string} [data.username=gmeConfig.authentication.guestAccount]
+ * @param {function} [callback]
+ * @returns {promise} //TODO: jsdocify this
  */
 SafeStorage.prototype.getCommits = function (data, callback) {
     var deferred = Q.defer(),
@@ -375,10 +410,32 @@ SafeStorage.prototype.getCommits = function (data, callback) {
 };
 
 /**
- * Authorization: read access for data.projectId
- * @param data
- * @param callback
- * @returns {*}
+ * Returns the latest commit data for a branch within the project. (This is the same data that is provided during
+ * a BRANCH_UPDATE event.)
+ *
+ * Example: {
+ *   projectId: 'guest+TestProject',
+ *   branchName: 'master',
+ *   commitObject: {
+ *     _id: '#someCommitHash',
+ *     root: '#someNodeHash',
+ *     parents: ['#someOtherCommitHash'],
+ *     update: ['guest'],
+ *     time: 1430169614741,
+ *     message: 'createChild(/1/2)',
+ *     type: 'commit'
+ *   },
+ *   coreObject: [{coreObj}, ..., {coreObj}],
+ * }
+ *
+ * Authorization level: read access for project
+ *
+ * @param {object} data - input parameters
+ * @param {string} data.projectId - identifier for project.
+ * @param {string} data.branchName - name of the branch.
+ * @param {string} [data.username=gmeConfig.authentication.guestAccount]
+ * @param {function} [callback]
+ * @returns {promise} //TODO: jsdocify this
  */
 SafeStorage.prototype.getLatestCommitData = function (data, callback) {
     var deferred = Q.defer(),
@@ -841,4 +898,5 @@ SafeStorage.prototype.loadObjects = function (data, callback) {
 
     return deferred.promise.nodeify(callback);
 };
+
 module.exports = SafeStorage;

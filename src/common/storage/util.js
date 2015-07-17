@@ -23,7 +23,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
                 return projectFullName.replace(CONSTANTS.PROJECT_DISPLAYED_NAME_SEP, CONSTANTS.PROJECT_ID_SEP);
             }
         },
-        getProjectIdFromUserIdAndProjectName: function (userId, projectName) {
+        getProjectIdFromOwnerIdAndProjectName: function (userId, projectName) {
             return userId + CONSTANTS.PROJECT_ID_SEP + projectName;
         }
     };

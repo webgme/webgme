@@ -162,22 +162,16 @@ function StandAloneServer(gmeConfig) {
             __httpServer = Https.createServer({
                 key: __secureSiteInfo.key,
                 cert: __secureSiteInfo.certificate
-            }, __app).listen(gmeConfig.server.port, function (err) {
-                if (err) {
-                    logger.error('Failed to start server', {metadata: {port: gmeConfig.server.port, error: err}});
-                    serverDeferred.reject(err);
-                } else {
-                    serverDeferred.resolve();
-                }
+            }, __app).listen(gmeConfig.server.port, function () {
+                // Note: the listening function does not return with an error, errors are handled by the error event
+                logger.debug('Https server is listening on ', {metadata: {port: gmeConfig.server.port}});
+                serverDeferred.resolve();
             });
         } else {
-            __httpServer = Http.createServer(__app).listen(gmeConfig.server.port, function (err) {
-                if (err) {
-                    logger.error('Failed to start server', {metadata: {port: gmeConfig.server.port, error: err}});
-                    serverDeferred.reject(err);
-                } else {
-                    serverDeferred.resolve();
-                }
+            __httpServer = Http.createServer(__app).listen(gmeConfig.server.port, function () {
+                // Note: the listening function does not return with an error, errors are handled by the error event
+                logger.debug('Http server is listening on ', {metadata: {port: gmeConfig.server.port}});
+                serverDeferred.resolve();
             });
         }
         __httpServer.on('connection', function (socket) {
@@ -192,6 +186,15 @@ function StandAloneServer(gmeConfig) {
                     delete sockets[socketId];
                 }
             });
+        });
+
+        __httpServer.on('error', function (err) {
+            if (err.code === 'EADDRINUSE') {
+                logger.error('Failed to start server', {metadata: {port: gmeConfig.server.port, error: err}});
+                serverDeferred.reject(err);
+            } else {
+                logger.error('Server raised an error', {metadata: {port: gmeConfig.server.port, error: err}});
+            }
         });
 
         __storage.openDatabase(function (err) {
@@ -215,7 +218,7 @@ function StandAloneServer(gmeConfig) {
 
         __workerManager.start();
 
-        Q.allSettled([serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise, apiReady])
+        Q.all([serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise, apiReady])
             .nodeify(function (err) {
                 self.isRunning = true;
                 callback(err);

@@ -44,8 +44,9 @@ main = function (argv, callback) {
         .parse(argv);
 
     if (!(program.pluginName && program.projectName)) {
-        program.help();
         logger.error('A project and pluginName must be specified.');
+        callback('A project and pluginName must be specified.');
+        program.help();
     }
 
     // this line throws a TypeError for invalid databaseConnectionString

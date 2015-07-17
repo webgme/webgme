@@ -100,7 +100,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
      *
      * @param {object} commitData
      * @param {string} commitData.commitHash - hash of the commit.
-     * @param {string} commitData.status - storage.constants./SYNCH/FORKED.
+     * @param {string} commitData.status - storage.constants./SYNCED/FORKED/MERGED
      * @param {string} commitData.branchName - name of branch that got updated with the commitHash.
      */
     PluginResult.prototype.addCommit = function (commitData) {

@@ -131,10 +131,17 @@ describe('ServerWorkerManager', function () {
 
     describe('bad request handling', function () {
 
-        var swm;
+        var swm,
+            ownGmeConfig = JSON.parse(JSON.stringify(gmeConfig)),
+            managerParameters = {
+                globConf: ownGmeConfig,
+                logger: logger,
+            };
+
+        ownGmeConfig.addOn.enable = false;
 
         before(function () {
-            swm = new ServerWorkerManager(workerManagerParameters);
+            swm = new ServerWorkerManager(managerParameters);
             swm.start();
         });
 
@@ -149,7 +156,7 @@ describe('ServerWorkerManager', function () {
             });
         });
 
-        it.skip('should fail to start addOn as it is disabled', function (done) {
+        it('should fail to start addOn as it is disabled', function (done) {
             var addOnRequest = {
                 command: 'connectedWorkerStart',
                 workerName: 'TestAddOn',

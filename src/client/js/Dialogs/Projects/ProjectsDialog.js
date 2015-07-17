@@ -303,7 +303,7 @@ define([
 
         this._txtNewProjectName.on('keyup', function () {
             var val = self._txtNewProjectName.val(),
-                projectId = StorageUtil.getProjectIdFromUserIdAndProjectName(self._dialog.find('.username').text(), val);
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(self._dialog.find('.username').text(), val);
 
             if (val.length === 1) {
                 self._filter = [projectId.toUpperCase()[0], projectId.toUpperCase()[0]];
@@ -337,7 +337,7 @@ define([
 
             var enterPressed = event.which === 13,
                 newProjectName = self._txtNewProjectName.val(),
-                projectId =  StorageUtil.getProjectIdFromUserIdAndProjectName(self._dialog.find('.username').text(), newProjectName);
+                projectId =  StorageUtil.getProjectIdFromOwnerIdAndProjectName(self._dialog.find('.username').text(), newProjectName);
 
 
             if (enterPressed && isValidProjectName(newProjectName, projectId)) {

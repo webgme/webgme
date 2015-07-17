@@ -427,7 +427,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     logger.debug('seedProject - seeding from file:', parameters.seedName);
                     jsonSeed = getSeedFromFile(parameters.seedName);
                     if (jsonSeed === null) {
-                        finish('unknown file seed');
+                        finish('unknown file seed [' + parameters.seedName + ']');
                     } else {
                         seedReady();
                     }
@@ -443,7 +443,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                             return;
                         }
                         if (branches.hasOwnProperty(parameters.seedBranch) === false) {
-                            finish('Branch did not exist' + parameters.seedBranch);
+                            finish('Branch did not exist [' + parameters.seedBranch + ']');
                             return;
                         }
                         project.loadObject(branches[parameters.seedBranch], function (err, commit) {
@@ -657,7 +657,9 @@ process.on('message', function (parameters) {
     }
 
     logger.debug('Incoming message:', {metadata: parameters});
-    resultId = GUID();
+    if (parameters.command !== CONSTANT.workerCommands.getResult) {
+        resultId = GUID();
+    }
     if (parameters.command === CONSTANT.workerCommands.dumpMoreNodes) {
         if (typeof parameters.projectId === 'string' &&
             typeof parameters.hash === 'string' &&
@@ -674,14 +676,23 @@ process.on('message', function (parameters) {
             });
         }
     } else if (parameters.command === CONSTANT.workerCommands.getResult) {
-        if (resultReady === true) {
-            var e = error,
-                r = result;
+        if (resultId) {
+            if (resultReady === true) {
+                var e = error,
+                    r = result;
 
-            initResult();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: e, result: r});
+                initResult();
+                safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: e, result: r});
+            } else {
+                resultRequested = true;
+            }
         } else {
-            resultRequested = true;
+            safeSend({
+                pid: process.pid,
+                type: CONSTANT.msgTypes.request,
+                error: 'no work was started yet',
+                resid: null
+            });
         }
     } else if (parameters.command === CONSTANT.workerCommands.executePlugin) {
         if (gmeConfig.plugin.allowServerExecution) {

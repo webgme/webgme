@@ -22,10 +22,10 @@ define([], function () {
         DISCONNECTED: 'DISCONNECTED',
         RECONNECTED: 'RECONNECTED',
 
-        // Branch status
-        SYNCH: 'SYNCH',
+        // Branch commit status - this is the status returned after setting the hash of a branch
+        SYNCED: 'SYNCED',
         FORKED: 'FORKED',
-        MERGED: 'MERGED',
+        MERGED: 'MERGED', //This is currently not used
 
         // Events
         PROJECT_DELETED: 'PROJECT_DELETED',

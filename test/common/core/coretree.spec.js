@@ -12,6 +12,7 @@ describe('CoreTree', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
         should = require('chai').should(),
+        expect = testFixture.expect,
         requirejs = require('requirejs'),
         projectName = 'CoreTreeTest',
         projectId = testFixture.projectName2Id(projectName),
@@ -54,6 +55,28 @@ describe('CoreTree', function () {
                 ]);
             })
             .nodeify(done);
+    });
+
+    it('should setData, getData, deleteData', function () {
+        var node = coreTree.createRoot(),
+            data = {
+                a: [],
+                b: true,
+                c: 'c',
+                d: 42
+            };
+
+        coreTree.setData(node, data);
+        expect(coreTree.getData(node)).to.deep.equal(data);
+        expect(coreTree.deleteData(node)).to.deep.equal(data);
+        expect(coreTree.getData(node)).to.deep.equal({});
+    });
+
+
+    it('should getDescendant', function () {
+        var node = coreTree.createRoot();
+
+        expect(coreTree.getDescendant(node, node, undefined /* base */)).to.deep.equal(node);
     });
 
     describe('core.getParent', function () {

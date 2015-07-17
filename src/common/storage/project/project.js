@@ -48,11 +48,11 @@ define([
         };
 
         this.setBranchHash = function (branchName, newHash, oldHash, callback) {
-            return storage.setBranchHash(self.projectId, branchName, newHash, oldHash, callback);
+            storage.setBranchHash(self.projectId, branchName, newHash, oldHash, callback);
         };
 
         this.getBranchHash = function (branchName, callback) {
-            storage.setBranchHash(self.projectId, branchName, callback);
+            storage.getBranchHash(self.projectId, branchName, callback);
         };
 
         this.createBranch = function (branchName, newHash, callback) {

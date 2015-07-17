@@ -31,20 +31,20 @@ define([
         return '' + relid;
     };
 
-    // make relids deterministic
-    if (false) {
-        var nextRelid = 0;
-        createRelid = function (data) {
-            ASSERT(data && typeof data === 'object');
-
-            var relid;
-            do {
-                relid = (nextRelid += -1);
-            } while (data[relid] !== undefined);
-
-            return '' + relid;
-        };
-    }
+    //// make relids deterministic
+    //if (false) {
+    //    var nextRelid = 0;
+    //    createRelid = function (data) {
+    //        ASSERT(data && typeof data === 'object');
+    //
+    //        var relid;
+    //        do {
+    //            relid = (nextRelid += -1);
+    //        } while (data[relid] !== undefined);
+    //
+    //        return '' + relid;
+    //    };
+    //}
 
     var rootCounter = 0;
 

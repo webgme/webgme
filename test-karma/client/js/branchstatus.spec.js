@@ -207,7 +207,7 @@ describe('branch status', function () {
                 project.setBranchHash(branchName, newHash, currentHash,
                     function (err, result) {
                         expect(err).to.equal(null);
-                        expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
+                        expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCED);
                     }
                 );
             });
@@ -268,7 +268,7 @@ describe('branch status', function () {
                                 project.setBranchHash(branchName, newHash, currentHash,
                                     function (err, result) {
                                         expect(err).to.equal(null);
-                                        expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
+                                        expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCED);
                                         client.setAttributes('', 'name', 'newRootyName', 'conflicting change');
                                         client.completeTransaction('sync_aheadSync_aheadNotSync__stop');
                                     }
@@ -345,7 +345,7 @@ describe('branch status', function () {
                                 project.setBranchHash(branchName, newHash, currentHash,
                                     function (err, result) {
                                         expect(err).to.equal(null);
-                                        expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
+                                        expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCED);
                                         client.setAttributes('', 'name', 'newRootyNameTest2', 'conflicting change');
                                         client.completeTransaction('sync_aheadSync_aheadNotSync_aheadNotSync__stop');
                                     }

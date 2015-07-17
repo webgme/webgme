@@ -41,10 +41,10 @@ define([
             storage = Storage.getStorage(logger, gmeConfig, true),
             state = {
                 connection: null, // CONSTANTS.STORAGE. CONNECTED/DISCONNECTED/RECONNECTED
-                project: null, //CONSTANTS.BRANCH_STATUS. SYNCH/FORKED/AHEAD/PULLING
+                project: null,
                 core: null,
                 branchName: null,
-                branchStatus: null,
+                branchStatus: null, //CONSTANTS.BRANCH_STATUS. SYNCED/FORKED/AHEAD/PULLING
                 inSync: true,
                 readOnlyProject: false,
                 viewer: false, // This means that a specific commit is selected w/o regards to any branch.
@@ -580,7 +580,7 @@ define([
                 logger.debug('default commitHandler invoked, result: ', result);
                 logger.debug('commitQueue', commitQueue);
 
-                if (result.status === CONSTANTS.STORAGE.SYNCH) {
+                if (result.status === CONSTANTS.STORAGE.SYNCED) {
                     logger.debug('You are in synch.');
                     logState('info', 'commitHandler');
                     if (commitQueue.length === 1) {

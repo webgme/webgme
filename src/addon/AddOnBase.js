@@ -71,7 +71,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
                 return;
             }
 
-            if (!branches[self.branchName]) {
+            if (branches.hasOwnProperty(self.branchName) === false) {
                 callback(new Error('no such branch [' + self.branchName + ']'));
                 return;
             }
@@ -195,7 +195,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
     };
 
     AddOnBase.prototype.update = function (root, callback) {
-        callback(new Error('The update function is a main point of an addOn\'s functionality so it must be' +
+        callback(new Error('The update function is a main point of an addOn\'s functionality so it must be ' +
             'overwritten.'));
     };
 

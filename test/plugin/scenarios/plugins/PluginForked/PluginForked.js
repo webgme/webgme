@@ -134,10 +134,10 @@ if (typeof define === 'undefined') {
                         }
                         self.project.setBranchHash(self.branchName, commitResult.hash, self.currentHash,
                             function (err, commitResult) {
-                                if (commitResult.status === STORAGE_CONSTANTS.SYNCH) {
+                                if (commitResult.status === STORAGE_CONSTANTS.SYNCED) {
                                     makeAndSaveChanges();
                                 } else {
-                                    callback('Injected commit was not in synch, ' + commitResult.status);
+                                    callback('Injected commit was not in sync, ' + commitResult.status);
                                 }
                             }
                         );

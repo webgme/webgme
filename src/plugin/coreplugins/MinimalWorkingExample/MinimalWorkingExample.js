@@ -37,6 +37,26 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
     };
 
     /**
+     * Gets the configuration structure for the MetaGMEParadigmImporter.
+     * The ConfigurationStructure defines the configuration for the plugin
+     * and will be used to populate the GUI when invoking the plugin from webGME.
+     * @returns {object} The version of the plugin.
+     * @public
+     */
+    MinimalWorkingExample.prototype.getConfigStructure = function () {
+        return [
+            {
+                name: 'shouldFail',
+                displayName: 'Should fail',
+                description: 'Example if the plugin execution fails',
+                value: false,
+                valueType: 'boolean',
+                readOnly: false
+            }
+        ];
+    };
+
+    /**
     * Main function for the plugin to execute. This will perform the execution.
     * Notes:
     * - Always log with the provided logger.[error,warning,info,debug].
@@ -48,7 +68,8 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
     MinimalWorkingExample.prototype.main = function (callback) {
         // Use self to access core, project, result, logger etc from PluginBase.
         // These are all instantiated at this point.
-        var self = this;
+        var self = this,
+            currentConfiguration = self.getCurrentConfig();
         self.updateMETA(self.metaTypes);
         // Using the logger.
         self.logger.debug('This is a debug message.');
@@ -81,7 +102,14 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
                 self.result.setError(err);
             }
             self.logger.info('saved returned with status', status);
-            callback(null, self.result);
+
+            if (currentConfiguration.shouldFail) {
+                self.result.setSuccess(false);
+                self.result.setError('Failed on purpose.');
+                callback('Failed on purpose.', self.result);
+            } else {
+                callback(null, self.result);
+            }
         });
 
     };
