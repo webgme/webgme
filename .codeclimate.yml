@@ -13,3 +13,4 @@ exclude_paths:
  - "src/common/util/jszip.js"
  - "src/common/util/sax.js"
  - "src/server/middleware/executor/worker/node_worker.classes.build.js"
+ - "test-karma/**/*"
