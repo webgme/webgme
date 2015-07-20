@@ -16,11 +16,24 @@ define(['common/core/users/meta', 'common/util/url'], function (BaseMeta, URL) {
         };
 
     var changeRefObjects = function (refType, urlPrefix, object, core, root, callback) {
-        var i;
+        var i,
+            needed = 0,
+            neededNames = [],
+            error = null,
+            pathToRefObjFinished = function (err, refObj) {
+                error = error || err;
+                object[neededNames[i]] = refObj;
+                if (--needed === 0) {
+                    callback(error);
+                }
+            },
+            changeRefObjDone = function (err) {
+                error = error || err;
+                if (--needed === 0) {
+                    callback(error);
+                }
+            };
         if (typeof object === 'object') {
-            var needed = 0,
-                neededNames = [],
-                error = null;
             for (i in object) { // TODO: use key here instead
                 if (object[i] !== null && typeof object[i] === 'object') {
                     needed++;
@@ -32,22 +45,9 @@ define(['common/core/users/meta', 'common/util/url'], function (BaseMeta, URL) {
                     if (object[neededNames[i]].$ref) {
                         //reference object
                         pathToRefObjAsync(refType, urlPrefix, object[neededNames[i]].$ref/*.substring(1)*/,
-                            core, root,
-                            function (err, refObj) {
-                                error = error || err;
-                                object[neededNames[i]] = refObj;
-                                if (--needed === 0) {
-                                    callback(error);
-                                }
-                            }
-                        );
+                            core, root, pathToRefObjFinished);
                     } else {
-                        changeRefObjects(refType, urlPrefix, object[neededNames[i]], core, root, function (err) {
-                            error = error || err;
-                            if (--needed === 0) {
-                                callback(error);
-                            }
-                        });
+                        changeRefObjects(refType, urlPrefix, object[neededNames[i]], core, root, changeRefObjDone);
                     }
                 }
             } else {
@@ -227,15 +227,38 @@ define(['common/core/users/meta', 'common/util/url'], function (BaseMeta, URL) {
     };
 
     var getSetsOfNode = function (core, node, urlPrefix, refType, callback) {
-        var setsInfo = {};
-        var createOneSetInfo = function (setName, callback) {
+        var setsInfo = {},
+            tArray = core.getSetNames(node),
+            memberOfInfo = core.isMemberOf(node),
+            i, j, needed,
+            error = null,
+            createOneSetInfoFinished = function(err){
+                error = error || err;
+                if (--needed === 0) {
+                    callback(error, setsInfo);
+                }
+            },
+            createOneSetInfo = function (setName) {
             var needed,
                 members = (core.getMemberPaths(node, setName)).sort(), //TODO Remove the sort part at some point
                 info = {from: [], to: [], set: true},
                 i,
                 error = null,
                 containers = [],
-                collectSetInfo = function (nodePath, container, callback) {
+                collectSetInfoFinished = function (err, refObj) {
+                    error = error || err;
+                    if (refObj !== undefined && refObj !== null) {
+                        info.to.push(refObj);
+                    }
+
+                    if (--needed === 0) {
+                        if (error === null) {
+                            setsInfo[setName] = info;
+                        }
+                        createOneSetInfoFinished(error);
+                    }
+                },
+                collectSetInfo = function (nodePath, container) {
                     if (container === true) {
                         pathToRefObjAsync(refType, urlPrefix, nodePath, core, core.getRoot(node),
                             function (err, refObj) {
@@ -247,11 +270,11 @@ define(['common/core/users/meta', 'common/util/url'], function (BaseMeta, URL) {
                                                     refObj[j] = atrAndReg[j];
                                                 }
                                             }
-                                            callback(err, refObj);
+                                            collectSetInfoFinished(err, refObj);
                                         }
                                     );
                                 } else {
-                                    callback(err, null);
+                                    collectSetInfoFinished(err, null);
                                 }
                             }
                         );
@@ -264,7 +287,7 @@ define(['common/core/users/meta', 'common/util/url'], function (BaseMeta, URL) {
                                     for (var j in atrAndReg) {
                                         refObj[j] = atrAndReg[j];
                                     }
-                                    callback(err, refObj);
+                                    collectSetInfoFinished(err, refObj);
                                 }
                             }
                         );
@@ -280,44 +303,17 @@ define(['common/core/users/meta', 'common/util/url'], function (BaseMeta, URL) {
             needed = members.length + containers.length;
             if (needed > 0) {
                 for (i = 0; i < members.length; i++) {
-                    collectSetInfo(members[i], false, function (err, refObj) {
-                        error = error || err;
-                        if (refObj !== undefined && refObj !== null) {
-                            info.to.push(refObj);
-                        }
-
-                        if (--needed === 0) {
-                            if (error === null) {
-                                setsInfo[setName] = info;
-                            }
-                            callback(error);
-                        }
-                    });
+                    collectSetInfo(members[i], false);
                 }
 
                 for (i = 0; i < containers.length; i++) {
-                    collectSetInfo(containers[i], true, function (err, refObj) {
-                        error = error || err;
-                        if (refObj !== undefined && refObj !== null) {
-                            info.from.push(refObj);
-                        }
-
-                        if (--needed === 0) {
-                            if (error === null) {
-                                setsInfo[setName] = info;
-                            }
-                            callback(error);
-                        }
-                    });
+                    collectSetInfo(containers[i], true);
                 }
             } else {
                 callback(null);
             }
         };
 
-        var tArray = core.getSetNames(node),
-            memberOfInfo = core.isMemberOf(node),
-            i, j, needed, error = null;
         for (j in memberOfInfo) {
             for (i = 0; i < memberOfInfo[j].length; i++) {
                 if (tArray.indexOf(memberOfInfo[j][i]) === -1) {
@@ -328,12 +324,7 @@ define(['common/core/users/meta', 'common/util/url'], function (BaseMeta, URL) {
         needed = tArray.length;
         if (needed > 0) {
             for (i = 0; i < tArray.length; i++) {
-                createOneSetInfo(tArray[i], function (err) {
-                    error = error || err;
-                    if (--needed === 0) {
-                        callback(error, setsInfo);
-                    }
-                });
+                createOneSetInfo(tArray[i]);
             }
         } else {
             callback(null, setsInfo);
