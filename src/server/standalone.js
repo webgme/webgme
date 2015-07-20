@@ -360,7 +360,6 @@ function StandAloneServer(gmeConfig) {
                 } else if (gmeConfig.authentication.allowGuests) {
                     req.session.authenticated = true;
                     req.session.udmId = gmeConfig.authentication.guestAccount;
-                    req.session.userType = 'GME';
                     res.cookie('webgme', req.session.udmId);
                     return next();
                 } else if (res.getHeader('X-WebGME-Media-Type')) {
@@ -376,7 +375,6 @@ function StandAloneServer(gmeConfig) {
             // if authentication is turned off we treat everybody as a guest user
             req.session.authenticated = true;
             req.session.udmId = gmeConfig.authentication.guestAccount;
-            req.session.userType = 'GME';
             res.cookie('webgme', req.session.udmId);
             return next();
         }
@@ -650,7 +648,6 @@ function StandAloneServer(gmeConfig) {
         res.clearCookie('isisforge'); // TODO is this really needed
         req.logout();
         req.session.authenticated = false;
-        req.session.userType = 'loggedout';
         delete req.session.udmId;
         res.redirect(__logoutUrl);
     });
