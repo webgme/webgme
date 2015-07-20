@@ -287,8 +287,7 @@ define([
             i,
             j,
             type,
-            types = ['atom', 'folder', 'model', 'set', 'connection', 'reference'],
-            error;
+            types = ['atom', 'folder', 'model', 'set', 'connection', 'reference'];
 
         self.logger.debug('Creating nodes ...');
 

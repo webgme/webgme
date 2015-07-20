@@ -13,8 +13,8 @@ function getUserId(req) {
 }
 
 function initialize(middlewareOpts) {
-    var gmeConfig = middlewareOpts.gmeConfig,
-        logger = middlewareOpts.logger.fork('ExampleRestRouter'),
+    var logger = middlewareOpts.logger.fork('ExampleRestRouter'),
+        //gmeConfig = middlewareOpts.gmeConfig,
         ensureAuthenticated = middlewareOpts.ensureAuthenticated;
 
     logger.debug('initializing ...');

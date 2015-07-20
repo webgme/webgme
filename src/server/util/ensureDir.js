@@ -6,11 +6,12 @@
  * @author https://github.com/samxxu/ensureDir
  */
 
+'use strict';
+
 var path = require('path'),
     fs = require('fs');
 
 function _ensureDir(dir, mode, callback) {
-    'use strict';
     var existsFunction = fs.exists || path.exists;
 
     existsFunction(dir, function (exists) {
@@ -53,13 +54,14 @@ function _ensureDir(dir, mode, callback) {
  */
 
 function ensureDir(dir, mode, callback) {
-    //jshint bitwise: false
     if (mode && typeof mode === 'function') {
         callback = mode;
         mode = null;
     }
 
-    mode = mode || 0777 & (~process.umask());
+    //jshint bitwise: false
+    mode = mode || parseInt('0777', 8) & (~process.umask());
+    //jshint bitwise: true
 
     callback = callback || function () {
     };

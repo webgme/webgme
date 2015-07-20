@@ -1,4 +1,4 @@
-/*globals require*/
+/*globals require, console*/
 /*jshint browser: true*/
 
 function done() {
@@ -12,7 +12,6 @@ function done() {
         };
 
     Object.keys(window.__karma__.files).forEach(function (file) {
-        'use strict';
         if (TEST_REGEXP.test(file)) {
             // Normalize paths to RequireJS module names.
             allTestFiles.push(pathToModule(file));
@@ -82,34 +81,36 @@ function done() {
     });
 }
 
-function httpGet(theUrl, callback) {
-    var xhr = new XMLHttpRequest();
-    console.log(theUrl);
-    xhr.open('GET', theUrl, true);
-    xhr.onreadystatechange  = function () {
-        console.log('ready state changed');
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                console.log(xhr.responseText);
-                callback(xhr.status);
-            } else {
-                console.error(xhr.statusText);
-                callback(xhr.status);
-            }
-        }
-    };
-    xhr.onerror = function (e) {
-        console.error(xhr.statusText);
-        callback(xhr.status);
-    };
-    xhr.send(null);
-    return xhr;
-}
+//function httpGet(theUrl, callback) {
+//    'use strict';
+//    var xhr = new XMLHttpRequest();
+//    console.log(theUrl);
+//    xhr.open('GET', theUrl, true);
+//    xhr.onreadystatechange  = function () {
+//        console.log('ready state changed');
+//        if (xhr.readyState === 4) {
+//            if (xhr.status === 200) {
+//                console.log(xhr.responseText);
+//                callback(xhr.status);
+//            } else {
+//                console.error(xhr.statusText);
+//                callback(xhr.status);
+//            }
+//        }
+//    };
+//    xhr.onerror = function (/*e*/) {
+//        console.error(xhr.statusText);
+//        callback(xhr.status);
+//    };
+//    xhr.send(null);
+//    return xhr;
+//}
 
 
 // FIXME: we should try to load gmeConfig with HTTPXmlRequest, to see if the server is up and running
 // wait for 5 seconds for server start up
 setTimeout(function () {
+    'use strict';
     done();
 }, 5000);
 

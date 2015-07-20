@@ -1,5 +1,6 @@
-/* globals module */
+/*jshint node:true*/
 
+'use strict';
 
 module.exports = function BlobError(message, statusCode) {
     Error.captureStackTrace(this, this.constructor);

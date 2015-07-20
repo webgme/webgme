@@ -1,4 +1,4 @@
-/*globals requireJS*/
+/*globals*/
 /*jshint node: true*/
 /**
  * @module Server:ServerWorkerManager

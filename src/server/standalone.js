@@ -501,8 +501,8 @@ function StandAloneServer(gmeConfig) {
         __sessionStore,
         __workerManager,
         __users = {},
-        __googleAuthenticationSet = false,
-        __canCheckToken = true,
+        //__googleAuthenticationSet = false,
+        //__canCheckToken = true,
         __httpServer = null,
         __logoutUrl = gmeConfig.authentication.logOutUrl || '/',
         __baseDir = requireJS.s.contexts._.config.baseUrl,// TODO: this is ugly

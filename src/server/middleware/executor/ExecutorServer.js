@@ -156,7 +156,6 @@ function executorRESTWorkerAPI(req, res, next) {
     }
 
     var url = require('url').parse(req.url);
-    var pathParts = url.pathname.split('/');
 
     var serverResponse = new WorkerInfo.ServerResponse({refreshPeriod: workerRefreshInterval});
     serverResponse.labelJobs = labelJobs;

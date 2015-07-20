@@ -22,4 +22,4 @@
     startFile: 'start.frag',
     endFile: 'end.frag'
   }
-})
+});

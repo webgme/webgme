@@ -115,7 +115,7 @@ define([
             d.status = d.status || getOpenStatus(d);
         });
 
-        // Update the nodes…
+        // Update the nodes ...
         var node = this._svg.selectAll('g.node')
             .data(nodes, function (d) {
                 return d.id || (d.id = ++i);
@@ -213,7 +213,7 @@ define([
         nodeExit.select('text')
             .style('fill-opacity', 1e-6);
 
-        // Update the links…
+        // Update the links ...
         var link = this._svg.selectAll('path.link')
             .data(links, function (d) {
                 return d.target.id;
