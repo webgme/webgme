@@ -109,11 +109,11 @@ define(['js/Decorators/WidgetDecoratorBase'], function (WidgetDecoratorBase) {
         //TODO Determine a better way to represent this...
         //Only allow one 'Click' per region
         result.push({
-            'id': '0',
-            'x1': this.hostDesignerItem.getWidth() / 2,
-            'y1': this.hostDesignerItem.getHeight() / 2,
-            'x2': this.hostDesignerItem.getWidth() / 2,
-            'y2': this.hostDesignerItem.getHeight() / 2
+            id: '0',
+            x1: this.hostDesignerItem.getWidth() / 2,
+            y1: this.hostDesignerItem.getHeight() / 2,
+            x2: this.hostDesignerItem.getWidth() / 2,
+            y2: this.hostDesignerItem.getHeight() / 2
         });
 
         return result;
@@ -129,9 +129,9 @@ define(['js/Decorators/WidgetDecoratorBase'], function (WidgetDecoratorBase) {
 
     /******************** EVENT HANDLERS ************************/
 
-        //called when the mouse enters the DesignerItem's main container
-        //return TRUE if decorator code handled the event
-        //when returned FALSE, DesignerItem's event handler will be executed
+    //called when the mouse enters the DesignerItem's main container
+    //return TRUE if decorator code handled the event
+    //when returned FALSE, DesignerItem's event handler will be executed
     BlockEditorWidgetDecoratorBase.prototype.onMouseEnter = function (/*event*/) {
         return false;
     };
@@ -182,7 +182,7 @@ define(['js/Decorators/WidgetDecoratorBase'], function (WidgetDecoratorBase) {
 
 
     /************* ADDITIONAL METHODS ***************************/
-        //called when the designer item should be updated
+    //called when the designer item should be updated
     BlockEditorWidgetDecoratorBase.prototype.update = function () {
     };
 

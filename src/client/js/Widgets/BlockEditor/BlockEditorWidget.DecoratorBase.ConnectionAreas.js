@@ -53,13 +53,13 @@ define(['./BlockEditorWidget.Constants'], function (SNAP_CONSTANTS) {
         if (line) {
             if (this._connHighlight === undefined) {
                 this._connHighlight = $('<div/>', {
-                    'class': CONN_AREA,
+                    class: CONN_AREA,
                     id: id
                 });
                 this._connHighlight.css({
-                    'position': 'absolute',
-                    'left': -shiftVal + 'px',
-                    'top': -shiftVal + 'px'
+                    position: 'absolute',
+                    left: -shiftVal + 'px',
+                    top: -shiftVal + 'px'
                 });
 
             }
@@ -93,7 +93,7 @@ define(['./BlockEditorWidget.Constants'], function (SNAP_CONSTANTS) {
             var path = this._svg.path('M ' + line.x1 + ',' + line.y1 + 'L' + line.x2 + ',' + line.y2);
             $(path.node).attr(DATA_CONN_AREA_ID, id);
             path.attr({'stroke-width': CONN_AREA_SIZE});
-            $(path.node).attr({'class': CONN_AREA_EDIT_CLASS});
+            $(path.node).attr({class: CONN_AREA_EDIT_CLASS});
 
             this.$el.append(this._connHighlight);
         }

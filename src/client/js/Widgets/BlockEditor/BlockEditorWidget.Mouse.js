@@ -1,4 +1,4 @@
-/*globals define, _*/
+/*globals define, $*/
 /*jshint browser: true*/
 
 /**
@@ -7,7 +7,7 @@
 
 define(['./BlockEditorWidget.Constants'], function (BlockEditorWidgetConstants) {
 
-    "use strict";
+    'use strict';
 
     var EVENT_POSTFIX = 'BlockEditorWidget';
 
@@ -96,13 +96,13 @@ define(['./BlockEditorWidget.Constants'], function (BlockEditorWidgetConstants) 
     BlockEditorWidgetMouse.prototype._getMouseEventDetails = function (event) {
         var mousePos = this.getAdjustedMousePos(event),
             eventDetails = {
-                'rightClick': event.which === 3,
-                'ctrlKey': event.ctrlKey,
-                'metaKey': event.metaKey,
-                'altKey': event.altKey,
-                'shiftKey': event.shiftKey,
-                'mouseX': mousePos.mX,
-                'mouseY': mousePos.mY
+                rightClick: event.which === 3,
+                ctrlKey: event.ctrlKey,
+                metaKey: event.metaKey,
+                altKey: event.altKey,
+                shiftKey: event.shiftKey,
+                mouseX: mousePos.mX,
+                mouseY: mousePos.mY
             };
 
         return eventDetails;

@@ -26,26 +26,26 @@ define([
 
         this._acceptDroppable = false;
 
-        this.skinParts.$dropRegion = $('<div/>', {'class': BLOCK_CONSTANTS.DROP_REGION_CLASS});
+        this.skinParts.$dropRegion = $('<div/>', {class: BLOCK_CONSTANTS.DROP_REGION_CLASS});
 
         this.skinParts.$dropRegion.insertBefore(this.skinParts.$itemsContainer);
 
         dropTarget.makeDroppable(this.skinParts.$dropRegion, {
-            'over': function (event, dragInfo) {
+            over: function (event, dragInfo) {
                 self._onDroppableOver(event, dragInfo);
             },
-            'out': function (/*event, dragInfo*/) {
+            out: function (/*event, dragInfo*/) {
                 self._onDroppableOut(/*event, dragInfo*/);
             },
-            'drop': function (event, dragInfo) {
+            drop: function (event, dragInfo) {
                 if (self.dropFocus === BLOCK_CONSTANTS.BACKGROUND) {
                     self._onBackgroundDrop(event, dragInfo);
                 }
             },
-            'activate': function (/*event, dragInfo*/) {
+            activate: function (/*event, dragInfo*/) {
                 self._onDroppableActivate(/*event, dragInfo*/);
             },
-            'deactivate': function (/*event, dragInfo*/) {
+            deactivate: function (/*event, dragInfo*/) {
                 self._onDroppableDeactivate(/*event, dragInfo*/);
             }
         });
@@ -55,10 +55,10 @@ define([
     BlockEditorWidgetDroppable.prototype._onDroppableActivate = function (/*event, dragInfo*/) {
         if (this.mode === this.OPERATING_MODES.DESIGN) {
             this.skinParts.$dropRegion.css({
-                'width': this._containerSize.w - 2 * DROP_REGION_MARGIN,
-                'height': this._containerSize.h - 2 * DROP_REGION_MARGIN,
-                'top': this._scrollPos.top + DROP_REGION_MARGIN,
-                'left': this._scrollPos.left + DROP_REGION_MARGIN
+                width: this._containerSize.w - 2 * DROP_REGION_MARGIN,
+                height: this._containerSize.h - 2 * DROP_REGION_MARGIN,
+                top: this._scrollPos.top + DROP_REGION_MARGIN,
+                left: this._scrollPos.left + DROP_REGION_MARGIN
             });
         }
     };
@@ -66,10 +66,10 @@ define([
 
     BlockEditorWidgetDroppable.prototype._onDroppableDeactivate = function (/*event, dragInfo*/) {
         this.skinParts.$dropRegion.css({
-            'width': '0px',
-            'height': '0px',
-            'top': '0px',
-            'left': '0px'
+            width: '0px',
+            height: '0px',
+            top: '0px',
+            left: '0px'
         });
     };
 
@@ -100,7 +100,7 @@ define([
         this.logger.debug('_onBackgroundDrop: ' + JSON.stringify(dragInfo));
 
         if (this._acceptDroppable === true) {
-            this.onBackgroundDrop(event, dragInfo, {'x': posX, 'y': posY});
+            this.onBackgroundDrop(event, dragInfo, {x: posX, y: posY});
         }
 
         this._doAcceptDroppable(false, false);

@@ -7,7 +7,7 @@
 
 define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
 
-    "use strict";
+    'use strict';
 
     var BlockEditorWidgetKeyboard;
 
@@ -98,7 +98,7 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
         return ret;
     };
 
-    BlockEditorWidgetKeyboard.prototype._moveSelection = function (dX, dY) {
+    BlockEditorWidgetKeyboard.prototype._moveSelection = function (/* dX, dY */) {
         /*if (!this._keyMoveDelta) {
          this._keyMoveDelta = {"x": 0, "y": 0};
          this.dragManager._initDrag(0, 0);

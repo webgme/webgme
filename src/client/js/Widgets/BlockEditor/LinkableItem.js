@@ -1,20 +1,17 @@
-/*globals define, _, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal, $*/
 /*jshint browser: true*/
 
 /**
  * @author brollb / https://github/brollb
  */
 
-define(['js/logger',
-    './BlockEditorWidget.Constants',
-    './ItemBase'
-], function (Logger, BLOCK_CONSTANTS, ItemBase) {
+define(['js/logger', './BlockEditorWidget.Constants', './ItemBase'], function (Logger, BLOCK_CONSTANTS, ItemBase) {
 
-    "use strict";
+    'use strict';
 
     var LinkableItem,
         DEBUG = false,
-        NAME = "linkable-item";
+        NAME = 'linkable-item';
 
     /**
      * LinkableItem
@@ -58,7 +55,7 @@ define(['js/logger',
 
     _.extend(LinkableItem.prototype, ItemBase.prototype);
 
-    LinkableItem.prototype.$_DOMBase = $('<div/>').attr({"class": BLOCK_CONSTANTS.DESIGNER_ITEM_CLASS});
+    LinkableItem.prototype.$_DOMBase = $('<div/>').attr({class: BLOCK_CONSTANTS.DESIGNER_ITEM_CLASS});
 
     /* * * * * * * * * * * * * ATTRIBUTES * * * * * * * * * * * * */
     /**
@@ -78,7 +75,7 @@ define(['js/logger',
             attr = newAttributeNames.pop();
             if (!_.isEqual(this.attributes[attr], attrInfo[attr])) {
                 this.attributes[attr] = attrInfo[attr];
-                changed = "set attribute";
+                changed = 'set attribute';
                 this.updatedAttributes.push(attr);
             }
 
@@ -91,7 +88,7 @@ define(['js/logger',
         while (oldAttributeNames.length) {
             attr = newAttributeNames.pop();
             delete this.attributes[attr];
-            changed = "removed attr";
+            changed = 'removed attr';
             this.updatedAttributes.push(attr);
         }
 
@@ -168,8 +165,8 @@ define(['js/logger',
             oldPtrs = Object.keys(this.ptrs),
             i = ptrs.length,
             changed = null,
-            otherItem,
-            oldItem,
+            //otherItem,
+            //oldItem,
             k,
             ptr;
 
@@ -181,14 +178,14 @@ define(['js/logger',
                 if (k === -1) {//didn't have the pointer
                     //Add pointer
                     this.setPtr(ptr, ptrInfo[ptr]);
-                    changed = "added ptr";
+                    changed = 'added ptr';
                 } else {
                     //Check that the pointer is correct
                     if (this.ptrs[ptr].id !== ptrInfo[ptr].id) {
                         this.removePtr(ptr);
 
                         this.setPtr(ptr, ptrInfo[ptr]);
-                        changed = "changed ptr";
+                        changed = 'changed ptr';
                     }
                     oldPtrs.splice(k, 1);
                 }
@@ -200,10 +197,10 @@ define(['js/logger',
         while (i--) {
             ptr = oldPtrs[i];
             this.removePtr(ptr);
-            changed = "removed ptr";
+            changed = 'removed ptr';
         }
 
-        if (changed === "removed ptr") {
+        if (changed === 'removed ptr') {
             this.cleanConnectionAreas(ptrs);
         }
 
@@ -231,7 +228,7 @@ define(['js/logger',
 
         //Make sure it is a valid 'move'
         if (item === this) {
-            this.logger.error("Should never set a pointer to itself");
+            this.logger.error('Should never set a pointer to itself');
         }
 
         //Removing any existing value
@@ -262,9 +259,10 @@ define(['js/logger',
     LinkableItem.prototype.getPtrNames = function () {
         //Get ptrNames from outgoing connection areas
         var areas = this.getConnectionAreas(),
-            ptrs = [];
+            ptrs = [],
+            i;
 
-        for (var i = areas.length - 1; i >= 0; i--) {
+        for (i = areas.length - 1; i >= 0; i--) {
             if (areas[i].role === BLOCK_CONSTANTS.CONN_OUTGOING) {
                 ptrs.push(areas[i].ptr);
             }
@@ -397,9 +395,10 @@ define(['js/logger',
             targetItem,
             visible,
             options,
-            changed = false;
+            changed = false,
+            i;
 
-        for (var i = fields.length - 1; i >= 0; i--) {
+        for (i = fields.length - 1; i >= 0; i--) {
             field = fields[i];
             if (this.isOccupied(field)) {
                 visible = false;
@@ -425,11 +424,12 @@ define(['js/logger',
 
                             if (this.inputFieldsToUpdate[field].content === BLOCK_CONSTANTS.DROPDOWN.CONTENT.POINTERS) {
                                 options = targetItem.getPtrNames();
-                            } else if (this.inputFieldsToUpdate[field].content === BLOCK_CONSTANTS.DROPDOWN.CONTENT.ATTRIBUTES) {
+                            } else if (this.inputFieldsToUpdate[field].content ===
+                                       BLOCK_CONSTANTS.DROPDOWN.CONTENT.ATTRIBUTES) {
                                 options = targetItem.getAttributeNames();
                             }
                         } else {
-                            options = ["N/A"];
+                            options = ['N/A'];
                         }
 
                     }
@@ -521,9 +521,10 @@ define(['js/logger',
         //Return sibling/non-sibling dependents
         var result = {siblings: [], children: []},
             ptrs = Object.keys(this.ptrs),
-            ptr;
+            ptr,
+            i;
 
-        for (var i = ptrs.length - 1; i >= 0; i--) {
+        for (i = ptrs.length - 1; i >= 0; i--) {
             ptr = ptrs[i];
 
             if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1) {
@@ -543,9 +544,10 @@ define(['js/logger',
      */
     LinkableItem.prototype.getDependents = function () {
         var deps = [],
-            keys = Object.keys(this.ptrs);
+            keys = Object.keys(this.ptrs),
+            i;
 
-        for (var i = keys.length - 1; i >= 0; i--) {
+        for (i = keys.length - 1; i >= 0; i--) {
             deps.push(this.ptrs[keys[i]]);
         }
 
@@ -603,10 +605,10 @@ define(['js/logger',
         }
 
         box = {
-            "x": this.positionX,
-            "y": this.positionY,
-            "width": this._width,
-            "height": this._height
+            x: this.positionX,
+            y: this.positionY,
+            width: this._width,
+            height: this._height
         };
 
         if (box.width === 0 && box.height === 0) {
@@ -654,9 +656,9 @@ define(['js/logger',
 
             if (changed === true) {
                 this.canvas.dispatchEvent(this.canvas.events.ITEM_SIZE_ChANGED, {
-                    "ID": this.id,
-                    "w": this._width,
-                    "h": this._height
+                    ID: this.id,
+                    w: this._width,
+                    h: this._height
                 });
             }
         }
@@ -689,7 +691,7 @@ define(['js/logger',
      */
     LinkableItem.prototype.updateSize = function () {
         var ptrs = this.getPtrNames(),
-            ptr,
+            //ptr,
             attrs = this.getAttributeNames(),
             combinedNames = {},
             names,
@@ -766,7 +768,7 @@ define(['js/logger',
             i = ptrs.length;
 
         while (i--) {
-            if (params.hasOwnProperty("propogate")) {
+            if (params.hasOwnProperty('propogate')) {
                 if (params.propogate === true) {
                     this.ptrs[ptrs[i]].updateDependents(params);
                 }
@@ -826,7 +828,7 @@ define(['js/logger',
         _.extend(params, options);
 
         if (!(params.incomingConn && params.outgoingConn)) {
-            this.logger.error("Connection Areas must both be defined");
+            this.logger.error('Connection Areas must both be defined');
         }
 
         //resize as necessary. May need to resize after connecting
@@ -893,8 +895,9 @@ define(['js/logger',
      * @return {Array} Connection Areas
      */
     LinkableItem.prototype.getRelativeConnectionAreas = function () {
-        var areas = this._decoratorInstance.getConnectionAreas();
-        for (var i = areas.length - 1; i >= 0; i--) {
+        var areas = this._decoratorInstance.getConnectionAreas(),
+            i;
+        for (i = areas.length - 1; i >= 0; i--) {
             areas[i].parentId = this.id;
         }
 
@@ -903,9 +906,10 @@ define(['js/logger',
 
     LinkableItem.prototype.getRelativeFreeConnectionAreas = function () {
         var result = [],
-            areas = this.getRelativeConnectionAreas();
+            areas = this.getRelativeConnectionAreas(),
+            i;
 
-        for (var i = areas.length - 1; i >= 0; i--) {
+        for (i = areas.length - 1; i >= 0; i--) {
             if (!this.conn2Item[areas[i].id]) {
                 result.push(areas[i]);
             }
@@ -965,7 +969,7 @@ define(['js/logger',
         var box = this.getBoundingBox();
         if (box.height > 0 && box.width > 0) {//If the box has been rendered
             if (area.x1 >= box.x && area.x2 <= box.x2 && area.y1 >= box.y && area.y2 <= box.y2) {
-                this.logger.debug("Connection Area is outside the linkable item's bounding box");
+                this.logger.debug('Connection Area is outside the linkable item\'s bounding box');
             }
         }
 
@@ -974,7 +978,8 @@ define(['js/logger',
 
     // Convenience method
     LinkableItem.prototype._makeConnAreasAbsolute = function (areas) {
-        for (var i = areas.length - 1; i >= 0; i--) {
+        var i;
+        for (i = areas.length - 1; i >= 0; i--) {
             areas[i] = this._makeConnAreaAbsolute(areas[i]);
         }
         return areas;
@@ -1076,16 +1081,16 @@ define(['js/logger',
 
             if (positionChanged) {
                 this.$el.css({
-                    "left": this.positionX,
-                    "top": this.positionY
+                    left: this.positionX,
+                    top: this.positionY
                 });
 
                 if (!this.isPositionDependent()) {//Only update database if position is independent
 
                     this.canvas.dispatchEvent(this.canvas.events.ITEM_POSITION_CHANGED, {
-                        "ID": this.id,
-                        "x": this.positionX,
-                        "y": this.positionY
+                        ID: this.id,
+                        x: this.positionX,
+                        y: this.positionY
                     });
                 }
             }
@@ -1110,7 +1115,7 @@ define(['js/logger',
     LinkableItem.prototype.renderSetLayoutInfo = function () {
         // Set the width, height of $el to account for zoom
         this.applySizeContainerInfo();
-        this._callDecoratorMethod("onRenderSetLayoutInfo");
+        this._callDecoratorMethod('onRenderSetLayoutInfo');
     };
 
     /**
@@ -1152,7 +1157,7 @@ define(['js/logger',
         //update position
         if (positionShouldChange(objDescriptor.position)) {
             this.moveTo(objDescriptor.position.x, objDescriptor.position.y);
-            needToUpdateDependents = "move";
+            needToUpdateDependents = 'move';
         }
 
         //update the decorator's input area fields' values
@@ -1162,29 +1167,37 @@ define(['js/logger',
         var oldMetaInfo = this._decoratorInstance.getMetaInfo();
 
         //update gmeId if needed
-        if (objDescriptor.id && oldMetaInfo[BLOCK_CONSTANTS.GME_ID] && oldMetaInfo[BLOCK_CONSTANTS.GME_ID] !== objDescriptor.id) {
-            this.logger.debug("Changing " + oldMetaInfo[BLOCK_CONSTANTS.GME_ID] + " to " + objDescriptor.id);
+        if (objDescriptor.id && oldMetaInfo[BLOCK_CONSTANTS.GME_ID] &&
+            oldMetaInfo[BLOCK_CONSTANTS.GME_ID] !== objDescriptor.id) {
+            this.logger.debug('Changing ' + oldMetaInfo[BLOCK_CONSTANTS.GME_ID] + ' to ' + objDescriptor.id);
             this._decoratorInstance.setGmeId(objDescriptor.id);
             this.$el.html(this._decoratorInstance.$el);
-            needToUpdateDependents = "changed id";
+            needToUpdateDependents = 'changed id';
         }
 
         //update decorator if needed
         if (objDescriptor.decoratorClass && this._decoratorID !== objDescriptor.decoratorClass.prototype.DECORATORID) {
-            needToUpdateDependents = "decorator changed";
+            needToUpdateDependents = 'decorator changed';
 
-            this.logger.debug("decorator update: '" + this._decoratorID + "' --> '" + objDescriptor.decoratorClass.prototype.DECORATORID + "'...");
+            this.logger.debug('decorator update: "' + this._decoratorID + '" --> "' +
+                              objDescriptor.decoratorClass.prototype.DECORATORID + '"...');
 
             var oldControl = this._decoratorInstance.getControl();
 
-            this.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, oldControl, oldMetaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
+            this.__setDecorator(objDescriptor.decorator,
+                objDescriptor.decoratorClass,
+                oldControl,
+                oldMetaInfo,
+                objDescriptor.preferencesHelper,
+                objDescriptor.aspect,
+                objDescriptor.decoratorParams);
 
             //attach new one
             this.$el.html(this._decoratorInstance.$el);
 
-            this.logger.debug("ItemBase's ['" + this.id + "'] decorator  has been updated.");
+            this.logger.debug('ItemBase\'s ["' + this.id + '"] decorator has been updated.');
 
-            this._callDecoratorMethod("on_addTo");
+            this._callDecoratorMethod('on_addTo');
 
         } else {
             //if decorator instance not changed
@@ -1193,7 +1206,7 @@ define(['js/logger',
                 this._decoratorInstance.setMetaInfo(objDescriptor.metaInfo);
             }
             if (this._decoratorInstance.update()) {
-                needToUpdateDependents = "decorator resized";
+                needToUpdateDependents = 'decorator resized';
             }
         }
 
@@ -1203,12 +1216,12 @@ define(['js/logger',
 
     /************ SUBCOMPONENT HANDLING *****************/
     LinkableItem.prototype.registerSubcomponent = function (subComponentId, metaInfo) {
-        this.logger.debug("registerSubcomponent - ID: '" + this.id + "', SubComponentID: '" + subComponentId + "'");
+        this.logger.debug('registerSubcomponent - ID: "' + this.id + '", SubComponentID: "' + subComponentId + '"');
         this.canvas.registerSubcomponent(this.id, subComponentId, metaInfo);
     };
 
     LinkableItem.prototype.unregisterSubcomponent = function (subComponentId) {
-        this.logger.debug("unregisterSubcomponent - ID: '" + this.id + "', SubComponentID: '" + subComponentId + "'");
+        this.logger.debug('unregisterSubcomponent - ID: "' + this.id + '", SubComponentID: "' + subComponentId + '"');
         this.canvas.unregisterSubcomponent(this.id, subComponentId);
     };
 

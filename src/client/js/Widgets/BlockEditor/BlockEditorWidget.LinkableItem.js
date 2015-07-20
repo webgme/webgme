@@ -5,10 +5,8 @@
  * @author brollb / https://github/brollb
  */
 
-define(['./LinkableItem',
-    './BlockEditorWidget.Constants'], function (LinkableItem,
-                                                CONSTANTS) {
-    "use strict";
+define(['./LinkableItem' /*, './BlockEditorWidget.Constants' */], function (LinkableItem /*,CONSTANTS*/) {
+    'use strict';
 
     var BlockEditorWidgetLinkableItems;
 
@@ -22,7 +20,7 @@ define(['./LinkableItem',
             alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y),
             newComponent;
 
-        this.logger.debug("Creating model component with id: '" + componentId + "'");
+        this.logger.debug('Creating model component with id: "' + componentId + '"');
 
         objDescriptor.designerCanvas = this;
         objDescriptor.position.x = alignedPosition.x;
@@ -49,7 +47,13 @@ define(['./LinkableItem',
 
         objDescriptor.decoratorParams = {stretchers: stretchers};
 
-        newComponent.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, objDescriptor.control, objDescriptor.metaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
+        newComponent.__setDecorator(objDescriptor.decorator,
+            objDescriptor.decoratorClass,
+            objDescriptor.control,
+            objDescriptor.metaInfo,
+            objDescriptor.preferencesHelper,
+            objDescriptor.aspect,
+            objDescriptor.decoratorParams);
         newComponent.addToDocFragment(this._documentFragment);
 
         //Set Pointers/Connections
@@ -61,7 +65,7 @@ define(['./LinkableItem',
         //set the item to be able to be "clicked" to with drag'n'drop
         this.setLinkable(newComponent);
 
-        this._linkableItems2Update[componentId] = "created";
+        this._linkableItems2Update[componentId] = 'created';
 
         return newComponent;
     };
@@ -89,8 +93,8 @@ define(['./LinkableItem',
         }
 
         return {
-            "x": pX,
-            "y": pY
+            x: pX,
+            y: pY
         };
     };
 
@@ -100,18 +104,19 @@ define(['./LinkableItem',
             item;
 
         if (this.itemIds.indexOf(componentId) !== -1) {
-            this.logger.debug("Updating model component with parameters: " + objDescriptor);
+            this.logger.debug('Updating model component with parameters: ' + objDescriptor);
             item = this.items[componentId];
 
             //Update pointers
-            if (objDescriptor.hasOwnProperty("ptrInfo")) {
+            if (objDescriptor.hasOwnProperty('ptrInfo')) {
                 var ptrInfo = this._createPtrInfoObject(objDescriptor.ptrInfo);
                 addToUpdateList = item.updatePtrs(ptrInfo) || addToUpdateList;
                 addToUpdateList = item.updateAttributes(objDescriptor.attrInfo) || addToUpdateList;
             }
 
             //adjust its position to this canvas
-            if (objDescriptor.position && _.isNumber(objDescriptor.position.x) && _.isNumber(objDescriptor.position.y)) {
+            if (objDescriptor.position && _.isNumber(objDescriptor.position.x) &&
+                _.isNumber(objDescriptor.position.y)) {
                 alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
 
                 objDescriptor.position.x = alignedPosition.x;
@@ -145,7 +150,7 @@ define(['./LinkableItem',
     BlockEditorWidgetLinkableItems.prototype.deleteLinkableItem = function (id) {
         var idx;
 
-        this.logger.debug("Deleting LinkableItem with ID: '" + id + "'");
+        this.logger.debug('Deleting LinkableItem with ID: "' + id + '"');
 
         //keep up accounting
         this._deletedLinkableItemIDs.push(id);
@@ -159,7 +164,8 @@ define(['./LinkableItem',
 
     //NOTE: could/should be overridden in the CONTROLLER
     BlockEditorWidgetLinkableItems.prototype.onLinkableItemDoubleClick = function (id, event) {
-        this.logger.debug("LinkableItem '" + id + "' received double click at pos: [" + event.offsetX + ", " + event.offsetY + "]");
+        this.logger.debug('LinkableItem "' + id + '" received double click at pos: [' + event.offsetX + ', ' +
+                          event.offsetY + ']');
     };
 
     BlockEditorWidgetLinkableItems.prototype.notifyItemComponentEvents = function (itemId, eventList) {
