@@ -5,7 +5,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
+define(['common/core/users/tojson'], function (toJson) {
     'use strict';
 
     var _refTypes = {
@@ -14,7 +14,6 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
             guid: 'guid'
         },
         _cache = {},
-        _rootPath = '',
         _refType = 'url',
         _core = null,
         _urlPrefix = '';
@@ -76,6 +75,7 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
     var dumpNode = function (node, relPath, containerDump, index, callback) {
         //first we should check if the node is already dumped or not
         var path = _core.getPath(node);
+
         if (_cache[path]) {
             containerDump[index] = {
                 GUID: _core.getGuid(node),
@@ -85,6 +85,13 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
         } else {
             //we try to dump this path for the first time
             toJson(_core, node, _urlPrefix, _refType, function (err, jNode) {
+                var dumped = function (err) {
+                    error = error || err;
+                    if (--needed === 0) {
+                        callback(error);
+                    }
+                };
+
                 if (err) {
                     callback(err);
                 } else {
@@ -101,13 +108,7 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
                             } else {
                                 for (var i = 0; i < children.length; i++) {
                                     dumpNode(children[i], relPath + '/children[' + i + ']',
-                                        containerDump[index].children, i, function (err) {
-                                            error = error || err;
-                                            if (--needed === 0) {
-                                                callback(error);
-                                            }
-                                        }
-                                    );
+                                        containerDump[index].children, i, dumped);
                                 }
                             }
                         });
@@ -128,6 +129,12 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
         var dumpNodes = [],
             needed = nodes.length,
             error = null,
+            dumped = function (err) {
+                error = error || err;
+                if (--needed === 0) {
+                    postProcessing(error);
+                }
+            },
             postProcessing = function (err) {
                 if (err) {
                     callback(err);
@@ -139,12 +146,7 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
         if (needed > 0) {
             for (var i = 0; i < nodes.length; i++) {
                 dumpNodes.push({});
-                dumpNode(nodes[i], '#[' + i + ']', dumpNodes, i, function (err) {
-                    error = error || err;
-                    if (--needed === 0) {
-                        postProcessing(error);
-                    }
-                });
+                dumpNode(nodes[i], '#[' + i + ']', dumpNodes, i, dumped);
             }
         } else {
             callback('no node to dump!!!', null);

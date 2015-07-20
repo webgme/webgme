@@ -95,17 +95,18 @@ define(['common/core/users/meta'], function (BaseMeta) {
 
     function importChildren(node, jNode, pIntPath, callback) {
         if (jNode && jNode.children && jNode.children.length) {
-            var needed = jNode.children.length;
+            var needed = jNode.children.length,
+                imported = function (err) {
+                    error = error || err;
+                    if (--needed === 0) {
+                        callback(error);
+                    }
+                };
 
             if (needed > 0) {
                 var error = null;
                 for (var i = 0; i < jNode.children.length; i++) {
-                    importNode(jNode.children[i], node, pIntPath + '/children[' + i + ']', function (err) {
-                        error = error || err;
-                        if (--needed === 0) {
-                            callback(error);
-                        }
-                    }); //FIXME
+                    importNode(jNode.children[i], node, pIntPath + '/children[' + i + ']', imported);
                 }
             } else {
                 callback(null);
@@ -136,10 +137,7 @@ define(['common/core/users/meta'], function (BaseMeta) {
         if (jNode.pointers[pName].to && jNode.pointers[pName].to.length > 0) {
             var needed = jNode.pointers[pName].to.length,
                 i,
-                error = null;
-
-            for (i = 0; i < jNode.pointers[pName].to.length; i++) {
-                getReferenceNode(jNode.pointers[pName].to[i], function (err, target) {
+                referenceFound = function (err, target) {
                     error = error || err;
                     if (target !== undefined) {
                         _core.setPointer(node, pName, target);
@@ -148,7 +146,11 @@ define(['common/core/users/meta'], function (BaseMeta) {
                     if (--needed === 0) {
                         callback(error);
                     }
-                }); //FIXME
+                },
+                error = null;
+
+            for (i = 0; i < jNode.pointers[pName].to.length; i++) {
+                getReferenceNode(jNode.pointers[pName].to[i], referenceFound);
             }
 
         } else {
@@ -173,18 +175,24 @@ define(['common/core/users/meta'], function (BaseMeta) {
                         _core.setMemberRegistry(sOwner, sName, mPath, key, atrAndReg.registry[key]);
                     }
                 },
-                importSetReference = function (isTo, index, cb) {
+                setReferenceImported = function (err) {
+                    error = error || err;
+                    if (--needed === 0) {
+                        callback(error);
+                    }
+                },
+                importSetReference = function (isTo, index) {
                     var jObj = isTo === true ? jNode.pointers[sName].to[index] : jNode.pointers[sName].from[index];
                     getReferenceNode(jObj, function (err, sNode) {
                         if (err) {
-                            cb(err);
+                            setReferenceImported(err);
                         } else {
                             if (sNode) {
                                 var sOwner = isTo === true ? node : sNode,
                                     sMember = isTo === true ? sNode : node;
                                 importSetRegAndAtr(sOwner, sMember, jObj);
                             }
-                            cb(null);
+                            setReferenceImported(null);
                         }
                     });
                 },
@@ -193,12 +201,7 @@ define(['common/core/users/meta'], function (BaseMeta) {
             _core.createSet(node, sName);
             needed = jNode.pointers[sName].to.length;
             for (i = 0; i < jNode.pointers[sName].to.length; i++) {
-                importSetReference(true, i, function (err) {
-                    error = error || err;
-                    if (--needed === 0) {
-                        callback(error);
-                    }
-                }); //FIXME
+                importSetReference(true, i);
             }
         } else {
             callback(null); //TODO now we just simply try to ignore faulty data import
@@ -265,7 +268,14 @@ define(['common/core/users/meta'], function (BaseMeta) {
             sets = [],
             needed = 0,
             error = null,
-            i;
+            i,
+            imported = function (err) {
+                error = error || err;
+                if (--needed === 0) {
+                    callback(error);
+                }
+            };
+
         if (typeof jNode.pointers !== 'object') {
             callback(null); //TODO should we drop an error???
         } else {
@@ -281,20 +291,10 @@ define(['common/core/users/meta'], function (BaseMeta) {
 
             if (needed > 0) {
                 for (i = 0; i < pointers.length; i++) {
-                    importPointer(node, jNode, pointers[i], function (err) {
-                        error = error || err;
-                        if (--needed === 0) {
-                            callback(error);
-                        }
-                    });
+                    importPointer(node, jNode, pointers[i], imported);
                 }
                 for (i = 0; i < sets.length; i++) {
-                    importSet(node, jNode, sets[i], function (err) {
-                        error = error || err;
-                        if (--needed === 0) {
-                            callback(error);
-                        }
-                    });
+                    importSet(node, jNode, sets[i], imported);
                 }
             } else {
                 callback(null);
@@ -305,52 +305,49 @@ define(['common/core/users/meta'], function (BaseMeta) {
     function importMeta(node, jNode, callback) {
 
         //TODO now this function searches the whole meta data for reference objects and load them, then call setMeta
-        var loadReference = function (refObj, cb) {
-                getReferenceNode(refObj, function (err, rNode) {
-                    if (err) {
-                        cb(err);
-                    } else {
-                        if (rNode) {
-                            refObj.$ref = _core.getPath(rNode);
+        var loadMetaReferences = function (jObject, cb) {
+            var needed = 0,
+                i,
+                error = null,
+                loadReference = function (refObj) {
+                    getReferenceNode(refObj, function (err, rNode) {
+                        if (err) {
+                            loaded(err);
+                        } else {
+                            if (rNode) {
+                                refObj.$ref = _core.getPath(rNode);
+                            }
+                            loaded(null);
                         }
-                        cb(null);
+                    });
+                },
+                loaded = function (err) {
+                    error = error || err;
+                    if (--needed === 0) {
+                        cb(error);
                     }
-                });
-            },
-            loadMetaReferences = function (jObject, cb) {
-                var needed = 0,
-                    i,
-                    error = null;
+                };
+
+            for (i in jObject) {
+                if (jObject[i] !== null && typeof jObject[i] === 'object') {
+                    needed++;
+                }
+            }
+
+            if (needed > 0) {
                 for (i in jObject) {
                     if (jObject[i] !== null && typeof jObject[i] === 'object') {
-                        needed++;
-                    }
-                }
-
-                if (needed > 0) {
-                    for (i in jObject) {
-                        if (jObject[i] !== null && typeof jObject[i] === 'object') {
-                            if (jObject[i].$ref) {
-                                loadReference(jObject[i], function (err) {
-                                    error = error || err;
-                                    if (--needed === 0) {
-                                        cb(error);
-                                    }
-                                });
-                            } else {
-                                loadMetaReferences(jObject[i], function (err) {
-                                    error = error || err;
-                                    if (--needed === 0) {
-                                        cb(error);
-                                    }
-                                });
-                            }
+                        if (jObject[i].$ref) {
+                            loadReference(jObject[i]);
+                        } else {
+                            loadMetaReferences(jObject[i], loaded);
                         }
                     }
-                } else {
-                    cb(error);
                 }
-            };
+            } else {
+                cb(error);
+            }
+        };
 
         loadMetaReferences(jNode.meta || {}, function (err) {
             if (err) {
@@ -431,16 +428,18 @@ define(['common/core/users/meta'], function (BaseMeta) {
             //multiple objects
             if (parent) {
                 var needed = jNode.length,
-                    error = null;
-                _cache[core.getPath(parent)] = parent;
-                _root = core.getRoot(parent);
-                for (var i = 0; i < jNode.length; i++) {
-                    importNode(jNode[i], parent, '#[' + i + ']', function (err) {
+                    error = null,
+                    imported = function (err) {
                         error = error || err;
                         if (--needed === 0) {
                             callback(error);
                         }
-                    });
+                    };
+
+                _cache[core.getPath(parent)] = parent;
+                _root = core.getRoot(parent);
+                for (var i = 0; i < jNode.length; i++) {
+                    importNode(jNode[i], parent, '#[' + i + ']', imported);
                 }
             } else {
                 callback('no parent given!!!');
