@@ -128,6 +128,18 @@ div.spacer {
     z-index: 10 !important;
 }
 
+.context-menu-item.hover > .context-menu-list {
+    /* if the modeling language has many elements right click on the root and select create sub-menu
+       we have to make it scrollable in y direction, but not in x direction.
+       https://github.com/medialize/jQuery-contextMenu/issues/60#issuecomment-30870663
+       http://stackoverflow.com/a/13347579
+     */
+    max-height: 400px; /* ~18 elements without scroll */
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
 /*FIX line-height so text and icons are nicely aligned to the middle*/
 .context-menu-item {
     line-height: 18px;
