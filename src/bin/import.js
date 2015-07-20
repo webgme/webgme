@@ -17,7 +17,7 @@ var webgme = require('../../webgme'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
     gmeAuth,
     logger = webgme.Logger.create('gme:bin:import', gmeConfig.bin.log),
-    REGEXP = webgme.REGEXP,
+    //REGEXP = webgme.REGEXP,
     Serialization = webgme.serializer,
     main;
 

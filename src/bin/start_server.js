@@ -4,6 +4,8 @@
  * @author kecso / https://github.com/kecso
  */
 
+'use strict';
+
 var path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
     webgme = require('../../webgme'),

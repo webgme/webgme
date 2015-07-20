@@ -77,10 +77,10 @@ var path = require('path'),
             options: {
                 db: {
                     w: 1,
-                    native_parser: true
+                    native_parser: true // jshint ignore: line
                 },
                 server: {
-                    auto_reconnect: true,
+                    auto_reconnect: true, // jshint ignore: line
                     socketOptions: {keepAlive: 1}
                     //poolSize: 5 // default pool size is 5
                 }
