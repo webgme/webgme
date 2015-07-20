@@ -117,6 +117,7 @@ define([
         var currentConfig = self.getCurrentConfig();
         self.logger.info('Current configuration ' + JSON.stringify(currentConfig, null, 4));
 
+        //FIXME running on client side will not generate events, so need manual update of the UI afterwards
         merge.merge({
             project: self.project,
             logger: self.logger,
@@ -178,7 +179,7 @@ define([
             })
             .catch(function (err) {
                 self.result.setSuccess(false);
-                self.result.setError(error);
+                self.result.setError(err.message);
                 callback(err, self.result);
             });
     };
