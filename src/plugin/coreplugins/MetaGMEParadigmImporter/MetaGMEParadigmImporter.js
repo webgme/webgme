@@ -274,6 +274,7 @@ define([
         // TODO: set default view to META
 
         self.core.setRegistry(languageNode, 'position', {x: 100, y: 200});
+        self.core.setRegistry(languageNode, 'decorator', 'DefaultDecorator');
 
 
         self.cache.languageNode = languageNode;
