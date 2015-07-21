@@ -444,11 +444,13 @@ define([
         };
 
         var __isEmptyData = function (data) {
-            // TODO: better way to check if object has keys?
-            for (var keys in data) {
+            if (typeof data === 'string') {
+                return false;
+            } else if (typeof data === 'object' && Object.keys(data).length === 0) {
+                return true;
+            } else {
                 return false;
             }
-            return true;
         };
 
         var __areEquivalent = function (data1, data2) {

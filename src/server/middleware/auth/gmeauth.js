@@ -229,24 +229,21 @@ function GMEAuth(session, gmeConfig) {
                 if (type === 'gmail') {
                     req.session.udmId = userData._id;
                     req.session.authenticated = true;
-                    req.session.userType = 'GME'; // FIXME: should this be another userType? gmail
                     next();
                 } else {
-                    if (!password) {
-                        return Q.reject('no password given');
-                    } else {
+                    if (password) {
                         return Q.ninvoke(bcrypt, 'compare', password, userData.passwordHash)
                             .then(function (hashRes) {
-                                if (!hashRes) {
-                                    return Q.reject('incorrect password');
-                                } else {
+                                if (hashRes) {
                                     req.session.udmId = userData._id;
                                     req.session.authenticated = true;
-                                    req.session.userType = 'GME'; // FIXME: uppercase or lowercase?
                                     next();
+                                } else {
+                                    return Q.reject('incorrect password');
                                 }
                             });
                     }
+                    return Q.reject('no password given');
                 }
             })
             .catch(function (err) {

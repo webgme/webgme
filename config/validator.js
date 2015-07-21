@@ -50,7 +50,7 @@ function assertBoolean(name, value, orFalsy) {
 
 function assertArray(name, value) {
     'use strict';
-    if (value instanceof Array == false) {
+    if (value instanceof Array === false) {
         throwTypeMiss(name, value, 'array');
     }
 }

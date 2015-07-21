@@ -5,16 +5,14 @@
  * @author brollb / https://github/brollb
  */
 
-define([
-    './BlockEditorWidget.Constants.js'
-], function (BLOCK_CONSTANTS) {
+define(['./BlockEditorWidget.Constants.js'], function (BLOCK_CONSTANTS) {
     'use strict';
 
     var getCenter = function (connArea) {
         return [(connArea.x1 + connArea.x2) / 2, (connArea.y1 + connArea.y2) / 2];
     };
 
-    var getDistance = function (src, dst) {
+    function getDistance(src, dst) {
         if (!src || !dst) {
             return Infinity;
         }
@@ -22,7 +20,7 @@ define([
             c2 = getCenter(dst);
 
         return Math.sqrt(Math.pow(c1[0] - c2[0], 2) + Math.pow(c1[1] - c2[1], 2));
-    };
+    }
 
     /**
      * Calculate the closest connection area from destination
@@ -32,7 +30,7 @@ define([
      * @param {Array[ConnectionAreas]} dsts
      * @return {ConnectionArea} closest connection area from set dsts
      */
-    var getClosestConnAreas = function (srcs, dsts) {
+    function getClosestConnAreas(srcs, dsts) {
         var minDistance = getDistance(srcs[0], dsts[0]),
             closestDst,
             ptr,
@@ -52,9 +50,9 @@ define([
         }
 
         return {ptr: ptr, activeItem: item, area: closestDst, distance: minDistance};
-    };
+    }
 
-    var sortByRole = function (areas) {
+    function sortByRole(areas) {
         var result = {};
 
         result[BLOCK_CONSTANTS.CONN_INCOMING] = [];
@@ -64,7 +62,7 @@ define([
         }
 
         return result;
-    };
+    }
 
     /**
      * Check the valid connection areas from the dragged item to under areas
@@ -74,7 +72,7 @@ define([
      * @param underAreas
      * @return {undefined}
      */
-    var getClosestCompatible = function (srcAreas, dstAreas) {
+    function getClosestCompatible(srcAreas, dstAreas) {
         var draggedAreas,
             underAreas,
             fromDraggedItem,
@@ -92,26 +90,28 @@ define([
         d2 = toDraggedItem.distance;
 
         return d1 < d2 ? fromDraggedItem : toDraggedItem;
-    };
+    }
 
-    var convertArrayToHash = function (array) {
-        var result = {};
+    function convertArrayToHash(array) {
+        var result = {},
+            i;
 
-        for (var i = array.length - 1; i >= 0; i--) {
+        for (i = array.length - 1; i >= 0; i--) {
             result[array[i]] = true;
         }
 
         return result;
-    };
+    }
 
-    var filterAreasByPtrs = function (params) {
+    function filterAreasByPtrs(params) {
         var areas = params.areas.slice(),
             ptrsToTarget = params.to ? convertArrayToHash(params.to) : {},
             ptrsFromTarget = params.from ? convertArrayToHash(params.from) : {},
             hasSiblingPtr,
-            j;
+            j,
+            i;
 
-        for (var i = areas.length - 1; i >= 0; i--) {
+        for (i = areas.length - 1; i >= 0; i--) {
             switch (areas[i].role) {
                 case BLOCK_CONSTANTS.CONN_INCOMING:
                     // Check to make sure ptrsFromTarget contains a sibling ptr
@@ -136,9 +136,9 @@ define([
         }
 
         return areas;
-    };
+    }
 
-    var shiftConnArea = function (params) {
+    function shiftConnArea(params) {
         var area = params.area,
             dx = params.dx || 0,
             dy = params.dy || 0;
@@ -149,19 +149,20 @@ define([
         area.y2 += dy;
 
         return area;
-    };
+    }
 
-    var shiftConnAreas = function (params) {
+    function shiftConnAreas(params) {
         var areas = params.areas || [],
             dx = params.dx || 0,
-            dy = params.dy || 0;
+            dy = params.dy || 0,
+            i;
 
-        for (var i = areas.length - 1; i >= 0; i--) {
+        for (i = areas.length - 1; i >= 0; i--) {
             areas[i] = shiftConnArea({area: areas[i], dx: dx, dy: dy});
         }
 
         return areas;
-    };
+    }
 
     return {
         getClosestCompatibleConn: getClosestCompatible,

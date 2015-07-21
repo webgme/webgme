@@ -32,24 +32,24 @@ define([
         var self = this;
 
         dragSource.makeDraggable(item.$el, {
-            'helper': function (event, dragInfo) {
+            helper: function (event, dragInfo) {
                 //Set the cursorAt value
                 var element = self._dragHelper(item, event, dragInfo);
                 $(this).draggable('option', 'cursorAt', self.getCursorLocation(element, event, item.id));
                 return element;
             },
-            'drag': function (/*event, ui*/) {
+            drag: function (/*event, ui*/) {
             },
-            'dragItems': function (/*el*/) {
+            dragItems: function (/*el*/) {
                 return self.getDragItems(self.selectionManager.getSelectedElements());
             },
-            'dragEffects': function (el, event) {
+            dragEffects: function (el, event) {
                 return self.getDragEffects(self.selectionManager.getSelectedElements(), event);
             },
-            'dragParams': function (el, event) {
+            dragParams: function (el, event) {
                 return self.getDragParams(self.selectionManager.getSelectedElements(), event);
             },
-            'start': function (event, ui) {
+            start: function (event, ui) {
                 //Set the drop focus
                 self.dropFocus = BLOCK_CONSTANTS.BACKGROUND;
 
@@ -134,11 +134,11 @@ define([
 
             itemElement = items[itemId].item.$el.clone();
             itemElement.css({
-                'position': 'absolute',
+                position: 'absolute',
                 'z-index': items[itemId].z,
                 //Shift the element by shiftX, shiftY
-                'left': items[itemId].item.positionX - shiftX + 'px',
-                'top': items[itemId].item.positionY - shiftY + 'px'
+                left: items[itemId].item.positionX - shiftX + 'px',
+                top: items[itemId].item.positionY - shiftY + 'px'
             });
 
             draggedItems.append(itemElement);
@@ -158,11 +158,11 @@ define([
         draggedElement.append(draggedItems);
 
         draggedItems.css({
-            'left': (width * (zoom - 1)) / 2 + DRAG_HELPER_BUFFER,
-            'top': (height * (zoom - 1)) / 2 + DRAG_HELPER_BUFFER,
-            'position': 'relative',
-            'width': width,
-            'height': height
+            left: (width * (zoom - 1)) / 2 + DRAG_HELPER_BUFFER,
+            top: (height * (zoom - 1)) / 2 + DRAG_HELPER_BUFFER,
+            position: 'relative',
+            width: width,
+            height: height
         });
 
         draggedElement.css({
@@ -239,7 +239,7 @@ define([
     };
 
     BlockEditorWidgetDraggable.prototype.getDragParams = function (selectedElements, event) {
-        var params = {'positions': {}},
+        var params = {positions: {}},
             i = selectedElements.length,
             itemID,
             mousePos = this.getAdjustedMousePos(event);
@@ -248,8 +248,8 @@ define([
             itemID = selectedElements[i];
             if (this.itemIds.indexOf(itemID) !== -1) {
                 params.positions[itemID] = {
-                    'x': this.items[itemID].positionX - mousePos.mX,
-                    'y': this.items[itemID].positionY - mousePos.mY
+                    x: this.items[itemID].positionX - mousePos.mX,
+                    y: this.items[itemID].positionY - mousePos.mY
                 };
             }
         }

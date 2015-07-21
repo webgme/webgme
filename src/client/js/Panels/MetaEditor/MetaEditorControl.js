@@ -1612,10 +1612,10 @@ define(['js/logger',
         });
 
         this._radioButtonGroupMetaRelationType.addButton({
-            "title": "Inheritance",
-            "selected": false,
-            "data": {"connType": MetaRelations.META_RELATIONS.INHERITANCE},
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)
+            title: 'Inheritance',
+            selected: false,
+            data: {connType: MetaRelations.META_RELATIONS.INHERITANCE},
+            icon: MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)
         });
 
         this._radioButtonGroupMetaRelationType.addButton({

@@ -97,17 +97,18 @@ define(['common/core/users/meta'], function (BaseMeta) {
 
     function importChildren(node, jNode, pIntPath, callback) {
         if (jNode && jNode.children && jNode.children.length) {
-            var needed = jNode.children.length;
+            var needed = jNode.children.length,
+                imported = function (err) {
+                    error = error || err;
+                    if (--needed === 0) {
+                        callback(error);
+                    }
+                };
 
             if (needed > 0) {
                 var error = null;
                 for (var i = 0; i < jNode.children.length; i++) {
-                    importNode(jNode.children[i], node, pIntPath + '/children[' + i + ']', true, function (err) {
-                        error = error || err;
-                        if (--needed === 0) {
-                            callback(error);
-                        }
-                    });
+                    importNode(jNode.children[i], node, pIntPath + '/children[' + i + ']', true, imported);
                 }
             } else {
                 callback(null);
@@ -154,8 +155,27 @@ define(['common/core/users/meta'], function (BaseMeta) {
         if (jNode.pointers[pName].to && jNode.pointers[pName].from) {
             var needed = jNode.pointers[pName].to.length + jNode.pointers[pName].from.length,
                 i,
-                error = null;
-            var ownPointer = true;
+                error = null,
+                ownPointer = true,
+                addingPointer = function (reference, isTarget) {
+                    var nodeFound = function (err, targetOrSource) {
+                        error = error || err;
+                        if (targetOrSource) {
+                            if (isTarget) {
+                                _core.setPointer(node, pName, targetOrSource);
+                            } else {
+                                _core.setPointer(targetOrSource, pName, node);
+                            }
+                        }
+
+                        if (--needed === 0) {
+                            callback(error);
+                        }
+                    };
+
+                    getReferenceNode(reference, nodeFound);
+                };
+
             if (jNode.OWN) {
                 if (jNode.OWN.pointers.indexOf(pName) === -1) {
                     ownPointer = false;
@@ -167,29 +187,13 @@ define(['common/core/users/meta'], function (BaseMeta) {
             } else {
                 if (ownPointer) {
                     for (i = 0; i < jNode.pointers[pName].to.length; i++) {
-                        getReferenceNode(jNode.pointers[pName].to[i], function (err, target) {
-                            error = error || err;
-                            _core.setPointer(node, pName, target);
-
-                            if (--needed === 0) {
-                                callback(error);
-                            }
-                        });
+                        addingPointer(jNode.pointers[pName].to[i], true);
                     }
                 }
 
                 for (i = 0; i < jNode.pointers[pName].from.length; i++) {
                     if (!isInternalReference(jNode.pointers[pName].from[i])) {
-                        getReferenceNode(jNode.pointers[pName].from[i], function (err, source) {
-                            error = error || err;
-                            if (source) {
-                                _core.setPointer(source, pName, node);
-                            }
-
-                            if (--needed === 0) {
-                                callback(error);
-                            }
-                        });
+                        addingPointer(jNode.pointers[pName].from[i], false);
                     } else {
                         if (--needed === 0) {
                             callback(error);
@@ -218,18 +222,24 @@ define(['common/core/users/meta'], function (BaseMeta) {
                         _core.setMemberRegistry(sOwner, sName, mPath, i, atrAndReg.registry[i]);
                     }
                 },
-                importSetReference = function (isTo, index, cb) {
+                setReferenceImported = function (err) {
+                    error = error || err;
+                    if (--needed === 0) {
+                        callback(error);
+                    }
+                },
+                importSetReference = function (isTo, index) {
                     var jObj = isTo === true ? jNode.pointers[sName].to[index] : jNode.pointers[sName].from[index];
                     getReferenceNode(jObj, function (err, sNode) {
                         if (err) {
-                            cb(err);
+                            setReferenceImported(err);
                         } else {
                             if (sNode) {
                                 var sOwner = isTo === true ? node : sNode,
                                     sMember = isTo === true ? sNode : node;
                                 importSetRegAndAtr(sOwner, sMember, jObj);
                             }
-                            cb(null);
+                            setReferenceImported(null);
                         }
                     });
                 },
@@ -245,20 +255,10 @@ define(['common/core/users/meta'], function (BaseMeta) {
 
             if (needed > 0) {
                 for (i = 0; i < jNode.pointers[sName].to.length; i++) {
-                    importSetReference(true, i, function (err) {
-                        error = error || err;
-                        if (--needed === 0) {
-                            callback(error);
-                        }
-                    });
+                    importSetReference(true, i);
                 }
                 for (i = 0; i < jNode.pointers[sName].from.length; i++) {
-                    importSetReference(false, i, function (err) {
-                        error = error || err;
-                        if (--needed === 0) {
-                            callback(error);
-                        }
-                    });
+                    importSetReference(false, i);
                 }
             } else {
                 callback(null);
@@ -274,7 +274,14 @@ define(['common/core/users/meta'], function (BaseMeta) {
             sets = [],
             needed = 0,
             error = null,
-            i;
+            i,
+            imported = function (err) {
+                error = error || err;
+                if (--needed === 0) {
+                    callback(error);
+                }
+            };
+
         if (typeof jNode.pointers !== 'object') {
             callback(null); //TODO should we drop an error???
         } else {
@@ -290,20 +297,10 @@ define(['common/core/users/meta'], function (BaseMeta) {
 
             if (needed > 0) {
                 for (i = 0; i < pointers.length; i++) {
-                    importPointer(node, jNode, pointers[i], function (err) {
-                        error = error || err;
-                        if (--needed === 0) {
-                            callback(error);
-                        }
-                    });
+                    importPointer(node, jNode, pointers[i], imported);
                 }
                 for (i = 0; i < sets.length; i++) {
-                    importSet(node, jNode, sets[i], function (err) {
-                        error = error || err;
-                        if (--needed === 0) {
-                            callback(error);
-                        }
-                    });
+                    importSet(node, jNode, sets[i], imported);
                 }
             } else {
                 callback(null);
@@ -328,7 +325,14 @@ define(['common/core/users/meta'], function (BaseMeta) {
             loadMetaReferences = function (jObject, cb) {
                 var needed = 0,
                     i,
-                    error = null;
+                    error = null,
+                    referenceLoaded = function (err) {
+                        error = error || err;
+                        if (--needed === 0) {
+                            cb(error);
+                        }
+                    };
+
                 for (i in jObject) {
                     if (jObject[i] !== null && typeof jObject[i] === 'object') {
                         needed++;
@@ -339,19 +343,9 @@ define(['common/core/users/meta'], function (BaseMeta) {
                     for (i in jObject) {
                         if (jObject[i] !== null && typeof jObject[i] === 'object') {
                             if (jObject[i].$ref) {
-                                loadReference(jObject[i], function (err) {
-                                    error = error || err;
-                                    if (--needed === 0) {
-                                        cb(error);
-                                    }
-                                });
+                                loadReference(jObject[i], referenceLoaded);
                             } else {
-                                loadMetaReferences(jObject[i], function (err) {
-                                    error = error || err;
-                                    if (--needed === 0) {
-                                        cb(error);
-                                    }
-                                });
+                                loadMetaReferences(jObject[i], referenceLoaded);
                             }
                         }
                     }
@@ -486,6 +480,15 @@ define(['common/core/users/meta'], function (BaseMeta) {
     }
 
     function importing(core, parent, jNode, callback) {
+        var needed = jNode.length,
+            error = null,
+            nodeImported = function (err) {
+                error = error || err;
+                if (--needed === 0) {
+                    callback(error);
+                }
+            };
+
         _core = core;
         _cache = {};
         _underImport = {};
@@ -496,17 +499,12 @@ define(['common/core/users/meta'], function (BaseMeta) {
         if (jNode.length) {
             //multiple objects
             if (parent) {
-                var needed = jNode.length,
-                    error = null;
+                needed = jNode.length;
+                error = null;
                 _cache[core.getPath(parent)] = parent;
                 _root = core.getRoot(parent);
                 for (var i = 0; i < jNode.length; i++) {
-                    importNode(jNode[i], parent, '#[' + i + ']', false, function (err) {
-                        error = error || err;
-                        if (--needed === 0) {
-                            callback(error);
-                        }
-                    });
+                    importNode(jNode[i], parent, '#[' + i + ']', false, nodeImported);
                 }
             } else {
                 callback('no parent given!!!');

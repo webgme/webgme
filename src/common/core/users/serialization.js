@@ -509,17 +509,23 @@ define(['common/util/assert'], function (ASSERT) {
             stillToGo = 0,
             i,
             guidList = Object.keys(guids),
-            loadBase = function (guid, path, cb) {
+            baseLoaded = function (err) {
+                error = error || err;
+                if (--stillToGo === 0) {
+                    callback(error);
+                }
+            },
+            loadBase = function (guid, path) {
                 _core.loadByPath(root, path, function (err, node) {
                     if (err) {
-                        return cb(err);
+                        return baseLoaded(err);
                     }
                     if (_core.getGuid(node) !== guid) {
-                        return cb('GUID mismatch');
+                        return baseLoaded('GUID mismatch');
                     }
 
                     _nodes[guid] = node;
-                    cb(null);
+                    baseLoaded(null);
                 });
             };
 
@@ -532,12 +538,7 @@ define(['common/util/assert'], function (ASSERT) {
         if (needed.length > 0) {
             stillToGo = needed.length;
             for (i = 0; i < needed.length; i++) {
-                loadBase(needed[i], guids[needed[i]], function (err) {
-                    error = error || err;
-                    if (--stillToGo === 0) {
-                        callback(error);
-                    }
-                });
+                loadBase(needed[i], guids[needed[i]]);
             }
         } else {
             return callback(null);
@@ -575,7 +576,7 @@ define(['common/util/assert'], function (ASSERT) {
                 for (i = 0; i < oldkeys.length; i++) {
                     if (newkeys.indexOf(oldkeys[i]) === -1) {
                         log('node ' + logId(_export.nodes, oldkeys[i]) +
-                        ', all of its sub-types and its children will be removed');
+                            ', all of its sub-types and its children will be removed');
 
                         _removedNodeGuids.push(oldkeys[i]);
                     }
@@ -864,7 +865,7 @@ define(['common/util/assert'], function (ASSERT) {
         var jsonMeta = _import.nodes[guid].meta.children || {items: [], minItems: [], maxItems: []},
             i;
         ASSERT(jsonMeta.items.length === jsonMeta.minItems.length &&
-        jsonMeta.minItems.length === jsonMeta.maxItems.length);
+            jsonMeta.minItems.length === jsonMeta.maxItems.length);
 
         _core.setChildrenMetaLimits(_nodes[guid], jsonMeta.min, jsonMeta.max);
         for (i = 0; i < jsonMeta.items.length; i++) {
@@ -879,7 +880,7 @@ define(['common/util/assert'], function (ASSERT) {
 
         for (i = 0; i < keys.length; i++) {
             ASSERT(jsonMeta[keys[i]].items.length === jsonMeta[keys[i]].minItems.length &&
-            jsonMeta[keys[i]].maxItems.length === jsonMeta[keys[i]].minItems.length);
+                jsonMeta[keys[i]].maxItems.length === jsonMeta[keys[i]].minItems.length);
 
             for (j = 0; j < jsonMeta[keys[i]].items.length; j++) {
                 _core.setPointerMetaTarget(_nodes[guid], keys[i], _nodes[jsonMeta[keys[i]].items[j]],

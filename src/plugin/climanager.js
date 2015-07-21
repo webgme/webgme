@@ -1,4 +1,4 @@
-/*globals requireJS*/
+/*globals*/
 /*jshint node:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
