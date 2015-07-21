@@ -248,7 +248,7 @@ define([
      */
     PluginBase.prototype.createMessage = function (node, message, severity) {
         var severityLevel = severity || 'info';
-        //this occurence of the function will always handle a single node
+        //this occurrence of the function will always handle a single node
 
         var descriptor = new PluginNodeDescription({
             name: node ? this.core.getAttribute(node, 'name') : '',

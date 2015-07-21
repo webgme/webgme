@@ -147,12 +147,24 @@ define([
                 // result.projectId
                 // result.targetBranchName
                 // result.theirCommitHash
+                // result.finalCommitHash
 
-                // if resolved the result structure as follows
+                // if resolved and a branch got updatedthe result structure as follows
                 // result.updatedBranch
                 // result.hash
 
-                // FIXME: what if it could not update the branch or got a commit hash
+                // if resolved and only commit is created the result structure as follows
+                // result is a commit hash itself
+
+                var resultHash = result.finalCommitHash || result.hash || result,
+                    resultBranch = result.targetBranchName || result.updatedBranch;
+
+                if (resultBranch) {
+                    self.createMessage(null, 'Successfully updated branch.', 'info');
+                } else {
+                    self.createMessage(null, 'Failed to update branch, but merge commit got created ' + resultHash, 'warn');
+                }
+
                 self.logger.info(result);
 
                 self.result.setSuccess(true);
