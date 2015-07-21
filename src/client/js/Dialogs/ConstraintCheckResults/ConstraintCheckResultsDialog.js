@@ -24,12 +24,12 @@ define(['js/util',
         RESULT_NAME_BASE = $('<span/>', {class: 'title'}),
         RESULT_TIME_BASE = $('<span/>', {class: 'time'}),
     //jscs:disable maximumLineLength
-        RESULT_DETAILS_BTN_BASE = $('<span class="btn btn-micro btn-details pull-right"><i class="glyphicon glyphicon-plus glyphicon glyphicon-plus"/></span>'),
+        RESULT_DETAILS_BTN_BASE = $('<span class="btn btn-micro btn-details pull-right"><i class="glyphicon glyphicon-plus"/></span>'),
     //jscs:enable maximumLineLength
         RESULT_DETAILS_BASE = $('<div/>', {class: 'messages collapse'}),
         NODE_ENTRY_BASE = $('<div/>', {class: 'constraint-check-result'}),
     //jscs:disable maximumLineLength
-        NODE_BTN_BASE = $('<span class="btn btn-micro btn-node pull-left"><i class="glyphicon glyphicon-eye-open glyphicon glyphicon-eye-open"/></span>'),
+        NODE_BTN_BASE = $('<span class="btn btn-micro btn-node pull-left"><i class="glyphicon glyphicon-link"/></span>'),
     //jscs:enable maximumLineLength
         MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>'),
     // FIXME: MAGIC do not we have a GUID regexp somewhere???
