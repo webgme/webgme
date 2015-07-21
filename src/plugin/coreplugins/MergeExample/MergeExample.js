@@ -124,87 +124,20 @@ define([
         // Use self to access core, project, result, logger etc from PluginBase.
         // These are all instantiated at this point.
         var self = this,
-            mergeTo,
-            prepareTarget = function () {
-                var deferred = Q.defer(),
-                    getCommitHash = function (commitOrBranch) {
-                        var commitDeferred = Q.defer();
-
-                        if (REGEXP.HASH.test(commitOrBranch)) {
-                            commitDeferred.resolve(commitOrBranch);
-                        } else {
-                            Q.ninvoke(self.project, 'getBranches')
-                                .then(function (branches) {
-                                    commitDeferred.resolve(branches[commitOrBranch]);
-                                })
-                                .catch(commitDeferred.reject);
-                        }
-                        return commitDeferred.promise;
-                    };
-
-                if (currentConfig.createNewBranch === true) {
-                    getCommitHash(currentConfig.mergeTo)
-                        .then(function (commitHash) {
-                            return Q.ninvoke(self.project, 'createBranch', currentConfig.newBranchName, commitHash);
-                        })
-                        .then(function () {
-                            deferred.resolve(currentConfig.newBranchName);
-                        })
-                        .catch(deferred.reject);
-                } else {
-                    deferred.resolve(currentConfig.mergeTo);
-                }
-                return deferred.promise;
-            };
-
+            newBranchName;
         // Obtain the current user configuration.
         var currentConfig = self.getCurrentConfig();
         self.logger.info('Current configuration ' + JSON.stringify(currentConfig, null, 4));
 
+        newBranchName = currentConfig.createNewBranch ? currentConfig.newBranchName : null;
+
+        function resolutionStrategy(result) {
+            // set the resolution as needed, then return with the object.
+            return result;
+        }
+
         //FIXME running on client side will not generate events, so need manual update of the UI afterwards
-        prepareTarget()
-            .then(function (mergeTo__) {
-                mergeTo = mergeTo__;
-                return merge.merge({
-                    project: self.project,
-                    logger: self.logger,
-                    gmeConfig: self.gmeConfig,
-                    myBranchOrCommit: currentConfig.mergeFrom,
-                    theirBranchOrCommit: mergeTo,
-                    auto: true
-                });
-            })
-            .then(function (result) {
-                // result.baseCommitHash
-                // result.conflict
-                // result.diff
-                // result.myCommitHash
-                // result.projectId
-                // result.targetBranchName
-                // result.theirCommitHash
-
-                self.logger.info(result);
-
-                if (result.conflict.items.length === 0) {
-                    // FIXME: what if it could not update the branch or got a commit hash
-                    return result;
-                } else {
-                    // there was a conflict
-                    // TODO: change conflict object as necessary select theirs or mine for resolution
-
-                    // resolve
-                    return merge.resolve({
-                        partial: result,
-                        project: self.project,
-                        logger: self.logger,
-                        gmeConfig: self.gmeConfig,
-                        myBranchOrCommit: currentConfig.mergeFrom,
-                        theirBranchOrCommit: mergeTo,
-                        auto: true
-                    });
-                }
-
-            })
+        self.merge(currentConfig.mergeFrom, currentConfig.mergeTo, newBranchName, resolutionStrategy)
             .then(function (result) {
                 // if merged without any conflicts the result structure is
                 // result.baseCommitHash
@@ -229,6 +162,114 @@ define([
                 self.result.setSuccess(false);
                 self.result.setError(err.message);
                 callback(err, self.result);
+            });
+    };
+
+    /**
+     * Creates a new branch from an existing branch or commit hash if new branch name is given and it is not the same
+     * as the branchNameOrCommitHash.
+     *
+     * @param branchNameOrCommitHash
+     * @param newBranchName
+     * @returns {*}
+     */
+    MergeExample.prototype.ensureBranch = function (branchNameOrCommitHash, newBranchName) {
+        var self = this,
+            deferred = Q.defer(),
+            getCommitHash = function (commitOrBranch) {
+                var commitDeferred = Q.defer();
+
+                if (REGEXP.HASH.test(commitOrBranch)) {
+                    commitDeferred.resolve(commitOrBranch);
+                } else {
+                    Q.ninvoke(self.project, 'getBranches')
+                        .then(function (branches) {
+                            commitDeferred.resolve(branches[commitOrBranch]);
+                        })
+                        .catch(commitDeferred.reject);
+                }
+                return commitDeferred.promise;
+            };
+
+        if (newBranchName && branchNameOrCommitHash !== newBranchName) {
+            getCommitHash(branchNameOrCommitHash)
+                .then(function (commitHash) {
+                    return Q.ninvoke(self.project, 'createBranch', newBranchName, commitHash);
+                })
+                .then(function () {
+                    deferred.resolve(newBranchName);
+                })
+                .catch(deferred.reject);
+        } else {
+            deferred.resolve(branchNameOrCommitHash);
+        }
+        return deferred.promise;
+    };
+
+    /**
+     * Merges two branches or commits. If the newBranchName is given it creates a new branch for the result.
+     *
+     * @param mergeFrom {string}
+     * @param mergeTo {string}
+     * @param newBranchName [string|null]
+     * @param resolutionStrategy [Function|null] - defines how the conflicts should be resolved, by default 'mine'
+     *                                             is chosen for all conflicts.
+     * @returns {*}
+     */
+    MergeExample.prototype.merge = function (mergeFrom, mergeTo, newBranchName, resolutionStrategy) {
+        var self = this;
+
+        // default values
+        mergeTo = mergeTo || 'master';
+        newBranchName = newBranchName || null;
+
+        if (typeof resolutionStrategy !== 'function') {
+            resolutionStrategy = function (result) {
+                return result;
+            };
+        }
+
+        return self.ensureBranch(mergeTo, newBranchName)
+            .then(function (mergeTo__) {
+                mergeTo = mergeTo__;
+                return merge.merge({
+                    project: self.project,
+                    logger: self.logger,
+                    gmeConfig: self.gmeConfig,
+                    myBranchOrCommit: mergeFrom,
+                    theirBranchOrCommit: mergeTo,
+                    auto: true
+                });
+            })
+            .then(function (result) {
+                // result.baseCommitHash
+                // result.conflict
+                // result.diff
+                // result.myCommitHash
+                // result.projectId
+                // result.targetBranchName
+                // result.theirCommitHash
+
+                self.logger.info(result);
+
+                if (result.conflict.items.length === 0) {
+                    // FIXME: what if it could not update the branch or got a commit hash
+                    return result;
+                } else {
+                    // there was a conflict
+
+                    // resolve
+                    return merge.resolve({
+                        partial: resolutionStrategy(result),
+                        project: self.project,
+                        logger: self.logger,
+                        gmeConfig: self.gmeConfig,
+                        myBranchOrCommit: mergeFrom,
+                        theirBranchOrCommit: mergeTo,
+                        auto: true
+                    });
+                }
+
             });
     };
 
