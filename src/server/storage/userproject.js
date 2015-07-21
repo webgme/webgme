@@ -140,7 +140,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     };
 }
 
-UserProject.prototype = Object.create(ProjectInterface);
+UserProject.prototype = Object.create(ProjectInterface.prototype);
 UserProject.prototype.constructor = UserProject;
 
 module.exports = UserProject;

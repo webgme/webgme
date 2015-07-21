@@ -72,7 +72,7 @@ define([
         };
     }
 
-    Project.prototype = Object.create(ProjectInterface);
+    Project.prototype = Object.create(ProjectInterface.prototype);
     Project.prototype.constructor = Project;
 
     return Project;

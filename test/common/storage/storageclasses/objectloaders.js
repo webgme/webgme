@@ -214,17 +214,28 @@ describe('storage storageclasses objectloaders', function () {
     });
 
 
-    it('should reach bucket size limit loadObject root three times', function (done) {
+    it('should reach bucket size limit (2) loadObject with three objects', function (done) {
+        var counter = 3,
+            ids = [];
 
-        Q.allSettled(
-            Q.ninvoke(storage, 'loadObject', projectName2Id(projectName), importResult.rootHash),
-            Q.ninvoke(storage, 'loadObject', projectName2Id(projectName), importResult.rootHash),
-            Q.ninvoke(storage, 'loadObject', projectName2Id(projectName), importResult.rootHash)
-        )
-            .then(function (promises) {
-                expect(promises.length).to.equal(0); // FIXME: is this right? no callback called???
-            })
-            .nodeify(done);
+        function objectLoaded(err, obj) {
+            counter -= 1;
+            expect(err).to.equal(null);
+
+            expect(typeof obj).to.equal('object');
+            expect(obj).not.to.equal(null);
+            expect(typeof obj._id).to.equal('string');
+
+            ids.push(obj._id);
+            if (counter === 0) {
+                expect(ids).to.have.members([importResult.rootHash, commitHash1, commitHash2]);
+                done();
+            }
+        }
+
+        storage.loadObject(projectName2Id(projectName), importResult.rootHash, objectLoaded);
+        storage.loadObject(projectName2Id(projectName), commitHash1, objectLoaded);
+        storage.loadObject(projectName2Id(projectName), commitHash2, objectLoaded);
     });
 
 

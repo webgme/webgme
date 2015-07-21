@@ -359,30 +359,6 @@ function Memory(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
-    function getProjectIds(callback) {
-        var deferred = Q.defer();
-
-        if (storage.connected) {
-            var projectIds = [];
-            for (var i = 0; i < storage.length; i += 1) {
-                var key = storage.key(i);
-                var keyArray = key.split(SEPARATOR);
-                ASSERT(keyArray.length === 3);
-                if (keyArray[0] === database) {
-                    if (projectIds.indexOf(keyArray[1]) === -1) {
-                        ASSERT(REGEXP.PROJECT.test(keyArray[1]));
-                        projectIds.push(keyArray[1]);
-                    }
-                }
-            }
-            deferred.resolve(projectIds);
-        } else {
-            deferred.reject(new Error('In-memory database has to be initialized. Call openDatabase first.'));
-        }
-
-        return deferred.promise.nodeify(callback);
-    }
-
     function createProject(projectId, callback) {
         var deferred = Q.defer(),
             project;
@@ -468,8 +444,6 @@ function Memory(mainLogger, gmeConfig) {
 
     this.openDatabase = openDatabase;
     this.closeDatabase = closeDatabase;
-
-    this.getProjectIds = getProjectIds;
 
     this.createProject = createProject;
     this.deleteProject = deleteProject;

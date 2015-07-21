@@ -385,36 +385,6 @@ function Mongo(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
-    function getProjectIds(callback) {
-        var deferred = Q.defer();
-
-        if (mongo) {
-            Q.ninvoke(mongo, 'collectionNames')
-                .then(function (collections) {
-                    var projectIds = [],
-                        i, p, n;
-
-                    for (i = 0; i < collections.length; i++) {
-                        if (!REGEXP.PROJECT.test(collections[i].name)) {
-                            continue;
-                        }
-                        p = collections[i].name.indexOf('.');
-                        n = collections[i].name.substring(p + 1);
-                        if (n.indexOf('system') === -1 && n.indexOf('.') === -1 && n.indexOf('_') !== 0) {
-                            projectIds.push(n);
-                        }
-                    }
-
-                    deferred.resolve(projectIds);
-                })
-                .catch(deferred.reject);
-        } else {
-            deferred.reject(new Error('Database is not open.'));
-        }
-
-        return deferred.promise.nodeify(callback);
-    }
-
     function deleteProject(projectId, callback) {
         var deferred = Q.defer();
 
@@ -499,8 +469,6 @@ function Mongo(mainLogger, gmeConfig) {
 
     this.openDatabase = openDatabase;
     this.closeDatabase = closeDatabase;
-
-    this.getProjectIds = getProjectIds;
 
     this.openProject = openProject;
     this.deleteProject = deleteProject;

@@ -52,6 +52,14 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
                 value: false,
                 valueType: 'boolean',
                 readOnly: false
+            },
+            {
+                name: 'save',
+                displayName: 'Should save the model',
+                description: 'Will update the model if true',
+                value: true,
+                valueType: 'boolean',
+                readOnly: false
             }
         ];
     };
@@ -96,13 +104,23 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
         // This will save the changes. If you don't want to save;
         // exclude self.save and call callback directly from this scope.
         self.result.setSuccess(true);
-        self.save('added obj', function (err, status) {
-            if (err) {
-                self.result.setSuccess(false);
-                self.result.setError(err);
-            }
-            self.logger.info('saved returned with status', status);
+        if (currentConfiguration.save === true) {
+            self.save('added obj', function (err, status) {
+                if (err) {
+                    self.result.setSuccess(false);
+                    self.result.setError(err);
+                }
+                self.logger.info('saved returned with status', status);
 
+                if (currentConfiguration.shouldFail) {
+                    self.result.setSuccess(false);
+                    self.result.setError('Failed on purpose.');
+                    callback('Failed on purpose.', self.result);
+                } else {
+                    callback(null, self.result);
+                }
+            });
+        } else {
             if (currentConfiguration.shouldFail) {
                 self.result.setSuccess(false);
                 self.result.setError('Failed on purpose.');
@@ -110,7 +128,7 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
             } else {
                 callback(null, self.result);
             }
-        });
+        }
 
     };
 

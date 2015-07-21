@@ -58,12 +58,6 @@ function SafeStorage(mongo, logger, gmeConfig, gmeAuth) {
 SafeStorage.prototype = Object.create(Storage.prototype);
 SafeStorage.prototype.constructor = SafeStorage;
 
-SafeStorage.prototype.getProjectIds = function (data, callback) {
-    var deferred = Q.defer();
-    deferred.reject(new Error('getProjectIds is deprecated, use getProjects instead.'));
-    return deferred.promise.nodeify(callback);
-};
-
 /**
  * Returns and array of dictionaries for each project the user has at least read access to.
  * If branches is set, the returned array will be filtered based on if the projects really do exist as
@@ -513,9 +507,10 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
         check(data.commitObject.parents[0] === '' || REGEXP.HASH.test(data.commitObject.parents[0]), deferred,
             'data.commitObject.parents[0] is not a valid hash: ' + data.commitObject.parents[0]) ||
         check(REGEXP.HASH.test(data.commitObject.root), deferred,
-            'data.commitObject.root is not a valid hash: ' + data.commitObject.root) ||
-        check(typeof data.coreObjects[data.commitObject.root] === 'object', deferred,
-            'data.coreObjects[data.commitObject.root] is not an object');
+            'data.commitObject.root is not a valid hash: ' + data.commitObject.root);
+        // Commits without coreObjects is valid now (the assumption is that the rootObject does exist.
+        //check(typeof data.coreObjects[data.commitObject.root] === 'object', deferred,
+        //    'data.coreObjects[data.commitObject.root] is not an object');
     }
 
     if (data.hasOwnProperty('username')) {
