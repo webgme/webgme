@@ -10,7 +10,7 @@ define([
     'module',
     './AutoRouter.ActionApplier',
     './AutoRouter.Utils',
-    'Q'
+    'q'
 ], function (Logger,
              module,
              ActionApplier,
