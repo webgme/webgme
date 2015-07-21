@@ -1547,7 +1547,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                 if (typeof temp === 'string' && temp !== TODELETESTRING) {
                     temp = getCommonPathForConcat(temp);
                 }
-                if (base[keys[i]] && CANON.stringify(base[keys[i]]) !== CANON.stringify(temp)) {
+                if (base[keys[i]] !== undefined && CANON.stringify(base[keys[i]]) !== CANON.stringify(temp)) {
                     //conflict
                     _conflictMine[path + '/' + keys[i]] = {value: base[keys[i]], conflictingPaths: {}};
                     _conflictTheirs[path + '/' + keys[i]] = {value: extension[keys[i]], conflictingPaths: {}};

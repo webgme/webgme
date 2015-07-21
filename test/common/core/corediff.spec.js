@@ -892,7 +892,10 @@ describe('core diff', function () {
 
             result = core.tryToConcatChanges(diff2, diff1);
 
-            // TODO: check result
+            expect(result.items).to.have.length(1);
+            expect(result.items[0].theirs.value).to.equal(TO_DELETE);
+            expect(result.items[0].theirs.path).to.equal('/175547009/meta');
+            expect(result.items[0].mine.path).to.equal('/175547009/meta/attributes/newAttribute');
         });
 
         it('should combine delete meta, and add a new pointer to meta', function () {
@@ -943,7 +946,13 @@ describe('core diff', function () {
 
             result = core.tryToConcatChanges(diff1, diff2);
 
-            // TODO: check result
+            expect(result.items).to.have.length(3);
+            expect(result.items[0].mine.value).to.equal(TO_DELETE);
+            expect(result.items[0].mine.path).to.equal('/175547009/meta');
+            expect(result.items[1].mine.value).to.equal(TO_DELETE);
+            expect(result.items[1].mine.path).to.equal('/175547009/meta');
+            expect(result.items[2].mine.value).to.equal(TO_DELETE);
+            expect(result.items[2].mine.path).to.equal('/175547009/meta');
         });
 
         it('should combine delete meta, and add new children to meta', function () {
@@ -982,7 +991,9 @@ describe('core diff', function () {
 
             result = core.tryToConcatChanges(diff1, diff2);
 
-            // TODO: check result
+            expect(result.items).to.have.length(1);
+            expect(result.items[0].mine.value).to.equal(TO_DELETE);
+            expect(result.items[0].mine.path).to.equal('/175547009/meta');
         });
 
     });
@@ -1561,7 +1572,10 @@ describe('core diff', function () {
 
             Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
                 .then(function () {
-                    // TODO: check if it was successful
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009');
+                })
+                .then(function (node) {
+                    expect(core.getValidChildrenPaths(node)).to.have.length(0);
                 })
                 .nodeify(done);
 
@@ -1615,9 +1629,12 @@ describe('core diff', function () {
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
 
-            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch)
                 .then(function () {
-                    // TODO: check if it was successful
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009');
+                })
+                .then(function (node) {
+                    expect(core.getAttributeMeta(node, 'newAttr')).to.eql({type: 'integer', default: 0});
                 })
                 .nodeify(done);
 
@@ -1670,9 +1687,12 @@ describe('core diff', function () {
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
 
-            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch)
                 .then(function () {
-                    // TODO: check if it was successful
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009');
+                })
+                .then(function (node) {
+                    expect(core.getValidAttributeNames(node)).not.to.include.members(['newAttr']);
                 })
                 .nodeify(done);
 
@@ -1727,13 +1747,16 @@ describe('core diff', function () {
 
             Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
                 .then(function () {
-                    // TODO: check if it was successful
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009');
+                })
+                .then(function (node) {
+                    expect(core.getValidAttributeNames(node)).not.to.include.members(['newAttr']);
                 })
                 .nodeify(done);
 
         });
 
-        it('should apply non conflicting aspect changes in meta', function (done) {
+        it('should apply conflicting aspect changes in meta', function (done) {
             var resultConflict,
                 resultPatch,
                 diff1 = {
@@ -1773,7 +1796,11 @@ describe('core diff', function () {
 
             Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
                 .then(function () {
-                    // TODO: check if it was successful
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009');
+                })
+                .then(function (node) {
+                    expect(core.getAspectMeta(node, 'a')).to.include.members(['/175547009',
+                        '/175547009/471466181', '/175547009/1817665259']);
                 })
                 .nodeify(done);
 
@@ -1818,7 +1845,10 @@ describe('core diff', function () {
 
             Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
                 .then(function () {
-                    // TODO: check if it was successful
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009');
+                })
+                .then(function (node) {
+                    expect(core.getValidAspectNames(node)).to.have.length(0);
                 })
                 .nodeify(done);
 
@@ -1863,7 +1893,10 @@ describe('core diff', function () {
 
             Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
                 .then(function () {
-                    // TODO: check if it was successful
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009');
+                })
+                .then(function (node) {
+                    expect(core.getValidAspectNames(node)).to.have.length(0);
                 })
                 .nodeify(done);
 
@@ -2012,9 +2045,23 @@ describe('core diff', function () {
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
 
-            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
+            Q.nfcall(core.applyTreeDiff, rootNode, resultPatch)
                 .then(function () {
-                    // TODO: check if everything is ok
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009');
+                })
+                .then(function (node) {
+                    expect(core.getPointerMeta(node, 'src')).to.eql({
+                        '/175547009/1817665259': {
+                            min: 2,
+                            max: 4
+                        },
+                        '/175547009/471466181': {
+                            min: -1,
+                            max: 1
+                        },
+                        min: 1,
+                        max: 1
+                    });
                 })
                 .nodeify(done);
         });
@@ -2071,7 +2118,10 @@ describe('core diff', function () {
 
             Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
                 .then(function () {
-                    // TODO: check if everything is ok
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009');
+                })
+                .then(function (node) {
+                    expect(core.getValidPointerNames(node)).to.have.length(0);
                 })
                 .nodeify(done);
         });
@@ -2127,7 +2177,10 @@ describe('core diff', function () {
 
             Q.nfcall(core.applyTreeDiff, rootNode, resultPatch) // FIXME: what if it results in an error?
                 .then(function () {
-                    // TODO: check if everything is ok
+                    return Q.nfcall(core.loadByPath, rootNode, '/175547009');
+                })
+                .then(function (node) {
+                    expect(core.getValidPointerNames(node)).to.have.length(0);
                 })
                 .nodeify(done);
         });
