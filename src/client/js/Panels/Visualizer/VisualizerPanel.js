@@ -114,7 +114,7 @@ define(['js/logger',
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
             if (self._settingVisualizer !== true) {
-                WebGMEGlobal.State.registerActiveVisualizer(activeVisualizer);
+                self._setActiveVisualizer(activeVisualizer,self._ul1);
             }
         });
 

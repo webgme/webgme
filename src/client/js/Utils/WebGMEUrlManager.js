@@ -80,37 +80,9 @@ define([
         return searchQuery;
     };
 
-    loadStateFromParsedUrl = function (parsedUrl) {
-        var state = {};
-
-        state[CONSTANTS.STATE_ACTIVE_ASPECT] = parsedUrl.aspectToLoad;
-
-        if (parsedUrl.branchToLoad) {
-            state[CONSTANTS.STATE_ACTIVE_BRANCH_NAME] = parsedUrl.branchToLoad;
-        } else if (parsedUrl.commitToLoad) {
-            state[CONSTANTS.STATE_ACTIVE_COMMIT] = parsedUrl.commitToLoad;
-        }
-
-        //state[CONSTANTS.STATE_ACTIVE_CROSSCUT] = parsedUrl.crosscutToLoad;
-
-        state[CONSTANTS.STATE_ACTIVE_OBJECT] = parsedUrl.objectToLoad === 'root' ?
-            CONSTANTS.PROJECT_ROOT_ID : parsedUrl.objectToLoad;
-
-        state[CONSTANTS.STATE_ACTIVE_PROJECT_NAME] = parsedUrl.projectToLoad;
-        state[CONSTANTS.STATE_ACTIVE_SELECTION] = parsedUrl.activeSelectionToLoad;
-        state[CONSTANTS.STATE_ACTIVE_VISUALIZER] = parsedUrl.visualizerToLoad;
-
-        state[CONSTANTS.STATE_IS_INIT_PHASE] = false;
-
-        //setTimeout(function () {
-        WebGMEGlobal.State.set(state);
-        //}, 1000);
-    };
-
     return {
         parseInitialThingsToDoFromUrl: parseInitialThingsToDoFromUrl,
-        serializeStateToUrl: serializeStateToUrl,
-        loadStateFromParsedUrl: loadStateFromParsedUrl
+        serializeStateToUrl: serializeStateToUrl
     };
 
 });

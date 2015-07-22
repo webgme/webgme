@@ -652,13 +652,13 @@ describe('GME client', function () {
             });
         });
 
-        it('should return error when selecting a nonexistent branch in selectProject', function (done) {
+        it('should return master when selecting a nonexistent branch in selectProject', function (done) {
             var projectName = 'branchWatcher',
                 projectId = projectName2Id(projectName, gmeConfig, client);
             //FIXME: All these tests should select different projects or even have different client instances.
             client.selectProject(projectId, 'branch_does_not_exist', function (err) {
-                expect(err.message).to.contain('Given branch does not exist "branch_does_not_exist"');
-                expect(client.getActiveProjectId()).to.equal(null);
+                expect(err).to.equal(null);
+                expect(client.getActiveBranchName()).to.equal('master');
                 done();
             });
         });

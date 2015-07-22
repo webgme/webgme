@@ -868,6 +868,12 @@ define([
         callback = callback || function () {
             };
 
+        //check if there is need for a change at all
+        if (currentProject && currentProject.id === projectId && currentBranch &&
+            (currentBranch.id === branchId || branchId === undefined || branchId === null || branchId === '')) {
+            callback(null);
+            return;
+        }
         // clear current selection
         if (currentProject) {
             currentProject.isSelected = false;

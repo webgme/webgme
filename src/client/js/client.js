@@ -363,22 +363,16 @@ define([
                 self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectId);
 
                 if (branches.hasOwnProperty(branchToOpen) === false) {
-                    if (branchName) {
-                        logger.error('Given branch does not exist "' + branchName + '"');
-                        closeProject(projectId, function (err) {
-                            if (err) {
-                                logger.error('closeProject after missing branch failed with err', err);
-                            }
-                            callback(new Error('Given branch does not exist "' + branchName + '"'));
-                        });
-                        return;
+                    logger.warn('Project "' + projectId + '" did not have branch "' + branchToOpen + '"');
+                    if (branches.hasOwnProperty('master')) {
+                        branchToOpen = 'master';
+                    } else {
+                        branchToOpen = Object.keys(branches)[0] || null;
                     }
-                    logger.warn('Project "' + projectId + '" did not have branch', branchToOpen);
-                    branchToOpen = Object.keys(branches)[0] || null;
                     logger.debug('Picked "' + branchToOpen + '".');
                 }
 
-                ASSERT(branchToOpen, 'No branch avaliable in project');
+                ASSERT(branchToOpen, 'No branch available in project');
 
                 self.selectBranch(branchToOpen, null, function (err) {
                     if (err) {

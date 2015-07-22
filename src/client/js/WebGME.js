@@ -190,24 +190,24 @@ define([
                                 }
                                 client.selectProject(initialThingsToDo.projectToLoad, initialThingsToDo.branchToLoad,
                                     function (err) {
-                                    if (err) {
-                                        logger.error(err);
-                                        openProjectLoadDialog(false);
-                                        return;
-                                    }
-                                    if (initialThingsToDo.commitToLoad) {
-                                        client.selectCommit(initialThingsToDo.commitToLoad, function (err) {
-                                            if (err) {
-                                                logger.error(err);
-                                                openProjectLoadDialog(false);
-                                                return;
-                                            }
+                                        if (err) {
+                                            logger.error(err);
+                                            openProjectLoadDialog(false);
+                                            return;
+                                        }
+                                        if (initialThingsToDo.commitToLoad) {
+                                            client.selectCommit(initialThingsToDo.commitToLoad, function (err) {
+                                                if (err) {
+                                                    logger.error(err);
+                                                    openProjectLoadDialog(false);
+                                                    return;
+                                                }
+                                                selectObject();
+                                            });
+                                        } else {
                                             selectObject();
-                                        });
-                                    } else {
-                                        selectObject();
-                                    }
-                                });
+                                        }
+                                    });
                             });
                         } else {
                             openProjectLoadDialog(true);
@@ -257,33 +257,51 @@ define([
 
             userPattern[METACONSTANTS.META_ASPECT_CONTAINER_ID] = {children: 0};
 
+            //TODO when there will be a new global state element, it has to be added here
             function eventHandler(events) {
-                var metaContainer,
-                    i,
-                    metaPaths,
-                    metaEventHandler,
-                    metaPattern = {},
-                    userMetaId;
+                var i, j,
+                    activeNode,
+                    selectedNodes = [],
+                    childrenPaths,
+                    updatedState = {};
                 logger.debug('events from selectObject', events);
-                if (events[0].etype === 'complete') {
-                    logger.debug('active node loaded');
-                    metaContainer = client.getNode(METACONSTANTS.META_ASPECT_CONTAINER_ID);
-                    metaPaths = metaContainer.getMemberIds(METACONSTANTS.META_ASPECT_SET_NAME);
-                    for (i = 0; i < metaPaths.length; i += 1) {
-                        metaPattern[metaPaths[i]] = {children: 0};
-                    }
-                    metaEventHandler = function (metaEvents) {
-                        logger.debug('events from meta-nodes load', metaEvents);
-                        if (metaEvents[0].etype === 'complete') {
-                            logger.debug('meta nodes loaded');
-                            WebGMEUrlManager.loadStateFromParsedUrl(initialThingsToDo);
-                            client.removeUI(userActiveNodeId);
-                            client.removeUI(userMetaId);
-                        }
-                    };
-                    userMetaId = client.addUI(user, metaEventHandler);
-                    client.updateTerritory(userMetaId, metaPattern);
+
+                if (events[0].etype !== 'complete') {
+                    logger.warn('partial events only');
+                    return;
                 }
+
+                logger.debug('active "' + nodePath + '" node loaded');
+
+                for (i = 0; i < events.length; i += 1) {
+                    //look for the active node
+                    if (events[i].eid === nodePath) {
+                        activeNode = client.getNode(nodePath);
+                        if (activeNode) {
+                            updatedState[CONSTANTS.STATE_ACTIVE_OBJECT] = nodePath;
+
+                            childrenPaths = activeNode.getChildrenIds();
+
+                            initialThingsToDo.activeSelectionToLoad = initialThingsToDo.activeSelectionToLoad || [];
+
+                            for (j = 0; j < childrenPaths.length; j += 1) {
+                                if (initialThingsToDo.activeSelectionToLoad.indexOf(childrenPaths[j]) !== -1) {
+                                    selectedNodes.push(childrenPaths[j]);
+                                }
+                            }
+                            if (selectedNodes.length > 0) {
+                                updatedState[CONSTANTS.STATE_ACTIVE_SELECTION] = selectedNodes;
+                            }
+
+                            updatedState[CONSTANTS.STATE_ACTIVE_VISUALIZER] = initialThingsToDo.visualizerToLoad;
+                            updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] = initialThingsToDo.aspectToLoad;
+
+                            WebGMEGlobal.State.set(updatedState);
+                            break;
+                        }
+                    }
+                }
+                client.removeUI(userActiveNodeId);
             }
 
             userActiveNodeId = client.addUI(user, eventHandler);
