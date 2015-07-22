@@ -586,7 +586,18 @@ describe('storage socketio websocket', function () {
 
     // TODO: makeCommit
     // TODO: loadObjects
-    // TODO: simpleQuery
+
+    it('should fail to execute simpleQuery without addOn configured', function (done) {
+        Q.nfcall(webSocket.simpleQuery, 'someWorkerId', {})
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err).to.include('wrong request');
+                done();
+            })
+            .done();
+    });
 
     it('should exportProject as library using simple request', function (done) {
         var command = {

@@ -282,4 +282,15 @@ describe('storage storageclasses simpleapi', function () {
             });
     });
 
+    it('should fail to execute simpleQuery without addOn configured', function (done) {
+        Q.ninvoke(storage, 'simpleQuery', 'someWorkerId', {})
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err).to.include('wrong request');
+                done();
+            })
+            .done();
+    });
 });

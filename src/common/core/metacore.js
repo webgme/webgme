@@ -209,6 +209,10 @@ define([
             return core.getPointerNames(getMetaAspectsNode(node)) || [];
         };
 
+        core.getAspectMeta = function (node, name) {
+            return core.getMemberPaths(getMetaAspectNode(node, name), 'items');
+        };
+
         //additional meta functions for getting meta definitions
         core.getJsonMeta = function (node) {
             var meta = {children: {}, attributes: {}, pointers: {}, aspects: {}, constraints: {}},
@@ -315,7 +319,7 @@ define([
                     if (smaller.attributes[names[i]]) {
                         //they both have the attribute - if it differs we keep the whole of the bigger
                         if (CANON.stringify(smaller.attributes[names[i]] !==
-                            CANON.stringify(bigger.attributes[names[i]]))) {
+                                CANON.stringify(bigger.attributes[names[i]]))) {
 
                             diff.attributes = diff.attributes || {};
                             diff.attributes[names[i]] = bigger.attributes[names[i]];
@@ -453,6 +457,48 @@ define([
         core.delPointerMeta = function (node, name) {
             core.deleteNode(_MetaPointerNode(node, name), true);
             core.deletePointer(getMetaNode(node), name);
+        };
+
+        core.getPointerMeta = function (node, name) {
+            var pointerMeta = {},
+                members,
+                member,
+                i,
+                pointerMetaNode = getMetaPointerNode(node, name);
+
+            if (pointerMetaNode === null) {
+                return null;
+            }
+
+            //min
+            pointerMeta.min = core.getAttribute(pointerMetaNode, 'min');
+            if (pointerMeta.min === undefined) {
+                pointerMeta.min = -1;
+            }
+
+            //max
+            pointerMeta.max = core.getAttribute(pointerMetaNode, 'max');
+            if (pointerMeta.max === undefined) {
+                pointerMeta.max = -1;
+            }
+
+            members = core.getMemberPaths(pointerMetaNode, 'items');
+            for (i = 0; i < members.length; i++) {
+                member = {
+                    min: core.getMemberAttribute(pointerMetaNode, 'items', members[i], 'min'),
+                    max: core.getMemberAttribute(pointerMetaNode, 'items', members[i], 'max')
+                };
+                if (member.min === undefined) {
+                    member.min = -1;
+                }
+                if (member.max === undefined) {
+                    member.max = -1;
+                }
+
+                pointerMeta[members[i]] = member;
+            }
+
+            return pointerMeta;
         };
 
         core.setAspectMetaTarget = function (node, name, target) {

@@ -260,6 +260,7 @@ describe('corediff apply', function () {
                     return Q.nfcall(core.applyTreeDiff, rootNode, diff);
                 })
                 .then(function () {
+                    expect(core.getChildrenRelids(rootNode)).to.include.members(['499575639']);
                     done();
                 })
                 .catch(done);
@@ -319,7 +320,7 @@ describe('corediff apply', function () {
 
             Q.nfcall(core.applyTreeDiff, rootNode, diff)
                 .then(function () {
-                    expect(core.getChildrenRelids(rootNode)).not.to.include.keys('1303043463');
+                    expect(core.getChildrenRelids(rootNode)).not.to.include.members(['1303043463']);
                     done();
                 })
                 .catch(done);
