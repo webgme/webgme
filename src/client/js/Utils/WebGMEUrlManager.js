@@ -27,6 +27,7 @@ define([
             objectToLoad: util.getURLParameterByName('node').toLowerCase() || CONSTANTS.PROJECT_ROOT_ID,
             createNewProject: util.getURLParameterByName('create') === 'true',
             branchToLoad: util.getURLParameterByName('branch'),
+            tabToSelect: util.getURLParameterByName('tab') || 0,
             visualizerToLoad: util.getURLParameterByName('visualizer') || 'ModelEditor',
             aspectToLoad: util.getURLParameterByName('aspect') || 'All',
             activeSelectionToLoad: util.getURLParameterByName('selection') ?
@@ -71,6 +72,9 @@ define([
                 searchQuery += '&aspect=' + WebGMEGlobal.State.getActiveAspect();
             }
 
+            if (WebGMEGlobal.State.getActiveTab() !== null && WebGMEGlobal.State.getActiveTab() !== undefined) {
+                searchQuery += '&tab=' + WebGMEGlobal.State.getActiveTab();
+            }
             // leave this last, url may exceeds the max url limit
             if (WebGMEGlobal.State.getActiveSelection()) {
                 searchQuery += '&selection=' + WebGMEGlobal.State.getActiveSelection().join(',');

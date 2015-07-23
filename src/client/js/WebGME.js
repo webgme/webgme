@@ -259,10 +259,8 @@ define([
 
             //TODO when there will be a new global state element, it has to be added here
             function eventHandler(events) {
-                var i, j,
+                var i,
                     activeNode,
-                    selectedNodes = [],
-                    childrenPaths,
                     updatedState = {};
                 logger.debug('events from selectObject', events);
 
@@ -280,21 +278,17 @@ define([
                         if (activeNode) {
                             updatedState[CONSTANTS.STATE_ACTIVE_OBJECT] = nodePath;
 
-                            childrenPaths = activeNode.getChildrenIds();
-
                             initialThingsToDo.activeSelectionToLoad = initialThingsToDo.activeSelectionToLoad || [];
 
-                            for (j = 0; j < childrenPaths.length; j += 1) {
-                                if (initialThingsToDo.activeSelectionToLoad.indexOf(childrenPaths[j]) !== -1) {
-                                    selectedNodes.push(childrenPaths[j]);
-                                }
-                            }
-                            if (selectedNodes.length > 0) {
-                                updatedState[CONSTANTS.STATE_ACTIVE_SELECTION] = selectedNodes;
+                            if (initialThingsToDo.activeSelectionToLoad.length > 0) {
+                                updatedState[CONSTANTS.STATE_ACTIVE_SELECTION] =
+                                    initialThingsToDo.activeSelectionToLoad;
                             }
 
                             updatedState[CONSTANTS.STATE_ACTIVE_VISUALIZER] = initialThingsToDo.visualizerToLoad;
-                            updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] = initialThingsToDo.aspectToLoad;
+                            if (initialThingsToDo.tabToSelect !== null && initialThingsToDo.tabToSelect !== undefined) {
+                                updatedState[CONSTANTS.STATE_ACTIVE_TAB] = initialThingsToDo.tabToSelect;
+                            }
 
                             WebGMEGlobal.State.set(updatedState);
                             break;

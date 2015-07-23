@@ -99,7 +99,7 @@ define(['js/logger',
 
         this.logger.debug('_loadMetaAspectContainerNode: "' + this.metaAspectContainerNodeID + '"');
 
-        this._initializeSelectedSheet();
+        //this._initializeSelectedSheet();
 
         //remove current territory patterns
         if (this._territoryId) {
@@ -240,6 +240,8 @@ define(['js/logger',
                 REGISTRY_KEYS.POSITION);
         }
 
+        //setSelected sheet
+        this._selectedMetaAspectSet
         //process the sheets
         positionsUpdated = this._processMetaAspectSheetsRegistry();
 
@@ -1772,6 +1774,13 @@ define(['js/logger',
                     }
                 }
             }
+        }
+
+        //setting selectedSheetID from global STATE
+        if (WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB) !== null &&
+            WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB) !== undefined &&
+            metaAspectSheetsRegistry.length > WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB)) {
+            selectedSheetID = WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB);
         }
 
         if (!selectedSheetID) {
