@@ -7,6 +7,9 @@
  * that is loaded when the bucket is full (gmeConfig.storage.loadBucketSize) or when a
  * timeout is triggered (gmeConfig.storage.loadBucketTimer).
  *
+ * N.B. when used directly, the user need to make sure that the same object (by hash) is not loaded within in the
+ * same bucket, (see the project-cache for example).
+ *
  * @author pmeijer / https://github.com/pmeijer
  */
 

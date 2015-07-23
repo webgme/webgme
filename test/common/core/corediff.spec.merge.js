@@ -49,7 +49,7 @@ describe('corediff-merge', function () {
                     project.makeCommit(null,
                         [commit],
                         changeObject.rootHash,
-                        [], // no core-objects
+                        persisted.objects,
                         'apply change finished ' + new Date().getTime(),
                         function (err, commitResult) {
                             if (err) {
