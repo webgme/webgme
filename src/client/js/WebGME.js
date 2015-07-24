@@ -261,7 +261,8 @@ define([
             function eventHandler(events) {
                 var i,
                     activeNode,
-                    updatedState = {};
+                    updatedState = {},
+                    aspectNames;
                 logger.debug('events from selectObject', events);
 
                 if (events[0].etype !== 'complete') {
@@ -286,8 +287,17 @@ define([
                             }
 
                             updatedState[CONSTANTS.STATE_ACTIVE_VISUALIZER] = initialThingsToDo.visualizerToLoad;
-                            if (initialThingsToDo.tabToSelect !== null && initialThingsToDo.tabToSelect !== undefined) {
+                            if (initialThingsToDo.tabToSelect !== null &&
+                                initialThingsToDo.tabToSelect !== undefined) {
                                 updatedState[CONSTANTS.STATE_ACTIVE_TAB] = initialThingsToDo.tabToSelect;
+
+                                //we also have to set the selected aspect according to the selectedTabIndex
+                                //TODO this is not the best solution,
+                                // but as the node always orders the aspects based on their names, it is fine
+                                aspectNames = client.getMetaAspectNames(nodePath);
+                                aspectNames.unshift('All');
+                                updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] =
+                                    aspectNames[initialThingsToDo.tabToSelect] || 'All';
                             }
 
                             WebGMEGlobal.State.set(updatedState);

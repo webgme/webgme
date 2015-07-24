@@ -38,7 +38,7 @@ define([
             },
 
             registerActiveAspect: function (aspect) {
-                this.set(CONSTANTS.STATE_ACTIVE_ASPECT, aspect);
+                this.set(CONSTANTS.STATE_ACTIVE_ASPECT, aspect, {silent: true});
             },
 
             getActiveAspect: function () {

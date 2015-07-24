@@ -237,7 +237,6 @@ define(['js/logger',
             settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
         }
 
-        settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
         settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = DEFAULT_VISUALIZER;
         WebGMEGlobal.State.set(settings);
     };

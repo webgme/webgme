@@ -29,7 +29,7 @@ define([
             branchToLoad: util.getURLParameterByName('branch'),
             tabToSelect: util.getURLParameterByName('tab') || 0,
             visualizerToLoad: util.getURLParameterByName('visualizer') || 'ModelEditor',
-            aspectToLoad: util.getURLParameterByName('aspect') || 'All',
+            //aspectToLoad: util.getURLParameterByName('aspect') || 'All',
             activeSelectionToLoad: util.getURLParameterByName('selection') ?
                 util.getURLParameterByName('selection').split(',') : []
         };
@@ -66,10 +66,6 @@ define([
 
             if (WebGMEGlobal.State.getActiveVisualizer()) {
                 searchQuery += '&visualizer=' + WebGMEGlobal.State.getActiveVisualizer();
-            }
-
-            if (WebGMEGlobal.State.getActiveAspect()) {
-                searchQuery += '&aspect=' + WebGMEGlobal.State.getActiveAspect();
             }
 
             if (WebGMEGlobal.State.getActiveTab() !== null && WebGMEGlobal.State.getActiveTab() !== undefined) {

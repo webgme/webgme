@@ -1164,8 +1164,9 @@ define(['js/logger',
         }
     };
 
-    ModelEditorControl.prototype._initializeSelectedAspect = function () {
+    ModelEditorControl.prototype._initializeSelectedAspect = function (tabID) {
         WebGMEGlobal.State.registerActiveAspect(this._selectedAspect);
+        WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB,tabID);
 
         this.selectedObjectChanged(this.currentNodeInfo.id);
     };

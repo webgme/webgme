@@ -1287,7 +1287,7 @@ define(['js/logger',
 
             this.logger.debug('selectedAspectChanged: ' + this._selectedAspect);
 
-            this._initializeSelectedAspect();
+            this._initializeSelectedAspect(tabID);
         }
     };
 

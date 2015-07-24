@@ -57,9 +57,9 @@ define(['js/logger',
             self.selectedObjectChanged(activeObject);
         });
 
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_ASPECT, function (model, activeAspect) {
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, function (model, activeAspect) {
             if (activeAspect !== undefined) {
-                self.selectedAspectChanged(activeAspect);
+                self.selectedAspectChanged(WebGMEGlobal.State.getActiveAspect());
             }
         });
     };
