@@ -83,6 +83,10 @@ define([
 
             setIsInitPhase: function (initPhase) {
                 return this.set(CONSTANTS.STATE_IS_INIT_PHASE, initPhase);
+            },
+
+            getActiveTab: function () {
+                return this.get(CONSTANTS.STATE_ACTIVE_TAB);
             }
 
         }),
