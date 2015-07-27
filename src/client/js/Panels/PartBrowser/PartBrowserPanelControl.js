@@ -58,7 +58,8 @@ define(['js/logger',
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, function (model, activeAspect) {
-            if (activeAspect !== undefined) {
+            //TODO we may need constants for the different visualizers, or have some feature table...
+            if (activeAspect !== undefined && WebGMEGlobal.State.getActiveVisualizer() === 'ModelEditor') {
                 self.selectedAspectChanged(WebGMEGlobal.State.getActiveAspect());
             }
         });

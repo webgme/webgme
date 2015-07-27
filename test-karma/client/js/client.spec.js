@@ -652,13 +652,13 @@ describe('GME client', function () {
             });
         });
 
-        it('should return master when selecting a nonexistent branch in selectProject', function (done) {
+        it('should return error when selecting a nonexistent branch in selectProject', function (done) {
             var projectName = 'branchWatcher',
                 projectId = projectName2Id(projectName, gmeConfig, client);
             //FIXME: All these tests should select different projects or even have different client instances.
             client.selectProject(projectId, 'branch_does_not_exist', function (err) {
-                expect(err).to.equal(null);
-                expect(client.getActiveBranchName()).to.equal('master');
+                expect(err.message).to.contain('Given branch does not exist "branch_does_not_exist"');
+                expect(client.getActiveProjectId()).to.equal(null);
                 done();
             });
         });
@@ -1455,7 +1455,7 @@ describe('GME client', function () {
             expect(clientNode.getOwnEditableRegistry('newReg')).to.eql(registryItem);
             client.delRegistry(clientNodePath, 'newReg');
         });
-        
+
         it('should return the names of available pointers', function () {
             expect(clientNode.getPointerNames()).to.have.members(['ptr', 'base']);
         });
@@ -1558,7 +1558,7 @@ describe('GME client', function () {
             expect(clientNode.toString()).to.contain('/323573539');
         });
 
-        it('should log the textual representation of the node',function(){
+        it('should log the textual representation of the node', function () {
 
         })
     });
