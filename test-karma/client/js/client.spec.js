@@ -1455,7 +1455,7 @@ describe('GME client', function () {
             expect(clientNode.getOwnEditableRegistry('newReg')).to.eql(registryItem);
             client.delRegistry(clientNodePath, 'newReg');
         });
-        
+
         it('should return the names of available pointers', function () {
             expect(clientNode.getPointerNames()).to.have.members(['ptr', 'base']);
         });
@@ -1558,7 +1558,7 @@ describe('GME client', function () {
             expect(clientNode.toString()).to.contain('/323573539');
         });
 
-        it('should log the textual representation of the node',function(){
+        it('should log the textual representation of the node', function () {
 
         })
     });

@@ -27,8 +27,9 @@ define([
             objectToLoad: util.getURLParameterByName('node').toLowerCase() || CONSTANTS.PROJECT_ROOT_ID,
             createNewProject: util.getURLParameterByName('create') === 'true',
             branchToLoad: util.getURLParameterByName('branch'),
+            tabToSelect: util.getURLParameterByName('tab') || 0,
             visualizerToLoad: util.getURLParameterByName('visualizer') || 'ModelEditor',
-            aspectToLoad: util.getURLParameterByName('aspect') || 'All',
+            //aspectToLoad: util.getURLParameterByName('aspect') || 'All',
             activeSelectionToLoad: util.getURLParameterByName('selection') ?
                 util.getURLParameterByName('selection').split(',') : []
         };
@@ -67,10 +68,9 @@ define([
                 searchQuery += '&visualizer=' + WebGMEGlobal.State.getActiveVisualizer();
             }
 
-            if (WebGMEGlobal.State.getActiveAspect()) {
-                searchQuery += '&aspect=' + WebGMEGlobal.State.getActiveAspect();
+            if (WebGMEGlobal.State.getActiveTab() !== null && WebGMEGlobal.State.getActiveTab() !== undefined) {
+                searchQuery += '&tab=' + WebGMEGlobal.State.getActiveTab();
             }
-
             // leave this last, url may exceeds the max url limit
             if (WebGMEGlobal.State.getActiveSelection()) {
                 searchQuery += '&selection=' + WebGMEGlobal.State.getActiveSelection().join(',');
@@ -80,37 +80,9 @@ define([
         return searchQuery;
     };
 
-    loadStateFromParsedUrl = function (parsedUrl) {
-        var state = {};
-
-        state[CONSTANTS.STATE_ACTIVE_ASPECT] = parsedUrl.aspectToLoad;
-
-        if (parsedUrl.branchToLoad) {
-            state[CONSTANTS.STATE_ACTIVE_BRANCH_NAME] = parsedUrl.branchToLoad;
-        } else if (parsedUrl.commitToLoad) {
-            state[CONSTANTS.STATE_ACTIVE_COMMIT] = parsedUrl.commitToLoad;
-        }
-
-        //state[CONSTANTS.STATE_ACTIVE_CROSSCUT] = parsedUrl.crosscutToLoad;
-
-        state[CONSTANTS.STATE_ACTIVE_OBJECT] = parsedUrl.objectToLoad === 'root' ?
-            CONSTANTS.PROJECT_ROOT_ID : parsedUrl.objectToLoad;
-
-        state[CONSTANTS.STATE_ACTIVE_PROJECT_NAME] = parsedUrl.projectToLoad;
-        state[CONSTANTS.STATE_ACTIVE_SELECTION] = parsedUrl.activeSelectionToLoad;
-        state[CONSTANTS.STATE_ACTIVE_VISUALIZER] = parsedUrl.visualizerToLoad;
-
-        state[CONSTANTS.STATE_IS_INIT_PHASE] = false;
-
-        //setTimeout(function () {
-        WebGMEGlobal.State.set(state);
-        //}, 1000);
-    };
-
     return {
         parseInitialThingsToDoFromUrl: parseInitialThingsToDoFromUrl,
-        serializeStateToUrl: serializeStateToUrl,
-        loadStateFromParsedUrl: loadStateFromParsedUrl
+        serializeStateToUrl: serializeStateToUrl
     };
 
 });

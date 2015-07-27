@@ -378,7 +378,7 @@ define([
                     logger.debug('Picked "' + branchToOpen + '".');
                 }
 
-                ASSERT(branchToOpen, 'No branch avaliable in project');
+                ASSERT(branchToOpen, 'No branch available in project');
 
                 self.selectBranch(branchToOpen, null, function (err) {
                     if (err) {

@@ -284,7 +284,6 @@ define(['js/logger',
                 logger.debug('Firing onNodeDoubleClicked with nodeId: ' + nodeId);
                 var settings = {};
                 settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
-                settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
                 settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = DEFAULT_VISUALIZER;
                 WebGMEGlobal.State.set(settings);
             };
@@ -353,7 +352,6 @@ define(['js/logger',
                         callback: function (/*key, options*/) {
                             var settings = {};
                             settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
-                            settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
                             settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = CROSSCUT_VISUALIZER;
                             WebGMEGlobal.State.set(settings);
                         },
@@ -367,7 +365,6 @@ define(['js/logger',
                         callback: function (/*key, options*/) {
                             var settings = {};
                             settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
-                            settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
                             settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = SET_VISUALIZER;
                             WebGMEGlobal.State.set(settings);
                         },
