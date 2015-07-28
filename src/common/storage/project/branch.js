@@ -13,27 +13,26 @@ define(['common/storage/constants'], function (CONSTANTS) {
             originHash = '',
             localHash = '',
             commitQueue = [],
-            updateQueue = [];
+            updateQueue = [],
+            status = null;
 
         logger.debug('ctor');
         this.name = name;
         this.isOpen = true;
 
-        this.updateHandler = null;
-        this.commitHandler = null;
-
-        this.localUpdateHandler = null;
+        this.branchStatusHandlers = [];
+        this.hashUpdateHandlers = [];
 
         this.cleanUp = function () {
             self.isOpen = false;
-            self.updateHandler = null;
-            self.commitHandler = null;
-            self.localUpdateHandler = null;
+            this.branchStatusHandlers = [];
+            this.hashUpdateHandlers = [];
 
             commitQueue = [];
             updateQueue = [];
         };
 
+        // Hash related functions
         this.getLocalHash = function () {
             return localHash;
         };
@@ -54,6 +53,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             }
         };
 
+        // Queue related functions
         this.queueCommit = function (commitData) {
             commitQueue.push(commitData);
             logger.debug('Adding new commit to queue', commitQueue.length);
@@ -142,6 +142,68 @@ define(['common/storage/constants'], function (CONSTANTS) {
             }
 
             return updateData;
+        };
+
+        // Event related functions
+        this.addBranchStatusHandler = function (fn) {
+            this.branchStatusHandlers.push(fn);
+        };
+
+        this.removeBranchStatusHandler = function (fn) {
+            var i;
+
+            for (i = 0; i < this.branchStatusHandlers.length; i += 1) {
+                if (this.branchStatusHandlers[i] === fn) {
+                    this.branchStatusHandlers.splice(i, 1);
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        this.dispatchBranchStatus = function (newStatus) {
+            var i;
+            logger.debug('dispatchBranchStatus: old, new', status, newStatus);
+            for (i = 0; i < this.branchStatusHandlers.length; i += 1) {
+                this.branchStatusHandlers[i](newStatus, commitQueue, updateQueue);
+            }
+        };
+
+        this.addHashUpdateHandler = function (fn) {
+            this.hashUpdateHandlers.push(fn);
+        };
+
+        this.removeHashUpdateHandler = function (fn) {
+            var i;
+
+            for (i = 0; i < this.hashUpdateHandlers.length; i += 1) {
+                if (this.hashUpdateHandlers[i] === fn) {
+                    this.hashUpdateHandlers.splice(i, 1);
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        this.dispatchHashUpdate = function (data, callback) {
+            var i,
+                error = null,
+                counter = this.hashUpdateHandlers.length,
+                allProceed = true,
+                counterCallback = function (err, proceed) {
+                    error = error || err; // Use the latest error
+                    allProceed = allProceed && proceed === true;
+                    counter -= 1;
+                    if (counter === 0) {
+                        callback(error, allProceed);
+                    }
+                };
+
+            for (i = 0; i < this.hashUpdateHandlers.length; i += 1) {
+                this.hashUpdateHandlers[i](data, counterCallback);
+            }
         };
     }
 

@@ -44,7 +44,22 @@ define([
 
         // Functions defined in ProjectInterface
         this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
-            return storage.makeCommit(self.projectId, branchName, parents, rootHash, coreObjects, msg, callback);
+            var commitObj;
+            if (branchName && !this.branches[branchName]) {
+                commitObj = storage.makeCommit(self.projectId, null, parents, rootHash, coreObjects, msg,
+                    function (err) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+                        self.setBranchHash(branchName, commitObj._id, parents[0], callback);
+                    });
+            } else {
+                commitObj = storage.makeCommit(self.projectId, branchName, parents, rootHash, coreObjects, msg,
+                    callback);
+            }
+
+            return commitObj;
         };
 
         this.setBranchHash = function (branchName, newHash, oldHash, callback) {

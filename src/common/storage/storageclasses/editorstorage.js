@@ -314,6 +314,8 @@ define([
                 branch = project.getBranch(branchName, true);
                 branch.updateHashes(commitData.commitObject[CONSTANTS.MONGO_ID], null);
                 branch.queueCommit(commitData);
+                // TODO: emmit ROOT_HASH_UPDATED [local]
+                // TODO: emmit BRANCH_STATUS_CHANGED
                 if (branch.getCommitQueue().length === 1) {
                     self._pushNextQueuedCommit(projectId, branchName, callback);
                 }
@@ -350,6 +352,7 @@ define([
                 }
 
                 if (branch.isOpen) {
+                    // TODO: Emmit BRANCH_STATUS_CHANGED
                     branch.commitHandler(branch.getCommitQueue(), result, function (push) {
                         if (push) {
                             branch.getFirstCommit(true); // Remove the commit from the queue.
@@ -391,22 +394,38 @@ define([
             logger.debug('About to update, updateQueue', {metadata: branch.getUpdateQueue()});
             if (branch.getUpdateQueue().length === 0) {
                 logger.debug('No queued updates, returns');
+                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
                 return;
             }
 
             updateData = branch.getFirstUpdate();
+
             if (branch.isOpen) {
-                branch.localUpdateHandler(branch.getUpdateQueue(), updateData, function (aborted) {
+                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.PULLING);
+                branch.dispatchHashUpdate(updateData, function (err, proceed) {
                     var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
-                    if (aborted === false) {
+                    if (err) {
+                        logger.error('Loading of update commit failed with error', err, {metadata: updateData});
+                    } else if (proceed === true) {
                         logger.debug('New commit was successfully loaded, updating localHash.');
                         branch.updateHashes(originHash, null);
                         branch.getFirstUpdate(true);
                         self._pullNextQueuedCommit(projectId, branchName);
                     } else {
-                        logger.warn('Loading of update commit was aborted or failed.', {metadat: updateData});
+                        logger.warn('Loading of update commit was aborted', {metadata: updateData});
                     }
                 });
+                //branch.localUpdateHandler(branch.getUpdateQueue(), updateData, function (aborted) {
+                //    var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
+                //    if (aborted === false) {
+                //        logger.debug('New commit was successfully loaded, updating localHash.');
+                //        branch.updateHashes(originHash, null);
+                //        branch.getFirstUpdate(true);
+                //        self._pullNextQueuedCommit(projectId, branchName);
+                //    } else {
+                //        logger.warn('Loading of update commit was aborted or failed.', {metadat: updateData});
+                //    }
+                //});
             } else {
                 logger.error('_pullNextQueuedCommit returned from server but the branch was closed.',
                     projectId, branchName);
