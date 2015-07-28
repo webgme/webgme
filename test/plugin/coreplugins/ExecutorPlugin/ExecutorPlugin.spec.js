@@ -12,7 +12,6 @@ describe('ExecutorPlugin', function () {
         fs = testFixture.fs,
         rimraf = testFixture.rimraf,
         childProcess = testFixture.childProcess,
-        should = testFixture.should,
         expect = testFixture.expect,
         logger = testFixture.logger.fork('ExecutorPlugin.spec'),
         ExecutorClient = testFixture.ExecutorClient,
@@ -24,6 +23,9 @@ describe('ExecutorPlugin', function () {
 
         projectName = 'ExecutorPluginTest',
         projects = [projectName],
+
+        os = require('os'),
+        platform = os.platform(),
 
         gmeAuth,
         safeStorage,
@@ -134,7 +136,7 @@ describe('ExecutorPlugin', function () {
 
         before(function (done) {
             var gmeConfig = testFixture.getGmeConfig();
-            this.timeout(5000);
+            this.timeout(15000);
             gmeConfig.executor.enable = true;
             gmeConfig.executor.nonce = null;
             gmeConfig.server.https.enable = false;
@@ -167,15 +169,17 @@ describe('ExecutorPlugin', function () {
         });
 
         it('should run plugin', function (done) {
+            var configFileName = './test/plugin/coreplugins/ExecutorPlugin/config.' + platform + '.json';
+
             this.timeout(10000);
 
             process.exit = function (code) {
-                console.log('Called ' + code);
                 expect(code).to.equal(0);
                 done();
             };
 
-            runPlugin.main(['node', filename, '-p', projectName, '-n', 'ExecutorPlugin'],
+
+            runPlugin.main(['node', filename, '-p', projectName, '-n', 'ExecutorPlugin', '-j', configFileName],
                 function (err, result) {
                     expect(err).to.equal(null);
                     expect(result.success).to.equal(true);
