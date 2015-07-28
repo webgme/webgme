@@ -172,7 +172,7 @@ define([
         function saveRoot(msg, callback) {
             var persisted,
                 numberOfPersistedObjects,
-                beforeLoading = true,
+                //beforeLoading = true,
                 commitQueue,
                 newCommitObject;
             logger.debug('saveRoot msg', msg);
@@ -205,17 +205,17 @@ define([
                     // Which also was the case before:
                     // https://github.com/webgme/webgme/commit/48547c33f638aedb60866772ca5638f9e447fa24
 
-                    loading(persisted.rootHash, function (err) {
-                        if (err) {
-                            logger.error('Saveroot - loading failed', err);
-                        }
-                        // TODO: Are local updates really guaranteed to be synchronous?
-                        if (beforeLoading === false) {
-                            logger.error('SaveRoot - was not synchronous!');
-                        }
-                    });
+                    //loading(persisted.rootHash, function (err) {
+                    //    if (err) {
+                    //        logger.error('Saveroot - loading failed', err);
+                    //    }
+                    //    // TODO: Are local updates really guaranteed to be synchronous?
+                    //    if (beforeLoading === false) {
+                    //        logger.error('SaveRoot - was not synchronous!');
+                    //    }
+                    //});
 
-                    beforeLoading = false;
+                    //beforeLoading = false;
                     newCommitObject = storage.makeCommit(
                         state.project.projectId,
                         state.branchName,
@@ -604,7 +604,7 @@ define([
             };
         }
 
-        function getUpdateHandler() {
+        function getUpdateHandlerOld() {
             return function (updateQueue, eventData, callback) {
                 var commitHash = eventData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
                 logger.debug('updateHandler invoked. project, branch', eventData.projectId, eventData.branchName);
@@ -637,6 +637,44 @@ define([
                             changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
                         }
                         callback(false); // aborted: false
+                    }
+                });
+            };
+        }
+
+        function getHashUpdateHandler() {
+            return function (data, commitQueue, updateQueue, callback) {
+                var commitData = data.commitData,
+                    clearUndoRedo = data.local !== true,
+                    commitHash = commitData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
+                logger.debug('hashUpdateHandler invoked. project, branch', commitData.projectId, commitData.branchName);
+
+                if (state.inTransaction) {
+                    logger.warn('Is in transaction, will not load in changes');
+                    callback(null, false); // proceed: false
+                    return;
+                }
+
+                //undo-redo
+                addModification(commitData.commitObject, clearUndoRedo);
+                self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
+                self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
+
+                logger.debug('loading commitHash, local?', commitHash, data.local);
+                loading(commitData.commitObject.root, function (err, aborted) {
+                    if (err) {
+                        logger.error('hashUpdateHandler invoked loading and it returned error',
+                            commitData.commitObject.root, err);
+                        logState('error', 'hashUpdateHandler');
+                        callback(err, false); // proceed: false
+                    } else if (aborted === true) {
+                        logState('warn', 'hashUpdateHandler');
+                        callback(null, false); // proceed: false
+                    } else {
+                        addCommit(commitHash);
+                        logger.debug('loading complete for incoming rootHash', commitData.commitObject.root);
+                        logState('debug', 'hashUpdateHandler');
+                        callback(null, true); // proceed: true
                     }
                 });
             };
@@ -723,6 +761,7 @@ define([
         function addModification(commitObject, clear) {
             var newItem;
             if (clear) {
+                logger.debug('foreign modification clearing undo-redo chain');
                 state.undoRedoChain = {
                     commit: commitObject[CONSTANTS.STORAGE.MONGO_ID],
                     root: commitObject.root,

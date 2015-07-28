@@ -34,14 +34,6 @@ define([
             return this.branches[branchName];
         };
 
-        this.removeBranch = function (branchName) {
-            var existed = this.branches.hasOwnProperty(branchName);
-            if (existed) {
-                delete this.branches[branchName];
-            }
-            return existed;
-        };
-
         // Functions defined in ProjectInterface
         this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
             var commitObj;

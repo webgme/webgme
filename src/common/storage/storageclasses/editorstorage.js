@@ -19,9 +19,10 @@ define([
     'common/storage/storageclasses/objectloaders',
     'common/storage/constants',
     'common/storage/project/project',
+    'common/storage/project/branch',
     'common/util/assert',
     'common/util/key'
-], function (StorageObjectLoaders, CONSTANTS, Project, ASSERT, GENKEY) {
+], function (StorageObjectLoaders, CONSTANTS, Project, Branch, ASSERT, GENKEY) {
     'use strict';
 
     function EditorStorage(webSocket, mainLogger, gmeConfig) {
@@ -175,33 +176,49 @@ define([
 
         };
 
-        this.openBranch = function (projectId, branchName, updateHandler, commitHandler, callback) {
-            ASSERT(projects.hasOwnProperty(projectId), 'Project not opened: ' + projectId);
+        this.openBranch = function (projectId, branchName, hashUpdateHandler, branchStatusHandler, callback) {
             var self = this,
                 project = projects[projectId],
                 data = {
                     projectId: projectId,
                     branchName: branchName
-                };
+                },
+                branch;
+
+            if (!project) {
+                callback('Cannot open branch, ' + branchName + ', project ' + projectId + ' is not opened.');
+                return;
+            }
+
+            if (project.branches[branchName]) {
+                callback('Branch is already open ' + branchName + ', project: ' + projectId);
+                return;
+            }
 
             webSocket.openBranch(data, function (err, latestCommit) {
+                var i,
+                    branchHash;
                 if (err) {
                     callback(err);
                     return;
                 }
-                var i,
-                    branchHash = latestCommit.commitObject[CONSTANTS.MONGO_ID],
-                    branch = project.getBranch(branchName, false);
 
+                branch = new Branch(branchName, project.logger);
+                project.branches[branchName] = branch;
+
+                // Update state of branch
+                branch.latestCommitData = latestCommit;
+                branchHash = latestCommit.commitObject[CONSTANTS.MONGO_ID];
                 branch.updateHashes(branchHash, branchHash);
 
-                branch.commitHandler = commitHandler;
-                branch.localUpdateHandler = updateHandler;
+                // Add handlers to branch and set the remote update handler for the web-socket.
+                branch.addHashUpdateHandler(hashUpdateHandler);
+                branch.addBranchStatusHandler(branchStatusHandler);
 
-                branch.updateHandler = function (_ws, updateData) {
+                branch._remoteUpdateHandler = function (_ws, updateData) {
                     var j,
                         originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
-                    logger.debug('updateHandler invoked for project, branch', projectId, branchName);
+                    logger.debug('_remoteUpdateHandler invoked for project, branch', projectId, branchName);
                     for (j = 0; j < updateData.coreObjects.length; j += 1) {
                         project.insertObject(updateData.coreObjects[j]);
                     }
@@ -211,8 +228,7 @@ define([
 
                     if (branch.getCommitQueue().length === 0) {
                         if (branch.getUpdateQueue().length === 1) {
-                            // The localUpdateHandler will be invoked here
-                            self._pullNextQueuedCommit(projectId, branchName);
+                            self._pullNextQueuedCommit(projectId, branchName); // hashUpdateHandlers
                         }
                     } else {
                         logger.debug('commitQueue is not empty, only updating originHash.');
@@ -220,7 +236,7 @@ define([
                 };
 
                 webSocket.addEventListener(webSocket.getBranchUpdateEventName(projectId, branchName),
-                    branch.updateHandler);
+                    branch._remoteUpdateHandler);
 
                 // Insert the objects from the latest commit into the project cache.
                 for (i = 0; i < latestCommit.coreObjects.length; i += 1) {
@@ -232,37 +248,55 @@ define([
         };
 
         this.closeBranch = function (projectId, branchName, callback) {
-            ASSERT(projects.hasOwnProperty(projectId), 'Project not opened: ' + projectId);
+            var project = projects[projectId],
+                branch;
+
             logger.debug('closeBranch', projectId, branchName);
 
-            var project = projects[projectId],
-                branch = project.branches[branchName];
+            if (!project) {
+                callback('Cannot close branch, ' + branchName + ', project ' + projectId + ' is not opened.');
+                return;
+            }
 
-            if (branch) {
-                // This will prevent memory leaks and expose if a commit is being
-                // processed at the server this time (see last error in _pushNextQueuedCommit).
-                branch.cleanUp();
+            branch = project.branches[branchName];
 
-                // Stop listening to events from the sever
-                webSocket.removeEventListener(webSocket.getBranchUpdateEventName(projectId, branchName),
-                    branch.updateHandler);
-            } else {
-                logger.warn('Branch is not open', projectId, branchName);
+            if (!branch) {
+                logger.warn('Project does not have given branch.', projectId, branchName);
                 callback(null);
                 return;
             }
 
-            project.removeBranch(branchName);
+            // This will prevent memory leaks and expose if a commit is being
+            // processed at the server this time (see last error in _pushNextQueuedCommit).
+            branch.cleanUp();
+
+            // Stop listening to events from the server
+            webSocket.removeEventListener(webSocket.getBranchUpdateEventName(projectId, branchName),
+                branch._remoteUpdateHandler);
+
+            delete project.branches[branchName];
             webSocket.closeBranch({projectId: projectId, branchName: branchName}, callback);
         };
 
         this.forkBranch = function (projectId, branchName, forkName, commitHash, callback) {
-            ASSERT(projects.hasOwnProperty(projectId), 'Project not opened: ' + projectId);
-            this.logger.debug('forkBranch', projectId, branchName, forkName, commitHash);
             var self = this,
                 project = projects[projectId],
-                branch = project.getBranch(branchName, true),
+                branch,
                 forkData;
+
+            this.logger.debug('forkBranch', projectId, branchName, forkName, commitHash);
+
+            if (!project) {
+                callback('Cannot fork branch, ' + branchName + ', project ' + projectId + ' is not opened.');
+                return;
+            }
+
+            branch = project.branches[branchName];
+
+            if (!branch) {
+                callback('Cannot fork branch, branch is not open ' + branchName + ', project: ' + projectId);
+                return;
+            }
 
             forkData = branch.getCommitsForNewFork(commitHash, forkName); // commitHash = null defaults to latest commit
             self.logger.debug('forkBranch - forkData', forkData);
@@ -300,27 +334,39 @@ define([
         };
 
         this.makeCommit = function (projectId, branchName, parents, rootHash, coreObjects, msg, callback) {
-            ASSERT(projects.hasOwnProperty(projectId), 'Project not opened: ' + projectId);
             var project = projects[projectId],
                 branch,
                 commitData = {
                     projectId: projectId
                 };
 
+            if (!project) {
+                callback('Cannot close branch, ' + branchName + ', project ' + projectId + ' is not opened.');
+                return;
+            }
+
             commitData.commitObject = self._getCommitObject(projectId, parents, rootHash, msg);
             commitData.coreObjects = coreObjects;
+
             if (typeof branchName === 'string') {
                 commitData.branchName = branchName;
-                branch = project.getBranch(branchName, true);
+                branch = project.branches[branchName];
+            }
+
+            if (branch) {
                 branch.updateHashes(commitData.commitObject[CONSTANTS.MONGO_ID], null);
                 branch.queueCommit(commitData);
+                branch.dispatchHashUpdate({commitData: commitData, local: false}, function (err, proceed) {
+
+                    if (branch.getCommitQueue().length === 1) {
+                        self._pushNextQueuedCommit(projectId, branchName, callback);
+                    }
+                });
                 // TODO: emmit ROOT_HASH_UPDATED [local]
                 // TODO: emmit BRANCH_STATUS_CHANGED
-                if (branch.getCommitQueue().length === 1) {
-                    self._pushNextQueuedCommit(projectId, branchName, callback);
-                }
+
             } else {
-                ASSERT(typeof callback === 'function', 'Making commit without updating branch requires a callback.');
+                ASSERT(typeof callback === 'function', 'Making commit without a branch requires a callback.');
                 webSocket.makeCommit(commitData, callback);
             }
 
@@ -402,7 +448,7 @@ define([
 
             if (branch.isOpen) {
                 branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.PULLING);
-                branch.dispatchHashUpdate(updateData, function (err, proceed) {
+                branch.dispatchHashUpdate({commitData: updateData, local: false}, function (err, proceed) {
                     var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                     if (err) {
                         logger.error('Loading of update commit failed with error', err, {metadata: updateData});

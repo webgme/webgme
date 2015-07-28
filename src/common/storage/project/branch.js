@@ -23,10 +23,16 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.branchStatusHandlers = [];
         this.hashUpdateHandlers = [];
 
+        this._remoteUpdateHandler = null;
+        this.latestCommitData = null;
+
         this.cleanUp = function () {
             self.isOpen = false;
-            this.branchStatusHandlers = [];
-            this.hashUpdateHandlers = [];
+            self.branchStatusHandlers = [];
+            self.hashUpdateHandlers = [];
+
+            self._remoteUpdateHandler = null;
+            self.latestCommitData = null;
 
             commitQueue = [];
             updateQueue = [];
@@ -146,15 +152,15 @@ define(['common/storage/constants'], function (CONSTANTS) {
 
         // Event related functions
         this.addBranchStatusHandler = function (fn) {
-            this.branchStatusHandlers.push(fn);
+            self.branchStatusHandlers.push(fn);
         };
 
         this.removeBranchStatusHandler = function (fn) {
             var i;
 
-            for (i = 0; i < this.branchStatusHandlers.length; i += 1) {
-                if (this.branchStatusHandlers[i] === fn) {
-                    this.branchStatusHandlers.splice(i, 1);
+            for (i = 0; i < self.branchStatusHandlers.length; i += 1) {
+                if (self.branchStatusHandlers[i] === fn) {
+                    self.branchStatusHandlers.splice(i, 1);
                     return true;
                 }
             }
@@ -165,21 +171,21 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.dispatchBranchStatus = function (newStatus) {
             var i;
             logger.debug('dispatchBranchStatus: old, new', status, newStatus);
-            for (i = 0; i < this.branchStatusHandlers.length; i += 1) {
-                this.branchStatusHandlers[i](newStatus, commitQueue, updateQueue);
+            for (i = 0; i < self.branchStatusHandlers.length; i += 1) {
+                self.branchStatusHandlers[i](newStatus, commitQueue, updateQueue);
             }
         };
 
         this.addHashUpdateHandler = function (fn) {
-            this.hashUpdateHandlers.push(fn);
+            self.hashUpdateHandlers.push(fn);
         };
 
         this.removeHashUpdateHandler = function (fn) {
             var i;
 
-            for (i = 0; i < this.hashUpdateHandlers.length; i += 1) {
-                if (this.hashUpdateHandlers[i] === fn) {
-                    this.hashUpdateHandlers.splice(i, 1);
+            for (i = 0; i < self.hashUpdateHandlers.length; i += 1) {
+                if (self.hashUpdateHandlers[i] === fn) {
+                    self.hashUpdateHandlers.splice(i, 1);
                     return true;
                 }
             }
@@ -190,7 +196,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.dispatchHashUpdate = function (data, callback) {
             var i,
                 error = null,
-                counter = this.hashUpdateHandlers.length,
+                counter = self.hashUpdateHandlers.length,
                 allProceed = true,
                 counterCallback = function (err, proceed) {
                     error = error || err; // Use the latest error
@@ -201,8 +207,8 @@ define(['common/storage/constants'], function (CONSTANTS) {
                     }
                 };
 
-            for (i = 0; i < this.hashUpdateHandlers.length; i += 1) {
-                this.hashUpdateHandlers[i](data, counterCallback);
+            for (i = 0; i < self.hashUpdateHandlers.length; i += 1) {
+                self.hashUpdateHandlers[i](data, commitQueue, updateQueue, counterCallback);
             }
         };
     }
