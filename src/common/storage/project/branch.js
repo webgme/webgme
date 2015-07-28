@@ -14,11 +14,12 @@ define(['common/storage/constants'], function (CONSTANTS) {
             localHash = '',
             commitQueue = [],
             updateQueue = [],
-            status = null;
+            branchStatus = null;
 
         logger.debug('ctor');
         this.name = name;
         this.isOpen = true;
+        this.inSync = true;
 
         this.branchStatusHandlers = [];
         this.hashUpdateHandlers = [];
@@ -168,11 +169,28 @@ define(['common/storage/constants'], function (CONSTANTS) {
             return false;
         };
 
-        this.dispatchBranchStatus = function (newStatus) {
+        this.dispatchBranchStatus = function (data) {
             var i;
-            logger.debug('dispatchBranchStatus: old, new', status, newStatus);
+
+            if (data.commitStatus) {
+                if (data.status === CONSTANTS.BRANCH_STATUS.SYNC) {
+                    self.inSync = true;
+
+                }
+            } else if (data.branchStatus) {
+                branchStatus = data.branchStatus;
+            } else if (data.committing) {
+                if (self.inSync) {
+                    branchStatus = CONSTANTS.BRANCH_STATUS.AHEAD_SYNC;
+                } else {
+                    branchStatus = CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC;
+                }
+            }
+
+            logger.debug('dispatchBranchStatus', branchStatus);
+
             for (i = 0; i < self.branchStatusHandlers.length; i += 1) {
-                self.branchStatusHandlers[i](newStatus, commitQueue, updateQueue);
+                self.branchStatusHandlers[i](branchStatus, commitQueue, updateQueue);
             }
         };
 

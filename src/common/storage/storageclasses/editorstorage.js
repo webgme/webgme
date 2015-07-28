@@ -357,7 +357,11 @@ define([
                 branch.updateHashes(commitData.commitObject[CONSTANTS.MONGO_ID], null);
                 branch.queueCommit(commitData);
                 branch.dispatchHashUpdate({commitData: commitData, local: false}, function (err, proceed) {
-
+                    if (branch.inSync === true) {
+                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
+                    } else {
+                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
+                    }
                     if (branch.getCommitQueue().length === 1) {
                         self._pushNextQueuedCommit(projectId, branchName, callback);
                     }
@@ -374,11 +378,24 @@ define([
         };
 
         this._pushNextQueuedCommit = function (projectId, branchName, callback) {
-            ASSERT(projects.hasOwnProperty(projectId), 'Project not opened: ' + projectId);
             var project = projects[projectId],
-                branch = project.getBranch(branchName, true),
+                branch,
                 commitData;
+
             logger.debug('_pushNextQueuedCommit', branch.getCommitQueue());
+
+            if (!project) {
+                callback('Project ' + projectId + ' is not opened.');
+                return;
+            }
+
+            branch = project.branches[branchName];
+
+            if (!branch) {
+                callback('Branch ' + branchName + ', in project ' + projectId + ', not opened.');
+                return;
+            }
+
             if (branch.getCommitQueue().length === 0) {
                 return;
             }
@@ -398,14 +415,30 @@ define([
                 }
 
                 if (branch.isOpen) {
-                    // TODO: Emmit BRANCH_STATUS_CHANGED
-                    branch.commitHandler(branch.getCommitQueue(), result, function (push) {
-                        if (push) {
-                            branch.getFirstCommit(true); // Remove the commit from the queue.
-                            branch.updateHashes(null, commitData.commitObject[CONSTANTS.MONGO_ID]);
-                            self._pushNextQueuedCommit(projectId, branchName);
-                        }
-                    });
+                    //if (result.status === CONSTANTS.STORAGE.SYNCED) {
+                    //    logger.debug('You are in synch.');
+                    //    logState('info', 'commitHandler');
+                    //    if (commitQueue.length === 1) {
+                    //        logger.debug('No commits queued.');
+                    //        changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
+                    //    } else {
+                    //        logger.debug('Will proceed with next queued commit...');
+                    //        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC, commitQueue);
+                    //    }
+                    //
+                    //    branch.getFirstCommit(true); // Remove the commit from the queue.
+                    //    branch.updateHashes(null, commitData.commitObject[CONSTANTS.MONGO_ID]);
+                    //    self._pushNextQueuedCommit(projectId, branchName);
+                    //} else if (result.status === CONSTANTS.STORAGE.FORKED) {
+                    //    logger.debug('You got forked');
+                    //    logState('info', 'commitHandler');
+                    //    changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC, commitQueue);
+                    //    callback(false); // push:false
+                    //} else {
+                    //    callback(false);
+                    //    changeBranchStatus(null);
+                    //    throw new Error('Unexpected result', result);
+                    //}
                 } else {
                     logger.error('_pushNextQueuedCommit returned from server but the branch was closed, ' +
                         'the branch has probably been closed while waiting for the response.', projectId, branchName);
