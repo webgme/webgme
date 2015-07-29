@@ -363,24 +363,40 @@ define([
 
             if (branch) {
                 commitData.callback = callback;
-                branch.updateHashes(commitData.commitObject[CONSTANTS.MONGO_ID], null);
-                branch.queueCommit(commitData);
-                branch.dispatchHashUpdate({commitData: commitData, local: false}, function (err, proceed) {
-                    if (err) {
-                        callback('Commit failed being loaded in users: ' + err);
-                    } else if (proceed === true) {
-                        if (branch.inSync === false) {
-                            branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC});
+                if (parents[0] === branch.getLocalHash()) {
+                    branch.queueCommit(commitData);
+                    branch.dispatchHashUpdate({commitData: commitData, local: true}, function (err, proceed) {
+                        var localHash = commitData.commitObject[CONSTANTS.MONGO_ID];
+                        if (err) {
+                            callback('Commit failed being loaded in users: ' + err);
+                        } else if (proceed === true) {
+                            branch.updateHashes(localHash, null);
+                            if (branch.inSync === false) {
+                                branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC});
+                            }
+                            if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
+                                self._pushNextQueuedCommit(projectId, branchName);
+                            }
+                        } else {
+                            callback('Commit halted when loaded in users: ' + err);
                         }
-                        if (branch.getCommitQueue().length === 1) {
-                            self._pushNextQueuedCommit(projectId, branchName);
+                    });
+                } else {
+                    // The current user is behind the local branch, e.g. plugin trying to save after client changes.
+                    logger.warn('Incoming commit was behind the local branch, inserting to db but will be FORKED.');
+                    delete commitData.branchName;
+                    delete commitData.callback;
+                    // Send the commitData to the server w/o updating the branch
+                    webSocket.makeCommit(commitData, function (err, result) {
+                        if (err) {
+                            callback(err);
+                            return;
                         }
-                    } else {
-                        callback('Commit halted when loaded in users: ' + err);
-                    }
-                });
+                        result.status = CONSTANTS.FORKED;
+                        callback(null, result);
+                    });
+                }
             } else {
-                ASSERT(typeof callback === 'function', 'Making commit without a branch requires a callback.');
                 webSocket.makeCommit(commitData, callback);
             }
 
