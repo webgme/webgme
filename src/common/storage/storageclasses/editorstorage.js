@@ -357,18 +357,19 @@ define([
                 branch.updateHashes(commitData.commitObject[CONSTANTS.MONGO_ID], null);
                 branch.queueCommit(commitData);
                 branch.dispatchHashUpdate({commitData: commitData, local: false}, function (err, proceed) {
-                    if (branch.inSync === true) {
-                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
+                    if (err) {
+                        callback('Commit failed being loaded in users: ' + err);
+                    } else if (proceed === true) {
+                        if (branch.inSync === false) {
+                            branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC});
+                        }
+                        if (branch.getCommitQueue().length === 1) {
+                            self._pushNextQueuedCommit(projectId, branchName, callback);
+                        }
                     } else {
-                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
-                    }
-                    if (branch.getCommitQueue().length === 1) {
-                        self._pushNextQueuedCommit(projectId, branchName, callback);
+                        callback('Commit halted when loaded in users: ' + err);
                     }
                 });
-                // TODO: emmit ROOT_HASH_UPDATED [local]
-                // TODO: emmit BRANCH_STATUS_CHANGED
-
             } else {
                 ASSERT(typeof callback === 'function', 'Making commit without a branch requires a callback.');
                 webSocket.makeCommit(commitData, callback);
@@ -397,9 +398,11 @@ define([
             }
 
             if (branch.getCommitQueue().length === 0) {
+                branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.SYNC});
                 return;
             }
 
+            branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_SYNC});
             commitData = branch.getFirstCommit(false);
             webSocket.makeCommit(commitData, function (err, result) {
                 if (err) {
@@ -415,52 +418,23 @@ define([
                 }
 
                 if (branch.isOpen) {
-                    //if (result.status === CONSTANTS.STORAGE.SYNCED) {
-                    //    logger.debug('You are in synch.');
-                    //    logState('info', 'commitHandler');
-                    //    if (commitQueue.length === 1) {
-                    //        logger.debug('No commits queued.');
-                    //        changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
-                    //    } else {
-                    //        logger.debug('Will proceed with next queued commit...');
-                    //        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC, commitQueue);
-                    //    }
-                    //
-                    //    branch.getFirstCommit(true); // Remove the commit from the queue.
-                    //    branch.updateHashes(null, commitData.commitObject[CONSTANTS.MONGO_ID]);
-                    //    self._pushNextQueuedCommit(projectId, branchName);
-                    //} else if (result.status === CONSTANTS.STORAGE.FORKED) {
-                    //    logger.debug('You got forked');
-                    //    logState('info', 'commitHandler');
-                    //    changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC, commitQueue);
-                    //    callback(false); // push:false
-                    //} else {
-                    //    callback(false);
-                    //    changeBranchStatus(null);
-                    //    throw new Error('Unexpected result', result);
-                    //}
+                    if (result.status === CONSTANTS.STORAGE.SYNCED) {
+                        branch.inSync = true;
+                        branch.updateHashes(null, commitData.commitObject[CONSTANTS.MONGO_ID]);
+                        branch.getFirstCommit(true);
+                        self._pushNextQueuedCommit(projectId, branchName);
+                    } else if (result.status === CONSTANTS.STORAGE.FORKED) {
+                        branch.inSync = false;
+                        branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC});
+                    } else {
+                        logger.error('Unsupported commit status', result.status);
+                        callback('Unsupported commit status: ' + result.status);
+                    }
                 } else {
                     logger.error('_pushNextQueuedCommit returned from server but the branch was closed, ' +
                         'the branch has probably been closed while waiting for the response.', projectId, branchName);
                 }
             });
-        };
-
-        this._getCommitObject = function (projectId, parents, rootHash, msg) {
-            msg = msg || 'n/a';
-            var commitObj = {
-                    root: rootHash,
-                    parents: parents,
-                    updater: [self.userId],
-                    time: (new Date()).getTime(),
-                    message: msg,
-                    type: 'commit'
-                },
-                commitHash = '#' + GENKEY(commitObj, gmeConfig);
-
-            commitObj[CONSTANTS.MONGO_ID] = commitHash;
-
-            return commitObj;
         };
 
         this._pullNextQueuedCommit = function (projectId, branchName) {
@@ -494,21 +468,27 @@ define([
                         logger.warn('Loading of update commit was aborted', {metadata: updateData});
                     }
                 });
-                //branch.localUpdateHandler(branch.getUpdateQueue(), updateData, function (aborted) {
-                //    var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
-                //    if (aborted === false) {
-                //        logger.debug('New commit was successfully loaded, updating localHash.');
-                //        branch.updateHashes(originHash, null);
-                //        branch.getFirstUpdate(true);
-                //        self._pullNextQueuedCommit(projectId, branchName);
-                //    } else {
-                //        logger.warn('Loading of update commit was aborted or failed.', {metadat: updateData});
-                //    }
-                //});
             } else {
                 logger.error('_pullNextQueuedCommit returned from server but the branch was closed.',
                     projectId, branchName);
             }
+        };
+
+        this._getCommitObject = function (projectId, parents, rootHash, msg) {
+            msg = msg || 'n/a';
+            var commitObj = {
+                    root: rootHash,
+                    parents: parents,
+                    updater: [self.userId],
+                    time: (new Date()).getTime(),
+                    message: msg,
+                    type: 'commit'
+                },
+                commitHash = '#' + GENKEY(commitObj, gmeConfig);
+
+            commitObj[CONSTANTS.MONGO_ID] = commitHash;
+
+            return commitObj;
         };
 
         this._rejoinBranchRooms = function () {

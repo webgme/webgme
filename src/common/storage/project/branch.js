@@ -172,23 +172,8 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.dispatchBranchStatus = function (data) {
             var i;
 
-            if (data.commitStatus) {
-                if (data.status === CONSTANTS.BRANCH_STATUS.SYNC) {
-                    self.inSync = true;
-
-                }
-            } else if (data.branchStatus) {
-                branchStatus = data.branchStatus;
-            } else if (data.committing) {
-                if (self.inSync) {
-                    branchStatus = CONSTANTS.BRANCH_STATUS.AHEAD_SYNC;
-                } else {
-                    branchStatus = CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC;
-                }
-            }
-
-            logger.debug('dispatchBranchStatus', branchStatus);
-
+            logger.debug('dispatchBranchStatus old, new', branchStatus, data.branchStatus);
+            branchStatus = data.branchStatus;
             for (i = 0; i < self.branchStatusHandlers.length; i += 1) {
                 self.branchStatusHandlers[i](branchStatus, commitQueue, updateQueue);
             }
