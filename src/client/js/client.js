@@ -44,8 +44,7 @@ define([
                 project: null,
                 core: null,
                 branchName: null,
-                branchStatus: null, //CONSTANTS.BRANCH_STATUS. SYNCED/FORKED/AHEAD/PULLING
-                inSync: true,
+                branchStatus: null, //CONSTANTS.BRANCH_STATUS. SYNC/AHEAD_SYNC/AHEAD_FORKED/PULLING or null
                 readOnlyProject: false,
                 viewer: false, // This means that a specific commit is selected w/o regards to any branch.
 
@@ -173,7 +172,7 @@ define([
             var persisted,
                 numberOfPersistedObjects,
                 //beforeLoading = true,
-                commitQueue,
+                //commitQueue,
                 newCommitObject;
             logger.debug('saveRoot msg', msg);
 
@@ -187,6 +186,7 @@ define([
                 }
                 if (!state.inTransaction) {
                     ASSERT(state.project && state.core && state.branchName);
+
                     logger.debug('is NOT in transaction - will persist.');
                     persisted = state.core.persist(state.nodes[ROOT_PATH].node);
                     logger.debug('persisted', persisted);
@@ -200,22 +200,7 @@ define([
                         logger.warn('Lots of persisted objects', numberOfPersistedObjects);
                     }
 
-                    // Calling event-listeners (users)
-                    // N.B. it is no longer waiting for the setBranchHash to return from server.
-                    // Which also was the case before:
-                    // https://github.com/webgme/webgme/commit/48547c33f638aedb60866772ca5638f9e447fa24
-
-                    //loading(persisted.rootHash, function (err) {
-                    //    if (err) {
-                    //        logger.error('Saveroot - loading failed', err);
-                    //    }
-                    //    // TODO: Are local updates really guaranteed to be synchronous?
-                    //    if (beforeLoading === false) {
-                    //        logger.error('SaveRoot - was not synchronous!');
-                    //    }
-                    //});
-
-                    //beforeLoading = false;
+                    // Make the commit on the storage (will emit hashUpdated)
                     newCommitObject = storage.makeCommit(
                         state.project.projectId,
                         state.branchName,
@@ -225,13 +210,6 @@ define([
                         state.msg,
                         callback
                     );
-                    commitQueue = state.project.getBranch(state.branchName, true).getCommitQueue();
-                    if (state.inSync === true) {
-                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC, commitQueue);
-                    } else {
-                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC, commitQueue);
-                    }
-
 
                     addCommit(newCommitObject[CONSTANTS.STORAGE.MONGO_ID]);
                     //undo-redo
@@ -423,7 +401,7 @@ define([
                 }
                 state.core = null;
                 state.branchName = null;
-                changeBranchStatus(null);
+                //self.dispatchEvent(null);
                 state.patterns = {};
                 //state.gHash = 0;
                 state.nodes = {};
@@ -445,10 +423,10 @@ define([
         /**
          *
          * @param {string} branchName - name of branch to open.
-         * @param {function} [commitHandler=getDefaultCommitHandler()] - Handles returned statuses after commits.
+         * @param {function} [branchStatusHandler=getDefaultCommitHandler()] - Handles returned statuses after commits.
          * @param callback
          */
-        this.selectBranch = function (branchName, commitHandler, callback) {
+        this.selectBranch = function (branchName, branchStatusHandler, callback) {
             logger.debug('selectBranch', branchName);
             if (isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
@@ -467,8 +445,8 @@ define([
                     callback(err);
                     return;
                 }
-                commitHandler = commitHandler || getDefaultCommitHandler();
-                storage.openBranch(state.project.projectId, branchName, getUpdateHandler(), commitHandler,
+
+                storage.openBranch(state.project.projectId, branchName, getHashUpdateHandler(), getBranchStatusHandler(),
                     function (err, latestCommit) {
                         var commitObject;
                         if (err) {
@@ -497,8 +475,8 @@ define([
                             } else {
                                 addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
                             }
-                            changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
-                            // TODO: Make sure this is always the case.
+                            // FIXME: Emit this from the storage instead
+                            self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {status: CONSTANTS.BRANCH_STATUS.SYNC});
                             callback(err);
                         });
 
@@ -535,7 +513,10 @@ define([
                 }
 
                 state.viewer = true;
-                changeBranchStatus(null);
+
+                state.branchStatus = null;
+                self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {status: null});
+
                 state.project.loadObject(commitHash, function (err, commitObj) {
                     if (!err && commitObj) {
                         logState('info', 'selectCommit loaded commit');
@@ -552,7 +533,8 @@ define([
                                 addCommit(commitHash);
                                 logger.debug('loading complete for selectCommit rootHash', commitObj.root);
                                 logState('info', 'selectCommit loading');
-                                changeBranchStatus(null);
+                                state.branchStatus = null;
+                                self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {status: null});
                                 callback(null);
                             }
                         });
@@ -575,70 +557,16 @@ define([
             }
         };
 
-        function getDefaultCommitHandler() {
-            return function (commitQueue, result, callback) {
-                logger.debug('default commitHandler invoked, result: ', result);
-                logger.debug('commitQueue', commitQueue);
-
-                if (result.status === CONSTANTS.STORAGE.SYNCED) {
-                    logger.debug('You are in synch.');
-                    logState('info', 'commitHandler');
-                    if (commitQueue.length === 1) {
-                        logger.debug('No commits queued.');
-                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
-                    } else {
-                        logger.debug('Will proceed with next queued commit...');
-                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC, commitQueue);
-                    }
-                    callback(true); // push:true
-                } else if (result.status === CONSTANTS.STORAGE.FORKED) {
-                    logger.debug('You got forked');
-                    logState('info', 'commitHandler');
-                    changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC, commitQueue);
-                    callback(false); // push:false
-                } else {
-                    callback(false);
-                    changeBranchStatus(null);
-                    throw new Error('Unexpected result', result);
-                }
-            };
-        }
-
-        function getUpdateHandlerOld() {
-            return function (updateQueue, eventData, callback) {
-                var commitHash = eventData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
-                logger.debug('updateHandler invoked. project, branch', eventData.projectId, eventData.branchName);
-                if (state.inTransaction) {
-                    logger.warn('Is in transaction, will not load in changes');
-                    callback(true); // aborted: true
-                    return;
-                }
-                logger.debug('loading commitHash', commitHash);
-                //undo-redo
-                logger.debug('foreign modification clearing undo-redo chain');
-                addModification(eventData.commitObject, true);
-                self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-                self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
-                changeBranchStatus(CONSTANTS.BRANCH_STATUS.PULLING, updateQueue.length);
-                loading(eventData.commitObject.root, function (err, aborted) {
-                    if (err) {
-                        logger.error('updateHandler invoked loading and it returned error',
-                            eventData.commitObject.root, err);
-                        logState('error', 'updateHandler');
-                        callback(true); // aborted: true
-                    } else if (aborted === true) {
-                        logState('warn', 'updateHandler');
-                        callback(true); // aborted: true
-                    } else {
-                        addCommit(commitHash);
-                        logger.debug('loading complete for incoming rootHash', eventData.commitObject.root);
-                        logState('debug', 'updateHandler');
-                        if (updateQueue.length === 1) {
-                            changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
-                        }
-                        callback(false); // aborted: false
-                    }
-                });
+        function getBranchStatusHandler () {
+            return function (branchStatus, commitQueue, updateQueue) {
+                logger.debug('branchStatus changed', branchStatus, commitQueue, updateQueue);
+                logState('info', 'commitHandler');
+                state.branchStatus = branchStatus;
+                self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {
+                    status: branchStatus,
+                    commitQueue: commitQueue,
+                    updateQueue: updateQueue}
+                );
             };
         }
 
@@ -678,17 +606,6 @@ define([
                     }
                 });
             };
-        }
-
-        function changeBranchStatus(branchStatus, details) {
-            logger.debug('changeBranchStatus, prev, new, details', state.branchStatus, branchStatus, details);
-            state.branchStatus = branchStatus;
-            if (branchStatus === CONSTANTS.BRANCH_STATUS.SYNC) {
-                state.inSync = true;
-            } else if (branchStatus === CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC) {
-                state.inSync = false;
-            }
-            self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {status: branchStatus, details: details});
         }
 
         this.forkCurrentBranch = function (newName, commitHash, callback) {

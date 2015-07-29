@@ -352,12 +352,6 @@ define([
                 },
                 commitHash;
 
-            callback = callback || function (err) {
-                    if (err) {
-                        logger.error(err);
-                    }
-                };
-
             if (!project) {
                 callback('Cannot close branch, ' + branchName + ', project ' + projectId + ' is not opened.');
                 return;
@@ -382,7 +376,7 @@ define([
                         } else if (proceed === true) {
                             branch.updateHashes(commitHash, null);
                             if (branch.inSync === false) {
-                                branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC});
+                                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
                             }
                             if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
                                 self._pushNextQueuedCommit(projectId, branchName);
@@ -412,11 +406,11 @@ define([
             logger.debug('_pushNextQueuedCommit', branch.getCommitQueue());
 
             if (branch.getCommitQueue().length === 0) {
-                branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.SYNC});
+                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
                 return;
             }
 
-            branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_SYNC});
+            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
 
             commitData = branch.getFirstCommit();
             callback = commitData.callback;
@@ -430,14 +424,14 @@ define([
                 callback(err, result);
 
                 if (branch.isOpen && !err && result) {
-                    if (result.status === CONSTANTS.STORAGE.SYNCED) {
+                    if (result.status === CONSTANTS.SYNCED) {
                         branch.inSync = true;
                         branch.updateHashes(null, result.hash);
                         branch.getFirstCommit(true);
                         self._pushNextQueuedCommit(projectId, branchName);
-                    } else if (result.status === CONSTANTS.STORAGE.FORKED) {
+                    } else if (result.status === CONSTANTS.FORKED) {
                         branch.inSync = false;
-                        branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC});
+                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
                     } else {
                         logger.error('Unsupported commit status ' + result.status);
                     }
@@ -458,14 +452,14 @@ define([
             logger.debug('About to update, updateQueue', {metadata: branch.getUpdateQueue()});
             if (branch.getUpdateQueue().length === 0) {
                 logger.debug('No queued updates, returns');
-                branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.SYNC});
+                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
                 return;
             }
 
             updateData = branch.getFirstUpdate();
 
             if (branch.isOpen) {
-                branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.PULLING});
+                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.PULLING);
                 branch.dispatchHashUpdate({commitData: updateData, local: false}, function (err, proceed) {
                     var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                     if (err) {

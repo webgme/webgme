@@ -14,7 +14,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             localHash = '',
             commitQueue = [],
             updateQueue = [],
-            branchStatus = null;
+            branchStatus = CONSTANTS.BRANCH_STATUS.SYNC;
 
         logger.debug('ctor');
         this.name = name;
@@ -178,13 +178,13 @@ define(['common/storage/constants'], function (CONSTANTS) {
             return false;
         };
 
-        this.dispatchBranchStatus = function (data) {
+        this.dispatchBranchStatus = function (newStatus) {
             var i;
 
-            logger.debug('dispatchBranchStatus old, new', branchStatus, data.branchStatus);
-            branchStatus = data.branchStatus;
+            logger.debug('dispatchBranchStatus old, new', branchStatus, newStatus);
+            branchStatus = newStatus;
             for (i = 0; i < self.branchStatusHandlers.length; i += 1) {
-                self.branchStatusHandlers[i](data, commitQueue, updateQueue);
+                self.branchStatusHandlers[i](newStatus, commitQueue, updateQueue);
             }
         };
 

@@ -28,6 +28,13 @@ define([], function () {
         CANCELED: 'CANCELED', // The commitData was never inserted to the database.
         MERGED: 'MERGED', // This is currently not used
 
+        BRANCH_STATUS: {
+            SYNC: 'SYNC',
+            AHEAD_SYNC: 'AHEAD_SYNC',
+            AHEAD_NOT_SYNC: 'AHEAD_NOT_SYNC',
+            PULLING: 'PULLING'
+        },
+
         // Events
         PROJECT_DELETED: 'PROJECT_DELETED',
         PROJECT_CREATED: 'PROJECT_CREATED',
