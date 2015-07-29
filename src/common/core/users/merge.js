@@ -137,22 +137,23 @@ define([
             }),
             branchName = REGEXP.HASH.test(parameters.theirBranchOrCommit) ? null : parameters.theirBranchOrCommit;
 
-        Q.all([
+        Q.allSettled([
             getRoot({project: parameters.project, core: core, id: parameters.myBranchOrCommit}),
             getRoot({project: parameters.project, core: core, id: parameters.theirBranchOrCommit})
         ])
             .then(function (results) {
-                myRoot = results[0].root;
-                theirRoot = results[1].root;
-                result.myCommitHash = results[0].commitHash;
-                result.theirCommitHash = results[1].commitHash;
+                myRoot = results[0].value.root;
+                theirRoot = results[1].value.root;
+                result.myCommitHash = results[0].value.commitHash;
+                result.theirCommitHash = results[1].value.commitHash;
 
                 return Q.nfcall(parameters.project.getCommonAncestorCommit,
                     result.myCommitHash, result.theirCommitHash);
             })
             .then(function (commitHash) {
                 result.baseCommitHash = commitHash;
-                return Q.all([
+
+                return Q.allSettled([
                     diff({
                         gmeConfig: parameters.gmeConfig,
                         logger: parameters.logger,
@@ -171,8 +172,8 @@ define([
             })
             .then(function (diffs) {
                 result.diff = {
-                    mine: diffs[0],
-                    theirs: diffs[1]
+                    mine: diffs[0].value,
+                    theirs: diffs[1].value
                 };
 
                 result.conflict = core.tryToConcatChanges(result.diff.mine, result.diff.theirs);

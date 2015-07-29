@@ -7,7 +7,11 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], function (CANON, TASYNC, ASSERT) {
+define(['common/util/canon',
+    'common/core/tasync',
+    'common/util/assert',
+    'common/regexp'
+], function (CANON, TASYNC, ASSERT, REGEXP) {
     'use strict';
 
     function diffCore(_innerCore, options) {
@@ -762,7 +766,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         };
 
         function getDiffChildrenRelids(diff) {
-            var keys = Object.keys(diff),
+            var keys = Object.keys(diff || {}),
                 i,
                 filteredKeys = [],
                 forbiddenWords = {
@@ -1208,8 +1212,9 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
 
         function getNodeByGuid(diff, guid) {
             var relids, i, node;
-            if (diff.guid === guid) {
-                return diff;
+
+            if (REGEXP.GUID.test(guid) !== true) {
+                return null;
             }
 
             relids = getDiffChildrenRelids(diff);
@@ -1225,6 +1230,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         function insertAtPath(diff, path, object) {
             ASSERT(typeof path === 'string');
             var i, base, relid, nodepath;
+
             if (path === '') {
                 _concatResult = JSON.parse(JSON.stringify(object));
                 return;
@@ -1338,6 +1344,11 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
 
         function getPathByGuid(conflict, guid, path) {
             var relids, i, result;
+
+            if (REGEXP.GUID.test(guid) !== true) {
+                return null;
+            }
+
             if (conflict.guid === guid) {
                 return path;
             }
