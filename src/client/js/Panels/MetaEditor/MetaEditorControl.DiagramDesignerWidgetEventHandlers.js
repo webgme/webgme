@@ -808,11 +808,15 @@ define(['js/logger',
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             i,
             j,
+            urlTab = WebGMEGlobal.State.getActiveTab(),
             setID;
 
         for (i = 0; i < newTabIDOrder.length; i += 1) {
             //i is the new order number
             //newTabIDOrder[i] is the sheet identifier
+            if (urlTab === newTabIDOrder[i]) {
+                WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB, i);
+            }
             setID = this._sheets[newTabIDOrder[i]];
             for (j = 0; j < metaAspectSheetsRegistry.length; j += 1) {
                 if (metaAspectSheetsRegistry[j].SetID === setID) {
@@ -830,9 +834,7 @@ define(['js/logger',
             }
         });
 
-        this._client.startTransaction();
         this._client.setRegistry(aspectNodeID, REGISTRY_KEYS.META_SHEETS, metaAspectSheetsRegistry);
-        this._client.completeTransaction();
     };
 
 
