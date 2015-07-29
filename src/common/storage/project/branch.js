@@ -28,13 +28,24 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.latestCommitData = null;
 
         this.cleanUp = function () {
+            var i,
+                commitResult;
             self.isOpen = false;
             self.branchStatusHandlers = [];
             self.hashUpdateHandlers = [];
 
             self._remoteUpdateHandler = null;
             self.latestCommitData = null;
-
+            for (i = 0; i < commitQueue.length; i += 1) {
+                // Make sure there are no pending callbacks, invoke with status CANCELED.
+                commitResult = {
+                    status: CONSTANTS.CANCELED,
+                    hash: commitQueue[i].commitObject[CONSTANTS.MONGO_ID]
+                };
+                if (commitQueue[i].callback) {
+                    commitQueue[i].callback(null, commitResult);
+                }
+            }
             commitQueue = [];
             updateQueue = [];
         };
@@ -109,8 +120,6 @@ define(['common/storage/constants'], function (CONSTANTS) {
             for (i = 0; i < commitQueue.length; i += 1) {
                 commitData = commitQueue[i];
                 commitHash = commitData.commitObject[CONSTANTS.MONGO_ID];
-                // remove the branchName of the commitData
-                delete commitData.branchName;
                 if (i !== 0) {
                     subQueue.push(commitData);
                 }
@@ -175,7 +184,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             logger.debug('dispatchBranchStatus old, new', branchStatus, data.branchStatus);
             branchStatus = data.branchStatus;
             for (i = 0; i < self.branchStatusHandlers.length; i += 1) {
-                self.branchStatusHandlers[i](branchStatus, commitQueue, updateQueue);
+                self.branchStatusHandlers[i](data, commitQueue, updateQueue);
             }
         };
 

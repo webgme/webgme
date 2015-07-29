@@ -306,10 +306,19 @@ define([
             }
 
             function commitNext() {
-                var currentCommitData = forkData.queue.shift();
+                var currentCommitData = forkData.queue.shift(),
+                    commitCallback;
+
                 logger.debug('forkBranch - commitNext, currentCommitData', currentCommitData);
                 if (currentCommitData) {
+                    // Temporarily remove the callback while committing.
+                    delete commitCallback.branchName;
+                    commitCallback = currentCommitData.callback;
+                    delete currentCommitData.callback;
+
                     webSocket.makeCommit(currentCommitData, function (err, result) {
+                        // Add back the callback while committing (needed when closing original branch)
+                        currentCommitData.callback = commitCallback;
                         if (err) {
                             logger.error('forkBranch - failed committing', err);
                             callback(err);
@@ -340,7 +349,8 @@ define([
                     projectId: projectId,
                     commitObject: null,
                     coreObjects: null
-                };
+                },
+                commitHash;
 
             callback = callback || function (err) {
                     if (err) {
@@ -354,6 +364,7 @@ define([
             }
 
             commitData.commitObject = self._getCommitObject(projectId, parents, rootHash, msg);
+            commitHash = commitData.commitObject[CONSTANTS.MONGO_ID];
             commitData.coreObjects = coreObjects;
 
             if (typeof branchName === 'string') {
@@ -362,15 +373,14 @@ define([
             }
 
             if (branch) {
-                commitData.callback = callback;
                 if (parents[0] === branch.getLocalHash()) {
+                    commitData.callback = callback;
                     branch.queueCommit(commitData);
                     branch.dispatchHashUpdate({commitData: commitData, local: true}, function (err, proceed) {
-                        var localHash = commitData.commitObject[CONSTANTS.MONGO_ID];
                         if (err) {
                             callback('Commit failed being loaded in users: ' + err);
                         } else if (proceed === true) {
-                            branch.updateHashes(localHash, null);
+                            branch.updateHashes(commitHash, null);
                             if (branch.inSync === false) {
                                 branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC});
                             }
@@ -383,18 +393,8 @@ define([
                     });
                 } else {
                     // The current user is behind the local branch, e.g. plugin trying to save after client changes.
-                    logger.warn('Incoming commit was behind the local branch, inserting to db but will be FORKED.');
-                    delete commitData.branchName;
-                    delete commitData.callback;
-                    // Send the commitData to the server w/o updating the branch
-                    webSocket.makeCommit(commitData, function (err, result) {
-                        if (err) {
-                            callback(err);
-                            return;
-                        }
-                        result.status = CONSTANTS.FORKED;
-                        callback(null, result);
-                    });
+                    logger.warn('Incoming commit was behind the local branch.');
+                    callback(null, {status: CONSTANTS.CANCELED, hash: commitHash});
                 }
             } else {
                 webSocket.makeCommit(commitData, callback);
@@ -417,6 +417,7 @@ define([
             }
 
             branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_SYNC});
+
             commitData = branch.getFirstCommit();
             callback = commitData.callback;
             delete commitData.callback;
@@ -426,18 +427,19 @@ define([
                     logger.error('makeCommit failed', err);
                 }
 
-                if (branch.isOpen) {
+                callback(err, result);
+
+                if (branch.isOpen && !err && result) {
                     if (result.status === CONSTANTS.STORAGE.SYNCED) {
                         branch.inSync = true;
-                        branch.updateHashes(null, commitData.commitObject[CONSTANTS.MONGO_ID]);
+                        branch.updateHashes(null, result.hash);
                         branch.getFirstCommit(true);
                         self._pushNextQueuedCommit(projectId, branchName);
                     } else if (result.status === CONSTANTS.STORAGE.FORKED) {
                         branch.inSync = false;
                         branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC});
                     } else {
-                        logger.error('Unsupported commit status', result.status);
-                        callback('Unsupported commit status: ' + result.status);
+                        logger.error('Unsupported commit status ' + result.status);
                     }
                 } else {
                     logger.error('_pushNextQueuedCommit returned from server but the branch was closed, ' +
