@@ -337,7 +337,15 @@ define([
             var project = projects[projectId],
                 branch,
                 commitData = {
-                    projectId: projectId
+                    projectId: projectId,
+                    commitObject: null,
+                    coreObjects: null
+                };
+
+            callback = callback || function (err) {
+                    if (err) {
+                        logger.error(err);
+                    }
                 };
 
             if (!project) {
@@ -354,6 +362,7 @@ define([
             }
 
             if (branch) {
+                commitData.callback = callback;
                 branch.updateHashes(commitData.commitObject[CONSTANTS.MONGO_ID], null);
                 branch.queueCommit(commitData);
                 branch.dispatchHashUpdate({commitData: commitData, local: false}, function (err, proceed) {
@@ -364,7 +373,7 @@ define([
                             branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC});
                         }
                         if (branch.getCommitQueue().length === 1) {
-                            self._pushNextQueuedCommit(projectId, branchName, callback);
+                            self._pushNextQueuedCommit(projectId, branchName);
                         }
                     } else {
                         callback('Commit halted when loaded in users: ' + err);
@@ -378,24 +387,13 @@ define([
             return commitData.commitObject; //commitHash
         };
 
-        this._pushNextQueuedCommit = function (projectId, branchName, callback) {
+        this._pushNextQueuedCommit = function (projectId, branchName) {
             var project = projects[projectId],
-                branch,
-                commitData;
+                branch = project.branches[branchName],
+                commitData,
+                callback;
 
             logger.debug('_pushNextQueuedCommit', branch.getCommitQueue());
-
-            if (!project) {
-                callback('Project ' + projectId + ' is not opened.');
-                return;
-            }
-
-            branch = project.branches[branchName];
-
-            if (!branch) {
-                callback('Branch ' + branchName + ', in project ' + projectId + ', not opened.');
-                return;
-            }
 
             if (branch.getCommitQueue().length === 0) {
                 branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.SYNC});
@@ -403,18 +401,13 @@ define([
             }
 
             branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.AHEAD_SYNC});
-            commitData = branch.getFirstCommit(false);
+            commitData = branch.getFirstCommit();
+            callback = commitData.callback;
+            delete commitData.callback;
+
             webSocket.makeCommit(commitData, function (err, result) {
                 if (err) {
                     logger.error('makeCommit failed', err);
-                }
-
-                // This is for when e.g. a plugin makes a commit to the same branch as the
-                // client and waits for the callback before proceeding.
-                // (If it is a forking commit, the plugin can proceed knowing that and the client will get notified of
-                // the fork through the commitHandler.
-                if (typeof callback === 'function') {
-                    callback(err, result);
                 }
 
                 if (branch.isOpen) {
@@ -447,14 +440,14 @@ define([
             logger.debug('About to update, updateQueue', {metadata: branch.getUpdateQueue()});
             if (branch.getUpdateQueue().length === 0) {
                 logger.debug('No queued updates, returns');
-                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
+                branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.SYNC});
                 return;
             }
 
             updateData = branch.getFirstUpdate();
 
             if (branch.isOpen) {
-                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.PULLING);
+                branch.dispatchBranchStatus({branchStatus: CONSTANTS.BRANCH_STATUS.PULLING});
                 branch.dispatchHashUpdate({commitData: updateData, local: false}, function (err, proceed) {
                     var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                     if (err) {
