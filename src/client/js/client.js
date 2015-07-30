@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, console*/
 /*jshint browser: true*/
 /**
  * @author kecso / https://github.com/kecso

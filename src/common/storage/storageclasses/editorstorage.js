@@ -177,8 +177,7 @@ define([
         };
 
         this.openBranch = function (projectId, branchName, hashUpdateHandler, branchStatusHandler, callback) {
-            var self = this,
-                project = projects[projectId],
+            var project = projects[projectId],
                 data = {
                     projectId: projectId,
                     branchName: branchName
@@ -196,8 +195,7 @@ define([
             }
 
             webSocket.openBranch(data, function (err, latestCommit) {
-                var i,
-                    branchHash;
+                var branchHash;
                 if (err) {
                     callback(err);
                     return;
@@ -281,8 +279,7 @@ define([
         };
 
         this.forkBranch = function (projectId, branchName, forkName, commitHash, callback) {
-            var self = this,
-                project = projects[projectId],
+            var project = projects[projectId],
                 branch,
                 forkData;
 
@@ -446,8 +443,7 @@ define([
 
         this._pullNextQueuedCommit = function (projectId, branchName, callback) {
             ASSERT(projects.hasOwnProperty(projectId), 'Project not opened: ' + projectId);
-            var self = this,
-                project = projects[projectId],
+            var project = projects[projectId],
                 branch = project.getBranch(branchName, true),
                 updateData;
 
