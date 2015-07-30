@@ -228,9 +228,15 @@ describe('branch status', function () {
 
             function eventHandler(__client, eventData) {
                 if (prevStatus === client.CONSTANTS.BRANCH_STATUS.SYNC) {
+                    // 1) Here it starts pulling the external changes..
+                    expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.PULLING);
+                    prevStatus = eventData.status;
+                } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.PULLING) {
+                    // 2) It starts with its own commit and disregards the pulling
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
                     prevStatus = eventData.status;
                 } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC) {
+                    // 3) When the commit returns its forked and the client is not in sync.
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
                     removeHandler();
                     currentBranchHash = client.getActiveCommitHash();

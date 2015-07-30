@@ -175,11 +175,26 @@ define([
         function saveRoot(msg, callback) {
             var persisted,
                 numberOfPersistedObjects,
-                //beforeLoading = true,
-                //commitQueue,
                 newCommitObject;
             logger.debug('saveRoot msg', msg);
-
+            if (callback) {
+                callback = function (err, result) {
+                    if (err) {
+                        logger.error('saveRoot failure', err);
+                    } else {
+                        logger.debug('saveRoot', result);
+                    }
+                    callback(err, result);
+                };
+            } else {
+                callback = function (err, result) {
+                    if (err) {
+                        logger.error('saveRoot failure', err);
+                    } else {
+                        logger.debug('saveRoot', result);
+                    }
+                };
+            }
             callback = callback || function () {
                 };
             if (!state.viewer && !state.readOnlyProject) {
@@ -450,7 +465,7 @@ define([
                 }
 
                 state.branchName = branchName;
-
+                logger.debug('openBranch, calling storage openBranch', state.project.projectId, branchName);
                 storage.openBranch(state.project.projectId, branchName,
                     getHashUpdateHandler(), getBranchStatusHandler(),
                     function (err /*, latestCommit*/) {
@@ -531,7 +546,6 @@ define([
                 logger.debug('Branch was open, closing it first', state.branchName);
                 prevBranchName = state.branchName;
                 state.branchName = null;
-                //state.branchStatus = null;
                 storage.closeBranch(state.project.projectId, prevBranchName, openCommit);
             } else {
                 openCommit(null);
@@ -1256,7 +1270,7 @@ define([
                 finalEvents = function () {
                     var modifiedPaths,
                         i;
-
+                    logger.debug('firing finalEvents from loading for new rootHash', newRootHash);
                     modifiedPaths = getModifiedNodes(state.loadNodes);
                     state.nodes = state.loadNodes;
                     state.loadNodes = {};
@@ -1269,7 +1283,7 @@ define([
                     }
                     callback(null);
                 };
-            logger.debug('loading newRootHash', newRootHash);
+            logger.debug('loading originatingRootHash, newRootHash', originatingRootHash, newRootHash);
 
             callback = callback || function (/*err*/) {
                 };

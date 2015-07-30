@@ -805,7 +805,6 @@ describe('Mongo storage', function () {
                 })
                 .catch(function (err) {
                     if (err === 'branch hash mismatch') {
-                        // TODO: check error message
                         done();
                     } else {
                         done(new Error('should have failed to openProject'));

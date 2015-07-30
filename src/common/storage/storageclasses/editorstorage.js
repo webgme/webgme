@@ -194,6 +194,8 @@ define([
                 return;
             }
 
+            logger.debug('openBranch, calling webSocket openBranch', projectId, branchName);
+
             webSocket.openBranch(data, function (err, latestCommit) {
                 var branchHash;
                 if (err) {
@@ -352,7 +354,7 @@ define([
                 commitHash;
 
             if (!project) {
-                callback('Cannot close branch, ' + branchName + ', project ' + projectId + ' is not opened.');
+                callback('Cannot makeCommit, ' + branchName + ', project ' + projectId + ' is not opened.');
                 return;
             }
 
@@ -365,11 +367,14 @@ define([
                 branch = project.branches[branchName];
             }
 
+            logger.debug('makeCommit', commitData);
             if (branch) {
+                logger.debug('makeCommit, branch is open will commit using commitQueue..');
                 if (parents[0] === branch.getLocalHash()) {
                     commitData.callback = callback;
-                    branch.queueCommit(commitData);
                     branch.dispatchHashUpdate({commitData: commitData, local: true}, function (err, proceed) {
+                        logger.debug('makeCommit, dispatchHashUpdate done err, proceed', err, proceed);
+                        branch.queueCommit(commitData);
                         if (err) {
                             callback('Commit failed being loaded in users: ' + err);
                         } else if (proceed === true) {
@@ -414,6 +419,9 @@ define([
             commitData = branch.getFirstCommit();
             callback = commitData.callback;
             delete commitData.callback;
+
+            logger.debug('_pushNextQueuedCommit, makeCommit ->',
+                commitData.commitObject.parents[0], commitData.commitObject._id);
 
             webSocket.makeCommit(commitData, function (err, result) {
                 if (err) {
