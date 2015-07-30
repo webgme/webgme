@@ -708,8 +708,9 @@ define(['common/util/canon',
             if (_needChecking !== true || guids.length < 1) {
                 shrinkDiff(_DIFF);
                 finalizeDiff();
-                return _DIFF;
+                return JSON.parse(JSON.stringify(_DIFF));
             }
+
             _needChecking = false;
             for (i = 0; i < guids.length; i++) {
                 ytc = _yetToCompute[guids[i]];
@@ -1202,7 +1203,6 @@ define(['common/util/canon',
         }
 
         _core.applyTreeDiff = function (root, diff) {
-
             toFrom = {};
             fromTo = {};
             getMoveSources(diff, '', toFrom, fromTo);
