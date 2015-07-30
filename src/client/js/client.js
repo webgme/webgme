@@ -230,11 +230,11 @@ define([
                         callback
                     );
 
-                    addCommit(newCommitObject[CONSTANTS.STORAGE.MONGO_ID]);
+
                     //undo-redo
-                    addModification(newCommitObject, false);
-                    self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-                    self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
+                    //addModification(newCommitObject, false);
+                    //self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
+                    //self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
                     state.msg = '';
                 } else {
@@ -518,7 +518,7 @@ define([
                     if (!err && commitObj) {
                         logState('info', 'selectCommit loaded commit');
                         self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
-                        loading(commitObj.root, function (err, aborted) {
+                        loading(commitObj.root, commitHash, function (err, aborted) {
                             if (err) {
                                 logger.error('loading returned error', commitObj.root, err);
                                 logState('error', 'selectCommit loading');
@@ -527,7 +527,6 @@ define([
                                 logState('warn', 'selectCommit loading');
                                 callback('Loading selected commit was aborted');
                             } else {
-                                addCommit(commitHash);
                                 logger.debug('loading complete for selectCommit rootHash', commitObj.root);
                                 logState('info', 'selectCommit loading');
                                 self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
@@ -570,7 +569,8 @@ define([
                 var commitData = data.commitData,
                     clearUndoRedo = data.local !== true,
                     commitHash = commitData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
-                logger.debug('hashUpdateHandler invoked. project, branch', commitData.projectId, commitData.branchName);
+                logger.debug('hashUpdateHandler invoked. project, branch, commitHash',
+                    commitData.projectId, commitData.branchName, commitHash);
 
                 if (state.inTransaction) {
                     logger.warn('Is in transaction, will not load in changes');
@@ -584,7 +584,7 @@ define([
                 self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
                 logger.debug('loading commitHash, local?', commitHash, data.local);
-                loading(commitData.commitObject.root, function (err, aborted) {
+                loading(commitData.commitObject.root, commitHash, function (err, aborted) {
                     if (err) {
                         logger.error('hashUpdateHandler invoked loading and it returned error',
                             commitData.commitObject.root, err);
@@ -594,7 +594,6 @@ define([
                         logState('warn', 'hashUpdateHandler');
                         callback(null, false); // proceed: false
                     } else {
-                        addCommit(commitHash);
                         logger.debug('loading complete for incoming rootHash', commitData.commitObject.root);
                         logState('debug', 'hashUpdateHandler');
                         callback(null, true); // proceed: true
@@ -719,7 +718,7 @@ define([
 
             state.undoRedoChain = state.undoRedoChain.previous;
 
-            loading(state.undoRedoChain.root, function (err) {
+            loading(state.undoRedoChain.root, state.undoRedoChain.commit, function (err) {
                 //TODO do we need to handle this??
                 if (err) {
                     logger.error(err);
@@ -752,7 +751,7 @@ define([
 
             state.undoRedoChain = state.undoRedoChain.next;
 
-            loading(state.undoRedoChain.root, function (err) {
+            loading(state.undoRedoChain.root, state.undeRedoChain.commit, function (err) {
                 //TODO do we need to handle this??
                 if (err) {
                     logger.error(err);
@@ -1264,7 +1263,7 @@ define([
         }
 
         //this is just a first brute implementation it needs serious optimization!!!
-        function loading(newRootHash, callback) {
+        function loading(newRootHash, newCommitHash, callback) {
             var firstRoot = !state.nodes[ROOT_PATH],
                 originatingRootHash = state.nodes[ROOT_PATH] ? state.core.getHash(state.nodes[ROOT_PATH].node) : null,
                 finalEvents = function () {
@@ -1274,8 +1273,12 @@ define([
                     modifiedPaths = getModifiedNodes(state.loadNodes);
                     state.nodes = state.loadNodes;
                     state.loadNodes = {};
+                    // We have now loaded the new root from the commit, update the state
                     state.root.previous = state.root.current;
                     state.root.current = newRootHash;
+                    state.commit.previous = state.commit.current;
+                    state.commit.current = newCommitHash;
+
                     for (i in state.users) {
                         if (state.users.hasOwnProperty(i)) {
                             userEvents(i, modifiedPaths);
@@ -1326,11 +1329,6 @@ define([
                 saveRoot(msg, callback);
             }
         };
-
-        function addCommit(commitHash) {
-            state.commit.previous = state.commit.current;
-            state.commit.current = commitHash;
-        }
 
         //territory functions
         this.addUI = function (ui, fn, guid) {

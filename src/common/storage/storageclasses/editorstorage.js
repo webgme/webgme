@@ -372,19 +372,28 @@ define([
                 logger.debug('makeCommit, branch is open will commit using commitQueue..');
                 if (parents[0] === branch.getLocalHash()) {
                     commitData.callback = callback;
+
+                    branch.updateHashes(commitHash, null);
+                    branch.queueCommit(commitData);
+                    if (branch.inSync === false) {
+                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
+                    }
+                    if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
+                        self._pushNextQueuedCommit(projectId, branchName);
+                    }
+
                     branch.dispatchHashUpdate({commitData: commitData, local: true}, function (err, proceed) {
                         logger.debug('makeCommit, dispatchHashUpdate done err, proceed', err, proceed);
-                        branch.queueCommit(commitData);
+
                         if (err) {
                             callback('Commit failed being loaded in users: ' + err);
                         } else if (proceed === true) {
-                            branch.updateHashes(commitHash, null);
-                            if (branch.inSync === false) {
-                                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
-                            }
-                            if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
-                                self._pushNextQueuedCommit(projectId, branchName);
-                            }
+                            //if (branch.inSync === false) {
+                            //    branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
+                            //}
+                            //if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
+                            //    self._pushNextQueuedCommit(projectId, branchName);
+                            //}
                         } else {
                             callback('Commit halted when loaded in users: ' + err);
                         }
