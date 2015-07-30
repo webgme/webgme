@@ -25,7 +25,6 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.hashUpdateHandlers = [];
 
         this._remoteUpdateHandler = null;
-        this.latestCommitData = null;
 
         this.cleanUp = function () {
             var i,
@@ -35,7 +34,6 @@ define(['common/storage/constants'], function (CONSTANTS) {
             self.hashUpdateHandlers = [];
 
             self._remoteUpdateHandler = null;
-            self.latestCommitData = null;
             for (i = 0; i < commitQueue.length; i += 1) {
                 // Make sure there are no pending callbacks, invoke with status CANCELED.
                 commitResult = {

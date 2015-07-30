@@ -215,7 +215,7 @@ define([
                 branch.addHashUpdateHandler(hashUpdateHandler);
                 branch.addBranchStatusHandler(branchStatusHandler);
 
-                branch._remoteUpdateHandler = function (_ws, updateData) {
+                branch._remoteUpdateHandler = function (_ws, updateData, callback) {
                     var j,
                         originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                     logger.debug('_remoteUpdateHandler invoked for project, branch', projectId, branchName);
@@ -228,22 +228,23 @@ define([
 
                     if (branch.getCommitQueue().length === 0) {
                         if (branch.getUpdateQueue().length === 1) {
-                            self._pullNextQueuedCommit(projectId, branchName); // hashUpdateHandlers
+                            self._pullNextQueuedCommit(projectId, branchName, callback); // hashUpdateHandlers
                         }
                     } else {
                         logger.debug('commitQueue is not empty, only updating originHash.');
                     }
                 };
 
-                webSocket.addEventListener(webSocket.getBranchUpdateEventName(projectId, branchName),
-                    branch._remoteUpdateHandler);
+                branch._remoteUpdateHandler(null, latestCommit, function (err) {
+                    webSocket.addEventListener(webSocket.getBranchUpdateEventName(projectId, branchName),
+                        branch._remoteUpdateHandler);
+                    callback(err, latestCommit);
+                });
 
-                // Insert the objects from the latest commit into the project cache.
-                for (i = 0; i < latestCommit.coreObjects.length; i += 1) {
-                    project.insertObject(latestCommit.coreObjects[i]);
-                }
-
-                callback(err, latestCommit);
+                //// Insert the objects from the latest commit into the project cache.
+                //for (i = 0; i < latestCommit.coreObjects.length; i += 1) {
+                //    project.insertObject(latestCommit.coreObjects[i]);
+                //}
             });
         };
 
@@ -443,7 +444,7 @@ define([
             });
         };
 
-        this._pullNextQueuedCommit = function (projectId, branchName) {
+        this._pullNextQueuedCommit = function (projectId, branchName, callback) {
             ASSERT(projects.hasOwnProperty(projectId), 'Project not opened: ' + projectId);
             var self = this,
                 project = projects[projectId],
@@ -454,6 +455,9 @@ define([
             if (branch.getUpdateQueue().length === 0) {
                 logger.debug('No queued updates, returns');
                 branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
+                if (callback) {
+                    callback(null);
+                }
                 return;
             }
 
@@ -469,9 +473,13 @@ define([
                         logger.debug('New commit was successfully loaded, updating localHash.');
                         branch.updateHashes(originHash, null);
                         branch.getFirstUpdate(true);
-                        self._pullNextQueuedCommit(projectId, branchName);
+                        self._pullNextQueuedCommit(projectId, branchName, callback);
+                        return;
                     } else {
                         logger.warn('Loading of update commit was aborted', {metadata: updateData});
+                    }
+                    if (callback) {
+                        callback(err || 'Loading the first commit was aborted');
                     }
                 });
             } else {

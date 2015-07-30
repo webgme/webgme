@@ -163,7 +163,11 @@ define([
                     projectReadOnly: self.isProjectReadOnly(),
                     commitReadOnly: self.isCommitReadOnly()
                 };
-                logger[level]('state at ' + msg, JSON.stringify(lightState));
+                if (level === 'console') {
+                    console.log('state at ' + msg, JSON.stringify(lightState));
+                } else {
+                    logger[level]('state at ' + msg, JSON.stringify(lightState));
+                }
             }
         }
 
@@ -427,6 +431,7 @@ define([
          * @param callback
          */
         this.selectBranch = function (branchName, branchStatusHandler, callback) {
+            var prevBranchName = state.branchName;
             logger.debug('selectBranch', branchName);
             if (isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
@@ -437,8 +442,6 @@ define([
                 return;
             }
 
-            var prevBranchName = state.branchName;
-
             function openBranch(err) {
                 if (err) {
                     logger.error('Problems closing existing branch', err);
@@ -446,47 +449,29 @@ define([
                     return;
                 }
 
-                storage.openBranch(state.project.projectId, branchName, getHashUpdateHandler(), getBranchStatusHandler(),
-                    function (err, latestCommit) {
-                        var commitObject;
+                state.branchName = branchName;
+
+                storage.openBranch(state.project.projectId, branchName,
+                    getHashUpdateHandler(), getBranchStatusHandler(),
+                    function (err /*, latestCommit*/) {
                         if (err) {
                             logger.error('storage.openBranch returned with error', err);
+                            self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
                             callback(new Error(err));
                             return;
                         }
-
-                        commitObject = latestCommit.commitObject;
-                        logger.debug('Branch opened latestCommit', latestCommit);
-
-                        //undo-redo
-                        logger.debug('changing branch - cleaning undo-redo chain');
-                        addModification(commitObject, true);
-                        self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-                        self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
                         state.viewer = false;
                         state.branchName = branchName;
                         self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
                         logState('info', 'openBranch');
-
-                        loading(commitObject.root, function (err) {
-                            if (err) {
-                                logger.error('loading failed after opening branch', branchName);
-                            } else {
-                                addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
-                            }
-                            // FIXME: Emit this from the storage instead
-                            self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {status: CONSTANTS.BRANCH_STATUS.SYNC});
-                            callback(err);
-                        });
-
+                        callback(null);
                     }
                 );
             }
 
-            if (state.branchName !== null) {
-                logger.debug('Branch was open, closing it first', state.branchName);
-                prevBranchName = state.branchName;
+            if (prevBranchName !== null) {
+                logger.debug('Branch was open, closing it first', prevBranchName);
                 storage.closeBranch(state.project.projectId, prevBranchName, openBranch);
             } else {
                 openBranch(null);
@@ -556,7 +541,7 @@ define([
         function getBranchStatusHandler () {
             return function (branchStatus, commitQueue, updateQueue) {
                 logger.debug('branchStatus changed', branchStatus, commitQueue, updateQueue);
-                logState('info', 'commitHandler');
+                logState('debug', 'branchStatus');
                 state.branchStatus = branchStatus;
                 self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {
                     status: branchStatus,
