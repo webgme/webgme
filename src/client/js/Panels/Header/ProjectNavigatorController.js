@@ -870,7 +870,7 @@ define([
 
         //check if there is need for a change at all
         if (currentProject && currentProject.id === projectId && currentBranch &&
-            (currentBranch.id === branchId || branchId === undefined || branchId === null || branchId === '')) {
+            (currentBranch.id === branchId || branchId === undefined || branchId === '')) {
             callback(null);
             return;
         }

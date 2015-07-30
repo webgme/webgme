@@ -514,9 +514,6 @@ define([
 
                 state.viewer = true;
 
-                state.branchStatus = null;
-                self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {status: null});
-
                 state.project.loadObject(commitHash, function (err, commitObj) {
                     if (!err && commitObj) {
                         logState('info', 'selectCommit loaded commit');
@@ -533,8 +530,7 @@ define([
                                 addCommit(commitHash);
                                 logger.debug('loading complete for selectCommit rootHash', commitObj.root);
                                 logState('info', 'selectCommit loading');
-                                state.branchStatus = null;
-                                self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {status: null});
+                                self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
                                 callback(null);
                             }
                         });

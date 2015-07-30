@@ -268,6 +268,7 @@ define([
 
             // This will prevent memory leaks and expose if a commit is being
             // processed at the server this time (see last error in _pushNextQueuedCommit).
+            branch.dispatchBranchStatus(null);
             branch.cleanUp();
 
             // Stop listening to events from the server
