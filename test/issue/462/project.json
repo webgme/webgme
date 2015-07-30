@@ -1,0 +1,5225 @@
+{
+  "bases": {},
+  "root": {
+    "path": "",
+    "guid": "005cb34a-7523-4940-a1e9-0cb530ba1005"
+  },
+  "relids": {
+    "005cb34a-7523-4940-a1e9-0cb530ba1005": null,
+    "0375e1c1-1217-7aa9-5e14-53c709a2abbe": "1675023230",
+    "051e2614-8618-ce58-2fe0-41f94ccaf98b": "1740267662",
+    "07d79d42-e631-fb69-a1f7-25b044d94fbb": "319211427",
+    "0bced7fe-4c88-f3c1-f877-6a0d0f344c46": "711037118",
+    "0cbe923f-e66c-6bb2-6cb1-6418b3665f8e": "1684641785",
+    "0e9a7224-3fb6-bdc9-b9ec-1b56696d34ec": "1332252948",
+    "0f8fa428-4f7e-3e83-1acd-141b22b417cf": "1007576016",
+    "113159c3-1cae-38f5-8fd4-5b356a2f5e3d": "1591506645",
+    "15e3558a-b564-8ebd-b330-5cfc5172941f": "1740267662",
+    "1b2720ba-040c-e5ac-bb4c-4bd502ee3353": "1008889918",
+    "1bf0e0e7-d4f1-a36d-416b-8af0651f138b": "1103499805",
+    "1c43e1a1-d510-2b57-f061-791daede321a": "1684641785",
+    "1deced2f-f026-ca87-711c-d8148b1dfd3c": "1598195376",
+    "1f35a3aa-321d-359f-7838-242bc2d08ae5": "755698918",
+    "220fe464-ca92-9f68-89cc-1cf4848c14aa": "647669121",
+    "2bc42bca-a9be-0f33-16a7-ea847e546b37": "34094492",
+    "31210b37-0234-e1f7-e194-17c772f79295": "1610552174",
+    "32f297fa-f9ee-df8d-151c-01f19934793e": "647669121",
+    "3317c9c6-6c44-1a06-a476-11f77d722b34": "1993805430",
+    "386ee9e0-cd9b-25f0-2944-89587dd90484": "982375584",
+    "3e223dbc-998f-e965-9d15-99085fd445ff": "749469140",
+    "40339fcc-164f-f128-a43c-00afde9077c1": "228082221",
+    "428911c8-137b-2fc7-2388-8266e7aeff44": "385953479",
+    "58fcb797-8a06-2976-9632-d281b3c1ddd2": "1045980796",
+    "5ecd04c4-44b3-ae27-e0ee-6cbc95f35464": "1876532111",
+    "64e8bdb8-06da-4380-1569-4e9bcbb3e9bd": "439641945",
+    "65dcb250-dcb6-4cad-4617-0518a9a37d2e": "803021327",
+    "7415ce26-35a6-0365-89b9-539ed60b8429": "439641945",
+    "768a6ddd-0cca-fd2c-253c-065374d55978": "663092595",
+    "79f0cc09-f068-284b-5473-efcf5dfa3497": "1949671222",
+    "79f7f205-38e6-9ca1-0fde-c0ca16f622f7": "1669293789",
+    "7fd023cc-47ef-948a-a258-14c2d8c612cf": "1659905525",
+    "8097ae89-983e-8ea8-6612-eefb6dee9203": "1455709881",
+    "818a8efa-a6d8-47b5-8d1a-c0d8212fd194": "1059726760",
+    "87018874-0598-6ca4-a7b3-4e1dd2bfe926": "236224320",
+    "8b1e277e-0f88-a58b-4aff-51c74250671d": "398267330",
+    "8e59be89-5899-3619-872d-c2222292cd73": "1671134528",
+    "9001f172-4258-ceaa-86e9-f6e80b85853d": "891929219",
+    "959e8751-e668-4b22-2620-67135dd47611": "1187841414",
+    "97a00dee-7375-3637-ec08-b62588d4d71d": "1502717053",
+    "9a64640a-d8d6-9efa-cf2f-b622aaa6e5ae": "1010911100",
+    "9fab1244-f449-d3c0-bfdc-f166f724e3f2": "1624079113",
+    "a0399d5f-26ab-3fac-def4-3834f5decac9": "1826321976",
+    "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f": "756182296",
+    "a76adaab-3039-cfb6-c88c-bfd71aaf5389": "1258022138",
+    "ab281360-2719-c4e0-c3c6-4eea03401141": "1220837843",
+    "b797a935-0345-8f53-545c-a2d207173e1d": "1258022138",
+    "be02d298-2892-180a-ed1a-138dc589dd5c": "1299690106",
+    "cb92c02d-84cf-f104-938b-b7de6641f8e5": "1998840078",
+    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": "1",
+    "d3bdeaca-590c-cbc0-24ff-d7a070ed8f28": "1226873745",
+    "d5fc3678-2722-5112-c0bb-fa758f113246": "1328879441",
+    "d83e8c50-5eb6-ffdc-6822-0e884265bfcf": "693822654",
+    "db059935-fd26-a01d-fc92-5df61aa21f95": "686890673",
+    "dd35b139-3346-08f0-013c-1e3a8a522f7f": "794302266",
+    "dfe3df16-dfc2-d4b5-09f8-ca4758ae1454": "206008088",
+    "e0bd7189-5dc8-9e2c-d4d6-2f61fa416ff1": "368674801",
+    "e544f3e4-e550-5750-8540-5598bbbf343c": "1368062975",
+    "e87743ed-b89e-d8ce-7b87-7b9aadcb4961": "1922772359",
+    "e9bd3f99-c925-8bc0-6bd5-15ac083d1028": "481954284",
+    "edf95f43-efbd-5c2c-6384-6ab74c160c17": "91705197",
+    "f0400217-6eb4-dec9-4806-3264e7f90265": "368674801",
+    "f0508110-9a11-3b6d-ea42-2193bf0485e0": "126974487",
+    "f26a44de-edb5-57c8-fd0f-242811b7816c": "24011457",
+    "f8d9bcd3-5655-7ddb-850d-28046a9dfba5": "488584186",
+    "f9f20885-6316-a7b6-2196-8299f45692ff": "1474284259"
+  },
+  "containment": {
+    "0f8fa428-4f7e-3e83-1acd-141b22b417cf": {
+      "7fd023cc-47ef-948a-a258-14c2d8c612cf": {
+        "113159c3-1cae-38f5-8fd4-5b356a2f5e3d": {
+          "386ee9e0-cd9b-25f0-2944-89587dd90484": {},
+          "428911c8-137b-2fc7-2388-8266e7aeff44": {},
+          "768a6ddd-0cca-fd2c-253c-065374d55978": {
+            "1c43e1a1-d510-2b57-f061-791daede321a": {},
+            "220fe464-ca92-9f68-89cc-1cf4848c14aa": {
+              "051e2614-8618-ce58-2fe0-41f94ccaf98b": {}
+            },
+            "7415ce26-35a6-0365-89b9-539ed60b8429": {},
+            "a76adaab-3039-cfb6-c88c-bfd71aaf5389": {},
+            "e0bd7189-5dc8-9e2c-d4d6-2f61fa416ff1": {}
+          },
+          "959e8751-e668-4b22-2620-67135dd47611": {},
+          "d83e8c50-5eb6-ffdc-6822-0e884265bfcf": {}
+        }
+      },
+      "818a8efa-a6d8-47b5-8d1a-c0d8212fd194": {
+        "db059935-fd26-a01d-fc92-5df61aa21f95": {
+          "5ecd04c4-44b3-ae27-e0ee-6cbc95f35464": {
+            "31210b37-0234-e1f7-e194-17c772f79295": {},
+            "40339fcc-164f-f128-a43c-00afde9077c1": {}
+          }
+        }
+      },
+      "8e59be89-5899-3619-872d-c2222292cd73": {
+        "0e9a7224-3fb6-bdc9-b9ec-1b56696d34ec": {
+          "0cbe923f-e66c-6bb2-6cb1-6418b3665f8e": {},
+          "32f297fa-f9ee-df8d-151c-01f19934793e": {
+            "15e3558a-b564-8ebd-b330-5cfc5172941f": {}
+          },
+          "64e8bdb8-06da-4380-1569-4e9bcbb3e9bd": {},
+          "b797a935-0345-8f53-545c-a2d207173e1d": {},
+          "f0400217-6eb4-dec9-4806-3264e7f90265": {}
+        }
+      }
+    },
+    "1b2720ba-040c-e5ac-bb4c-4bd502ee3353": {
+      "0375e1c1-1217-7aa9-5e14-53c709a2abbe": {},
+      "07d79d42-e631-fb69-a1f7-25b044d94fbb": {},
+      "0bced7fe-4c88-f3c1-f877-6a0d0f344c46": {},
+      "1bf0e0e7-d4f1-a36d-416b-8af0651f138b": {},
+      "1deced2f-f026-ca87-711c-d8148b1dfd3c": {},
+      "1f35a3aa-321d-359f-7838-242bc2d08ae5": {},
+      "2bc42bca-a9be-0f33-16a7-ea847e546b37": {},
+      "3317c9c6-6c44-1a06-a476-11f77d722b34": {},
+      "3e223dbc-998f-e965-9d15-99085fd445ff": {},
+      "58fcb797-8a06-2976-9632-d281b3c1ddd2": {},
+      "65dcb250-dcb6-4cad-4617-0518a9a37d2e": {},
+      "79f0cc09-f068-284b-5473-efcf5dfa3497": {},
+      "79f7f205-38e6-9ca1-0fde-c0ca16f622f7": {},
+      "8097ae89-983e-8ea8-6612-eefb6dee9203": {},
+      "87018874-0598-6ca4-a7b3-4e1dd2bfe926": {},
+      "8b1e277e-0f88-a58b-4aff-51c74250671d": {},
+      "9001f172-4258-ceaa-86e9-f6e80b85853d": {},
+      "97a00dee-7375-3637-ec08-b62588d4d71d": {},
+      "9a64640a-d8d6-9efa-cf2f-b622aaa6e5ae": {},
+      "9fab1244-f449-d3c0-bfdc-f166f724e3f2": {},
+      "a0399d5f-26ab-3fac-def4-3834f5decac9": {},
+      "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f": {},
+      "ab281360-2719-c4e0-c3c6-4eea03401141": {},
+      "be02d298-2892-180a-ed1a-138dc589dd5c": {},
+      "cb92c02d-84cf-f104-938b-b7de6641f8e5": {},
+      "d3bdeaca-590c-cbc0-24ff-d7a070ed8f28": {},
+      "d5fc3678-2722-5112-c0bb-fa758f113246": {},
+      "dd35b139-3346-08f0-013c-1e3a8a522f7f": {},
+      "dfe3df16-dfc2-d4b5-09f8-ca4758ae1454": {},
+      "e544f3e4-e550-5750-8540-5598bbbf343c": {},
+      "e87743ed-b89e-d8ce-7b87-7b9aadcb4961": {},
+      "e9bd3f99-c925-8bc0-6bd5-15ac083d1028": {},
+      "edf95f43-efbd-5c2c-6384-6ab74c160c17": {},
+      "f0508110-9a11-3b6d-ea42-2193bf0485e0": {},
+      "f26a44de-edb5-57c8-fd0f-242811b7816c": {},
+      "f8d9bcd3-5655-7ddb-850d-28046a9dfba5": {},
+      "f9f20885-6316-a7b6-2196-8299f45692ff": {}
+    },
+    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": {}
+  },
+  "nodes": {
+    "005cb34a-7523-4940-a1e9-0cb530ba1005": {
+      "attributes": {
+        "name": "ADMEditor"
+      },
+      "base": null,
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ],
+          "items": [
+            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+          ],
+          "min": "undefined",
+          "max": "undefined"
+        }
+      },
+      "parent": null,
+      "pointers": {
+        "base": null
+      },
+      "registry": {
+        "MetaSheets": [
+          {
+            "SetID": "MetaAspectSet_2a6f02e3-18d8-52a6-61d3-acfe19847740",
+            "order": 0,
+            "title": "META"
+          },
+          {
+            "SetID": "MetaAspectSet_2d52fbad-642f-44fb-dc0a-39053b3ffbc5",
+            "order": 1,
+            "title": "Folders"
+          },
+          {
+            "SetID": "MetaAspectSet_5d0cd801-3952-b24c-b2c7-201d67d6bb0a",
+            "order": 2,
+            "title": "AVM Design Model"
+          },
+          {
+            "SetID": "MetaAspectSet_2155346a-4b75-18f2-a6bc-5830e8ad3d23",
+            "order": 3,
+            "title": "AVM Component Model"
+          },
+          {
+            "SetID": "MetaAspectSet_72a3b626-ae5c-c7a5-9922-ab8cfebe67d2",
+            "order": 4,
+            "title": "AVM Test bench Model"
+          },
+          {
+            "SetID": "MetaAspectSet_48b1b523-6b87-61a8-b6a3-83fd60c98ff6",
+            "order": 5,
+            "title": "Requirements"
+          },
+          {
+            "SetID": "MetaAspectSet_4d5d204e-f520-ca21-01d9-1a9565f9b9c2",
+            "order": 6,
+            "title": "Tests"
+          },
+          {
+            "SetID": "MetaAspectSet_080b3ca3-3101-e949-b152-2f1d166e0ed1",
+            "order": 0,
+            "title": "META"
+          },
+          {
+            "SetID": "MetaAspectSet_24afaa72-3d6c-6972-a352-bd784001bc35",
+            "order": 7,
+            "title": "LayoutConstraints"
+          }
+        ],
+        "ProjectRegistry": {
+          "FCO_ID": "/1"
+        },
+        "validPlugins": "AtmExporter ExportWorkspace PluginGenerator AtmImporter GeneratePluginTests AcmImporter AdmImporter TestBenchRunner AdmExporter"
+      },
+      "sets": {
+        "MetaAspectSet": [
+          {
+            "attributes": {},
+            "guid": "0375e1c1-1217-7aa9-5e14-53c709a2abbe",
+            "registry": {
+              "position": {
+                "x": 615,
+                "y": 216
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "07d79d42-e631-fb69-a1f7-25b044d94fbb",
+            "registry": {
+              "position": {
+                "x": 715,
+                "y": 319
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "0bced7fe-4c88-f3c1-f877-6a0d0f344c46",
+            "registry": {
+              "position": {
+                "x": 413,
+                "y": 591
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+            "registry": {
+              "position": {
+                "x": 104,
+                "y": 246
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "1bf0e0e7-d4f1-a36d-416b-8af0651f138b",
+            "registry": {
+              "position": {
+                "x": 1031,
+                "y": 499
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "1deced2f-f026-ca87-711c-d8148b1dfd3c",
+            "registry": {
+              "position": {
+                "x": 276,
+                "y": 503
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "1f35a3aa-321d-359f-7838-242bc2d08ae5",
+            "registry": {
+              "position": {
+                "x": 386,
+                "y": 249
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+            "registry": {
+              "position": {
+                "x": 270,
+                "y": 579
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "3317c9c6-6c44-1a06-a476-11f77d722b34",
+            "registry": {
+              "position": {
+                "x": 214,
+                "y": 356
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "3e223dbc-998f-e965-9d15-99085fd445ff",
+            "registry": {
+              "position": {
+                "x": 900,
+                "y": 365
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "58fcb797-8a06-2976-9632-d281b3c1ddd2",
+            "registry": {
+              "position": {
+                "x": 393,
+                "y": 529
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "65dcb250-dcb6-4cad-4617-0518a9a37d2e",
+            "registry": {
+              "position": {
+                "x": 399,
+                "y": 717
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "79f0cc09-f068-284b-5473-efcf5dfa3497",
+            "registry": {
+              "position": {
+                "x": 18,
+                "y": 304
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "79f7f205-38e6-9ca1-0fde-c0ca16f622f7",
+            "registry": {
+              "position": {
+                "x": 291,
+                "y": 539
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "8097ae89-983e-8ea8-6612-eefb6dee9203",
+            "registry": {
+              "position": {
+                "x": 999,
+                "y": 376
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "87018874-0598-6ca4-a7b3-4e1dd2bfe926",
+            "registry": {
+              "position": {
+                "x": 717,
+                "y": 253
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "8b1e277e-0f88-a58b-4aff-51c74250671d",
+            "registry": {
+              "position": {
+                "x": 366,
+                "y": 229
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9001f172-4258-ceaa-86e9-f6e80b85853d",
+            "registry": {
+              "position": {
+                "x": 586,
+                "y": 314
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "97a00dee-7375-3637-ec08-b62588d4d71d",
+            "registry": {
+              "position": {
+                "x": 347,
+                "y": 96
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9a64640a-d8d6-9efa-cf2f-b622aaa6e5ae",
+            "registry": {
+              "position": {
+                "x": 450,
+                "y": 364
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9fab1244-f449-d3c0-bfdc-f166f724e3f2",
+            "registry": {
+              "position": {
+                "x": 131,
+                "y": 188
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "a0399d5f-26ab-3fac-def4-3834f5decac9",
+            "registry": {
+              "position": {
+                "x": 228,
+                "y": 170
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f",
+            "registry": {
+              "position": {
+                "x": 98,
+                "y": 648
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "ab281360-2719-c4e0-c3c6-4eea03401141",
+            "registry": {
+              "position": {
+                "x": 679,
+                "y": 475
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "be02d298-2892-180a-ed1a-138dc589dd5c",
+            "registry": {
+              "position": {
+                "x": 333,
+                "y": 770
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cb92c02d-84cf-f104-938b-b7de6641f8e5",
+            "registry": {
+              "position": {
+                "x": 137,
+                "y": 198
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+            "registry": {
+              "position": {
+                "x": 100,
+                "y": 100
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "d3bdeaca-590c-cbc0-24ff-d7a070ed8f28",
+            "registry": {
+              "position": {
+                "x": 1319,
+                "y": 502
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "d5fc3678-2722-5112-c0bb-fa758f113246",
+            "registry": {
+              "position": {
+                "x": 573,
+                "y": 156
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "dd35b139-3346-08f0-013c-1e3a8a522f7f",
+            "registry": {
+              "position": {
+                "x": 406,
+                "y": 269
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "dfe3df16-dfc2-d4b5-09f8-ca4758ae1454",
+            "registry": {
+              "position": {
+                "x": 22,
+                "y": 243
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e544f3e4-e550-5750-8540-5598bbbf343c",
+            "registry": {
+              "position": {
+                "x": 49,
+                "y": 394
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e87743ed-b89e-d8ce-7b87-7b9aadcb4961",
+            "registry": {
+              "position": {
+                "x": 627,
+                "y": 392
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e9bd3f99-c925-8bc0-6bd5-15ac083d1028",
+            "registry": {
+              "position": {
+                "x": 401,
+                "y": 274
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "edf95f43-efbd-5c2c-6384-6ab74c160c17",
+            "registry": {
+              "position": {
+                "x": 611,
+                "y": 414
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "f0508110-9a11-3b6d-ea42-2193bf0485e0",
+            "registry": {
+              "position": {
+                "x": 507,
+                "y": 458
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "f26a44de-edb5-57c8-fd0f-242811b7816c",
+            "registry": {
+              "position": {
+                "x": 876,
+                "y": 551
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "f8d9bcd3-5655-7ddb-850d-28046a9dfba5",
+            "registry": {
+              "position": {
+                "x": 469,
+                "y": 556
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "f9f20885-6316-a7b6-2196-8299f45692ff",
+            "registry": {
+              "position": {
+                "x": 675,
+                "y": 486
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_080b3ca3-3101-e949-b152-2f1d166e0ed1": [
+          {
+            "attributes": {},
+            "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+            "registry": {
+              "position": {
+                "x": 100,
+                "y": 100
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_2155346a-4b75-18f2-a6bc-5830e8ad3d23": [
+          {
+            "attributes": {},
+            "guid": "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+            "registry": {
+              "position": {
+                "x": 54,
+                "y": 400
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "58fcb797-8a06-2976-9632-d281b3c1ddd2",
+            "registry": {
+              "position": {
+                "x": 335,
+                "y": 348
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "65dcb250-dcb6-4cad-4617-0518a9a37d2e",
+            "registry": {
+              "position": {
+                "x": 187,
+                "y": 455
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "8b1e277e-0f88-a58b-4aff-51c74250671d",
+            "registry": {
+              "position": {
+                "x": 158,
+                "y": 80
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f",
+            "registry": {
+              "position": {
+                "x": 198,
+                "y": 569
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cb92c02d-84cf-f104-938b-b7de6641f8e5",
+            "registry": {
+              "position": {
+                "x": 137,
+                "y": 198
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e9bd3f99-c925-8bc0-6bd5-15ac083d1028",
+            "registry": {
+              "position": {
+                "x": 424,
+                "y": 184
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "f0508110-9a11-3b6d-ea42-2193bf0485e0",
+            "registry": {
+              "position": {
+                "x": 499,
+                "y": 350
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_24afaa72-3d6c-6972-a352-bd784001bc35": [
+          {
+            "attributes": {},
+            "guid": "1bf0e0e7-d4f1-a36d-416b-8af0651f138b",
+            "registry": {
+              "position": {
+                "x": 1031,
+                "y": 489
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "3317c9c6-6c44-1a06-a476-11f77d722b34",
+            "registry": {
+              "position": {
+                "x": 376,
+                "y": 138
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "3e223dbc-998f-e965-9d15-99085fd445ff",
+            "registry": {
+              "position": {
+                "x": 256,
+                "y": 493
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "79f7f205-38e6-9ca1-0fde-c0ca16f622f7",
+            "registry": {
+              "position": {
+                "x": 527,
+                "y": 495
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "87018874-0598-6ca4-a7b3-4e1dd2bfe926",
+            "registry": {
+              "position": {
+                "x": 580,
+                "y": 329
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cb92c02d-84cf-f104-938b-b7de6641f8e5",
+            "registry": {
+              "position": {
+                "x": 577,
+                "y": 105
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "d3bdeaca-590c-cbc0-24ff-d7a070ed8f28",
+            "registry": {
+              "position": {
+                "x": 1294,
+                "y": 490
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "f26a44de-edb5-57c8-fd0f-242811b7816c",
+            "registry": {
+              "position": {
+                "x": 775,
+                "y": 490
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_2a6f02e3-18d8-52a6-61d3-acfe19847740": [
+          {
+            "attributes": {},
+            "guid": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+            "registry": {
+              "position": {
+                "x": 104,
+                "y": 246
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+            "registry": {
+              "position": {
+                "x": 100,
+                "y": 100
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_2d52fbad-642f-44fb-dc0a-39053b3ffbc5": [
+          {
+            "attributes": {},
+            "guid": "0375e1c1-1217-7aa9-5e14-53c709a2abbe",
+            "registry": {
+              "position": {
+                "x": 595,
+                "y": 208
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "1f35a3aa-321d-359f-7838-242bc2d08ae5",
+            "registry": {
+              "position": {
+                "x": 415,
+                "y": 188
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "3317c9c6-6c44-1a06-a476-11f77d722b34",
+            "registry": {
+              "position": {
+                "x": 255,
+                "y": 358
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "8b1e277e-0f88-a58b-4aff-51c74250671d",
+            "registry": {
+              "position": {
+                "x": 75,
+                "y": 188
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "a0399d5f-26ab-3fac-def4-3834f5decac9",
+            "registry": {
+              "position": {
+                "x": 225,
+                "y": 58
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "dd35b139-3346-08f0-013c-1e3a8a522f7f",
+            "registry": {
+              "position": {
+                "x": 235,
+                "y": 188
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_48b1b523-6b87-61a8-b6a3-83fd60c98ff6": [
+          {
+            "attributes": {},
+            "guid": "0375e1c1-1217-7aa9-5e14-53c709a2abbe",
+            "registry": {
+              "position": {
+                "x": 499,
+                "y": 119
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "1deced2f-f026-ca87-711c-d8148b1dfd3c",
+            "registry": {
+              "position": {
+                "x": 461,
+                "y": 258
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9a64640a-d8d6-9efa-cf2f-b622aaa6e5ae",
+            "registry": {
+              "position": {
+                "x": 766,
+                "y": 184
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "ab281360-2719-c4e0-c3c6-4eea03401141",
+            "registry": {
+              "position": {
+                "x": 487,
+                "y": 378
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "d5fc3678-2722-5112-c0bb-fa758f113246",
+            "registry": {
+              "position": {
+                "x": 258,
+                "y": 417
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_4d5d204e-f520-ca21-01d9-1a9565f9b9c2": [
+          {
+            "attributes": {},
+            "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+            "registry": {
+              "position": {
+                "x": 631,
+                "y": 178
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e87743ed-b89e-d8ce-7b87-7b9aadcb4961",
+            "registry": {
+              "position": {
+                "x": 627,
+                "y": 392
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_5d0cd801-3952-b24c-b2c7-201d67d6bb0a": [
+          {
+            "attributes": {},
+            "guid": "0bced7fe-4c88-f3c1-f877-6a0d0f344c46",
+            "registry": {
+              "position": {
+                "x": 108,
+                "y": 746
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "1f35a3aa-321d-359f-7838-242bc2d08ae5",
+            "registry": {
+              "position": {
+                "x": 193,
+                "y": 80
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+            "registry": {
+              "position": {
+                "x": 201,
+                "y": 370
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "3317c9c6-6c44-1a06-a476-11f77d722b34",
+            "registry": {
+              "position": {
+                "x": 204,
+                "y": 217
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "58fcb797-8a06-2976-9632-d281b3c1ddd2",
+            "registry": {
+              "position": {
+                "x": 437,
+                "y": 305
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "65dcb250-dcb6-4cad-4617-0518a9a37d2e",
+            "registry": {
+              "position": {
+                "x": 232,
+                "y": 586
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "79f0cc09-f068-284b-5473-efcf5dfa3497",
+            "registry": {
+              "position": {
+                "x": 4,
+                "y": 284
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "8097ae89-983e-8ea8-6612-eefb6dee9203",
+            "registry": {
+              "position": {
+                "x": 999,
+                "y": 376
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "97a00dee-7375-3637-ec08-b62588d4d71d",
+            "registry": {
+              "position": {
+                "x": 322,
+                "y": 99
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f",
+            "registry": {
+              "position": {
+                "x": 6,
+                "y": 577
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "be02d298-2892-180a-ed1a-138dc589dd5c",
+            "registry": {
+              "position": {
+                "x": 286,
+                "y": 755
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cb92c02d-84cf-f104-938b-b7de6641f8e5",
+            "registry": {
+              "position": {
+                "x": 523,
+                "y": 88
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "dfe3df16-dfc2-d4b5-09f8-ca4758ae1454",
+            "registry": {
+              "position": {
+                "x": -1,
+                "y": 167
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e544f3e4-e550-5750-8540-5598bbbf343c",
+            "registry": {
+              "position": {
+                "x": 19,
+                "y": 395
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e9bd3f99-c925-8bc0-6bd5-15ac083d1028",
+            "registry": {
+              "position": {
+                "x": 969,
+                "y": 204
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "f0508110-9a11-3b6d-ea42-2193bf0485e0",
+            "registry": {
+              "position": {
+                "x": 507,
+                "y": 458
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "f8d9bcd3-5655-7ddb-850d-28046a9dfba5",
+            "registry": {
+              "position": {
+                "x": 664,
+                "y": 325
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "f9f20885-6316-a7b6-2196-8299f45692ff",
+            "registry": {
+              "position": {
+                "x": 671,
+                "y": 465
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_72a3b626-ae5c-c7a5-9922-ab8cfebe67d2": [
+          {
+            "attributes": {},
+            "guid": "07d79d42-e631-fb69-a1f7-25b044d94fbb",
+            "registry": {
+              "position": {
+                "x": 410,
+                "y": 301
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+            "registry": {
+              "position": {
+                "x": 329,
+                "y": 450
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "3317c9c6-6c44-1a06-a476-11f77d722b34",
+            "registry": {
+              "position": {
+                "x": 83,
+                "y": 416
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9001f172-4258-ceaa-86e9-f6e80b85853d",
+            "registry": {
+              "position": {
+                "x": 367,
+                "y": 61
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "9fab1244-f449-d3c0-bfdc-f166f724e3f2",
+            "registry": {
+              "position": {
+                "x": 131,
+                "y": 188
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f",
+            "registry": {
+              "position": {
+                "x": 322,
+                "y": 676
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "cb92c02d-84cf-f104-938b-b7de6641f8e5",
+            "registry": {
+              "position": {
+                "x": 40,
+                "y": 612
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "d5fc3678-2722-5112-c0bb-fa758f113246",
+            "registry": {
+              "position": {
+                "x": 492,
+                "y": 489
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "dd35b139-3346-08f0-013c-1e3a8a522f7f",
+            "registry": {
+              "position": {
+                "x": 146,
+                "y": 67
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "e544f3e4-e550-5750-8540-5598bbbf343c",
+            "registry": {
+              "position": {
+                "x": 8,
+                "y": 28
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "edf95f43-efbd-5c2c-6384-6ab74c160c17",
+            "registry": {
+              "position": {
+                "x": 524,
+                "y": 41
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "f8d9bcd3-5655-7ddb-850d-28046a9dfba5",
+            "registry": {
+              "position": {
+                "x": 710,
+                "y": 432
+              }
+            }
+          },
+          {
+            "attributes": {},
+            "guid": "f9f20885-6316-a7b6-2196-8299f45692ff",
+            "registry": {
+              "position": {
+                "x": 731,
+                "y": 302
+              }
+            }
+          }
+        ]
+      },
+      "constraints": {}
+    },
+    "0375e1c1-1217-7aa9-5e14-53c709a2abbe": {
+      "attributes": {
+        "INFO": "Container of requirements.",
+        "name": "RequirementsFolder"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "1deced2f-f026-ca87-711c-d8148b1dfd3c"
+          ],
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "SVGIcon": "Folder.svg",
+        "color": "#66ffff",
+        "position": {
+          "x": 1229,
+          "y": 233
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "051e2614-8618-ce58-2fe0-41f94ccaf98b": {
+      "attributes": {},
+      "base": "15e3558a-b564-8ebd-b330-5cfc5172941f",
+      "meta": {
+        "attributes": {
+          "Class": {
+            "default": "",
+            "type": "string"
+          },
+          "Type": {
+            "default": "",
+            "enum": [
+              "ModelicaConnector",
+              "CadPoint",
+              "CadAxis",
+              "CadPlane",
+              "CadCoordinateSystem"
+            ],
+            "type": "string"
+          },
+          "ID": {
+            "type": "string",
+            "default": ""
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "220fe464-ca92-9f68-89cc-1cf4848c14aa",
+      "pointers": {},
+      "registry": {},
+      "sets": {},
+      "constraints": {}
+    },
+    "07d79d42-e631-fb69-a1f7-25b044d94fbb": {
+      "attributes": {
+        "INFO": "Settings for the test-bench.",
+        "IntervalLength": 0,
+        "NumberOfIntervals": 100,
+        "StartTime": 0,
+        "StopTime": 1,
+        "Tolerance": 0.00001,
+        "name": "Settings"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "IntervalLength": {
+            "default": 0,
+            "type": "float"
+          },
+          "NumberOfIntervals": {
+            "default": 100,
+            "type": "integer"
+          },
+          "StartTime": {
+            "default": 0,
+            "type": "float"
+          },
+          "StopTime": {
+            "default": 1,
+            "type": "float"
+          },
+          "Tolerance": {
+            "default": 0.00001,
+            "type": "float"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "SVGIcon": "Gear.svg",
+        "position": {
+          "x": 1026,
+          "y": 524
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "0bced7fe-4c88-f3c1-f877-6a0d0f344c46": {
+      "attributes": {
+        "INFO": "Simple mathematical operations.",
+        "Method": "Addition",
+        "name": "SimpleFormula"
+      },
+      "base": "65dcb250-dcb6-4cad-4617-0518a9a37d2e",
+      "meta": {
+        "attributes": {
+          "Method": {
+            "default": "Addition",
+            "enum": [
+              "Addition",
+              "Multiplication",
+              "ArithmetricMean",
+              "GeometricMean",
+              "Maximum",
+              "Minimum"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "65dcb250-dcb6-4cad-4617-0518a9a37d2e"
+      },
+      "registry": {
+        "SVGIcon": "Chemistry.svg",
+        "color": "#ffb366",
+        "isAbstract": false,
+        "position": {
+          "x": 484,
+          "y": 661
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "0cbe923f-e66c-6bb2-6cb1-6418b3665f8e": {
+      "attributes": {
+        "DataType": "Real",
+        "ID": "id-40fd7c8d-6149-4c6e-97f3-42128e5e17f1",
+        "Maximum": "inf",
+        "Minimum": "-inf",
+        "OnDataSheet": false,
+        "Value": "5.5",
+        "ValueType": "Fixed",
+        "name": "Prop"
+      },
+      "base": "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+      "meta": {
+        "attributes": {
+          "DataType": {
+            "default": "String",
+            "enum": [
+              "Real",
+              "Integer",
+              "Boolean",
+              "String"
+            ],
+            "type": "string"
+          },
+          "Default": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Maximum": {
+            "default": "inf",
+            "type": "string"
+          },
+          "Minimum": {
+            "default": "-inf",
+            "type": "string"
+          },
+          "OnDataSheet": {
+            "type": "boolean",
+            "default": false
+          },
+          "Unit": {
+            "default": "",
+            "type": "string"
+          },
+          "Value": {
+            "default": "",
+            "type": "string"
+          },
+          "ValueType": {
+            "default": "Fixed",
+            "enum": [
+              "Fixed",
+              "Parametric"
+            ],
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "0e9a7224-3fb6-bdc9-b9ec-1b56696d34ec",
+      "pointers": {
+        "base": "2bc42bca-a9be-0f33-16a7-ea847e546b37"
+      },
+      "registry": {
+        "position": {
+          "x": 77,
+          "y": 392
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "0e9a7224-3fb6-bdc9-b9ec-1b56696d34ec": {
+      "attributes": {
+        "ID": "9fec54cf-6be4-477f-9351-94b0a52caad8",
+        "Resource": "95f5f253ec1bd748cf668024c0d51b9cc9f565f3",
+        "SchemaVersion": "2.5",
+        "Version": "",
+        "name": "Modelica"
+      },
+      "base": "cb92c02d-84cf-f104-938b-b7de6641f8e5",
+      "meta": {
+        "attributes": {
+          "Classifications": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Resource": {
+            "default": "",
+            "type": "asset"
+          },
+          "SchemaVersion": {
+            "default": "",
+            "type": "string"
+          },
+          "Version": {
+            "default": "",
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "8e59be89-5899-3619-872d-c2222292cd73",
+      "pointers": {
+        "base": "cb92c02d-84cf-f104-938b-b7de6641f8e5"
+      },
+      "registry": {
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "0f8fa428-4f7e-3e83-1acd-141b22b417cf": {
+      "attributes": {},
+      "base": "a0399d5f-26ab-3fac-def4-3834f5decac9",
+      "meta": {
+        "attributes": {
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "005cb34a-7523-4940-a1e9-0cb530ba1005",
+      "pointers": {
+        "base": "a0399d5f-26ab-3fac-def4-3834f5decac9"
+      },
+      "registry": {
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "113159c3-1cae-38f5-8fd4-5b356a2f5e3d": {
+      "attributes": {},
+      "base": "3317c9c6-6c44-1a06-a476-11f77d722b34",
+      "meta": {
+        "attributes": {
+          "Type": {
+            "default": "Compound",
+            "enum": [
+              "Compound",
+              "Alternative",
+              "Optional"
+            ],
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          },
+          "Description": {
+            "default": "",
+            "type": "string"
+          },
+          "Resource": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "7fd023cc-47ef-948a-a258-14c2d8c612cf",
+      "pointers": {
+        "base": "3317c9c6-6c44-1a06-a476-11f77d722b34"
+      },
+      "registry": {
+        "position": {
+          "x": 137,
+          "y": 147
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "15e3558a-b564-8ebd-b330-5cfc5172941f": {
+      "attributes": {
+        "Class": "class",
+        "ID": "id-1439b05b-11ed-4a09-a115-22b756fc2548",
+        "Type": "ModelicaConnector",
+        "name": "mc"
+      },
+      "base": "f0508110-9a11-3b6d-ea42-2193bf0485e0",
+      "meta": {
+        "attributes": {
+          "Class": {
+            "default": "",
+            "type": "string"
+          },
+          "Type": {
+            "default": "",
+            "enum": [
+              "ModelicaConnector",
+              "CadPoint",
+              "CadAxis",
+              "CadPlane",
+              "CadCoordinateSystem"
+            ],
+            "type": "string"
+          },
+          "ID": {
+            "type": "string",
+            "default": ""
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "32f297fa-f9ee-df8d-151c-01f19934793e",
+      "pointers": {
+        "base": "f0508110-9a11-3b6d-ea42-2193bf0485e0"
+      },
+      "registry": {
+        "position": {
+          "x": 200,
+          "y": 200
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "1b2720ba-040c-e5ac-bb4c-4bd502ee3353": {
+      "attributes": {
+        "name": "ADMEditorModelingLanguage"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+          ],
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ]
+        }
+      },
+      "parent": "005cb34a-7523-4940-a1e9-0cb530ba1005",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 81,
+          "y": 292
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "1bf0e0e7-d4f1-a36d-416b-8af0651f138b": {
+      "attributes": {
+        "RelativeLayer": "No Restriction",
+        "XRelativeRange": "",
+        "YRelativeRange": "",
+        "name": "RelativeRangeLayoutConstraint"
+      },
+      "base": "87018874-0598-6ca4-a7b3-4e1dd2bfe926",
+      "meta": {
+        "attributes": {
+          "Notes": {
+            "default": "",
+            "type": "string"
+          },
+          "RelativeLayer": {
+            "default": "No Restriction",
+            "enum": [
+              "No Restriction",
+              "Same",
+              "Opposite"
+            ],
+            "type": "string"
+          },
+          "XOffsetRange": {
+            "default": "",
+            "type": "string"
+          },
+          "YOffsetRange": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "pointers": {
+          "OriginComponent": {
+            "items": [
+              "cb92c02d-84cf-f104-938b-b7de6641f8e5"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "OriginComponent": null,
+        "base": "87018874-0598-6ca4-a7b3-4e1dd2bfe926"
+      },
+      "registry": {
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      "sets": {
+        "ConstraintTarget": []
+      },
+      "constraints": {}
+    },
+    "1c43e1a1-d510-2b57-f061-791daede321a": {
+      "attributes": {},
+      "base": "0cbe923f-e66c-6bb2-6cb1-6418b3665f8e",
+      "meta": {
+        "attributes": {
+          "DataType": {
+            "default": "String",
+            "enum": [
+              "Real",
+              "Integer",
+              "Boolean",
+              "String"
+            ],
+            "type": "string"
+          },
+          "Default": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Maximum": {
+            "default": "inf",
+            "type": "string"
+          },
+          "Minimum": {
+            "default": "-inf",
+            "type": "string"
+          },
+          "OnDataSheet": {
+            "type": "boolean",
+            "default": false
+          },
+          "Unit": {
+            "default": "",
+            "type": "string"
+          },
+          "Value": {
+            "default": "",
+            "type": "string"
+          },
+          "ValueType": {
+            "default": "Fixed",
+            "enum": [
+              "Fixed",
+              "Parametric"
+            ],
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "768a6ddd-0cca-fd2c-253c-065374d55978",
+      "pointers": {},
+      "registry": {},
+      "sets": {},
+      "constraints": {}
+    },
+    "1deced2f-f026-ca87-711c-d8148b1dfd3c": {
+      "attributes": {
+        "INFO": "A group of requirements.",
+        "name": "RequirementCategory"
+      },
+      "base": "9a64640a-d8d6-9efa-cf2f-b622aaa6e5ae",
+      "meta": {
+        "attributes": {
+          "Priority": {
+            "default": 0,
+            "type": "integer"
+          },
+          "description": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "weight": {
+            "default": 1,
+            "type": "float"
+          },
+          "weightNeg": {
+            "default": 1,
+            "type": "float"
+          },
+          "weightPos": {
+            "default": 1,
+            "type": "float"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "1deced2f-f026-ca87-711c-d8148b1dfd3c",
+            "ab281360-2719-c4e0-c3c6-4eea03401141"
+          ],
+          "minItems": [
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            -1
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "9a64640a-d8d6-9efa-cf2f-b622aaa6e5ae"
+      },
+      "registry": {
+        "color": "#99ffff",
+        "isAbstract": false,
+        "position": {
+          "x": 1187,
+          "y": 449
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "1f35a3aa-321d-359f-7838-242bc2d08ae5": {
+      "attributes": {
+        "INFO": "Container of designs.",
+        "name": "ADMFolder"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "1f35a3aa-321d-359f-7838-242bc2d08ae5",
+            "3317c9c6-6c44-1a06-a476-11f77d722b34"
+          ],
+          "minItems": [
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            -1
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "SVGIcon": "Folder.svg",
+        "color": "#99ccff",
+        "position": {
+          "x": 228,
+          "y": 223
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "220fe464-ca92-9f68-89cc-1cf4848c14aa": {
+      "attributes": {},
+      "base": "32f297fa-f9ee-df8d-151c-01f19934793e",
+      "meta": {
+        "attributes": {
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          },
+          "Definition": {
+            "default": "",
+            "type": "string"
+          },
+          "Description": {
+            "default": "",
+            "type": "string"
+          }
+        }
+      },
+      "parent": "768a6ddd-0cca-fd2c-253c-065374d55978",
+      "pointers": {},
+      "registry": {},
+      "sets": {},
+      "constraints": {}
+    },
+    "2bc42bca-a9be-0f33-16a7-ea847e546b37": {
+      "attributes": {
+        "DataType": "String",
+        "Default": "",
+        "ID": "",
+        "INFO": "A property or parametric value.",
+        "Maximum": "inf",
+        "Minimum": "-inf",
+        "OnDataSheet": false,
+        "Unit": "",
+        "Value": "",
+        "ValueType": "Fixed",
+        "name": "Property"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "DataType": {
+            "default": "String",
+            "enum": [
+              "Real",
+              "Integer",
+              "Boolean",
+              "String"
+            ],
+            "type": "string"
+          },
+          "Default": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Maximum": {
+            "default": "inf",
+            "type": "string"
+          },
+          "Minimum": {
+            "default": "-inf",
+            "type": "string"
+          },
+          "OnDataSheet": {
+            "default": false,
+            "type": "boolean"
+          },
+          "Unit": {
+            "default": "",
+            "type": "string"
+          },
+          "Value": {
+            "default": "",
+            "type": "string"
+          },
+          "ValueType": {
+            "default": "Fixed",
+            "enum": [
+              "Fixed",
+              "Parametric"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "2bc42bca-a9be-0f33-16a7-ea847e546b37"
+          ],
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "PortSVGIcon": "BlackPort.svg",
+        "color": "#ffe6cc",
+        "isPort": true,
+        "position": {
+          "x": 103,
+          "y": 423
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "31210b37-0234-e1f7-e194-17c772f79295": {
+      "attributes": {
+        "DataType": "Real",
+        "ID": "id-40fd7c8d-6149-4c6e-97f3-42128e5e17f1",
+        "Maximum": "inf",
+        "Minimum": "-inf",
+        "OnDataSheet": false,
+        "Value": "5.5",
+        "ValueType": "Fixed",
+        "name": "Prop"
+      },
+      "base": "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+      "meta": {
+        "attributes": {
+          "DataType": {
+            "default": "String",
+            "enum": [
+              "Real",
+              "Integer",
+              "Boolean",
+              "String"
+            ],
+            "type": "string"
+          },
+          "Default": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Maximum": {
+            "default": "inf",
+            "type": "string"
+          },
+          "Minimum": {
+            "default": "-inf",
+            "type": "string"
+          },
+          "OnDataSheet": {
+            "type": "boolean",
+            "default": false
+          },
+          "Unit": {
+            "default": "",
+            "type": "string"
+          },
+          "Value": {
+            "default": "",
+            "type": "string"
+          },
+          "ValueType": {
+            "default": "Fixed",
+            "enum": [
+              "Fixed",
+              "Parametric"
+            ],
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "5ecd04c4-44b3-ae27-e0ee-6cbc95f35464",
+      "pointers": {
+        "base": "2bc42bca-a9be-0f33-16a7-ea847e546b37"
+      },
+      "registry": {
+        "position": {
+          "x": 1016,
+          "y": 279
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "32f297fa-f9ee-df8d-151c-01f19934793e": {
+      "attributes": {
+        "ID": "id-a99d8ceb-ab0c-42e3-a87f-e2dc046d4d0c",
+        "name": "c"
+      },
+      "base": "58fcb797-8a06-2976-9632-d281b3c1ddd2",
+      "meta": {
+        "attributes": {
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          },
+          "Definition": {
+            "default": "",
+            "type": "string"
+          },
+          "Description": {
+            "default": "",
+            "type": "string"
+          }
+        }
+      },
+      "parent": "0e9a7224-3fb6-bdc9-b9ec-1b56696d34ec",
+      "pointers": {
+        "base": "58fcb797-8a06-2976-9632-d281b3c1ddd2"
+      },
+      "registry": {
+        "position": {
+          "x": 84,
+          "y": 231
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "3317c9c6-6c44-1a06-a476-11f77d722b34": {
+      "attributes": {
+        "Description": "",
+        "INFO": "System of components and sub-systems.",
+        "Resource": "",
+        "Type": "Compound",
+        "name": "Container"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "Description": {
+            "default": "",
+            "type": "string"
+          },
+          "Resource": {
+            "default": "",
+            "type": "asset"
+          },
+          "Type": {
+            "default": "Compound",
+            "enum": [
+              "Compound",
+              "Alternative",
+              "Optional"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+            "3317c9c6-6c44-1a06-a476-11f77d722b34",
+            "58fcb797-8a06-2976-9632-d281b3c1ddd2",
+            "65dcb250-dcb6-4cad-4617-0518a9a37d2e",
+            "8097ae89-983e-8ea8-6612-eefb6dee9203",
+            "87018874-0598-6ca4-a7b3-4e1dd2bfe926",
+            "97a00dee-7375-3637-ec08-b62588d4d71d",
+            "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f",
+            "cb92c02d-84cf-f104-938b-b7de6641f8e5",
+            "dfe3df16-dfc2-d4b5-09f8-ca4758ae1454",
+            "e9bd3f99-c925-8bc0-6bd5-15ac083d1028",
+            "f0508110-9a11-3b6d-ea42-2193bf0485e0",
+            "f8d9bcd3-5655-7ddb-850d-28046a9dfba5",
+            "f9f20885-6316-a7b6-2196-8299f45692ff"
+          ],
+          "minItems": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        "aspects": {
+          "NoValueFlow": [
+            "3317c9c6-6c44-1a06-a476-11f77d722b34",
+            "58fcb797-8a06-2976-9632-d281b3c1ddd2",
+            "cb92c02d-84cf-f104-938b-b7de6641f8e5",
+            "f8d9bcd3-5655-7ddb-850d-28046a9dfba5"
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "color": "#cce5ff",
+        "position": {
+          "x": 168,
+          "y": 354
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "386ee9e0-cd9b-25f0-2944-89587dd90484": {
+      "attributes": {},
+      "base": "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f",
+      "meta": {
+        "attributes": {
+          "VariableName": {
+            "default": "",
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "113159c3-1cae-38f5-8fd4-5b356a2f5e3d",
+      "pointers": {
+        "base": "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f",
+        "dst": "a76adaab-3039-cfb6-c88c-bfd71aaf5389",
+        "src": "d83e8c50-5eb6-ffdc-6822-0e884265bfcf"
+      },
+      "registry": {
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "3e223dbc-998f-e965-9d15-99085fd445ff": {
+      "attributes": {
+        "Layer": "Top",
+        "Rotation": "",
+        "X": null,
+        "Y": null,
+        "name": "ExactLayoutConstraint"
+      },
+      "base": "87018874-0598-6ca4-a7b3-4e1dd2bfe926",
+      "meta": {
+        "attributes": {
+          "Layer": {
+            "default": "Top",
+            "enum": [
+              "Top",
+              "Bottom"
+            ],
+            "type": "string"
+          },
+          "Notes": {
+            "default": "",
+            "type": "string"
+          },
+          "Rotation": {
+            "default": "",
+            "enum": [
+              "0",
+              "90",
+              "180",
+              "270"
+            ],
+            "type": "string"
+          },
+          "X": {
+            "default": null,
+            "type": "float"
+          },
+          "Y": {
+            "default": null,
+            "type": "float"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "87018874-0598-6ca4-a7b3-4e1dd2bfe926"
+      },
+      "registry": {
+        "position": {
+          "x": 746,
+          "y": 258
+        }
+      },
+      "sets": {
+        "ConstraintTarget": []
+      },
+      "constraints": {}
+    },
+    "40339fcc-164f-f128-a43c-00afde9077c1": {
+      "attributes": {
+        "DataType": "Integer",
+        "ID": "id-3eb0bd47-c681-4868-b9ae-6fa5b9708521",
+        "Maximum": "inf",
+        "Minimum": "-inf",
+        "Value": "4",
+        "ValueType": "Parametric",
+        "name": "Param"
+      },
+      "base": "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+      "meta": {
+        "attributes": {
+          "DataType": {
+            "default": "String",
+            "enum": [
+              "Real",
+              "Integer",
+              "Boolean",
+              "String"
+            ],
+            "type": "string"
+          },
+          "Default": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Maximum": {
+            "default": "inf",
+            "type": "string"
+          },
+          "Minimum": {
+            "default": "-inf",
+            "type": "string"
+          },
+          "OnDataSheet": {
+            "type": "boolean",
+            "default": false
+          },
+          "Unit": {
+            "default": "",
+            "type": "string"
+          },
+          "Value": {
+            "default": "",
+            "type": "string"
+          },
+          "ValueType": {
+            "default": "Fixed",
+            "enum": [
+              "Fixed",
+              "Parametric"
+            ],
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "5ecd04c4-44b3-ae27-e0ee-6cbc95f35464",
+      "pointers": {
+        "base": "2bc42bca-a9be-0f33-16a7-ea847e546b37"
+      },
+      "registry": {
+        "position": {
+          "x": 991,
+          "y": 138
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "428911c8-137b-2fc7-2388-8266e7aeff44": {
+      "attributes": {
+        "DataType": "Real",
+        "ID": "id-40fd7c8d-6149-4c6e-97f3-42128e5e17f1",
+        "Maximum": "inf",
+        "Minimum": "-inf",
+        "OnDataSheet": false,
+        "Value": "5.5",
+        "ValueType": "Fixed",
+        "name": "Prop"
+      },
+      "base": "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+      "meta": {
+        "attributes": {
+          "DataType": {
+            "default": "String",
+            "enum": [
+              "Real",
+              "Integer",
+              "Boolean",
+              "String"
+            ],
+            "type": "string"
+          },
+          "Default": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Maximum": {
+            "default": "inf",
+            "type": "string"
+          },
+          "Minimum": {
+            "default": "-inf",
+            "type": "string"
+          },
+          "OnDataSheet": {
+            "type": "boolean",
+            "default": false
+          },
+          "Unit": {
+            "default": "",
+            "type": "string"
+          },
+          "Value": {
+            "default": "",
+            "type": "string"
+          },
+          "ValueType": {
+            "default": "Fixed",
+            "enum": [
+              "Fixed",
+              "Parametric"
+            ],
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "113159c3-1cae-38f5-8fd4-5b356a2f5e3d",
+      "pointers": {
+        "base": "2bc42bca-a9be-0f33-16a7-ea847e546b37"
+      },
+      "registry": {
+        "position": {
+          "x": 278,
+          "y": 341
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "58fcb797-8a06-2976-9632-d281b3c1ddd2": {
+      "attributes": {
+        "Definition": "",
+        "Description": "",
+        "ID": "",
+        "INFO": "Container of domain connectors.",
+        "name": "Connector"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "Definition": {
+            "default": "",
+            "type": "string"
+          },
+          "Description": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "f0508110-9a11-3b6d-ea42-2193bf0485e0"
+          ],
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "isPort": true,
+        "position": {
+          "x": 263,
+          "y": 429
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "5ecd04c4-44b3-ae27-e0ee-6cbc95f35464": {
+      "attributes": {},
+      "base": "3317c9c6-6c44-1a06-a476-11f77d722b34",
+      "meta": {
+        "attributes": {
+          "Type": {
+            "default": "Compound",
+            "enum": [
+              "Compound",
+              "Alternative",
+              "Optional"
+            ],
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          },
+          "Description": {
+            "default": "",
+            "type": "string"
+          },
+          "Resource": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "db059935-fd26-a01d-fc92-5df61aa21f95",
+      "pointers": {
+        "base": "3317c9c6-6c44-1a06-a476-11f77d722b34"
+      },
+      "registry": {
+        "position": {
+          "x": 406,
+          "y": 525
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "64e8bdb8-06da-4380-1569-4e9bcbb3e9bd": {
+      "attributes": {
+        "Class": "class",
+        "Type": "Modelica",
+        "name": "ModelicaModel"
+      },
+      "base": "e9bd3f99-c925-8bc0-6bd5-15ac083d1028",
+      "meta": {
+        "attributes": {
+          "Class": {
+            "default": "",
+            "type": "string"
+          },
+          "Type": {
+            "default": "",
+            "enum": [
+              "Modelica",
+              "CAD",
+              "Cyber",
+              "Manufacturing"
+            ],
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "0e9a7224-3fb6-bdc9-b9ec-1b56696d34ec",
+      "pointers": {
+        "base": "e9bd3f99-c925-8bc0-6bd5-15ac083d1028"
+      },
+      "registry": {
+        "position": {
+          "x": 364,
+          "y": 168
+        }
+      },
+      "sets": {
+        "UsesResource": []
+      },
+      "constraints": {}
+    },
+    "65dcb250-dcb6-4cad-4617-0518a9a37d2e": {
+      "attributes": {
+        "name": "Formula"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "isAbstract": true,
+        "position": {
+          "x": 561,
+          "y": 569
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "7415ce26-35a6-0365-89b9-539ed60b8429": {
+      "attributes": {},
+      "base": "64e8bdb8-06da-4380-1569-4e9bcbb3e9bd",
+      "meta": {
+        "attributes": {
+          "Class": {
+            "default": "",
+            "type": "string"
+          },
+          "Type": {
+            "default": "",
+            "enum": [
+              "Modelica",
+              "CAD",
+              "Cyber",
+              "Manufacturing"
+            ],
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "768a6ddd-0cca-fd2c-253c-065374d55978",
+      "pointers": {},
+      "registry": {},
+      "sets": {
+        "UsesResource": []
+      },
+      "constraints": {}
+    },
+    "768a6ddd-0cca-fd2c-253c-065374d55978": {
+      "attributes": {},
+      "base": "0e9a7224-3fb6-bdc9-b9ec-1b56696d34ec",
+      "meta": {
+        "attributes": {
+          "Classifications": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Resource": {
+            "default": "",
+            "type": "asset"
+          },
+          "SchemaVersion": {
+            "default": "",
+            "type": "string"
+          },
+          "Version": {
+            "default": "",
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "113159c3-1cae-38f5-8fd4-5b356a2f5e3d",
+      "pointers": {
+        "base": "0e9a7224-3fb6-bdc9-b9ec-1b56696d34ec"
+      },
+      "registry": {
+        "position": {
+          "x": 557,
+          "y": 245
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "79f0cc09-f068-284b-5473-efcf5dfa3497": {
+      "attributes": {
+        "AlternativeAssignments": "[]",
+        "name": "DesertConfiguration"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "AlternativeAssignments": {
+            "default": "[]",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "e544f3e4-e550-5750-8540-5598bbbf343c"
+          ],
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 431,
+          "y": 424
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "79f7f205-38e6-9ca1-0fde-c0ca16f622f7": {
+      "attributes": {
+        "LayerRange": "",
+        "Type": "Inclusion",
+        "XRange": "",
+        "YRange": "",
+        "name": "RangeLayoutConstraint"
+      },
+      "base": "87018874-0598-6ca4-a7b3-4e1dd2bfe926",
+      "meta": {
+        "attributes": {
+          "LayerRange": {
+            "default": "",
+            "enum": [
+              "Top",
+              "Bottom",
+              "Either"
+            ],
+            "type": "string"
+          },
+          "Notes": {
+            "default": "",
+            "type": "string"
+          },
+          "Type": {
+            "default": "Inclusion",
+            "enum": [
+              "Inclusion",
+              "Exclusion"
+            ],
+            "type": "string"
+          },
+          "XRange": {
+            "default": "",
+            "type": "string"
+          },
+          "YRange": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "87018874-0598-6ca4-a7b3-4e1dd2bfe926"
+      },
+      "registry": {
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      "sets": {
+        "ConstraintTarget": []
+      },
+      "constraints": {}
+    },
+    "7fd023cc-47ef-948a-a258-14c2d8c612cf": {
+      "attributes": {},
+      "base": "1f35a3aa-321d-359f-7838-242bc2d08ae5",
+      "meta": {
+        "attributes": {
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "0f8fa428-4f7e-3e83-1acd-141b22b417cf",
+      "pointers": {
+        "base": "1f35a3aa-321d-359f-7838-242bc2d08ae5"
+      },
+      "registry": {
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "8097ae89-983e-8ea8-6612-eefb6dee9203": {
+      "attributes": {
+        "Hash": "",
+        "Notes": "",
+        "Path": "",
+        "name": "Resource"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "Hash": {
+            "default": "",
+            "type": "string"
+          },
+          "Notes": {
+            "default": "",
+            "type": "string"
+          },
+          "Path": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "818a8efa-a6d8-47b5-8d1a-c0d8212fd194": {
+      "attributes": {},
+      "base": "dd35b139-3346-08f0-013c-1e3a8a522f7f",
+      "meta": {
+        "attributes": {
+          "Results": {
+            "default": "",
+            "type": "asset"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "0f8fa428-4f7e-3e83-1acd-141b22b417cf",
+      "pointers": {
+        "base": "dd35b139-3346-08f0-013c-1e3a8a522f7f"
+      },
+      "registry": {
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "87018874-0598-6ca4-a7b3-4e1dd2bfe926": {
+      "attributes": {
+        "Notes": "",
+        "name": "LayoutConstraint"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "Notes": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "pointers": {
+          "ConstraintTarget": {
+            "items": [
+              "cb92c02d-84cf-f104-938b-b7de6641f8e5"
+            ],
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              -1
+            ]
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 838,
+          "y": 163
+        }
+      },
+      "sets": {
+        "ConstraintTarget": []
+      },
+      "constraints": {}
+    },
+    "8b1e277e-0f88-a58b-4aff-51c74250671d": {
+      "attributes": {
+        "INFO": "Container of components.",
+        "name": "ACMFolder"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "8b1e277e-0f88-a58b-4aff-51c74250671d",
+            "cb92c02d-84cf-f104-938b-b7de6641f8e5"
+          ],
+          "minItems": [
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            -1
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "SVGIcon": "Folder.svg",
+        "color": "#ff9999",
+        "position": {
+          "x": 559,
+          "y": 230
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "8e59be89-5899-3619-872d-c2222292cd73": {
+      "attributes": {},
+      "base": "8b1e277e-0f88-a58b-4aff-51c74250671d",
+      "meta": {
+        "attributes": {
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "0f8fa428-4f7e-3e83-1acd-141b22b417cf",
+      "pointers": {
+        "base": "8b1e277e-0f88-a58b-4aff-51c74250671d"
+      },
+      "registry": {
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "9001f172-4258-ceaa-86e9-f6e80b85853d": {
+      "attributes": {
+        "INFO": "Container of task defining steps of the test-bench execution.",
+        "name": "Workflow"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "edf95f43-efbd-5c2c-6384-6ab74c160c17"
+          ],
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "color": "#ffffcc",
+        "position": {
+          "x": 849,
+          "y": 449
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "959e8751-e668-4b22-2620-67135dd47611": {
+      "attributes": {},
+      "base": "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f",
+      "meta": {
+        "attributes": {
+          "VariableName": {
+            "default": "",
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "113159c3-1cae-38f5-8fd4-5b356a2f5e3d",
+      "pointers": {
+        "base": "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f",
+        "dst": "1c43e1a1-d510-2b57-f061-791daede321a",
+        "src": "428911c8-137b-2fc7-2388-8266e7aeff44"
+      },
+      "registry": {
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "97a00dee-7375-3637-ec08-b62588d4d71d": {
+      "attributes": {
+        "name": "AssemblyRoot"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "pointers": {
+          "Selection": {
+            "items": [
+              "cb92c02d-84cf-f104-938b-b7de6641f8e5"
+            ],
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              -1
+            ]
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "color": "#66ffb3",
+        "position": {
+          "x": 74,
+          "y": 596
+        }
+      },
+      "sets": {
+        "Selection": []
+      },
+      "constraints": {}
+    },
+    "9a64640a-d8d6-9efa-cf2f-b622aaa6e5ae": {
+      "attributes": {
+        "INFO": "A set of requirements for a work-space.",
+        "Priority": 1,
+        "description": "",
+        "name": "RequirementBase",
+        "weight": 1,
+        "weightNeg": 1
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "Priority": {
+            "default": 1,
+            "type": "float"
+          },
+          "description": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "weight": {
+            "default": 1,
+            "type": "float"
+          },
+          "weightNeg": {
+            "default": 1,
+            "type": "float"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "color": "#f2f2f2",
+        "isAbstract": true,
+        "position": {
+          "x": 1229,
+          "y": 353
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "9fab1244-f449-d3c0-bfdc-f166f724e3f2": {
+      "attributes": {
+        "ID": "",
+        "INFO": "An experiment on the TopLevelSystemUnderTest.",
+        "Results": "",
+        "TestBenchFiles": "",
+        "name": "AVMTestBenchModel"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Results": {
+            "default": "",
+            "type": "asset"
+          },
+          "TestBenchFiles": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "07d79d42-e631-fb69-a1f7-25b044d94fbb",
+            "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+            "3317c9c6-6c44-1a06-a476-11f77d722b34",
+            "9001f172-4258-ceaa-86e9-f6e80b85853d",
+            "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f",
+            "cb92c02d-84cf-f104-938b-b7de6641f8e5",
+            "d5fc3678-2722-5112-c0bb-fa758f113246",
+            "f8d9bcd3-5655-7ddb-850d-28046a9dfba5",
+            "f9f20885-6316-a7b6-2196-8299f45692ff"
+          ],
+          "minItems": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        "pointers": {
+          "TopLevelSystemUnderTest": {
+            "items": [
+              "3317c9c6-6c44-1a06-a476-11f77d722b34"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        },
+        "aspects": {
+          "NoValueFlow": [
+            "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+            "3317c9c6-6c44-1a06-a476-11f77d722b34",
+            "d5fc3678-2722-5112-c0bb-fa758f113246"
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "TopLevelSystemUnderTest": null,
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "SVGIcon": "Play.svg",
+        "color": "#ccffcc",
+        "position": {
+          "x": 939,
+          "y": 349
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "a0399d5f-26ab-3fac-def4-3834f5decac9": {
+      "attributes": {
+        "INFO": "A project has components, designs and test-benches.",
+        "name": "WorkSpace"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "0375e1c1-1217-7aa9-5e14-53c709a2abbe",
+            "1f35a3aa-321d-359f-7838-242bc2d08ae5",
+            "8b1e277e-0f88-a58b-4aff-51c74250671d",
+            "dd35b139-3346-08f0-013c-1e3a8a522f7f"
+          ],
+          "minItems": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "SVGIcon": "Folder2.svg",
+        "position": {
+          "x": 616,
+          "y": 43
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f": {
+      "attributes": {
+        "INFO": "A value flow between properties.",
+        "VariableName": "",
+        "name": "ValueFlowComposition"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "VariableName": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "pointers": {
+          "dst": {
+            "items": [
+              "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+              "65dcb250-dcb6-4cad-4617-0518a9a37d2e"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1,
+              -1
+            ],
+            "maxItems": [
+              1,
+              1
+            ]
+          },
+          "src": {
+            "items": [
+              "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+              "65dcb250-dcb6-4cad-4617-0518a9a37d2e"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1,
+              -1
+            ],
+            "maxItems": [
+              1,
+              1
+            ]
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+        "dst": null,
+        "src": null
+      },
+      "registry": {
+        "DisplayFormat": "$VariableName",
+        "lineEndArrow": "classic-xwide-xlong",
+        "position": {
+          "x": 572,
+          "y": 741
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "a76adaab-3039-cfb6-c88c-bfd71aaf5389": {
+      "attributes": {},
+      "base": "b797a935-0345-8f53-545c-a2d207173e1d",
+      "meta": {
+        "attributes": {
+          "DataType": {
+            "default": "String",
+            "enum": [
+              "Real",
+              "Integer",
+              "Boolean",
+              "String"
+            ],
+            "type": "string"
+          },
+          "Default": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Maximum": {
+            "default": "inf",
+            "type": "string"
+          },
+          "Minimum": {
+            "default": "-inf",
+            "type": "string"
+          },
+          "OnDataSheet": {
+            "type": "boolean",
+            "default": false
+          },
+          "Unit": {
+            "default": "",
+            "type": "string"
+          },
+          "Value": {
+            "default": "",
+            "type": "string"
+          },
+          "ValueType": {
+            "default": "Fixed",
+            "enum": [
+              "Fixed",
+              "Parametric"
+            ],
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "768a6ddd-0cca-fd2c-253c-065374d55978",
+      "pointers": {},
+      "registry": {},
+      "sets": {},
+      "constraints": {}
+    },
+    "ab281360-2719-c4e0-c3c6-4eea03401141": {
+      "attributes": {
+        "INFO": "Requirement on a metric.",
+        "KPP": false,
+        "function": "",
+        "name": "Requirement",
+        "objective": 1,
+        "threshold": 0
+      },
+      "base": "9a64640a-d8d6-9efa-cf2f-b622aaa6e5ae",
+      "meta": {
+        "attributes": {
+          "KPP": {
+            "default": false,
+            "type": "boolean"
+          },
+          "Priority": {
+            "default": 0,
+            "type": "integer"
+          },
+          "description": {
+            "default": "",
+            "type": "string"
+          },
+          "function": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "objective": {
+            "default": 1,
+            "type": "float"
+          },
+          "threshold": {
+            "default": 0,
+            "type": "float"
+          },
+          "weight": {
+            "default": 1,
+            "type": "float"
+          },
+          "weightNeg": {
+            "default": 1,
+            "type": "float"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "pointers": {
+          "Metric": {
+            "items": [
+              "d5fc3678-2722-5112-c0bb-fa758f113246"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "Metric": null,
+        "base": "9a64640a-d8d6-9efa-cf2f-b622aaa6e5ae"
+      },
+      "registry": {
+        "color": "#ccffff",
+        "isAbstract": false,
+        "position": {
+          "x": 1329,
+          "y": 450
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "b797a935-0345-8f53-545c-a2d207173e1d": {
+      "attributes": {
+        "DataType": "Integer",
+        "ID": "id-3eb0bd47-c681-4868-b9ae-6fa5b9708521",
+        "Maximum": "inf",
+        "Minimum": "-inf",
+        "Value": "4",
+        "ValueType": "Parametric",
+        "name": "Param"
+      },
+      "base": "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+      "meta": {
+        "attributes": {
+          "DataType": {
+            "default": "String",
+            "enum": [
+              "Real",
+              "Integer",
+              "Boolean",
+              "String"
+            ],
+            "type": "string"
+          },
+          "Default": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Maximum": {
+            "default": "inf",
+            "type": "string"
+          },
+          "Minimum": {
+            "default": "-inf",
+            "type": "string"
+          },
+          "OnDataSheet": {
+            "type": "boolean",
+            "default": false
+          },
+          "Unit": {
+            "default": "",
+            "type": "string"
+          },
+          "Value": {
+            "default": "",
+            "type": "string"
+          },
+          "ValueType": {
+            "default": "Fixed",
+            "enum": [
+              "Fixed",
+              "Parametric"
+            ],
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "0e9a7224-3fb6-bdc9-b9ec-1b56696d34ec",
+      "pointers": {
+        "base": "2bc42bca-a9be-0f33-16a7-ea847e546b37"
+      },
+      "registry": {
+        "position": {
+          "x": 77,
+          "y": 462
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "be02d298-2892-180a-ed1a-138dc589dd5c": {
+      "attributes": {
+        "Expression": "",
+        "INFO": "Custom mathematical formulas.",
+        "name": "CustomFormula"
+      },
+      "base": "65dcb250-dcb6-4cad-4617-0518a9a37d2e",
+      "meta": {
+        "attributes": {
+          "Expression": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "65dcb250-dcb6-4cad-4617-0518a9a37d2e"
+      },
+      "registry": {
+        "SVGIcon": "Chemistry2.svg",
+        "color": "#cccccc",
+        "isAbstract": false,
+        "position": {
+          "x": 654,
+          "y": 664
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "cb92c02d-84cf-f104-938b-b7de6641f8e5": {
+      "attributes": {
+        "Classifications": "",
+        "ID": "",
+        "INFO": "Component model with resources.",
+        "Resource": "",
+        "SchemaVersion": "",
+        "Version": "",
+        "name": "AVMComponentModel"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "Classifications": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Resource": {
+            "default": "",
+            "type": "asset"
+          },
+          "SchemaVersion": {
+            "default": "",
+            "type": "string"
+          },
+          "Version": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+            "58fcb797-8a06-2976-9632-d281b3c1ddd2",
+            "65dcb250-dcb6-4cad-4617-0518a9a37d2e",
+            "a1e4a35d-de60-0fec-ba6d-e2bd8897e16f",
+            "e9bd3f99-c925-8bc0-6bd5-15ac083d1028",
+            "f0508110-9a11-3b6d-ea42-2193bf0485e0"
+          ],
+          "minItems": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        "aspects": {
+          "NoValueFlow": [
+            "58fcb797-8a06-2976-9632-d281b3c1ddd2"
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "color": "#ffcccc",
+        "position": {
+          "x": 626,
+          "y": 337
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": {
+      "attributes": {
+        "INFO": "",
+        "ReadMe": "",
+        "name": "FCO"
+      },
+      "base": null,
+      "meta": {
+        "attributes": {
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "minItems": [],
+          "maxItems": [],
+          "items": [],
+          "min": "undefined",
+          "max": "undefined"
+        }
+      },
+      "parent": "005cb34a-7523-4940-a1e9-0cb530ba1005",
+      "pointers": {
+        "base": null
+      },
+      "registry": {
+        "DisplayFormat": "$name",
+        "PortSVGIcon": "",
+        "SVGIcon": "",
+        "decorator": "",
+        "isAbstract": false,
+        "isPort": false,
+        "position": {
+          "x": 1039,
+          "y": 141
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "d3bdeaca-590c-cbc0-24ff-d7a070ed8f28": {
+      "attributes": {
+        "Constraint": "Board Edge Spacing",
+        "name": "GlobalLayoutConstraintException"
+      },
+      "base": "87018874-0598-6ca4-a7b3-4e1dd2bfe926",
+      "meta": {
+        "attributes": {
+          "Constraint": {
+            "default": "Board Edge Spacing",
+            "enum": [
+              "Board Edge Spacing",
+              "Inter-Chip Spacing"
+            ],
+            "type": "string"
+          },
+          "Notes": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "87018874-0598-6ca4-a7b3-4e1dd2bfe926"
+      },
+      "registry": {
+        "position": {
+          "x": 936,
+          "y": 672
+        }
+      },
+      "sets": {
+        "ConstraintTarget": []
+      },
+      "constraints": {}
+    },
+    "d5fc3678-2722-5112-c0bb-fa758f113246": {
+      "attributes": {
+        "INFO": "Metric value of an executed experiment.",
+        "Value": "",
+        "name": "Metric"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "Value": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "color": "#ccffff",
+        "position": {
+          "x": 999,
+          "y": 449
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "d83e8c50-5eb6-ffdc-6822-0e884265bfcf": {
+      "attributes": {
+        "DataType": "Integer",
+        "ID": "id-3eb0bd47-c681-4868-b9ae-6fa5b9708521",
+        "Maximum": "inf",
+        "Minimum": "-inf",
+        "Value": "4",
+        "ValueType": "Parametric",
+        "name": "Param"
+      },
+      "base": "2bc42bca-a9be-0f33-16a7-ea847e546b37",
+      "meta": {
+        "attributes": {
+          "DataType": {
+            "default": "String",
+            "enum": [
+              "Real",
+              "Integer",
+              "Boolean",
+              "String"
+            ],
+            "type": "string"
+          },
+          "Default": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Maximum": {
+            "default": "inf",
+            "type": "string"
+          },
+          "Minimum": {
+            "default": "-inf",
+            "type": "string"
+          },
+          "OnDataSheet": {
+            "type": "boolean",
+            "default": false
+          },
+          "Unit": {
+            "default": "",
+            "type": "string"
+          },
+          "Value": {
+            "default": "",
+            "type": "string"
+          },
+          "ValueType": {
+            "default": "Fixed",
+            "enum": [
+              "Fixed",
+              "Parametric"
+            ],
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "113159c3-1cae-38f5-8fd4-5b356a2f5e3d",
+      "pointers": {
+        "base": "2bc42bca-a9be-0f33-16a7-ea847e546b37"
+      },
+      "registry": {
+        "position": {
+          "x": 275,
+          "y": 218
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "db059935-fd26-a01d-fc92-5df61aa21f95": {
+      "attributes": {
+        "ID": "/TestBenches/CyPhy2Modelica",
+        "TestBenchFiles": "95f5f253ec1bd748cf668024c0d51b9cc9f565f3"
+      },
+      "base": "9fab1244-f449-d3c0-bfdc-f166f724e3f2",
+      "meta": {
+        "attributes": {
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Results": {
+            "default": "",
+            "type": "asset"
+          },
+          "TestBenchFiles": {
+            "default": "",
+            "type": "asset"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "818a8efa-a6d8-47b5-8d1a-c0d8212fd194",
+      "pointers": {
+        "TopLevelSystemUnderTest": "113159c3-1cae-38f5-8fd4-5b356a2f5e3d",
+        "base": "9fab1244-f449-d3c0-bfdc-f166f724e3f2"
+      },
+      "registry": {
+        "position": {
+          "x": 358,
+          "y": 240
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "dd35b139-3346-08f0-013c-1e3a8a522f7f": {
+      "attributes": {
+        "INFO": "Container of test-benches.",
+        "Results": "",
+        "name": "ATMFolder"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "Results": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "9fab1244-f449-d3c0-bfdc-f166f724e3f2",
+            "dd35b139-3346-08f0-013c-1e3a8a522f7f"
+          ],
+          "minItems": [
+            -1,
+            -1
+          ],
+          "maxItems": [
+            -1,
+            -1
+          ]
+        },
+        "pointers": {
+          "TopLevelSystemUnderTest": {
+            "items": [
+              "3317c9c6-6c44-1a06-a476-11f77d722b34"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "TopLevelSystemUnderTest": null,
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "SVGIcon": "Folder.svg",
+        "color": "#99ff99",
+        "position": {
+          "x": 939,
+          "y": 229
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "dfe3df16-dfc2-d4b5-09f8-ca4758ae1454": {
+      "attributes": {
+        "Adm": "",
+        "name": "DesertConfigurationSet"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "Adm": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "79f0cc09-f068-284b-5473-efcf5dfa3497"
+          ],
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ]
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 352,
+          "y": 355
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "e0bd7189-5dc8-9e2c-d4d6-2f61fa416ff1": {
+      "attributes": {},
+      "base": "f0400217-6eb4-dec9-4806-3264e7f90265",
+      "meta": {
+        "attributes": {
+          "Class": {
+            "default": "",
+            "type": "string"
+          },
+          "Type": {
+            "default": "",
+            "enum": [
+              "ModelicaConnector",
+              "CadPoint",
+              "CadAxis",
+              "CadPlane",
+              "CadCoordinateSystem"
+            ],
+            "type": "string"
+          },
+          "ID": {
+            "type": "string",
+            "default": ""
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "768a6ddd-0cca-fd2c-253c-065374d55978",
+      "pointers": {},
+      "registry": {},
+      "sets": {},
+      "constraints": {}
+    },
+    "e544f3e4-e550-5750-8540-5598bbbf343c": {
+      "attributes": {
+        "Artifacts": "",
+        "Atm": "",
+        "CfgAdm": "",
+        "TestBenchManifest": "",
+        "name": "Result"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "Artifacts": {
+            "default": "",
+            "type": "asset"
+          },
+          "Atm": {
+            "default": "",
+            "type": "asset"
+          },
+          "CfgAdm": {
+            "default": "",
+            "type": "asset"
+          },
+          "TestBenchManifest": {
+            "default": "",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "pointers": {
+          "ExecutedTestBench": {
+            "items": [
+              "9fab1244-f449-d3c0-bfdc-f166f724e3f2"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "ExecutedTestBench": null,
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 446,
+          "y": 503
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "e87743ed-b89e-d8ce-7b87-7b9aadcb4961": {
+      "attributes": {
+        "artifacts": "",
+        "isTest": false,
+        "name": "Test",
+        "plugins": "",
+        "success": true
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "artifacts": {
+            "default": "",
+            "type": "asset"
+          },
+          "isTest": {
+            "default": false,
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "plugins": {
+            "default": "",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "type": "boolean"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "children": {
+          "items": [
+            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+          ],
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ]
+        },
+        "pointers": {
+          "TestPoint": {
+            "items": [
+              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "TestPoint": null,
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "color": "#ff99ff",
+        "position": {
+          "x": 1032,
+          "y": 61
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "e9bd3f99-c925-8bc0-6bd5-15ac083d1028": {
+      "attributes": {
+        "Class": "",
+        "INFO": "Domain model of AVMComponentModel.",
+        "Type": "",
+        "name": "DomainModel"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "Class": {
+            "default": "",
+            "type": "string"
+          },
+          "Type": {
+            "default": "",
+            "enum": [
+              "Modelica",
+              "CAD",
+              "Cyber",
+              "Manufacturing",
+              "RF",
+              "EDA",
+              "SystemC",
+              "SPICE"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "pointers": {
+          "UsesResource": {
+            "items": [
+              "8097ae89-983e-8ea8-6612-eefb6dee9203"
+            ],
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              -1
+            ]
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "DisplayFormat": "$Type : $name",
+        "borderColor": "#000000",
+        "color": "#ccccff",
+        "position": {
+          "x": 644,
+          "y": 429
+        }
+      },
+      "sets": {
+        "UsesResource": []
+      },
+      "constraints": {}
+    },
+    "edf95f43-efbd-5c2c-6384-6ab74c160c17": {
+      "attributes": {
+        "COMName": "",
+        "INFO": "Defines a step of a the test-bench execution.",
+        "Parameters": "",
+        "Type": "InterpreterTask",
+        "name": "Task"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "COMName": {
+            "default": "",
+            "type": "string"
+          },
+          "Parameters": {
+            "default": "",
+            "type": "string"
+          },
+          "Type": {
+            "default": "InterpreterTask",
+            "enum": [
+              "InterpreterTask",
+              "ExecutionTask"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "position": {
+          "x": 849,
+          "y": 519
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "f0400217-6eb4-dec9-4806-3264e7f90265": {
+      "attributes": {
+        "Class": "class",
+        "ID": "id-1e497612-cac1-47c6-874f-3c714508546d",
+        "Type": "ModelicaConnector",
+        "name": "mc"
+      },
+      "base": "f0508110-9a11-3b6d-ea42-2193bf0485e0",
+      "meta": {
+        "attributes": {
+          "Class": {
+            "default": "",
+            "type": "string"
+          },
+          "Type": {
+            "default": "",
+            "enum": [
+              "ModelicaConnector",
+              "CadPoint",
+              "CadAxis",
+              "CadPlane",
+              "CadCoordinateSystem"
+            ],
+            "type": "string"
+          },
+          "ID": {
+            "type": "string",
+            "default": ""
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "0e9a7224-3fb6-bdc9-b9ec-1b56696d34ec",
+      "pointers": {
+        "base": "f0508110-9a11-3b6d-ea42-2193bf0485e0"
+      },
+      "registry": {},
+      "sets": {},
+      "constraints": {}
+    },
+    "f0508110-9a11-3b6d-ea42-2193bf0485e0": {
+      "attributes": {
+        "Class": "",
+        "ID": "",
+        "INFO": "Connector of a specific domain.",
+        "Type": "",
+        "name": "DomainPort"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "Class": {
+            "default": "",
+            "type": "string"
+          },
+          "ID": {
+            "default": "",
+            "type": "string"
+          },
+          "Type": {
+            "default": "",
+            "enum": [
+              "ModelicaConnector",
+              "CadPoint",
+              "CadAxis",
+              "CadPlane",
+              "CadCoordinateSystem",
+              "RFPort",
+              "SchematicPin",
+              "SystemCPort"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+      },
+      "registry": {
+        "DisplayFormat": "$Type : $name",
+        "PortSVGIcon": "Semicircle.svg",
+        "color": "#ccccff",
+        "isAbstract": false,
+        "isPort": true,
+        "position": {
+          "x": 273,
+          "y": 502
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "f26a44de-edb5-57c8-fd0f-242811b7816c": {
+      "attributes": {
+        "RelativeLayer": "Either",
+        "RelativeRotation": "r0",
+        "XOffset": null,
+        "YOffset": null,
+        "name": "RelativeLayoutConstraint"
+      },
+      "base": "87018874-0598-6ca4-a7b3-4e1dd2bfe926",
+      "meta": {
+        "attributes": {
+          "Notes": {
+            "default": "",
+            "type": "string"
+          },
+          "RelativeLayer": {
+            "default": "Either",
+            "enum": [
+              "Either",
+              "Same",
+              "Opposite"
+            ],
+            "type": "string"
+          },
+          "RelativeRotation": {
+            "default": "r0",
+            "enum": [
+              "r0",
+              "r90",
+              "r180",
+              "r270",
+              "NoRestriction"
+            ],
+            "type": "string"
+          },
+          "XOffset": {
+            "default": null,
+            "type": "float"
+          },
+          "YOffset": {
+            "default": null,
+            "type": "float"
+          },
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "pointers": {
+          "OriginComponent": {
+            "items": [
+              "cb92c02d-84cf-f104-938b-b7de6641f8e5"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "OriginComponent": null,
+        "base": "87018874-0598-6ca4-a7b3-4e1dd2bfe926"
+      },
+      "registry": {
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      "sets": {
+        "ConstraintTarget": []
+      },
+      "constraints": {}
+    },
+    "f8d9bcd3-5655-7ddb-850d-28046a9dfba5": {
+      "attributes": {
+        "INFO": "Composition between two connectors.",
+        "name": "ConnectorComposition"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "pointers": {
+          "dst": {
+            "items": [
+              "58fcb797-8a06-2976-9632-d281b3c1ddd2"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          },
+          "src": {
+            "items": [
+              "58fcb797-8a06-2976-9632-d281b3c1ddd2"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+        "dst": null,
+        "src": null
+      },
+      "registry": {
+        "DisplayFormat": "",
+        "color": "#808080",
+        "lineWidth": 2,
+        "position": {
+          "x": 277,
+          "y": 582
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    },
+    "f9f20885-6316-a7b6-2196-8299f45692ff": {
+      "attributes": {
+        "name": "PortMap"
+      },
+      "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          },
+          "INFO": {
+            "default": "",
+            "type": "string"
+          },
+          "ReadMe": {
+            "default": "",
+            "type": "asset"
+          }
+        },
+        "pointers": {
+          "dst": {
+            "items": [
+              "f0508110-9a11-3b6d-ea42-2193bf0485e0"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          },
+          "src": {
+            "items": [
+              "f0508110-9a11-3b6d-ea42-2193bf0485e0"
+            ],
+            "min": 1,
+            "max": 1,
+            "minItems": [
+              -1
+            ],
+            "maxItems": [
+              1
+            ]
+          }
+        }
+      },
+      "parent": "1b2720ba-040c-e5ac-bb4c-4bd502ee3353",
+      "pointers": {
+        "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+        "dst": null,
+        "src": null
+      },
+      "registry": {
+        "DisplayFormat": "",
+        "position": {
+          "x": 280,
+          "y": 657
+        }
+      },
+      "sets": {},
+      "constraints": {}
+    }
+  },
+  "metaSheets": {}
+}
