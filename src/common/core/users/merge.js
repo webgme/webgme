@@ -248,8 +248,8 @@ define([
                     }
                     result.finalCommitHash = result.theirCommitHash;
                     return;
-                    
                 }
+                
                 //check fast-forward
                 if (result.theirCommitHash === result.baseCommitHash) {
                     result.finalCommitHash = result.myCommitHash;
