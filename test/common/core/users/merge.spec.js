@@ -18,7 +18,23 @@ describe('merge - library', function () {
         getRoot = testFixture.requirejs('common/core/users/getroot'),
         storage,
         context,
-        gmeAuth;
+        gmeAuth,
+        getContext = function (branchName) {
+            var deferred = Q.defer(),
+                branchContext = {};
+            branchContext.core = context.core;
+            branchContext.project = context.project;
+            branchContext.commitHash = context.commitHash;
+            branchContext.id = branchName;
+            getRoot(branchContext)
+                .then(function (result) {
+                    branchContext.rootNode = result.root;
+
+                    deferred.resolve(branchContext);
+                })
+                .catch(deferred.reject);
+            return deferred.promise;
+        };
 
     before(function (done) {
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
@@ -150,23 +166,7 @@ describe('merge - library', function () {
             masterContext,
             otherContext,
             masterPersisted,
-            otherPersisted,
-            getContext = function (branchName) {
-                var deferred = Q.defer(),
-                    branchContext = {};
-                branchContext.core = context.core;
-                branchContext.project = context.project;
-                branchContext.commitHash = context.commitHash;
-                branchContext.id = branchName;
-                getRoot(branchContext)
-                    .then(function (result) {
-                        branchContext.rootNode = result.root;
-
-                        deferred.resolve(branchContext);
-                    })
-                    .catch(deferred.reject);
-                return deferred.promise;
-            };
+            otherPersisted;
 
         Q.allSettled([
             Q.nfcall(context.project.createBranch, masterBranch, context.commitHash),
@@ -260,23 +260,7 @@ describe('merge - library', function () {
             masterContext,
             otherContext,
             masterPersisted,
-            otherPersisted,
-            getContext = function (branchName) {
-                var deferred = Q.defer(),
-                    branchContext = {};
-                branchContext.core = context.core;
-                branchContext.project = context.project;
-                branchContext.commitHash = context.commitHash;
-                branchContext.id = branchName;
-                getRoot(branchContext)
-                    .then(function (result) {
-                        branchContext.rootNode = result.root;
-
-                        deferred.resolve(branchContext);
-                    })
-                    .catch(deferred.reject);
-                return deferred.promise;
-            };
+            otherPersisted;
 
         Q.allSettled([
             Q.nfcall(context.project.createBranch, masterBranch, context.commitHash),
@@ -370,4 +354,188 @@ describe('merge - library', function () {
             .catch(done);
     });
 
+    it('should merge two independent changes', function (done) {
+        var masterBranch = 'mergeMasterBranch',
+            otherBranch = 'mergeOtherBranch',
+            masterContext,
+            otherContext,
+            masterPersisted,
+            otherPersisted;
+
+        Q.allSettled([
+            Q.nfcall(context.project.createBranch, masterBranch, context.commitHash),
+            Q.nfcall(context.project.createBranch, otherBranch, context.commitHash)
+        ])
+            .then(function () {
+                return Q.allSettled([
+                    getContext(masterBranch),
+                    getContext(otherBranch)
+                ]);
+            })
+            .then(function (contexts) {
+                expect(contexts).not.to.equal(null);
+                expect(contexts).to.have.length(2);
+                expect(contexts[0].state).to.equal('fulfilled');
+                expect(contexts[1].state).to.equal('fulfilled');
+
+                masterContext = contexts[0].value;
+                otherContext = contexts[1].value;
+
+                masterContext.core.setRegistry(masterContext.rootNode, 'newItem', 'masterValue');
+                otherContext.core.setRegistry(otherContext.rootNode, 'otherNewItem', 'otherValue');
+
+                masterPersisted = masterContext.core.persist(masterContext.rootNode);
+                otherPersisted = otherContext.core.persist(otherContext.rootNode);
+
+                return Q.allSettled([
+                    masterContext.project.makeCommit(
+                        masterBranch,
+                        [masterContext.commitHash],
+                        masterContext.core.getHash(masterContext.rootNode),
+                        masterPersisted.objects,
+                        'master setting core registry'),
+                    otherContext.project.makeCommit(
+                        otherBranch,
+                        [otherContext.commitHash],
+                        otherContext.core.getHash(otherContext.rootNode),
+                        otherPersisted.objects,
+                        'other setting core registry')
+                ]);
+            })
+            .then(function (commitResults) {
+                expect(commitResults).not.to.equal(null);
+                expect(commitResults).to.have.length(2);
+
+                return merger.merge({
+                    project: context.project,
+                    logger: logger,
+                    gmeConfig: gmeConfig,
+                    myBranchOrCommit: otherBranch,
+                    theirBranchOrCommit: masterBranch,
+                    auto: true
+                });
+            })
+            .then(function (mergeResult) {
+                expect(mergeResult).not.to.equal(null);
+                expect(mergeResult).to.include.keys(['myCommitHash',
+                    'theirCommitHash', 'baseCommitHash', 'diff', 'conflict', 'finalCommitHash', 'updatedBranch']);
+                expect(mergeResult.updatedBranch).to.equal(masterBranch);
+
+                return getContext(masterBranch);
+            })
+            .then(function (finalContext) {
+                expect(finalContext.core.getRegistryNames(finalContext.rootNode))
+                    .to.include.members(['newItem', 'otherNewItem']);
+
+                done();
+            })
+            .catch(done);
+    });
+
+    it('should make a fast-forward', function (done) {
+        var myContext, myCommitHash;
+        Q.nfcall(context.project.createBranch, 'fastForward', context.commitHash)
+            .then(function () {
+                return getContext('fastForward');
+            })
+            .then(function (myContext_) {
+                var persisted;
+                //modify
+                myContext = myContext_;
+                myContext.core.setRegistry(myContext.rootNode, 'newItem', 'newValue');
+
+                persisted = myContext.core.persist(myContext.rootNode);
+
+                if (!persisted) {
+                    throw new Error('failed to persist');
+                }
+
+                return myContext.project.makeCommit(
+                    null,
+                    [myContext.commitHash],
+                    myContext.core.getHash(myContext.rootNode),
+                    persisted.objects,
+                    'fast-forward test'
+                );
+            })
+            .then(function (commitResult) {
+                expect(commitResult).not.to.equal(null);
+                expect(commitResult.hash).to.contain('#');
+                expect(commitResult.hash).to.have.length(41);
+
+                myCommitHash = commitResult.hash;
+
+                //fast-forward
+                return merger.merge({
+                    project: myContext.project,
+                    logger: logger,
+                    gmeConfig: gmeConfig,
+                    myBranchOrCommit: myCommitHash,
+                    theirBranchOrCommit: 'fastForward',
+                    auto: true
+                });
+            })
+            .then(function (result) {
+                expect(result).not.to.equal(null);
+                expect(result.finalCommitHash).to.equal(myCommitHash);
+                expect(result.updatedBranch).to.equal('fastForward');
+
+                done();
+            })
+            .catch(done);
+    });
+
+    it('should make a fast-forward without a branch', function (done) {
+        var myContext, myCommitHash, startCommitHash;
+        Q.nfcall(context.project.createBranch, 'fastForward', context.commitHash)
+            .then(function () {
+                return getContext('fastForward');
+            })
+            .then(function (myContext_) {
+                var persisted;
+                //modify
+                myContext = myContext_;
+                startCommitHash = myContext.commitHash;
+                myContext.core.setRegistry(myContext.rootNode, 'newItem', 'newValue');
+
+                persisted = myContext.core.persist(myContext.rootNode);
+
+                if (!persisted) {
+                    throw new Error('failed to persist');
+                }
+
+                return myContext.project.makeCommit(
+                    null,
+                    [myContext.commitHash],
+                    myContext.core.getHash(myContext.rootNode),
+                    persisted.objects,
+                    'fast-forward test'
+                );
+            })
+            .then(function (commitResult) {
+                expect(commitResult).not.to.equal(null);
+                expect(commitResult.hash).to.contain('#');
+                expect(commitResult.hash).to.have.length(41);
+
+                myCommitHash = commitResult.hash;
+
+                //fast-forward
+                return merger.merge({
+                    project: myContext.project,
+                    logger: logger,
+                    gmeConfig: gmeConfig,
+                    myBranchOrCommit: myCommitHash,
+                    theirBranchOrCommit: startCommitHash,
+                    auto: true
+                });
+            })
+            .then(function (result) {
+                expect(result).not.to.equal(null);
+                expect(result.finalCommitHash).to.equal(myCommitHash);
+                expect(result.updatedBranch).to.equal(undefined);
+
+                done();
+            })
+            .catch(done);
+    });
 });
