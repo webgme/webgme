@@ -54,16 +54,12 @@ define([
                 // FIXME: This should be the same as nodes (need to make sure they are not modified in meta).
                 metaNodes: {},
 
-                root: {
-                    current: null,
-                    previous: null,
-                    object: null
-                },
-                commit: {
-                    current: null,
-                    previous: null
-                },
-                undoRedoChain: null, //{commit: '#hash', root: '#hash', previous: object, next: object}
+                rootHash: null,
+                rootObject: null,
+                commitHash: null,
+
+                undoRedoChain: null, //{commitHash: '#hash', rootHash: '#hash', previous: object, next: object}
+                undoingOrRedoing: false,
                 inTransaction: false,
                 msg: '',
                 gHash: 0,
@@ -124,7 +120,7 @@ define([
                         chainItem = value;
                         while (chainItem.previous) {
                             prevChain.previous = {
-                                commit: chainItem.commit,
+                                commitHash: chainItem.commitHash,
                                 previous: null
                             };
                             prevChain = prevChain.previous;
@@ -137,7 +133,7 @@ define([
                         chainItem = value;
                         while (chainItem.next) {
                             nextChain.next = {
-                                commit: chainItem.commit,
+                                commitHash: chainItem.commitHash,
                                 next: null
                             };
                             nextChain = nextChain.next;
@@ -223,18 +219,12 @@ define([
                     newCommitObject = storage.makeCommit(
                         state.project.projectId,
                         state.branchName,
-                        [state.commit.current],
+                        [state.commitHash],
                         persisted.rootHash,
                         persisted.objects,
                         state.msg,
                         callback
                     );
-
-
-                    //undo-redo
-                    //addModification(newCommitObject, false);
-                    //self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-                    //self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
                     state.msg = '';
                 } else {
@@ -427,9 +417,8 @@ define([
                 state.metaNodes = {};
                 state.loadNodes = {};
                 state.loadError = 0;
-                state.root.current = null;
-                state.root.previous = null;
-                //state.root.object = null;
+                state.rootHash = null;
+                //state.rootObject = null;
                 state.inTransaction = false;
                 state.msg = '';
 
@@ -653,11 +642,11 @@ define([
         };
 
         this.getActiveCommitHash = function () {
-            return state.commit.current;
+            return state.commitHash;
         };
 
         this.getActiveRootHash = function () {
-            return state.root.current;
+            return state.rootHash;
         };
 
         this.isProjectReadOnly = function () {
@@ -679,8 +668,8 @@ define([
             if (clear) {
                 logger.debug('foreign modification clearing undo-redo chain');
                 state.undoRedoChain = {
-                    commit: commitObject[CONSTANTS.STORAGE.MONGO_ID],
-                    root: commitObject.root,
+                    commitHash: commitObject[CONSTANTS.STORAGE.MONGO_ID],
+                    rootHash: commitObject.root,
                     previous: null,
                     next: null
                 };
@@ -688,8 +677,8 @@ define([
             }
 
             newItem = {
-                commit: commitObject[CONSTANTS.STORAGE.MONGO_ID],
-                root: commitObject.root,
+                commitHash: commitObject[CONSTANTS.STORAGE.MONGO_ID],
+                rootHash: commitObject.root,
                 previous: state.undoRedoChain,
                 next: null
             };
@@ -722,25 +711,18 @@ define([
             }
 
             state.undoRedoChain = state.undoRedoChain.previous;
+            //state.undoingOrRedoing = true;
 
-            loading(state.undoRedoChain.root, state.undoRedoChain.commit, function (err) {
-                //TODO do we need to handle this??
-                if (err) {
-                    logger.error(err);
-                }
-            });
-            self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-            self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
             logState('info', 'undo [before setBranchHash]');
-            storage.setBranchHash(state.project.projectId,
-                state.branchName, state.undoRedoChain.commit, state.commit.current, function (err) {
+            storage.setBranchHash(state.project.projectId, branchName, state.undoRedoChain.commitHash, state.commitHash,
+                function (err) {
                     if (err) {
                         //TODO do we need to handle this? How?
                         callback(err);
                         return;
                     }
 
-                    state.commit.current = state.undoRedoChain.commit;
+                    state.commitHash = state.undoRedoChain.commitHash;
                     logState('info', 'undo [after setBranchHash]');
                     callback(null);
                 }
@@ -756,23 +738,15 @@ define([
 
             state.undoRedoChain = state.undoRedoChain.next;
 
-            loading(state.undoRedoChain.root, state.undeRedoChain.commit, function (err) {
-                //TODO do we need to handle this??
-                if (err) {
-                    logger.error(err);
-                }
-            });
-            self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-            self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
             logState('info', 'redo [before setBranchHash]');
-            storage.setBranchHash(state.project.projectId,
-                state.branchName, state.undoRedoChain.commit, state.commit.current, function (err) {
+            storage.setBranchHash(state.project.projectId, branchName, state.undoRedoChain.commitHash, state.commitHash,
+                function (err) {
                     if (err) {
                         //TODO do we need to handle this? How?
                         callback(err);
                         return;
                     }
-                    state.commit.current = state.undoRedoChain.commit;
+                    state.commitHash = state.undoRedoChain.commitHash;
                     logState('info', 'redo [after setBranchHash]');
                     callback(null);
                 }
@@ -1233,7 +1207,7 @@ define([
 
                 ASSERT(err || root);
 
-                state.root.object = root;
+                state.rootObject = root;
                 addOnFunctions.updateRunningAddOns(root);
                 error = error || err;
                 if (!err) {
@@ -1279,10 +1253,8 @@ define([
                     state.nodes = state.loadNodes;
                     state.loadNodes = {};
                     // We have now loaded the new root from the commit, update the state
-                    state.root.previous = state.root.current;
-                    state.root.current = newRootHash;
-                    state.commit.previous = state.commit.current;
-                    state.commit.current = newCommitHash;
+                    state.rootHash = newRootHash;
+                    state.commitHash = newCommitHash;
 
                     for (i in state.users) {
                         if (state.users.hasOwnProperty(i)) {
@@ -1299,7 +1271,7 @@ define([
 
             loadRoot(newRootHash, function (err) {
                 if (err) {
-                    state.root.current = null;
+                    state.rootHash = null;
                     callback(err);
                 } else {
                     if (firstRoot ||
@@ -1509,7 +1481,7 @@ define([
                                             return;
                                         }
 
-                                        Serialization.import(state.core, state.root.object, jProject, function (err) {
+                                        Serialization.import(state.core, state.rootObject, jProject, function (err) {
                                             if (err) {
                                                 return callback(err);
                                             }
@@ -1567,7 +1539,7 @@ define([
             storage.simpleRequest({
                     command: 'dumpMoreNodes',
                     projectId: state.project.projectId,
-                    hash: state.root.current,
+                    hash: state.rootHash,
                     nodes: paths
                 },
                 function (err, resId) {
@@ -1586,7 +1558,7 @@ define([
             var command = {};
             command.command = 'exportLibrary';
             command.projectId = state.project.projectId;
-            command.hash = state.root.current;
+            command.hash = state.rootHash;
             command.path = libraryRootPath;
             if (command.projectId && command.hash) {
                 storage.simpleRequest(command, function (err, resId) {

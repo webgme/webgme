@@ -350,70 +350,105 @@ define([
                     projectId: projectId,
                     commitObject: null,
                     coreObjects: null
-                },
-                commitHash;
-
-            if (!project) {
-                callback('Cannot makeCommit, ' + branchName + ', project ' + projectId + ' is not opened.');
-                return;
-            }
+                };
 
             commitData.commitObject = self._getCommitObject(projectId, parents, rootHash, msg);
-            commitHash = commitData.commitObject[CONSTANTS.MONGO_ID];
             commitData.coreObjects = coreObjects;
+
+            if (project) {
+                project.insertObject(commitData.commitObject);
+            }
 
             if (typeof branchName === 'string') {
                 commitData.branchName = branchName;
-                branch = project.branches[branchName];
+                branch = project ? project.branches[branchName] : null;
             }
 
             logger.debug('makeCommit', commitData);
             if (branch) {
                 logger.debug('makeCommit, branch is open will commit using commitQueue. branchName:', branchName);
-                logger.debug('makeCommit, [parents[0], localHash]', parents[0], branch.getLocalHash());
-                if (parents[0] === branch.getLocalHash()) {
-                    commitData.callback = callback;
-                    branch.updateHashes(commitHash, null);
-                    branch.queueCommit(commitData);
-
-                    if (branch.inSync === false) {
-                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
-                    } else {
-                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
-                    }
-
-                    if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
-                        logger.debug('makeCommit, commit was first in queue. Will start pushing commit');
-                        self._pushNextQueuedCommit(projectId, branchName);
-                    }
-
-                    branch.dispatchHashUpdate({commitData: commitData, local: true}, function (err, proceed) {
-                        logger.debug('makeCommit, dispatchHashUpdate done. [err, proceed]', err, proceed);
-
-                        if (err) {
-                            callback('Commit failed being loaded in users: ' + err);
-                        } else if (proceed === true) {
-                            //if (branch.inSync === false) {
-                            //    branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
-                            //}
-                            //if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
-                            //    self._pushNextQueuedCommit(projectId, branchName);
-                            //}
-                        } else {
-                            callback('Commit halted when loaded in users: ' + err);
-                        }
-                    });
-                } else {
-                    // The current user is behind the local branch, e.g. plugin trying to save after client changes.
-                    logger.warn('Incoming commit parent was not the same as the localHash for the branch, ' +
-                        'commit will be canceled!');
-                    callback(null, {status: CONSTANTS.CANCELED, hash: commitHash});
-                }
+                self._commitToBranch(projectId, branchName, commitData, callback);
             } else {
                 webSocket.makeCommit(commitData, callback);
             }
 
             return commitData.commitObject; //commitHash
+        };
+
+        this.setBranchHash = function (projectId, branchName, newHash, oldHash, callback) {
+            var project = projects[projectId],
+                branch;
+
+            if (project && project.branches[branchName]) {
+                branch = project.branches[branchName];
+                logger.debug('branch is open, will notify other users about change');
+                project.loadObject(newHash, function (err, commitObject) {
+                    var commitData;
+                    if (err) {
+                        callback('loading commitObject failed with err, ' + err);
+                        return;
+                    }
+                    logger.debug('loaded commitObject');
+                    commitData = {
+                        projectId: projectId,
+                        branchName: branchName,
+                        coreObjects: [],
+                        commitObject: commitObject
+                    };
+                    self._commitToBranch(projectId, branchName, commitData, callback);
+                });
+            } else {
+                StorageObjectLoaders.prototype.setBranchHash.call(self,
+                    projectId, branchName, newHash, oldHash, callback);
+            }
+        };
+
+        this._commitToBranch = function (projectId, branchName, commitData, callback) {
+            var project = projects[projectId],
+                oldCommitHash = commitData.commitObject.parents[0],
+                newCommitHash = commitData.commitObject._id,
+                branch = project.branches[branchName];
+
+            logger.debug('makeCommit, [oldCommitHash, localHash]', oldCommitHash, branch.getLocalHash());
+
+            if (oldCommitHash === branch.getLocalHash()) {
+                commitData.callback = callback;
+                branch.updateHashes(newCommitHash, null);
+                branch.queueCommit(commitData);
+
+                if (branch.inSync === false) {
+                    branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
+                } else {
+                    branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
+                }
+
+                if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
+                    logger.debug('makeCommit, commit was first in queue. Will start pushing commit');
+                    self._pushNextQueuedCommit(projectId, branchName);
+                }
+
+                branch.dispatchHashUpdate({commitData: commitData, local: true}, function (err, proceed) {
+                    logger.debug('makeCommit, dispatchHashUpdate done. [err, proceed]', err, proceed);
+
+                    if (err) {
+                        callback('Commit failed being loaded in users: ' + err);
+                    } else if (proceed === true) {
+                        //if (branch.inSync === false) {
+                        //    branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
+                        //}
+                        //if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
+                        //    self._pushNextQueuedCommit(projectId, branchName);
+                        //}
+                    } else {
+                        callback('Commit halted when loaded in users: ' + err);
+                    }
+                });
+            } else {
+                // The current user is behind the local branch, e.g. plugin trying to save after client changes.
+                logger.warn('Incoming commit parent was not the same as the localHash for the branch, ' +
+                    'commit will be canceled!');
+                callback(null, {status: CONSTANTS.CANCELED, hash: newCommitHash});
+            }
         };
 
         this._pushNextQueuedCommit = function (projectId, branchName) {
