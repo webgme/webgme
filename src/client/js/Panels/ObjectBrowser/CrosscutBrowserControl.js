@@ -417,6 +417,7 @@ define(['js/logger',
             settings[CONSTANTS.STATE_ACTIVE_TAB] = getTabId();
         } else {
             settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
+            settings[CONSTANTS.STATE_ACTIVE_TAB] = 0;
         }
 
         settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = DEFAULT_VISUALIZER;
