@@ -59,7 +59,7 @@ define([
                 commitHash: null,
 
                 undoRedoChain: null, //{commitHash: '#hash', rootHash: '#hash', previous: object, next: object}
-                undoingOrRedoing: false,
+
                 inTransaction: false,
                 msg: '',
                 gHash: 0,
@@ -573,7 +573,9 @@ define([
                 }
 
                 //undo-redo
-                addModification(commitData.commitObject, clearUndoRedo);
+                if (!data.isUndoRedo) {
+                    addModification(commitData.commitObject, clearUndoRedo);
+                }
                 self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
                 self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
@@ -711,7 +713,6 @@ define([
             }
 
             state.undoRedoChain = state.undoRedoChain.previous;
-            //state.undoingOrRedoing = true;
 
             logState('info', 'undo [before setBranchHash]');
             storage.setBranchHash(state.project.projectId, branchName, state.undoRedoChain.commitHash, state.commitHash,
@@ -721,8 +722,6 @@ define([
                         callback(err);
                         return;
                     }
-
-                    state.commitHash = state.undoRedoChain.commitHash;
                     logState('info', 'undo [after setBranchHash]');
                     callback(null);
                 }
@@ -746,7 +745,6 @@ define([
                         callback(err);
                         return;
                     }
-                    state.commitHash = state.undoRedoChain.commitHash;
                     logState('info', 'redo [after setBranchHash]');
                     callback(null);
                 }

@@ -313,7 +313,7 @@ define([
                 logger.debug('forkBranch - commitNext, currentCommitData', currentCommitData);
                 if (currentCommitData) {
                     // Temporarily remove the callback while committing.
-                    delete commitCallback.branchName;
+                    delete currentCommitData.branchName;
                     commitCallback = currentCommitData.callback;
                     delete currentCommitData.callback;
 
@@ -367,7 +367,7 @@ define([
             logger.debug('makeCommit', commitData);
             if (branch) {
                 logger.debug('makeCommit, branch is open will commit using commitQueue. branchName:', branchName);
-                self._commitToBranch(projectId, branchName, commitData, callback);
+                self._commitToBranch(projectId, branchName, commitData, parents[0], callback);
             } else {
                 webSocket.makeCommit(commitData, callback);
             }
@@ -393,9 +393,10 @@ define([
                         projectId: projectId,
                         branchName: branchName,
                         coreObjects: [],
-                        commitObject: commitObject
+                        commitObject: commitObject,
+                        oldHash: oldHash
                     };
-                    self._commitToBranch(projectId, branchName, commitData, callback);
+                    self._commitToBranch(projectId, branchName, commitData, oldHash, callback);
                 });
             } else {
                 StorageObjectLoaders.prototype.setBranchHash.call(self,
@@ -403,11 +404,15 @@ define([
             }
         };
 
-        this._commitToBranch = function (projectId, branchName, commitData, callback) {
+        this._commitToBranch = function (projectId, branchName, commitData, oldCommitHash, callback) {
             var project = projects[projectId],
-                oldCommitHash = commitData.commitObject.parents[0],
                 newCommitHash = commitData.commitObject._id,
-                branch = project.branches[branchName];
+                branch = project.branches[branchName],
+                eventData = {
+                    commitData: commitData,
+                    local: true,
+                    isUndoRedo: commitData.commitObject.parents[0] !== oldCommitHash
+                };
 
             logger.debug('makeCommit, [oldCommitHash, localHash]', oldCommitHash, branch.getLocalHash());
 
@@ -427,7 +432,7 @@ define([
                     self._pushNextQueuedCommit(projectId, branchName);
                 }
 
-                branch.dispatchHashUpdate({commitData: commitData, local: true}, function (err, proceed) {
+                branch.dispatchHashUpdate(eventData, function (err, proceed) {
                     logger.debug('makeCommit, dispatchHashUpdate done. [err, proceed]', err, proceed);
 
                     if (err) {
