@@ -186,7 +186,7 @@ define([
                 if (self.projects) {
                     for (projectId in self.projects) {
                         if (self.projects.hasOwnProperty(projectId)) {
-                            self.gmeClient.unwatchProject(self.projects[projectId]._watcher);
+                            self.gmeClient.unwatchProject(projectId, self.projects[projectId]._watcher);
                         }
                     }
                 }
