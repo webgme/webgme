@@ -369,21 +369,26 @@ define([
 
             logger.debug('makeCommit', commitData);
             if (branch) {
-                logger.debug('makeCommit, branch is open will commit using commitQueue..');
+                logger.debug('makeCommit, branch is open will commit using commitQueue. branchName:', branchName);
+                logger.debug('makeCommit, [parents[0], localHash]', parents[0], branch.getLocalHash());
                 if (parents[0] === branch.getLocalHash()) {
                     commitData.callback = callback;
-
                     branch.updateHashes(commitHash, null);
                     branch.queueCommit(commitData);
+
                     if (branch.inSync === false) {
                         branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
+                    } else {
+                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
                     }
+
                     if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
+                        logger.debug('makeCommit, commit was first in queue. Will start pushing commit');
                         self._pushNextQueuedCommit(projectId, branchName);
                     }
 
                     branch.dispatchHashUpdate({commitData: commitData, local: true}, function (err, proceed) {
-                        logger.debug('makeCommit, dispatchHashUpdate done err, proceed', err, proceed);
+                        logger.debug('makeCommit, dispatchHashUpdate done. [err, proceed]', err, proceed);
 
                         if (err) {
                             callback('Commit failed being loaded in users: ' + err);
@@ -400,7 +405,8 @@ define([
                     });
                 } else {
                     // The current user is behind the local branch, e.g. plugin trying to save after client changes.
-                    logger.warn('Incoming commit was behind the local branch.');
+                    logger.warn('Incoming commit parent was not the same as the localHash for the branch, ' +
+                        'commit will be canceled!');
                     callback(null, {status: CONSTANTS.CANCELED, hash: commitHash});
                 }
             } else {
@@ -418,18 +424,11 @@ define([
 
             logger.debug('_pushNextQueuedCommit', branch.getCommitQueue());
 
-            if (branch.getCommitQueue().length === 0) {
-                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
-                return;
-            }
-
-            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
-
             commitData = branch.getFirstCommit();
             callback = commitData.callback;
             delete commitData.callback;
 
-            logger.debug('_pushNextQueuedCommit, makeCommit ->',
+            logger.debug('_pushNextQueuedCommit, makeCommit [from# -> to#]',
                 commitData.commitObject.parents[0], commitData.commitObject._id);
 
             webSocket.makeCommit(commitData, function (err, result) {
@@ -444,7 +443,12 @@ define([
                         branch.inSync = true;
                         branch.updateHashes(null, result.hash);
                         branch.getFirstCommit(true);
-                        self._pushNextQueuedCommit(projectId, branchName);
+                        if (branch.getCommitQueue().length === 0) {
+                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
+                        } else {
+                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
+                            self._pushNextQueuedCommit(projectId, branchName);
+                        }
                     } else if (result.status === CONSTANTS.FORKED) {
                         branch.inSync = false;
                         branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
@@ -461,8 +465,16 @@ define([
         this._pullNextQueuedCommit = function (projectId, branchName, callback) {
             ASSERT(projects.hasOwnProperty(projectId), 'Project not opened: ' + projectId);
             var project = projects[projectId],
-                branch = project.getBranch(branchName, true),
+                branch = project.branches[branchName],
                 updateData;
+
+            if (!branch) {
+                if (callback) {
+                    callback('Branch, ' + branchName + ', not in project ' + projectId + '.');
+                } else {
+                    throw new Error('Branch, ' + branchName + ', not in project ' + projectId + '.');
+                }
+            }
 
             logger.debug('About to update, updateQueue', {metadata: branch.getUpdateQueue()});
             if (branch.getUpdateQueue().length === 0) {

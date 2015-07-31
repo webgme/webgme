@@ -457,6 +457,11 @@ define([
                 return;
             }
 
+            if (branchStatusHandler) {
+                logger.warn('passing branchStatusHandler is deprecated, use addHashUpdateHandler or' +
+                    ' addBranchStatusHandler on the branch object instead (getProjectObject().branches[branchName]).');
+            }
+
             function openBranch(err) {
                 if (err) {
                     logger.error('Problems closing existing branch', err);

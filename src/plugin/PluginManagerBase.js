@@ -141,7 +141,7 @@ define(['plugin/PluginBase', 'plugin/PluginContext'], function (PluginBase, Plug
             pluginContext.project = this._storage;
             pluginContext.projectName = managerConfiguration.project;
             pluginContext.branchName = managerConfiguration.branchName;
-            pluginContext.branch = pluginContext.project.getBranch(pluginContext.branchName, true);
+
             pluginContext.core = new self._Core(pluginContext.project, {
                 globConf: self.gmeConfig,
                 logger: self.logger.fork('core') //TODO: This logger should probably fork from the plugin logger
