@@ -6,7 +6,7 @@
 
 var testFixture = require('../_globals');
 
-describe('merge - library', function () {
+describe('issue462', function () {
     'use strict';
     var projectName = 'issue462test',
         projectId = testFixture.projectName2Id(projectName),
@@ -75,6 +75,7 @@ describe('merge - library', function () {
                     relids.push(context.core.getRelid(context.core.copyNode(node, container)));
                 }
                 persisted = context.core.persist(context.rootNode);
+
 
                 if (!persisted) {
                     throw new Error('persist failed');

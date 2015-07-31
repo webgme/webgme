@@ -1217,6 +1217,10 @@ define(['common/util/canon',
                 return null;
             }
 
+            if (diff.guid === guid) {
+                return diff;
+            }
+
             relids = getDiffChildrenRelids(diff);
             for (i = 0; i < relids.length; i++) {
                 node = getNodeByGuid(diff[relids[i]], guid);
@@ -2064,7 +2068,6 @@ define(['common/util/canon',
                 basePath = getPathByGuid(_concatBase, guid, ''),
                 i, tPath,
                 relids = getDiffChildrenRelids(extNode);
-
 
             if (extNode.removed === true) {
                 if (baseNode && baseNode.removed !== true) {
