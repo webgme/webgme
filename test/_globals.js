@@ -79,20 +79,21 @@ function clearDatabase(gmeConfigParameter, callback) {
     Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfigParameter.mongo.uri, gmeConfigParameter.mongo.options)
         .then(function (db_) {
             db = db_;
-            return Q.allSettled([
-                Q.ninvoke(db, 'collection', '_users')
-                    .then(function (collection_) {
-                        return Q.ninvoke(collection_, 'remove');
-                    }),
-                Q.ninvoke(db, 'collection', '_organizations')
-                    .then(function (orgs_) {
-                        return Q.ninvoke(orgs_, 'remove');
-                    }),
-                Q.ninvoke(db, 'collection', '_projects')
-                    .then(function (projects_) {
-                        return Q.ninvoke(projects_, 'remove');
-                    })
-            ]);
+            return Q.ninvoke(db, 'dropDatabase');
+            //return Q.allSettled([
+            //    Q.ninvoke(db, 'collection', '_users')
+            //        .then(function (collection_) {
+            //            return Q.ninvoke(collection_, 'remove');
+            //        }),
+            //    Q.ninvoke(db, 'collection', '_organizations')
+            //        .then(function (orgs_) {
+            //            return Q.ninvoke(orgs_, 'remove');
+            //        }),
+            //    Q.ninvoke(db, 'collection', '_projects')
+            //        .then(function (projects_) {
+            //            return Q.ninvoke(projects_, 'remove');
+            //        })
+            //]);
         })
         .then(function () {
             return Q.ninvoke(db, 'close');

@@ -88,11 +88,8 @@ describe('CorePlugins', function () {
                         });
                         promises.push(promise);
                     }
-
                     return Q.allSettled(promises);
                 })
-                //.then(function (result) {
-                //})
                 .nodeify(done);
         });
     });
