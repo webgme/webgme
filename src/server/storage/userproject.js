@@ -28,10 +28,6 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
         this.userName = userName;
     };
 
-    this.getBranch = function () {
-        return null;
-    };
-
     // Helper functions
     this.createCommitObject = function (parents, rootHash, user, msg) {
         user = user || self.userName || 'n/a';

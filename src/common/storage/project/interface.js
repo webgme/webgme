@@ -18,10 +18,6 @@ define([
         this.logger.debug('ctor', projectId);
         this.projectCache = new ProjectCache(storageObjectsAccessor, this.projectId, this.logger, gmeConfig);
 
-        this.getBranch = function (branchName, shouldExist) {
-            throw new Error('getBranch must be overridden in derived class');
-        };
-
         // Functions forwarded to project cache.
         this.insertObject = this.projectCache.insertObject;
         this.loadObject = this.projectCache.loadObject;

@@ -700,7 +700,7 @@ describe('Memory storage', function () {
                     done(new Error('should have failed'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error && err.message.indexOf('branch has mismatch') > -1) {
+                    if (err === 'branch hash mismatch') {
                         done();
                     } else {
                         done(new Error('should have failed to openProject'));
@@ -725,7 +725,7 @@ describe('Memory storage', function () {
                     done(new Error('should have failed'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error && err.message.indexOf('branch has mismatch') > -1) {
+                    if (err === 'branch hash mismatch') {
                         done();
                     } else {
                         done(new Error('should have failed to openProject'));

@@ -511,6 +511,13 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
         // Commits without coreObjects is valid now (the assumption is that the rootObject does exist.
         //check(typeof data.coreObjects[data.commitObject.root] === 'object', deferred,
         //    'data.coreObjects[data.commitObject.root] is not an object');
+
+        if (typeof data.oldHash === 'string') {
+            // Provide the possibility to refer to an oldHash explicitly rather than from the commitObj,
+            // the is needed when e.g. undoing/redoing.
+            check(data.oldHash === '' || REGEXP.HASH.test(data.oldHash), deferred,
+                'data.oldHash is not a valid hash: ' + data.oldHash);
+        }
     }
 
     if (data.hasOwnProperty('username')) {

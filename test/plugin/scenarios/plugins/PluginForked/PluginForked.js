@@ -134,6 +134,11 @@ if (typeof define === 'undefined') {
                         }
                         self.project.setBranchHash(self.branchName, commitResult.hash, self.currentHash,
                             function (err, commitResult) {
+                                if (err) {
+                                    self.logger.error('setBranchHash failed', err);
+                                    callback(err);
+                                    return;
+                                }
                                 if (commitResult.status === STORAGE_CONSTANTS.SYNCED) {
                                     makeAndSaveChanges();
                                 } else {

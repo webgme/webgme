@@ -13,27 +13,42 @@ define(['common/storage/constants'], function (CONSTANTS) {
             originHash = '',
             localHash = '',
             commitQueue = [],
-            updateQueue = [];
+            updateQueue = [],
+            branchStatus = CONSTANTS.BRANCH_STATUS.SYNC;
 
         logger.debug('ctor');
         this.name = name;
         this.isOpen = true;
+        this.inSync = true;
 
-        this.updateHandler = null;
-        this.commitHandler = null;
+        this.branchStatusHandlers = [];
+        this.hashUpdateHandlers = [];
 
-        this.localUpdateHandler = null;
+        this._remoteUpdateHandler = null;
 
         this.cleanUp = function () {
+            var i,
+                commitResult;
             self.isOpen = false;
-            self.updateHandler = null;
-            self.commitHandler = null;
-            self.localUpdateHandler = null;
+            self.branchStatusHandlers = [];
+            self.hashUpdateHandlers = [];
 
+            self._remoteUpdateHandler = null;
+            for (i = 0; i < commitQueue.length; i += 1) {
+                // Make sure there are no pending callbacks, invoke with status CANCELED.
+                commitResult = {
+                    status: CONSTANTS.CANCELED,
+                    hash: commitQueue[i].commitObject[CONSTANTS.MONGO_ID]
+                };
+                if (commitQueue[i].callback) {
+                    commitQueue[i].callback(null, commitResult);
+                }
+            }
             commitQueue = [];
             updateQueue = [];
         };
 
+        // Hash related functions
         this.getLocalHash = function () {
             return localHash;
         };
@@ -54,6 +69,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             }
         };
 
+        // Queue related functions
         this.queueCommit = function (commitData) {
             commitQueue.push(commitData);
             logger.debug('Adding new commit to queue', commitQueue.length);
@@ -102,8 +118,6 @@ define(['common/storage/constants'], function (CONSTANTS) {
             for (i = 0; i < commitQueue.length; i += 1) {
                 commitData = commitQueue[i];
                 commitHash = commitData.commitObject[CONSTANTS.MONGO_ID];
-                // remove the branchName of the commitData
-                delete commitData.branchName;
                 if (i !== 0) {
                     subQueue.push(commitData);
                 }
@@ -142,6 +156,70 @@ define(['common/storage/constants'], function (CONSTANTS) {
             }
 
             return updateData;
+        };
+
+        // Event related functions
+        this.addBranchStatusHandler = function (fn) {
+            self.branchStatusHandlers.push(fn);
+        };
+
+        this.removeBranchStatusHandler = function (fn) {
+            var i;
+
+            for (i = 0; i < self.branchStatusHandlers.length; i += 1) {
+                if (self.branchStatusHandlers[i] === fn) {
+                    self.branchStatusHandlers.splice(i, 1);
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        this.dispatchBranchStatus = function (newStatus) {
+            var i;
+
+            logger.debug('dispatchBranchStatus old, new', branchStatus, newStatus);
+            branchStatus = newStatus;
+            for (i = 0; i < self.branchStatusHandlers.length; i += 1) {
+                self.branchStatusHandlers[i](newStatus, commitQueue, updateQueue);
+            }
+        };
+
+        this.addHashUpdateHandler = function (fn) {
+            self.hashUpdateHandlers.push(fn);
+        };
+
+        this.removeHashUpdateHandler = function (fn) {
+            var i;
+
+            for (i = 0; i < self.hashUpdateHandlers.length; i += 1) {
+                if (self.hashUpdateHandlers[i] === fn) {
+                    self.hashUpdateHandlers.splice(i, 1);
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        this.dispatchHashUpdate = function (data, callback) {
+            var i,
+                error = null,
+                counter = self.hashUpdateHandlers.length,
+                allProceed = true,
+                counterCallback = function (err, proceed) {
+                    error = error || err; // Use the latest error
+                    allProceed = allProceed && proceed === true;
+                    counter -= 1;
+                    if (counter === 0) {
+                        callback(error, allProceed);
+                    }
+                };
+
+            for (i = 0; i < self.hashUpdateHandlers.length; i += 1) {
+                self.hashUpdateHandlers[i](data, commitQueue, updateQueue, counterCallback);
+            }
         };
     }
 

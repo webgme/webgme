@@ -186,7 +186,7 @@ define([
                 if (self.projects) {
                     for (projectId in self.projects) {
                         if (self.projects.hasOwnProperty(projectId)) {
-                            self.gmeClient.unwatchProject(self.projects[projectId]._watcher);
+                            self.gmeClient.unwatchProject(projectId, self.projects[projectId]._watcher);
                         }
                     }
                 }
@@ -870,7 +870,7 @@ define([
 
         //check if there is need for a change at all
         if (currentProject && currentProject.id === projectId && currentBranch &&
-            (currentBranch.id === branchId || branchId === undefined || branchId === null || branchId === '')) {
+            (currentBranch.id === branchId || branchId === undefined || branchId === '')) {
             callback(null);
             return;
         }

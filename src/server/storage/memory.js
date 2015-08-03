@@ -197,7 +197,7 @@ function Memory(mainLogger, gmeConfig) {
                 if (oldhash === hash) {
                     deferred.resolve();
                 } else {
-                    deferred.reject(new Error('branch has mismatch'));
+                    deferred.reject('branch hash mismatch');
                 }
             } else {
                 if (oldhash === hash) {
@@ -211,7 +211,7 @@ function Memory(mainLogger, gmeConfig) {
                     }
                     deferred.resolve();
                 } else {
-                    deferred.reject(new Error('branch has mismatch'));
+                    deferred.reject('branch hash mismatch');
                 }
             }
 
