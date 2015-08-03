@@ -306,15 +306,18 @@ describe('branch status', function () {
             function eventHandler(__client, eventData) {
                 if (prevStatus === client.CONSTANTS.BRANCH_STATUS.SYNC) {
                     prevStatus = eventData.status;
+                    expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.PULLING);
+                } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.PULLING) {
+                    prevStatus = eventData.status;
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
                 } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC) {
                     prevStatus = eventData.status;
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
-                    expect(eventData.details.length).to.equal(1);
+                    expect(eventData.commitQueue.length).to.equal(1);
                     client.setAttributes('', 'name', 'newRootyName2Test2', 'change when ahead not sync');
                 } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC) {
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
-                    expect(eventData.details.length).to.equal(2);
+                    expect(eventData.commitQueue.length).to.equal(2);
                     removeHandler();
                     currentBranchHash = client.getActiveCommitHash();
                     done();
