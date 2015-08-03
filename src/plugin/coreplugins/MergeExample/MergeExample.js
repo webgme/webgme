@@ -255,8 +255,8 @@ define([
             })
             .then(function (result) {
                 // result.baseCommitHash
-                // result.conflict
-                // result.diff
+                // [result.conflict] - not there if fast-forward
+                // [result.diff]- not there if fast-forward
                 // result.myCommitHash
                 // result.projectId
                 // result.targetBranchName
@@ -264,7 +264,7 @@ define([
 
                 self.logger.info(result);
 
-                if (result.conflict.items.length === 0) {
+                if (!result.conflict || result.conflict.items.length === 0) {
                     // FIXME: what if it could not update the branch or got a commit hash
                     return result;
                 } else {

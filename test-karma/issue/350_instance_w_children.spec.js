@@ -49,11 +49,12 @@ describe.skip('issue 350 client crashes when manipulating a node that has a mode
                 client.deleteProject(projectName, function (err) {
                     expect(err).to.equal(null);
 
-                    client.createProjectFromFileAsync(projectName, projectImport, function (err) {
-                        expect(err).to.equal(null);
-
-                        done();
-                    });
+                    client.createProjectFromFileAsync(projectName, 'master', projectImport,
+                        function (err, projectId, branchName) {
+                            expect(err).to.equal(null);
+                            client.selectProject(projectId, branchName, done);
+                        }
+                    );
                 });
             });
         });

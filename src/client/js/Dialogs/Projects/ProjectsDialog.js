@@ -518,13 +518,19 @@ define([
 
         loader.start();
 
-        self._client.createProjectFromFile(projectName, jsonContent, function (err) {
+        self._client.createProjectFromFile(projectName, null, jsonContent, function (err, projectId, branchName) {
             if (err) {
-                self._logger.error('CANNOT CREATE NEW PROJECT FROM FILE: ' + err.message);
+                self._logger.error('CANNOT CREATE NEW PROJECT FROM FILE: ' + err);
+                loader.stop();
             } else {
                 self._logger.debug('CREATE NEW PROJECT FROM FILE FINISHED SUCCESSFULLY');
+                self._client.selectProject(projectId, branchName, function (err) {
+                    if (err) {
+                        self._logger.error('CANNOT SELECT NEWLY CREATED PROJECT FROM FILE: ' + err.message);
+                    }
+                    loader.stop();
+                });
             }
-            loader.stop();
         });
     };
 

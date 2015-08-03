@@ -78,10 +78,10 @@ define([
             });
         });
 
-        this.btnAbort.on('click', function () {
-            //just simply exit the dialog
-            self.hide();
-        });
+        //this._btnAbort.on('click', function () {
+        //    //just simply exit the dialog
+        //    self._dialog.modal('hide');
+        //});
     };
 
     MergeDialog.prototype._initDialog = function () {

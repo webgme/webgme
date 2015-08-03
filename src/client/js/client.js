@@ -1441,7 +1441,9 @@ define([
         };
 
         //create from file
-        this.createProjectFromFile = function (projectName, jProject, callback) {
+        this.createProjectFromFile = function (projectName, branchName, jProject, callback) {
+            branchName = branchName || 'master';
+
             storage.createProject(projectName, function (err, projectId) {
                 if (err) {
                     callback(err);
@@ -1460,53 +1462,48 @@ define([
                         globConf: gmeConfig,
                         logger: logger.fork('core')
                     });
+
                     rootNode = core.createNode({parent: null, base: null});
-                    persisted = core.persist(rootNode);
+                    Serialization.import(core, rootNode, jProject, function (err) {
+                        if (err) {
+                            return callback(err);
+                        }
 
-                    storage.makeCommit(projectId,
-                        null,
-                        [],
-                        persisted.rootHash,
-                        persisted.objects,
-                        'creating project from a file',
-                        function (err, commitResult) {
-                            if (err) {
-                                logger.error('cannot make initial commit for project creation from file');
-                                callback(err);
-                                return;
-                            }
+                        persisted = core.persist(rootNode);
 
-                            project.createBranch('master', commitResult.hash, function (err) {
+                        storage.makeCommit(projectId,
+                            null,
+                            [],
+                            persisted.rootHash,
+                            persisted.objects,
+                            'creating project from a file',
+                            function (err, commitResult) {
                                 if (err) {
-                                    logger.error('cannot set branch \'master\' for project creation from file');
+                                    logger.error('cannot make initial commit for project creation from file');
                                     callback(err);
                                     return;
                                 }
-                                storage.closeProject(projectId, function (err) {
+
+                                project.createBranch(branchName, commitResult.hash, function (err) {
                                     if (err) {
-                                        logger.error('Closing temporary project failed in project creation from file',
-                                            err);
+                                        logger.error('cannot set branch \'master\' for project creation from file');
                                         callback(err);
                                         return;
                                     }
 
-                                    self.selectProject(projectId, null, function (err) {
+                                    storage.closeProject(projectId, function (err) {
                                         if (err) {
+                                            logger.error('Closing temporary project failed in project creation ' +
+                                                'from file', err);
                                             callback(err);
                                             return;
                                         }
-
-                                        Serialization.import(state.core, state.rootObject, jProject, function (err) {
-                                            if (err) {
-                                                return callback(err);
-                                            }
-                                            saveRoot('project created from file', callback);
-                                        });
+                                        callback(null, projectId, branchName);
                                     });
                                 });
-                            });
-                        }
-                    );
+                            }
+                        );
+                    });
                 });
             });
         };

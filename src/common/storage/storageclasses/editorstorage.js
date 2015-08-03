@@ -270,11 +270,11 @@ define([
             // This will prevent memory leaks and expose if a commit is being
             // processed at the server this time (see last error in _pushNextQueuedCommit).
             branch.dispatchBranchStatus(null);
-            branch.cleanUp();
 
             // Stop listening to events from the server
             webSocket.removeEventListener(webSocket.getBranchUpdateEventName(projectId, branchName),
                 branch._remoteUpdateHandler);
+            branch.cleanUp();
 
             delete project.branches[branchName];
             webSocket.closeBranch({projectId: projectId, branchName: branchName}, callback);
@@ -379,16 +379,17 @@ define([
             var project = projects[projectId],
                 branch;
 
+            logger.debug('setBranchHash', projectId, branchName, newHash, oldHash);
             if (project && project.branches[branchName]) {
                 branch = project.branches[branchName];
-                logger.debug('branch is open, will notify other users about change');
+                logger.debug('setBranchHash, branch is open, will notify other local users about change');
                 project.loadObject(newHash, function (err, commitObject) {
                     var commitData;
                     if (err) {
                         callback('loading commitObject failed with err, ' + err);
                         return;
                     }
-                    logger.debug('loaded commitObject');
+                    logger.debug('setBranchHash, loaded commitObject');
                     commitData = {
                         projectId: projectId,
                         branchName: branchName,
@@ -413,7 +414,7 @@ define([
                     local: true
                 };
 
-            logger.debug('makeCommit, [oldCommitHash, localHash]', oldCommitHash, branch.getLocalHash());
+            logger.debug('_commitToBranch, [oldCommitHash, localHash]', oldCommitHash, branch.getLocalHash());
 
             if (oldCommitHash === branch.getLocalHash()) {
                 commitData.callback = callback;
@@ -427,25 +428,25 @@ define([
                 }
 
                 if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
-                    logger.debug('makeCommit, commit was first in queue. Will start pushing commit');
+                    logger.debug('_commitToBranch, commit was first in queue. Will start pushing commit');
                     self._pushNextQueuedCommit(projectId, branchName);
                 }
 
                 branch.dispatchHashUpdate(eventData, function (err, proceed) {
-                    logger.debug('makeCommit, dispatchHashUpdate done. [err, proceed]', err, proceed);
+                    logger.debug('_commitToBranch, dispatchHashUpdate done. [err, proceed]', err, proceed);
 
                     if (err) {
                         callback('Commit failed being loaded in users: ' + err);
                     } else if (proceed === true) {
-                        logger.debug('proceed only applicable when loading external updates');
+                        logger.debug('_commitToBranch, proceed only applicable when loading external updates');
                     } else {
                         callback('Commit halted when loaded in users: ' + err);
                     }
                 });
             } else {
                 // The current user is behind the local branch, e.g. plugin trying to save after client changes.
-                logger.warn('Incoming commit parent was not the same as the localHash for the branch, ' +
-                    'commit will be canceled!');
+                logger.warn('_commitToBranch, incoming commit parent was not the same as the localHash ' +
+                    'for the branch, commit will be canceled!');
                 callback(null, {status: CONSTANTS.CANCELED, hash: newCommitHash});
             }
         };
