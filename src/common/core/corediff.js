@@ -7,7 +7,11 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], function (CANON, TASYNC, ASSERT) {
+define(['common/util/canon',
+    'common/core/tasync',
+    'common/util/assert',
+    'common/regexp'
+], function (CANON, TASYNC, ASSERT, REGEXP) {
     'use strict';
 
     function diffCore(_innerCore, options) {
@@ -704,8 +708,9 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
             if (_needChecking !== true || guids.length < 1) {
                 shrinkDiff(_DIFF);
                 finalizeDiff();
-                return _DIFF;
+                return JSON.parse(JSON.stringify(_DIFF));
             }
+
             _needChecking = false;
             for (i = 0; i < guids.length; i++) {
                 ytc = _yetToCompute[guids[i]];
@@ -762,7 +767,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         };
 
         function getDiffChildrenRelids(diff) {
-            var keys = Object.keys(diff),
+            var keys = Object.keys(diff || {}),
                 i,
                 filteredKeys = [],
                 forbiddenWords = {
@@ -1198,7 +1203,6 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         }
 
         _core.applyTreeDiff = function (root, diff) {
-
             toFrom = {};
             fromTo = {};
             getMoveSources(diff, '', toFrom, fromTo);
@@ -1208,6 +1212,11 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
 
         function getNodeByGuid(diff, guid) {
             var relids, i, node;
+
+            if (REGEXP.GUID.test(guid) !== true) {
+                return null;
+            }
+
             if (diff.guid === guid) {
                 return diff;
             }
@@ -1225,6 +1234,7 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
         function insertAtPath(diff, path, object) {
             ASSERT(typeof path === 'string');
             var i, base, relid, nodepath;
+
             if (path === '') {
                 _concatResult = JSON.parse(JSON.stringify(object));
                 return;
@@ -1338,6 +1348,11 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
 
         function getPathByGuid(conflict, guid, path) {
             var relids, i, result;
+
+            if (REGEXP.GUID.test(guid) !== true) {
+                return null;
+            }
+
             if (conflict.guid === guid) {
                 return path;
             }
@@ -2053,7 +2068,6 @@ define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], functi
                 basePath = getPathByGuid(_concatBase, guid, ''),
                 i, tPath,
                 relids = getDiffChildrenRelids(extNode);
-
 
             if (extNode.removed === true) {
                 if (baseNode && baseNode.removed !== true) {
