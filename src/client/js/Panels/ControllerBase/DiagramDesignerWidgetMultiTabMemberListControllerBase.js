@@ -186,14 +186,22 @@ define(['js/logger',
         this.selectedObjectChanged(activeObjectId);
     };
 
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveTabChanged = function (model, tabId) {
+        if (this._selectedMemberListID !== this._tabIDMemberListID[tabId]) {
+            this._widget.selectTab(tabId + '');
+        }
+    };
+
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged, this);
 
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged);
 
     };
 
@@ -323,7 +331,7 @@ define(['js/logger',
                 //set tab based on the UI state
                 if (!selectedMemberListTabID &&
                     WebGMEGlobal.State.getActiveTab() !== null && WebGMEGlobal.State.getActiveTab() !== undefined &&
-                WebGMEGlobal.State.getActiveTab()<Object.keys(this._tabIDMemberListID).length) {
+                    WebGMEGlobal.State.getActiveTab() < Object.keys(this._tabIDMemberListID).length) {
                     selectedMemberListTabID = WebGMEGlobal.State.getActiveTab();
                 }
 
@@ -1484,18 +1492,25 @@ define(['js/logger',
             memberListSetsRegistry,
             i,
             j,
+            oldIDList = this._tabIDMemberListID,
+            urlTab = WebGMEGlobal.State.getActiveTab(),
             setID;
 
-        if (memberListContainerID &&
+        if (typeof memberListContainerID === 'string' &&
             memberListSetsRegistryKey &&
             memberListSetsRegistryKey !== '') {
             memberListContainer = this._client.getNode(memberListContainerID);
             memberListSetsRegistry = memberListContainer.getEditableRegistry(memberListSetsRegistryKey) || [];
 
+            this._tabIDMemberListID = {};
             for (i = 0; i < newTabIDOrder.length; i += 1) {
                 //i is the new order number
                 //newTabIDOrder[i] is the tab identifier
-                setID = this._tabIDMemberListID[newTabIDOrder[i]];
+                if (urlTab === newTabIDOrder[i]) {
+                    WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB, i);
+                }
+                setID = oldIDList[newTabIDOrder[i]];
+                this._tabIDMemberListID[i] = setID;
                 for (j = 0; j < memberListSetsRegistry.length; j += 1) {
                     if (memberListSetsRegistry[j].SetID === setID) {
                         memberListSetsRegistry[j].order = i;
@@ -1512,9 +1527,8 @@ define(['js/logger',
                 }
             });
 
-            this._client.startTransaction();
+
             this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
-            this._client.completeTransaction();
         }
     };
 
@@ -1527,7 +1541,7 @@ define(['js/logger',
             i,
             setID;
 
-        if (memberListContainerID &&
+        if (typeof memberListContainerID === 'string' &&
             memberListSetsRegistryKey &&
             memberListSetsRegistryKey !== '') {
             memberListContainer = this._client.getNode(memberListContainerID);

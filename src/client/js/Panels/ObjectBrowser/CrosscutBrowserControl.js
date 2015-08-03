@@ -19,7 +19,8 @@ define(['js/logger',
         GME_MODEL_CLASS = 'gme-model',
         GME_ATOM_CLASS = 'gme-atom',
         PROJECT_ROOT_ID = CONSTANTS.PROJECT_ROOT_ID,
-        DEFAULT_VISUALIZER = 'Crosscut';
+        DEFAULT_VISUALIZER = 'Crosscut',
+        REG_NAME = 'CrossCuts';
 
     var CrosscutBrowserControl = function (client, treeBrowser) {
         var self = this;
@@ -390,22 +391,38 @@ define(['js/logger',
 
     CrosscutBrowserControl.prototype._onNodeDoubleClicked = function (nodeId) {
         this._logger.debug('_onNodeDoubleClicked with nodeId: ' + nodeId);
-        var settings = {};
+        var settings = {},
+            self = this,
+            getTabId = function () {
+                var node = self._client.getNode(self._crosscuts[nodeId]),
+                    crosscuts,
+                    i;
+
+                if (node) {
+                    crosscuts = node.getRegistry(REG_NAME);
+                    if (crosscuts && crosscuts.length > 0) {
+                        for (i = 0; i < crosscuts.length; i += 1) {
+                            if (crosscuts[i].SetID === self._getCrosscutID(nodeId, self._crosscuts[nodeId])) {
+                                return crosscuts[i].order;
+                            }
+                        }
+                    }
+                }
+
+                return 0;
+            };
 
         if (this._crosscuts.hasOwnProperty(nodeId)) {
             settings[CONSTANTS.STATE_ACTIVE_OBJECT] = this._crosscuts[nodeId];
+            settings[CONSTANTS.STATE_ACTIVE_TAB] = getTabId();
         } else {
             settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
+            settings[CONSTANTS.STATE_ACTIVE_TAB] = 0;
         }
 
         settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = DEFAULT_VISUALIZER;
 
         WebGMEGlobal.State.set(settings);
-
-        if (this._crosscuts.hasOwnProperty(nodeId)) {
-            settings[CONSTANTS.STATE_ACTIVE_CROSSCUT] = this._getCrosscutID(nodeId, this._crosscuts[nodeId]);
-            WebGMEGlobal.State.set(settings);
-        }
     };
 
     CrosscutBrowserControl.prototype._isExpandable = function (objectId) {
