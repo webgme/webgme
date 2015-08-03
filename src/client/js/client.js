@@ -171,10 +171,11 @@ define([
         function saveRoot(msg, callback) {
             var persisted,
                 numberOfPersistedObjects,
+                wrappedCallback,
                 newCommitObject;
             logger.debug('saveRoot msg', msg);
             if (callback) {
-                callback = function (err, result) {
+                wrappedCallback = function (err, result) {
                     if (err) {
                         logger.error('saveRoot failure', err);
                     } else {
@@ -183,7 +184,7 @@ define([
                     callback(err, result);
                 };
             } else {
-                callback = function (err, result) {
+                wrappedCallback = function (err, result) {
                     if (err) {
                         logger.error('saveRoot failure', err);
                     } else {
@@ -191,8 +192,7 @@ define([
                     }
                 };
             }
-            callback = callback || function () {
-                };
+
             if (!state.viewer && !state.readOnlyProject) {
                 if (state.msg) {
                     state.msg += '\n' + msg;
@@ -208,7 +208,7 @@ define([
                     numberOfPersistedObjects = Object.keys(persisted.objects).length;
                     if (numberOfPersistedObjects === 0) {
                         logger.warn('No changes after persist will return from saveRoot.');
-                        callback(null);
+                        wrappedCallback(null);
                         return;
                     } else if (numberOfPersistedObjects > 200) {
                         //This is just for debugging
@@ -223,7 +223,7 @@ define([
                         persisted.rootHash,
                         persisted.objects,
                         state.msg,
-                        callback
+                        wrappedCallback
                     );
 
                     state.msg = '';
@@ -233,7 +233,7 @@ define([
             } else {
                 //TODO: Why is this set to empty here?
                 state.msg = '';
-                callback(null);
+                wrappedCallback(null);
             }
         }
 
