@@ -324,7 +324,7 @@ describe('TestAddOn', function () {
                 //start
                 Q.ninvoke(_addOn, 'start', startParam)
                     .then(function () {
-                        return Q.ninvoke(_addOn, 'start', startParam)
+                        return Q.ninvoke(_addOn, 'start', startParam);
                     })
                     .then(function () {
                         done(new Error('should have failed to initialize'));
