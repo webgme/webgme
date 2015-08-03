@@ -410,8 +410,7 @@ define([
                 branch = project.branches[branchName],
                 eventData = {
                     commitData: commitData,
-                    local: true,
-                    isUndoRedo: commitData.commitObject.parents[0] !== oldCommitHash
+                    local: true
                 };
 
             logger.debug('makeCommit, [oldCommitHash, localHash]', oldCommitHash, branch.getLocalHash());
@@ -438,12 +437,7 @@ define([
                     if (err) {
                         callback('Commit failed being loaded in users: ' + err);
                     } else if (proceed === true) {
-                        //if (branch.inSync === false) {
-                        //    branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
-                        //}
-                        //if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
-                        //    self._pushNextQueuedCommit(projectId, branchName);
-                        //}
+                        logger.debug('proceed only applicable when loading external updates');
                     } else {
                         callback('Commit halted when loaded in users: ' + err);
                     }

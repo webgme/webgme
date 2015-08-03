@@ -573,9 +573,7 @@ define([
                 }
 
                 //undo-redo
-                if (!data.isUndoRedo) {
-                    addModification(commitData.commitObject, clearUndoRedo);
-                }
+                addModification(commitData.commitObject, clearUndoRedo);
                 self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
                 self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
@@ -666,11 +664,13 @@ define([
 
         // Undo/Redo functionality
         function addModification(commitObject, clear) {
-            var newItem;
+            var newItem,
+                commitHash = commitObject[CONSTANTS.STORAGE.MONGO_ID],
+                currItem;
             if (clear) {
                 logger.debug('foreign modification clearing undo-redo chain');
                 state.undoRedoChain = {
-                    commitHash: commitObject[CONSTANTS.STORAGE.MONGO_ID],
+                    commitHash: commitHash,
                     rootHash: commitObject.root,
                     previous: null,
                     next: null
@@ -678,8 +678,25 @@ define([
                 return;
             }
 
+            // Check if the modification already exist, i.e. commit is from undoing or redoing.
+            currItem = state.undoRedoChain;
+            while (currItem) {
+                if (currItem.commitHash === commitHash) {
+                    return;
+                }
+                currItem = currItem.previous;
+            }
+
+            currItem = state.undoRedoChain;
+            while (currItem) {
+                if (currItem.commitHash === commitHash) {
+                    return;
+                }
+                currItem = currItem.next;
+            }
+
             newItem = {
-                commitHash: commitObject[CONSTANTS.STORAGE.MONGO_ID],
+                commitHash: commitHash,
                 rootHash: commitObject.root,
                 previous: state.undoRedoChain,
                 next: null
