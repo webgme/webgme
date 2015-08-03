@@ -32,7 +32,12 @@ describe('NodeWorker', function () {
                     return Q.nfcall(rimraf, './test-tmp/worker_config.json');
                 })
                 .then(function () {
-                    var clientsParam = {};
+                    server = testFixture.WebGME.standaloneServer(gmeConfig);
+                    return Q.nfcall(server.start);
+                })
+                .then(function () {
+                    var workerConfig = {},
+                        clientsParam = {};
 
                     clientsParam.serverPort = gmeConfig.server.port;
                     clientsParam.sessionId = 'testingNodeWorker';
@@ -40,14 +45,10 @@ describe('NodeWorker', function () {
                     clientsParam.httpsecure = gmeConfig.server.https.enable;
                     clientsParam.executorNonce = gmeConfig.executor.nonce;
 
-                    server = testFixture.WebGME.standaloneServer(gmeConfig);
-                    server.start(function () {
-                        var workerConfig = {};
-                        executorClient = new ExecutorClient(clientsParam);
-                        blobClient = new BlobClient(clientsParam);
-                        workerConfig[server.getUrl()] = workerNonce ? {executorNonce: workerNonce} : {};
-                        return Q.nfcall(fs.writeFile, 'test-tmp/worker_config.json', JSON.stringify(workerConfig));
-                    });
+                    executorClient = new ExecutorClient(clientsParam);
+                    blobClient = new BlobClient(clientsParam);
+                    workerConfig[server.getUrl()] = workerNonce ? {executorNonce: workerNonce} : {};
+                    return Q.nfcall(fs.writeFile, 'test-tmp/worker_config.json', JSON.stringify(workerConfig));
                 })
                 .then(function () {
                     var deferred = Q.defer(),

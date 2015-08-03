@@ -98,7 +98,7 @@ main = function (argv, callback) {
                     activeNode: program.selectedObjID,
                     activeSelection: [], //TODO: Enable passing this from command line.
                     branchName: program.branchName,
-                    commitHash: commitHash,
+                    commitHash: commitHash
                 };
 
             pluginManager.executePlugin(program.pluginName, pluginConfig, context,

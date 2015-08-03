@@ -88,13 +88,20 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
      * @returns {promise}
      */
     this.configurePlugin = function (plugin, pluginConfig, context, callback) {
-        var deferred = Q.defer();
-        if (!pluginConfig) {
-            pluginConfig = plugin.getDefaultConfig();
+        var deferred = Q.defer(),
+            pluginConfiguration = plugin.getDefaultConfig(),
+            key;
+
+        if (pluginConfig) {
+            for (key in pluginConfig) {
+                if (pluginConfig.hasOwnProperty(key)) {
+                    pluginConfiguration[key] = pluginConfig[key];
+                }
+            }
         }
 
         //TODO: Check that a passed config is consistent with the structure..
-        plugin.setCurrentConfig(pluginConfig);
+        plugin.setCurrentConfig(pluginConfiguration);
 
         context.project = context.project || project;
 
