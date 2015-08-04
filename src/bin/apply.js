@@ -8,7 +8,6 @@
 
 var webgme = require('../../webgme'),
     FS = require('fs'),
-    Project = require('../../src/server/storage/userproject'),
     Q = require('q'),
     cliStorage,
     gmeAuth,
@@ -114,8 +113,7 @@ main = function (argv) {
 
             return cliStorage.openProject(params);
         })
-        .then(function (dbProject) {
-            var project = new Project(dbProject, cliStorage, logger.fork('project'), gmeConfig);
+        .then(function (project) {
             if (program.user) {
                 project.setUser(program.user);
             }

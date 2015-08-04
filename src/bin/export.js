@@ -27,7 +27,6 @@ main = function (argv) {
         Command = require('commander').Command,
         program = new Command(),
         syntaxFailure = false,
-        project,
         core,
         finishUp = function (error) {
             var ended = function () {
@@ -112,8 +111,7 @@ main = function (argv) {
 
             return cliStorage.openProject(params);
         })
-        .then(function (dbProject) {
-            project = new Project(dbProject, cliStorage, logger.fork('project'), gmeConfig);
+        .then(function (project) {
             core = new webgme.core(project, {
                 globConf: gmeConfig,
                 logger: logger.fork('core')

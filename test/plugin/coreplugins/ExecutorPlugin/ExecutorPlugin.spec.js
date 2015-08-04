@@ -29,6 +29,7 @@ describe('ExecutorPlugin', function () {
 
         gmeAuth,
         safeStorage,
+        importResult,
 
         path = require('path'),
         runPlugin = require('../../../../src/bin/run_plugin'),
@@ -62,11 +63,6 @@ describe('ExecutorPlugin', function () {
                 ]);
             })
             .then(function () {
-                return Q.allSettled([
-                    safeStorage.deleteProject({projectId: testFixture.projectName2Id(projectName)})
-                ]);
-            })
-            .then(function () {
                 return testFixture.importProject(safeStorage, {
                     projectSeed: './seeds/ActivePanels.json',
                     projectName: projectName,
@@ -76,7 +72,12 @@ describe('ExecutorPlugin', function () {
                 });
             })
             // project is created
-            .then(function () {
+            .then(function (importResult_) {
+                importResult = importResult_;
+                return importResult.project.createBranch('b1', importResult.commitHash);
+            })
+            .then(function (result) {
+                expect(result.status).to.equal('SYNCED');
                 server = testFixture.WebGME.standaloneServer(gmeConfig);
                 return Q.nfcall(server.start);
             })
@@ -168,21 +169,125 @@ describe('ExecutorPlugin', function () {
             process.exit = oldProcessExit;
         });
 
-        it('should run plugin', function (done) {
-            var configFileName = './test/plugin/coreplugins/ExecutorPlugin/config.' + platform + '.json';
+        it('should run ExecutorPlugin and update the model', function (done) {
+            var configFileName = './test/plugin/coreplugins/ExecutorPlugin/config.' + platform + '.json',
+                args = [
+                    'node',
+                    filename,
+                    'ExecutorPlugin',
+                    projectName,
+                    '-s',
+                    '/1',
+                    '-j',
+                    configFileName,
+                    '-b',
+                    'b1'];
 
             this.timeout(10000);
 
             process.exit = function (code) {
                 expect(code).to.equal(0);
-                done();
             };
 
 
-            runPlugin.main(['node', filename, '-p', projectName, '-n', 'ExecutorPlugin', '-j', configFileName],
-                function (err, result) {
-                    expect(err).to.equal(null);
+            Q.ninvoke(runPlugin, 'main', args)
+                .then(function (result) {
                     expect(result.success).to.equal(true);
+                    expect(result.commits instanceof Array).to.equal(true);
+                    expect(result.commits.length).to.equal(2);
+                    return Q.ninvoke(importResult.project, 'loadObject', result.commits[1].commitHash);
+                })
+                .then(function (commitObj) {
+                    return Q.ninvoke(importResult.core, 'loadRoot', commitObj.root);
+                })
+                .then(function (rootNode) {
+                    var deferred = Q.defer();
+                    importResult.core.loadByPath(rootNode, '/1', function (err, node) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve(node);
+                        }
+                    });
+                    return deferred.promise;
+                })
+                .then(function (fcoNode) {
+                    expect(importResult.core.getAttribute(fcoNode, 'name')).to.equal('ThisIsANewName');
+                })
+                .nodeify(done);
+        });
+
+        it('should run ExecutorPlugin but not update the model', function (done) {
+            var configFileName = './test/plugin/coreplugins/ExecutorPlugin/config.' + platform + '.noUpdate.json',
+                args = [
+                    'node',
+                    filename,
+                    'ExecutorPlugin',
+                    projectName,
+                    '-s',
+                    '/1',
+                    '-j',
+                    configFileName,
+                    '-b',
+                    'master'];
+
+            this.timeout(10000);
+
+            process.exit = function (code) {
+                expect(code).to.equal(0);
+            };
+
+
+            Q.ninvoke(runPlugin, 'main', args)
+                .then(function (result) {
+                    expect(result.success).to.equal(true);
+                    expect(result.commits instanceof Array).to.equal(true);
+                    expect(result.commits.length).to.equal(1);
+
+                    return importResult.project.getBranches();
+                })
+                .then(function (branches) {
+                    expect(branches.master).to.equal(importResult.commitHash);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to run ExecutorPlugin on root node', function (done) {
+            var configFileName = './test/plugin/coreplugins/ExecutorPlugin/config.' + platform + '.json';
+
+            this.timeout(10000);
+
+            process.exit = function (code) {
+                expect(code).to.equal(1);
+                //done();
+            };
+
+
+            runPlugin.main(['node', filename, 'ExecutorPlugin', projectName, '-j', configFileName],
+                function (err, result) {
+                    expect(err).to.equal('No activeNode specified or rootNode. Execute on any other node.');
+                    expect(result.success).to.equal(false);
+                    done();
+                });
+        });
+
+        it('should fail the job but return artifacts when success is set to false', function (done) {
+            var configFileName = './test/plugin/coreplugins/ExecutorPlugin/config.' + platform + '.fail.json';
+
+            this.timeout(10000);
+
+            process.exit = function (code) {
+                expect(code).to.equal(1);
+            };
+
+
+            runPlugin.main(['node', filename, 'ExecutorPlugin', projectName, '-s', '/1', '-j', configFileName],
+                function (err, result) {
+                    expect(err).to.include('Job execution failed');
+                    expect(result.success).to.equal(false);
+                    expect(result.artifacts instanceof Array).to.equal(true);
+                    expect(result.artifacts.length).to.equal(4);
+                    done();
                 });
         });
     });

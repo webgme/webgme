@@ -141,7 +141,7 @@ describe('CorePlugins', function () {
                     done();
                 };
 
-                runPlugin.main(['node', filename, '-p', projectName, '-n', name],
+                runPlugin.main(['node', filename, name, projectName, '-s', '/1'],
                     function (err, result) {
                         numCallback += 1;
                         if (err) {

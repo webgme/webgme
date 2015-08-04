@@ -136,7 +136,6 @@ define([
             return result;
         }
 
-        //FIXME running on client side will not generate events, so need manual update of the UI afterwards
         self.merge(currentConfig.mergeFrom, currentConfig.mergeTo, newBranchName, resolutionStrategy)
             .then(function (result) {
                 // if merged without any conflicts the result structure is
@@ -194,7 +193,7 @@ define([
                 if (REGEXP.HASH.test(commitOrBranch)) {
                     commitDeferred.resolve(commitOrBranch);
                 } else {
-                    Q.ninvoke(self.project, 'getBranches')
+                    self.project.getBranches()
                         .then(function (branches) {
                             commitDeferred.resolve(branches[commitOrBranch]);
                         })
@@ -206,7 +205,7 @@ define([
         if (newBranchName && branchNameOrCommitHash !== newBranchName) {
             getCommitHash(branchNameOrCommitHash)
                 .then(function (commitHash) {
-                    return Q.ninvoke(self.project, 'createBranch', newBranchName, commitHash);
+                    return self.project.createBranch(newBranchName, commitHash);
                 })
                 .then(function () {
                     deferred.resolve(newBranchName);
