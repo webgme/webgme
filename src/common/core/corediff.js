@@ -897,7 +897,7 @@ define(['common/util/canon',
                 }
                 applyAttributeChanges(n, nodeDiff.attr || {});
                 applyRegistryChanges(n, nodeDiff.reg || {});
-                done = applyPointerChanges(n, nodeDiff.pointer || {});
+                done = applyPointerChanges(n, nodeDiff);
                 done = TASYNC.call(applySetChanges, n, nodeDiff.set || {}, done);
                 if (nodeDiff.meta) {
                     delete nodeDiff.meta.empty;
@@ -957,14 +957,15 @@ define(['common/util/canon',
             }, targetNode);
         }
 
-        function applyPointerChanges(node, pointerDiff) {
+        function applyPointerChanges(node, diff) {
             var done,
+                pointerDiff = diff.pointer || {},
                 keys = Object.keys(pointerDiff),
                 i;
             for (i = 0; i < keys.length; i++) {
                 if (pointerDiff[keys[i]] === TODELETESTRING) {
                     _core.deletePointer(node, keys[i]);
-                } else {
+                } else if (diff.removed !== false) {
                     done = setPointer(node, keys[i], pointerDiff[keys[i]]);
                 }
             }
