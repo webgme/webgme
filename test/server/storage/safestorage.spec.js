@@ -209,9 +209,10 @@ describe('SafeStorage', function () {
 
         it('should setBranchHash', function (done) {
             var data = {
-                projectId: projectId,
-                branchName: 'master'
-            };
+                    projectId: projectId,
+                    branchName: 'master'
+                },
+                newHash;
 
             safeStorage.getBranchHash(data)
                 .then(function (hash) {
@@ -221,20 +222,22 @@ describe('SafeStorage', function () {
                     data.branchName = 'setBranchHash';
                     data.oldHash = '';
                     data.newHash = hash;
+                    newHash = hash;
 
                     return safeStorage.setBranchHash(data);
                 })
                 .then(function (result) {
-                    expect(result).to.deep.equal({status: 'SYNCED'});
+                    expect(result).to.deep.equal({status: 'SYNCED', hash: newHash});
                 })
                 .nodeify(done);
         });
 
         it('should createBranch', function (done) {
             var data = {
-                projectId: projectId,
-                branchName: 'master'
-            };
+                    projectId: projectId,
+                    branchName: 'master'
+                },
+                newHash;
 
             safeStorage.getBranchHash(data)
                 .then(function (hash) {
@@ -243,11 +246,12 @@ describe('SafeStorage', function () {
 
                     data.branchName = 'createBranch';
                     data.hash = hash;
+                    newHash = hash;
 
                     return safeStorage.createBranch(data);
                 })
                 .then(function (result) {
-                    expect(result).to.deep.equal({status: 'SYNCED'});
+                    expect(result).to.deep.equal({status: 'SYNCED', hash: newHash});
                     return safeStorage.getBranches(data);
                 })
                 .then(function (result) {
@@ -258,9 +262,10 @@ describe('SafeStorage', function () {
 
         it('should deleteBranch', function (done) {
             var data = {
-                projectId: projectId,
-                branchName: 'master'
-            };
+                    projectId: projectId,
+                    branchName: 'master'
+                },
+                newHash;
 
             safeStorage.getBranchHash(data)
                 .then(function (hash) {
@@ -269,11 +274,12 @@ describe('SafeStorage', function () {
 
                     data.branchName = 'deleteBranch';
                     data.hash = hash;
+                    newHash = hash;
 
                     return safeStorage.createBranch(data);
                 })
                 .then(function (result) {
-                    expect(result).to.deep.equal({status: 'SYNCED'});
+                    expect(result).to.deep.equal({status: 'SYNCED', hash: newHash});
                     return safeStorage.getBranches(data);
                 })
                 .then(function (result) {
@@ -281,7 +287,7 @@ describe('SafeStorage', function () {
                     return safeStorage.deleteBranch(data);
                 })
                 .then(function (result) {
-                    expect(result).to.deep.equal({status: 'SYNCED'});
+                    expect(result).to.deep.equal({status: 'SYNCED', hash: ''});
                     return safeStorage.getBranches(data);
                 })
                 .then(function (result) {
@@ -298,7 +304,8 @@ describe('SafeStorage', function () {
 
             safeStorage.deleteBranch(data)
                 .then(function (result) {
-                    expect(result).to.deep.equal({status: 'SYNCED'});
+                    expect(result.status).to.equal('SYNCED');
+                    expect(result.hash).to.equal('');
                     return safeStorage.getBranches(data);
                 })
                 .then(function (result) {

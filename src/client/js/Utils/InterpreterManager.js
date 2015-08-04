@@ -11,10 +11,11 @@ define([
     'common/core/core',
     'plugin/PluginManagerBase',
     'plugin/PluginResult',
+    'plugin/PluginMessage',
     'blob/BlobClient',
     'js/Dialogs/PluginConfig/PluginConfigDialog',
     'js/logger'
-], function (Core, PluginManagerBase, PluginResult, BlobClient, PluginConfigDialog, Logger) {
+], function (Core, PluginManagerBase, PluginResult, PluginMessage, BlobClient, PluginConfigDialog, Logger) {
 
     'use strict';
 
@@ -42,6 +43,21 @@ define([
         }
     };
 
+    function getPluginErrorResult(pluginName, message, startTime) {
+        var pluginResult = new PluginResult(),
+            pluginMessage = new PluginMessage();
+        pluginMessage.severity = 'error';
+        pluginMessage.message = message;
+        pluginResult.setSuccess(false);
+        pluginResult.pluginName = pluginName;
+        pluginResult.addMessage(pluginMessage);
+        pluginResult.setStartTime(startTime);
+        pluginResult.setFinishTime((new Date()).toISOString());
+        pluginResult.setError(pluginMessage.message);
+
+        return pluginResult;
+    }
+
     /**
      *
      * @param {string} name - name of plugin to be executed.
@@ -53,7 +69,8 @@ define([
      * @param callback
      */
     InterpreterManager.prototype.run = function (name, silentPluginCfg, callback) {
-        var self = this;
+        var self = this,
+            startTime = (new Date()).toISOString();
         getPlugin(name, function (err, plugin) {
             self.logger.debug('Getting getPlugin in run.');
             if (!err && plugin) {
@@ -102,6 +119,7 @@ define([
                         //when Save&Run is clicked in the dialog (or silentPluginCfg was passed)
                         var globalconfig = updatedConfig['Global Options'],
                             activeNode,
+                            errMessage,
                             activeSelection;
                         delete updatedConfig['Global Options'];
 
@@ -121,6 +139,18 @@ define([
                         //#2: save it back and run the plugin
                         if (configSaveCallback) {
                             configSaveCallback(updatedConfig);
+
+                            if (self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC) {
+                                errMessage = 'Not allowed to invoke plugin ';
+                                if (self._client.isProjectReadOnly) {
+                                    errMessage += 'when in readOnly state.';
+                                } else {
+                                    errMessage += 'while local branch is AHEAD or PULLING changes from server.';
+                                }
+                                self.logger.error(errMessage);
+                                callback(getPluginErrorResult(name, errMessage, startTime));
+                                return;
+                            }
 
                             // TODO: If global config says try to merge branch then we
                             // TODO: should pass the name of the branch.
@@ -143,7 +173,12 @@ define([
                                 self._client.runServerPlugin(name, context, function (err, result) {
                                     if (err) {
                                         self.logger.error(err);
-                                        callback(new PluginResult()); //TODO return proper error result
+                                        if (result) {
+                                            callback(new PluginResult(result));
+                                        } else {
+                                            errMessage = 'Plugin execution resulted in error, err: ' + err;
+                                            callback(getPluginErrorResult(name, errMessage, startTime));
+                                        }
                                     } else {
                                         var resultObject = new PluginResult(result);
                                         callback(resultObject);
@@ -186,8 +221,8 @@ define([
                 });
             } else {
                 self.logger.error(err);
-                self.logger.error('unable to load plugin');
-                callback(null); //TODO proper result
+                self.logger.error('Unable to load plugin');
+                callback(getPluginErrorResult(name, 'Unable to load plugin, err:' + err, startTime));
             }
         });
     };

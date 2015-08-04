@@ -39,7 +39,7 @@ describe('apply CLI tests', function () {
                     logger: logger.fork('import'),
                     gmeConfig: gmeConfig,
                     branchName: 'master',
-                    userName: gmeConfig.authentication.guestAccount,
+                    username: gmeConfig.authentication.guestAccount,
                     projectSeed: './test/bin/apply/base001.json'
                 });
             })

@@ -464,14 +464,10 @@ function createAPI(app, mountPath, middlewareOpts) {
 
 
             safeStorage.openProject(data)
-                .then(function (dbProject) {
-                    var serverUserProject = new ServerUserProject(dbProject,
-                        safeStorage,
-                        loggerCompare,
-                        middlewareOpts.gmeConfig);
+                .then(function (project) {
 
                     return merge.diff({
-                        project: serverUserProject,
+                        project: project,
                         branchOrCommitA: req.params.branchOrCommitA,
                         branchOrCommitB: req.params.branchOrCommitB,
                         logger: loggerCompare,

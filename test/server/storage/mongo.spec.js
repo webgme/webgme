@@ -431,7 +431,7 @@ describe('Mongo storage', function () {
                 })
                 .then(function (projects) {
                     expect(projects[0]._id).deep.equal(projectId);
-                    return mongoStorage.openProject({projectId: projectId});
+                    return mongoStorage._getProject({projectId: projectId});
                 })
                 .then(function (project) {
 
@@ -495,7 +495,7 @@ describe('Mongo storage', function () {
                 })
                 .then(function (/*result*/) {
                     //console.log(result);
-                    return mongoStorage.openProject({projectId: projectId});
+                    return mongoStorage._getProject({projectId: projectId});
                 })
                 .then(function (project) {
                     return project.closeProject();
@@ -523,7 +523,7 @@ describe('Mongo storage', function () {
             })
                 .then(function (result) {
                     expect(result.projectId).to.equal(projectId);
-                    return mongoStorage.openProject({projectId: projectId});
+                    return mongoStorage._getProject({projectId: projectId});
                 })
                 .then(function (p) {
                     project = p;

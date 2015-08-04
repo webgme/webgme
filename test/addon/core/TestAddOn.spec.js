@@ -20,7 +20,7 @@ describe('TestAddOn', function () {
         storage,
         webgmeSessionId,
         socket,
-        projectName = 'TestAddOn',
+        projectName = 'TestAddOnProject',
         projectId = testFixture.projectName2Id(projectName),
         Q = testFixture.Q,
         gmeConfig = testFixture.getGmeConfig(),
@@ -76,22 +76,6 @@ describe('TestAddOn', function () {
         safeStorage,
         gmeAuth;
 
-    // FIXME: duplicated code from project.spec.js
-    function makeCommitPromise(project, branchName, parents, rootHash, coreObjects, msg) {
-        var deferred = Q.defer(),
-            synchronousData; // This is not returned here...
-
-        synchronousData = project.makeCommit(branchName, parents, rootHash, coreObjects, msg, function (err, result) {
-            if (err) {
-                deferred.reject(err);
-            } else {
-                deferred.resolve(result);
-            }
-        });
-
-        return deferred.promise;
-    }
-
     before(function (done) {
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
@@ -109,7 +93,7 @@ describe('TestAddOn', function () {
                     gmeConfig: gmeConfig,
                     branchName: 'master',
                     userName: gmeConfig.authentication.guestAccount,
-                    projectSeed: './test/addon/core/TestAddOn/project.json'
+                    projectSeed: './seeds/EmptyProject.json'
                 });
             })
             .then(function (result) {
@@ -123,9 +107,8 @@ describe('TestAddOn', function () {
             })
             .then(function (socket_) {
                 socket = socket_;
-                done();
             })
-            .catch(done);
+            .nodeify(done);
     });
 
     after(function (done) {
@@ -163,13 +146,11 @@ describe('TestAddOn', function () {
                         expect(result[0]).to.equal('test');
                         expect(result[1]).to.equal(0);
                         // update model
-                        return makeCommitPromise(_addOn.project, null, [importResult.commitHash], importResult.rootHash, {}, 'new commit');
+                        return _addOn.project.makeCommit('master', [importResult.commitHash], importResult.rootHash, {},
+                            'new commit');
                     })
                     .then(function (result) {
-                        // updating master to the new branch
-                        return Q.nfcall(_addOn.project.setBranchHash, 'master', result.hash, importResult.commitHash);
-                    })
-                    .then(function () {
+                        expect(result.status).to.equal(_addOn.project.CONSTANTS.SYNCED);
                         return Q.ninvoke(_addOn, 'query', 'test2');
                     })
                     .then(function (result) {
@@ -187,7 +168,8 @@ describe('TestAddOn', function () {
                         storage.close(function () {
                             done(new Error(err));
                         });
-                    });
+                    })
+                    .done();
             } else {
                 storage.close(function () {
                     done(new Error('unable to connect storage'));
@@ -331,10 +313,11 @@ describe('TestAddOn', function () {
                     })
                     .catch(function (err) {
                         storage.close(function () {
-                            expect(err).to.match(/project is already open/);
+                            expect(err.message).to.match(/AddOn is already running/);
                             done();
                         });
-                    });
+                    })
+                    .done();
             } else {
                 storage.close(function () {
                     done(new Error('unable to connect storage'));

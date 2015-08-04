@@ -17,7 +17,8 @@ var Q = require('q'),
     CONSTANTS = requireJS('common/storage/constants'),
     REGEXP = requireJS('common/regexp'),
     ASSERT = requireJS('common/util/assert'),
-    Storage = require('./storage');
+    Storage = require('./storage'),
+    UserProject = require('./userproject');
 
 function check(cond, deferred, msg) {
     var rejected = false;
@@ -241,7 +242,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
         rejected = false,
         userAuthInfo,
         self = this,
-        project;
+        dbProject;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
@@ -264,9 +265,9 @@ SafeStorage.prototype.createProject = function (data, callback) {
                     throw new Error('Not authorized to create a new project.');
                 }
             })
-            .then(function (project_) {
-                project = project_;
-                return self.gmeAuth.authorizeByUserId(data.username, project.projectId, 'create', {
+            .then(function (dbProject_) {
+                dbProject = dbProject_;
+                return self.gmeAuth.authorizeByUserId(data.username, dbProject.projectId, 'create', {
                     read: true,
                     write: true,
                     delete: true
@@ -281,6 +282,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
                 return self.gmeAuth.addProject(data.username, data.projectName, info);
             })
             .then(function () {
+                var project = new UserProject(dbProject, self, self.logger, self.gmeConfig);
                 deferred.resolve(project);
             })
             .catch(function (err) {
@@ -811,20 +813,43 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
 };
 
 /**
- * Authorization: TODO: read or write access for data.projectId
+ * Authorization: read access
  * @param data
  * @param callback
  * @returns {*}
  */
 SafeStorage.prototype.openProject = function (data, callback) {
     var deferred = Q.defer(),
+        userProject,
+        self = this;
+
+    self._getProject(data)
+        .then(function (dbProject) {
+            userProject = new UserProject(dbProject, self, self.logger, self.gmeConfig);
+            deferred.resolve(userProject);
+        })
+        .catch(function (err) {
+            deferred.reject(new Error(err));
+        });
+
+    return deferred.promise.nodeify(callback);
+};
+
+/**
+ * Authorization: read access
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
+SafeStorage.prototype._getProject = function (data, callback) {
+    var deferred = Q.defer(),
         rejected = false,
         userAuthInfo,
         self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
-    check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
-    check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId);
+        check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+        check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId);
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
@@ -844,8 +869,8 @@ SafeStorage.prototype.openProject = function (data, callback) {
                     throw new Error('Not authorized to read or write project: ' + data.projectId);
                 }
             })
-            .then(function (project) {
-                deferred.resolve(project);
+            .then(function (dbProject) {
+                deferred.resolve(dbProject);
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));

@@ -19,7 +19,8 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.branch = null;
         this.commit = null;
         this.root = null;
-        this.initializing = true;
+        this.initializing = false;
+        this.running = false;
         this.rootHash = '';
         this.userId = userId;
 
@@ -124,6 +125,12 @@ define(['common/storage/constants'], function (CONSTANTS) {
         var self = this;
         //this is the initialization function it could be overwritten or use as it is
         //this.logger = parameters.logger;
+        if (self.running || self.initializing) {
+            callback(new Error('AddOn is already running or starting up.'));
+            return;
+        }
+
+        self.initializing = true;
 
         self.init(parameters, function (err) {
             if (err) {

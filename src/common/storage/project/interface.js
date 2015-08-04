@@ -13,6 +13,7 @@ define([
 
     function ProjectInterface(projectId, storageObjectsAccessor, mainLogger, gmeConfig) {
         this.projectId = projectId;
+        this.CONSTANTS = CONSTANTS;
         this.ID_NAME = CONSTANTS.MONGO_ID;
         this.logger = mainLogger.fork('Project:' + this.projectId);
         this.logger.debug('ctor', projectId);
@@ -36,6 +37,10 @@ define([
         };
 
         this.createBranch = function (branchName, newHash, callback) {
+            throw new Error('createBranch must be overridden in derived class');
+        };
+
+        this.deleteBranch = function (branchName, oldHash, callback) {
             throw new Error('createBranch must be overridden in derived class');
         };
 

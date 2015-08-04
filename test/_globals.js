@@ -220,9 +220,8 @@ function importProject(storage, parameters, callback) {
     data.projectName = parameters.projectName;
 
     storage.createProject(data)
-        .then(function (dbProject) {
-            var project = new Project(dbProject, storage, parameters.logger, parameters.gmeConfig),
-                core = new Core(project, {
+        .then(function (project) {
+            var core = new Core(project, {
                     globConf: parameters.gmeConfig,
                     logger: parameters.logger
                 }),
@@ -236,19 +235,12 @@ function importProject(storage, parameters, callback) {
                 }
                 persisted = core.persist(rootNode);
 
-                var commitObject = project.createCommitObject([''], persisted.rootHash, 'test', 'project imported'),
-                    commitData = {
-                        projectId: project.projectId,
-                        branchName: branchName,
-                        commitObject: commitObject,
-                        coreObjects: persisted.objects
-                    };
-                storage.makeCommit(commitData)
+                project.makeCommit(branchName, [''], persisted.rootHash, persisted.objects, 'project imported')
                     .then(function (result) {
                         deferred.resolve({
                             status: result.status,
                             branchName: branchName,
-                            commitHash: commitObject._id,
+                            commitHash: result.hash,
                             project: project,
                             projectId: project.projectId,
                             core: core,
@@ -413,6 +405,7 @@ module.exports = {
     getMemoryStorage: getMemoryStorage,
     Project: Project,
     Logger: Logger,
+    Core: Core,
     // test logger instance, used by all tests and only tests
     logger: logger,
     generateKey: generateKey,

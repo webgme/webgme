@@ -436,14 +436,14 @@ describe('Memory storage', function () {
                     expect(projects).deep.equal([]);
                     return memoryStorage.createProject({projectName: projectName});
                 })
-                .then(function (dbProject) {
-                    projectId = dbProject.projectId;
+                .then(function (project) {
+                    projectId = project.projectId;
                     return memoryStorage.getProjects({branches: true});
                 })
                 .then(function (projects) {
                     expect(projects.length).to.equal(1, 'getProject should have returned with one.');
                     expect(projects[0]._id).to.equal(projectId);
-                    return memoryStorage.openProject({projectId: projectId});
+                    return memoryStorage._getProject({projectId: projectId});
                 })
                 .then(function (project) {
 
@@ -476,14 +476,14 @@ describe('Memory storage', function () {
                     expect(projects).deep.equal([]);
                     return memoryStorage.createProject({projectName: projectName});
                 })
-                .then(function (dbProject) {
-                    projectId = dbProject.projectId;
+                .then(function (project) {
+                    projectId = project.projectId;
                     return memoryStorage.getProjects({branches: true});
                 })
                 .then(function (projects) {
                     expect(projects.length).to.equal(1, 'getProject should have returned with one.');
                     expect(projects[0]._id).to.equal(projectId);
-                    return memoryStorage.openProject({projectId: projectId});
+                    return memoryStorage._getProject({projectId: projectId});
                 })
                 .then(function (project) {
                     var data = {
@@ -525,7 +525,7 @@ describe('Memory storage', function () {
                 })
                 .then(function (result) {
                     expect(result.projectId).to.equal(testFixture.projectName2Id(projectName));
-                    return storage.openProject({projectId: result.projectId});
+                    return storage._getProject({projectId: result.projectId});
                 })
                 .then(function (project) {
                     return project.closeProject();
@@ -554,7 +554,7 @@ describe('Memory storage', function () {
                 })
                 .then(function (result) {
                     expect(result.projectId).to.equal(projectId);
-                    return storage.openProject({projectId: projectId});
+                    return storage._getProject({projectId: projectId});
                 })
                 .then(function (p) {
                     project = p;
