@@ -30,7 +30,11 @@ function ServerWorkerManager(_parameters) {
             execArgv = process.execArgv.filter(function (arg) {
                 if (arg.indexOf('--debug-brk') === 0) {
                     logger.info('Main process is in debug mode', arg);
-                    debug = true;
+                    debug = '--debug-brk';
+                    return false;
+                } else if (arg.indexOf('--debug') === 0) {
+                    logger.info('Main process is in debug mode', arg);
+                    debug = '--debug';
                     return false;
                 }
                 return true;
@@ -38,8 +42,8 @@ function ServerWorkerManager(_parameters) {
         // http://stackoverflow.com/questions/16840623/how-to-debug-node-js-child-forked-process
         // For some reason --debug-brk is given here..
         if (debug) {
-            execArgv.push('--debug-brk=' + debugPort.toString());
-            logger.info('Child debug flag: --debug-brk=' + debugPort.toString());
+            execArgv.push(debug + '=' + debugPort.toString());
+            logger.info('Child debug port: ' + debugPort.toString());
             debugPort += 1;
         }
 
