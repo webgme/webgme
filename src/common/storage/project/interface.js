@@ -33,7 +33,7 @@ define([
         };
 
         this.getBranchHash = function (branchName, callback) {
-            throw new Error('setBranchHash must be overridden in derived class');
+            throw new Error('getBranchHash must be overridden in derived class');
         };
 
         this.createBranch = function (branchName, newHash, callback) {
@@ -41,7 +41,7 @@ define([
         };
 
         this.deleteBranch = function (branchName, oldHash, callback) {
-            throw new Error('createBranch must be overridden in derived class');
+            throw new Error('deleteBranch must be overridden in derived class');
         };
 
         this.getBranches = function (callback) {
