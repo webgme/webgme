@@ -183,6 +183,7 @@ function validateConfig(configOrFileName) {
     assertObject('config.storage', config.storage);
     assertBoolean('config.storage.autoPersist', config.storage.autoPersist);
     assertBoolean('config.storage.broadcastProjectEvents', config.storage.broadcastProjectEvents);
+    assertBoolean('config.storage.emitCommittedCoreObjects', config.storage.emitCommittedCoreObjects);
     assertNumber('config.storage.cache', config.storage.cache);
     assertNumber('config.storage.loadBucketSize', config.storage.loadBucketSize);
     assertNumber('config.storage.loadBucketTimer', config.storage.loadBucketTimer);

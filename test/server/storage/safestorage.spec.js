@@ -12,7 +12,6 @@ describe('SafeStorage', function () {
         expect = testFixture.expect,
         logger = testFixture.logger.fork('memory'),
         Q = testFixture.Q,
-
         gmeAuth,
         projectName = 'newProject',
         projectId = gmeConfig.authentication.guestAccount + testFixture.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
@@ -36,6 +35,7 @@ describe('SafeStorage', function () {
 
     describe('Projects', function () {
         var safeStorage,
+            importResult,
             commitHash;
 
         before(function (done) {
@@ -52,20 +52,14 @@ describe('SafeStorage', function () {
                 .then(function (result) {
                     expect(result.projectId).to.equal(projectId);
                     commitHash = result.commitHash;
+                    importResult = result;
                     return Q();
                 })
                 .nodeify(done);
         });
 
         after(function (done) {
-            safeStorage.deleteProject({projectId: projectId})
-                .then(function () {
-                    safeStorage.closeDatabase(done);
-                })
-                .catch(function (err) {
-                    logger.error(err);
-                    safeStorage.closeDatabase(done);
-                });
+            safeStorage.closeDatabase(done);
         });
 
         it('should getProjects (no rights, no info, no branches)', function (done) {
@@ -193,6 +187,22 @@ describe('SafeStorage', function () {
                 .nodeify(done);
         });
 
+        it('should getLatestCommitData should fail when branchName does not exist', function (done) {
+            var data = {
+                projectId: projectId,
+                branchName: 'hurdyGurdy'
+            };
+
+            safeStorage.getLatestCommitData(data)
+                .then(function () {
+                    throw new Error('should getLatestCommitData should fail when project does not exist');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.include('Error: Branch "hurdyGurdy" does not exist in project');
+                })
+                .nodeify(done);
+        });
+
         it('should getBranchHash', function (done) {
             var data = {
                 projectId: projectId,
@@ -296,7 +306,7 @@ describe('SafeStorage', function () {
                 .nodeify(done);
         });
 
-        it('should return after deleteBranch when it did not exist', function (done) {
+        it('should succeed after deleteBranch when it did not exist', function (done) {
             var data = {
                 projectId: projectId,
                 branchName: 'doesNotExist'
@@ -340,6 +350,25 @@ describe('SafeStorage', function () {
                 })
                 .nodeify(done);
         });
+
+        it('should return object with hashes and values as error strings when hashes invalid', function (done) {
+            var data = {
+                    projectId: projectId,
+                    branchName: 'master',
+                    hashes: ['#52896a42a5e46429f39923400ed5059f309991b9', '#52896a42a5e46429f39923400ed5059f309991b8']
+                };
+
+            safeStorage.loadObjects(data)
+                .then(function (objects) {
+                    expect(Object.keys(objects).length).to.equal(2);
+                    expect(Object.keys(objects).length).to.equal(2);
+                    expect(objects['#52896a42a5e46429f39923400ed5059f309991b8'])
+                        .to.equal('object does not exist #52896a42a5e46429f39923400ed5059f309991b8');
+                    expect(objects['#52896a42a5e46429f39923400ed5059f309991b9'])
+                        .to.equal('object does not exist #52896a42a5e46429f39923400ed5059f309991b9');
+                })
+                .nodeify(done);
+        });
     });
 
     describe('getCommits', function () {
@@ -366,14 +395,7 @@ describe('SafeStorage', function () {
         });
 
         after(function (done) {
-            safeStorage.deleteProject({projectId: projectId})
-                .then(function () {
-                    safeStorage.closeDatabase(done);
-                })
-                .catch(function (err) {
-                    logger.error(err);
-                    safeStorage.closeDatabase(done);
-                });
+            safeStorage.closeDatabase(done);
         });
 
         it('should getCommits using timestamp', function (done) {
@@ -447,6 +469,108 @@ describe('SafeStorage', function () {
                     done();
                 })
                 .done();
+        });
+    });
+
+    describe('BRANCH events', function () {
+        var safeStorage,
+            project,
+            newBranchHash,
+            importResult;
+
+        before(function (done) {
+            safeStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+
+            safeStorage.openDatabase()
+                .then(function () {
+                    return testFixture.importProject(safeStorage, {
+                        projectSeed: 'seeds/EmptyProject.json',
+                        projectName: projectName,
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (result) {
+                    importResult = result;
+                    project = importResult.project;
+                    return project.createBranch('b1', importResult.commitHash);
+                })
+                .then(function () {
+                    return project.createBranch('toBeDeleted', importResult.commitHash);
+                })
+                .then(function () {
+                    return project.createBranch('branchHashUpdated', importResult.commitHash);
+                })
+                .then(function () {
+                    return project.createBranch('branchUpdated', importResult.commitHash);
+                })
+                .then(function () {
+                    return project.makeCommit(null, [importResult.commitHash], importResult.rootHash, {}, 'aCommit');
+                })
+                .then(function (result) {
+                    expect(result.hash).not.to.equal(importResult.commitHash);
+                    newBranchHash = result.hash;
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            safeStorage.closeDatabase(done);
+        });
+
+        it('should emit BRANCH_CREATED', function (done) {
+            var eventHandler = function (_storage, eventData) {
+                expect(eventData.branchName).to.equal('newBranch');
+                expect(eventData.oldHash).to.equal('');
+                expect(eventData.newHash).to.equal(importResult.commitHash);
+                safeStorage.removeAllEventListeners();
+                done();
+            };
+
+            safeStorage.addEventListener(project.CONSTANTS.BRANCH_CREATED, eventHandler);
+            project.createBranch('newBranch', importResult.commitHash);
+        });
+
+        it('should emit BRANCH_DELETED', function (done) {
+            var eventHandler = function (_storage, eventData) {
+                expect(eventData.branchName).to.equal('toBeDeleted');
+                expect(eventData.oldHash).to.equal(importResult.commitHash);
+                expect(eventData.newHash).to.equal('');
+                safeStorage.removeAllEventListeners();
+                done();
+            };
+
+            safeStorage.addEventListener(project.CONSTANTS.BRANCH_DELETED, eventHandler);
+            project.deleteBranch('toBeDeleted', importResult.commitHash);
+        });
+
+        it('should emit BRANCH_HASH_UPDATED when setBranchHash', function (done) {
+            var eventHandler = function (_storage, eventData) {
+                expect(eventData.branchName).to.equal('branchHashUpdated');
+                expect(eventData.oldHash).to.equal(importResult.commitHash);
+                expect(eventData.newHash).to.equal(newBranchHash);
+                safeStorage.removeAllEventListeners();
+                done();
+            };
+
+            safeStorage.addEventListener(project.CONSTANTS.BRANCH_HASH_UPDATED, eventHandler);
+            project.setBranchHash('branchHashUpdated', newBranchHash, importResult.commitHash);
+        });
+
+        it.skip('should emit BRANCH_UPDATED when setBranchHash', function (done) {
+            var eventHandler = function (_storage, eventData) {
+                expect(eventData.branchName).to.equal('branchUpdated');
+                expect(eventData.commitObject._id).to.equal(importResult.commitHash);
+                expect(eventData.commitObject.root).to.equal(importResult.rootHash);
+                expect(eventData.coreObjects instanceof Array).to.equal(true);
+                expect(eventData.coreObjects.length).to.equal(1);
+                expect(eventData.coreObjects[0]._id).to.equal(importResult.rootHash);
+                safeStorage.removeAllEventListeners();
+                done();
+            };
+
+            safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+            project.setBranchHash('branchUpdated', newBranchHash, importResult.commitHash);
         });
     });
 });
