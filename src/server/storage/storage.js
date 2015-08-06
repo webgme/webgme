@@ -336,10 +336,10 @@ Storage.prototype.setBranchHash = function (data, callback) {
 
                     if (data.oldHash === '' && data.newHash !== '') {
                         self.dispatchEvent(CONSTANTS.BRANCH_CREATED, eventData);
-                        deferred.resolve({status: CONSTANTS.SYNCED});
+                        deferred.resolve({status: CONSTANTS.SYNCED, hash: data.newHash});
                     } else if (data.newHash === '' && data.oldHash !== '') {
                         self.dispatchEvent(CONSTANTS.BRANCH_DELETED, eventData);
-                        deferred.resolve({status: CONSTANTS.SYNCED});
+                        deferred.resolve({status: CONSTANTS.SYNCED, hash: data.newHash});
                     } else if (data.newHash !== '' && data.oldHash !== '') {
                         // Load the necessary objects for BRANCH_UPDATED event.
                         project.loadObject(data.newHash)
@@ -351,21 +351,21 @@ Storage.prototype.setBranchHash = function (data, callback) {
                                 fullEventData.coreObjects.push(rootObject);
                                 self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
                                 self.dispatchEvent(CONSTANTS.BRANCH_UPDATED, fullEventData);
-                                deferred.resolve({status: CONSTANTS.SYNCED});
+                                deferred.resolve({status: CONSTANTS.SYNCED, hash: data.newHash});
                             })
                             .catch(function (err) {
                                 deferred.reject(new Error('Failed loading objects for events' + err));
                             });
                     } else {
                         //setting empty branch to empty
-                        deferred.resolve({status: CONSTANTS.SYNCED});
+                        deferred.resolve({status: CONSTANTS.SYNCED, hash: ''});
                     }
                 })
                 .catch(function (err) {
                     if (err === 'branch hash mismatch' || err.message === 'branch has mismatch') {
                         // TODO: Need to check error better here..
                         self.logger.debug('user got forked');
-                        deferred.resolve({status: CONSTANTS.FORKED});
+                        deferred.resolve({status: CONSTANTS.FORKED, hash: data.newHash});
                     } else {
                         self.logger.error('Failed updating hash', err);
                         // TODO: How to add meta data to error and decide on error codes.

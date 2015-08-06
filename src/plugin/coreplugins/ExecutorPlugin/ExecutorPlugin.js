@@ -139,11 +139,11 @@ define([
             artifact;
         self.logger.info('inside main');
         // This is just to track the current node path in the result from the execution.
+        if (!self.activeNode || self.core.getPath(self.activeNode) === '') {
+            callback('No activeNode specified or rootNode. Execute on any other node.', self.result);
+            return;
+        }
         if (config.update) {
-            if (!self.activeNode) {
-                callback('No activeNode specified! Set update to false or invoke from a node.', self.result);
-                return;
-            }
             executorConfig.args.push(self.core.getPath(self.activeNode));
             self.logger.info('will write back to model');
         } else {
@@ -238,6 +238,9 @@ define([
                     return;
                 }
                 if (self.getCurrentConfig().update) {
+                    if (newName instanceof Buffer) {
+                        newName = JSON.parse(String.fromCharCode.apply(null, new Uint16Array(newName)));
+                    }
                     for (key in newName) {
                         if (newName.hasOwnProperty(key)) {
                             self.core.setAttribute(self.activeNode, 'name', newName[key]);

@@ -10,7 +10,8 @@ var main;
 main = function (argv, callback) {
     'use strict';
     var path = require('path'),
-        gmeConfig = require(path.join(process.cwd(), 'config')),
+        configDir = path.join(process.cwd(), 'config'),
+        gmeConfig = require(configDir),
         webgme = require('../../webgme'),
         MongoURI = require('mongo-uri'),
         Command = require('commander').Command,
@@ -19,34 +20,57 @@ main = function (argv, callback) {
         storage,
         STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
         PluginCliManager = require('../../src/plugin/climanager'),
-        Project = require('../../src/server/storage/userproject'),
         project,
+        projectName,
+        pluginName,
         pluginConfig;
 
     callback = callback || function () {
         };
 
+    function list(val) {
+        return val.split(',');
+    }
+
     webgme.addToRequireJsPaths(gmeConfig);
 
     program
-        .version('0.2.0')
-        .option('-p, --project-name [string]', 'project name [mandatory]')
-        .option('-n, --pluginName [string]', 'Path to given plugin.')
+        .version('0.14.0')
+        .arguments('<pluginName> <projectName>')
+        .option('-b, --branchName [string]', 'Name of the branch to load and save to.', 'master')
         .option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '')
+        .option('-a, --activeSelection <webGMEIDs>', 'IDs of selected components (comma separated with no spaces).',
+        list)
         .option('-m, --mongo-database-uri [url]',
         'URI of the MongoDB [default from the configuration file]', gmeConfig.mongo.uri)
         .option('-u, --user [string]', 'the user of the command [if not given we use the default user]',
         gmeConfig.authentication.guestAccount)
         .option('-o, --owner [string]', 'the owner of the project [by default, the user is the owner]')
-        .option('-b, --branchName [string]', 'Name of the branch.', 'master')
         .option('-j, --pluginConfigPath [string]',
         'Path to json file with plugin options that should be overwritten.', '')
+
+        .on('--help', function () {
+            var i,
+                env = process.env.NODE_ENV || 'default';
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node run_plugin.js PluginGenerator TestProject');
+            console.log('    $ node run_plugin.js PluginGenerator TestProject -b branch1 -j pluginConfig.json');
+            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -s /11231234/123458374');
+            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -a /1,/1/123458374,/11231234');
+            console.log();
+            console.log('  Plugin paths using ' + configDir + path.sep + 'config.' + env + '.js :');
+            console.log();
+            for (i = 0; i < gmeConfig.plugin.basePaths.length; i += 1) {
+                console.log('    "' + gmeConfig.plugin.basePaths[i] + '"');
+            }
+        })
         .parse(argv);
 
-    if (!(program.pluginName && program.projectName)) {
-        logger.error('A project and pluginName must be specified.');
+    if (program.args.length < 2) {
         callback('A project and pluginName must be specified.');
         program.help();
+        return;
     }
 
     // this line throws a TypeError for invalid databaseConnectionString
@@ -54,7 +78,9 @@ main = function (argv, callback) {
 
     gmeConfig.mongo.uri = program.mongoDatabaseUri;
 
-    logger.info('Executing ' + program.pluginName + ' plugin on ' + program.projectName + ' in branch ' +
+    pluginName = program.args[0];
+    projectName = program.args[1];
+    logger.info('Executing ' + pluginName + ' plugin on ' + projectName + ' in branch ' +
         program.branchName + '.');
 
     if (program.pluginConfigPath) {
@@ -76,32 +102,30 @@ main = function (argv, callback) {
             logger.info('Database is opened.');
 
             if (program.owner) {
-                params.projectId = program.owner + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+                params.projectId = program.owner + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
             } else {
-                params.projectId = program.user + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+                params.projectId = program.user + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
             }
 
             return storage.openProject(params);
         })
-        .then(function (dbProject) {
+        .then(function (project_) {
             logger.info('Project is opened.');
-            project = new Project(dbProject, storage, logger, gmeConfig);
-            return storage.getBranchHash({
-                projectId: project.projectId,
-                branchName: program.branchName
-            });
+            project = project_;
+
+            return project.getBranchHash(program.branchName);
         })
         .then(function (commitHash) {
             logger.info('CommitHash obtained ', commitHash);
             var pluginManager = new PluginCliManager(project, logger, gmeConfig),
                 context = {
                     activeNode: program.selectedObjID,
-                    activeSelection: [], //TODO: Enable passing this from command line.
+                    activeSelection: program.activeSelection || [],
                     branchName: program.branchName,
                     commitHash: commitHash
                 };
 
-            pluginManager.executePlugin(program.pluginName, pluginConfig, context,
+            pluginManager.executePlugin(pluginName, pluginConfig, context,
                 function (err, pluginResult) {
                     if (err) {
                         logger.error('execution stopped:', err, pluginResult);
@@ -116,7 +140,7 @@ main = function (argv, callback) {
             );
         })
         .catch(function (err) {
-            logger.error('Could not open the project or branch', err);
+            logger.error('Could not open the project or branch', err.message);
             callback(err);
             process.exit(1);
         });

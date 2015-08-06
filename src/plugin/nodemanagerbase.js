@@ -51,7 +51,7 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
                 self.runPluginMain(plugin, callback);
             })
             .catch(function (err) {
-                var pluginResult = self.getPluginErrorResult(pluginName, 'Exception got thrown');
+                var pluginResult = self.getPluginErrorResult(pluginName, 'Exception was raised, err: ' + err.stack);
                 self.logger.error(err.stack);
                 callback(err.message, pluginResult);
             });
@@ -269,11 +269,11 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
 
     this.loadNodeByPath = function (pluginContext, path) {
         var deferred = Q.defer();
-        pluginContext.core.loadByPath(pluginContext.rootNode, path, function (err, rootNode) {
+        pluginContext.core.loadByPath(pluginContext.rootNode, path, function (err, node) {
             if (err) {
                 deferred.reject(err);
             } else {
-                deferred.resolve(rootNode);
+                deferred.resolve(node);
             }
         });
         return deferred.promise;

@@ -148,10 +148,9 @@ define([
                 }
                 logger.debug('inside closeAndDelete branchCnt', branchCnt);
                 if (branchCnt === 0) {
-                    delete projects[projectId];
-                    logger.debug('project reference deleted, sending close to server.');
                     webSocket.closeProject({projectId: projectId}, function (err) {
                         logger.debug('project closed on server.');
+                        delete projects[projectId];
                         callback(err || error);
                     });
                 }
@@ -240,11 +239,6 @@ define([
                         branch._remoteUpdateHandler);
                     callback(err, latestCommit);
                 });
-
-                //// Insert the objects from the latest commit into the project cache.
-                //for (i = 0; i < latestCommit.coreObjects.length; i += 1) {
-                //    project.insertObject(latestCommit.coreObjects[i]);
-                //}
             });
         };
 
@@ -274,10 +268,13 @@ define([
             // Stop listening to events from the server
             webSocket.removeEventListener(webSocket.getBranchUpdateEventName(projectId, branchName),
                 branch._remoteUpdateHandler);
+
             branch.cleanUp();
 
-            delete project.branches[branchName];
-            webSocket.closeBranch({projectId: projectId, branchName: branchName}, callback);
+            webSocket.closeBranch({projectId: projectId, branchName: branchName}, function (err) {
+                delete project.branches[branchName];
+                callback(err);
+            });
         };
 
         this.forkBranch = function (projectId, branchName, forkName, commitHash, callback) {
@@ -371,8 +368,6 @@ define([
             } else {
                 webSocket.makeCommit(commitData, callback);
             }
-
-            return commitData.commitObject; //commitHash
         };
 
         this.setBranchHash = function (projectId, branchName, newHash, oldHash, callback) {

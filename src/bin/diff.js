@@ -15,7 +15,6 @@ var webgme = require('../../webgme'),
     path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
     logger = webgme.Logger.create('gme:bin:diff', gmeConfig.bin.log, false),
-    Project = require('../../src/server/storage/userproject'),
     STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants');
 
 
@@ -115,8 +114,7 @@ main = function (argv) {
 
             return cliStorage.openProject(params);
         })
-        .then(function (dbProject) {
-            var project = new Project(dbProject, cliStorage, logger.fork('project'), gmeConfig);
+        .then(function (project) {
             if (program.user) {
                 project.setUser(program.user);
             }

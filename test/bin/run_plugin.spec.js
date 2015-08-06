@@ -28,9 +28,6 @@ describe('Run plugin CLI', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                return testFixture.forceDeleteProject(storage, gmeAuth, projectName);
-            })
-            .then(function () {
                 return testFixture.importProject(storage, {
                     projectSeed: './test/bin/run_plugin/project.json',
                     projectName: projectName,
@@ -43,19 +40,16 @@ describe('Run plugin CLI', function () {
     });
 
     after(function (done) {
-        testFixture.forceDeleteProject(storage, gmeAuth, projectName)
-            .then(function () {
-                return Q.allSettled([
-                    storage.closeDatabase(),
-                    gmeAuth.unload()
-                ]);
-            })
-            .nodeify(done);
+        Q.all([
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
+        .nodeify(done);
     });
 
     describe('as a child process', function () {
         it('should run the Minimal Working Example plugin', function (done) {
-            var runpluginProcess = spawn('node', [filename, '-p', projectName, '-n', 'MinimalWorkingExample']),
+            var runpluginProcess = spawn('node', [filename, 'MinimalWorkingExample', projectName]),
                 stdout,
                 stderr;
 
@@ -94,7 +88,7 @@ describe('Run plugin CLI', function () {
                 done();
             };
 
-            runPlugin.main(['node', filename, '-p', projectName, '-n', 'MinimalWorkingExample'],
+            runPlugin.main(['node', filename, 'MinimalWorkingExample', projectName],
                 function (err, result) {
                     if (err) {
                         done(new Error(err));
@@ -112,8 +106,9 @@ describe('Run plugin CLI', function () {
                 done();
             };
 
-            runPlugin.main(['node', filename, '-p', projectName, '-n', 'MinimalWorkingExample', '-j', './test/bin/run_plugin/MinimalWorkingExample.config.json'],
-                function (err, result) {
+            runPlugin.main(['node', filename, 'MinimalWorkingExample', projectName,
+                    '-j', './test/bin/run_plugin/MinimalWorkingExample.config.json'],
+                function (err) {
                     if (err) {
                         expect(err).to.match(/Failed on purpose./);
                         return;
@@ -130,7 +125,8 @@ describe('Run plugin CLI', function () {
                 done();
             };
 
-            runPlugin.main(['node', filename, '-p', projectName, '-n', 'MinimalWorkingExample', '-o', gmeConfig.authentication.guestAccount],
+            runPlugin.main(['node', filename, 'MinimalWorkingExample', projectName,
+                    '-o', gmeConfig.authentication.guestAccount],
                 function (err, result) {
                     if (err) {
                         done(new Error(err));
@@ -148,8 +144,8 @@ describe('Run plugin CLI', function () {
                 done();
             };
 
-            runPlugin.main(['node', filename, '-p', 'not_authorized_project', '-n', 'MinimalWorkingExample'],
-                function (err, result) {
+            runPlugin.main(['node', filename, 'MinimalWorkingExample', 'not_authorized_project'],
+                function (err) {
                     if (err) {
                         expect(err).to.match(/Not authorized to read or write project/);
                         return;
@@ -159,13 +155,13 @@ describe('Run plugin CLI', function () {
             );
         });
 
-        it('should fail to run plugin if plugin name is not given', function (done) {
-            process.exit = function (code) {
+        it('should fail to run plugin if no plugin name and no project name is not given', function (done) {
+            process.exit = function () {
                 done();
             };
 
-            runPlugin.main(['node', filename, '-p', projectName],
-                function (err, result) {
+            runPlugin.main(['node', filename],
+                function (err/*, result*/) {
                     if (err) {
                         expect(err).to.match(/must be specified/);
                         return;
@@ -175,14 +171,13 @@ describe('Run plugin CLI', function () {
             );
         });
 
-
-        it('should fail to run plugin if project id is not given', function (done) {
-            process.exit = function (code) {
+        it('should fail to run plugin if no project name is given', function (done) {
+            process.exit = function () {
                 done();
             };
 
-            runPlugin.main(['node', filename, '-n', 'MinimalWorkingExample'],
-                function (err, result) {
+            runPlugin.main(['node', filename, projectName],
+                function (err) {
                     if (err) {
                         expect(err).to.match(/must be specified/);
                         return;

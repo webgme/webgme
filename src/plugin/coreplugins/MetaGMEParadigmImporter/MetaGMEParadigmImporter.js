@@ -157,7 +157,7 @@ define([
             if (error) {
                 self.result.setSuccess(false);
                 self.result.setError(error.message);
-                callback(error, self.result);
+                callback(error.stack, self.result);
                 return;
             }
 
