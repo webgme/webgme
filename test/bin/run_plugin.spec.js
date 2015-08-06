@@ -40,7 +40,7 @@ describe('Run plugin CLI', function () {
     });
 
     after(function (done) {
-        Q.allSettled([
+        Q.all([
             storage.closeDatabase(),
             gmeAuth.unload()
         ])
