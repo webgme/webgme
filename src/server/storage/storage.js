@@ -117,7 +117,8 @@ Storage.prototype.makeCommit = function (data, callback) {
         deferred = Q.defer();
     this.mongo.openProject(data.projectId)
         .then(function (project) {
-            var objectHashes = Object.keys(data.coreObjects);
+            var objectHashes = Object.keys(data.coreObjects),
+                rootProvided;
 
             function insertObj(hash) {
                 return project.insertObject(data.coreObjects[hash]);
@@ -128,8 +129,10 @@ Storage.prototype.makeCommit = function (data, callback) {
                     rootObject = data.coreObjects[data.commitObject.root];
 
                 if (rootObject) {
+                    rootProvided = true;
                     rootDeferred.resolve(rootObject);
                 } else {
+                    rootProvided = false;
                     project.loadObject(data.commitObject.root)
                         .then(rootDeferred.resolve)
                         .catch(rootDeferred.reject);
@@ -167,7 +170,7 @@ Storage.prototype.makeCommit = function (data, callback) {
                                                             projectId: data.projectId,
                                                             branchName: data.branchName,
                                                             commitObject: data.commitObject,
-                                                            coreObjects: [rootObject]
+                                                            coreObjects: []
                                                         },
                                                         eventData = {
                                                             projectId: data.projectId,
@@ -182,6 +185,18 @@ Storage.prototype.makeCommit = function (data, callback) {
                                                             eventData.socket = data.socket;
                                                         }
                                                     }
+
+                                                    if (self.gmeConfig.storage.emitCommittedCoreObjects &&
+                                                        rootProvided) {
+                                                        //https://github.com/webgme/webgme/issues/474
+                                                        Object.keys(data.coreObjects).map(function (obj) {
+                                                            fullEventData.coreObjects.push(data.coreObjects[obj]);
+                                                        });
+                                                        self.logger.debug('Will emit committed core objects');
+                                                    } else {
+                                                        fullEventData.coreObjects.push(rootObject);
+                                                    }
+
                                                     result.status = CONSTANTS.SYNCED;
                                                     self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
                                                     self.dispatchEvent(CONSTANTS.BRANCH_UPDATED, fullEventData);
