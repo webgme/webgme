@@ -121,7 +121,7 @@ if (typeof define === 'undefined') {
             if (config.fork === true) {
                 self.core.setAttribute(self.activeNode, 'name', 'FCO_Fork_Name');
                 persisted = self.core.persist(self.rootNode);
-                self.project.makeCommit(null,
+                self.project.makeCommit(self.branchName,
                     [self.currentHash],
                     persisted.rootHash,
                     persisted.objects,
@@ -132,20 +132,11 @@ if (typeof define === 'undefined') {
                             callback(err);
                             return;
                         }
-                        self.project.setBranchHash(self.branchName, commitResult.hash, self.currentHash,
-                            function (err, commitResult) {
-                                if (err) {
-                                    self.logger.error('setBranchHash failed', err);
-                                    callback(err);
-                                    return;
-                                }
-                                if (commitResult.status === STORAGE_CONSTANTS.SYNCED) {
-                                    makeAndSaveChanges();
-                                } else {
-                                    callback('Injected commit was not in sync, ' + commitResult.status);
-                                }
-                            }
-                        );
+                        if (commitResult.status === STORAGE_CONSTANTS.SYNCED) {
+                            makeAndSaveChanges();
+                        } else {
+                            callback('Injected commit was not in sync, ' + commitResult.status);
+                        }
                     }
                 );
             } else {
