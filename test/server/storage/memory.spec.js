@@ -27,7 +27,7 @@ describe('Memory storage', function () {
     });
 
     after(function (done) {
-        Q.allSettled([
+        Q.allDone([
             gmeAuth.unload()
         ])
             .nodeify(done);
@@ -798,7 +798,7 @@ describe('Memory storage', function () {
                         return storage.makeCommit(commitData);
                     }
 
-                    return Q.allSettled(commitDatas.map(makeCommit));
+                    return Q.allDone(commitDatas.map(makeCommit));
                 })
                 .then(function (/*commitResults*/) {
                     done();

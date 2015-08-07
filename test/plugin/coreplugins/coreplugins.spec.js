@@ -67,7 +67,7 @@ describe('CorePlugins', function () {
                     gmeAuth = gmeAuth_;
                     safeStorage = testFixture.getMongoStorage(logger, gmeConfigWithAuth, gmeAuth);
 
-                    return Q.allSettled([
+                    return Q.allDone([
                         safeStorage.openDatabase()
                     ]);
                 })
@@ -88,7 +88,7 @@ describe('CorePlugins', function () {
                         });
                         promises.push(promise);
                     }
-                    return Q.allSettled(promises);
+                    return Q.allDone(promises);
                 })
                 .nodeify(done);
         });
@@ -101,7 +101,7 @@ describe('CorePlugins', function () {
                 return;
             }
 
-            Q.allSettled([
+            Q.allDone([
                 gmeAuth.unload(),
                 safeStorage.closeDatabase()
             ])

@@ -1,34 +1,36 @@
-/*jshint mocha:true*/
+/*jshint node: true, mocha:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
 
 var testFixture = require('../../../_globals.js');
 
-describe('Executor', function () {
+describe('ExecutorServer', function () {
     'use strict';
 
     var gmeConfig,
         agent = testFixture.superagent.agent(),
         should = testFixture.should,
-        rimraf = testFixture.rimraf,
         expect = testFixture.expect,
+        Q = testFixture.Q,
         server;
 
-    before(function (done) {
-        rimraf('./test-tmp/executor', function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            gmeConfig = testFixture.getGmeConfig();
-            done();
-        });
+    beforeEach(function (done) {
+        Q.allDone([
+            Q.ninvoke(testFixture, 'rimraf', './test-tmp/executor'),
+            Q.ninvoke(testFixture, 'rimraf', './test-tmp/executor-tmp')
+        ])
+            .then(function () {
+                gmeConfig = testFixture.getGmeConfig();
+            })
+            .nodeify(done);
     });
 
     afterEach(function (done) {
         server.stop(function (err) {
-            done(err);
+            setTimeout(function () {
+                done(err);
+            }, 300); // FIXME: This is really ugly and bad
         });
     });
 

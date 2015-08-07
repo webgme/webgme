@@ -58,7 +58,7 @@ describe('ExecutorPlugin', function () {
                 gmeAuth = gmeAuth_;
                 safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
-                return Q.allSettled([
+                return Q.allDone([
                     safeStorage.openDatabase()
                 ]);
             })

@@ -13,7 +13,7 @@ describe('export CLI tests', function () {
         exportCli = require('../../src/bin/export'),
         filename = require('path').normalize('src/bin/export.js'),
         projectName = 'exportCliTest',
-        projectId = testFixture.projectName2Id(projectName),
+        //projectId = testFixture.projectName2Id(projectName),
         outputPath = './test-tmp/exportCliTest.out',
         Q = testFixture.Q,
         logger = testFixture.logger.fork('export.spec'),
@@ -30,9 +30,6 @@ describe('export CLI tests', function () {
                 gmeAuth = gmeAuth_;
                 storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
-            })
-            .then(function () {
-                return storage.deleteProject({projectId: projectId});
             })
             .then(function () {
                 return testFixture.importProject(storage, {
@@ -52,14 +49,11 @@ describe('export CLI tests', function () {
     });
 
     after(function (done) {
-        storage.deleteProject({projectId: projectId}).
-            then(function () {
-                return Q.allSettled([
-                    gmeAuth.unload(),
-                    storage.closeDatabase(),
-                    Q.nfcall(testFixture.rimraf, outputPath)
-                ]);
-            })
+        Q.allDone([
+            gmeAuth.unload(),
+            storage.closeDatabase(),
+            Q.nfcall(testFixture.rimraf, outputPath)
+        ])
             .nodeify(done);
     });
 

@@ -80,7 +80,7 @@ describe('corediff-base', function () {
             after(function (done) {
                 storage.deleteProject({projectId: projectId})
                     .then(function () {
-                        return Q.allSettled([
+                        return Q.allDone([
                             storage.closeDatabase(),
                             gmeAuth.unload()
                         ]);
@@ -195,7 +195,7 @@ describe('corediff-base', function () {
                             return storage.makeCommit(commitData);
                         }
 
-                        return Q.allSettled(commitDatas.map(makeCommit));
+                        return Q.allDone(commitDatas.map(makeCommit));
                     })
                     .then(function (/*commitResults*/) {
                         done();
@@ -206,7 +206,7 @@ describe('corediff-base', function () {
             after(function (done) {
                 storage.deleteProject({projectId: projectId})
                     .then(function () {
-                        return Q.allSettled([
+                        return Q.allDone([
                             storage.closeDatabase(),
                             gmeAuth.unload()
                         ]);

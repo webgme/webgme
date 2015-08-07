@@ -55,7 +55,7 @@ describe('Seeds', function () {
                     gmeAuth = gmeAuth_;
                     safeStorage = testFixture.getMemoryStorage(logger, gmeConfigWithAuth, gmeAuth);
 
-                    return Q.allSettled([
+                    return Q.allDone([
                         safeStorage.openDatabase()
                     ]);
                 })
@@ -70,7 +70,7 @@ describe('Seeds', function () {
                 return;
             }
 
-            Q.allSettled([
+            Q.allDone([
                 gmeAuth.unload(),
                 safeStorage.closeDatabase()
             ])
