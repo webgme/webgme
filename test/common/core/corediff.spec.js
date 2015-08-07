@@ -36,7 +36,7 @@ describe('core diff', function () {
     });
 
     after(function (done) {
-        Q.allSettled([
+        Q.allDone([
             storage.closeDatabase(),
             gmeAuth.unload()
         ]).nodeify(done);

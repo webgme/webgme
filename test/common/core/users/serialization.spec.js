@@ -65,7 +65,7 @@ describe('serialization', function () {
                 return storage.deleteProject({projectId: projectIdTo});
             })
             .then(function () {
-                return Q.allSettled([
+                return Q.allDone([
                     storage.closeDatabase(),
                     gmeAuth.unload()
                 ]);

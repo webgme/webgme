@@ -18,7 +18,6 @@ describe('merge CLI test', function () {
         database,
         gmeAuth,
         projectName = 'mergeCliTest',
-        projectId = testFixture.projectName2Id(projectName),
         oldProcessExit = process.exit,
         oldConsoleLog = console.log,
         oldConsoleError = console.error,
@@ -57,9 +56,6 @@ describe('merge CLI test', function () {
                 return database.openDatabase();
             })
             .then(function () {
-                return database.deleteProject({projectId: projectId});
-            })
-            .then(function () {
                 return testFixture.importProject(database, {
                     projectName: projectName,
                     logger: logger.fork('import'),
@@ -75,7 +71,7 @@ describe('merge CLI test', function () {
                 return result.project.createBranch('other', result.commitHash);
             })
             .then(function () {
-                return Q.allSettled([
+                return Q.allDone([
                     merger.apply({
                         gmeConfig: gmeConfig,
                         logger: logger.fork('apply'),
@@ -102,14 +98,11 @@ describe('merge CLI test', function () {
     });
 
     after(function (done) {
-        database.deleteProject({projectId: projectId})
-            .then(function () {
-                return Q.allSettled([
-                    gmeAuth.unload(),
-                    database.closeDatabase(),
-                    Q.nfcall(rimraf, './test-tmp/mergeCli*')
-                ]);
-            })
+        Q.allDone([
+            gmeAuth.unload(),
+            database.closeDatabase(),
+            Q.nfcall(rimraf, './test-tmp/mergeCli*')
+        ])
             .nodeify(done);
     });
 
@@ -146,7 +139,7 @@ describe('merge CLI test', function () {
             '-T', 'other',
             '-m', gmeConfig.mongo.uri,
             '-u', gmeConfig.authentication.guestAccount,
-            '-o','badOwner',
+            '-o', 'badOwner',
             '-f', './test-tmp/mergeCli'])
             .then(function () {
                 done(new Error('missing error handling'));

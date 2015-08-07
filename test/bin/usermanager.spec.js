@@ -105,7 +105,7 @@ describe('User manager command line interface (CLI)', function () {
             dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', mongoUri, gmeConfig.mongo.options)
                 .then(function (db_) {
                     db = db_;
-                    return Q.allSettled([
+                    return Q.allDone([
                         Q.ninvoke(db, 'collection', '_users')
                             .then(function (collection_) {
                                 var collection = collection_;

@@ -31,9 +31,6 @@ describe('apply CLI tests', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                return storage.deleteProject({projectId: projectId});
-            })
-            .then(function () {
                 testFixture.importProject(storage, {
                     projectName: projectName,
                     logger: logger.fork('import'),
@@ -47,15 +44,10 @@ describe('apply CLI tests', function () {
     });
 
     after(function (done) {
-        storage.deleteProject({
-            projectId: projectId
-        })
-            .then(function () {
-                return Q.allSettled([
-                    gmeAuth.unload(),
-                    storage.closeDatabase()
-                ]);
-            })
+        Q.allDone([
+            gmeAuth.unload(),
+            storage.closeDatabase()
+        ])
             .nodeify(done);
     });
 
@@ -145,4 +137,5 @@ describe('apply CLI tests', function () {
             })
             .done();
     });
-});
+})
+;

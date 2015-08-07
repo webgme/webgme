@@ -54,14 +54,14 @@ describe('storage socketio websocket', function () {
                     return safeStorage.openDatabase();
                 })
                 .then(function () {
-                    return Q.allSettled([
+                    return Q.allDone([
                         safeStorage.deleteProject({projectId: projectName2Id(projectName)}),
                         safeStorage.deleteProject({projectId: projectName2Id(projectNameCreate)}),
                         safeStorage.deleteProject({projectId: projectName2Id(projectNameDelete)})
                     ]);
                 })
                 .then(function () {
-                    return Q.allSettled([
+                    return Q.allDone([
                         testFixture.importProject(safeStorage, {
                             projectSeed: 'seeds/EmptyProject.json',
                             projectName: projectName,
@@ -71,7 +71,7 @@ describe('storage socketio websocket', function () {
                     ]);
                 })
                 .then(function (results) {
-                    importResult = results[0].value; // projectName
+                    importResult = results[0]; // projectName
                     originalHash = importResult.commitHash;
 
                     commitObject = importResult.project.createCommitObject([originalHash],
@@ -115,7 +115,7 @@ describe('storage socketio websocket', function () {
                 return;
             }
 
-            Q.allSettled([
+            Q.allDone([
                 gmeAuth.unload(),
                 safeStorage.closeDatabase()
             ])
