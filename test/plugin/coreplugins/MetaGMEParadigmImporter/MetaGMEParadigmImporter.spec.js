@@ -49,7 +49,7 @@ describe('Plugin MetaGMEParadigmImporter', function () {
                 project = importResult.project;
                 commitHash = importResult.commitHash;
                 pluginManager = new PluginCliManager(project, logger, gmeConfig);
-                return Q.all([
+                return Q.allDone([
                     project.createBranch('b1', commitHash)
                 ]);
             })
@@ -59,7 +59,7 @@ describe('Plugin MetaGMEParadigmImporter', function () {
                     filePath2 = './test/plugin/coreplugins/MetaGMEParadigmImporter/SF_fail.xmp',
                     blobClient = new BlobRunPluginClient(blobBackend);
 
-                return Q.all([
+                return Q.allDone([
                     Q.ninvoke(blobClient, 'putFile', 'SF.xmp', testFixture.fs.readFileSync(filePath1)),
                     Q.ninvoke(blobClient, 'putFile', 'SF_fail.xmp', testFixture.fs.readFileSync(filePath2))
                 ]);
