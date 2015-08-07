@@ -26,7 +26,7 @@ describe('SafeStorage', function () {
     });
 
     after(function (done) {
-        Q.allSettled([
+        Q.allDone([
             gmeAuth.unload()
         ])
             .nodeify(done);
@@ -493,23 +493,17 @@ describe('SafeStorage', function () {
                 .then(function (result) {
                     importResult = result;
                     project = importResult.project;
-                    return project.createBranch('b1', importResult.commitHash);
-                })
-                .then(function () {
-                    return project.createBranch('toBeDeleted', importResult.commitHash);
-                })
-                .then(function () {
-                    return project.createBranch('branchHashUpdated', importResult.commitHash);
-                })
-                .then(function () {
-                    return project.createBranch('branchUpdated', importResult.commitHash);
-                })
-                .then(function () {
-                    return project.makeCommit(null, [importResult.commitHash], importResult.rootHash, {}, 'aCommit');
+                    return Q.allDone([
+                        project.makeCommit(null, [importResult.commitHash], importResult.rootHash, {}, 'aCommit'),
+                        project.createBranch('b1', importResult.commitHash),
+                        project.createBranch('toBeDeleted', importResult.commitHash),
+                        project.createBranch('branchHashUpdated', importResult.commitHash),
+                        project.createBranch('branchUpdated', importResult.commitHash)
+                    ]);
                 })
                 .then(function (result) {
-                    expect(result.hash).not.to.equal(importResult.commitHash);
-                    newBranchHash = result.hash;
+                    expect(result[0].hash).not.to.equal(importResult.commitHash);
+                    newBranchHash = result[0].hash;
                 })
                 .nodeify(done);
         });
@@ -523,12 +517,12 @@ describe('SafeStorage', function () {
                 expect(eventData.branchName).to.equal('newBranch');
                 expect(eventData.oldHash).to.equal('');
                 expect(eventData.newHash).to.equal(importResult.commitHash);
-                safeStorage.removeAllEventListeners();
+                safeStorage.clearAllEvents();
                 done();
             };
 
             safeStorage.addEventListener(project.CONSTANTS.BRANCH_CREATED, eventHandler);
-            project.createBranch('newBranch', importResult.commitHash);
+            project.createBranch('newBranch', importResult.commitHash).catch(done);
         });
 
         it('should emit BRANCH_DELETED', function (done) {
@@ -536,12 +530,12 @@ describe('SafeStorage', function () {
                 expect(eventData.branchName).to.equal('toBeDeleted');
                 expect(eventData.oldHash).to.equal(importResult.commitHash);
                 expect(eventData.newHash).to.equal('');
-                safeStorage.removeAllEventListeners();
+                safeStorage.clearAllEvents();
                 done();
             };
 
             safeStorage.addEventListener(project.CONSTANTS.BRANCH_DELETED, eventHandler);
-            project.deleteBranch('toBeDeleted', importResult.commitHash);
+            project.deleteBranch('toBeDeleted', importResult.commitHash).catch(done);
         });
 
         it('should emit BRANCH_HASH_UPDATED when setBranchHash', function (done) {
@@ -549,28 +543,28 @@ describe('SafeStorage', function () {
                 expect(eventData.branchName).to.equal('branchHashUpdated');
                 expect(eventData.oldHash).to.equal(importResult.commitHash);
                 expect(eventData.newHash).to.equal(newBranchHash);
-                safeStorage.removeAllEventListeners();
+                safeStorage.clearAllEvents();
                 done();
             };
 
             safeStorage.addEventListener(project.CONSTANTS.BRANCH_HASH_UPDATED, eventHandler);
-            project.setBranchHash('branchHashUpdated', newBranchHash, importResult.commitHash);
+            project.setBranchHash('branchHashUpdated', newBranchHash, importResult.commitHash).catch(done);
         });
 
-        it.skip('should emit BRANCH_UPDATED when setBranchHash', function (done) {
+        it('should emit BRANCH_UPDATED when setBranchHash', function (done) {
             var eventHandler = function (_storage, eventData) {
                 expect(eventData.branchName).to.equal('branchUpdated');
-                expect(eventData.commitObject._id).to.equal(importResult.commitHash);
+                expect(eventData.commitObject._id).to.equal(newBranchHash);
                 expect(eventData.commitObject.root).to.equal(importResult.rootHash);
                 expect(eventData.coreObjects instanceof Array).to.equal(true);
                 expect(eventData.coreObjects.length).to.equal(1);
                 expect(eventData.coreObjects[0]._id).to.equal(importResult.rootHash);
-                safeStorage.removeAllEventListeners();
+                safeStorage.clearAllEvents();
                 done();
             };
 
             safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
-            project.setBranchHash('branchUpdated', newBranchHash, importResult.commitHash);
+            project.setBranchHash('branchUpdated', newBranchHash, importResult.commitHash).catch(done);
         });
     });
 });

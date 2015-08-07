@@ -29,6 +29,7 @@ Storage.prototype.openDatabase = function (callback) {
 };
 
 Storage.prototype.closeDatabase = function (callback) {
+    this.clearAllEvents();
     return this.mongo.closeDatabase()
         .nodeify(callback);
 };
@@ -369,7 +370,12 @@ Storage.prototype.setBranchHash = function (data, callback) {
                                 deferred.resolve({status: CONSTANTS.SYNCED, hash: data.newHash});
                             })
                             .catch(function (err) {
-                                deferred.reject(new Error('Failed loading objects for events' + err));
+                                var errMsg = err;
+                                if (err instanceof Error) {
+                                    errMsg = err.message;
+                                }
+                                self.logger.error('setBranchHash', errMsg);
+                                deferred.reject(new Error('Failed loading objects for events: ' + errMsg));
                             });
                     } else {
                         //setting empty branch to empty
