@@ -48,7 +48,7 @@ describe('Simple worker', function () {
 
 
     before(function (done) {
-
+        var project;
         //gmeConfig.authentication.enable = true;
         gmeConfig.authentication.allowGuests = true;
         gmeConfig.addOn.enable = true;
@@ -81,10 +81,20 @@ describe('Simple worker', function () {
                     baseProjectContext.commitHash = result.commitHash;
                     baseProjectContext.id = result.project.projectId;
                     baseProjectContext.rootHash = result.core.getHash(result.rootNode);
-
-                    return result.project.createBranch('corruptBranch', '#4242424242424242424242424242424242424242');
+                    project = result.project;
+                    return project.createBranch('corruptBranch', result.commitHash);
                 })
-                .then(function () {
+                .then(function (result) {
+                    var invalidRoot = '#424242424242424242424',
+                        coreObjs = {};
+                    coreObjs.invalidRoot = {_id: invalidRoot};
+                    expect(result.status).to.equal(project.CONSTANTS.SYNCED);
+
+                    return project.makeCommit('corruptBranch', [baseProjectContext.commitHash],
+                        invalidRoot, coreObjs, 'bad commit');
+                })
+                .then(function (result) {
+                    expect(result.status).to.equal(project.CONSTANTS.SYNCED);
                     return openSocketIo(server, agent, guestAccount, guestAccount);
                 })
                 .then(function (result) {
@@ -101,7 +111,7 @@ describe('Simple worker', function () {
             }
             deleteProject(storage, gmeAuth, baseProjectContext.name)
                 .then(function () {
-                    return Q.allDone([
+                    return Q.allSettled([
                         storage.closeDatabase(),
                         gmeAuth.unload()
                     ]);
@@ -895,7 +905,7 @@ describe('Simple worker', function () {
                     done(new Error('missing error handling'));
                 })
                 .catch(function (err) {
-                    expect(err.message).to.contain('object does not exist');
+                    expect(err.message).to.contain('Error: ASSERT failed');
                     done();
                 })
                 .finally(restoreProcessFunctions)

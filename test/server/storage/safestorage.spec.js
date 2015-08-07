@@ -16,7 +16,6 @@ describe('SafeStorage', function () {
         projectName = 'newProject',
         projectId = gmeConfig.authentication.guestAccount + testFixture.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
 
-
     before(function (done) {
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
@@ -53,7 +52,7 @@ describe('SafeStorage', function () {
                     expect(result.projectId).to.equal(projectId);
                     commitHash = result.commitHash;
                     importResult = result;
-                    return Q();
+                    return result.project.createBranch('setFail', commitHash);
                 })
                 .nodeify(done);
         });
@@ -242,6 +241,31 @@ describe('SafeStorage', function () {
                 .nodeify(done);
         });
 
+        it('should setBranchHash should fail if commitObject does not exist for given hash and not update branch',
+            function (done) {
+                var data = {
+                    projectId: projectId,
+                    branchName: 'setFail',
+                    oldHash: '',
+                    newHash: '#Does_not_exist'
+                };
+
+                safeStorage.setBranchHash(data)
+                    .then(function () {
+                        throw new Error('setBranchHash should have failed');
+                    })
+                    .catch(function (err) {
+                        expect(err.message).to.contain('Error: Tried to setBranchHash to invalid or non-existing' +
+                            ' commit, err: object does not exist #Does_not_exist');
+                        return importResult.project.getBranchHash('setFail');
+                    })
+                    .then(function (hashAfterFail) {
+                        expect(hashAfterFail).to.equal(commitHash);
+                    })
+                    .nodeify(done);
+            }
+        );
+
         it('should createBranch', function (done) {
             var data = {
                     projectId: projectId,
@@ -353,10 +377,10 @@ describe('SafeStorage', function () {
 
         it('should return object with hashes and values as error strings when hashes invalid', function (done) {
             var data = {
-                    projectId: projectId,
-                    branchName: 'master',
-                    hashes: ['#52896a42a5e46429f39923400ed5059f309991b9', '#52896a42a5e46429f39923400ed5059f309991b8']
-                };
+                projectId: projectId,
+                branchName: 'master',
+                hashes: ['#52896a42a5e46429f39923400ed5059f309991b9', '#52896a42a5e46429f39923400ed5059f309991b8']
+            };
 
             safeStorage.loadObjects(data)
                 .then(function (objects) {
@@ -495,10 +519,11 @@ describe('SafeStorage', function () {
                     project = importResult.project;
                     return Q.allDone([
                         project.makeCommit(null, [importResult.commitHash], importResult.rootHash, {}, 'aCommit'),
-                        project.createBranch('b1', importResult.commitHash),
                         project.createBranch('toBeDeleted', importResult.commitHash),
                         project.createBranch('branchHashUpdated', importResult.commitHash),
-                        project.createBranch('branchUpdated', importResult.commitHash)
+                        project.createBranch('branchUpdated', importResult.commitHash),
+                        project.createBranch('branchUpdatedCommitWithNodes', importResult.commitHash),
+                        project.createBranch('branchUpdatedCommitWithOutNodes', importResult.commitHash),
                     ]);
                 })
                 .then(function (result) {
@@ -551,7 +576,7 @@ describe('SafeStorage', function () {
             project.setBranchHash('branchHashUpdated', newBranchHash, importResult.commitHash).catch(done);
         });
 
-        it('should emit BRANCH_UPDATED when setBranchHash', function (done) {
+        it('should emit BRANCH_UPDATED when setBranchHash and include root', function (done) {
             var eventHandler = function (_storage, eventData) {
                 expect(eventData.branchName).to.equal('branchUpdated');
                 expect(eventData.commitObject._id).to.equal(newBranchHash);
@@ -565,6 +590,168 @@ describe('SafeStorage', function () {
 
             safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
             project.setBranchHash('branchUpdated', newBranchHash, importResult.commitHash).catch(done);
+        });
+
+        it('should emit BRANCH_UPDATED when makeCommit and include root when root was provided', function (done) {
+            var eventHandler = function (_storage, eventData) {
+                    expect(eventData.branchName).to.equal('branchUpdatedCommitWithNodes');
+                    expect(eventData.commitObject._id).to.not.equal(importResult.commitHash);
+                    expect(eventData.commitObject.root).to.equal(newRootHash);
+                    expect(eventData.coreObjects instanceof Array).to.equal(true);
+                    expect(eventData.coreObjects.length).to.equal(1);
+                    expect(eventData.coreObjects[0]._id).to.equal(newRootHash);
+                    safeStorage.clearAllEvents();
+                    done();
+                },
+                rootNode,
+                newRootHash;
+
+            safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+            Q.ninvoke(importResult.core, 'loadRoot', importResult.rootHash)
+                .then(function (rootNode_) {
+                    rootNode = rootNode_;
+                    return Q.ninvoke(importResult.core, 'loadByPath', rootNode, '/1');
+                })
+                .then(function (fcoNode) {
+                    var persisted;
+                    importResult.core.setAttribute(fcoNode, 'name', 'branchUpdatedCommitWithNodes');
+                    persisted = importResult.core.persist(rootNode);
+                    expect(Object.keys(persisted.objects).length).to.equal(2);
+                    newRootHash = persisted.rootHash;
+                    return project.makeCommit(
+                        'branchUpdatedCommitWithNodes',
+                        [importResult.commitHash],
+                        persisted.rootHash,
+                        persisted.objects,
+                        'branchUpdatedCommitWithNodes'
+                    );
+                })
+                .catch(function (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    done(err);
+                });
+        });
+
+        it('should emit BRANCH_UPDATED when makeCommit and include root when root was not provided', function (done) {
+            var eventHandler = function (_storage, eventData) {
+                expect(eventData.branchName).to.equal('branchUpdatedCommitWithOutNodes');
+                expect(eventData.commitObject._id).to.not.equal(importResult.commitHash);
+                expect(eventData.commitObject.root).to.equal(importResult.rootHash);
+                expect(eventData.coreObjects instanceof Array).to.equal(true);
+                expect(eventData.coreObjects.length).to.equal(1);
+                expect(eventData.coreObjects[0]._id).to.equal(importResult.rootHash);
+                safeStorage.clearAllEvents();
+                done();
+            };
+
+            safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+
+            project.makeCommit(
+                'branchUpdatedCommitWithOutNodes',
+                [importResult.commitHash],
+                importResult.rootHash,
+                {},
+                'branchUpdatedCommitWithOutNodes'
+            )
+                .catch(done);
+        });
+    });
+
+    describe('gmeConfig.storage.emitCommittedCoreObjects', function () {
+        var safeStorage,
+            project,
+            gmeConfigEmit = testFixture.getGmeConfig(),
+            importResult;
+
+        before(function (done) {
+            gmeConfigEmit.storage.emitCommittedCoreObjects = true;
+            safeStorage = testFixture.getMemoryStorage(logger, gmeConfigEmit, gmeAuth);
+
+            safeStorage.openDatabase()
+                .then(function () {
+                    return testFixture.importProject(safeStorage, {
+                        projectSeed: 'seeds/EmptyProject.json',
+                        projectName: projectName,
+                        gmeConfig: gmeConfigEmit,
+                        logger: logger
+                    });
+                })
+                .then(function (result) {
+                    importResult = result;
+                    project = importResult.project;
+                    return Q.allDone([
+                        project.createBranch('emitAllWithNodes', importResult.commitHash),
+                        project.createBranch('emitAllNoNodes', importResult.commitHash)
+                    ]);
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            safeStorage.closeDatabase(done);
+        });
+
+        it('should emit BRANCH_UPDATED when makeCommit and include all object provided', function (done) {
+            var eventHandler = function (_storage, eventData) {
+                    expect(eventData.branchName).to.equal('emitAllWithNodes');
+                    expect(eventData.commitObject._id).to.not.equal(importResult.commitHash);
+                    expect(eventData.commitObject.root).to.equal(newRootHash);
+                    expect(eventData.coreObjects instanceof Array).to.equal(true);
+                    expect(eventData.coreObjects.length).to.equal(2);
+                    safeStorage.clearAllEvents();
+                    done();
+                },
+                rootNode,
+                newRootHash;
+
+            safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+            Q.ninvoke(importResult.core, 'loadRoot', importResult.rootHash)
+                .then(function (rootNode_) {
+                    rootNode = rootNode_;
+                    return Q.ninvoke(importResult.core, 'loadByPath', rootNode, '/1');
+                })
+                .then(function (fcoNode) {
+                    var persisted;
+                    importResult.core.setAttribute(fcoNode, 'name', 'emitAllWithNodes');
+                    persisted = importResult.core.persist(rootNode);
+                    expect(Object.keys(persisted.objects).length).to.equal(2);
+                    newRootHash = persisted.rootHash;
+                    return project.makeCommit(
+                        'emitAllWithNodes',
+                        [importResult.commitHash],
+                        persisted.rootHash,
+                        persisted.objects,
+                        'emitAllWithNodes'
+                    );
+                })
+                .catch(function (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    done(err);
+                });
+        });
+
+        it('should emit BRANCH_UPDATED when makeCommit and include root when root was not provided', function (done) {
+            var eventHandler = function (_storage, eventData) {
+                expect(eventData.branchName).to.equal('emitAllNoNodes');
+                expect(eventData.commitObject._id).to.not.equal(importResult.commitHash);
+                expect(eventData.commitObject.root).to.equal(importResult.rootHash);
+                expect(eventData.coreObjects instanceof Array).to.equal(true);
+                expect(eventData.coreObjects.length).to.equal(1);
+                expect(eventData.coreObjects[0]._id).to.equal(importResult.rootHash);
+                safeStorage.clearAllEvents();
+                done();
+            };
+
+            safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+
+            project.makeCommit(
+                'emitAllNoNodes',
+                [importResult.commitHash],
+                importResult.rootHash,
+                {},
+                'emitAllNoNodes'
+            )
+                .catch(done);
         });
     });
 });

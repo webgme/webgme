@@ -487,7 +487,7 @@ describe('merge - library', function () {
 
     it('should make a fast-forward without a branch', function (done) {
         var myContext, myCommitHash, startCommitHash;
-        Q.nfcall(context.project.createBranch, 'fastForward', context.commitHash)
+        context.project.createBranch('fastForwardWithOutBranch', context.commitHash)
             .then(function () {
                 return getContext('fastForward');
             })
