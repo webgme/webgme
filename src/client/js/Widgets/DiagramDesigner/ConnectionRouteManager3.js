@@ -9,13 +9,11 @@ define([
     'js/logger',
     'module',
     './AutoRouter.ActionApplier',
-    './AutoRouter.Utils',
-    'q'
+    './AutoRouter.Utils'
 ], function (Logger,
              module,
              ActionApplier,
-             Utils,
-             Q) {
+             Utils) {
 
     'use strict';
 
@@ -25,7 +23,11 @@ define([
 
     ConnectionRouteManager3 = function (options) {
         if (window.Worker && WORKER) {
-            this._deferredItems = {};
+            // A queue of item operations to perform after the item is created. 
+            // Unfortunately, promises didn't work because they
+            // simply place the callbacks (eg, item move, item delete) on 
+            // the event queue rather than executing the callback themselves
+            this._onItemCreateQueue = {};
             this.workerQueue = [];
 
             // TODO: If merging into one js file, this may break
@@ -69,7 +71,8 @@ define([
     ConnectionRouteManager3.prototype.init = ActionApplier.prototype._clearRecords;
 
     ConnectionRouteManager3.prototype._invokeAutoRouterMethod = function() {
-        var array = Utils.toArray(arguments);  // Remove the extra 'arguments' stuff
+        var array = Utils.toArray(arguments),  // Remove the extra 'arguments' stuff
+            id;
         if (this.workerReady) {
             this.worker.postMessage(array);
         } else {
@@ -77,24 +80,21 @@ define([
         }
 
         // Update some record keeping
-        var collection = null;
         switch (array[0]) {
             case 'addPath':
-                // Set the collection to store it then fall through
-                // to create the promise in the 'addBox' method
-                collection = '_autorouterPaths';  // jshint ignore:line
 
             case 'addBox':
-                var id = array[1][1],
-                    deferred = Q.defer();
-
-                collection = collection || '_autorouterBoxes';
-                this._deferredItems[id] = deferred;
-                this[collection][id] = deferred.promise;
+                id = array[1][1];
+                this._onItemCreateQueue[id] = [];
                 break;
 
             case 'clear':
                 this.init();  // Clear the records
+                break;
+
+            case 'remove':
+                id = array[1][1];
+                delete this._onItemCreateQueue[id];
                 break;
         }
     };
@@ -116,7 +116,8 @@ define([
             // response = [cmd, args, result]
 
             // Render connections?
-            var id;
+            var id,
+                collection = '_autorouterBoxes';
             switch (response[0]) {
                 case 'getPathPoints':
                     id = response[1][0];  // first arg from request
@@ -131,11 +132,22 @@ define([
                     }
                     break;
 
-                case 'addBox':
                 case 'addPath':
-                    // Resolve the promise
+                    // Set the collection to store it then fall through
+                    // to create the promise in the 'addBox' method
+                    collection = '_autorouterPaths';  // jshint ignore:line
+                case 'addBox':
+                    // Record the item
                     id = response[1][1];
-                    this._deferredItems[id].resolve(response[2]);
+                    this[collection][id] = response[2];
+
+                    // Evaluate the event queue for the item in order
+                    if (this._onItemCreateQueue[id]) {  // FIXME: Sometimes this is null -> it is 
+                        for (i = 0; i < this._onItemCreateQueue[id].length; i++) {
+                            this._onItemCreateQueue[id][i].call(this,response[2]);
+                        }
+                    }
+                    this._onItemCreateQueue[id] = null;
                     break;
 
                 case 'BugReplayList':
@@ -274,24 +286,13 @@ define([
         }
     };
 
-    ConnectionRouteManager3.prototype._refreshConnData = function (idList) {
-        // Clear connection data and paths then re-add them
-        var i = idList.length;
-
-        while (i--) {
-            this.deleteItem(idList[i]);
-            this.insertConnection(idList[i]);
-        }
-
-    };
-
     ConnectionRouteManager3.prototype._clearGraph = function () {
         this._invokeAutoRouterMethod('clear', []);
         this._autorouterBoxRotation = {};  // Define container that will map obj+subID -> rotation
-        //this._clearRecords();
         this.endpointConnectionAreaInfo = {};
         this.initialized = false;
         this.readyToDownload = true;
+        this._onItemCreateQueue = {};
     };
 
     ConnectionRouteManager3.prototype._initializeGraph = function () {
@@ -407,14 +408,11 @@ define([
     };
 
     ConnectionRouteManager3.prototype.deleteItem = function (objId) {
-        //If I can query them from the objId, I can clear the entries with that info
+        // If I can query them from the objId, I can clear the entries with that info
         // Make sure that the path/box has been created
-        var promise = this._autorouterBoxes[objId] || this._autorouterPaths[objId];
+        var removeFn = this._invokeAutoRouterMethod.bind(this, 'remove', [objId]);
 
-        promise.then(function() {
-            this._invokeAutoRouterMethod('remove', [objId]);
-        }.bind(this));
-
+        this._modifyItem(objId, removeFn);
     };
 
     ConnectionRouteManager3.prototype._resizeItem = function (objId) {
@@ -456,46 +454,65 @@ define([
 
     ConnectionRouteManager3.prototype._updatePort = function (objId, subCompId) {
         var longid = objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId,
-            canvas = this.diagramDesigner;
+            newBox,
+            updateBoxFn;
 
         if (subCompId !== undefined) { //Updating a port
-            //We need to know if the box even exists...
-            if (!this._autorouterBoxes[longid]) { //If the port doesn't exist, create it
+            // We need to know if the box even exists...
+            if (this._onItemCreateQueue[longid] === undefined) {  // If the port doesn't exist, create it
                 this._createPort(objId, subCompId);
             } else {
-                //TODO Adjust size, connection info
-                var newBox = this._createPortInfo(objId, subCompId);
-                this._invokeAutoRouterMethod('setBoxRect', [longid, newBox]);
+                // TODO Adjust size, connection info
+                newBox = this._createPortInfo(objId, subCompId);
+                updateBoxFn = this._invokeAutoRouterMethod.bind(this, 'setBoxRect', [longid, newBox]);
+                this._modifyItem(longid, updateBoxFn);
             }
         } else { // Updating the box's connection areas
-            this._autorouterBoxes[objId].then(function(boxObject) {
-                var areas = canvas.items[objId].getConnectionAreas() || [],
-                    newIds = {},
-                    connInfo = [],
-                    id,
-                    j;
+            this._modifyItem(objId, this._updateBoxConnectionAreas.bind(this, objId));
+        }
+    };
 
-                for (j = areas.length; j--;) {
-                    //Building up the ports object
-                    connInfo.push({
-                        'id': areas[j].id, 'area': [[areas[j].x1, areas[j].y1], [areas[j].x2, areas[j].y2]],
-                        'angles': [areas[j].angle1, areas[j].angle2]
-                    });
-                    newIds[areas[j].id] = true;
-                }
+    /**
+     * Call a function on an item which may or may not exist yet
+     *
+     * @param {String} id
+     * @param {Function} fn
+     * @return {undefined}
+     */
+    ConnectionRouteManager3.prototype._modifyItem = function (id, fn) {
+        if (this._onItemCreateQueue[id] === null) {  // Item has been created
+            fn();
+        } else {  // Store the operation
+            this._onItemCreateQueue[id].push(fn);
+        }
+    };
 
-                // Update each AutoRouter port
-                for (j = connInfo.length; j--;) {
-                    this._invokeAutoRouterMethod('updatePort', [objId, connInfo[j]]);
-                }
+    ConnectionRouteManager3.prototype._updateBoxConnectionAreas = function (objId, boxObject) {
+        var areas = this.diagramDesigner.items[objId].getConnectionAreas() || [],
+            newIds = {},
+            connInfo = [],
+            id,
+            j;
 
-                for (j = boxObject.ports.length; j--;) {
-                    id = boxObject.ports[j].id;
-                    if (!newIds[id]) {
-                        this._invokeAutoRouterMethod('removePort', [boxObject.ports[j]]);  // Not sure FIXME
-                    }
-                }
-            }.bind(this));
+        for (j = areas.length; j--;) {
+            //Building up the ports object
+            connInfo.push({
+                'id': areas[j].id, 'area': [[areas[j].x1, areas[j].y1], [areas[j].x2, areas[j].y2]],
+                'angles': [areas[j].angle1, areas[j].angle2]
+            });
+            newIds[areas[j].id] = true;
+        }
+
+        // Update each AutoRouter port
+        for (j = connInfo.length; j--;) {
+            this._invokeAutoRouterMethod('updatePort', [objId, connInfo[j]]);
+        }
+
+        for (j = boxObject.ports.length; j--;) {
+            id = boxObject.ports[j].id;
+            if (!newIds[id]) {
+                this._invokeAutoRouterMethod('removePort', [boxObject.ports[j]]);  // Not sure FIXME
+            }
         }
     };
 

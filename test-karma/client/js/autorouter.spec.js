@@ -222,11 +222,20 @@ describe('AutoRouter', function () {
         it('should not contain skew edge w/ async routing', function (done) {
             requirejs(['text!aRtestCases/simplifyPathsbug.json'], function (actions) {
                 bugPlayer.test(JSON.parse(actions), {}, function() {
-                    bugPlayer.getPathPoints('C_000032', function(points) {
+                    bugPlayer.getPathPoints('C_000032', function(/*points*/) {
                         // TODO: Add API for executing stuff after routeAsync is done...
                         // utils.validatePoints(points);
                         done();
                     });
+                });
+            });
+        });
+
+        it('issue/447_autorouter_cant_retrieve_end_port', function (done) {
+            requirejs(['text!aRtestCases/issue447.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions), {}, function() {
+                    // Check that paths are routed
+                    setTimeout(done,200);
                 });
             });
         });
@@ -529,6 +538,12 @@ describe('AutoRouter', function () {
                 router.addPath({src: box1.ports[srcId], dst: box2.ports[dstId]});
 
                 router.routeAsync({
+                    first: function() {
+                        // Check that there is a temp path
+                        path = router.graph.paths[0];
+                        assert(path, 'Missing path');
+                        assert(path.points.length >= 2, 'Path missing temporary points');
+                    },
                     callback: function (paths) {
                         var path = paths[0];
                         assert(path.points.length > 2,
@@ -537,10 +552,6 @@ describe('AutoRouter', function () {
                     }
                 });
 
-                // Check that there is a temp path
-                path = router.graph.paths[0];
-                assert(path, 'Missing path');
-                assert(path.points.length >= 2, 'Path missing temporary points');
             });
 
             it('should reconnect paths disconnected during routeAsync', function (done) {
