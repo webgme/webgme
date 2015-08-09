@@ -75,7 +75,8 @@ define([
     };
 
     AutoRouterPath.prototype.getStartPort = function () {
-        assert(this.startports.length, 'ARPort.getStartPort: Can\'t retrieve start port.');
+        assert(this.startports.length, 
+            'ARPort.getStartPort: Can\'t retrieve start port. from '+this.id);
 
         if (!this.startport) {
             this.calculateStartPorts();
@@ -84,7 +85,8 @@ define([
     };
 
     AutoRouterPath.prototype.getEndPort = function () {
-        assert(this.endports.length, 'ARPort.getEndPort: Can\'t retrieve end port.');
+        assert(this.endports.length, 
+            'ARPort.getEndPort: Can\'t retrieve end port from '+this.id);
         if (!this.endport) {
             this.calculateEndPorts();
         }
@@ -526,6 +528,10 @@ define([
 
     AutoRouterPath.prototype.assertValid = function () {
         var i;
+
+        assert(this.startports.length > 0, 'Path has no startports!');
+        assert(this.endports.length > 0, 'Path has no endports!');
+
         for (i = this.startports.length; i--;) {
             this.startports[i].assertValid();
         }
@@ -540,10 +546,6 @@ define([
                     'ARPath.assertValid: this.points.length !== 0 FAILED');
                 var points = this.getPointList();
                 points.assertValid();
-
-            } else {
-                assert(this.points.length === 0,
-                    'ARPath.assertValid: this.points.length === 0 FAILED');
             }
         }
 
