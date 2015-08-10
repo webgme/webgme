@@ -898,28 +898,26 @@ describe('GME client', function () {
                 expect(err).to.equal(null);
 
                 actualProject = client.getActiveProjectId();
-
                 expect(actualProject).to.equal(projectId);
-                client.deleteProject(genericProjectId, function (err) {
+
+                client.getBranches(genericProjectId, function (err, branches) {
                     expect(err).to.equal(null);
-                    client.createProject(genericProjectName, function (err) {
+                    expect(branches.master).to.include('#');
+
+                    client.createBranch(genericProjectId, 'genericBranch', branches.master, function (err) {
                         expect(err).to.equal(null);
 
-                        client.createBranch(genericProjectId, 'genericBranch', '#424242', function (err) {
+                        client.getProjectsAndBranches(true, function (err, info) {
                             expect(err).to.equal(null);
 
-                            client.getProjectsAndBranches(true, function (err, info) {
-                                expect(err).to.equal(null);
+                            expect(client.getActiveProjectId()).to.equal(actualProject);
+                            expect(info).not.to.equal(null);
+                            expect(info).to.include.keys(genericProjectId);
+                            expect(info[genericProjectId]).to.include.keys('branches');
+                            expect(info[genericProjectId].branches).to.include.keys('genericBranch', 'master');
 
-                                expect(client.getActiveProjectId()).to.equal(actualProject);
-                                expect(info).not.to.equal(null);
-                                expect(info).to.include.keys(genericProjectId);
-                                expect(info[genericProjectId]).to.include.keys('branches');
-                                expect(info[genericProjectId].branches).to.include.keys('genericBranch');
-
-                                expect(err).to.equal(null);
-                                done();
-                            });
+                            expect(err).to.equal(null);
+                            done();
                         });
                     });
                 });
@@ -937,44 +935,41 @@ describe('GME client', function () {
 
                 actualProject = client.getActiveProjectId();
 
-                client.deleteProject(genericProjectId, function (err) {
+                client.getBranches(genericProjectId, function (err, branches) {
                     expect(err).to.equal(null);
-                    client.createProject(genericProjectName, function (err, projectId) {
-                        expect(err).to.equal(null);
-                        expect(projectId).to.equal(genericProjectId);
+                    expect(branches.master).to.include('#');
 
-                        client.createBranch(genericProjectId, 'genericBranch', '#424242', function (err) {
+                    client.createBranch(genericProjectId, 'genericBranch', branches.master, function (err) {
+                        expect(err).to.equal(null);
+
+                        client.getProjectsAndBranches(true, function (err, info) {
                             expect(err).to.equal(null);
 
-                            client.getProjectsAndBranches(true, function (err, info) {
-                                expect(err).to.equal(null);
+                            expect(client.getActiveProjectId()).to.equal(actualProject);
+                            expect(info).not.to.equal(null);
+                            expect(info).to.include.keys(genericProjectId);
+                            expect(info[genericProjectId]).to.include.keys('branches');
+                            expect(info[genericProjectId].branches).to.include.keys('genericBranch');
 
-                                expect(client.getActiveProjectId()).to.equal(actualProject);
-                                expect(info).not.to.equal(null);
-                                expect(info).to.include.keys(genericProjectId);
-                                expect(info[genericProjectId]).to.include.keys('branches');
-                                expect(info[genericProjectId].branches).to.include.keys('genericBranch');
-
-                                client.deleteBranch(genericProjectId,
-                                    'genericBranch',
-                                    '#424242',
-                                    function (err) {
+                            client.deleteBranch(genericProjectId,
+                                'genericBranch',
+                                branches.master,
+                                function (err) {
+                                    expect(err).to.equal(null);
+                                    client.getProjectsAndBranches(true, function (err, info) {
                                         expect(err).to.equal(null);
-                                        client.getProjectsAndBranches(true, function (err, info) {
-                                            expect(err).to.equal(null);
 
-                                            expect(client.getActiveProjectId()).to.equal(actualProject);
-                                            expect(info).not.to.equal(null);
-                                            expect(info).to.include.keys(genericProjectId);
-                                            expect(info[genericProjectId]).to.include.keys('branches');
-                                            expect(info[genericProjectId].branches)
-                                                .not.to.include.keys('genericBranch');
+                                        expect(client.getActiveProjectId()).to.equal(actualProject);
+                                        expect(info).not.to.equal(null);
+                                        expect(info).to.include.keys(genericProjectId);
+                                        expect(info[genericProjectId]).to.include.keys('branches');
+                                        expect(info[genericProjectId].branches)
+                                            .not.to.include.keys('genericBranch');
 
-                                            done();
-                                        });
-                                    }
-                                );
-                            });
+                                        done();
+                                    });
+                                }
+                            );
                         });
                     });
                 });
@@ -1462,7 +1457,7 @@ describe('GME client', function () {
 
         it('should return the list of META-defined pointers', function () {
             expect(clientNode.getValidPointerNames()).to.have.members(['ptr']);
-        })
+        });
 
         it('should return the names of available pointers which has a target on this inheritance level',
             function () {
