@@ -46,7 +46,7 @@ describe('UserProject', function () {
     });
 
     after(function (done) {
-        Q.allSettled([
+        Q.allDone([
             storage.closeDatabase(),
             gmeAuth.unload()
         ])

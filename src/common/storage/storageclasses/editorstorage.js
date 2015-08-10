@@ -82,7 +82,7 @@ define([
                     webSocket.disconnect();
                     self.connected = false;
                     // Remove all local event-listeners.
-                    webSocket.removeAllEventListeners();
+                    webSocket.clearAllEvents();
                     callback(error || null);
                 }
             }

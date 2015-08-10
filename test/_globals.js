@@ -72,6 +72,38 @@ var WebGME = require('../webgme'),
     rimraf = require('rimraf'),
     childProcess = require('child_process');
 
+/**
+ * A combination of Q.allSettled and Q.all. It works like Q.allSettled in the sense that
+ * the promise is not rejected until all promises have finished and like Q.all in that it
+ * is rejected with the first encountered rejection and resolves with an array of "values".
+ *
+ * The rejection is always an Error.
+ * @param promises
+ * @returns {*|promise}
+ */
+Q.allDone = function (promises) {
+    var deferred = Q.defer();
+    Q.allSettled(promises)
+        .then(function (results) {
+            var i,
+                values = [];
+            for (i = 0; i < results.length; i += 1) {
+                if (results[i].state === 'rejected') {
+                    deferred.reject(new Error(results[i].reason));
+                    break;
+                } else if (results[i].state === 'fulfilled') {
+                    values.push(results[i].value);
+                } else {
+                    deferred.reject(new Error('Unexpected promise state' + results[i].state));
+                    break;
+                }
+            }
+            deferred.resolve(values);
+        });
+
+    return deferred.promise;
+};
+
 function clearDatabase(gmeConfigParameter, callback) {
     var deferred = Q.defer(),
         db;

@@ -27,7 +27,7 @@ describe('GME authentication', function () {
         dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
             .then(function (db_) {
                 db = db_;
-                return Q.allSettled([
+                return Q.allDone([
                     Q.ninvoke(db, 'collection', '_users')
                         .then(function (collection_) {
                             var collection = collection_;
@@ -205,7 +205,6 @@ describe('GME authentication', function () {
             })
             .nodeify(done);
     });
-
 
 
     it('checks invalid and returns false', function (done) {
@@ -428,37 +427,40 @@ describe('GME authentication', function () {
     });
 
     it('should be able to list organization', function (done) {
-        var orgName = 'org1',
+        var orgName = 'org2',
             otherOrgName = 'otherOrgName';
-        Q.allSettled([
+        Q.allDone([
             auth.addOrganization(orgName),
             auth.addOrganization(otherOrgName)
         ])
             .then(function () {
                 return auth.listOrganizations({});
             }).then(function (organizations) {
-                var expectedResult = [
-                    {
+                expect(organizations).to.include({
                         _id: orgName,
                         projects: {}
                     },
                     {
                         _id: otherOrgName,
                         projects: {}
-                    }
-                ];
-                expect(organizations).to.deep.equal(expectedResult);
+                    });
             }).nodeify(done);
     });
 
     it('should fail to add dup organization', function (done) {
-        var orgName = 'org1';
+        var orgName = 'org3';
         auth.addOrganization(orgName)
             .then(function () {
+                return auth.addOrganization(orgName);
+            })
+            .then(function () {
                 done(new Error('should have been rejected'));
-            }, function (/*err*/) {
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('duplicate key error');
                 done();
-            });
+            })
+            .done();
     });
 
     it('should fail to add nonexistant organization', function (done) {

@@ -84,6 +84,9 @@ define([], function () {
                 handler(this, eventArgs);
             }
         },
+        clearAllEvents: function () {
+            this._eventList = {};
+        },
         _getEventHandler: function (eventName) {
             // Get Event Handler Array for this Event
             var evt = this._getEvent(eventName, false);

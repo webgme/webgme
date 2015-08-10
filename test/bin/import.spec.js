@@ -66,13 +66,10 @@ describe('import CLI tests', function () {
     });
 
     after(function (done) {
-        storage.deleteProject({projectId: existingProjectId}).
-            then(function () {
-                return Q.allSettled([
-                    gmeAuth.unload(),
-                    storage.closeDatabase()
-                ]);
-            })
+        Q.allDone([
+            gmeAuth.unload(),
+            storage.closeDatabase()
+        ])
             .nodeify(done);
     });
 

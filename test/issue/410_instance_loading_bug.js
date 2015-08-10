@@ -33,7 +33,7 @@ describe('issue410 testing', function () {
     after(function (done) {
         storage.deleteProject({projectId: projectId})
             .then(function () {
-                return Q.allSettled([
+                return Q.allDone([
                     storage.closeDatabase(),
                     gmeAuth.unload()
                 ]);

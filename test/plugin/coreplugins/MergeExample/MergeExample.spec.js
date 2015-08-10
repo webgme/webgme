@@ -47,7 +47,7 @@ describe('Plugin MergeExample', function () {
                 project = importResult.project;
                 commitHash = importResult.commitHash;
                 pluginManager = new PluginCliManager(project, logger, gmeConfig);
-                return Q.all([
+                return Q.allDone([
                     project.createBranch('b1', commitHash),
                     project.createBranch('b2', commitHash),
                     project.createBranch('Root1', commitHash),
@@ -85,7 +85,7 @@ describe('Plugin MergeExample', function () {
     });
 
     after(function (done) {
-        Q.allSettled([
+        Q.allDone([
             storage.closeDatabase(),
             gmeAuth.unload()
         ])

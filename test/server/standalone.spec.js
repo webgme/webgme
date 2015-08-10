@@ -284,7 +284,7 @@ describe('standalone server', function () {
                 dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
                     .then(function (db_) {
                         db = db_;
-                        return Q.allSettled([
+                        return Q.allDone([
                             Q.ninvoke(db, 'collection', '_users')
                                 .then(function (collection_) {
                                     return Q.ninvoke(collection_, 'remove');
@@ -320,7 +320,7 @@ describe('standalone server', function () {
                 serverBaseUrl = server.getUrl();
                 server.start(serverReady.makeNodeResolver());
 
-                Q.allSettled([serverReady, dbConn])
+                Q.allDone([serverReady, dbConn])
                     .then(function () {
                         return auth.connect();
                     })
@@ -480,13 +480,13 @@ describe('standalone server', function () {
 
                 })
                 .then(function () {
-                    return Q.allSettled([
+                    return Q.allDone([
                         safeStorage.deleteProject({projectId: testFixture.projectName2Id(project)}),
                         safeStorage.deleteProject({projectId: testFixture.projectName2Id(unauthorizedProject)})
                     ]);
                 })
                 .then(function () {
-                    return Q.allSettled([
+                    return Q.allDone([
                         testFixture.importProject(safeStorage, {
                             projectSeed: 'seeds/EmptyProject.json',
                             projectName: project,
@@ -506,7 +506,7 @@ describe('standalone server', function () {
                 })
                 .then(function (db_) {
                     db = db_;
-                    return Q.allSettled([
+                    return Q.allDone([
                         Q.ninvoke(db, 'collection', testFixture.projectName2Id('ClientCreateProject', 'user'))
                             .then(function (createdProject) {
                                 return Q.ninvoke(createdProject, 'remove');
@@ -518,7 +518,7 @@ describe('standalone server', function () {
             serverBaseUrl = server.getUrl();
             server.start(serverReady.makeNodeResolver());
 
-            Q.allSettled([serverReady, dbConn])
+            Q.allDone([serverReady, dbConn])
                 .then(function () {
                     return gmeauth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true});
                 })

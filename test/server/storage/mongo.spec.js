@@ -30,7 +30,7 @@ describe('Mongo storage', function () {
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
                 storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-                return Q.allSettled([
+                return Q.allDone([
                     storage.openDatabase(),
                     gmeAuth.authorizeByUserId(guestAccount, projectDoesNotHaveAccessId, 'create',
                         {
@@ -44,7 +44,7 @@ describe('Mongo storage', function () {
     });
 
     after(function (done) {
-        Q.allSettled([
+        Q.allDone([
             gmeAuth.unload(),
             storage.closeDatabase()
         ])
@@ -169,7 +169,7 @@ describe('Mongo storage', function () {
         var mongoStorage;
 
         afterEach(function (done) {
-            Q.allSettled([
+            Q.allDone([
                 testFixture.forceDeleteProject(storage, gmeAuth, projectName),
                 testFixture.forceDeleteProject(storage, gmeAuth, projectDoesNotHaveAccessName)
             ])
@@ -903,7 +903,7 @@ describe('Mongo storage', function () {
                         return mongoStorage.makeCommit(commitData);
                     }
 
-                    return Q.allSettled(commitDatas.map(makeCommit));
+                    return Q.allDone(commitDatas.map(makeCommit));
                 })
                 .then(function (/*commitResults*/) {
                     done();

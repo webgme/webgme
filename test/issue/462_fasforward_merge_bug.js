@@ -42,7 +42,7 @@ describe('issue462', function () {
             })
             .then(function (result) {
                 context = result;
-                return Q.allSettled([
+                return Q.allDone([
                     Q.nfcall(context.project.createBranch, 'apply', result.commitHash),
                     Q.nfcall(context.project.createBranch, 'merge', result.commitHash)
                 ]);
@@ -53,7 +53,7 @@ describe('issue462', function () {
     after(function (done) {
         storage.deleteProject({projectId: projectId})
             .then(function () {
-                return Q.allSettled([
+                return Q.allDone([
                     storage.closeDatabase(),
                     gmeAuth.unload()
                 ]);

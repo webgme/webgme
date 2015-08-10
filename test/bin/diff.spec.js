@@ -15,30 +15,20 @@ describe('diff CLI tests', function () {
         logger = testFixture.logger.fork('diff.spec'),
         diffCLI = require('../../src/bin/diff'),
         filename = require('path').normalize('src/bin/diff.js'),
-        FS = testFixture.fs,
         rimraf = testFixture.rimraf,
         Q = testFixture.Q,
-        getJsonProject = function (path) {
-            return JSON.parse(FS.readFileSync(path, 'utf-8'));
-        },
         oldLogFunction = console.log,
         oldWarnFunction = console.warn,
         oldStdOutFunction = process.stdout.write,
 
-        projectName = 'diffCliTest',
-        projectId = testFixture.projectName2Id(projectName);
+        projectName = 'diffCliTest';
 
     before(function (done) {
-        var jsonProject;
-
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth__) {
                 gmeAuth = gmeAuth__;
                 storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
-            })
-            .then(function () {
-                return storage.deleteProject({projectId: projectId});
             })
             .then(function () {
                 return testFixture.importProject(storage, {
@@ -61,13 +51,13 @@ describe('diff CLI tests', function () {
                  jsonProject: projectJson,
                  rootNode: rootNode,
                  rootHash: persisted.rootHash*/
-                return result.project.createBranch('target',result.commitHash);
+                return result.project.createBranch('target', result.commitHash);
             })
             .nodeify(done);
     });
 
     after(function (done) {
-        Q.allSettled([
+        Q.allDone([
             gmeAuth.unload(),
             storage.closeDatabase(),
             Q.nfcall(rimraf, './test-tmp/diffCli.out')
