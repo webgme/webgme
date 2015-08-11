@@ -24,10 +24,12 @@ var WebGME = require('../webgme'),
     },
     Core = requireJS('common/core/core'),
     NodeStorage = requireJS('../src/common/storage/nodestorage'),
+    storageUtil = requireJS('common/storage/util'),
     Mongo = require('../src/server/storage/mongo'),
     Memory = require('../src/server/storage/memory'),
     SafeStorage = require('../src/server/storage/safestorage'),
     Logger = require('../src/server/logger'),
+
     logger = Logger.create('gme:test', {
         //patterns: ['gme:test:*cache'],
         transports: [{
@@ -327,7 +329,7 @@ function saveChanges(parameters, done) {
  */
 function projectName2Id(projectName, userId) {
     userId = userId || gmeConfig.authentication.guestAccount;
-    return userId + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
+    return storageUtil.getProjectIdFromOwnerIdAndProjectName(userId, projectName);
 }
 
 /**
@@ -471,5 +473,6 @@ module.exports = {
     logIn: logIn,
     openSocketIo: openSocketIo,
 
+    storageUtil: storageUtil,
     STORAGE_CONSTANTS: STORAGE_CONSTANTS
 };

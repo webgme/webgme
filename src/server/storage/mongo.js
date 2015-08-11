@@ -467,12 +467,29 @@ function Mongo(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
+    function renameProject(projectId, newProjectId, callback) {
+        var deferred = Q.defer();
+
+        if (mongo) {
+            Q.ninvoke(mongo, 'renameCollection', projectId, newProjectId)
+                .then(function () {
+                    deferred.resolve();
+                })
+                .catch(deferred.reject);
+        } else {
+            deferred.reject(new Error('Database is not open.'));
+        }
+
+        return deferred.promise.nodeify(callback);
+    }
+
     this.openDatabase = openDatabase;
     this.closeDatabase = closeDatabase;
 
     this.openProject = openProject;
     this.deleteProject = deleteProject;
     this.createProject = createProject;
+    this.renameProject = renameProject;
 }
 
 module.exports = Mongo;
