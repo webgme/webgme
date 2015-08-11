@@ -14,257 +14,39 @@
 
 'use strict';
 
-var fs = require('fs'),
-    path = require('path'),
-    bufferEqual = require('buffer-equal-constant-time'),
-    DataStore = require('nedb'),
-    mkdirp = require('mkdirp'),
+var express = require('express'),
+    router = express.Router();
 
-    JobInfo = requireJS('common/executor/JobInfo'),
-    WorkerInfo = requireJS('common/executor/WorkerInfo'),
-    ASSERT = requireJS('common/util/assert');
-
-var jobListDBFile,
-    workerListDBFile,
-    gmeConfig,
-    jobList,
-    workerList,
-    workerRefreshInterval,
-    labelJobs,
-    labelJobsFilename,
-    logger;
-
-function executorRESTCreate(req, res/*, next*/) {
-    if (req.method !== 'POST') {
-        res.sendStatus(405);
-    }
-    var url = req.url.split('/');
-
-    if (url.length < 3 || !url[2]) {
-        res.sendStatus(404);
-    } else {
-        var hash = url[2];
-
-        var info = req.body;
-        info.hash = hash;
-        info.createTime = new Date().toISOString();
-        info.status = info.status || 'CREATED'; // TODO: define a constant for this
-        var jobInfo = new JobInfo(info);
-        // TODO: check if hash ok
-        jobList.find({hash: hash}, function (err, docs) {
-            if (err) {
-                logger.error('err');
-                res.sendStatus(500);
-            } else if (docs.length === 0) {
-                jobList.update({hash: hash}, jobInfo, {upsert: true}, function (err) {
-                    if (err) {
-                        logger.error(err);
-                        res.sendStatus(500);
-                    } else {
-                        delete jobInfo._id;
-                        res.send(jobInfo);
-                    }
-                });
-            } else {
-                delete docs[0]._id;
-                res.send(docs[0]);
-            }
-        });
-
-        // TODO: get job description
-    }
+function getUserId(req) {
+    return req.session.udmId;
 }
 
-function executorRESTUpdate(req, res/*, next*/) {
-    if (req.method !== 'POST') {
-        res.sendStatus(405);
-    }
-    var url = req.url.split('/');
+function initialize(middlewareOpts) {
+    var logger = middlewareOpts.logger.fork('middleware:ExecutorServer'),
+        gmeConfig = middlewareOpts.gmeConfig,
+        ensureAuthenticated = middlewareOpts.ensureAuthenticated,
+        fs = require('fs'),
+        path = require('path'),
+        bufferEqual = require('buffer-equal-constant-time'),
+        DataStore = require('nedb'),
+        mkdirp = require('mkdirp'),
 
-    if (url.length < 3 || !url[2]) {
-        res.sendStatus(404);
-    } else {
-        var hash = url[2];
+        JobInfo = requireJS('common/executor/JobInfo'),
+        WorkerInfo = requireJS('common/executor/WorkerInfo'),
+        ASSERT = requireJS('common/util/assert'),
 
-        jobList.find({hash: hash}, function (err, docs) {
-            if (err) {
-                logger.error(err);
-                res.sendStatus(500);
-            } else if (docs.length) {
-                var jobInfo = new JobInfo(docs[0]);
-                var jobInfoUpdate = new JobInfo(req.body);
-                jobInfoUpdate.hash = hash;
-                for (var i in jobInfoUpdate) {
-                    if (jobInfoUpdate[i] !== null && (!(jobInfoUpdate[i] instanceof Array) ||
-                                                      jobInfoUpdate[i].length !== 0)) {
+        jobListDBFile,
+        workerListDBFile,
+        jobList,
+        workerList,
+        workerRefreshInterval,
+        labelJobs,
+        labelJobsFilename;
 
-                        jobInfo[i] = jobInfoUpdate[i];
-                    }
-                }
-                jobList.update({hash: hash}, jobInfo, function (err, numReplaced) {
-                    if (err) {
-                        logger.error(err);
-                        res.sendStatus(500);
-                    } else if (numReplaced !== 1) {
-                        res.sendStatus(404);
-                    } else {
-                        res.sendStatus(200);
-                    }
-                });
-            } else {
-                res.sendStatus(404);
-            }
-        });
-    }
-}
-
-function executorRESTWorkerGET(req, res/*, next*/) {
-    var response = {};
-    workerList.find({}, function (err, workers) {
-        var jobQuery = function (i) {
-            if (i === workers.length) {
-                res.send(JSON.stringify(response));
-                return;
-            }
-            var worker = workers[i];
-            jobList.find({
-                status: 'RUNNING',
-                worker: worker.clientId
-            }).sort({createTime: 1}).exec(function (err, jobs) {
-                // FIXME: index jobList on status?
-                for (var j = 0; j < jobs.length; j += 1) {
-                    delete jobs[j]._id;
-                }
-                delete worker._id;
-                response[worker.clientId] = worker;
-                response[worker.clientId].jobs = jobs;
-
-                jobQuery(i + 1);
-            });
-        };
-        jobQuery(0);
-    });
-}
-
-function executorRESTWorkerAPI(req, res, next) {
-    if (req.method !== 'POST' && req.method !== 'GET') {
-        res.sendStatus(405);
-        return;
-    }
-    if (req.method === 'GET') {
-        return executorRESTWorkerGET(req, res, next);
-    }
-
-    var url = require('url').parse(req.url);
-
-    var serverResponse = new WorkerInfo.ServerResponse({refreshPeriod: workerRefreshInterval});
-    serverResponse.labelJobs = labelJobs;
-    var clientRequest = new WorkerInfo.ClientRequest(req.body);
-
-    workerList.update({clientId: clientRequest.clientId}, {
-        $set: {
-            lastSeen: (new Date()).getTime() / 1000,
-            labels: clientRequest.labels
-        }
-    }, {upsert: true}, function () {
-        if (clientRequest.availableProcesses) {
-            jobList.find({
-                status: 'CREATED',
-                $not: {labels: {$nin: clientRequest.labels}}
-            }).limit(clientRequest.availableProcesses).exec(function (err, docs) {
-                if (err) {
-                    logger.error(err);
-                    res.sendStatus(500);
-                    return; // FIXME need to return 2x
-                }
-
-                var callback = function (i) {
-                    if (i === docs.length) {
-                        res.send(JSON.stringify(serverResponse));
-                        return;
-                    }
-                    jobList.update({_id: docs[i]._id, status: 'CREATED'}, {
-                        $set: {
-                            status: 'RUNNING',
-                            worker: clientRequest.clientId
-                        }
-                    }, function (err, numReplaced) {
-                        if (err) {
-                            logger.error(err);
-                            res.sendStatus(500);
-                            return;
-                        } else if (numReplaced) {
-                            serverResponse.jobsToStart.push(docs[i].hash);
-                        }
-                        callback(i + 1);
-                    });
-                };
-                callback(0);
-            });
-        } else {
-            res.send(JSON.stringify(serverResponse));
-        }
-    });
-}
-
-function executorRESTCancel(req, res/*, next*/) {
-    if (req.method !== 'POST') {
-        res.sendStatus(405);
-        return;
-    }
-
-    var url = req.url.split('/');
-
-    if (url.length < 3 || !url[2]) {
-        logger.error('ExecutorRESTCancel wrong format of url', url);
-        res.sendStatus(500);
-    } else {
-        var hash = url[2];
-
-        if (false) {
-            // TODO
-            executorBackend.cancelJob(hash);
-
-            res.sendStatus(200);
-        } else {
-            res.sendStatus(500);
-        }
-    }
-
-}
-
-function executorRESTInfo(req, res/*, next*/) {
-    if (req.method !== 'GET') {
-        res.sendStatus(405);
-        return;
-    }
-
-    var url = req.url.split('/');
-
-    if (url.length < 3 || !url[2]) {
-        logger.error('ExecutorRESTInfo wrong format of url', url);
-        res.sendStatus(500);
-    } else {
-        var hash = url[2];
-
-        jobList.find({hash: hash}, function (err, docs) {
-            if (err) {
-                logger.error(err);
-                res.sendStatus(500);
-            } else if (docs.length) {
-                res.send(docs[0]);
-            } else {
-                res.sendStatus(404);
-            }
-        });
-    }
-}
-
-function executorREST(req, res, next) {
-
-    var authenticate = function () {
+    function executorAuthenticate(req, res, next) {
         var isAuth = true,
             workerNonce;
+
         if (gmeConfig.executor.nonce) {
             workerNonce = req.headers['x-executor-nonce'];
             if (workerNonce) {
@@ -272,128 +54,65 @@ function executorREST(req, res, next) {
             } else {
                 isAuth = false;
             }
-            if (isAuth === false) {
-                res.sendStatus(403);
-            }
         }
 
-        return isAuth;
-    };
-
-    var url = require('url').parse(req.url);
-    var pathParts = url.pathname.split('/');
-
-    if (pathParts.length === 2 && pathParts[1] === '') {
-        //next should be always called / the response should be sent otherwise this thread will stop without and end
-
-        var query = {};
-        if (req.query.status) { // req.query.hasOwnProperty raises TypeError on node 0.11.16 [!]
-            query.status = req.query.status;
-        }
-        jobList.find(query, function (err, docs) {
-            if (err) {
-                logger.error(err);
-                res.sendStatus(500);
-                return;
-            }
-            var jobList = {};
-            for (var i = 0; i < docs.length; i += 1) {
-                jobList[docs[i].hash] = docs[i];
-                delete docs[i]._id;
-            }
-            res.send(jobList);
-        });
-
-        // TODO: send status
-        // FIXME: this path will not be safe
-//            res.sendfile(path.join('src', 'rest', 'executor', 'index2.html'), function (err) {
-//                if (err) {
-//                    logger.error(err);
-//                    res.sendStatus(500);
-//                }
-//            });
-
-    } else {
-
-        switch (pathParts[1]) {
-            case 'create':
-                authenticate() && executorRESTCreate(req, res, next);
-                break;
-            case 'worker':
-                (req.method !== 'POST' || authenticate()) && executorRESTWorkerAPI(req, res, next);
-                break;
-            case 'cancel':
-                authenticate() && executorRESTCancel(req, res, next);
-                break;
-            case 'info':
-                executorRESTInfo(req, res, next);
-                break;
-            case 'update':
-                authenticate() && executorRESTUpdate(req, res, next);
-                break;
-            default:
-                res.sendStatus(404);
-                break;
-        }
-    }
-}
-
-function workerTimeout() {
-    var query;
-    if (process.uptime() < workerRefreshInterval / 1000 * 5) {
-        return;
-    }
-    query = {
-        lastSeen: {
-            $lt: (new Date()).getTime() / 1000 - workerRefreshInterval / 1000 * 5
-        }
-    };
-    workerList.find(query, function (err, docs) {
-        for (var i = 0; i < docs.length; i += 1) {
-            // reset unfinished jobs assigned to worker to CREATED, so they'll be executed by someone else
-            logger.debug('worker "' + docs[i].clientId + '" is gone');
-            workerList.remove({_id: docs[i]._id});
-            // FIXME: race after assigning finishTime between this and uploading to blob
-            jobList.update({worker: docs[i].clientId, finishTime: null}, {
-                $set: {
-                    worker: null,
-                    status: 'CREATED',
-                    startTime: null
-                }
-            }, function () {
-            });
-        }
-    });
-}
-
-function updateLabelJobs() {
-    fs.readFile(labelJobsFilename, {encoding: 'utf-8'}, function (err, data) {
-        logger.debug('Reading ' + labelJobsFilename);
-        labelJobs = JSON.parse(data);
-    });
-}
-
-function watchLabelJobs() {
-    fs.exists(labelJobsFilename, function (exists) {
-        if (exists) {
-            updateLabelJobs();
-            fs.watch(labelJobsFilename, {persistent: false}, function () {
-                setTimeout(updateLabelJobs, 200);
-            });
+        if (isAuth) {
+            next();
         } else {
-            setTimeout(watchLabelJobs, 10 * 1000);
+            res.sendStatus(403);
         }
-    });
-}
+    }
 
-function createExpressExecutor(__app, baseUrl, options) {
-    ASSERT(typeof baseUrl === 'string', 'baseUrl must be given');
-    ASSERT(typeof options.gmeConfig !== 'undefined', 'gmeConfig must be provided to ExecutorServer');
-    ASSERT(typeof options.logger !== 'undefined', 'logger must be provided to ExecutorServer');
+    function workerTimeout() {
+        var query;
+        if (process.uptime() < workerRefreshInterval / 1000 * 5) {
+            return;
+        }
+        query = {
+            lastSeen: {
+                $lt: (new Date()).getTime() / 1000 - workerRefreshInterval / 1000 * 5
+            }
+        };
+        workerList.find(query, function (err, docs) {
+            for (var i = 0; i < docs.length; i += 1) {
+                // reset unfinished jobs assigned to worker to CREATED, so they'll be executed by someone else
+                logger.debug('worker "' + docs[i].clientId + '" is gone');
+                workerList.remove({_id: docs[i]._id});
+                // FIXME: race after assigning finishTime between this and uploading to blob
+                jobList.update({worker: docs[i].clientId, finishTime: null}, {
+                    $set: {
+                        worker: null,
+                        status: 'CREATED',
+                        startTime: null
+                    }
+                }, function () {
+                });
+            }
+        });
+    }
 
-    gmeConfig = options.gmeConfig;
+    function updateLabelJobs() {
+        fs.readFile(labelJobsFilename, {encoding: 'utf-8'}, function (err, data) {
+            logger.debug('Reading ' + labelJobsFilename);
+            labelJobs = JSON.parse(data);
+        });
+    }
 
-    logger = options.logger.fork('middleware:ExecutorServer');
+    function watchLabelJobs() {
+        fs.exists(labelJobsFilename, function (exists) {
+            if (exists) {
+                updateLabelJobs();
+                fs.watch(labelJobsFilename, {persistent: false}, function () {
+                    setTimeout(updateLabelJobs, 200);
+                });
+            } else {
+                setTimeout(watchLabelJobs, 10 * 1000);
+            }
+        });
+    }
+
+    logger.debug('initializing ...');
+
     logger.debug('output directory', gmeConfig.executor.outputDir);
     mkdirp.sync(gmeConfig.executor.outputDir);
 
@@ -415,7 +134,219 @@ function createExpressExecutor(__app, baseUrl, options) {
         }
     });
 
-    __app.use(baseUrl, executorREST); //TODO: This can be nicer integrated (see BlobServer).
+
+    // ensure authenticated can be used only after this rule
+    router.use('*', function (req, res, next) {
+        // TODO: set all headers, check rate limit, etc.
+        res.setHeader('X-WebGME-Media-Type', 'webgme.v1');
+        next();
+    });
+
+    // all endpoints require authentication
+    router.use('*', ensureAuthenticated);
+    router.use('*', executorAuthenticate);
+
+    router.get('/', function (req, res/*, next*/) {
+        var query = {};
+        if (req.query.status) { // req.query.hasOwnProperty raises TypeError on node 0.11.16 [!]
+            query.status = req.query.status;
+        }
+        jobList.find(query, function (err, docs) {
+            if (err) {
+                logger.error(err);
+                res.sendStatus(500);
+                return;
+            }
+            var jobList = {};
+            for (var i = 0; i < docs.length; i += 1) {
+                jobList[docs[i].hash] = docs[i];
+                delete docs[i]._id;
+            }
+            res.send(jobList);
+        });
+
+        // TODO: send status
+        // FIXME: this path will not be safe
+        //res.sendfile(path.join('src', 'rest', 'executor', 'index2.html'), function (err) {
+        //    if (err) {
+        //        logger.error(err);
+        //        res.sendStatus(500);
+        //    }
+        //});
+    });
+
+    router.get('/info/:hash', function (req, res/*, next*/) {
+        jobList.find({hash: req.params.hash}, function (err, docs) {
+            if (err) {
+                logger.error(err);
+                res.sendStatus(500);
+            } else if (docs.length) {
+                res.send(docs[0]);
+            } else {
+                res.sendStatus(404);
+            }
+        });
+    });
+
+    router.post('/create/:hash', function (req, res/*, next*/) {
+        var jobInfo,
+            info = req.body;
+
+        info.hash = req.params.hash;
+        info.createTime = new Date().toISOString();
+        info.status = info.status || 'CREATED'; // TODO: define a constant for this
+
+        jobInfo = new JobInfo(info);
+        // TODO: check if hash ok
+        jobList.find({hash: req.params.hash}, function (err, docs) {
+            if (err) {
+                logger.error('err');
+                res.sendStatus(500);
+            } else if (docs.length === 0) {
+                jobList.update({hash: req.params.hash}, jobInfo, {upsert: true}, function (err) {
+                    if (err) {
+                        logger.error(err);
+                        res.sendStatus(500);
+                    } else {
+                        delete jobInfo._id;
+                        res.send(jobInfo);
+                    }
+                });
+            } else {
+                delete docs[0]._id;
+                res.send(docs[0]);
+            }
+        });
+
+        // TODO: get job description
+
+    });
+
+
+    router.post('/update/:hash', function (req, res/*, next*/) {
+
+        jobList.find({hash: req.params.hash}, function (err, docs) {
+            if (err) {
+                logger.error(err);
+                res.sendStatus(500);
+            } else if (docs.length) {
+                var jobInfo = new JobInfo(docs[0]);
+                var jobInfoUpdate = new JobInfo(req.body);
+                jobInfoUpdate.hash = req.params.hash;
+                for (var i in jobInfoUpdate) {
+                    if (jobInfoUpdate[i] !== null && (!(jobInfoUpdate[i] instanceof Array) ||
+                        jobInfoUpdate[i].length !== 0)) {
+
+                        jobInfo[i] = jobInfoUpdate[i];
+                    }
+                }
+                jobList.update({hash: req.params.hash}, jobInfo, function (err, numReplaced) {
+                    if (err) {
+                        logger.error(err);
+                        res.sendStatus(500);
+                    } else if (numReplaced !== 1) {
+                        res.sendStatus(404);
+                    } else {
+                        res.sendStatus(200);
+                    }
+                });
+            } else {
+                res.sendStatus(404);
+            }
+        });
+    });
+
+    router.post('/cancel/:hash', function (req, res, next) {
+        next(new Error('Not implemented yet.'));
+    });
+
+    // worker API
+    router.get('/worker', function (req, res/*, next*/) {
+        var response = {};
+        workerList.find({}, function (err, workers) {
+            var jobQuery = function (i) {
+                if (i === workers.length) {
+                    res.send(JSON.stringify(response));
+                    return;
+                }
+                var worker = workers[i];
+                jobList.find({
+                    status: 'RUNNING',
+                    worker: worker.clientId
+                }).sort({createTime: 1}).exec(function (err, jobs) {
+                    // FIXME: index jobList on status?
+                    for (var j = 0; j < jobs.length; j += 1) {
+                        delete jobs[j]._id;
+                    }
+                    delete worker._id;
+                    response[worker.clientId] = worker;
+                    response[worker.clientId].jobs = jobs;
+
+                    jobQuery(i + 1);
+                });
+            };
+            jobQuery(0);
+        });
+    });
+
+    router.post('/worker', function (req, res/*, next*/) {
+        var clientRequest = new WorkerInfo.ClientRequest(req.body),
+            serverResponse = new WorkerInfo.ServerResponse({refreshPeriod: workerRefreshInterval});
+
+        serverResponse.labelJobs = labelJobs;
+
+        workerList.update({clientId: clientRequest.clientId}, {
+            $set: {
+                lastSeen: (new Date()).getTime() / 1000,
+                labels: clientRequest.labels
+            }
+        }, {upsert: true}, function () {
+            if (clientRequest.availableProcesses) {
+                jobList.find({
+                    status: 'CREATED',
+                    $not: {labels: {$nin: clientRequest.labels}}
+                }).limit(clientRequest.availableProcesses).exec(function (err, docs) {
+                    if (err) {
+                        logger.error(err);
+                        res.sendStatus(500);
+                        return; // FIXME need to return 2x
+                    }
+
+                    var callback = function (i) {
+                        if (i === docs.length) {
+                            res.send(JSON.stringify(serverResponse));
+                            return;
+                        }
+                        jobList.update({_id: docs[i]._id, status: 'CREATED'}, {
+                            $set: {
+                                status: 'RUNNING',
+                                worker: clientRequest.clientId
+                            }
+                        }, function (err, numReplaced) {
+                            if (err) {
+                                logger.error(err);
+                                res.sendStatus(500);
+                                return;
+                            } else if (numReplaced) {
+                                serverResponse.jobsToStart.push(docs[i].hash);
+                            }
+                            callback(i + 1);
+                        });
+                    };
+                    callback(0);
+                });
+            } else {
+                res.send(JSON.stringify(serverResponse));
+            }
+        });
+    });
+
+    logger.debug('ready');
 }
 
-module.exports.createExpressExecutor = createExpressExecutor;
+
+
+module.exports = {
+    initialize: initialize,
+    router: router
+};
