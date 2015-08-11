@@ -55,6 +55,22 @@ function assertArray(name, value) {
     }
 }
 
+function assertEnum(name, value) {
+    'use strict';
+    var validValues = Array.prototype.slice.call(arguments).splice(2),
+        msg;
+
+    if (validValues.indexOf(value) === -1) {
+        if (configFileName) {
+            msg = 'In ' + configFileName;
+        } else {
+            msg = 'In configuration';
+        }
+        msg += ': ' + name + ' must be one of: ' + validValues.toString() + '. Got: "' + value + '".';
+        throw new Error(msg);
+    }
+}
+
 // We will fail as early as possible
 function validateConfig(configOrFileName) {
     'use strict';
@@ -109,6 +125,8 @@ function validateConfig(configOrFileName) {
     assertString('config.client.defaultProject.name', config.client.defaultProject.name, true);
     assertString('config.client.defaultProject.branch', config.client.defaultProject.name, true);
     assertString('config.client.defaultProject.node', config.client.defaultProject.name, true);
+    assertEnum('config.client.defaultConnectionRouter', config.client.defaultConnectionRouter,
+        'basic', 'basic2', 'basic3');
 
     // debug
     expectedKeys.push('debug');
@@ -187,7 +205,7 @@ function validateConfig(configOrFileName) {
     assertNumber('config.storage.cache', config.storage.cache);
     assertNumber('config.storage.loadBucketSize', config.storage.loadBucketSize);
     assertNumber('config.storage.loadBucketTimer', config.storage.loadBucketTimer);
-    assertString('config.storage.keyType', config.storage.keyType);
+    assertEnum('config.storage.keyType', config.storage.keyType, 'rand160Bits', 'ZSSHA', 'plainSHA1');
 
     //visualization
     expectedKeys.push('visualization');
