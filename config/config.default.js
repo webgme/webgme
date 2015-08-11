@@ -59,7 +59,8 @@ var path = require('path'),
                 name: null,
                 branch: null,
                 node: null
-            }
+            },
+            defaultConnectionRouter: 'basic3' //'basic', 'basic2', 'basic3'
         },
 
         debug: false,
