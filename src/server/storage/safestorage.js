@@ -312,7 +312,6 @@ SafeStorage.prototype.createProject = function (data, callback) {
 SafeStorage.prototype.getBranches = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false,
-        userAuthInfo,
         self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
@@ -326,10 +325,9 @@ SafeStorage.prototype.getBranches = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getUser(data.username)
-            .then(function (user) {
-                userAuthInfo = user.projects;
-                if (userAuthInfo.hasOwnProperty(data.projectId) && userAuthInfo[data.projectId].read) {
+        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+            .then(function (projectAccess) {
+                if (projectAccess.read) {
                     return Storage.prototype.getBranches.call(self, data);
                 } else {
                     throw new Error('Not authorized to read project: ' + data.projectId);

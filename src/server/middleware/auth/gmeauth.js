@@ -12,7 +12,7 @@ var Mongodb = require('mongodb'),
 
     GUID = requireJS('common/util/guid'),
 
-    STORAGE_CONSTANTS = requireJS('common/storage/constants'),
+    storageUtil = requireJS('common/storage/util'),
 
     Logger = require('../../logger');
 
@@ -352,26 +352,26 @@ function GMEAuth(session, gmeConfig) {
     /**
      *
      * @param userId {string}
-     * @param projectName {string}
+     * @param projectId {string}
      * @param callback
      * @returns {*}
      */
-    function getProjectAuthorizationByUserId(userId, projectName, callback) {
+    function getProjectAuthorizationByUserId(userId, projectId, callback) {
         var ops = ['read', 'write', 'delete'];
-        return collection.findOne({_id: userId}, _getProjection('orgs', 'projects.' + projectName))
+        return collection.findOne({_id: userId}, _getProjection('orgs', 'projects.' + projectId))
             .then(function (userData) {
                 if (!userData) {
                     return Q.reject('No such user [' + userId + ']');
                 }
                 userData.orgs = userData.orgs || [];
-                return [userData.projects[projectName] || {},
+                return [userData.projects[projectId] || {},
                     Q.all(ops.map(function (op) {
                         var query;
-                        if ((userData.projects[projectName] || {})[op]) {
+                        if ((userData.projects[projectId] || {})[op]) {
                             return 1;
                         }
                         query = {_id: {$in: userData.orgs}};
-                        query['projects.' + projectName + '.' + op] = true;
+                        query['projects.' + projectId + '.' + op] = true;
                         return organizationCollection.findOne(query, {_id: 1});
                     }))];
             }).spread(function (user, rwd) {
@@ -675,7 +675,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function addProject(orgOrUserId, projectName, info, callback) {
-        var id = orgOrUserId + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName,
+        var id = storageUtil.getProjectIdFromOwnerIdAndProjectName(orgOrUserId, projectName),
             data = {
                 _id: id,
                 owner: orgOrUserId,
@@ -706,7 +706,46 @@ function GMEAuth(session, gmeConfig) {
     }
 
     function transferProject(orgOrUserId, projectName, newOrgOrUserId, callback) {
-        callback(new Error('Not implemented yet.'));
+        var projectId = storageUtil.getProjectIdFromOwnerIdAndProjectName(orgOrUserId, projectName),
+            projectInfo,
+            errMsg;
+        logger.debug('transferProject: orgOrUserId, projectName, newOrgOrUserId',
+            orgOrUserId, projectName, newOrgOrUserId);
+
+        return projectCollection.findOne({_id: projectId})
+            .then(function (projectData) {
+                if (!projectData) {
+                    errMsg = 'no such project [' + projectId + ']';
+                    logger.debug('transferProject rejected: ', errMsg);
+                    return Q.reject(new Error(errMsg));
+                }
+                if (projectData.owner !== orgOrUserId) {
+                    errMsg = 'orgOrUserId [' + orgOrUserId + '] not owner of [' + projectId + ']';
+                    logger.debug('transferProject rejected: ', errMsg);
+                    return Q.reject(new Error(errMsg));
+                }
+                projectInfo = projectData.info;
+                return collection.findOne({_id: newOrgOrUserId});
+            })
+            .then(function (newOwner) {
+                if (!newOwner) {
+                    errMsg = 'newOrgOrUserId [' + orgOrUserId + '] does not exist.';
+                    logger.debug('transferProject rejected: ', errMsg);
+                    return Q.reject(new Error(errMsg));
+                }
+                return addProject(newOrgOrUserId, projectName, projectInfo);
+            })
+            .then(function () {
+                return authorizeByUserId(newOrgOrUserId, projectId, 'set', {
+                    read: true,
+                    write: true,
+                    delete: true
+                });
+            })
+            .then(function () {
+                return deleteProject(projectId);
+            })
+            .nodeify(callback);
     }
 
     /**
