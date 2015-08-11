@@ -630,7 +630,8 @@ function StandAloneServer(gmeConfig) {
     //});
 
     if (gmeConfig.executor.enable) {
-        ExecutorServer.createExpressExecutor(__app, '/rest/executor', middlewareOpts);
+        ExecutorServer.initialize(middlewareOpts);
+        __app.use('/rest/executor', ExecutorServer.router);
     } else {
         logger.debug('Executor not enabled. Add \'executor.enable: true\' to configuration to activate.');
     }
