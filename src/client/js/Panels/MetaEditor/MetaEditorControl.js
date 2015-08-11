@@ -99,7 +99,7 @@ define(['js/logger',
 
         this.logger.debug('_loadMetaAspectContainerNode: "' + this.metaAspectContainerNodeID + '"');
 
-        //this._initializeSelectedSheet();
+        this._initializeSelectedSheet();
 
         //remove current territory patterns
         if (this._territoryId) {
@@ -241,7 +241,7 @@ define(['js/logger',
         }
 
         //setSelected sheet
-        this._selectedMetaAspectSet
+        //this._selectedMetaAspectSet
         //process the sheets
         positionsUpdated = this._processMetaAspectSheetsRegistry();
 
