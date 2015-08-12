@@ -22,9 +22,7 @@ function getUserId(req) {
 }
 
 function initialize(middlewareOpts) {
-    var logger = middlewareOpts.logger.fork('middleware:ExecutorServer'),
-        gmeConfig = middlewareOpts.gmeConfig,
-        ensureAuthenticated = middlewareOpts.ensureAuthenticated,
+    var self = this,
         fs = require('fs'),
         path = require('path'),
         bufferEqual = require('buffer-equal-constant-time'),
@@ -35,22 +33,20 @@ function initialize(middlewareOpts) {
         WorkerInfo = requireJS('common/executor/WorkerInfo'),
         ASSERT = requireJS('common/util/assert'),
 
-        jobListDBFile,
-        workerListDBFile,
-        jobList,
-        workerList,
-        workerRefreshInterval,
-        labelJobs,
-        labelJobsFilename;
+        workerRefreshInterval;
+
+    self.logger = middlewareOpts.logger.fork('middleware:ExecutorServer');
+    self.gmeConfig = middlewareOpts.gmeConfig;
+    self.ensureAuthenticated = middlewareOpts.ensureAuthenticated;
 
     function executorAuthenticate(req, res, next) {
         var isAuth = true,
             workerNonce;
 
-        if (gmeConfig.executor.nonce) {
+        if (self.gmeConfig.executor.nonce) {
             workerNonce = req.headers['x-executor-nonce'];
             if (workerNonce) {
-                isAuth = bufferEqual(new Buffer(workerNonce), new Buffer(gmeConfig.executor.nonce));
+                isAuth = bufferEqual(new Buffer(workerNonce), new Buffer(self.gmeConfig.executor.nonce));
             } else {
                 isAuth = false;
             }
@@ -73,13 +69,13 @@ function initialize(middlewareOpts) {
                 $lt: (new Date()).getTime() / 1000 - workerRefreshInterval / 1000 * 5
             }
         };
-        workerList.find(query, function (err, docs) {
+        self.workerList.find(query, function (err, docs) {
             for (var i = 0; i < docs.length; i += 1) {
                 // reset unfinished jobs assigned to worker to CREATED, so they'll be executed by someone else
-                logger.debug('worker "' + docs[i].clientId + '" is gone');
-                workerList.remove({_id: docs[i]._id});
+                self.logger.debug('worker "' + docs[i].clientId + '" is gone');
+                self.workerList.remove({_id: docs[i]._id});
                 // FIXME: race after assigning finishTime between this and uploading to blob
-                jobList.update({worker: docs[i].clientId, finishTime: null}, {
+                self.jobList.update({worker: docs[i].clientId, finishTime: null}, {
                     $set: {
                         worker: null,
                         status: 'CREATED',
@@ -92,17 +88,17 @@ function initialize(middlewareOpts) {
     }
 
     function updateLabelJobs() {
-        fs.readFile(labelJobsFilename, {encoding: 'utf-8'}, function (err, data) {
-            logger.debug('Reading ' + labelJobsFilename);
-            labelJobs = JSON.parse(data);
+        fs.readFile(self.labelJobsFilename, {encoding: 'utf-8'}, function (err, data) {
+            self.logger.debug('Reading ' + self.labelJobsFilename);
+            self.labelJobs = JSON.parse(data);
         });
     }
 
     function watchLabelJobs() {
-        fs.exists(labelJobsFilename, function (exists) {
+        fs.exists(self.labelJobsFilename, function (exists) {
             if (exists) {
                 updateLabelJobs();
-                fs.watch(labelJobsFilename, {persistent: false}, function () {
+                fs.watch(self.labelJobsFilename, {persistent: false}, function () {
                     setTimeout(updateLabelJobs, 200);
                 });
             } else {
@@ -111,25 +107,25 @@ function initialize(middlewareOpts) {
         });
     }
 
-    logger.debug('initializing ...');
+    self.logger.debug('initializing ...');
 
-    logger.debug('output directory', gmeConfig.executor.outputDir);
-    mkdirp.sync(gmeConfig.executor.outputDir);
+    self.logger.debug('output directory', self.gmeConfig.executor.outputDir);
+    mkdirp.sync(self.gmeConfig.executor.outputDir);
 
-    jobListDBFile = path.join(gmeConfig.executor.outputDir, 'jobList.nedb');
-    workerListDBFile = path.join(gmeConfig.executor.outputDir, 'workerList.nedb');
-    jobList = new DataStore({filename: jobListDBFile, autoload: true});
-    workerList = new DataStore({filename: workerListDBFile, autoload: true});
-    workerRefreshInterval = gmeConfig.executor.workerRefreshInterval;
+    self.jobListDBFile = path.join(self.gmeConfig.executor.outputDir, 'self.jobList.nedb');
+    self.workerListDBFile = path.join(self.gmeConfig.executor.outputDir, 'self.workerList.nedb');
+    self.jobList = new DataStore({filename: self.jobListDBFile, autoload: true});
+    self.workerList = new DataStore({filename: self.workerListDBFile, autoload: true});
+    workerRefreshInterval = self.gmeConfig.executor.workerRefreshInterval;
 
-    logger.debug('label-jobs config file', gmeConfig.labelJobs);
-    labelJobs = {}; // map from label to blob hash
-    labelJobsFilename = gmeConfig.executor.labelJobs;
+    self.logger.debug('label-jobs config file', self.gmeConfig.labelJobs);
+    self.labelJobs = {}; // map from label to blob hash
+    self.labelJobsFilename = self.gmeConfig.executor.labelJobs;
     watchLabelJobs();
     setInterval(workerTimeout, 10 * 1000);
-    jobList.ensureIndex({fieldName: 'hash', unique: true}, function (err) {
+    self.jobList.ensureIndex({fieldName: 'hash', unique: true}, function (err) {
         if (err) {
-            logger.error('Failure in ExecutorRest');
+            self.logger.error('Failure in ExecutorRest');
             throw new Error(err);
         }
     });
@@ -143,7 +139,7 @@ function initialize(middlewareOpts) {
     });
 
     // all endpoints require authentication
-    router.use('*', ensureAuthenticated);
+    router.use('*', self.ensureAuthenticated);
     router.use('*', executorAuthenticate);
 
     router.get('/', function (req, res/*, next*/) {
@@ -151,9 +147,9 @@ function initialize(middlewareOpts) {
         if (req.query.status) { // req.query.hasOwnProperty raises TypeError on node 0.11.16 [!]
             query.status = req.query.status;
         }
-        jobList.find(query, function (err, docs) {
+        self.jobList.find(query, function (err, docs) {
             if (err) {
-                logger.error(err);
+                self.logger.error(err);
                 res.sendStatus(500);
                 return;
             }
@@ -176,9 +172,9 @@ function initialize(middlewareOpts) {
     });
 
     router.get('/info/:hash', function (req, res/*, next*/) {
-        jobList.find({hash: req.params.hash}, function (err, docs) {
+        self.jobList.find({hash: req.params.hash}, function (err, docs) {
             if (err) {
-                logger.error(err);
+                self.logger.error(err);
                 res.sendStatus(500);
             } else if (docs.length) {
                 res.send(docs[0]);
@@ -198,14 +194,14 @@ function initialize(middlewareOpts) {
 
         jobInfo = new JobInfo(info);
         // TODO: check if hash ok
-        jobList.find({hash: req.params.hash}, function (err, docs) {
+        self.jobList.find({hash: req.params.hash}, function (err, docs) {
             if (err) {
-                logger.error('err');
+                self.logger.error('err');
                 res.sendStatus(500);
             } else if (docs.length === 0) {
-                jobList.update({hash: req.params.hash}, jobInfo, {upsert: true}, function (err) {
+                self.jobList.update({hash: req.params.hash}, jobInfo, {upsert: true}, function (err) {
                     if (err) {
-                        logger.error(err);
+                        self.logger.error(err);
                         res.sendStatus(500);
                     } else {
                         delete jobInfo._id;
@@ -225,9 +221,9 @@ function initialize(middlewareOpts) {
 
     router.post('/update/:hash', function (req, res/*, next*/) {
 
-        jobList.find({hash: req.params.hash}, function (err, docs) {
+        self.jobList.find({hash: req.params.hash}, function (err, docs) {
             if (err) {
-                logger.error(err);
+                self.logger.error(err);
                 res.sendStatus(500);
             } else if (docs.length) {
                 var jobInfo = new JobInfo(docs[0]);
@@ -240,9 +236,9 @@ function initialize(middlewareOpts) {
                         jobInfo[i] = jobInfoUpdate[i];
                     }
                 }
-                jobList.update({hash: req.params.hash}, jobInfo, function (err, numReplaced) {
+                self.jobList.update({hash: req.params.hash}, jobInfo, function (err, numReplaced) {
                     if (err) {
-                        logger.error(err);
+                        self.logger.error(err);
                         res.sendStatus(500);
                     } else if (numReplaced !== 1) {
                         res.sendStatus(404);
@@ -263,18 +259,18 @@ function initialize(middlewareOpts) {
     // worker API
     router.get('/worker', function (req, res/*, next*/) {
         var response = {};
-        workerList.find({}, function (err, workers) {
+        self.workerList.find({}, function (err, workers) {
             var jobQuery = function (i) {
                 if (i === workers.length) {
                     res.send(JSON.stringify(response));
                     return;
                 }
                 var worker = workers[i];
-                jobList.find({
+                self.jobList.find({
                     status: 'RUNNING',
                     worker: worker.clientId
                 }).sort({createTime: 1}).exec(function (err, jobs) {
-                    // FIXME: index jobList on status?
+                    // FIXME: index self.jobList on status?
                     for (var j = 0; j < jobs.length; j += 1) {
                         delete jobs[j]._id;
                     }
@@ -293,21 +289,21 @@ function initialize(middlewareOpts) {
         var clientRequest = new WorkerInfo.ClientRequest(req.body),
             serverResponse = new WorkerInfo.ServerResponse({refreshPeriod: workerRefreshInterval});
 
-        serverResponse.labelJobs = labelJobs;
+        serverResponse.labelJobs = self.labelJobs;
 
-        workerList.update({clientId: clientRequest.clientId}, {
+        self.workerList.update({clientId: clientRequest.clientId}, {
             $set: {
                 lastSeen: (new Date()).getTime() / 1000,
                 labels: clientRequest.labels
             }
         }, {upsert: true}, function () {
             if (clientRequest.availableProcesses) {
-                jobList.find({
+                self.jobList.find({
                     status: 'CREATED',
                     $not: {labels: {$nin: clientRequest.labels}}
                 }).limit(clientRequest.availableProcesses).exec(function (err, docs) {
                     if (err) {
-                        logger.error(err);
+                        self.logger.error(err);
                         res.sendStatus(500);
                         return; // FIXME need to return 2x
                     }
@@ -317,14 +313,14 @@ function initialize(middlewareOpts) {
                             res.send(JSON.stringify(serverResponse));
                             return;
                         }
-                        jobList.update({_id: docs[i]._id, status: 'CREATED'}, {
+                        self.jobList.update({_id: docs[i]._id, status: 'CREATED'}, {
                             $set: {
                                 status: 'RUNNING',
                                 worker: clientRequest.clientId
                             }
                         }, function (err, numReplaced) {
                             if (err) {
-                                logger.error(err);
+                                self.logger.error(err);
                                 res.sendStatus(500);
                                 return;
                             } else if (numReplaced) {
@@ -341,7 +337,7 @@ function initialize(middlewareOpts) {
         });
     });
 
-    logger.debug('ready');
+    self.logger.debug('ready');
 }
 
 
