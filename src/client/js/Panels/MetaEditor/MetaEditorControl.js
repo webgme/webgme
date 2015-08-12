@@ -1250,30 +1250,30 @@ define(['js/logger',
     };
 
 
-    //MetaEditorControl.prototype._deleteInheritanceRelationship = function (parentID, objectID) {
-    //    var objectNode = this._client.getNode(objectID),
-    //        objectBaseId,
-    //        baseNode;
-    //
-    //    if (objectNode) {
-    //        objectBaseId = objectNode.getBaseId();
-    //
-    //        if (objectBaseId) {
-    //            baseNode = this._client.getNode(objectBaseId);
-    //            if (baseNode) {
-    //                objectBaseId = baseNode.getAttribute(nodePropertyNames.Attributes.name) + ' (' + objectBaseId + ')';
-    //            }
-    //            /*this.logger.debug('Deleting InheritanceRelationship from "' +
-    //             objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' +
-    //             objectBaseId + '"');
-    //             this._client.delBase(objectID);*/
-    //            //TEMPORARILY DO NOT ALLOW DELETING INHERITANCE RELATIONSHIP
-    //            this.logger.warn('Deleting InheritanceRelationship from "' +
-    //                objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID +
-    //                ') to parent "' + objectBaseId + '" is not allowed...');
-    //        }
-    //    }
-    //};
+    MetaEditorControl.prototype._deleteInheritanceRelationship = function (parentID, objectID) {
+        var objectNode = this._client.getNode(objectID),
+            objectBaseId,
+            baseNode;
+
+        if (objectNode) {
+            objectBaseId = objectNode.getBaseId();
+
+            if (objectBaseId) {
+                baseNode = this._client.getNode(objectBaseId);
+                if (baseNode) {
+                    objectBaseId = baseNode.getAttribute(nodePropertyNames.Attributes.name) + ' (' + objectBaseId + ')';
+                }
+                /*this.logger.debug('Deleting InheritanceRelationship from "' +
+                 objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' +
+                 objectBaseId + '"');
+                 this._client.delBase(objectID);*/
+                //TEMPORARILY DO NOT ALLOW DELETING INHERITANCE RELATIONSHIP
+                this.logger.error('Deleting InheritanceRelationship from "' +
+                    objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID +
+                    ') to parent "' + objectBaseId + '" is not allowed...');
+            }
+        }
+    };
     /****************************************************************************/
     /*    END OF --- CREATE NEW CONNECTION BETWEEN TWO ITEMS                    */
     /****************************************************************************/
