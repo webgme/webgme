@@ -71,25 +71,25 @@ describe('ExecutorServer', function () {
         });
     });
 
-    it('should return 405 GET rest/executor/cancel', function (done) {
+    it('should return 404 GET rest/executor/cancel', function (done) {
         gmeConfig.executor.enable = true;
         server = testFixture.WebGME.standaloneServer(gmeConfig);
         server.start(function () {
             var serverBaseUrl = server.getUrl();
             agent.get(serverBaseUrl + '/rest/executor/cancel').end(function (err, res) {
-                should.equal(res.status, 405, err);
+                should.equal(res.status, 404, err);
                 done();
             });
         });
     });
 
-    it('should return 500 POST rest/executor/cancel', function (done) {
+    it('should return 404 POST rest/executor/cancel', function (done) {
         gmeConfig.executor.enable = true;
         server = testFixture.WebGME.standaloneServer(gmeConfig);
         server.start(function () {
             var serverBaseUrl = server.getUrl();
             agent.post(serverBaseUrl + '/rest/executor/cancel').end(function (err, res) {
-                should.equal(res.status, 500, err);
+                should.equal(res.status, 404, err);
                 done();
             });
         });
@@ -108,25 +108,25 @@ describe('ExecutorServer', function () {
     });
 
 
-    it('should return 405 POST rest/executor/info', function (done) {
+    it('should return 404 POST rest/executor/info', function (done) {
         gmeConfig.executor.enable = true;
         server = testFixture.WebGME.standaloneServer(gmeConfig);
         server.start(function () {
             var serverBaseUrl = server.getUrl();
             agent.post(serverBaseUrl + '/rest/executor/info').end(function (err, res) {
-                should.equal(res.status, 405, err);
+                should.equal(res.status, 404, err);
                 done();
             });
         });
     });
 
-    it('should return 500 GET rest/executor/info/', function (done) {
+    it('should return 404 GET rest/executor/info/', function (done) {
         gmeConfig.executor.enable = true;
         server = testFixture.WebGME.standaloneServer(gmeConfig);
         server.start(function () {
             var serverBaseUrl = server.getUrl();
             agent.get(serverBaseUrl + '/rest/executor/info/').end(function (err, res) {
-                should.equal(res.status, 500, err);
+                should.equal(res.status, 404, err);
                 done();
             });
         });
@@ -158,25 +158,25 @@ describe('ExecutorServer', function () {
     });
 
 
-    it('should return 405 PUT rest/executor/worker', function (done) {
+    it('should return 404 PUT rest/executor/worker', function (done) {
         gmeConfig.executor.enable = true;
         server = testFixture.WebGME.standaloneServer(gmeConfig);
         server.start(function () {
             var serverBaseUrl = server.getUrl();
             agent.put(serverBaseUrl + '/rest/executor/worker').end(function (err, res) {
-                should.equal(res.status, 405, err);
+                should.equal(res.status, 404, err);
                 done();
             });
         });
     });
 
-    it('should return 405 PUT rest/executor/update', function (done) {
+    it('should return 404 PUT rest/executor/update', function (done) {
         gmeConfig.executor.enable = true;
         server = testFixture.WebGME.standaloneServer(gmeConfig);
         server.start(function () {
             var serverBaseUrl = server.getUrl();
             agent.put(serverBaseUrl + '/rest/executor/update').end(function (err, res) {
-                should.equal(res.status, 405, err);
+                should.equal(res.status, 404, err);
                 done();
             });
         });
@@ -194,13 +194,13 @@ describe('ExecutorServer', function () {
         });
     });
 
-    it('should return 405 PUT rest/executor/create', function (done) {
+    it('should return 404 PUT rest/executor/create', function (done) {
         gmeConfig.executor.enable = true;
         server = testFixture.WebGME.standaloneServer(gmeConfig);
         server.start(function () {
             var serverBaseUrl = server.getUrl();
             agent.put(serverBaseUrl + '/rest/executor/create').end(function (err, res) {
-                should.equal(res.status, 405, err);
+                should.equal(res.status, 404, err);
                 done();
             });
         });

@@ -119,15 +119,15 @@ describe('ExecutorClient', function () {
         });
     });
 
-    it('getAllInfo should return 500', function (done) {
+    it('getAllInfo should return 404', function (done) {
         executorClient.getAllInfo(function (err, res) {
             if (err) {
-                should.equal(err.message, 'Internal Server Error');
+                should.equal(err.message, 'Not Found');
                 done();
                 return;
             }
             logger.debug(res);
-            done(new Error('should have failed with 500'));
+            done(new Error('should have failed with 404'));
         });
     });
 
