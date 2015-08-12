@@ -372,7 +372,7 @@ function GMEAuth(session, gmeConfig) {
                         }
                         query = {_id: {$in: userData.orgs}};
                         query['projects.' + projectId + '.' + op] = true;
-                        return organizationCollection.findOne(query, {_id: 1});
+                        return collection.findOne(query, {_id: 1});
                     }))];
             }).spread(function (user, rwd) {
                 var ret = {};
@@ -380,6 +380,49 @@ function GMEAuth(session, gmeConfig) {
                     ret[op] = (user[op] || rwd[i]) ? true : false;
                 });
                 return ret;
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param userId {string}
+     * @param projectId {string}
+     * @param callback
+     * @returns {*}
+     */
+    function getProjectAuthorizationListByUserId(userId, callback) {
+        var res;
+        return collection.findOne({_id: userId}, _getProjection('orgs', 'projects'))
+            .then(function (userData) {
+                if (!userData) {
+                    return Q.reject('No such user [' + userId + ']');
+                }
+                userData.orgs = userData.orgs || [];
+                res = userData.projects;
+                return Q.allSettled(userData.orgs.map(function (orgId) {
+                    return collection.findOne({_id: orgId}, _getProjection('projects'));
+                }));
+            })
+            .then(function (orgResults) {
+                orgResults.map(function (orgRes) {
+                    var orgProjects;
+                    if (orgRes.state === 'rejected') {
+                        logger.error(orgRes.reason);
+                    } else {
+                        orgProjects = orgRes.value.projects || {};
+                        Object.keys(orgProjects).forEach(function (projectId) {
+                            if (res.hasOwnProperty(projectId)) {
+                                res[projectId].read = res[projectId].read || orgProjects[projectId].read;
+                                res[projectId].write = res[projectId].write || orgProjects[projectId].write;
+                                res[projectId].delete = res[projectId].delete || orgProjects[projectId].delete;
+                            } else {
+                                res[projectId] = orgProjects[projectId];
+                            }
+                        });
+                    }
+                });
+                return res;
             })
             .nodeify(callback);
     }
@@ -575,7 +618,7 @@ function GMEAuth(session, gmeConfig) {
      */
     function listUsers(query, callback) {
         // FIXME: query can paginate, or filter users
-        return collection.find({})
+        return collection.find({type: 'User'})
             .then(function (users) {
                 return Q.ninvoke(users, 'toArray');
             })
@@ -646,6 +689,7 @@ function GMEAuth(session, gmeConfig) {
             email: email,
             canCreate: canCreate,
             projects: {},
+            type: 'User',
             orgs: [],
             siteAdmin: options.siteAdmin
         };
@@ -754,9 +798,15 @@ function GMEAuth(session, gmeConfig) {
      * @param callback
      * @returns {*}
      */
-    function addOrganization(orgId, callback) {
+    function addOrganization(orgId, info, callback) {
         // TODO: check user/orgId collision
-        return organizationCollection.insert({_id: orgId, projects: {}})
+        return collection.insert({
+            _id: orgId,
+            projects: {},
+            type: 'Organization',
+            admins: [],
+            info: info || {}}
+        )
             .nodeify(callback);
     }
 
@@ -767,7 +817,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function getOrganization(orgId, callback) {
-        return organizationCollection.findOne({_id: orgId})
+        return collection.findOne({_id: orgId})
             .then(function (org) {
                 if (!org) {
                     return Q.reject('No such organization [' + orgId + ']');
@@ -793,7 +843,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function listOrganizations(query, callback) {
-        return organizationCollection.find({})
+        return collection.find({type: 'Organization'})
             .then(function (orgs) {
                 return Q.ninvoke(orgs, 'toArray');
             })
@@ -811,7 +861,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function removeOrganizationByOrgId(orgId, callback) {
-        return organizationCollection.remove({_id: orgId})
+        return collection.remove({_id: orgId, type: 'Organization'})
             .then(function (count) {
                 if (count === 0) {
                     return Q.reject('No such organization [' + orgId + ']');
@@ -829,14 +879,14 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function addUserToOrganization(userId, orgId, callback) {
-        return organizationCollection.findOne({_id: orgId})
+        return collection.findOne({_id: orgId, type: 'Organization'})
             .then(function (org) {
                 if (!org) {
                     return Q.reject('No such organization [' + orgId + ']');
                 }
             })
             .then(function () {
-                return collection.update({_id: userId}, {$addToSet: {orgs: orgId}})
+                return collection.update({_id: userId, type: 'User'}, {$addToSet: {orgs: orgId}})
                     .spread(function (count) {
                         if (count === 0) {
                             return Q.reject('No such user [' + userId + ']');
@@ -854,14 +904,14 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function removeUserFromOrganization(userId, orgId, callback) {
-        return organizationCollection.findOne({_id: orgId})
+        return collection.findOne({_id: orgId, type: 'Organization'})
             .then(function (org) {
                 if (!org) {
                     return Q.reject('No such organization [' + orgId + ']');
                 }
             })
             .then(function () {
-                collection.update({_id: userId}, {orgs: {$pull: orgId}});
+                collection.update({_id: userId, type: 'User'}, {orgs: {$pull: orgId}});
             })
             .nodeify(callback);
     }
@@ -869,18 +919,18 @@ function GMEAuth(session, gmeConfig) {
     /**
      *
      * @param orgId
-     * @param projectName
+     * @param projectId
      * @param type {string} 'create' 'delete' or 'read'
      * @param rights {object} {read: true, write: true, delete: true}
      * @param callback
      * @returns {*}
      */
-    function authorizeOrganization(orgId, projectName, type, rights, callback) {
+    function authorizeOrganization(orgId, projectId, type, rights, callback) {
         var update;
         if (type === 'create' || type === 'set') {
             update = {$set: {}};
-            update.$set['projects.' + projectName] = rights;
-            return organizationCollection.update({_id: orgId}, update)
+            update.$set['projects.' + projectId] = rights;
+            return collection.update({_id: orgId, type: 'Organization'}, update)
                 .spread(function (numUpdated) {
                     if (numUpdated !== 1) {
                         return Q.reject('No such organization [' + orgId + ']');
@@ -890,8 +940,8 @@ function GMEAuth(session, gmeConfig) {
                 .nodeify(callback);
         } else if (type === 'delete') {
             update = {$unset: {}};
-            update.$unset['projects.' + projectName] = '';
-            return organizationCollection.update({_id: orgId}, update)
+            update.$unset['projects.' + projectId] = '';
+            return collection.update({_id: orgId, type: 'Organization'}, update)
                 .spread(function (numUpdated) {
                     // FIXME this is always true. Try findAndUpdate instead
                     return numUpdated === 1;
@@ -913,7 +963,7 @@ function GMEAuth(session, gmeConfig) {
     function getAuthorizationInfoByOrgId(orgId, projectName, callback) {
         var projection = {};
         projection['projects.' + projectName] = 1;
-        return organizationCollection.findOne({_id: orgId}, projection)
+        return organizationCollection.findOne({_id: orgId, type: 'Organization'}, projection)
             .then(function (orgData) {
                 if (!orgData) {
                     return Q.reject('No such organization [' + orgId + ']');
@@ -932,6 +982,8 @@ function GMEAuth(session, gmeConfig) {
         getUserIdBySession: getUserIdBySession,
         getProjectAuthorizationBySession: getProjectAuthorizationBySession,
         getProjectAuthorizationByUserId: getProjectAuthorizationByUserId,
+        getProjectAuthorizationListByUserId: getProjectAuthorizationListByUserId,
+
         tokenAuthorization: tokenAuthorization,
         generateToken: generateTokenBySession,
         generateTokenForUserId: generateTokenByUserId,
@@ -943,6 +995,7 @@ function GMEAuth(session, gmeConfig) {
         getAllUserAuthInfoBySession: getAllUserAuthInfoBySession,
         authorizeByUserId: authorizeByUserId,
         getAuthorizationInfoByUserId: getAuthorizationInfoByUserId,
+
         unload: unload,
         connect: connect,
         _getProjectNames: _getProjectNames,
