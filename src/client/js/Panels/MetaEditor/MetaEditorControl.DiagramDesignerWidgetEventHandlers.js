@@ -678,7 +678,7 @@ define(['js/logger',
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectedTabChanged = function (tabID) {
-        if (this._sheets && tabID && this._sheets[tabID]) {
+        if (this._sheets && tabID && this._selectedMetaAspectSet !== this._sheets[tabID]) {
             this._selectedMetaAspectSet = this._sheets[tabID];
 
             this.logger.debug('selectedAspectChanged: ' + this._selectedMetaAspectSet);
