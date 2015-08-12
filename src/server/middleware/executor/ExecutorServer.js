@@ -17,12 +17,12 @@
 var express = require('express'),
     router = express.Router();
 
-function getUserId(req) {
-    return req.session.udmId;
-}
+//function getUserId(req) {
+//    return req.session.udmId;
+//}
 
 function initialize(middlewareOpts) {
-    var self = this,
+    var self = this, // Will be the module.exports, i.e. have keys initialize and router - consider instances.
         fs = require('fs'),
         path = require('path'),
         bufferEqual = require('buffer-equal-constant-time'),
@@ -31,7 +31,6 @@ function initialize(middlewareOpts) {
 
         JobInfo = requireJS('common/executor/JobInfo'),
         WorkerInfo = requireJS('common/executor/WorkerInfo'),
-        ASSERT = requireJS('common/util/assert'),
 
         workerRefreshInterval;
 
@@ -112,8 +111,8 @@ function initialize(middlewareOpts) {
     self.logger.debug('output directory', self.gmeConfig.executor.outputDir);
     mkdirp.sync(self.gmeConfig.executor.outputDir);
 
-    self.jobListDBFile = path.join(self.gmeConfig.executor.outputDir, 'self.jobList.nedb');
-    self.workerListDBFile = path.join(self.gmeConfig.executor.outputDir, 'self.workerList.nedb');
+    self.jobListDBFile = path.join(self.gmeConfig.executor.outputDir, 'jobList.nedb');
+    self.workerListDBFile = path.join(self.gmeConfig.executor.outputDir, 'workerList.nedb');
     self.jobList = new DataStore({filename: self.jobListDBFile, autoload: true});
     self.workerList = new DataStore({filename: self.workerListDBFile, autoload: true});
     workerRefreshInterval = self.gmeConfig.executor.workerRefreshInterval;
