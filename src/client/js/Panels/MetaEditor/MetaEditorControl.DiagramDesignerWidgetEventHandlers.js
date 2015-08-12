@@ -79,6 +79,19 @@ define(['js/logger',
                                     }
                                 );
                                 return;
+                            } else {
+                                do {
+                                    if (baseNode.getId() === targetId) {
+                                        dialog.alert('Invalid base modification',
+                                            'Change of base node would create circular inheritance!',
+                                            function () {
+
+                                            }
+                                        );
+                                        return;
+                                    }
+                                    baseNode = self._client.getNode(baseNode.getBaseId());
+                                } while (baseNode);
                             }
 
                             dialog.confirm('Confirm base change',
@@ -87,7 +100,19 @@ define(['js/logger',
                                     self._onCreateNewConnection(params);
                                 }
                             );
+                        } else if (!oldBaseNode) {
+                            dialog.alert('Invalid base modification',
+                                'Cannot change the base of the FCO!',
+                                function () {
+                                }
+                            );
                         }
+                    } else {
+                        dialog.alert('Invalid base modification',
+                            'Base already set to the new base!',
+                            function () {
+                            }
+                        );
                     }
                 }
                 return;
