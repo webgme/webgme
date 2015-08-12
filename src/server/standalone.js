@@ -645,7 +645,6 @@ function StandAloneServer(gmeConfig) {
     });
     __app.get('/logout', function (req, res) {
         res.clearCookie('webgme');
-        res.clearCookie('isisforge'); // TODO is this really needed
         req.logout();
         req.session.authenticated = false;
         delete req.session.udmId;
