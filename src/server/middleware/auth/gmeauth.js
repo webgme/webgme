@@ -14,7 +14,12 @@ var Mongodb = require('mongodb'),
 
     storageUtil = requireJS('common/storage/util'),
 
-    Logger = require('../../logger');
+    Logger = require('../../logger'),
+
+    CONSTANTS = {
+        USER: 'User',
+        ORGANIZATION: 'Organization'
+    };
 
 /**
  *
@@ -618,7 +623,7 @@ function GMEAuth(session, gmeConfig) {
      */
     function listUsers(query, callback) {
         // FIXME: query can paginate, or filter users
-        return collection.find({type: 'User'})
+        return collection.find({type: CONSTANTS.USER})
             .then(function (users) {
                 return Q.ninvoke(users, 'toArray');
             })
@@ -686,7 +691,7 @@ function GMEAuth(session, gmeConfig) {
             email: email,
             canCreate: canCreate,
             projects: {},
-            type: 'User',
+            type: CONSTANTS.USER,
             orgs: [],
             siteAdmin: options.siteAdmin
         };
@@ -887,7 +892,7 @@ function GMEAuth(session, gmeConfig) {
                 }
             })
             .then(function () {
-                return collection.update({_id: userId, type: 'User'}, {$addToSet: {orgs: orgId}})
+                return collection.update({_id: userId, type: CONSTANTS.USER}, {$addToSet: {orgs: orgId}})
                     .spread(function (count) {
                         if (count === 0) {
                             return Q.reject('No such user [' + userId + ']');
@@ -912,7 +917,7 @@ function GMEAuth(session, gmeConfig) {
                 }
             })
             .then(function () {
-                collection.update({_id: userId, type: 'User'}, {orgs: {$pull: orgId}});
+                collection.update({_id: userId, type: CONSTANTS.USER}, {orgs: {$pull: orgId}});
             })
             .nodeify(callback);
     }
@@ -926,7 +931,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function setAdminForUserInOrganization(userId, orgId, makeAdmin, callback) {
-        return collection.findOne({_id: orgId, type: 'Organization'})
+        return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION})
             .then(function (org) {
                 if (!org) {
                     return Q.reject('No such organization [' + orgId + ']');
@@ -934,7 +939,7 @@ function GMEAuth(session, gmeConfig) {
             })
             .then(function () {
                 var update = makeAdmin ? {$addToSet: {admins: userId}} : {admins: {$pull: userId}};
-                return collection.update({_id: orgId, type: 'Organization'}, update);
+                return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION}, update);
             })
             .nodeify(callback);
     }
@@ -953,7 +958,7 @@ function GMEAuth(session, gmeConfig) {
         if (type === 'create' || type === 'set') {
             update = {$set: {}};
             update.$set['projects.' + projectId] = rights;
-            return collection.update({_id: orgId, type: 'Organization'}, update)
+            return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION}, update)
                 .spread(function (numUpdated) {
                     if (numUpdated !== 1) {
                         return Q.reject('No such organization [' + orgId + ']');
@@ -964,7 +969,7 @@ function GMEAuth(session, gmeConfig) {
         } else if (type === 'delete') {
             update = {$unset: {}};
             update.$unset['projects.' + projectId] = '';
-            return collection.update({_id: orgId, type: 'Organization'}, update)
+            return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION}, update)
                 .spread(function (numUpdated) {
                     // FIXME this is always true. Try findAndUpdate instead
                     return numUpdated === 1;
@@ -986,7 +991,7 @@ function GMEAuth(session, gmeConfig) {
     function getAuthorizationInfoByOrgId(orgId, projectName, callback) {
         var projection = {};
         projection['projects.' + projectName] = 1;
-        return collection.findOne({_id: orgId, type: 'Organization'}, projection)
+        return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION}, projection)
             .then(function (orgData) {
                 if (!orgData) {
                     return Q.reject('No such organization [' + orgId + ']');
@@ -1043,7 +1048,9 @@ function GMEAuth(session, gmeConfig) {
 
         addProject: addProject,
         getProject: getProject,
-        transferProject: transferProject
+        transferProject: transferProject,
+
+        CONSTANTS: CONSTANTS
     };
 }
 
