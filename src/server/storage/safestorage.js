@@ -241,8 +241,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false,
         userAuthInfo,
-        self = this,
-        dbProject;
+        self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
     check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
@@ -255,33 +254,30 @@ SafeStorage.prototype.createProject = function (data, callback) {
     }
 
     if (rejected === false) {
-        data.projectId = data.username + CONSTANTS.PROJECT_ID_SEP + data.projectName;
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
+                var info = {
+                    createdAt: (new Date()).toISOString()
+                };
                 userAuthInfo = user.projects;
                 if (user.canCreate) {
-                    return Storage.prototype.createProject.call(self, data);
+                    return self.gmeAuth.addProject(data.username, data.projectName, info);
                 } else {
                     throw new Error('Not authorized to create a new project.');
                 }
             })
-            .then(function (dbProject_) {
-                dbProject = dbProject_;
-                return self.gmeAuth.authorizeByUserId(data.username, dbProject.projectId, 'create', {
+            .then(function (projectId) {
+                data.projectId = projectId;
+                return self.gmeAuth.authorizeByUserId(data.username, projectId, 'create', {
                     read: true,
                     write: true,
                     delete: true
                 });
             })
             .then(function () {
-                var info = {
-                    createdAt: (new Date()).toISOString()
-                    //TODO: populate with more data here, e.g. description
-                };
-
-                return self.gmeAuth.addProject(data.username, data.projectName, info);
+                return Storage.prototype.createProject.call(self, data);
             })
-            .then(function () {
+            .then(function (dbProject) {
                 var project = new UserProject(dbProject, self, self.logger, self.gmeConfig);
                 deferred.resolve(project);
             })
