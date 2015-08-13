@@ -128,7 +128,7 @@ function GMEAuth(session, gmeConfig) {
                     return Q(null);
                 } else {
                     logger.warn('User "' + guestAcc + '" was not found. ' +
-                                'We will attempt to create it automatically.');
+                        'We will attempt to create it automatically.');
 
                     // TODO: maybe the canCreate can come from gmeConfig
                     return addUser(guestAcc, guestAcc, guestAcc, true, {overwrite: true});
@@ -137,7 +137,7 @@ function GMEAuth(session, gmeConfig) {
             .then(function () {
                 if (gmeConfig.authentication.allowGuests) {
                     logger.warn('Guest access can be disabled by setting' +
-                                ' gmeConfig.authentication.allowGuests = false');
+                        ' gmeConfig.authentication.allowGuests = false');
                 }
 
                 // TODO: maybe guest's project authorization can come from gmeConfig
@@ -660,9 +660,6 @@ function GMEAuth(session, gmeConfig) {
         update.$unset['projects.' + projectId] = '';
         return collection.update({}, update, {multi: true})
             .then(function () {
-                return organizationCollection.update({}, update, {multi: true});
-            })
-            .spread(function (/*numUpdated*/) {
                 return projectCollection.remove({_id: projectId});
             })
             .then(function () {
@@ -729,6 +726,9 @@ function GMEAuth(session, gmeConfig) {
             };
 
         return projectCollection.update({_id: id}, data, {upsert: true})
+            .then(function () {
+                return id;
+            })
             .nodeify(callback);
     }
 
@@ -801,11 +801,12 @@ function GMEAuth(session, gmeConfig) {
     function addOrganization(orgId, info, callback) {
         // TODO: check user/orgId collision
         return collection.insert({
-            _id: orgId,
-            projects: {},
-            type: 'Organization',
-            admins: [],
-            info: info || {}}
+                _id: orgId,
+                projects: {},
+                type: 'Organization',
+                admins: [],
+                info: info || {}
+            }
         )
             .nodeify(callback);
     }
@@ -918,6 +919,28 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
+     * @param {string} userId
+     * @param {string} orgId
+     * @param {boolean} makeAdmin
+     * @param callback
+     * @returns {*}
+     */
+    function setAdminForUserInOrganization(userId, orgId, makeAdmin, callback) {
+        return collection.findOne({_id: orgId, type: 'Organization'})
+            .then(function (org) {
+                if (!org) {
+                    return Q.reject('No such organization [' + orgId + ']');
+                }
+            })
+            .then(function () {
+                var update = makeAdmin ? {$addToSet: {admins: userId}} : {admins: {$pull: userId}};
+                return collection.update({_id: orgId, type: 'Organization'}, update);
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
      * @param orgId
      * @param projectId
      * @param type {string} 'create' 'delete' or 'read'
@@ -963,7 +986,7 @@ function GMEAuth(session, gmeConfig) {
     function getAuthorizationInfoByOrgId(orgId, projectName, callback) {
         var projection = {};
         projection['projects.' + projectName] = 1;
-        return organizationCollection.findOne({_id: orgId, type: 'Organization'}, projection)
+        return collection.findOne({_id: orgId, type: 'Organization'}, projection)
             .then(function (orgData) {
                 if (!orgData) {
                     return Q.reject('No such organization [' + orgId + ']');
@@ -1016,6 +1039,7 @@ function GMEAuth(session, gmeConfig) {
         removeUserFromOrganization: removeUserFromOrganization,
         authorizeOrganization: authorizeOrganization,
         getAuthorizationInfoByOrgId: getAuthorizationInfoByOrgId,
+        setAdminForUserInOrganization: setAdminForUserInOrganization,
 
         addProject: addProject,
         getProject: getProject,
