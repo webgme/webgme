@@ -11,6 +11,15 @@ define([
 ], function (ProjectInterface, Branch, Q) {
     'use strict';
 
+    /**
+     *
+     * @param projectId
+     * @param storage
+     * @param mainLogger
+     * @param gmeConfig
+     * @constructor
+     * @augments ProjectInterface
+     */
     function Project(projectId, storage, mainLogger, gmeConfig) {
         var self = this;
         this.branches = {};
