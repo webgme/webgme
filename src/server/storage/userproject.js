@@ -14,6 +14,15 @@ var CONSTANTS = requireJS('common/storage/constants'),
     GENKEY = requireJS('common/util/key'),
     ProjectInterface = requireJS('common/storage/project/interface');
 
+/**
+ *
+ * @param dbProject
+ * @param storage
+ * @param mainLogger
+ * @param gmeConfig
+ * @constructor
+ * @augments ProjectInterface
+ */
 function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     var self = this,
         objectLoader = {
