@@ -102,11 +102,8 @@ define([
                     return Object.keys(value);
                 } else if (key === 'users') {
                     return Object.keys(value);
-                } else if (key === 'root') {
-                    return {
-                        current: value.current,
-                        previous: value.previous
-                    };
+                } else if (key === 'rootObject') {
+                    return;
                 } else if (key === 'undoRedoChain') {
                     if (value) {
                         chain = {
