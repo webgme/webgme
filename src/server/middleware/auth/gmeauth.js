@@ -33,7 +33,7 @@ function GMEAuth(session, gmeConfig) {
     // TODO: make sure that gmeConfig passes all config
     var logger = Logger.create('gme:server:auth:gmeauth', gmeConfig.server.log),
         _collectionName = '_users',
-        _organizationCollectionName = '_organizations',
+    //_organizationCollectionName = '_organizations',
         _projectCollectionName = '_projects',
         _session = session,
         _userField = 'username',
@@ -42,8 +42,8 @@ function GMEAuth(session, gmeConfig) {
         db,
         collectionDeferred = Q.defer(),
         collection = collectionDeferred.promise,
-        organizationCollectionDeferred = Q.defer(),
-        organizationCollection = organizationCollectionDeferred.promise,
+    //organizationCollectionDeferred = Q.defer(),
+    //organizationCollection = organizationCollectionDeferred.promise,
         projectCollectionDeferred = Q.defer(),
         projectCollection = projectCollectionDeferred.promise;
     //FIXME should be taken into use or remove it
@@ -111,7 +111,7 @@ function GMEAuth(session, gmeConfig) {
     }
 
     addMongoOpsToPromize(collection);
-    addMongoOpsToPromize(organizationCollection);
+    //addMongoOpsToPromize(organizationCollection);
     addMongoOpsToPromize(projectCollection);
 
 
@@ -177,10 +177,10 @@ function GMEAuth(session, gmeConfig) {
                 return _prepareGuestAccount();
             })
             .then(function () {
-                return Q.ninvoke(db, 'collection', _organizationCollectionName);
-            })
-            .then(function (organizationCollection_) {
-                organizationCollectionDeferred.resolve(organizationCollection_);
+                //    return Q.ninvoke(db, 'collection', _organizationCollectionName);
+                //})
+                //.then(function (organizationCollection_) {
+                //    organizationCollectionDeferred.resolve(organizationCollection_);
                 return Q.ninvoke(db, 'collection', _projectCollectionName);
             })
             .then(function (projectCollection_) {
@@ -808,7 +808,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.insert({
                 _id: orgId,
                 projects: {},
-                type: 'Organization',
+                type: CONSTANTS.ORGANIZATION,
                 admins: [],
                 info: info || {}
             }
@@ -823,12 +823,12 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function getOrganization(orgId, callback) {
-        return collection.findOne({_id: orgId})
+        return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION})
             .then(function (org) {
                 if (!org) {
                     return Q.reject('No such organization [' + orgId + ']');
                 }
-                return [org, collection.find({orgs: orgId}, {_id: 1})];
+                return [org, collection.find({orgs: orgId, type: CONSTANTS.USER}, {_id: 1})];
             })
             .spread(function (org, users) {
                 return [org, Q.ninvoke(users, 'toArray')];

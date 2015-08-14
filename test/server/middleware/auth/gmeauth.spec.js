@@ -33,10 +33,10 @@ describe('GME authentication', function () {
                             var collection = collection_;
                             return Q.ninvoke(collection, 'remove');
                         }),
-                    Q.ninvoke(db, 'collection', '_organizations')
-                        .then(function (orgs_) {
-                            return Q.ninvoke(orgs_, 'remove');
-                        }),
+                    //Q.ninvoke(db, 'collection', '_organizations')
+                    //    .then(function (orgs_) {
+                    //        return Q.ninvoke(orgs_, 'remove');
+                    //    }),
                     Q.ninvoke(db, 'collection', 'ClientCreateProject')
                         .then(function (createdProject) {
                             return Q.ninvoke(createdProject, 'remove');
@@ -438,11 +438,17 @@ describe('GME authentication', function () {
             }).then(function (organizations) {
                 expect(organizations).to.include({
                         _id: orgName,
-                        projects: {}
+                        info: {},
+                        projects: {},
+                        type: auth.CONSTANTS.ORGANIZATION,
+                        admins: []
                     },
                     {
                         _id: otherOrgName,
-                        projects: {}
+                        info: {},
+                        projects: {},
+                        type: auth.CONSTANTS.ORGANIZATION,
+                        admins: []
                     });
             }).nodeify(done);
     });

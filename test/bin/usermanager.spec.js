@@ -111,10 +111,10 @@ describe('User manager command line interface (CLI)', function () {
                                 var collection = collection_;
                                 return Q.ninvoke(collection, 'remove');
                             }),
-                        Q.ninvoke(db, 'collection', '_organizations')
-                            .then(function (orgs_) {
-                                return Q.ninvoke(orgs_, 'remove');
-                            }),
+                        //Q.ninvoke(db, 'collection', '_organizations')
+                        //    .then(function (orgs_) {
+                        //        return Q.ninvoke(orgs_, 'remove');
+                        //    }),
                         Q.ninvoke(db, 'collection', 'ClientCreateProject')
                             .then(function (createdProject) {
                                 return Q.ninvoke(createdProject, 'remove');

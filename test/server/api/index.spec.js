@@ -39,10 +39,10 @@ describe('API', function () {
                         .then(function (collection_) {
                             return Q.ninvoke(collection_, 'remove');
                         }),
-                    Q.ninvoke(db, 'collection', '_organizations')
-                        .then(function (orgs_) {
-                            return Q.ninvoke(orgs_, 'remove');
-                        }),
+                    //Q.ninvoke(db, 'collection', '_organizations')
+                    //    .then(function (orgs_) {
+                    //        return Q.ninvoke(orgs_, 'remove');
+                    //    }),
                     Q.ninvoke(db, 'collection', '_projects')
                         .then(function (projects_) {
                             return Q.ninvoke(projects_, 'remove');
