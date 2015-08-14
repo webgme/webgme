@@ -289,10 +289,10 @@ describe('standalone server', function () {
                                 .then(function (collection_) {
                                     return Q.ninvoke(collection_, 'remove');
                                 }),
-                            Q.ninvoke(db, 'collection', '_organizations')
-                                .then(function (orgs_) {
-                                    return Q.ninvoke(orgs_, 'remove');
-                                }),
+                            //Q.ninvoke(db, 'collection', '_organizations')
+                            //    .then(function (orgs_) {
+                            //        return Q.ninvoke(orgs_, 'remove');
+                            //    }),
                             Q.ninvoke(db, 'collection', 'ClientCreateProject')
                                 .then(function (createdProject) {
                                     return Q.ninvoke(createdProject, 'remove');
