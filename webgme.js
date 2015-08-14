@@ -139,5 +139,6 @@ module.exports = {
     serializer: requirejs('common/core/users/serialization'),
     canon: requirejs('common/util/canon'),
     Logger: require('./src/server/logger'),
-    REGEXP: requirejs('common/regexp')
+    REGEXP: requirejs('common/regexp'),
+    PluginCliManager: require('./src/plugin/climanager')
 };

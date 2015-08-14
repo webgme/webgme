@@ -19,7 +19,7 @@ main = function (argv, callback) {
         program = new Command(),
         storage,
         STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
-        PluginCliManager = require('../../src/plugin/climanager'),
+        PluginCliManager = webgme.PluginCliManager,
         project,
         projectName,
         pluginName,
