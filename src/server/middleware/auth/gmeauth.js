@@ -726,11 +726,10 @@ function GMEAuth(session, gmeConfig) {
                 _id: id,
                 owner: orgOrUserId,
                 name: projectName,
-                fullName: orgOrUserId + '/' + projectName,
                 info: info || {}
             };
 
-        return projectCollection.update({_id: id}, data, {upsert: true})
+        return projectCollection.insert(data)
             .then(function () {
                 return id;
             })
@@ -849,7 +848,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function listOrganizations(query, callback) {
-        return collection.find({type: 'Organization'})
+        return collection.find({type: CONSTANTS.ORGANIZATION})
             .then(function (orgs) {
                 return Q.ninvoke(orgs, 'toArray');
             })
@@ -867,7 +866,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function removeOrganizationByOrgId(orgId, callback) {
-        return collection.remove({_id: orgId, type: 'Organization'})
+        return collection.remove({_id: orgId, type: CONSTANTS.ORGANIZATION})
             .then(function (count) {
                 if (count === 0) {
                     return Q.reject('No such organization [' + orgId + ']');
@@ -885,7 +884,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function addUserToOrganization(userId, orgId, callback) {
-        return collection.findOne({_id: orgId, type: 'Organization'})
+        return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION})
             .then(function (org) {
                 if (!org) {
                     return Q.reject('No such organization [' + orgId + ']');
@@ -910,7 +909,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function removeUserFromOrganization(userId, orgId, callback) {
-        return collection.findOne({_id: orgId, type: 'Organization'})
+        return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION})
             .then(function (org) {
                 if (!org) {
                     return Q.reject('No such organization [' + orgId + ']');
@@ -931,15 +930,26 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function setAdminForUserInOrganization(userId, orgId, makeAdmin, callback) {
-        return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION})
+        return getAdminsInOrganization(userId, orgId)
+            .then(function (admins) {
+                if (makeAdmin) {
+                    return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION}, {$addToSet: {admins: userId}});
+                } else {
+                    if (admins.indexOf(userId) > -1) {
+                        return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION}, {$pull: {admins: userId}});
+                    }
+                }
+            })
+            .nodeify(callback);
+    }
+
+    function getAdminsInOrganization(userId, orgId, callback) {
+        return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION}, {admins: 1})
             .then(function (org) {
                 if (!org) {
                     return Q.reject('No such organization [' + orgId + ']');
                 }
-            })
-            .then(function () {
-                var update = makeAdmin ? {$addToSet: {admins: userId}} : {admins: {$pull: userId}};
-                return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION}, update);
+                return org.admins;
             })
             .nodeify(callback);
     }
@@ -1045,6 +1055,7 @@ function GMEAuth(session, gmeConfig) {
         authorizeOrganization: authorizeOrganization,
         getAuthorizationInfoByOrgId: getAuthorizationInfoByOrgId,
         setAdminForUserInOrganization: setAdminForUserInOrganization,
+        getAdminsInOrganization: getAdminsInOrganization,
 
         addProject: addProject,
         getProject: getProject,
