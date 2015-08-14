@@ -70,7 +70,7 @@ describe('SafeStorage', function () {
                     expect(projects.length).to.equal(1);
                     expect(projects[0]).to.deep.equal({
                         _id: 'guest+newProject',
-                        fullName: 'guest/newProject',
+                        //fullName: 'guest/newProject',
                         name: 'newProject',
                         owner: 'guest'
                     });
@@ -89,7 +89,7 @@ describe('SafeStorage', function () {
                     expect(projects.length).to.equal(1);
                     expect(projects[0]).to.deep.equal({
                         _id: 'guest+newProject',
-                        fullName: 'guest/newProject',
+                        //fullName: 'guest/newProject',
                         name: 'newProject',
                         owner: 'guest',
                         rights: {
@@ -116,7 +116,7 @@ describe('SafeStorage', function () {
                     delete projects[0].info;
                     expect(projects[0]).to.deep.equal({
                         _id: 'guest+newProject',
-                        fullName: 'guest/newProject',
+                        //fullName: 'guest/newProject',
                         name: 'newProject',
                         owner: 'guest',
                         rights: {
@@ -147,7 +147,7 @@ describe('SafeStorage', function () {
                     delete projects[0].branches;
                     expect(projects[0]).to.deep.equal({
                         _id: 'guest+newProject',
-                        fullName: 'guest/newProject',
+                        //fullName: 'guest/newProject',
                         name: 'newProject',
                         owner: 'guest',
                         rights: {
