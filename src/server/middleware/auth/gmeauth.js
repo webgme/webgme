@@ -294,27 +294,42 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param userId {string}
+     * @param userId
+     * @param projectId
+     * @param type
+     * @param rights
+     * @param callback
+     * @returns {*}
+     */
+    function authorizeByUserId(userId, projectId, type, rights, callback) {
+        return authorizeByUserOrOrgId(userId, projectId, type, rights)
+            .nodeify(callback);
+    }
+    /**
+     *
+     * @param userOrOrgId {string}
      * @param projectId {string}
      * @param type {string} 'create' or 'delete'
      * @param rights {object} {read: true, write: true, delete: true}
      * @param callback
      * @returns {*}
      */
-    function authorizeByUserId(userId, projectId, type, rights, callback) {
+    function authorizeByUserOrOrgId(userOrOrgId, projectId, type, rights, callback) {
         var update;
         if (type === 'create' || type === 'set') {
             update = {$set: {}};
             update.$set['projects.' + projectId] = rights;
-            return collection.update({_id: userId}, update)
+            return collection.update({_id: userOrOrgId}, update)
                 .spread(function (numUpdated) {
-                    return numUpdated === 1;
+                    if (numUpdated !== 1) {
+                        return Q.reject('No such user or org [' + userOrOrgId + ']');
+                    }
                 })
                 .nodeify(callback);
         } else if (type === 'delete') {
             update = {$unset: {}};
             update.$unset['projects.' + projectId] = '';
-            return collection.update({_id: userId}, update)
+            return collection.update({_id: userOrOrgId}, update)
                 .spread(function (numUpdated) {
                     // FIXME this is always true. Try findAndUpdate instead
                     return numUpdated === 1;
@@ -760,9 +775,20 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * All users previous access will be lost, new owner will get full access.
+     *
+     * @param orgOrUserId
+     * @param projectName
+     * @param newOrgOrUserId
+     * @param callback
+     * @returns {*}
+     */
     function transferProject(orgOrUserId, projectName, newOrgOrUserId, callback) {
         var projectId = storageUtil.getProjectIdFromOwnerIdAndProjectName(orgOrUserId, projectName),
             projectInfo,
+            newProjectId,
             errMsg;
         logger.debug('transferProject: orgOrUserId, projectName, newOrgOrUserId',
             orgOrUserId, projectName, newOrgOrUserId);
@@ -784,14 +810,15 @@ function GMEAuth(session, gmeConfig) {
             })
             .then(function (newOwner) {
                 if (!newOwner) {
-                    errMsg = 'newOrgOrUserId [' + orgOrUserId + '] does not exist.';
+                    errMsg = 'newOrgOrUserId [' + newOrgOrUserId + '] does not exist.';
                     logger.debug('transferProject rejected: ', errMsg);
                     return Q.reject(new Error(errMsg));
                 }
                 return addProject(newOrgOrUserId, projectName, projectInfo);
             })
-            .then(function () {
-                return authorizeByUserId(newOrgOrUserId, projectId, 'set', {
+            .then(function (newProjectId_) {
+                newProjectId = newProjectId_;
+                return authorizeByUserOrOrgId(newOrgOrUserId, newProjectId, 'set', {
                     read: true,
                     write: true,
                     delete: true
@@ -799,6 +826,9 @@ function GMEAuth(session, gmeConfig) {
             })
             .then(function () {
                 return deleteProject(projectId);
+            })
+            .then(function () {
+                return newProjectId;
             })
             .nodeify(callback);
     }
@@ -923,7 +953,7 @@ function GMEAuth(session, gmeConfig) {
                 }
             })
             .then(function () {
-                collection.update({_id: userId, type: CONSTANTS.USER}, {orgs: {$pull: orgId}});
+                collection.update({_id: userId, type: CONSTANTS.USER}, {$pull: {orgs: orgId}});
             })
             .nodeify(callback);
     }
@@ -971,49 +1001,26 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function authorizeOrganization(orgId, projectId, type, rights, callback) {
-        var update;
-        if (type === 'create' || type === 'set') {
-            update = {$set: {}};
-            update.$set['projects.' + projectId] = rights;
-            return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION}, update)
-                .spread(function (numUpdated) {
-                    if (numUpdated !== 1) {
-                        return Q.reject('No such organization [' + orgId + ']');
-                    }
-                    return numUpdated === 1;
-                })
-                .nodeify(callback);
-        } else if (type === 'delete') {
-            update = {$unset: {}};
-            update.$unset['projects.' + projectId] = '';
-            return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION}, update)
-                .spread(function (numUpdated) {
-                    // FIXME this is always true. Try findAndUpdate instead
-                    return numUpdated === 1;
-                })
-                .nodeify(callback);
-        } else {
-            return Q.reject('invalid type ' + type)
-                .nodeify(callback);
-        }
+        return authorizeByUserOrOrgId(orgId, projectId, type, rights)
+            .nodeify(callback);
     }
 
     /**
      *
      * @param orgId
-     * @param projectName
+     * @param projectId
      * @param callback
      * @returns {*}
      */
-    function getAuthorizationInfoByOrgId(orgId, projectName, callback) {
+    function getAuthorizationInfoByOrgId(orgId, projectId, callback) {
         var projection = {};
-        projection['projects.' + projectName] = 1;
+        projection['projects.' + projectId] = 1;
         return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION}, projection)
             .then(function (orgData) {
                 if (!orgData) {
                     return Q.reject('No such organization [' + orgId + ']');
                 }
-                return orgData.projects[projectName] || {};
+                return orgData.projects[projectId] || {};
             })
             .nodeify(callback);
     }
