@@ -220,7 +220,7 @@ describe('Memory storage', function () {
 
         it('should fail to get projects and branches if not connected to database', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
-                projectName = 'something';
+                projectName = 'something1';
 
             importProjectAndClose(memoryStorage, projectName)
                 .then(function (/*projectId*/) {
@@ -253,8 +253,8 @@ describe('Memory storage', function () {
 
         it('should create a project', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
-                projectId,
-                projectName = 'something';
+                projectName = 'something2',
+                projectId = testFixture.projectName2Id(projectName);
 
             memoryStorage.openDatabase()
                 .then(function () {
@@ -332,8 +332,8 @@ describe('Memory storage', function () {
 
         it('should create and delete a project', function (done) {
             var memoryStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth),
-                projectId,
-                projectName = 'something';
+                projectName = 'something3',
+                projectId = testFixture.projectName2Id(projectName);
 
             memoryStorage.openDatabase()
                 .then(function () {

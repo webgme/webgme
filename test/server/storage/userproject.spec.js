@@ -15,19 +15,16 @@ describe('UserProject', function () {
         gmeAuth,
         expect = testFixture.expect,
         projectName = 'UserProject_test',
-        projectId = testFixture.projectName2Id(projectName),
+        //projectId = testFixture.projectName2Id(projectName),
         importResult,
         project;
 
     before(function (done) {
-        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, null)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
                 storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth_);
                 return storage.openDatabase();
-            })
-            .then(function () {
-                return storage.deleteProject({projectId: projectId});
             })
             .then(function () {
                 return testFixture.importProject(storage, {

@@ -351,7 +351,7 @@ describe('GME authentication', function () {
             })
             .catch(function (error) {
                 expect(error instanceof Error);
-                expect(error.message).to.contain('duplicate key error index');
+                expect(error.message).to.equal('Project already exists someUser+already_added in _projects collection');
                 done();
             })
             .done();
