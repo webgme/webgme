@@ -169,21 +169,14 @@ describe('Mongo storage', function () {
         var mongoStorage;
 
         afterEach(function (done) {
-            Q.allDone([
-                testFixture.forceDeleteProject(storage, gmeAuth, projectName),
-                testFixture.forceDeleteProject(storage, gmeAuth, projectDoesNotHaveAccessName)
-            ])
-                .finally(function () {
-                    // Don't care if we can't delete the project or it doesn't exist
-                    if (mongoStorage) {
-                        mongoStorage.closeDatabase(function (err) {
-                            mongoStorage = null;
-                            done(err);
-                        });
-                    } else {
-                        done();
-                    }
+            if (mongoStorage) {
+                mongoStorage.closeDatabase(function (err) {
+                    mongoStorage = null;
+                    done(err);
                 });
+            } else {
+                done();
+            }
         });
 
         it('should fail to open a project if not connected to database', function (done) {
@@ -249,7 +242,7 @@ describe('Mongo storage', function () {
 
         it('should fail to get project ids if not connected to database', function (done) {
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-            gmeAuth.authorizeByUserId(guestAccount, testFixture.projectName2Id('something'),
+            gmeAuth.authorizeByUserId(guestAccount, testFixture.projectName2Id('something1'),
                 'create',
                 {
                     read: true,
@@ -257,7 +250,7 @@ describe('Mongo storage', function () {
                     delete: true
                 })
                 .then(function () {
-                    return gmeAuth.addProject(guestAccount, 'something', null);
+                    return gmeAuth.addProject(guestAccount, 'something1', null);
                 })
                 .then(function () {
                     return mongoStorage.getProjects({branches: true});
@@ -288,6 +281,7 @@ describe('Mongo storage', function () {
         });
 
         it('should create a project', function (done) {
+            var nbrOfProjectsStart;
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
@@ -295,28 +289,29 @@ describe('Mongo storage', function () {
                     return mongoStorage.getProjects({branches: true});
                 })
                 .then(function (projects) {
-                    expect(projects).deep.equal([]);
+                    nbrOfProjectsStart = projects.length;
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
                     return mongoStorage.getProjects({branches: true});
                 })
                 .then(function (projects) {
-                    expect(projects[0]._id).to.equal(projectId);
+                    expect(projects.length > nbrOfProjectsStart).to.equal(true);
                     done();
                 })
                 .catch(done);
         });
 
         it('should not have access to project', function (done) {
+            var startProjects;
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjects({username: guestAccount, branches: true});
+                    return mongoStorage.getProjects({username: 'admin', branches: true});
                 })
                 .then(function (projects) {
-                    expect(projects).deep.equal([]);
+                    startProjects = projects;
                     return mongoStorage.createProject({
                         username: guestAccount,
                         projectName: projectDoesNotHaveAccessName
@@ -326,86 +321,65 @@ describe('Mongo storage', function () {
                     return mongoStorage.getProjects({username: 'admin', branches: true});
                 })
                 .then(function (projects) {
-                    expect(projects).deep.equal([]);
+                    expect(projects).deep.equal(startProjects);
                 })
                 .nodeify(done);
         });
 
         it('should fail to create a project if it already exists', function (done) {
+            var projectName = 'createdTwice',
+                projectId = testFixture.projectName2Id(projectName);
+
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjects({branches: true});
-                })
-                .then(function (projects) {
-                    expect(projects).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
-                    return mongoStorage.getProjects({branches: true});
-                })
-                .then(function (projects) {
-                    expect(projects[0]._id).to.equal(projectId);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
                     done(new Error('should have failed to createProject'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error && err.message.indexOf('already exist') > -1) {
-                        done();
-                    } else {
-                        done(new Error('should have failed to createProject'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.include('Error: Project already exists ' + projectId);
+                    done();
+                })
+                .done();
         });
 
         it('should create and delete a project', function (done) {
+            var projectName = 'createAndDelete',
+                projectId = testFixture.projectName2Id(projectName);
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjects({branches: true});
-                })
-                .then(function (projects) {
-                    expect(projects).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
-                    return mongoStorage.getProjects({branches: true});
-                })
-                .then(function (projects) {
-                    expect(projects[0]._id).deep.equal(projectId);
                     return mongoStorage.deleteProject({projectId: projectId});
                 })
-                .then(function () {
-                    return mongoStorage.getProjects({branches: true});
-                })
-                .then(function (projects) {
-                    expect(projects).deep.equal([]);
-                    done();
-                })
-                .catch(done);
+                .nodeify(done);
         });
 
         it('should open an existing project', function (done) {
+            var projectName = 'toBeOpened',
+                projectId = testFixture.projectName2Id(projectName);
+
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjects({branches: true});
-                })
-                .then(function (projects) {
-                    expect(projects).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
-                    return mongoStorage.getProjects({branches: true});
+                    return mongoStorage.openProject({projectId: projectId});
                 })
-                .then(function (projects) {
-                    expect(projects[0]._id).deep.equal(projectId);
-                    return mongoStorage.getBranches({projectId: projectId});
+                .then(function (project) {
+                    return project.getBranches();
                 })
                 .then(function (branches) {
                     // expect names of branches
@@ -416,35 +390,30 @@ describe('Mongo storage', function () {
         });
 
         it('should get an existing project', function (done) {
+            var projectName = 'toGet',
+                projectId = testFixture.projectName2Id(projectName);
+
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjects({branches: true});
-                })
-                .then(function (projects) {
-                    expect(projects).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
-                .then(function () {
-                    return mongoStorage.getProjects({branches: true});
-                })
-                .then(function (projects) {
-                    expect(projects[0]._id).deep.equal(projectId);
+                .then(function (project_) {
                     return mongoStorage._getProject({projectId: projectId});
                 })
-                .then(function (project) {
+                .then(function (dbProject) {
 
-                    expect(project.projectId).equal(projectId);
+                    expect(dbProject.projectId).equal(projectId);
 
-                    expect(project).to.have.property('closeProject');
-                    expect(project).to.have.property('loadObject');
-                    expect(project).to.have.property('insertObject');
-                    expect(project).to.have.property('getBranches');
-                    expect(project).to.have.property('getBranchHash');
-                    expect(project).to.have.property('setBranchHash');
-                    expect(project).to.have.property('getCommits');
-                    expect(project).to.have.property('getCommonAncestorCommit');
+                    expect(dbProject).to.have.property('closeProject');
+                    expect(dbProject).to.have.property('loadObject');
+                    expect(dbProject).to.have.property('insertObject');
+                    expect(dbProject).to.have.property('getBranches');
+                    expect(dbProject).to.have.property('getBranchHash');
+                    expect(dbProject).to.have.property('setBranchHash');
+                    expect(dbProject).to.have.property('getCommits');
+                    expect(dbProject).to.have.property('getCommonAncestorCommit');
 
                     done();
                 })
@@ -488,7 +457,7 @@ describe('Mongo storage', function () {
                 .then(function () {
                     return testFixture.importProject(storage, {
                         projectSeed: 'seeds/EmptyProject.json',
-                        projectName: projectName,
+                        projectName: 'importedAndGet',
                         gmeConfig: gmeConfig,
                         logger: logger
                     });
@@ -507,6 +476,7 @@ describe('Mongo storage', function () {
 
     describe('project specific functions', function () {
         var project,
+            projectId,
             mongoStorage;
 
         before(function (done) {
@@ -517,12 +487,12 @@ describe('Mongo storage', function () {
         beforeEach(function (done) {
             testFixture.importProject(mongoStorage, {
                 projectSeed: 'seeds/EmptyProject.json',
-                projectName: projectName,
+                projectName: 'projectSpecific',
                 gmeConfig: gmeConfig,
                 logger: logger
             })
                 .then(function (result) {
-                    expect(result.projectId).to.equal(projectId);
+                    projectId = result.projectId;
                     return mongoStorage._getProject({projectId: projectId});
                 })
                 .then(function (p) {

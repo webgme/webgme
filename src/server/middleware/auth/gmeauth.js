@@ -733,6 +733,13 @@ function GMEAuth(session, gmeConfig) {
             .then(function () {
                 return id;
             })
+            .catch(function (err) {
+                if (err.code === 11000) {
+                    throw new Error('Project already exists ' + id + ' in _projects collection');
+                } else {
+                    throw err;
+                }
+            })
             .nodeify(callback);
     }
 

@@ -397,6 +397,7 @@ describe('SafeStorage', function () {
 
     describe('getCommits', function () {
         var safeStorage,
+            projectId,
             commitHash;
 
         before(function (done) {
@@ -406,12 +407,13 @@ describe('SafeStorage', function () {
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
                         projectSeed: 'seeds/EmptyProject.json',
-                        projectName: projectName,
+                        projectName: 'getCommits',
                         gmeConfig: gmeConfig,
                         logger: logger
                     });
                 })
                 .then(function (result) {
+                    projectId = result.project.projectId;
                     commitHash = result.commitHash;
                     return Q();
                 })
@@ -499,6 +501,7 @@ describe('SafeStorage', function () {
     describe('BRANCH events', function () {
         var safeStorage,
             project,
+            projectId,
             newBranchHash,
             importResult;
 
@@ -509,7 +512,7 @@ describe('SafeStorage', function () {
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
                         projectSeed: 'seeds/EmptyProject.json',
-                        projectName: projectName,
+                        projectName: 'BRANCH_events',
                         gmeConfig: gmeConfig,
                         logger: logger
                     });
@@ -517,6 +520,7 @@ describe('SafeStorage', function () {
                 .then(function (result) {
                     importResult = result;
                     project = importResult.project;
+                    projectId = project.projectId;
                     return Q.allDone([
                         project.makeCommit(null, [importResult.commitHash], importResult.rootHash, {}, 'aCommit'),
                         project.createBranch('toBeDeleted', importResult.commitHash),
@@ -660,6 +664,7 @@ describe('SafeStorage', function () {
     describe('gmeConfig.storage.emitCommittedCoreObjects', function () {
         var safeStorage,
             project,
+            projectId,
             gmeConfigEmit = testFixture.getGmeConfig(),
             importResult;
 
@@ -671,7 +676,7 @@ describe('SafeStorage', function () {
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
                         projectSeed: 'seeds/EmptyProject.json',
-                        projectName: projectName,
+                        projectName: 'emitCommittedCoreObjects',
                         gmeConfig: gmeConfigEmit,
                         logger: logger
                     });
@@ -679,6 +684,7 @@ describe('SafeStorage', function () {
                 .then(function (result) {
                     importResult = result;
                     project = importResult.project;
+                    projectId = project.projectId;
                     return Q.allDone([
                         project.createBranch('emitAllWithNodes', importResult.commitHash),
                         project.createBranch('emitAllNoNodes', importResult.commitHash)
