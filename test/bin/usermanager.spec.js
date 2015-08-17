@@ -6,7 +6,7 @@
 
 var testFixture = require('../_globals');
 
-describe('User manager command line interface (CLI)', function () {
+describe.only('User manager command line interface (CLI)', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -74,7 +74,8 @@ describe('User manager command line interface (CLI)', function () {
                 'usermod_auth',
                 'orgmod_auth',
                 'usermod_organization_add',
-                'usermod_organization_del'
+                'usermod_organization_del',
+                'organizationlist'
             ],
             addTest,
 
@@ -583,6 +584,31 @@ describe('User manager command line interface (CLI)', function () {
                 });
         });
 
+        it('should add user to organization usermod_organization_add and make him admin', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org11'])
+                .then(function () {
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext']);
+                })
+                .then(function () {
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'usermod_organization_add', 'user', 'org11', '--makeAdmin']);
+                })
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);
+                })
+                .then(function () {
+                    restoreLogAndExit();
+                    done();
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
+
         it('should add user to organization and remove it usermod_organization_del', function (done) {
             suppressLogAndExit();
 
@@ -598,6 +624,48 @@ describe('User manager command line interface (CLI)', function () {
                 .then(function () {
                     return userManager.main(['node',
                         filename, '--db', mongoUri, 'usermod_organization_del', 'user', 'org11']);
+                })
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);
+                })
+                .then(function () {
+                    restoreLogAndExit();
+                    done();
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
+
+        it('should list organization', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org11'])
+                .then(function () {
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'organizationlist']);
+                })
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);
+                })
+                .then(function () {
+                    restoreLogAndExit();
+                    done();
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
+
+        it('should list specific organization', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org11'])
+                .then(function () {
+                    return userManager.main(['node',
+                        filename, '--db', mongoUri, 'organizationlist', 'org11']);
                 })
                 .then(function () {
                     return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);

@@ -173,8 +173,6 @@ main = function (argv) {
         .description('adds a new organization')
         .action(function (organizationname, options) {
 
-            console.log('[WARNING] Do not use organizations functionality yet.');
-
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (organizationname) {
@@ -199,10 +197,7 @@ main = function (argv) {
         .description('deletes an existing organization')
         .action(function (organizationname, options) {
 
-            console.log('[WARNING] Do not use organizations functionality yet.');
-
             setupGMEAuth(options.parent.db, function (/*err*/) {
-
                 if (organizationname) {
                     auth.removeOrganizationByOrgId(organizationname)
                         .then(mainDeferred.resolve)
@@ -274,9 +269,6 @@ main = function (argv) {
         .option('-a, --authorize <mode>', 'mode is rwd, read, write, delete', 'rwd')
         .option('-d, --deauthorize', 'deauthorizes user', false)
         .action(function (orgname, projectname, options) {
-
-            console.log('[WARNING] Do not use organizations functionality yet.');
-
             if (orgname && projectname) {
                 authUserOrGroup(orgname, projectname, options, 'authorizeOrganization');
             } else {
@@ -290,14 +282,17 @@ main = function (argv) {
     program
         .command('usermod_organization_add <username> <organizationname>')
         .description('adds a user to an existing organization')
+        .option('-m, --makeAdmin', 'make user admin', false)
         .action(function (username, organizationname, options) {
-
-            console.log('[WARNING] Do not use organizations functionality yet.');
-
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (username && organizationname) {
                     auth.addUserToOrganization(username, organizationname)
+                        .then(function () {
+                            if (options.makeAdmin) {
+                                return auth.setAdminForUserInOrganization(username, organizationname, true);
+                            }
+                        })
                         .then(mainDeferred.resolve)
                         .catch(mainDeferred.reject)
                         .finally(auth.unload);
@@ -310,6 +305,7 @@ main = function (argv) {
             console.log('  Examples:');
             console.log();
             console.log('    $ node usermanager.js usermod_organization_add user23 organization123');
+            console.log('    $ node usermanager.js usermod_organization_add --makeAdmin user23 organization123');
             console.log();
         });
 
@@ -317,13 +313,13 @@ main = function (argv) {
         .command('usermod_organization_del <username> <organizationname>')
         .description('removes a user from an existing organization')
         .action(function (username, organizationname, options) {
-
-            console.log('[WARNING] Do not use organizations functionality yet.');
-
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (username && organizationname) {
                     auth.removeUserFromOrganization(username, organizationname)
+                        .then(function () {
+                            return auth.setAdminForUserInOrganization(username, organizationname, false);
+                        })
                         .then(mainDeferred.resolve)
                         .catch(mainDeferred.reject)
                         .finally(auth.unload);
@@ -339,6 +335,39 @@ main = function (argv) {
             console.log();
         });
 
+    program
+        .command('organizationlist [organizationname]')
+        .description('lists all organizations or the specified organization')
+        .action(function (organizationname, options) {
+            setupGMEAuth(options.parent.db, function (/*err*/) {
+                if (organizationname) {
+                    auth.getOrganization(organizationname)
+                        .then(function (organObject) {
+                            // TODO: pretty print organObject
+                            console.log(organObject);
+                            mainDeferred.resolve();
+                        })
+                        .catch(mainDeferred.reject)
+                        .finally(auth.unload);
+                } else {
+                    auth.listOrganizations(null)
+                        .then(function (organObject) {
+                            // TODO: pretty print organObject
+                            console.log(organObject);
+                            mainDeferred.resolve();
+                        })
+                        .catch(mainDeferred.reject)
+                        .finally(auth.unload);
+                }
+            });
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node usermanager.js organizationlist');
+            console.log('    $ node usermanager.js organizationlist organ23');
+            console.log();
+        });
 
     program.parse(args);
 

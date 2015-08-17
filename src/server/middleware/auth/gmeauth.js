@@ -541,7 +541,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function getUserAuthInfo(userId, callback) {
-        return collection.findOne({_id: userId})
+        return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
             .then(function (userData) {
                 if (!userData) {
                     return Q.reject('no such user [' + userId + ']');
@@ -569,7 +569,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function getUser(userId, callback) {
-        return collection.findOne({_id: userId})
+        return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
             .then(function (userData) {
                 if (!userData) {
                     return Q.reject('no such user [' + userId + ']');
@@ -587,7 +587,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function deleteUser(userId, callback) {
-        return collection.remove({_id: userId})
+        return collection.remove({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
             .nodeify(callback);
     }
 
@@ -599,7 +599,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function updateUser(userId, data, callback) {
-        return collection.findOne({_id: userId})
+        return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
             .then(function (userData) {
                 if (!userData) {
                     return Q.reject('no such user [' + userId + ']');
@@ -638,7 +638,7 @@ function GMEAuth(session, gmeConfig) {
      */
     function listUsers(query, callback) {
         // FIXME: query can paginate, or filter users
-        return collection.find({type: CONSTANTS.USER})
+        return collection.find({type: {$ne: CONSTANTS.ORGANIZATION}})
             .then(function (users) {
                 return Q.ninvoke(users, 'toArray');
             })
@@ -864,7 +864,7 @@ function GMEAuth(session, gmeConfig) {
                 if (!org) {
                     return Q.reject('No such organization [' + orgId + ']');
                 }
-                return [org, collection.find({orgs: orgId, type: CONSTANTS.USER}, {_id: 1})];
+                return [org, collection.find({orgs: orgId, type: {$ne: CONSTANTS.ORGANIZATION}}, {_id: 1})];
             })
             .spread(function (org, users) {
                 return [org, Q.ninvoke(users, 'toArray')];
@@ -928,7 +928,7 @@ function GMEAuth(session, gmeConfig) {
                 }
             })
             .then(function () {
-                return collection.update({_id: userId, type: CONSTANTS.USER}, {$addToSet: {orgs: orgId}})
+                return collection.update({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}}, {$addToSet: {orgs: orgId}})
                     .spread(function (count) {
                         if (count === 0) {
                             return Q.reject('No such user [' + userId + ']');
@@ -953,7 +953,7 @@ function GMEAuth(session, gmeConfig) {
                 }
             })
             .then(function () {
-                collection.update({_id: userId, type: CONSTANTS.USER}, {$pull: {orgs: orgId}});
+                collection.update({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}}, {$pull: {orgs: orgId}});
             })
             .nodeify(callback);
     }
