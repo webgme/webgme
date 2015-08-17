@@ -689,9 +689,8 @@ describe('GME authentication', function () {
     });
 
     it('getAdminsInOrganization should fail with non-existing organization', function (done) {
-        var orgId = 'doesNotExist',
-            userId = 'adminUser';
-        return auth.getAdminsInOrganization(userId, orgId)
+        var orgId = 'doesNotExist';
+        return auth.getAdminsInOrganization(orgId)
             .then(function () {
                 throw 'getAdminsInOrganization should fail with non-existing organization';
             })
@@ -703,11 +702,10 @@ describe('GME authentication', function () {
     });
 
     it('getAdminsInOrganization return empty array for new organization', function (done) {
-        var orgId = 'orgAdmin1',
-            userId = 'adminUser1';
+        var orgId = 'orgAdmin1';
         return auth.addOrganization(orgId)
             .then(function () {
-                return auth.getAdminsInOrganization(userId, orgId);
+                return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
                 expect(admins).to.deep.equal([]);
@@ -723,7 +721,7 @@ describe('GME authentication', function () {
                 return auth.setAdminForUserInOrganization(userId, orgId, true);
             })
             .then(function () {
-                return auth.getAdminsInOrganization(userId, orgId);
+                return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
                 expect(admins.indexOf(userId) > - 1).to.equal(true);
@@ -739,7 +737,7 @@ describe('GME authentication', function () {
                 return auth.setAdminForUserInOrganization(userId, orgId, true);
             })
             .then(function () {
-                return auth.getAdminsInOrganization(userId, orgId);
+                return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
                 expect(admins.indexOf(userId) > - 1).to.equal(true);
@@ -748,7 +746,7 @@ describe('GME authentication', function () {
                 return auth.setAdminForUserInOrganization(userId, orgId, false);
             })
             .then(function () {
-                return auth.getAdminsInOrganization(userId, orgId);
+                return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
                 expect(admins.indexOf(userId) > - 1).to.equal(false);
@@ -764,7 +762,7 @@ describe('GME authentication', function () {
                 return auth.setAdminForUserInOrganization(userId, orgId, true);
             })
             .then(function () {
-                return auth.getAdminsInOrganization(userId, orgId);
+                return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
                 expect(admins.indexOf(userId) > - 1).to.equal(true);
@@ -773,7 +771,7 @@ describe('GME authentication', function () {
                 return auth.setAdminForUserInOrganization(userId, orgId, true);
             })
             .then(function () {
-                return auth.getAdminsInOrganization(userId, orgId);
+                return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
                 expect(admins.indexOf(userId) > - 1).to.equal(true);
@@ -789,7 +787,7 @@ describe('GME authentication', function () {
                 return auth.setAdminForUserInOrganization(userId, orgId, false);
             })
             .then(function () {
-                return auth.getAdminsInOrganization(userId, orgId);
+                return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
                 expect(admins.indexOf(userId) > - 1).to.equal(false);

@@ -231,13 +231,13 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
  * @param {object} data - input parameters
  * @param {string} data.projectName - name of new project.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
+ * @param {string} [data.ownerId=data.username]
  * @param {function} [callback]
  * @returns {promise} //TODO: jsdocify this
  */
 SafeStorage.prototype.createProject = function (data, callback) {
     var deferred = Q.defer(),
         rejected = false,
-        userAuthInfo,
         self = this;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
@@ -250,18 +250,35 @@ SafeStorage.prototype.createProject = function (data, callback) {
         data.username = this.gmeConfig.authentication.guestAccount;
     }
 
+    if (data.hasOwnProperty('ownerId')) {
+        rejected = rejected || check(typeof data.ownerId === 'string', deferred, 'data.ownerId is not a string.');
+    } else {
+        data.ownerId = data.username;
+    }
+
     if (rejected === false) {
         this.gmeAuth.getUser(data.username)
             .then(function (user) {
+                if (!user.canCreate) {
+                    throw new Error('Not authorized to create a new project.');
+                } else if (data.ownerId === data.username) {
+                    return data.ownerId;
+                } else {
+                    return self.gmeAuth.getAdminsInOrganization(data.ownerId)
+                        .then(function (admins) {
+                            if (admins.indexOf(data.username) > -1) {
+                                return data.ownerId;
+                            } else {
+                                throw new Error('Not authorized to create project in organization ' + data.ownerId);
+                            }
+                        });
+                }
+            })
+            .then(function (ownerId) {
                 var info = {
                     createdAt: (new Date()).toISOString()
                 };
-                userAuthInfo = user.projects;
-                if (user.canCreate) {
-                    return self.gmeAuth.addProject(data.username, data.projectName, info);
-                } else {
-                    throw new Error('Not authorized to create a new project.');
-                }
+                return self.gmeAuth.addProject(ownerId, data.projectName, info);
             })
             .then(function (projectId) {
                 data.projectId = projectId;

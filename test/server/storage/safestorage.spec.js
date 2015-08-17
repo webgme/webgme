@@ -760,4 +760,180 @@ describe('SafeStorage', function () {
                 .catch(done);
         });
     });
+
+    describe('Project Creation', function () {
+        var safeStorage,
+            notInOrgCanNotCreate = 'notInOrgCanNotCreate',
+            notInOrgCanCreate = 'notInOrgCanCreate',
+            inOrgCanCreateNotAdmin = 'inOrgCanCreateNotAdmin',
+            inOrgCanCreateAdmin = 'inOrgCanCreateAdmin';
+
+        before(function (done) {
+            Q.allDone([
+                gmeAuth.addUser(notInOrgCanNotCreate, '@', 'p', false, {}),
+                gmeAuth.addUser(notInOrgCanCreate, '@', 'p', true, {}),
+                gmeAuth.addUser(inOrgCanCreateNotAdmin, '@', 'p', true, {}),
+                gmeAuth.addUser(inOrgCanCreateAdmin, '@', 'p', true, {}),
+                gmeAuth.addOrganization('theOrg')
+            ])
+                .then(function () {
+                    return Q.allDone([
+                        gmeAuth.addUserToOrganization(inOrgCanCreateNotAdmin, 'theOrg'),
+                        gmeAuth.addUserToOrganization(inOrgCanCreateAdmin, 'theOrg'),
+                        gmeAuth.setAdminForUserInOrganization(inOrgCanCreateAdmin, 'theOrg', true)
+                    ]);
+                })
+                .then(function () {
+                    safeStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                    return safeStorage.openDatabase();
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            safeStorage.closeDatabase(done);
+        });
+
+        it('should fail notInOrgCanNotCreate1', function (done) {
+            var projectName = 'notInOrgCanNotCreate1',
+                username = notInOrgCanNotCreate,
+                ownerId = notInOrgCanNotCreate,
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId
+                };
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Not authorized to create a new project');
+                    done();
+                })
+                .done();
+        });
+
+        it('should fail notInOrgCanNotCreate2', function (done) {
+            var projectName = 'notInOrgCanNotCreate2',
+                username = notInOrgCanNotCreate,
+                data = {
+                    projectName: projectName,
+                    username: username
+                };
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Not authorized to create a new project');
+                    done();
+                })
+                .done();
+        });
+
+        it('should create for user notInOrgCanCreate', function (done) {
+            var projectName = 'notInOrgCanCreate1',
+                username = notInOrgCanCreate,
+                data = {
+                    projectName: projectName,
+                    username: username
+                },
+                projectId;
+            safeStorage.createProject(data)
+                .then(function (project) {
+                    projectId = project.projectId;
+                    return safeStorage.getProjects(data);
+                })
+                .then(function (projects) {
+                    expect(projects.hasOwnProperty(projectId));
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to create for organization notInOrgCanCreate', function (done) {
+            var projectName = 'notInOrgCanCreate2',
+                username = notInOrgCanCreate,
+                ownerId = 'theOrg',
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId
+                };
+
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Not authorized to create project in organization theOrg');
+                    done();
+                })
+                .done();
+        });
+
+        it('should fail to create for organization inOrgCanCreateNotAdmin', function (done) {
+            var projectName = 'inOrgCanCreateNotAdmin1',
+                username = inOrgCanCreateNotAdmin,
+                ownerId = 'theOrg',
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId
+                };
+
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Not authorized to create project in organization theOrg');
+                    done();
+                })
+                .done();
+        });
+
+        it('should create for user inOrgCanCreateAdmin', function (done) {
+            var projectName = 'inOrgCanCreateAdmin',
+                username = inOrgCanCreateAdmin,
+                ownerId = 'theOrg',
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId
+                },
+                projectId;
+            safeStorage.createProject(data)
+                .then(function (project) {
+                    projectId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerId, projectName);
+                    expect(project.projectId).to.equal(projectId);
+                    return safeStorage.getProjects(data);
+                })
+                .then(function (projects) {
+                    expect(projects.hasOwnProperty(projectId));
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to create for non-existing organization', function (done) {
+            var projectName = 'nonExistingOrganization',
+                username = inOrgCanCreateAdmin,
+                ownerId = inOrgCanCreateNotAdmin,
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId
+                };
+
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('No such organization [inOrgCanCreateNotAdmin]');
+                    done();
+                })
+                .done();
+        });
+    });
 });
