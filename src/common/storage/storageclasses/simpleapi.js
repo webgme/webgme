@@ -121,11 +121,17 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     };
 
     // Setters
-    StorageSimpleAPI.prototype.createProject = function (projectName, callback) {
-        var data = {
-            projectName: projectName
-        },
-            self = this;
+    StorageSimpleAPI.prototype.createProject = function (projectName, ownerId, callback) {
+        var self = this,
+            data = {
+                projectName: projectName,
+                ownerId: ownerId
+            };
+
+        if (callback === undefined && typeof ownerId === 'function') {
+            callback = ownerId;
+            data.ownerId = undefined;
+        }
 
         this.logger.debug('invoking createProject', {metadata: data});
 

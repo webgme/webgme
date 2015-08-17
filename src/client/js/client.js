@@ -1441,10 +1441,14 @@ define([
         };
 
         //create from file
-        this.createProjectFromFile = function (projectName, branchName, jProject, callback) {
+        this.createProjectFromFile = function (projectName, branchName, jProject, ownerId, callback) {
             branchName = branchName || 'master';
+            if (callback === undefined && typeof ownerId === 'function') {
+                callback = ownerId;
+                ownerId = undefined;
+            }
 
-            storage.createProject(projectName, function (err, projectId) {
+            storage.createProject(projectName, ownerId, function (err, projectId) {
                 if (err) {
                     callback(err);
                     return;
