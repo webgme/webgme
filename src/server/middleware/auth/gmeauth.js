@@ -967,7 +967,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function setAdminForUserInOrganization(userId, orgId, makeAdmin, callback) {
-        return getAdminsInOrganization(userId, orgId)
+        return getAdminsInOrganization(orgId)
             .then(function (admins) {
                 if (makeAdmin) {
                     return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION}, {$addToSet: {admins: userId}});
@@ -980,7 +980,7 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-    function getAdminsInOrganization(userId, orgId, callback) {
+    function getAdminsInOrganization(orgId, callback) {
         return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION}, {admins: 1})
             .then(function (org) {
                 if (!org) {
