@@ -360,7 +360,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
             var jsonSeed,
                 seedReady = function () {
                     logger.debug('seedProject - seedReady');
-                    storage.createProject(parameters.projectName, function (err, projectId) {
+                    storage.createProject(parameters.projectName, parameters.ownerId, function (err, projectId) {
                         if (err) {
                             logger.error('empty project creation failed', err);
                             finish(err);

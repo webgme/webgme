@@ -250,7 +250,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
         data.username = this.gmeConfig.authentication.guestAccount;
     }
 
-    if (data.hasOwnProperty('ownerId')) {
+    if (data.ownerId) {
         rejected = rejected || check(typeof data.ownerId === 'string', deferred, 'data.ownerId is not a string.');
     } else {
         data.ownerId = data.username;

@@ -118,6 +118,7 @@ main = function (argv) {
 
             if (program.owner) {
                 params.projectId = program.owner + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+                params.ownerId = program.owner;
             } else if (program.user) {
                 params.projectId = program.user + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
             } else {
