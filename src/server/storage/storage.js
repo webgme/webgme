@@ -77,10 +77,10 @@ Storage.prototype.renameProject = function (data, callback) {
     var self = this;
     return this.mongo.renameProject(data.projectId, data.newProjectId)
         .then(function () {
-            var eventDataCreated = {
+            var eventDataDeleted = {
                     projectId: data.projectId
                 },
-                eventDataDeleted = {
+                eventDataCreated = {
                     projectId: data.newProjectId
                 };
 
