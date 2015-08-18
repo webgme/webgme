@@ -157,7 +157,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
         })
         .then(function (gmeAuth_) {
             gmeAuth = gmeAuth_;
-            return Q.allSettled([
+            return Q.allDone([
                 gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
                 gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
             ]);
@@ -193,7 +193,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
                 logger.warn('No projects to authorize...', projectNameOrNames);
             }
 
-            return Q.allSettled(projectsToAuthorize);
+            return Q.allDone(projectsToAuthorize);
         })
         .then(function () {
             deferred.resolve(gmeAuth);

@@ -158,6 +158,10 @@ define([
             self.socket.emit('createProject', data, callback);
         };
 
+        this.transferProject = function (data, callback) {
+            self.socket.emit('transferProject', data, callback);
+        };
+
         this.getBranches = function (data, callback) {
             self.socket.emit('getBranches', data, callback);
         };

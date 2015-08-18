@@ -420,6 +420,27 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     });
             });
 
+            socket.on('transferProject', function (data, callback) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
+                            data.socket = socket;
+                        }
+                        data.username = userId;
+                        return storage.transferProject(data);
+                    })
+                    .then(function (newProjectId) {
+                        callback(null, newProjectId);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
             socket.on('getBranches', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {

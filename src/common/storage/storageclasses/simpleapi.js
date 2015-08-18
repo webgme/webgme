@@ -155,6 +155,15 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         this.webSocket.deleteProject(data, callback);
     };
 
+    StorageSimpleAPI.prototype.transferProject = function (projectId, newOwnerId, callback) {
+        var data = {
+            projectId: projectId,
+            newOwnerId: newOwnerId
+        };
+        this.logger.debug('invoking transferProject', {metadata: data});
+        this.webSocket.transferProject(data, callback);
+    };
+
     StorageSimpleAPI.prototype.setBranchHash = function (projectId, branchName, newHash, oldHash, callback) {
         var data = {
             projectId: projectId,
