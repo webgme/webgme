@@ -780,40 +780,21 @@ function GMEAuth(session, gmeConfig) {
      * All users previous access will be lost, new owner will get full access.
      *
      * @param orgOrUserId
-     * @param projectName
+     * @param projectId
      * @param newOrgOrUserId
      * @param callback
      * @returns {*}
      */
-    function transferProject(orgOrUserId, projectName, newOrgOrUserId, callback) {
-        var projectId = storageUtil.getProjectIdFromOwnerIdAndProjectName(orgOrUserId, projectName),
-            projectInfo,
-            newProjectId,
-            errMsg;
-        logger.debug('transferProject: orgOrUserId, projectName, newOrgOrUserId',
-            orgOrUserId, projectName, newOrgOrUserId);
+    function transferProject(projectId, newOrgOrUserId, callback) {
+        var projectInfo,
+            projectName,
+            newProjectId;
+        logger.debug('transferProject: projectId, newOrgOrUserId', projectId, newOrgOrUserId);
 
-        return projectCollection.findOne({_id: projectId})
+        return getProject(projectId)
             .then(function (projectData) {
-                if (!projectData) {
-                    errMsg = 'no such project [' + projectId + ']';
-                    logger.debug('transferProject rejected: ', errMsg);
-                    return Q.reject(new Error(errMsg));
-                }
-                if (projectData.owner !== orgOrUserId) {
-                    errMsg = 'orgOrUserId [' + orgOrUserId + '] not owner of [' + projectId + ']';
-                    logger.debug('transferProject rejected: ', errMsg);
-                    return Q.reject(new Error(errMsg));
-                }
                 projectInfo = projectData.info;
-                return collection.findOne({_id: newOrgOrUserId});
-            })
-            .then(function (newOwner) {
-                if (!newOwner) {
-                    errMsg = 'newOrgOrUserId [' + newOrgOrUserId + '] does not exist.';
-                    logger.debug('transferProject rejected: ', errMsg);
-                    return Q.reject(new Error(errMsg));
-                }
+                projectName = projectData.name;
                 return addProject(newOrgOrUserId, projectName, projectInfo);
             })
             .then(function (newProjectId_) {
@@ -1021,6 +1002,27 @@ function GMEAuth(session, gmeConfig) {
                     return Q.reject('No such organization [' + orgId + ']');
                 }
                 return orgData.projects[projectId] || {};
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param userOrOrgId
+     * @param callback
+     * @returns {*}
+     */
+    function getUserOrOrg(userOrOrgId, callback) {
+        return collection.findOne({_id: userOrOrgId})
+            .then(function (userOrOrgData) {
+                if (!userOrOrgData) {
+                    return Q.reject('no such user or org [' + userOrOrgId + ']');
+                }
+                if (!userOrOrgData.type || userOrOrgData.type === CONSTANTS.USER) {
+                    delete userOrOrgData.passwordHash;
+                    userOrOrgData.type = CONSTANTS.USER;
+                }
+                return userOrOrgData;
             })
             .nodeify(callback);
     }
