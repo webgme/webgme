@@ -57,14 +57,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         var userId = userId;
         return getUserIdFromSocket(socket)
             .then(function (userId) {
-                return gmeAuth.getUser(userId);
-            })
-            .then(function (user) {
-                if (user.projects.hasOwnProperty(projectId)) {
-                    return Q(user.projects[projectId]);
-                } else {
-                    return Q({read: false, write: false, delete: false});
-                }
+                return gmeAuth.getProjectAuthorizationByUserId(userId, projectId);
             })
             .nodeify(callback);
     }

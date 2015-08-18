@@ -851,6 +851,20 @@ define([
             }
         };
 
+        this.transferProject = function (projectId, newOwnerId, callback) {
+            if (isConnected()) {
+                storage.transferProject(projectId, newOwnerId, function (err, newProjectId) {
+                    if (err) {
+                        callback(new Error(err));
+                        return;
+                    }
+                    callback(null, newProjectId);
+                });
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
         this.createBranch = function (projectId, branchName, newHash, callback) {
             if (isConnected()) {
                 storage.createBranch(projectId, branchName, newHash, callback);
