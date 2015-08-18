@@ -76,7 +76,7 @@ Storage.prototype.createProject = function (data, callback) {
 Storage.prototype.renameProject = function (data, callback) {
     var self = this;
     return this.mongo.renameProject(data.projectId, data.newProjectId)
-        .then(function (project) {
+        .then(function () {
             var eventDataCreated = {
                     projectId: data.projectId
                 },
@@ -92,7 +92,8 @@ Storage.prototype.renameProject = function (data, callback) {
 
             self.dispatchEvent(CONSTANTS.PROJECT_CREATED, eventDataCreated);
             self.dispatchEvent(CONSTANTS.PROJECT_DELETED, eventDataDeleted);
-            return project;
+
+            return data.newProjectId;
         })
         .nodeify(callback);
 };

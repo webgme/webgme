@@ -1065,6 +1065,8 @@ function GMEAuth(session, gmeConfig) {
         getOrganization: getOrganization,
         listOrganizations: listOrganizations,
 
+        getUserOrOrg: getUserOrOrg,
+
         removeOrganizationByOrgId: removeOrganizationByOrgId,
         addUserToOrganization: addUserToOrganization,
         removeUserFromOrganization: removeUserFromOrganization,
