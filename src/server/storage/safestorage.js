@@ -1,5 +1,5 @@
 /*globals requireJS*/
-/*jshint node:true, newcap:false*/
+/*jshint node:true*/
 /**
  * This class forwards function calls to the storage and in addition:
  *  - checks that input data is of correct format.
@@ -13,8 +13,6 @@
 'use strict';
 
 var Q = require('q'),
-
-    CONSTANTS = requireJS('common/storage/constants'),
     REGEXP = requireJS('common/regexp'),
     ASSERT = requireJS('common/util/assert'),
     Storage = require('./storage'),
@@ -297,6 +295,70 @@ SafeStorage.prototype.createProject = function (data, callback) {
             })
             .catch(function (err) {
                 // TODO: Clean up appropriately when failure to add to model, user or projects database.
+                deferred.reject(new Error(err));
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
+/**
+ *
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
+SafeStorage.prototype.transferProject = function (data, callback) {
+    var deferred = Q.defer(),
+        rejected = false,
+        self = this;
+
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+        check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+        check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
+        check(typeof data.newOwnerId === 'string', deferred, 'data.newOwnerId is not a string.');
+
+    if (data.hasOwnProperty('username')) {
+        rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
+    } else {
+        data.username = this.gmeConfig.authentication.guestAccount;
+    }
+
+    if (rejected === false) {
+        self.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+            .then(function (projectAccess) {
+                if (projectAccess.delete) {
+                    return self.gmeAuth.getUserOrOrg(data.newOwnerId);
+                } else {
+                    throw new Error('Not authorized to delete project: ' + data.projectId);
+                }
+            })
+            .then(function (newOwner) {
+                if (newOwner._id === data.username) {
+
+                } else if (newOwner.type === self.gmeAuth.CONSTANTS.ORGANIZATION) {
+                    return self.gmeAuth.getAdminsInOrganization(newOwner._id)
+                        .then(function (admins) {
+                            if (admins.indexOf(data.username) === -1) {
+                                throw new Error('Not authorized to transfer project to organization ' + newOwner._id);
+                            }
+                        });
+                } else {
+                    throw new Error('Not authorized to transfer projects to other users ' + newOwner._id);
+                }
+            })
+            .then(function () {
+                return self.gmeAuth.transferProject(data.projectId, data.newOwnerId);
+            })
+            .then(function (newProjectId) {
+                data.newProjectId = newProjectId;
+                return Storage.prototype.renameProject.call(self, data);
+            })
+            .then(function (dbProject) {
+                var project = new UserProject(dbProject, self, self.logger, self.gmeConfig);
+                deferred.resolve(project);
+            })
+            .catch(function (err) {
                 deferred.reject(new Error(err));
             });
     }
