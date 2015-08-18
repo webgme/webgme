@@ -446,33 +446,40 @@ function Memory(mainLogger, gmeConfig) {
             key,
             keyArray,
             i,
-            err,
             namesToRemove = [],
+            oldProjectKey,
+            newProject,
             namesToAdd = [];
 
         if (storage.connected) {
-            for (i = 0; i < storage.length; i += 1) {
-                key = storage.key(i);
-                keyArray = key.split(SEPARATOR);
-                ASSERT(keyArray.length === 3);
-                if (keyArray[0] === database) {
-                    if (keyArray[1] === projectId) {
-                        namesToRemove.push(key);
-                        namesToAdd.push(keyArray[0] + SEPARATOR + newProjectId + SEPARATOR + keyArray[2]);
-                    } else if (keyArray[1] === newProjectId) {
-                        err = new Error('duplicate key'); //TODO: Appropriate error mimicking mongodb
-                        break;
+            newProject = storage.getItem(database + SEPARATOR + newProjectId + SEPARATOR);
+            if (newProject) {
+                deferred.reject(new Error('Project already exists ' + newProjectId));
+            } else {
+                newProject = new Project(newProjectId);
+
+                for (i = 0; i < storage.length; i += 1) {
+                    key = storage.key(i);
+                    keyArray = key.split(SEPARATOR);
+                    ASSERT(keyArray.length === 3);
+                    if (keyArray[0] === database) {
+                        if (keyArray[1] === projectId) {
+                            if (keyArray[2]) {
+                                namesToRemove.push(key);
+                                namesToAdd.push(keyArray[0] + SEPARATOR + newProjectId + SEPARATOR + keyArray[2]);
+                            } else {
+                                oldProjectKey = keyArray[0] + SEPARATOR + projectId + SEPARATOR;
+                            }
+                        }
                     }
                 }
-            }
 
-            if (err) {
-                deferred.reject(err);
-            } else {
                 for (i = 0; i < namesToRemove.length; i += 1) {
+                    storage.setItem(namesToAdd[i], storage.getItem(namesToRemove[i]));
                     storage.removeItem(namesToRemove[i]);
-                    storage.setItem(namesToAdd[i]);
                 }
+
+                storage.removeItem(oldProjectKey);
 
                 deferred.resolve();
             }
