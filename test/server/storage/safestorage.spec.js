@@ -761,7 +761,7 @@ describe('SafeStorage', function () {
         });
     });
 
-    describe('Project Creation', function () {
+    describe('Project Creation/Transfer', function () {
         var safeStorage,
             notInOrgCanNotCreate = 'notInOrgCanNotCreate',
             notInOrgCanCreate = 'notInOrgCanCreate',
@@ -931,6 +931,171 @@ describe('SafeStorage', function () {
                 })
                 .catch(function (err) {
                     expect(err.message).to.contain('No such organization [inOrgCanCreateNotAdmin]');
+                    done();
+                })
+                .done();
+        });
+
+        it('should transfer a project to an organization where user is admin', function (done) {
+            var projectName = 'inOrgAsAdminTransfer',
+                username = inOrgCanCreateAdmin,
+                ownerId = 'theOrg',
+                createData = {
+                    projectName: projectName,
+                    username: username
+                },
+                transferData = {
+                    username: username,
+                    newOwnerId: ownerId,
+                    projectId: null
+                },
+                newProjectId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerId, projectName);
+
+            safeStorage.createProject(createData)
+                .then(function (project) {
+                    transferData.projectId = project.projectId;
+                    return safeStorage.transferProject(transferData);
+                })
+                .then(function (newProjectId_) {
+                    expect(newProjectId_).to.equal(newProjectId);
+                    return safeStorage.openProject({projectId: newProjectId, username: username});
+                })
+                .then(function (project) {
+                    expect(project.projectId).to.equal(newProjectId);
+                })
+                .nodeify(done);
+        });
+
+        it('should not transfer project to an organization where user is not admin', function (done) {
+            var projectName = 'inOrgNotAdminTransfer',
+                username = inOrgCanCreateNotAdmin,
+                ownerId = 'theOrg',
+                createData = {
+                    projectName: projectName,
+                    username: username
+                },
+                transferData = {
+                    username: username,
+                    newOwnerId: ownerId,
+                    projectId: null
+                };
+
+            safeStorage.createProject(createData)
+                .then(function (project) {
+                    transferData.projectId = project.projectId;
+                    return safeStorage.transferProject(transferData);
+                })
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Not authorized to transfer project to organization theOrg');
+                    done();
+                })
+                .done();
+        });
+
+        it('should not transfer a non-existing project', function (done) {
+            var projectId = 'doesNotExistTransfer',
+                username = inOrgCanCreateNotAdmin,
+                transferData = {
+                    username: username,
+                    projectId: projectId,
+                    newOwnerId: 'someOwner'
+                };
+
+            safeStorage.transferProject(transferData)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Error: Not authorized to delete project: doesNotExistTransfer');
+                    done();
+                })
+                .done();
+        });
+
+        it('should not transfer a project to another user', function (done) {
+            var projectName = 'notBeTransferredToOtherUser',
+                username = inOrgCanCreateAdmin,
+                ownerId = inOrgCanCreateNotAdmin,
+                createData = {
+                    projectName: projectName,
+                    username: username
+                },
+                transferData = {
+                    username: username,
+                    newOwnerId: ownerId,
+                    projectId: null
+                };
+
+            safeStorage.createProject(createData)
+                .then(function (project) {
+                    transferData.projectId = project.projectId;
+                    return safeStorage.transferProject(transferData);
+                })
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Not authorized to transfer projects to other users');
+                    done();
+                })
+                .done();
+        });
+
+        it('should not transfer a project to non-existing new owner', function (done) {
+            var projectName = 'notBeTransferredToNonExistingOwner',
+                username = inOrgCanCreateAdmin,
+                ownerId = 'doesNotExist',
+                createData = {
+                    projectName: projectName,
+                    username: username
+                },
+                transferData = {
+                    username: username,
+                    newOwnerId: ownerId,
+                    projectId: null
+                };
+
+            safeStorage.createProject(createData)
+                .then(function (project) {
+                    transferData.projectId = project.projectId;
+                    return safeStorage.transferProject(transferData);
+                })
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('no such user or org [doesNotExist]');
+                    done();
+                })
+                .done();
+        });
+
+        it('should not transfer a project to the same owner', function (done) {
+            var projectName = 'sameOwnerAfterTransfer',
+                username = inOrgCanCreateAdmin,
+                createData = {
+                    projectName: projectName,
+                    username: username
+                },
+                transferData = {
+                    username: username,
+                    newOwnerId: username,
+                    projectId: null
+                };
+
+            safeStorage.createProject(createData)
+                .then(function (project) {
+                    transferData.projectId = project.projectId;
+                    return safeStorage.transferProject(transferData);
+                })
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Project already exists inOrgCanCreateAdmin+sameOwnerAfterTransfer');
                     done();
                 })
                 .done();

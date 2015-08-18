@@ -354,9 +354,8 @@ SafeStorage.prototype.transferProject = function (data, callback) {
                 data.newProjectId = newProjectId;
                 return Storage.prototype.renameProject.call(self, data);
             })
-            .then(function (dbProject) {
-                var project = new UserProject(dbProject, self, self.logger, self.gmeConfig);
-                deferred.resolve(project);
+            .then(function (newProjectId) {
+                deferred.resolve(newProjectId);
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));

@@ -441,6 +441,47 @@ function Memory(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
+    function renameProject(projectId, newProjectId, callback) {
+        var deferred = Q.defer(),
+            key,
+            keyArray,
+            i,
+            err,
+            namesToRemove = [],
+            namesToAdd = [];
+
+        if (storage.connected) {
+            for (i = 0; i < storage.length; i += 1) {
+                key = storage.key(i);
+                keyArray = key.split(SEPARATOR);
+                ASSERT(keyArray.length === 3);
+                if (keyArray[0] === database) {
+                    if (keyArray[1] === projectId) {
+                        namesToRemove.push(key);
+                        namesToAdd.push(keyArray[0] + SEPARATOR + newProjectId + SEPARATOR + keyArray[2]);
+                    } else if (keyArray[1] === newProjectId) {
+                        err = new Error('duplicate key'); //TODO: Appropriate error mimicking mongodb
+                        break;
+                    }
+                }
+            }
+
+            if (err) {
+                deferred.reject(err);
+            } else {
+                for (i = 0; i < namesToRemove.length; i += 1) {
+                    storage.removeItem(namesToRemove[i]);
+                    storage.setItem(namesToAdd[i]);
+                }
+
+                deferred.resolve();
+            }
+        } else {
+            deferred.reject(new Error('In-memory database has to be initialized. Call openDatabase first.'));
+        }
+
+        return deferred.promise.nodeify(callback);
+    }
 
     this.openDatabase = openDatabase;
     this.closeDatabase = closeDatabase;
@@ -448,6 +489,7 @@ function Memory(mainLogger, gmeConfig) {
     this.createProject = createProject;
     this.deleteProject = deleteProject;
     this.openProject = openProject;
+    this.renameProject = renameProject;
 }
 
 module.exports = Memory;
