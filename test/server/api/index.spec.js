@@ -8,7 +8,7 @@
 var testFixture = require('../../_globals.js');
 
 
-describe('API', function () {
+describe.only('API', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -39,18 +39,10 @@ describe('API', function () {
                         .then(function (collection_) {
                             return Q.ninvoke(collection_, 'remove');
                         }),
-                    //Q.ninvoke(db, 'collection', '_organizations')
-                    //    .then(function (orgs_) {
-                    //        return Q.ninvoke(orgs_, 'remove');
-                    //    }),
                     Q.ninvoke(db, 'collection', '_projects')
                         .then(function (projects_) {
                             return Q.ninvoke(projects_, 'remove');
                         }),
-                    //Q.ninvoke(db, 'collection', 'ClientCreateProject')
-                    //    .then(function (createdProject) {
-                    //        return Q.ninvoke(createdProject, 'remove');
-                    //    }),
                     Q.ninvoke(db, 'collection', 'project')
                         .then(function (project) {
                             return Q.ninvoke(project, 'remove')
@@ -81,7 +73,15 @@ describe('API', function () {
                     auth.addUser('self_delete_1', 'user@example.com', 'plaintext', true, {overwrite: true}),
                     auth.addUser('self_delete_2', 'user@example.com', 'plaintext', true, {overwrite: true}),
                     auth.addUser('user_to_modify', 'user@example.com', 'plaintext', true, {overwrite: true}),
-                    auth.addUser('user_without_create', 'user@example.com', 'plaintext', false, {overwrite: true})
+                    auth.addUser('user_without_create', 'user@example.com', 'plaintext', false, {overwrite: true}),
+                    auth.addUser('orgAdminUser', 'user@example.com', 'plaintext', false, {overwrite: true}),
+                    auth.addUser('userAddedToOrg', 'user@example.com', 'plaintext', false, {overwrite: true}),
+                    auth.addUser('userRemovedFromOrg', 'user@example.com', 'plaintext', false, {overwrite: true}),
+                    auth.addOrganization('initialOrg', {someInfo: true}),
+                    auth.addOrganization('orgToAddAdmin', null),
+                    auth.addOrganization('orgToRemoveAdmin', null),
+                    auth.addOrganization('orgToRemoveUser', null),
+                    auth.addOrganization('orgToDelete', null)
                 ]);
             })
             .then(function () {
@@ -95,7 +95,11 @@ describe('API', function () {
                         read: false,
                         write: false,
                         delete: false
-                    })
+                    }),
+                    auth.addUserToOrganization('orgAdminUser', 'initialOrg'),
+                    auth.addUserToOrganization('userRemovedFromOrg', 'orgToRemoveUser'),
+                    auth.setAdminForUserInOrganization('orgAdminUser', 'initialOrg', true),
+                    auth.setAdminForUserInOrganization('orgAdminUser', 'orgToRemoveAdmin', true)
                 ]);
             })
             .nodeify(done);
@@ -180,6 +184,16 @@ describe('API', function () {
 
             it('should get all users /api/v1/users', function (done) {
                 agent.get(server.getUrl() + '/api/v1/users').end(function (err, res) {
+                    expect(res.status).equal(200, err);
+                    //expect(res.body.length).equal(8);
+                    // TODO: check all users are there
+
+                    done();
+                });
+            });
+
+            it('should get all organizations /api/v1/orgs', function (done) {
+                agent.get(server.getUrl() + '/api/v1/orgs').end(function (err, res) {
                     expect(res.status).equal(200, err);
                     //expect(res.body.length).equal(8);
                     // TODO: check all users are there
@@ -962,6 +976,177 @@ describe('API', function () {
         });
     });
 
+    describe('ORGANIZATION SPECIFIC API', function () {
+        describe('auth disabled, allowGuests false', function () {
+            var server,
+                agent;
+
+            before(function (done) {
+                var gmeConfig = testFixture.getGmeConfig();
+                gmeConfig.authentication.enable = false;
+                gmeConfig.authentication.allowGuests = false;
+
+                server = WebGME.standaloneServer(gmeConfig);
+                server.start(done);
+            });
+
+            after(function (done) {
+                server.stop(done);
+            });
+
+            beforeEach(function () {
+                agent = superagent.agent();
+            });
+
+            // NO AUTH methods
+            it('should get all organizations /api/v1/orgs', function (done) {
+                agent.get(server.getUrl() + '/api/v1/orgs').end(function (err, res) {
+                    expect(res.status).equal(200, err);
+                    expect(res.body.length > 0).equal(true);
+
+                    done();
+                });
+            });
+
+            it('should get specific organization /api/v1/orgs/initialOrg', function (done) {
+                agent.get(server.getUrl() + '/api/v1/orgs/initialOrg').end(function (err, res) {
+                    expect(res.status).equal(200, err);
+                    expect(res.body.admins.length).equal(1);
+                    expect(res.body.admins[0]).equal('orgAdminUser');
+
+                    done();
+                });
+            });
+
+            // AUTH METHODS
+            it('should create a new organization with valid data PUT /api/v1/orgs/newOrg', function (done) {
+                var newOrg = {
+                    orgId: 'newOrg',
+                    info: {
+                        info: 'new'
+                    }
+                };
+
+                agent.get(server.getUrl() + '/api/v1/orgs/newOrg')
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err); // user should not exist at this point
+
+                        agent.put(server.getUrl() + '/api/v1/orgs')
+                            .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                            .send(newOrg)
+                            .end(function (err, res2) {
+                                expect(res2.status).equal(200, err);
+
+                                expect(res2.body._id).equal(newOrg.orgId);
+                                expect(res2.body.info.info).equal(newOrg.info.info);
+
+                                done();
+                            });
+                    });
+            });
+
+            it('should delete organization DELETE /api/v1/orgs/orgToDelete', function (done) {
+                agent.get(server.getUrl() + '/api/v1/orgs/orgToDelete')
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err); // org should exist at this point
+
+                        agent.del(server.getUrl() + '/api/v1/orgs/orgToDelete')
+                            .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                            .end(function (err, res2) {
+                                expect(res2.status).equal(204, err);
+
+                                agent.get(server.getUrl() + '/api/v1/orgs/orgToDelete')
+                                    .end(function (err, res) {
+                                        expect(res.status).equal(404, err); // org should not exist at this point
+                                        done();
+                                    });
+                            });
+                    });
+            });
+
+            it('should add user to organization PUT /api/v1/orgs/initialOrg/users/userAddedToOrg', function (done) {
+                agent.put(server.getUrl() + '/api/v1/orgs/initialOrg/users/userAddedToOrg')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res2) {
+                        expect(res2.status).equal(204, err);
+
+                        agent.get(server.getUrl() + '/api/v1/users/userAddedToOrg')
+                            .end(function (err, res) {
+                                expect(res.status).equal(200, err);
+                                expect(res.body.orgs.length === 1).to.equal(true);
+                                expect(res.body.orgs[0]).to.equal('initialOrg');
+                                done();
+                            });
+                    });
+            });
+
+            it('should remove user from organization DELETE /api/v1/orgs/orgToRemoveUser/users/userRemovedFromOrg',
+                function (done) {
+                    agent.get(server.getUrl() + '/api/v1/users/userRemovedFromOrg')
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body.orgs.length === 1).to.equal(true);
+                            expect(res.body.orgs[0]).to.equal('orgToRemoveUser');
+
+                            agent.del(server.getUrl() + '/api/v1/orgs/orgToRemoveUser/users/userRemovedFromOrg')
+                                .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(204, err);
+
+                                    agent.get(server.getUrl() + '/api/v1/users/userRemovedFromOrg')
+                                        .end(function (err, res) {
+                                            expect(res.status).equal(200, err);
+                                            expect(res.body.orgs.length === 0).to.equal(true);
+                                            done();
+                                        });
+                                });
+                        });
+                }
+            );
+
+            it('should make user admin in organization PUT /api/v1/orgs/orgToAddAdmin/admins/userAddedToOrg',
+                function (done) {
+                    agent.put(server.getUrl() + '/api/v1/orgs/orgToAddAdmin/admins/userAddedToOrg')
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(204, err);
+
+                            agent.get(server.getUrl() + '/api/v1/orgs/orgToAddAdmin')
+                                .end(function (err, res) {
+                                    expect(res.status).equal(200, err);
+                                    expect(res.body.admins.length === 1).to.equal(true);
+                                    expect(res.body.admins[0]).to.equal('userAddedToOrg');
+                                    done();
+                                });
+                        });
+                }
+            );
+
+            it('should remove user admin in organization DELETE /api/v1/orgs/orgToRemoveAdmin/admins/orgAdminUser',
+                function (done) {
+                    agent.get(server.getUrl() + '/api/v1/orgs/orgToRemoveAdmin')
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body.admins.length === 1).to.equal(true);
+                            expect(res.body.admins[0]).to.equal('orgAdminUser');
+
+                            agent.del(server.getUrl() + '/api/v1/orgs/orgToRemoveAdmin/admins/orgAdminUser')
+                                .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(204, err);
+
+                                    agent.get(server.getUrl() + '/api/v1/orgs/orgToRemoveAdmin')
+                                        .end(function (err, res) {
+                                            expect(res.status).equal(200, err);
+                                            expect(res.body.admins.length === 0).to.equal(true);
+                                            done();
+                                        });
+                                });
+                        });
+                }
+            );
+        });
+    });
 
     describe('PROJECT SPECIFIC API', function () {
 
@@ -1096,7 +1281,7 @@ describe('API', function () {
 
             it('should not get branches for non-existent project', function (done) {
                 agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath('does_not_exist') +
-                          '/branches').end(function (err, res) {
+                    '/branches').end(function (err, res) {
                     expect(res.status).equal(403, err);
                     done();
                 });
@@ -1105,7 +1290,7 @@ describe('API', function () {
             it('should get branch information for project /projects/:ownerId/:projectId/branches/master',
                 function (done) {
                     agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
-                              '/branches/master')
+                        '/branches/master')
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
                             expect(res.body).to.have.property('projectId');
@@ -1122,7 +1307,7 @@ describe('API', function () {
 
             it('should not get branch information for non-existent branch', function (done) {
                 agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
-                          '/branches/does_not_exist')
+                    '/branches/does_not_exist')
                     .end(function (err, res) {
                         expect(res.status).equal(404, err);
                         done();
@@ -1151,12 +1336,12 @@ describe('API', function () {
                         expect(res.status).equal(200, err);
 
                         agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
-                                  '/branches/newBranch')
+                            '/branches/newBranch')
                             .send({hash: res.body.commitObject._id})
                             .end(function (err, res) {
                                 expect(res.status).equal(201, err);
                                 agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
-                                          '/branches')
+                                    '/branches')
                                     .end(function (err, res) {
                                         expect(res.status).equal(200, err);
                                         expect(res.body).to.have.property('master');
@@ -1171,20 +1356,20 @@ describe('API', function () {
             it('should delete a branch for project /projects/:ownerId/:projectId/branches/newBranchToDelete',
                 function (done) {
                     agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
-                              '/branches/master')
+                        '/branches/master')
                         .end(function (err, res) {
                             var hash;
                             expect(res.status).equal(200, err);
                             hash = res.body.commitObject._id;
 
                             agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
-                                      '/branches/newBranchToDelete')
+                                '/branches/newBranchToDelete')
                                 .send({hash: hash})
                                 .end(function (err, res) {
                                     expect(res.status).equal(201, err);
 
                                     agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
-                                              '/branches')
+                                        '/branches')
                                         .end(function (err, res) {
                                             expect(res.status).equal(200, err);
                                             expect(res.body).to.have.property('master');
@@ -1192,13 +1377,13 @@ describe('API', function () {
                                             expect(res.body.newBranchToDelete).to.equal(hash);
 
                                             agent.del(server.getUrl() + '/api/projects/' +
-                                                      projectName2APIPath(projectName) +
-                                                      '/branches/newBranchToDelete')
+                                                projectName2APIPath(projectName) +
+                                                '/branches/newBranchToDelete')
                                                 .end(function (err, res) {
                                                     expect(res.status).equal(204, err);
 
                                                     agent.get(server.getUrl() + '/api/projects/' +
-                                                              projectName2APIPath(projectName) + '/branches')
+                                                        projectName2APIPath(projectName) + '/branches')
                                                         .end(function (err, res) {
                                                             expect(res.status).equal(200, err);
                                                             expect(res.body).to.have.property('master');
@@ -1215,27 +1400,27 @@ describe('API', function () {
             it('should patch a branch for project /projects/:ownerId/:projectId/branches/newBranchToPatch',
                 function (done) {
                     agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
-                              '/branches/master')
+                        '/branches/master')
                         .end(function (err, res) {
                             var hash;
                             expect(res.status).equal(200, err);
                             hash = res.body.commitObject._id;
 
                             agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
-                                      '/branches/newBranchToPatch')
+                                '/branches/newBranchToPatch')
                                 .send({hash: hash})
                                 .end(function (err, res) {
                                     expect(res.status).equal(201, err);
 
                                     agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
-                                              '/branches')
+                                        '/branches')
                                         .end(function (err, res) {
                                             var commitObject = importResult.project.createCommitObject([hash],
-                                                importResult.rootHash,
-                                                'tester',
-                                                '15'),
+                                                    importResult.rootHash,
+                                                    'tester',
+                                                    '15'),
                                                 commitData = {
-                                                    projectId:  projectName2Id(projectName),
+                                                    projectId: projectName2Id(projectName),
                                                     commitObject: commitObject,
                                                     coreObjects: []
                                                 };
@@ -1253,8 +1438,8 @@ describe('API', function () {
                                                     expect(result.hasOwnProperty('hash')).to.equal(true);
 
                                                     agent.patch(server.getUrl() + '/api/projects/' +
-                                                                projectName2APIPath(projectName) +
-                                                                '/branches/newBranchToPatch')
+                                                        projectName2APIPath(projectName) +
+                                                        '/branches/newBranchToPatch')
                                                         .send({
                                                             oldHash: hash,
                                                             newHash: result.hash
@@ -1263,7 +1448,7 @@ describe('API', function () {
                                                             expect(res.status).equal(200, err);
 
                                                             agent.get(server.getUrl() + '/api/projects/' +
-                                                                      projectName2APIPath(projectName) + '/branches')
+                                                                projectName2APIPath(projectName) + '/branches')
                                                                 .end(function (err, res) {
                                                                     expect(res.status).equal(200, err);
                                                                     expect(res.body).to.have.property('master');
@@ -1284,7 +1469,7 @@ describe('API', function () {
             it('should compare branches for project /projects/:ownerId/:projectId/compare/master...master',
                 function (done) {
                     agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
-                              '/compare/master...master')
+                        '/compare/master...master')
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
                             // expecting empty diff
@@ -1296,7 +1481,7 @@ describe('API', function () {
             it('should fail to compare non-existent branches for project /projects/:ownerId/:projectId/compare/doesnt_exist...master',
                 function (done) {
                     agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
-                              '/compare/doesnt_exist...master')
+                        '/compare/doesnt_exist...master')
                         .end(function (err, res) {
                             expect(res.status).equal(500, err);
                             // expecting empty diff
@@ -1306,7 +1491,7 @@ describe('API', function () {
 
             it('should not get commits for non-existent project', function (done) {
                 agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath('does_not_exist') +
-                          '/commits').end(function (err, res) {
+                    '/commits').end(function (err, res) {
                     expect(res.status).equal(403, err);
                     done();
                 });
@@ -1356,5 +1541,4 @@ describe('API', function () {
             });
         });
     });
-
 });
