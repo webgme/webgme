@@ -15,116 +15,54 @@ describe('API', function () {
         logger = testFixture.logger.fork('index.spec'),
         WebGME = testFixture.WebGME,
         expect = testFixture.expect,
-        GMEAuth = testFixture.GMEAuth,
-        mongodb = testFixture.mongodb,
         Q = testFixture.Q,
 
         superagent = testFixture.superagent,
-        projectName2Id = testFixture.projectName2Id,
-
-        auth,
-        dbConn,
-        db;
-
-
-    before(function (done) {
-
-        auth = new GMEAuth(null, gmeConfig);
-
-        dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
-            .then(function (db_) {
-                db = db_;
-                return Q.allDone([
-                    Q.ninvoke(db, 'collection', '_users')
-                        .then(function (collection_) {
-                            return Q.ninvoke(collection_, 'remove');
-                        }),
-                    Q.ninvoke(db, 'collection', '_projects')
-                        .then(function (projects_) {
-                            return Q.ninvoke(projects_, 'remove');
-                        }),
-                    Q.ninvoke(db, 'collection', 'project')
-                        .then(function (project) {
-                            return Q.ninvoke(project, 'remove')
-                                .then(function () {
-                                    return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
-                                });
-                        }),
-                    Q.ninvoke(db, 'collection', 'unauthorized_project')
-                        .then(function (project) {
-                            return Q.ninvoke(project, 'remove')
-                                .then(function () {
-                                    return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
-                                });
-                        })
-                ]);
-            });
-
-        Q.allDone([dbConn])
-            .then(function () {
-                return auth.connect();
-            })
-            .then(function () {
-                return Q.allDone([
-                    auth.addUser('guest', 'guest@example.com', 'guest', true, {overwrite: true}),
-                    auth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true}),
-                    auth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true}),
-                    auth.addUser('user_to_delete', 'user@example.com', 'plaintext', true, {overwrite: true}),
-                    auth.addUser('self_delete_1', 'user@example.com', 'plaintext', true, {overwrite: true}),
-                    auth.addUser('self_delete_2', 'user@example.com', 'plaintext', true, {overwrite: true}),
-                    auth.addUser('user_to_modify', 'user@example.com', 'plaintext', true, {overwrite: true}),
-                    auth.addUser('user_without_create', 'user@example.com', 'plaintext', false, {overwrite: true}),
-                    auth.addUser('orgAdminUser', 'user@example.com', 'plaintext', false, {overwrite: true}),
-                    auth.addUser('userAddedToOrg', 'user@example.com', 'plaintext', false, {overwrite: true}),
-                    auth.addUser('userRemovedFromOrg', 'user@example.com', 'plaintext', false, {overwrite: true}),
-                    auth.addOrganization('initialOrg', {someInfo: true}),
-                    auth.addOrganization('orgToAddAdmin', null),
-                    auth.addOrganization('orgToRemoveAdmin', null),
-                    auth.addOrganization('orgToRemoveUser', null),
-                    auth.addOrganization('orgToDelete', null)
-                ]);
-            })
-            .then(function () {
-                return Q.allDone([
-                    auth.authorizeByUserId('user', 'project', 'create', {
-                        read: true,
-                        write: true,
-                        delete: false
-                    }),
-                    auth.authorizeByUserId('user', 'unauthorized_project', 'create', {
-                        read: false,
-                        write: false,
-                        delete: false
-                    }),
-                    auth.addUserToOrganization('orgAdminUser', 'initialOrg'),
-                    auth.addUserToOrganization('userRemovedFromOrg', 'orgToRemoveUser'),
-                    auth.setAdminForUserInOrganization('orgAdminUser', 'initialOrg', true),
-                    auth.setAdminForUserInOrganization('orgAdminUser', 'orgToRemoveAdmin', true)
-                ]);
-            })
-            .nodeify(done);
-    });
-
-    after(function (done) {
-        db.close(true, function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            auth.unload(function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                done();
-            });
-        });
-    });
+        projectName2Id = testFixture.projectName2Id;
 
 
     // USER SPECIFIC API
 
     describe('USER SPECIFIC API', function () {
+        var gmeAuth;
+
+        before(function (done) {
+            testFixture.clearDBAndGetGMEAuth(gmeConfig)
+                .then(function (gmeAuth_) {
+                    gmeAuth = gmeAuth_;
+                    return Q.allDone([
+                        gmeAuth.addUser('guest', 'guest@example.com', 'guest', true, {overwrite: true}),
+                        gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true}),
+                        gmeAuth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true}),
+                        gmeAuth.addUser('user_to_delete', 'user@example.com', 'plaintext', true, {overwrite: true}),
+                        gmeAuth.addUser('self_delete_1', 'user@example.com', 'plaintext', true, {overwrite: true}),
+                        gmeAuth.addUser('self_delete_2', 'user@example.com', 'plaintext', true, {overwrite: true}),
+                        gmeAuth.addUser('user_to_modify', 'user@example.com', 'plaintext', true, {overwrite: true}),
+                        gmeAuth.addUser('user_without_create', 'user@example.com', 'plaintext', false, {overwrite: true})
+                    ]);
+                })
+                .then(function () {
+                    return Q.allDone([
+                        gmeAuth.authorizeByUserId('user', 'project', 'create', {
+                            read: true,
+                            write: true,
+                            delete: false
+                        }),
+                        gmeAuth.authorizeByUserId('user', 'unauthorized_project', 'create', {
+                            read: false,
+                            write: false,
+                            delete: false
+                        })
+                    ]);
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            gmeAuth.unload()
+                .nodeify(done);
+        });
+
         describe('auth disabled, allowGuests false', function () {
             var server,
                 agent;
@@ -977,6 +915,40 @@ describe('API', function () {
     });
 
     describe('ORGANIZATION SPECIFIC API', function () {
+        var gmeAuth;
+
+        before(function (done) {
+            testFixture.clearDBAndGetGMEAuth(gmeConfig)
+                .then(function (gmeAuth_) {
+                    gmeAuth = gmeAuth_;
+                    return Q.allDone([
+                        gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true}),
+                        gmeAuth.addUser('userAdminOrg', 'user@example.com', 'plaintext', false, {overwrite: true}),
+                        gmeAuth.addUser('userAddedToOrg', 'user@example.com', 'plaintext', false, {overwrite: true}),
+                        gmeAuth.addUser('userRemovedFromOrg', 'user@example.com', 'plaintext', false, {overwrite: true}),
+                        gmeAuth.addOrganization('orgInit', {someInfo: true}),
+                        gmeAuth.addOrganization('orgToAddAdmin', null),
+                        gmeAuth.addOrganization('orgToRemoveAdmin', null),
+                        gmeAuth.addOrganization('orgToRemoveUser', null),
+                        gmeAuth.addOrganization('orgToDelete', null)
+                    ]);
+                })
+                .then(function () {
+                    return Q.allDone([
+                        gmeAuth.addUserToOrganization('userAdminOrg', 'orgInit'),
+                        gmeAuth.addUserToOrganization('userRemovedFromOrg', 'orgToRemoveUser'),
+                        gmeAuth.setAdminForUserInOrganization('userAdminOrg', 'orgInit', true),
+                        gmeAuth.setAdminForUserInOrganization('userAdminOrg', 'orgToRemoveAdmin', true)
+                    ]);
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            gmeAuth.unload()
+                .nodeify(done);
+        });
+
         describe('auth disabled, allowGuests false', function () {
             var server,
                 agent;
@@ -1002,17 +974,16 @@ describe('API', function () {
             it('should get all organizations /api/v1/orgs', function (done) {
                 agent.get(server.getUrl() + '/api/v1/orgs').end(function (err, res) {
                     expect(res.status).equal(200, err);
-                    expect(res.body.length > 0).equal(true);
+                    expect(res.body.length).to.be.above(3);
 
                     done();
                 });
             });
 
-            it('should get specific organization /api/v1/orgs/initialOrg', function (done) {
-                agent.get(server.getUrl() + '/api/v1/orgs/initialOrg').end(function (err, res) {
+            it('should get specific organization /api/v1/orgs/orgInit', function (done) {
+                agent.get(server.getUrl() + '/api/v1/orgs/orgInit').end(function (err, res) {
                     expect(res.status).equal(200, err);
-                    expect(res.body.admins.length).equal(1);
-                    expect(res.body.admins[0]).equal('orgAdminUser');
+                    expect(res.body.admins).to.deep.equal(['userAdminOrg']);
 
                     done();
                 });
@@ -1039,7 +1010,7 @@ describe('API', function () {
 
                                 expect(res2.body._id).equal(newOrg.orgId);
                                 expect(res2.body.info.info).equal(newOrg.info.info);
-                                expect(res2.body.admins[0]).equal('admin');
+                                expect(res2.body.admins).to.deep.equal(['admin']);
 
                                 done();
                             });
@@ -1065,8 +1036,8 @@ describe('API', function () {
                     });
             });
 
-            it('should add user to organization PUT /api/v1/orgs/initialOrg/users/userAddedToOrg', function (done) {
-                agent.put(server.getUrl() + '/api/v1/orgs/initialOrg/users/userAddedToOrg')
+            it('should add user to organization PUT /api/v1/orgs/orgInit/users/userAddedToOrg', function (done) {
+                agent.put(server.getUrl() + '/api/v1/orgs/orgInit/users/userAddedToOrg')
                     .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res2) {
                         expect(res2.status).equal(204, err);
@@ -1074,8 +1045,7 @@ describe('API', function () {
                         agent.get(server.getUrl() + '/api/v1/users/userAddedToOrg')
                             .end(function (err, res) {
                                 expect(res.status).equal(200, err);
-                                expect(res.body.orgs.length === 1).to.equal(true);
-                                expect(res.body.orgs[0]).to.equal('initialOrg');
+                                expect(res.body.orgs).to.deep.equal(['orgInit']);
                                 done();
                             });
                     });
@@ -1086,8 +1056,7 @@ describe('API', function () {
                     agent.get(server.getUrl() + '/api/v1/users/userRemovedFromOrg')
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
-                            expect(res.body.orgs.length === 1).to.equal(true);
-                            expect(res.body.orgs[0]).to.equal('orgToRemoveUser');
+                            expect(res.body.orgs).to.deep.equal(['orgToRemoveUser']);
 
                             agent.del(server.getUrl() + '/api/v1/orgs/orgToRemoveUser/users/userRemovedFromOrg')
                                 .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
@@ -1097,7 +1066,7 @@ describe('API', function () {
                                     agent.get(server.getUrl() + '/api/v1/users/userRemovedFromOrg')
                                         .end(function (err, res) {
                                             expect(res.status).equal(200, err);
-                                            expect(res.body.orgs.length === 0).to.equal(true);
+                                            expect(res.body.orgs).to.deep.equal([]);
                                             done();
                                         });
                                 });
@@ -1115,8 +1084,7 @@ describe('API', function () {
                             agent.get(server.getUrl() + '/api/v1/orgs/orgToAddAdmin')
                                 .end(function (err, res) {
                                     expect(res.status).equal(200, err);
-                                    expect(res.body.admins.length === 1).to.equal(true);
-                                    expect(res.body.admins[0]).to.equal('userAddedToOrg');
+                                    expect(res.body.admins).to.deep.equal(['userAddedToOrg']);
                                     done();
                                 });
                         });
@@ -1128,10 +1096,9 @@ describe('API', function () {
                     agent.get(server.getUrl() + '/api/v1/orgs/orgToRemoveAdmin')
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
-                            expect(res.body.admins.length === 1).to.equal(true);
-                            expect(res.body.admins[0]).to.equal('orgAdminUser');
+                            expect(res.body.admins).to.deep.equal(['userAdminOrg']);
 
-                            agent.del(server.getUrl() + '/api/v1/orgs/orgToRemoveAdmin/admins/orgAdminUser')
+                            agent.del(server.getUrl() + '/api/v1/orgs/orgToRemoveAdmin/admins/userAdminOrg')
                                 .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                 .end(function (err, res2) {
                                     expect(res2.status).equal(204, err);
@@ -1139,7 +1106,7 @@ describe('API', function () {
                                     agent.get(server.getUrl() + '/api/v1/orgs/orgToRemoveAdmin')
                                         .end(function (err, res) {
                                             expect(res.status).equal(200, err);
-                                            expect(res.body.admins.length === 0).to.equal(true);
+                                            expect(res.body.admins).to.deep.equal([]);
                                             done();
                                         });
                                 });
