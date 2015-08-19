@@ -70,7 +70,7 @@ describe('SafeStorage', function () {
                     expect(projects.length).to.equal(1);
                     expect(projects[0]).to.deep.equal({
                         _id: 'guest+newProject',
-                        fullName: 'guest/newProject',
+                        //fullName: 'guest/newProject',
                         name: 'newProject',
                         owner: 'guest'
                     });
@@ -89,7 +89,7 @@ describe('SafeStorage', function () {
                     expect(projects.length).to.equal(1);
                     expect(projects[0]).to.deep.equal({
                         _id: 'guest+newProject',
-                        fullName: 'guest/newProject',
+                        //fullName: 'guest/newProject',
                         name: 'newProject',
                         owner: 'guest',
                         rights: {
@@ -116,7 +116,7 @@ describe('SafeStorage', function () {
                     delete projects[0].info;
                     expect(projects[0]).to.deep.equal({
                         _id: 'guest+newProject',
-                        fullName: 'guest/newProject',
+                        //fullName: 'guest/newProject',
                         name: 'newProject',
                         owner: 'guest',
                         rights: {
@@ -147,7 +147,7 @@ describe('SafeStorage', function () {
                     delete projects[0].branches;
                     expect(projects[0]).to.deep.equal({
                         _id: 'guest+newProject',
-                        fullName: 'guest/newProject',
+                        //fullName: 'guest/newProject',
                         name: 'newProject',
                         owner: 'guest',
                         rights: {
@@ -397,6 +397,7 @@ describe('SafeStorage', function () {
 
     describe('getCommits', function () {
         var safeStorage,
+            projectId,
             commitHash;
 
         before(function (done) {
@@ -406,12 +407,13 @@ describe('SafeStorage', function () {
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
                         projectSeed: 'seeds/EmptyProject.json',
-                        projectName: projectName,
+                        projectName: 'getCommits',
                         gmeConfig: gmeConfig,
                         logger: logger
                     });
                 })
                 .then(function (result) {
+                    projectId = result.project.projectId;
                     commitHash = result.commitHash;
                     return Q();
                 })
@@ -499,6 +501,7 @@ describe('SafeStorage', function () {
     describe('BRANCH events', function () {
         var safeStorage,
             project,
+            projectId,
             newBranchHash,
             importResult;
 
@@ -509,7 +512,7 @@ describe('SafeStorage', function () {
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
                         projectSeed: 'seeds/EmptyProject.json',
-                        projectName: projectName,
+                        projectName: 'BRANCH_events',
                         gmeConfig: gmeConfig,
                         logger: logger
                     });
@@ -517,6 +520,7 @@ describe('SafeStorage', function () {
                 .then(function (result) {
                     importResult = result;
                     project = importResult.project;
+                    projectId = project.projectId;
                     return Q.allDone([
                         project.makeCommit(null, [importResult.commitHash], importResult.rootHash, {}, 'aCommit'),
                         project.createBranch('toBeDeleted', importResult.commitHash),
@@ -660,6 +664,7 @@ describe('SafeStorage', function () {
     describe('gmeConfig.storage.emitCommittedCoreObjects', function () {
         var safeStorage,
             project,
+            projectId,
             gmeConfigEmit = testFixture.getGmeConfig(),
             importResult;
 
@@ -671,7 +676,7 @@ describe('SafeStorage', function () {
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
                         projectSeed: 'seeds/EmptyProject.json',
-                        projectName: projectName,
+                        projectName: 'emitCommittedCoreObjects',
                         gmeConfig: gmeConfigEmit,
                         logger: logger
                     });
@@ -679,6 +684,7 @@ describe('SafeStorage', function () {
                 .then(function (result) {
                     importResult = result;
                     project = importResult.project;
+                    projectId = project.projectId;
                     return Q.allDone([
                         project.createBranch('emitAllWithNodes', importResult.commitHash),
                         project.createBranch('emitAllNoNodes', importResult.commitHash)
@@ -752,6 +758,347 @@ describe('SafeStorage', function () {
                 'emitAllNoNodes'
             )
                 .catch(done);
+        });
+    });
+
+    describe('Project Creation/Transfer', function () {
+        var safeStorage,
+            notInOrgCanNotCreate = 'notInOrgCanNotCreate',
+            notInOrgCanCreate = 'notInOrgCanCreate',
+            inOrgCanCreateNotAdmin = 'inOrgCanCreateNotAdmin',
+            inOrgCanCreateAdmin = 'inOrgCanCreateAdmin';
+
+        before(function (done) {
+            Q.allDone([
+                gmeAuth.addUser(notInOrgCanNotCreate, '@', 'p', false, {}),
+                gmeAuth.addUser(notInOrgCanCreate, '@', 'p', true, {}),
+                gmeAuth.addUser(inOrgCanCreateNotAdmin, '@', 'p', true, {}),
+                gmeAuth.addUser(inOrgCanCreateAdmin, '@', 'p', true, {}),
+                gmeAuth.addOrganization('theOrg')
+            ])
+                .then(function () {
+                    return Q.allDone([
+                        gmeAuth.addUserToOrganization(inOrgCanCreateNotAdmin, 'theOrg'),
+                        gmeAuth.addUserToOrganization(inOrgCanCreateAdmin, 'theOrg'),
+                        gmeAuth.setAdminForUserInOrganization(inOrgCanCreateAdmin, 'theOrg', true)
+                    ]);
+                })
+                .then(function () {
+                    safeStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                    return safeStorage.openDatabase();
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            safeStorage.closeDatabase(done);
+        });
+
+        it('should fail notInOrgCanNotCreate1', function (done) {
+            var projectName = 'notInOrgCanNotCreate1',
+                username = notInOrgCanNotCreate,
+                ownerId = notInOrgCanNotCreate,
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId
+                };
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Not authorized to create a new project');
+                    done();
+                })
+                .done();
+        });
+
+        it('should fail notInOrgCanNotCreate2', function (done) {
+            var projectName = 'notInOrgCanNotCreate2',
+                username = notInOrgCanNotCreate,
+                data = {
+                    projectName: projectName,
+                    username: username
+                };
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Not authorized to create a new project');
+                    done();
+                })
+                .done();
+        });
+
+        it('should create for user notInOrgCanCreate', function (done) {
+            var projectName = 'notInOrgCanCreate1',
+                username = notInOrgCanCreate,
+                data = {
+                    projectName: projectName,
+                    username: username
+                },
+                projectId;
+            safeStorage.createProject(data)
+                .then(function (project) {
+                    projectId = project.projectId;
+                    return safeStorage.getProjects(data);
+                })
+                .then(function (projects) {
+                    expect(projects.hasOwnProperty(projectId));
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to create for organization notInOrgCanCreate', function (done) {
+            var projectName = 'notInOrgCanCreate2',
+                username = notInOrgCanCreate,
+                ownerId = 'theOrg',
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId
+                };
+
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Not authorized to create project in organization theOrg');
+                    done();
+                })
+                .done();
+        });
+
+        it('should fail to create for organization inOrgCanCreateNotAdmin', function (done) {
+            var projectName = 'inOrgCanCreateNotAdmin1',
+                username = inOrgCanCreateNotAdmin,
+                ownerId = 'theOrg',
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId
+                };
+
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Not authorized to create project in organization theOrg');
+                    done();
+                })
+                .done();
+        });
+
+        it('should create for user inOrgCanCreateAdmin', function (done) {
+            var projectName = 'inOrgCanCreateAdmin',
+                username = inOrgCanCreateAdmin,
+                ownerId = 'theOrg',
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId
+                },
+                projectId;
+            safeStorage.createProject(data)
+                .then(function (project) {
+                    projectId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerId, projectName);
+                    expect(project.projectId).to.equal(projectId);
+                    return safeStorage.getProjects(data);
+                })
+                .then(function (projects) {
+                    expect(projects.hasOwnProperty(projectId));
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to create for non-existing organization', function (done) {
+            var projectName = 'nonExistingOrganization',
+                username = inOrgCanCreateAdmin,
+                ownerId = inOrgCanCreateNotAdmin,
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId
+                };
+
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('No such organization [inOrgCanCreateNotAdmin]');
+                    done();
+                })
+                .done();
+        });
+
+        it('should transfer a project to an organization where user is admin', function (done) {
+            var projectName = 'inOrgAsAdminTransfer',
+                username = inOrgCanCreateAdmin,
+                ownerId = 'theOrg',
+                createData = {
+                    projectName: projectName,
+                    username: username
+                },
+                transferData = {
+                    username: username,
+                    newOwnerId: ownerId,
+                    projectId: null
+                },
+                newProjectId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerId, projectName);
+
+            safeStorage.createProject(createData)
+                .then(function (project) {
+                    transferData.projectId = project.projectId;
+                    return safeStorage.transferProject(transferData);
+                })
+                .then(function (newProjectId_) {
+                    expect(newProjectId_).to.equal(newProjectId);
+                    return safeStorage.openProject({projectId: newProjectId, username: username});
+                })
+                .then(function (project) {
+                    expect(project.projectId).to.equal(newProjectId);
+                })
+                .nodeify(done);
+        });
+
+        it('should not transfer project to an organization where user is not admin', function (done) {
+            var projectName = 'inOrgNotAdminTransfer',
+                username = inOrgCanCreateNotAdmin,
+                ownerId = 'theOrg',
+                createData = {
+                    projectName: projectName,
+                    username: username
+                },
+                transferData = {
+                    username: username,
+                    newOwnerId: ownerId,
+                    projectId: null
+                };
+
+            safeStorage.createProject(createData)
+                .then(function (project) {
+                    transferData.projectId = project.projectId;
+                    return safeStorage.transferProject(transferData);
+                })
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Not authorized to transfer project to organization theOrg');
+                    done();
+                })
+                .done();
+        });
+
+        it('should not transfer a non-existing project', function (done) {
+            var projectId = 'doesNotExistTransfer',
+                username = inOrgCanCreateNotAdmin,
+                transferData = {
+                    username: username,
+                    projectId: projectId,
+                    newOwnerId: 'someOwner'
+                };
+
+            safeStorage.transferProject(transferData)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Error: Not authorized to delete project: doesNotExistTransfer');
+                    done();
+                })
+                .done();
+        });
+
+        it('should not transfer a project to another user', function (done) {
+            var projectName = 'notBeTransferredToOtherUser',
+                username = inOrgCanCreateAdmin,
+                ownerId = inOrgCanCreateNotAdmin,
+                createData = {
+                    projectName: projectName,
+                    username: username
+                },
+                transferData = {
+                    username: username,
+                    newOwnerId: ownerId,
+                    projectId: null
+                };
+
+            safeStorage.createProject(createData)
+                .then(function (project) {
+                    transferData.projectId = project.projectId;
+                    return safeStorage.transferProject(transferData);
+                })
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Not authorized to transfer projects to other users');
+                    done();
+                })
+                .done();
+        });
+
+        it('should not transfer a project to non-existing new owner', function (done) {
+            var projectName = 'notBeTransferredToNonExistingOwner',
+                username = inOrgCanCreateAdmin,
+                ownerId = 'doesNotExist',
+                createData = {
+                    projectName: projectName,
+                    username: username
+                },
+                transferData = {
+                    username: username,
+                    newOwnerId: ownerId,
+                    projectId: null
+                };
+
+            safeStorage.createProject(createData)
+                .then(function (project) {
+                    transferData.projectId = project.projectId;
+                    return safeStorage.transferProject(transferData);
+                })
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('no such user or org [doesNotExist]');
+                    done();
+                })
+                .done();
+        });
+
+        it('should not transfer a project to the same owner', function (done) {
+            var projectName = 'sameOwnerAfterTransfer',
+                username = inOrgCanCreateAdmin,
+                createData = {
+                    projectName: projectName,
+                    username: username
+                },
+                transferData = {
+                    username: username,
+                    newOwnerId: username,
+                    projectId: null
+                };
+
+            safeStorage.createProject(createData)
+                .then(function (project) {
+                    transferData.projectId = project.projectId;
+                    return safeStorage.transferProject(transferData);
+                })
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Project already exists inOrgCanCreateAdmin+sameOwnerAfterTransfer');
+                    done();
+                })
+                .done();
         });
     });
 });

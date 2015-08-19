@@ -34,35 +34,31 @@ describe('ServerWorkerManager', function () {
         //adding some project to the database
         server = testFixture.WebGME.standaloneServer(gmeConfig);
 
-        server.start(function (err) {
-            expect(err).to.equal(null);
-
-            testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
-                .then(function (gmeAuth_) {
-                    gmeAuth = gmeAuth_;
-                    storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-                    return storage.openDatabase();
-                })
-                .then(function () {
-                    return testFixture.forceDeleteProject(storage, gmeAuth, projectName);
-                })
-                .then(function () {
-                    return testFixture.importProject(storage, {
-                        projectSeed: 'test/server/worker/workermanager/basicProject.json',
-                        projectName: projectName,
-                        branchName: 'master',
-                        gmeConfig: gmeConfig,
-                        logger: logger
-                    });
-                })
-                .then(function (/*result*/) {
-                    return testFixture.openSocketIo(server, agent, guestAccount, guestAccount);
-                })
-                .then(function (result) {
-                    webGMESessionId = result.webGMESessionId;
-                })
-                .nodeify(done);
-        });
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return testFixture.importProject(storage, {
+                    projectSeed: 'test/server/worker/workermanager/basicProject.json',
+                    projectName: projectName,
+                    branchName: 'master',
+                    gmeConfig: gmeConfig,
+                    logger: logger
+                });
+            })
+            .then(function () {
+                return Q.ninvoke(server, 'start');
+            })
+            .then(function (/*result*/) {
+                return testFixture.openSocketIo(server, agent, guestAccount, guestAccount);
+            })
+            .then(function (result) {
+                webGMESessionId = result.webGMESessionId;
+            })
+            .nodeify(done);
     });
 
     after(function (done) {
@@ -70,13 +66,10 @@ describe('ServerWorkerManager', function () {
             if (err) {
                 logger.error(err);
             }
-            testFixture.forceDeleteProject(storage, gmeAuth, projectName)
-                .then(function () {
-                    return Q.allDone([
-                        storage.closeDatabase(),
-                        gmeAuth.unload()
-                    ]);
-                })
+            return Q.allDone([
+                storage.closeDatabase(),
+                gmeAuth.unload()
+            ])
                 .nodeify(done);
         });
     });
@@ -237,6 +230,7 @@ describe('ServerWorkerManager', function () {
         });
 
         it('should handle more requests simultaneously than workers allowed', function (done) {
+            this.timeout(5000);
             var needed = gmeConfig.server.maxWorkers + 1,
                 i,
                 requestHandled = function () {

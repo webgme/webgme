@@ -33,6 +33,7 @@ describe('storage storageclasses simpleapi', function () {
         projectNameCreate = 'SimpleAPICreateProject',
         projectNameCreate2 = 'SimpleAPICreateProject2',
         projectNameDelete = 'SimpleAPIDeleteProject',
+        projectNameTransfer = 'SimpleAPIProjectNameTransfer',
         importResult,
         originalHash,
         commitHash1,
@@ -52,6 +53,15 @@ describe('storage storageclasses simpleapi', function () {
             testFixture.clearDBAndGetGMEAuth(gmeConfig, [projectName, projectNameCreate, projectNameCreate2, projectNameDelete])
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
+                    return gmeAuth.addOrganization('orgId');
+                })
+                .then(function () {
+                    return gmeAuth.addUserToOrganization(gmeConfig.authentication.guestAccount, 'orgId');
+                })
+                .then(function () {
+                    return gmeAuth.setAdminForUserInOrganization(gmeConfig.authentication.guestAccount, 'orgId', true);
+                })
+                .then(function () {
                     safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                     return safeStorage.openDatabase();
                 })
@@ -225,6 +235,30 @@ describe('storage storageclasses simpleapi', function () {
             })
             .then(function (existed) {
                 expect(existed).to.equal(true);
+            })
+            .nodeify(done);
+    });
+
+    it('should createProject and transferProject', function (done) {
+        var newOwner = 'orgId';
+        Q.ninvoke(storage, 'createProject', projectNameTransfer)
+            .then(function (projectId) {
+                return Q.ninvoke(storage, 'transferProject', projectId, newOwner);
+            })
+            .then(function (newProjectId) {
+                expect(newProjectId).to.equal(testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(newOwner,
+                    projectNameTransfer));
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to transferProject when it does not exist', function (done) {
+        Q.ninvoke(storage, 'transferProject', 'doesNotExist', 'someOwnerId')
+            .then(function () {
+                throw 'Should have failed!';
+            })
+            .catch(function (err) {
+                expect(err).to.contain('Not authorized to delete project: doesNotExist');
             })
             .nodeify(done);
     });

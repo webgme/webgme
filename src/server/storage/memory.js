@@ -441,6 +441,54 @@ function Memory(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
+    function renameProject(projectId, newProjectId, callback) {
+        var deferred = Q.defer(),
+            key,
+            keyArray,
+            i,
+            namesToRemove = [],
+            oldProjectKey,
+            newProject,
+            namesToAdd = [];
+
+        if (storage.connected) {
+            newProject = storage.getItem(database + SEPARATOR + newProjectId + SEPARATOR);
+            if (newProject) {
+                deferred.reject(new Error('Project already exists ' + newProjectId));
+            } else {
+                newProject = new Project(newProjectId);
+
+                for (i = 0; i < storage.length; i += 1) {
+                    key = storage.key(i);
+                    keyArray = key.split(SEPARATOR);
+                    ASSERT(keyArray.length === 3);
+                    if (keyArray[0] === database) {
+                        if (keyArray[1] === projectId) {
+                            if (keyArray[2]) {
+                                namesToRemove.push(key);
+                                namesToAdd.push(keyArray[0] + SEPARATOR + newProjectId + SEPARATOR + keyArray[2]);
+                            } else {
+                                oldProjectKey = keyArray[0] + SEPARATOR + projectId + SEPARATOR;
+                            }
+                        }
+                    }
+                }
+
+                for (i = 0; i < namesToRemove.length; i += 1) {
+                    storage.setItem(namesToAdd[i], storage.getItem(namesToRemove[i]));
+                    storage.removeItem(namesToRemove[i]);
+                }
+
+                storage.removeItem(oldProjectKey);
+
+                deferred.resolve();
+            }
+        } else {
+            deferred.reject(new Error('In-memory database has to be initialized. Call openDatabase first.'));
+        }
+
+        return deferred.promise.nodeify(callback);
+    }
 
     this.openDatabase = openDatabase;
     this.closeDatabase = closeDatabase;
@@ -448,6 +496,7 @@ function Memory(mainLogger, gmeConfig) {
     this.createProject = createProject;
     this.deleteProject = deleteProject;
     this.openProject = openProject;
+    this.renameProject = renameProject;
 }
 
 module.exports = Memory;

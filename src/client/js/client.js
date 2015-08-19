@@ -848,6 +848,20 @@ define([
             }
         };
 
+        this.transferProject = function (projectId, newOwnerId, callback) {
+            if (isConnected()) {
+                storage.transferProject(projectId, newOwnerId, function (err, newProjectId) {
+                    if (err) {
+                        callback(new Error(err));
+                        return;
+                    }
+                    callback(null, newProjectId);
+                });
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
         this.createBranch = function (projectId, branchName, newHash, callback) {
             if (isConnected()) {
                 storage.createBranch(projectId, branchName, newHash, callback);
@@ -1438,10 +1452,14 @@ define([
         };
 
         //create from file
-        this.createProjectFromFile = function (projectName, branchName, jProject, callback) {
+        this.createProjectFromFile = function (projectName, branchName, jProject, ownerId, callback) {
             branchName = branchName || 'master';
+            if (callback === undefined && typeof ownerId === 'function') {
+                callback = ownerId;
+                ownerId = undefined;
+            }
 
-            storage.createProject(projectName, function (err, projectId) {
+            storage.createProject(projectName, ownerId, function (err, projectId) {
                 if (err) {
                     callback(err);
                     return;

@@ -1,5 +1,5 @@
 /*globals requireJS*/
-/*jshint node:true, newcap:false*/
+/*jshint node:true*/
 
 /**
  * @module Server:Storage
@@ -49,7 +49,7 @@ Storage.prototype.deleteProject = function (data, callback) {
                 }
                 self.dispatchEvent(CONSTANTS.PROJECT_DELETED, eventData);
             }
-            return Q(didExist);
+            return didExist;
         })
         .nodeify(callback);
 };
@@ -68,7 +68,32 @@ Storage.prototype.createProject = function (data, callback) {
             }
 
             self.dispatchEvent(CONSTANTS.PROJECT_CREATED, eventData);
-            return Q(project);
+            return project;
+        })
+        .nodeify(callback);
+};
+
+Storage.prototype.renameProject = function (data, callback) {
+    var self = this;
+    return this.mongo.renameProject(data.projectId, data.newProjectId)
+        .then(function () {
+            var eventDataDeleted = {
+                    projectId: data.projectId
+                },
+                eventDataCreated = {
+                    projectId: data.newProjectId
+                };
+
+            self.logger.debug('Project transferred will dispatch', data.projectId, data.newProjectId);
+            if (self.gmeConfig.storage.broadcastProjectEvents) {
+                eventDataCreated.socket = data.socket;
+                eventDataDeleted.socket = data.socket;
+            }
+
+            self.dispatchEvent(CONSTANTS.PROJECT_CREATED, eventDataCreated);
+            self.dispatchEvent(CONSTANTS.PROJECT_DELETED, eventDataDeleted);
+
+            return data.newProjectId;
         })
         .nodeify(callback);
 };
@@ -108,7 +133,7 @@ Storage.prototype.getLatestCommitData = function (data, callback) {
         })
         .then(function (rootObject) {
             result.coreObjects.push(rootObject);
-            return Q(result);
+            return result;
         })
         .nodeify(callback);
 };
@@ -340,7 +365,7 @@ Storage.prototype.setBranchHash = function (data, callback) {
         };
 
     // This will also ensure that the new commit does indeed point to a commitObject with an existing root.
-    function loadRootAndCommitObject (project) {
+    function loadRootAndCommitObject(project) {
         var deferred = Q.defer();
         if (data.newHash !== '') {
             project.loadObject(data.newHash)

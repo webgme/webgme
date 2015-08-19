@@ -33,9 +33,9 @@ describe('GME authentication', function () {
                             var collection = collection_;
                             return Q.ninvoke(collection, 'remove');
                         }),
-                    Q.ninvoke(db, 'collection', '_organizations')
-                        .then(function (orgs_) {
-                            return Q.ninvoke(orgs_, 'remove');
+                    Q.ninvoke(db, 'collection', '_projects')
+                        .then(function (projects) {
+                            return Q.ninvoke(projects, 'remove');
                         }),
                     Q.ninvoke(db, 'collection', 'ClientCreateProject')
                         .then(function (createdProject) {
@@ -280,11 +280,121 @@ describe('GME authentication', function () {
             .nodeify(done);
     });
 
-    it('deletes project', function (done) {
+    // _projects
+    it('should add and get a project', function (done) {
+        var projectName = 'newly_added_project',
+            ownerName = 'someUser',
+            projId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerName, projectName);
+        auth.addProject(ownerName, projectName)
+            .then(function (projectId) {
+                expect(projectId).to.equal(projId);
+                return auth.getProject(projectId);
+            })
+            .then(function (project) {
+                expect(project).to.deep.equal({
+                    _id: projId,
+                    info: {},
+                    owner: ownerName,
+                    name: projectName
+                });
+            })
+            .nodeify(done);
+    });
+
+    it('should add a project with supplied info', function (done) {
+        var projectName = 'project_with_info',
+            ownerName = 'someUser',
+            projId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerName, projectName);
+        auth.addProject(ownerName, projectName, {created: 'justNow'})
+            .then(function (projectId) {
+                expect(projectId).to.equal(projId);
+                return auth.getProject(projectId);
+            })
+            .then(function (project) {
+                expect(project).to.deep.equal({
+                    _id: projId,
+                    info: {created: 'justNow'},
+                    owner: ownerName,
+                    name: projectName,
+                });
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to get a non-existing project', function (done) {
+        var projectName = 'does_not_exist',
+            ownerName = 'someUser',
+            projId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerName, projectName);
+        auth.getProject(projId)
+            .then(function () {
+                throw new Error('should fail to get a non-existing project');
+            })
+            .catch(function (error) {
+                expect(error instanceof Error);
+                expect(error.message).to.contain('no such project [' + projId);
+                done();
+            })
+            .done();
+    });
+
+    it('should fail to add an existing project', function (done) {
+        var projectName = 'already_added',
+            ownerName = 'someUser',
+            projId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerName, projectName);
+        auth.addProject(ownerName, projectName)
+            .then(function (projectId) {
+                expect(projectId).to.equal(projId);
+                return auth.addProject(ownerName, projectName);
+            })
+            .then(function () {
+                throw new Error('should fail to add an existing project');
+            })
+            .catch(function (error) {
+                expect(error instanceof Error);
+                expect(error.message).to.equal('Project already exists someUser+already_added in _projects collection');
+                done();
+            })
+            .done();
+    });
+
+    it('should delete a project', function (done) {
+        var projectName = 'to_be_deleted',
+            ownerName = 'someUser',
+            projId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerName, projectName);
+        auth.addProject(ownerName, projectName)
+            .then(function (projectId) {
+                expect(projectId).to.equal(projId);
+                return auth.getProject(projectId);
+            })
+            .then(function (project) {
+                expect(project).to.deep.equal({
+                    _id: projId,
+                    info: {},
+                    owner: ownerName,
+                    name: projectName
+                });
+                return auth.deleteProject(projId);
+            })
+            .then(function () {
+                return auth.getProject(projId);
+            })
+            .then(function () {
+                throw new Error('should fail to get a deleted project');
+            })
+            .catch(function (error) {
+                expect(error instanceof Error);
+                expect(error.message).to.contain('no such project [' + projId);
+                done();
+            })
+            .done();
+    });
+
+    it('should delete non-existing project', function (done) {
         auth.deleteProject('does_not_exist_project')
             .nodeify(done);
     });
 
+    // Organizations
     it('should fail to get non existent organization', function (done) {
         auth.getOrganization('does_not_exist')
             .then(function () {
@@ -319,14 +429,13 @@ describe('GME authentication', function () {
 
     it('should fail to authorize organization with invalid type', function (done) {
         auth.authorizeOrganization('dummyOrgId', 'dummyProjectName', 'unknown', {}, function (err) {
-            if (err.indexOf('invalid type') > -1) {
+            if (err.indexOf('unknown type') > -1) {
                 done();
                 return;
             }
             done(new Error('Unexpected error: ' + err));
         });
     });
-
 
     it('should fail to authorize by user id with invalid type', function (done) {
         auth.authorizeByUserId('user', 'dummyProjectName', 'unknown', {}, function (err) {
@@ -344,7 +453,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.indexOf('No such organization') > -1) {
+                if (err.indexOf('No such user or org') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error: ' + err);
@@ -438,11 +547,17 @@ describe('GME authentication', function () {
             }).then(function (organizations) {
                 expect(organizations).to.include({
                         _id: orgName,
-                        projects: {}
+                        info: {},
+                        projects: {},
+                        type: auth.CONSTANTS.ORGANIZATION,
+                        admins: []
                     },
                     {
                         _id: otherOrgName,
-                        projects: {}
+                        info: {},
+                        projects: {},
+                        type: auth.CONSTANTS.ORGANIZATION,
+                        admins: []
                     });
             }).nodeify(done);
     });
@@ -531,6 +646,32 @@ describe('GME authentication', function () {
             .nodeify(done);
     });
 
+    it('should remove user from organization', function (done) {
+        var orgId = 'orgWithUser',
+            userId = 'userInOrg';
+        auth.addUser(userId, '@', 'ss', true, {})
+            .then(function () {
+                return auth.addOrganization(orgId);
+            })
+            .then(function () {
+                return auth.addUserToOrganization(userId, orgId);
+            })
+            .then(function () {
+                return auth.getUser(userId);
+            })
+            .then(function (user) {
+                expect(user.orgs).to.deep.equal(['orgWithUser']);
+                return auth.removeUserFromOrganization(userId, orgId);
+            })
+            .then(function () {
+                return auth.getUser(userId);
+            })
+            .then(function (user) {
+                expect(user.orgs).to.deep.equal([]);
+            })
+            .nodeify(done);
+    });
+
     it('should remove organization', function (done) {
         var orgName = 'org1';
         auth.removeOrganizationByOrgId(orgName)
@@ -545,5 +686,441 @@ describe('GME authentication', function () {
             }, function (/*err*/) {
                 done();
             });
+    });
+
+    it('getAdminsInOrganization should fail with non-existing organization', function (done) {
+        var orgId = 'doesNotExist';
+        return auth.getAdminsInOrganization(orgId)
+            .then(function () {
+                throw 'getAdminsInOrganization should fail with non-existing organization';
+            })
+            .catch(function (error) {
+                expect(error).to.include('No such organization [' + orgId);
+                done();
+            })
+            .done();
+    });
+
+    it('getAdminsInOrganization return empty array for new organization', function (done) {
+        var orgId = 'orgAdmin1';
+        return auth.addOrganization(orgId)
+            .then(function () {
+                return auth.getAdminsInOrganization(orgId);
+            })
+            .then(function (admins) {
+                expect(admins).to.deep.equal([]);
+            })
+            .nodeify(done);
+    });
+
+    it('should should make user admin for organization', function (done) {
+        var orgId = 'orgAdmin2',
+            userId = 'adminUser2';
+        return auth.addOrganization(orgId)
+            .then(function () {
+                return auth.setAdminForUserInOrganization(userId, orgId, true);
+            })
+            .then(function () {
+                return auth.getAdminsInOrganization(orgId);
+            })
+            .then(function (admins) {
+                expect(admins.indexOf(userId) > - 1).to.equal(true);
+            })
+            .nodeify(done);
+    });
+
+    it('should should make user admin, then remove admin for organization', function (done) {
+        var orgId = 'orgAdmin3',
+            userId = 'adminUser3';
+        return auth.addOrganization(orgId)
+            .then(function () {
+                return auth.setAdminForUserInOrganization(userId, orgId, true);
+            })
+            .then(function () {
+                return auth.getAdminsInOrganization(orgId);
+            })
+            .then(function (admins) {
+                expect(admins.indexOf(userId) > - 1).to.equal(true);
+            })
+            .then(function () {
+                return auth.setAdminForUserInOrganization(userId, orgId, false);
+            })
+            .then(function () {
+                return auth.getAdminsInOrganization(orgId);
+            })
+            .then(function (admins) {
+                expect(admins.indexOf(userId) > - 1).to.equal(false);
+            })
+            .nodeify(done);
+    });
+
+    it('should should make user admin twice organization', function (done) {
+        var orgId = 'orgAdmin4',
+            userId = 'adminUser4';
+        return auth.addOrganization(orgId)
+            .then(function () {
+                return auth.setAdminForUserInOrganization(userId, orgId, true);
+            })
+            .then(function () {
+                return auth.getAdminsInOrganization(orgId);
+            })
+            .then(function (admins) {
+                expect(admins.indexOf(userId) > - 1).to.equal(true);
+            })
+            .then(function () {
+                return auth.setAdminForUserInOrganization(userId, orgId, true);
+            })
+            .then(function () {
+                return auth.getAdminsInOrganization(orgId);
+            })
+            .then(function (admins) {
+                expect(admins.indexOf(userId) > - 1).to.equal(true);
+            })
+            .nodeify(done);
+    });
+
+    it('should should remove user admin in organization', function (done) {
+        var orgId = 'orgAdmin5',
+            userId = 'adminUser5';
+        return auth.addOrganization(orgId)
+            .then(function () {
+                return auth.setAdminForUserInOrganization(userId, orgId, false);
+            })
+            .then(function () {
+                return auth.getAdminsInOrganization(orgId);
+            })
+            .then(function (admins) {
+                expect(admins.indexOf(userId) > - 1).to.equal(false);
+            })
+            .nodeify(done);
+    });
+
+    it('getProjectAuthorizationListByUserId should include auth from organization', function (done) {
+        var orgId = 'organ1',
+            userId = 'userWithOrgan1',
+            projectId1 = 'organsProject1',
+            projectId2 = 'usersProject1';
+
+        auth.addUser(userId, '@', 'p', true, {})
+            .then(function () {
+                return auth.addOrganization(orgId);
+            })
+            .then(function () {
+                return auth.authorizeOrganization(orgId, projectId1, 'create',
+                    {read: true, write: true, delete: true});
+            })
+            .then(function () {
+                return auth.authorizeByUserId(userId, projectId2, 'create',
+                    {read: true, write: true, delete: true});
+            })
+            .then(function () {
+                return auth.getProjectAuthorizationListByUserId(userId);
+            })
+            .then(function (fullRights) {
+                fullRights.should.deep.equal({
+                    usersProject1: {
+                        read: true,
+                        write: true,
+                        delete: true
+                    }
+                });
+                return auth.addUserToOrganization(userId, orgId);
+            })
+            .then(function () {
+                return auth.getProjectAuthorizationListByUserId(userId);
+            })
+            .then(function (fullRights) {
+                fullRights.should.deep.equal({
+                    usersProject1: {
+                        read: true,
+                        write: true,
+                        delete: true
+                    },
+                    organsProject1: {
+                        read: true,
+                        write: true,
+                        delete: true
+                    }
+                });
+                return auth.removeUserFromOrganization(userId, orgId);
+            })
+            .then(function () {
+                return auth.getProjectAuthorizationListByUserId(userId);
+            })
+            .then(function (fullRights) {
+                fullRights.should.deep.equal({
+                    usersProject1: {
+                        read: true,
+                        write: true,
+                        delete: true
+                    }
+                });
+            })
+            .nodeify(done);
+    });
+
+    it('getProjectAuthorizationListByUserId should get the highest auth', function (done) {
+        var orgId = 'organHighest1',
+            userId = 'userWithOrganHighest1',
+            projectId = 'organAndUserProject1';
+
+        auth.addUser(userId, '@', 'p', true, {})
+            .then(function () {
+                return auth.addOrganization(orgId);
+            })
+            .then(function () {
+                return auth.authorizeOrganization(orgId, projectId, 'create',
+                    {read: true, write: false, delete: false});
+            })
+            .then(function () {
+                return auth.authorizeByUserId(userId, projectId, 'create',
+                    {read: true, write: true, delete: false});
+            })
+            .then(function () {
+                return auth.getProjectAuthorizationListByUserId(userId);
+            })
+            .then(function (fullRights) {
+                fullRights.should.deep.equal({
+                    organAndUserProject1: {
+                        read: true,
+                        write: true,
+                        delete: false
+                    }
+                });
+                return auth.addUserToOrganization(userId, orgId);
+            })
+            .then(function () {
+                return auth.getProjectAuthorizationListByUserId(userId);
+            })
+            .then(function (fullRights) {
+                fullRights.should.deep.equal({
+                    organAndUserProject1: {
+                        read: true,
+                        write: true,
+                        delete: false
+                    }
+                });
+                return auth.removeUserFromOrganization(userId, orgId);
+            })
+            .then(function () {
+                return auth.getProjectAuthorizationListByUserId(userId);
+            })
+            .then(function (fullRights) {
+                fullRights.should.deep.equal({
+                    organAndUserProject1: {
+                        read: true,
+                        write: true,
+                        delete: false
+                    }
+                });
+            })
+            .nodeify(done);
+    });
+
+    it('getProjectAuthorizationListByUserId should get the highest auth2', function (done) {
+        var orgId = 'organHighest2',
+            userId = 'userWithOrganHighest2',
+            projectId = 'organAndUserProject2';
+
+        auth.addUser(userId, '@', 'p', true, {})
+            .then(function () {
+                return auth.addOrganization(orgId);
+            })
+            .then(function () {
+                return auth.authorizeOrganization(orgId, projectId, 'create',
+                    {read: true, write: true, delete: true});
+            })
+            .then(function () {
+                return auth.authorizeByUserId(userId, projectId, 'create',
+                    {read: true, write: false, delete: false});
+            })
+            .then(function () {
+                return auth.getProjectAuthorizationListByUserId(userId);
+            })
+            .then(function (fullRights) {
+                fullRights.should.deep.equal({
+                    organAndUserProject2: {
+                        read: true,
+                        write: false,
+                        delete: false
+                    }
+                });
+                return auth.addUserToOrganization(userId, orgId);
+            })
+            .then(function () {
+                return auth.getProjectAuthorizationListByUserId(userId);
+            })
+            .then(function (fullRights) {
+                fullRights.should.deep.equal({
+                    organAndUserProject2: {
+                        read: true,
+                        write: true,
+                        delete: true
+                    }
+                });
+                return auth.removeUserFromOrganization(userId, orgId);
+            })
+            .then(function () {
+                return auth.getProjectAuthorizationListByUserId(userId);
+            })
+            .then(function (fullRights) {
+                fullRights.should.deep.equal({
+                    organAndUserProject2: {
+                        read: true,
+                        write: false,
+                        delete: false
+                    }
+                });
+            })
+            .nodeify(done);
+    });
+
+    it('getProjectAuthorizationList should fail if user does not exist', function (done) {
+        var userId = 'getProjectAuthorizationListDoesNotExist';
+
+        auth.getProjectAuthorizationListByUserId(userId).
+            then(function () {
+                throw 'Should have failed';
+            })
+            .catch(function (err) {
+                expect(err).to.include('No such user [' + userId);
+                done();
+            })
+            .done();
+    });
+
+    // project transfer
+    it('transferProject should fail when project does not exit', function (done) {
+        var oldOwner = 'currOwner',
+            newOwner = 'newOwner',
+            projectName = 'does_not_exist_transfer',
+            projectId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(oldOwner, projectName);
+
+        auth.transferProject(projectId, newOwner)
+            .then(function () {
+                throw new Error('should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('no such project [');
+                done();
+            })
+            .done();
+    });
+
+    it.skip('transferProject should fail when newOwner does not exist', function (done) {
+        // This is not checked in gmeAuth
+        var oldOwner = 'currOwner',
+            newOwner = 'newOwner_does_not_exist',
+            projectName = 'owner_does_not_match_transfer',
+            projectId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(oldOwner, projectName);
+
+        auth.addProject(oldOwner, projectName)
+            .then(function () {
+                return auth.transferProject(projectId, newOwner);
+            })
+            .then(function () {
+                throw new Error('should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('newOrgOrUserId [' + newOwner + '] does not exist');
+                done();
+            })
+            .done();
+    });
+
+    it('transferProject should give full rights to new owner', function (done) {
+        var oldOwner = 'currOwner',
+            newOwner = 'newOwner',
+            newProjectId,
+            projectName = 'transferred1',
+            projectId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(oldOwner, projectName);
+
+        auth.addProject(oldOwner, projectName)
+            .then(function () {
+                return auth.addUser(oldOwner, '@', 'p', true, {});
+            })
+            .then(function () {
+                return auth.addUser(newOwner, '@', 'p', true, {});
+            })
+            .then(function () {
+                return auth.transferProject(projectId, newOwner);
+            })
+            .then(function (newProjectId_) {
+                newProjectId = newProjectId_;
+                return auth.getProject(newProjectId);
+            })
+            .then(function (projectData) {
+                expect(projectData).to.deep.equal({
+                    _id: 'newOwner+transferred1',
+                    info: {},
+                    name: 'transferred1',
+                    owner: 'newOwner'
+                });
+                return auth.getProjectAuthorizationByUserId(newOwner, newProjectId);
+            })
+            .then(function (rights) {
+                expect(rights).to.deep.equal({
+                    read: true,
+                    write: true,
+                    delete: true
+                });
+            })
+            .nodeify(done);
+    });
+
+    it('transferProject should save info about project', function (done) {
+        var oldOwner = 'currOwner2',
+            newOwner = 'newOwner2',
+            newProjectId,
+            projectName = 'transferred2',
+            projectId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(oldOwner, projectName);
+
+        auth.addProject(oldOwner, projectName, {firstOwner: oldOwner})
+            .then(function () {
+                return auth.addUser(oldOwner, '@', 'p', true, {});
+            })
+            .then(function () {
+                return auth.addUser(newOwner, '@', 'p', true, {});
+            })
+            .then(function () {
+                return auth.transferProject(projectId, newOwner);
+            })
+            .then(function (newProjectId_) {
+                newProjectId = newProjectId_;
+                return auth.getProject(newProjectId);
+            })
+            .then(function (projectData) {
+                expect(projectData.info).to.deep.equal({firstOwner: oldOwner});
+            })
+            .nodeify(done);
+    });
+
+    it('transferProject should transfer to organization', function (done) {
+        var oldOwner = 'currOwnerUser',
+            newOwner = 'newOwnerOrg',
+            projectName = 'transferred3',
+            projectId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(oldOwner, projectName);
+
+        auth.addProject(oldOwner, projectName, {firstOwner: oldOwner})
+            .then(function () {
+                return auth.addUser(oldOwner, '@', 'p', true, {});
+            })
+            .then(function () {
+                return auth.addOrganization(newOwner);
+            })
+            .then(function () {
+                return auth.transferProject(projectId, newOwner);
+            })
+            .then(function (newProjectId) {
+                return auth.getAuthorizationInfoByOrgId(newOwner, newProjectId);
+            })
+            .then(function (rights) {
+                expect(rights).to.deep.equal({
+                    read: true,
+                    write: true,
+                    delete: true
+                });
+            })
+            .nodeify(done);
     });
 });

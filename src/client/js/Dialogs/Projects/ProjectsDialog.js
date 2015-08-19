@@ -53,6 +53,7 @@ define([
         this._projectNames = [];
         this._projectList = {};
         this._filter = undefined;
+        this._ownerId = null; // TODO get this from dropdown list
 
         this._logger.debug('Created');
     };
@@ -191,7 +192,7 @@ define([
 
         this._txtNewProjectName = this._dialog.find('.txt-project-name');
         this._dialog.find('.username').text(this._client.getUserId());
-
+        this._ownerId = this._client.getUserId(); //TODO: Get this from drop-down
 
         this._loader = new LoaderCircles({containerElement: this._btnRefresh});
         this._loader.setSize(14);
@@ -518,20 +519,22 @@ define([
 
         loader.start();
 
-        self._client.createProjectFromFile(projectName, null, jsonContent, function (err, projectId, branchName) {
-            if (err) {
-                self._logger.error('CANNOT CREATE NEW PROJECT FROM FILE: ' + err);
-                loader.stop();
-            } else {
-                self._logger.debug('CREATE NEW PROJECT FROM FILE FINISHED SUCCESSFULLY');
-                self._client.selectProject(projectId, branchName, function (err) {
-                    if (err) {
-                        self._logger.error('CANNOT SELECT NEWLY CREATED PROJECT FROM FILE: ' + err.message);
-                    }
+        self._client.createProjectFromFile(projectName, null, jsonContent, self._ownerId,
+            function (err, projectId, branchName) {
+                if (err) {
+                    self._logger.error('CANNOT CREATE NEW PROJECT FROM FILE: ' + err);
                     loader.stop();
-                });
+                } else {
+                    self._logger.debug('CREATE NEW PROJECT FROM FILE FINISHED SUCCESSFULLY');
+                    self._client.selectProject(projectId, branchName, function (err) {
+                        if (err) {
+                            self._logger.error('CANNOT SELECT NEWLY CREATED PROJECT FROM FILE: ' + err.message);
+                        }
+                        loader.stop();
+                    });
+                }
             }
-        });
+        );
     };
 
     ProjectsDialog.prototype._createProjectFromSeed = function (projectName, type, seedName, branchName, commitHash) {
@@ -541,7 +544,8 @@ define([
                 projectName: projectName,
                 seedName: seedName,
                 seedBranch: branchName,
-                seedCommit: commitHash
+                seedCommit: commitHash,
+                ownerId: self._ownerId
             },
             loader = new LoaderCircles({containerElement: $('body')});
 

@@ -24,10 +24,12 @@ var WebGME = require('../webgme'),
     },
     Core = requireJS('common/core/core'),
     NodeStorage = requireJS('../src/common/storage/nodestorage'),
+    storageUtil = requireJS('common/storage/util'),
     Mongo = require('../src/server/storage/mongo'),
     Memory = require('../src/server/storage/memory'),
     SafeStorage = require('../src/server/storage/safestorage'),
     Logger = require('../src/server/logger'),
+
     logger = Logger.create('gme:test', {
         //patterns: ['gme:test:*cache'],
         transports: [{
@@ -112,20 +114,6 @@ function clearDatabase(gmeConfigParameter, callback) {
         .then(function (db_) {
             db = db_;
             return Q.ninvoke(db, 'dropDatabase');
-            //return Q.allSettled([
-            //    Q.ninvoke(db, 'collection', '_users')
-            //        .then(function (collection_) {
-            //            return Q.ninvoke(collection_, 'remove');
-            //        }),
-            //    Q.ninvoke(db, 'collection', '_organizations')
-            //        .then(function (orgs_) {
-            //            return Q.ninvoke(orgs_, 'remove');
-            //        }),
-            //    Q.ninvoke(db, 'collection', '_projects')
-            //        .then(function (projects_) {
-            //            return Q.ninvoke(projects_, 'remove');
-            //        })
-            //]);
         })
         .then(function () {
             return Q.ninvoke(db, 'close');
@@ -169,7 +157,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
         })
         .then(function (gmeAuth_) {
             gmeAuth = gmeAuth_;
-            return Q.allSettled([
+            return Q.allDone([
                 gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
                 gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
             ]);
@@ -205,7 +193,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
                 logger.warn('No projects to authorize...', projectNameOrNames);
             }
 
-            return Q.allSettled(projectsToAuthorize);
+            return Q.allDone(projectsToAuthorize);
         })
         .then(function () {
             deferred.resolve(gmeAuth);
@@ -327,7 +315,7 @@ function saveChanges(parameters, done) {
  */
 function projectName2Id(projectName, userId) {
     userId = userId || gmeConfig.authentication.guestAccount;
-    return userId + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
+    return storageUtil.getProjectIdFromOwnerIdAndProjectName(userId, projectName);
 }
 
 /**
@@ -471,5 +459,6 @@ module.exports = {
     logIn: logIn,
     openSocketIo: openSocketIo,
 
+    storageUtil: storageUtil,
     STORAGE_CONSTANTS: STORAGE_CONSTANTS
 };

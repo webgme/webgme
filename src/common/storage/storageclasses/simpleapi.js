@@ -121,11 +121,17 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     };
 
     // Setters
-    StorageSimpleAPI.prototype.createProject = function (projectName, callback) {
-        var data = {
-            projectName: projectName
-        },
-            self = this;
+    StorageSimpleAPI.prototype.createProject = function (projectName, ownerId, callback) {
+        var self = this,
+            data = {
+                projectName: projectName,
+                ownerId: ownerId
+            };
+
+        if (callback === undefined && typeof ownerId === 'function') {
+            callback = ownerId;
+            data.ownerId = undefined;
+        }
 
         this.logger.debug('invoking createProject', {metadata: data});
 
@@ -147,6 +153,15 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         };
         this.logger.debug('invoking deleteProject', {metadata: data});
         this.webSocket.deleteProject(data, callback);
+    };
+
+    StorageSimpleAPI.prototype.transferProject = function (projectId, newOwnerId, callback) {
+        var data = {
+            projectId: projectId,
+            newOwnerId: newOwnerId
+        };
+        this.logger.debug('invoking transferProject', {metadata: data});
+        this.webSocket.transferProject(data, callback);
     };
 
     StorageSimpleAPI.prototype.setBranchHash = function (projectId, branchName, newHash, oldHash, callback) {
