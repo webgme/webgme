@@ -71,6 +71,7 @@ var WebGME = require('../webgme'),
     mongodb = require('mongodb'),
     Q = require('q'),
     fs = require('fs'),
+    path = require('path'),
     rimraf = require('rimraf'),
     childProcess = require('child_process');
 
@@ -439,6 +440,7 @@ module.exports = {
     requirejs: requireJS,
     Q: Q,
     fs: fs,
+    path: path,
     superagent: superagent,
     mongodb: mongodb,
     rimraf: rimraf,
@@ -458,7 +460,7 @@ module.exports = {
     forceDeleteProject: forceDeleteProject,
     logIn: logIn,
     openSocketIo: openSocketIo,
-
     storageUtil: storageUtil,
+    SEED_DIR: path.join(__dirname, '../seeds/'),
     STORAGE_CONSTANTS: STORAGE_CONSTANTS
 };

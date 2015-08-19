@@ -32,6 +32,7 @@ define([
         this.core = null;
         this.project = null;
         this.projectName = null;
+        this.projectId = null;
         this.branchName = null;
         this.branchHash = null;
         this.commitHash = null;
@@ -413,6 +414,7 @@ define([
         this.project = config.project;
         this.branch = config.branch;  // This is only for client side.
         this.projectName = config.projectName;
+        this.projectId = config.projectId;
         this.branchName = config.branchName;
         this.branchHash = config.branchName ? config.commitHash : null;
 

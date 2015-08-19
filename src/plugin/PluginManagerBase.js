@@ -13,7 +13,8 @@
 // TODO: PluginManager should download the plugins
 
 
-define(['plugin/PluginBase', 'plugin/PluginContext'], function (PluginBase, PluginContext) {
+define(['plugin/PluginBase', 'plugin/PluginContext', 'common/storage/util'],
+    function (PluginBase, PluginContext, storageUtil) {
         'use strict';
 
         var PluginManagerBase = function (storage, Core, logger, plugins, gmeConfig) {
@@ -139,7 +140,8 @@ define(['plugin/PluginBase', 'plugin/PluginContext'], function (PluginBase, Plug
             // 7) return
 
             pluginContext.project = this._storage;
-            pluginContext.projectName = managerConfiguration.project;
+            pluginContext.projectName = storageUtil.getProjectNameFromProjectId(managerConfiguration.project);
+            pluginContext.projectId = managerConfiguration.project;
             pluginContext.branchName = managerConfiguration.branchName;
 
             pluginContext.core = new self._Core(pluginContext.project, {
