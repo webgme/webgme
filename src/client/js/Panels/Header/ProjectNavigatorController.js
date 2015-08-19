@@ -190,7 +190,18 @@ define([
                 self.gmeClient.watchDatabase(function (emitter, data) {
                     self.logger.debug('watchDatabase event', data);
                     if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_CREATED) {
-                        self.addProject(data.projectId);
+                        self.gmeClient.getBranches(data.projectId, function (err, branches) {
+                            if (err) {
+                                self.logger.error('Could not get branches for newlycreated project ' + data.projectId);
+                                self.logger.error(err);
+                            } else {
+                                self.addProject(data.projectId); //TODO: Should include rights..
+
+                                Object.keys(branches).map(function (branchId) {
+                                    self.addBranch(data.projectId, branchId);
+                                });
+                            }
+                        });
                     } else if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_DELETED) {
                         self.removeProject(data.projectId);
                     } else {
