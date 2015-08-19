@@ -25,6 +25,11 @@ define(['common/storage/constants'], function (CONSTANTS) {
         },
         getProjectIdFromOwnerIdAndProjectName: function (userId, projectName) {
             return userId + CONSTANTS.PROJECT_ID_SEP + projectName;
+        },
+        getProjectNameFromProjectId: function (projectId) {
+            if (projectId) {
+                return projectId.substring(projectId.indexOf(CONSTANTS.PROJECT_ID_SEP) + 1);
+            }
         }
     };
 });

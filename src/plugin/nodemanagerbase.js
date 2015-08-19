@@ -9,6 +9,7 @@ var Core = requireJS('common/core/core'),
     PluginResult = requireJS('plugin/PluginResult'),
     PluginMessage = requireJS('plugin/PluginMessage'),
     ProjectInterface = requireJS('common/storage/project/interface'),
+    storageUtil = requireJS('common/storage/util'),
     Q = require('q');
 
 /**
@@ -29,8 +30,8 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
      * @param {string} pluginName
      * @param {object} pluginConfig - configuration for the plugin.
      * @param {object} context
-     * @param {string} context.commitHash - commit from which to start the plugin.
      * @param {string} context.branchName - name of branch that should be updated
+     * @param {string} [context.commitHash] - commit from which to start the plugin, defaults to latest for branchName.
      * @param {ProjectInterface} [context.project=project] - project instance if different from the one passed in ctor.
      * @param {string} [context.activeNode=''] - path to active node
      * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
@@ -79,8 +80,8 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
      * @param {object} plugin
      * @param {object} pluginConfig - configuration for the plugin.
      * @param {object} context
-     * @param {string} context.commitHash - commit from which to start the plugin.
      * @param {string} context.branchName - name of branch that should be updated
+     * @param {string} [context.commitHash] - commit from which to start the plugin, defaults to latest for branchName.
      * @param {ProjectInterface} [context.project=project] - project instance if different from the one passed in ctor.
      * @param {string} [context.activeNode=''] - path to active node
      * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
@@ -195,8 +196,8 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
      *
      * @param {object} context
      * @param {object} context.project - project form where to load the context.
-     * @param {string} context.commitHash - commit from which to start the plugin.
      * @param {string} context.branchName - name of branch that should be updated
+     * @param {string} [context.commitHash] - commit from which to start the plugin, defaults to latest for branchName.
      * @param {string} [context.activeNode=''] - path to active node
      * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
      * @param {object} pluginLogger - logger for the plugin.
@@ -213,7 +214,8 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
                 META: null,
 
                 project: context.project,
-                projectName: context.project.projectId,
+                projectId: context.project.projectId,
+                projectName: storageUtil.getProjectNameFromProjectId(context.project.projectId),
                 core: new Core(context.project, {
                     globConf: gmeConfig,
                     logger: self.logger.fork('core')
@@ -222,7 +224,11 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
 
         self.logger.debug('loading context');
 
-        Q.ninvoke(pluginContext.project, 'loadObject', context.commitHash)
+        pluginContext.project.getBranchHash(pluginContext.branchName)
+            .then(function (commitHash) {
+                pluginContext.commitHash = context.commitHash || commitHash;
+                return Q.ninvoke(pluginContext.project, 'loadObject', pluginContext.commitHash);
+            })
             .then(function (commitObject) {
                 var rootDeferred = Q.defer();
                 self.logger.debug('commitObject loaded', {metadata: commitObject});

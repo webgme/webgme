@@ -174,6 +174,29 @@ describe('climanager', function () {
         });
     });
 
+    it('should executePlugin without specified commitHash', function (done) {
+        var manager = new PluginCliManager(null, logger, gmeConfig),
+            pluginConfig = {
+                save: false
+            },
+            context = {
+                project: project,
+                branchName: branchName
+            };
+
+        project.getBranchHash(branchName, function (err, commitHash) {
+            expect(err).to.equal(null);
+
+            manager.executePlugin(pluginName, pluginConfig, context, function (err, pluginResult) {
+                expect(err).to.equal(null);
+
+                expect(pluginResult.success).to.equal(true);
+                expect(pluginResult.commits[0].commitHash).to.equal(commitHash);
+                done();
+            });
+        });
+    });
+
     it('should fail executePlugin with pluginResult when no default project in manager and no project in context',
         function (done) {
             var manager = new PluginCliManager(null, logger, gmeConfig),
