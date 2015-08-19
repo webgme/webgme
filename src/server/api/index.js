@@ -410,21 +410,25 @@ function createAPI(app, mountPath, middlewareOpts) {
                         res.status(400);
                         return next(new Error(err));
                     }
-
-                    gmeAuth.getOrganization(receivedData.orgId, function (err, data) {
+                    gmeAuth.setAdminForUserInOrganization(userId, receivedData.orgId, true, function (err) {
                         if (err) {
-                            res.status(404);
-                            res.json({
-                                message: 'Requested resource was not found',
-                                error: err
-                            });
-                            return;
+                            res.status(400);
+                            return next(new Error(err));
                         }
+                        gmeAuth.getOrganization(receivedData.orgId, function (err, data) {
+                            if (err) {
+                                res.status(404);
+                                res.json({
+                                    message: 'Requested resource was not found',
+                                    error: err
+                                });
+                                return;
+                            }
 
-                        res.json(data);
+                            res.json(data);
+                        });
                     });
                 });
-
         });
 
     });

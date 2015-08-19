@@ -8,7 +8,7 @@
 var testFixture = require('../../_globals.js');
 
 
-describe.only('API', function () {
+describe('API', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -1039,6 +1039,7 @@ describe.only('API', function () {
 
                                 expect(res2.body._id).equal(newOrg.orgId);
                                 expect(res2.body.info.info).equal(newOrg.info.info);
+                                expect(res2.body.admins[0]).equal('admin');
 
                                 done();
                             });
