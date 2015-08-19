@@ -13,52 +13,15 @@ describe('GME authentication', function () {
 
     var gmeConfig = testFixture.getGmeConfig(),
         GMEAuth = testFixture.GMEAuth,
-        mongodb = testFixture.mongodb,
         expect = testFixture.expect,
         Q = testFixture.Q,
 
-        auth,
-        dbConn,
-        db;
+        auth;
 
     before(function (done) {
         auth = new GMEAuth(null, gmeConfig);
 
-        dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
-            .then(function (db_) {
-                db = db_;
-                return Q.allDone([
-                    Q.ninvoke(db, 'collection', '_users')
-                        .then(function (collection_) {
-                            var collection = collection_;
-                            return Q.ninvoke(collection, 'remove');
-                        }),
-                    Q.ninvoke(db, 'collection', '_projects')
-                        .then(function (projects) {
-                            return Q.ninvoke(projects, 'remove');
-                        }),
-                    Q.ninvoke(db, 'collection', 'ClientCreateProject')
-                        .then(function (createdProject) {
-                            return Q.ninvoke(createdProject, 'remove');
-                        }),
-                    Q.ninvoke(db, 'collection', 'project')
-                        .then(function (project) {
-                            return Q.ninvoke(project, 'remove')
-                                .then(function () {
-                                    return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
-                                });
-                        }),
-                    Q.ninvoke(db, 'collection', 'unauthorized_project')
-                        .then(function (project) {
-                            return Q.ninvoke(project, 'remove')
-                                .then(function () {
-                                    return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
-                                });
-                        })
-                ]);
-            });
-
-        dbConn
+        testFixture.clearDatabase(gmeConfig)
             .then(function () {
                 return auth.connect();
             })
@@ -83,19 +46,8 @@ describe('GME authentication', function () {
     });
 
     after(function (done) {
-        db.close(true, function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            auth.unload(function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                done();
-            });
-        });
+        auth.unload()
+            .nodeify(done);
     });
 
 

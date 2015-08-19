@@ -113,7 +113,18 @@ function clearDatabase(gmeConfigParameter, callback) {
     Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfigParameter.mongo.uri, gmeConfigParameter.mongo.options)
         .then(function (db_) {
             db = db_;
-            return Q.ninvoke(db, 'dropDatabase');
+            return Q.ninvoke(db, 'collectionNames');
+        })
+        .then(function (collectionNames) {
+            var collectionPromises = [];
+            collectionNames.map(function (collData) {
+                if (collData.name.indexOf('system.') === -1) {
+                    collectionPromises.push(Q.ninvoke(db, 'dropCollection', collData.name));
+                } else {
+
+                }
+            });
+            return Q.allDone(collectionPromises);
         })
         .then(function () {
             return Q.ninvoke(db, 'close');
@@ -318,33 +329,6 @@ function projectName2Id(projectName, userId) {
     return storageUtil.getProjectIdFromOwnerIdAndProjectName(userId, projectName);
 }
 
-/**
- * Forces the deletion of the given projectName (N.B. not projectId).
- * @param storage
- * @param gmeAuth
- * @param projectName
- * @param [userId=gmeConfig.authentication.guestAccount]
- * @param [callback]
- * @returns {*}
- */
-function forceDeleteProject(storage, gmeAuth, projectName, userId, callback) {
-    var projectId = projectName2Id(projectName, userId);
-
-    userId = userId || gmeConfig.authentication.guestAccount;
-
-    return gmeAuth.addProject(userId, projectName, null)
-        .then(function () {
-            return gmeAuth.authorizeByUserId(userId, projectId, 'create', {
-                read: true,
-                write: true,
-                delete: true
-            });
-        })
-        .then(function () {
-            return storage.deleteProject({projectId: projectId});
-        }).nodeify(callback);
-}
-
 function logIn(server, agent, userName, password) {
     var serverBaseUrl = server.getUrl(),
         deferred = Q.defer();
@@ -455,7 +439,6 @@ module.exports = {
     importProject: importProject,
     saveChanges: saveChanges,
     projectName2Id: projectName2Id,
-    forceDeleteProject: forceDeleteProject,
     logIn: logIn,
     openSocketIo: openSocketIo,
 

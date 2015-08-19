@@ -174,22 +174,19 @@ function GMEAuth(session, gmeConfig) {
             })
             .then(function (collection_) {
                 collectionDeferred.resolve(collection_);
-                return _prepareGuestAccount();
-            })
-            .then(function () {
-                //    return Q.ninvoke(db, 'collection', _organizationCollectionName);
-                //})
-                //.then(function (organizationCollection_) {
-                //    organizationCollectionDeferred.resolve(organizationCollection_);
                 return Q.ninvoke(db, 'collection', _projectCollectionName);
             })
             .then(function (projectCollection_) {
                 projectCollectionDeferred.resolve(projectCollection_);
+                return _prepareGuestAccount();
+            })
+            .then(function () {
                 return self;
             })
             .catch(function (err) {
                 logger.error(err);
                 collectionDeferred.reject(err);
+                projectCollectionDeferred.reject(err);
                 throw err;
             })
             .nodeify(callback);
@@ -201,7 +198,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function unload(callback) {
-        return collection
+        return Q.all([collection, projectCollection])
             .finally(function () {
                 return Q.ninvoke(db, 'close');
             })
@@ -934,7 +931,7 @@ function GMEAuth(session, gmeConfig) {
                 }
             })
             .then(function () {
-                collection.update({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}}, {$pull: {orgs: orgId}});
+                return collection.update({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}}, {$pull: {orgs: orgId}});
             })
             .nodeify(callback);
     }
