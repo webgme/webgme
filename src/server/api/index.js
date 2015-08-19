@@ -393,9 +393,9 @@ function createAPI(app, mountPath, middlewareOpts) {
                 return;
             }
 
-            if (!data.siteAdmin) {
+            if (!(data.siteAdmin || data.canCreate)) {
                 res.status(403);
-                return next(new Error('site admin role is required for  this operation'));
+                return next(new Error('site admin role or can create is required for this operation'));
             }
 
             //try {
@@ -403,8 +403,6 @@ function createAPI(app, mountPath, middlewareOpts) {
             // TODO: verify request
             // "orgId"
             // "info"
-
-            // we may need to check if this user can create other ones.
 
             gmeAuth.addOrganization(receivedData.orgId, receivedData.info,
                 function (err/*, updateData*/) {
@@ -458,26 +456,208 @@ function createAPI(app, mountPath, middlewareOpts) {
                 });
                 return;
             }
+            gmeAuth.getAdminsInOrganization(req.params.orgId, function (err, admins) {
+                if (err) {
+                    res.status(404);
+                    res.json({
+                        message: 'Requested resource was not found',
+                        error: err
+                    });
+                    return;
+                }
 
-            if (data.siteAdmin) {
-                gmeAuth.removeOrganizationByOrgId(req.params.username, function (err, mongoResult) {
-                    if (err || mongoResult !== 1) {
-                        res.status(404);
-                        res.json({
-                            message: 'Requested resource was not found',
-                            error: err
-                        });
-                        return;
-                    }
+                if (data.siteAdmin || admins.indexOf(userId) > -1) {
+                    gmeAuth.removeOrganizationByOrgId(req.params.orgId, function (err, mongoResult) {
+                        if (err) {
+                            res.status(404);
+                            res.json({
+                                message: 'Requested resource was not found',
+                                error: err
+                            });
+                            return;
+                        }
 
-                    res.sendStatus(204);
-                });
-            } else {
-                res.status(403);
-                return next(new Error('site admin role is required for this operation'));
-            }
+                        res.sendStatus(204);
+                    });
+                } else {
+                    res.status(403);
+                    return next(new Error('site admin role or organization admin is required for this operation'));
+                }
+            });
         });
 
+    });
+
+    router.put('/orgs/:orgId/users/:username', function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.getUser(userId, function (err, data) {
+            if (err) {
+                res.status(404);
+                res.json({
+                    message: 'Requested resource was not found',
+                    error: err
+                });
+                return;
+            }
+            gmeAuth.getAdminsInOrganization(req.params.orgId, function (err, admins) {
+                if (err) {
+                    res.status(404);
+                    res.json({
+                        message: 'Requested resource was not found',
+                        error: err
+                    });
+                    return;
+                }
+
+                if (data.siteAdmin || admins.indexOf(userId) > -1) {
+                    gmeAuth.addUserToOrganization(req.params.username, req.params.orgId, function (err) {
+                        if (err) {
+                            res.status(404);
+                            res.json({
+                                message: 'Requested resource was not found',
+                                error: err
+                            });
+                            return;
+                        }
+
+                        res.sendStatus(204);
+                    });
+                } else {
+                    res.status(403);
+                    return next(new Error('site admin role or organization admin is required for this operation'));
+                }
+            });
+        });
+    });
+
+    router.delete('/orgs/:orgId/users/:username', function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.getUser(userId, function (err, data) {
+            if (err) {
+                res.status(404);
+                res.json({
+                    message: 'Requested resource was not found',
+                    error: err
+                });
+                return;
+            }
+            gmeAuth.getAdminsInOrganization(req.params.orgId, function (err, admins) {
+                if (err) {
+                    res.status(404);
+                    res.json({
+                        message: 'Requested resource was not found',
+                        error: err
+                    });
+                    return;
+                }
+
+                if (data.siteAdmin || admins.indexOf(userId) > -1) {
+                    gmeAuth.removeUserFromOrganization(req.params.username, req.params.orgId, function (err) {
+                        if (err) {
+                            res.status(404);
+                            res.json({
+                                message: 'Requested resource was not found',
+                                error: err
+                            });
+                            return;
+                        }
+
+                        res.sendStatus(204);
+                    });
+                } else {
+                    res.status(403);
+                    return next(new Error('site admin role or organization admin is required for this operation'));
+                }
+            });
+        });
+    });
+
+    router.put('/orgs/:orgId/admins/:username', function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.getUser(userId, function (err, data) {
+            if (err) {
+                res.status(404);
+                res.json({
+                    message: 'Requested resource was not found',
+                    error: err
+                });
+                return;
+            }
+            gmeAuth.getAdminsInOrganization(req.params.orgId, function (err, admins) {
+                if (err) {
+                    res.status(404);
+                    res.json({
+                        message: 'Requested resource was not found',
+                        error: err
+                    });
+                    return;
+                }
+
+                if (data.siteAdmin || admins.indexOf(userId) > -1) {
+                    gmeAuth.setAdminForUserInOrganization(req.params.username, req.params.orgId, true, function (err) {
+                        if (err) {
+                            res.status(404);
+                            res.json({
+                                message: 'Requested resource was not found',
+                                error: err
+                            });
+                            return;
+                        }
+
+                        res.sendStatus(204);
+                    });
+                } else {
+                    res.status(403);
+                    return next(new Error('site admin role or organization admin is required for this operation'));
+                }
+            });
+        });
+    });
+
+    router.delete('/orgs/:orgId/admins/:username', function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.getUser(userId, function (err, data) {
+            if (err) {
+                res.status(404);
+                res.json({
+                    message: 'Requested resource was not found',
+                    error: err
+                });
+                return;
+            }
+            gmeAuth.getAdminsInOrganization(req.params.orgId, function (err, admins) {
+                if (err) {
+                    res.status(404);
+                    res.json({
+                        message: 'Requested resource was not found',
+                        error: err
+                    });
+                    return;
+                }
+
+                if (data.siteAdmin || admins.indexOf(userId) > -1) {
+                    gmeAuth.setAdminForUserInOrganization(req.params.username, req.params.orgId, false, function (err) {
+                        if (err) {
+                            res.status(404);
+                            res.json({
+                                message: 'Requested resource was not found',
+                                error: err
+                            });
+                            return;
+                        }
+
+                        res.sendStatus(204);
+                    });
+                } else {
+                    res.status(403);
+                    return next(new Error('site admin role or organization admin is required for this operation'));
+                }
+            });
+        });
     });
 
     // AUTHENTICATED
