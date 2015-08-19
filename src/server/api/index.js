@@ -33,7 +33,6 @@ function createAPI(app, mountPath, middlewareOpts) {
         safeStorage = middlewareOpts.safeStorage,
         ensureAuthenticated = middlewareOpts.ensureAuthenticated,
         webgme = require('../../../webgme'),
-        ServerUserProject = require('../storage/userproject'),
         merge = webgme.requirejs('common/core/users/merge'),
         StorageUtil = webgme.requirejs('common/storage/util'),
 
@@ -344,6 +343,124 @@ function createAPI(app, mountPath, middlewareOpts) {
 
             if (data.siteAdmin || data._id === req.params.username) {
                 gmeAuth.deleteUser(req.params.username, function (err, mongoResult) {
+                    if (err || mongoResult !== 1) {
+                        res.status(404);
+                        res.json({
+                            message: 'Requested resource was not found',
+                            error: err
+                        });
+                        return;
+                    }
+
+                    res.sendStatus(204);
+                });
+            } else {
+                res.status(403);
+                return next(new Error('site admin role is required for this operation'));
+            }
+        });
+
+    });
+
+    //ORGANIZATIONS
+    router.get('/orgs', function (req, res) {
+        gmeAuth.listOrganizations(null, function (err, data) {
+            if (err) {
+                res.status(404);
+                res.json({
+                    message: 'Requested resource was not found',
+                    error: err
+                });
+                return;
+            }
+
+            res.json(data);
+        });
+    });
+
+    router.put('/orgs', function (req, res, next) {
+
+        var userId = getUserId(req);
+
+        gmeAuth.getUser(userId, function (err, data) {
+            var receivedData;
+            if (err) {
+                res.status(404);
+                res.json({
+                    message: 'Requested resource was not found',
+                    error: err
+                });
+                return;
+            }
+
+            if (!data.siteAdmin) {
+                res.status(403);
+                return next(new Error('site admin role is required for  this operation'));
+            }
+
+            //try {
+            receivedData = req.body;
+            // TODO: verify request
+            // "orgId"
+            // "info"
+
+            // we may need to check if this user can create other ones.
+
+            gmeAuth.addOrganization(receivedData.orgId, receivedData.info,
+                function (err/*, updateData*/) {
+                    if (err) {
+                        res.status(400);
+                        return next(new Error(err));
+                    }
+
+                    gmeAuth.getOrganization(receivedData.orgId, function (err, data) {
+                        if (err) {
+                            res.status(404);
+                            res.json({
+                                message: 'Requested resource was not found',
+                                error: err
+                            });
+                            return;
+                        }
+
+                        res.json(data);
+                    });
+                });
+
+        });
+
+    });
+
+    router.get('/orgs/:orgId', function (req, res) {
+        gmeAuth.getOrganization(req.params.orgId, function (err, data) {
+            if (err) {
+                res.status(404);
+                res.json({
+                    message: 'Requested resource was not found',
+                    error: err
+                });
+                return;
+            }
+
+            res.json(data);
+        });
+    });
+
+    router.delete('/orgs/:orgId', function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.getUser(userId, function (err, data) {
+            if (err) {
+                res.status(404);
+                res.json({
+                    message: 'Requested resource was not found',
+                    error: err
+                });
+                return;
+            }
+
+            if (data.siteAdmin) {
+                gmeAuth.removeOrganizationByOrgId(req.params.username, function (err, mongoResult) {
                     if (err || mongoResult !== 1) {
                         res.status(404);
                         res.json({
