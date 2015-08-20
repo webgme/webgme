@@ -55,13 +55,6 @@ describe('storage socketio websocket', function () {
                 })
                 .then(function () {
                     return Q.allDone([
-                        safeStorage.deleteProject({projectId: projectName2Id(projectName)}),
-                        safeStorage.deleteProject({projectId: projectName2Id(projectNameCreate)}),
-                        safeStorage.deleteProject({projectId: projectName2Id(projectNameDelete)})
-                    ]);
-                })
-                .then(function () {
-                    return Q.allDone([
                         testFixture.importProject(safeStorage, {
                             projectSeed: 'seeds/EmptyProject.json',
                             projectName: projectName,

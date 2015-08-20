@@ -1,5 +1,4 @@
-/*globals */
-/*jshint node:true, newcap:false*/
+/*jshint node:true, newcap:false, mocha:true*/
 /**
  * @author lattmann / https://github.com/lattmann
  */
@@ -10,8 +9,7 @@ var testFixture = require('../_globals.js');
 describe('server logger', function () {
     'use strict';
 
-    var gmeConfig = testFixture.getGmeConfig(),
-        expect = testFixture.expect,
+    var expect = testFixture.expect,
         Logger = require('../../src/server/logger');
 
     it('should instantiate a logger', function () {

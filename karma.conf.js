@@ -57,14 +57,6 @@ var testFixture = require('./test/_globals.js'),
             return storage.openDatabase();
         })
         .then(function () {
-            // Delete the projects to be imported
-            function deleteProject(projectInfo) {
-                return testFixture.forceDeleteProject(storage, gmeAuth, projectInfo.name);
-            }
-
-            return Q.all(PROJECTS_TO_IMPORT.map(deleteProject));
-        })
-        .then(function () {
             // Import all the projects.
             function importProject(projectInfo) {
                 var branchName = projectInfo.hasOwnProperty('branches') ?

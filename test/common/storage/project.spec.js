@@ -54,11 +54,6 @@ describe('storage project', function () {
                 })
                 .then(function () {
                     return Q.allDone([
-                        safeStorage.deleteProject({projectId: projectName2Id(projectName)})
-                    ]);
-                })
-                .then(function () {
-                    return Q.allDone([
                         testFixture.importProject(safeStorage, {
                             projectSeed: 'seeds/EmptyProject.json',
                             projectName: projectName,
