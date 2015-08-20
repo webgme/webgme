@@ -945,9 +945,17 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function setAdminForUserInOrganization(userId, orgId, makeAdmin, callback) {
+        var admins;
         return getAdminsInOrganization(orgId)
-            .then(function (admins) {
+            .then(function (admins_) {
+                admins = admins_;
+                return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}});
+            })
+            .then(function (user) {
                 if (makeAdmin) {
+                    if (!user) {
+                        return Q.reject('No such user [' + userId + ']');
+                    }
                     return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION}, {$addToSet: {admins: userId}});
                 } else {
                     if (admins.indexOf(userId) > -1) {

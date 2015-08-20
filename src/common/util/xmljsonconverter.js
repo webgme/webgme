@@ -267,6 +267,9 @@ define(['common/util/sax'], function (sax) {
 
     return {
         Xml2json: XML2JSON,
-        Json2xml: JSON2XML
+        Json2xml: JSON2XML,
+
+        JsonToXml: JSON2XML,
+        XmlToJson: XML2JSON
     };
 });
