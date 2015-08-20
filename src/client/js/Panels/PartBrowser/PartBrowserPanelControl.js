@@ -247,7 +247,8 @@ define(['js/logger',
                 this._doUpdateTerritory(true);
             } else {
                 this._logger.debug('_processContainerNode territory did not change _suppressDecoratorUpdate=false');
-                this._suppressDecoratorUpdate = false;
+                this._suppressDecoratorUpdate = true;
+                this._logger.debug('WARN - Forcing _suppressDecoratorUpdate=true see issue #492');
             }
         }
     };
