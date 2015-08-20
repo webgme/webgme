@@ -923,21 +923,27 @@ describe('API', function () {
                     gmeAuth = gmeAuth_;
                     return Q.allDone([
                         gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true}),
+                        gmeAuth.addUser('userCanCreate', 'admin@example.com', 'plaintext', true, {overwrite: true}),
+                        gmeAuth.addUser('userCanNotCreate', 'admin@example.com', 'plaintext', false, {overwrite: true}),
                         gmeAuth.addUser('userAdminOrg', 'user@example.com', 'plaintext', false, {overwrite: true}),
+                        gmeAuth.addUser('userAdminOrg2', 'user@example.com', 'plaintext', false, {overwrite: true}),
                         gmeAuth.addUser('userAddedToOrg', 'user@example.com', 'plaintext', false, {overwrite: true}),
                         gmeAuth.addUser('userRemovedFromOrg', 'user@example.com', 'plaintext', false, {overwrite: true}),
                         gmeAuth.addOrganization('orgInit', {someInfo: true}),
                         gmeAuth.addOrganization('orgToAddAdmin', null),
                         gmeAuth.addOrganization('orgToRemoveAdmin', null),
                         gmeAuth.addOrganization('orgToRemoveUser', null),
-                        gmeAuth.addOrganization('orgToDelete', null)
+                        gmeAuth.addOrganization('orgToDelete', null),
+                        gmeAuth.addOrganization('orgToDelete2', null),
                     ]);
                 })
                 .then(function () {
                     return Q.allDone([
                         gmeAuth.addUserToOrganization('userAdminOrg', 'orgInit'),
                         gmeAuth.addUserToOrganization('userRemovedFromOrg', 'orgToRemoveUser'),
+                        gmeAuth.addUserToOrganization('userAdminOrg2', 'orgToDelete2'),
                         gmeAuth.setAdminForUserInOrganization('userAdminOrg', 'orgInit', true),
+                        gmeAuth.setAdminForUserInOrganization('userAdminOrg2', 'orgToDelete2', true),
                         gmeAuth.setAdminForUserInOrganization('userAdminOrg', 'orgToRemoveAdmin', true)
                     ]);
                 })
@@ -990,7 +996,8 @@ describe('API', function () {
             });
 
             // AUTH METHODS
-            it('should create a new organization with valid data PUT /api/v1/orgs/newOrg', function (done) {
+            // create organization
+            it('should create a new organization as admin with valid data PUT /api/v1/orgs/newOrg', function (done) {
                 var newOrg = {
                     orgId: 'newOrg',
                     info: {
@@ -998,7 +1005,7 @@ describe('API', function () {
                     }
                 };
 
-                agent.get(server.getUrl() + '/api/v1/orgs/newOrg')
+                agent.get(server.getUrl() + '/api/v1/orgs/' + newOrg.orgId)
                     .end(function (err, res) {
                         expect(res.status).equal(404, err); // user should not exist at this point
 
@@ -1017,17 +1024,99 @@ describe('API', function () {
                     });
             });
 
-            it('should delete organization DELETE /api/v1/orgs/orgToDelete', function (done) {
-                agent.get(server.getUrl() + '/api/v1/orgs/orgToDelete')
+            it('should create a new organization when canCreate with valid data PUT /api/v1/orgs/newOrgCanCreate',
+                function (done) {
+                    var newOrg = {
+                        orgId: 'newOrgCanCreate',
+                        info: {
+                            info: 'new'
+                        }
+                    };
+
+                    agent.get(server.getUrl() + '/api/v1/orgs/' + newOrg.orgId)
+                        .end(function (err, res) {
+                            expect(res.status).equal(404, err); // org should not exist at this point
+
+                            agent.put(server.getUrl() + '/api/v1/orgs')
+                                .set('Authorization', 'Basic ' + new Buffer('userCanCreate:plaintext')
+                                    .toString('base64'))
+                                .send(newOrg)
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(200, err);
+
+                                    expect(res2.body._id).equal(newOrg.orgId);
+                                    expect(res2.body.info.info).equal(newOrg.info.info);
+                                    expect(res2.body.admins).to.deep.equal(['userCanCreate']);
+
+                                    done();
+                                });
+                        });
+                }
+            );
+
+            it('should 403 when create a new organization when can not create with valid data PUT /api/v1/orgs/someOrg',
+                function (done) {
+                    var newOrg = {
+                        orgId: 'someOrg',
+                        info: {
+                            info: 'new'
+                        }
+                    };
+
+                    agent.get(server.getUrl() + '/api/v1/orgs/' + newOrg.orgId)
+                        .end(function (err, res) {
+                            expect(res.status).equal(404, err); // org should not exist at this point
+
+                            agent.put(server.getUrl() + '/api/v1/orgs')
+                                .set('Authorization', 'Basic ' + new Buffer('userCanNotCreate:plaintext')
+                                    .toString('base64'))
+                                .send(newOrg)
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(403, err);
+                                    done();
+                                });
+                        });
+                }
+            );
+
+            it('should 500 when create a new organization when already exists with valid data PUT /api/v1/orgs/orgInit',
+                function (done) {
+                    var newOrg = {
+                        orgId: 'orgInit',
+                        info: {
+                            info: 'new'
+                        }
+                    };
+
+                    agent.get(server.getUrl() + '/api/v1/orgs/' + newOrg.orgId)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+
+                            agent.put(server.getUrl() + '/api/v1/orgs')
+                                .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                                .send(newOrg)
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(500, err);
+
+                                    done();
+                                });
+                        });
+                }
+            );
+
+            // delete organization
+            it('should delete organization as site admin DELETE /api/v1/orgs/orgToDelete', function (done) {
+                var orgName = 'orgToDelete';
+                agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
                     .end(function (err, res) {
                         expect(res.status).equal(200, err); // org should exist at this point
 
-                        agent.del(server.getUrl() + '/api/v1/orgs/orgToDelete')
+                        agent.del(server.getUrl() + '/api/v1/orgs/' + orgName)
                             .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                             .end(function (err, res2) {
                                 expect(res2.status).equal(204, err);
 
-                                agent.get(server.getUrl() + '/api/v1/orgs/orgToDelete')
+                                agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
                                     .end(function (err, res) {
                                         expect(res.status).equal(404, err); // org should not exist at this point
                                         done();
@@ -1036,6 +1125,69 @@ describe('API', function () {
                     });
             });
 
+            it('should delete organization as org admin DELETE /api/v1/orgs/orgToDelete2', function (done) {
+                var orgName = 'orgToDelete2';
+                agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err); // org should exist at this point
+
+                        agent.del(server.getUrl() + '/api/v1/orgs/' + orgName)
+                            .set('Authorization', 'Basic ' + new Buffer('userAdminOrg2:plaintext')
+                                .toString('base64'))
+                            .end(function (err, res2) {
+                                expect(res2.status).equal(204, err);
+
+                                agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
+                                    .end(function (err, res) {
+                                        expect(res.status).equal(404, err); // org should not exist at this point
+                                        done();
+                                    });
+                            });
+                    });
+            });
+
+            it('should 403 when delete organization when not site nor org admin DELETE /api/v1/orgs/orgInit',
+                function (done) {
+                    var orgName = 'orgInit';
+                    agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err); // org should exist at this point
+
+                            agent.del(server.getUrl() + '/api/v1/orgs/' + orgName)
+                                .set('Authorization', 'Basic ' + new Buffer('userCanNotCreate:plaintext')
+                                    .toString('base64'))
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(403, err);
+
+                                    agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
+                                        .end(function (err, res) {
+                                            expect(res.status).equal(200, err); // org should still exist at this point
+                                            done();
+                                        });
+                                });
+                        });
+                }
+            );
+
+            it('should 404 when delete organization that does not exist DELETE /api/v1/orgs/orgInitDoesNotExist',
+                function (done) {
+                    var orgName = 'orgInitDoesNotExist';
+                    agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
+                        .end(function (err, res) {
+                            expect(res.status).equal(404, err); // org should not exist at this point
+
+                            agent.del(server.getUrl() + '/api/v1/orgs/' + orgName)
+                                .set('Authorization', 'Basic ' + new Buffer('admin:admin')
+                                    .toString('base64'))
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(404, err);
+                                    done();
+                                });
+                        });
+                }
+            );
+
+            // add user to organization
             it('should add user to organization PUT /api/v1/orgs/orgInit/users/userAddedToOrg', function (done) {
                 agent.put(server.getUrl() + '/api/v1/orgs/orgInit/users/userAddedToOrg')
                     .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
@@ -1051,19 +1203,55 @@ describe('API', function () {
                     });
             });
 
+            it('should 403 when add user to organization and not admin PUT /api/v1/orgs/orgInit/users/userAddedToOrg',
+                function (done) {
+                    agent.put(server.getUrl() + '/api/v1/orgs/orgInit/users/userAddedToOrg')
+                        .set('Authorization', 'Basic ' + new Buffer('userCanNotCreate:plaintext').toString('base64'))
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(403, err);
+                            done();
+                        });
+                }
+            );
+
+            it('should 404 when add user to non-existing organization PUT /api/v1/orgs/noExists/users/userAddedToOrg',
+                function (done) {
+                    agent.put(server.getUrl() + '/api/v1/orgs/noExists/users/userAddedToOrg')
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(404, err);
+                            done();
+                        });
+                }
+            );
+
+            it('should 404 when add non-existing user to organization PUT /api/v1/orgs/orgInit/users/noExists',
+                function (done) {
+                    agent.put(server.getUrl() + '/api/v1/orgs/orgInit/users/noExists')
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(404, err);
+                            done();
+                        });
+                }
+            );
+
+            // remove user from organization
             it('should remove user from organization DELETE /api/v1/orgs/orgToRemoveUser/users/userRemovedFromOrg',
                 function (done) {
-                    agent.get(server.getUrl() + '/api/v1/users/userRemovedFromOrg')
+                    var orgId = 'orgToRemoveUser',
+                        userId = 'userRemovedFromOrg';
+                    agent.get(server.getUrl() + '/api/v1/users/' + userId)
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
-                            expect(res.body.orgs).to.deep.equal(['orgToRemoveUser']);
+                            expect(res.body.orgs).to.deep.equal([orgId]);
 
-                            agent.del(server.getUrl() + '/api/v1/orgs/orgToRemoveUser/users/userRemovedFromOrg')
+                            agent.del(server.getUrl() + '/api/v1/orgs/' + orgId + '/users/' + userId)
                                 .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                 .end(function (err, res2) {
                                     expect(res2.status).equal(204, err);
 
-                                    agent.get(server.getUrl() + '/api/v1/users/userRemovedFromOrg')
+                                    agent.get(server.getUrl() + '/api/v1/users/' + userId)
                                         .end(function (err, res) {
                                             expect(res.status).equal(200, err);
                                             expect(res.body.orgs).to.deep.equal([]);
@@ -1074,42 +1262,181 @@ describe('API', function () {
                 }
             );
 
+            it('should 403 when remove user from org and not admin DELETE /api/v1/orgs/initOrg/users/userAdminOrg',
+                function (done) {
+                    var orgId = 'orgInit',
+                        userId = 'userAdminOrg';
+                    agent.get(server.getUrl() + '/api/v1/users/' + userId)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body.orgs).to.deep.equal([orgId]);
+
+                            agent.del(server.getUrl() + '/api/v1/orgs/' + orgId + '/users/' + userId)
+                                .set('Authorization', 'Basic ' + new Buffer('userCanNotCreate:plaintext')
+                                    .toString('base64'))
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(403, err);
+
+                                    agent.get(server.getUrl() + '/api/v1/users/' + userId)
+                                        .end(function (err, res) {
+                                            expect(res.status).equal(200, err);
+                                            expect(res.body.orgs).to.deep.equal([orgId]);
+                                            done();
+                                        });
+                                });
+                        });
+                }
+            );
+
+            it('should 404 when remove user from non-existing org DELETE /api/v1/orgs/noExist/users/userAdminOrg',
+                function (done) {
+                    var orgId = 'noExist',
+                        userId = 'userAdminOrg';
+
+                    agent.del(server.getUrl() + '/api/v1/orgs/' + orgId + '/users/' + userId)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin')
+                            .toString('base64'))
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(404, err);
+                            done();
+                        });
+                }
+            );
+
+            it('should 204 when remove non-existing user from org DELETE /api/v1/orgs/initOrg/users/noExist',
+                function (done) {
+                    var orgId = 'orgInit',
+                        userId = 'noExist';
+
+                    agent.del(server.getUrl() + '/api/v1/orgs/' + orgId + '/users/' + userId)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin')
+                            .toString('base64'))
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(204, err);
+                            done();
+                        });
+                }
+            );
+
+            // set admins of organization
             it('should make user admin in organization PUT /api/v1/orgs/orgToAddAdmin/admins/userAddedToOrg',
                 function (done) {
-                    agent.put(server.getUrl() + '/api/v1/orgs/orgToAddAdmin/admins/userAddedToOrg')
+                    var orgId = 'orgToAddAdmin',
+                        userId = 'userAddedToOrg';
+                    agent.put(server.getUrl() + '/api/v1/orgs/' + orgId + '/admins/' + userId)
                         .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                         .end(function (err, res2) {
                             expect(res2.status).equal(204, err);
 
-                            agent.get(server.getUrl() + '/api/v1/orgs/orgToAddAdmin')
+                            agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
                                 .end(function (err, res) {
                                     expect(res.status).equal(200, err);
-                                    expect(res.body.admins).to.deep.equal(['userAddedToOrg']);
+                                    expect(res.body.admins).to.deep.equal([userId]);
                                     done();
                                 });
                         });
                 }
             );
 
-            it('should remove user admin in organization DELETE /api/v1/orgs/orgToRemoveAdmin/admins/orgAdminUser',
+            it('should 403 when making user admin when not admin PUT /api/v1/orgs/orgInit/admins/userAddedToOrg',
                 function (done) {
-                    agent.get(server.getUrl() + '/api/v1/orgs/orgToRemoveAdmin')
+                    var orgId = 'orgInit',
+                        userId = 'userAddedToOrg';
+                    agent.put(server.getUrl() + '/api/v1/orgs/' + orgId + '/admins/' + userId)
+                        .set('Authorization', 'Basic ' + new Buffer('userCanNotCreate:plaintext').toString('base64'))
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(403, err);
+                            done();
+                        });
+                }
+            );
+
+            it('should 404 when making user admin in non-existing org PUT /api/v1/orgs/noExist/admins/userAddedToOrg',
+                function (done) {
+                    var orgId = 'noExist',
+                        userId = 'userAddedToOrg';
+                    agent.put(server.getUrl() + '/api/v1/orgs/' + orgId + '/admins/' + userId)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(404, err);
+                            done();
+                        });
+                }
+            );
+
+            it('should 404 when making non-existing user admin in org PUT /api/v1/orgs/orgInit/admins/noExist',
+                function (done) {
+                    var orgId = 'orgInit',
+                        userId = 'noExist';
+                    agent.put(server.getUrl() + '/api/v1/orgs/' + orgId + '/admins/' + userId)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(404, err);
+                            done();
+                        });
+                }
+            );
+
+            it('should remove user admin in organization DELETE /api/v1/orgs/orgToRemoveAdmin/admins/userAdminOrg',
+                function (done) {
+                    var orgId = 'orgToRemoveAdmin',
+                        userId = 'userAdminOrg';
+                    agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
-                            expect(res.body.admins).to.deep.equal(['userAdminOrg']);
+                            expect(res.body.admins).to.deep.equal([userId]);
 
-                            agent.del(server.getUrl() + '/api/v1/orgs/orgToRemoveAdmin/admins/userAdminOrg')
+                            agent.del(server.getUrl() + '/api/v1/orgs/' + orgId + '/admins/' + userId)
                                 .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                 .end(function (err, res2) {
                                     expect(res2.status).equal(204, err);
 
-                                    agent.get(server.getUrl() + '/api/v1/orgs/orgToRemoveAdmin')
+                                    agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
                                         .end(function (err, res) {
                                             expect(res.status).equal(200, err);
                                             expect(res.body.admins).to.deep.equal([]);
                                             done();
                                         });
                                 });
+                        });
+                }
+            );
+
+            it('should 403 when removing user admin when not admin DELETE /api/v1/orgs/orgInit/admins/userAddedToOrg',
+                function (done) {
+                    var orgId = 'orgInit',
+                        userId = 'userAddedToOrg';
+                    agent.del(server.getUrl() + '/api/v1/orgs/' + orgId + '/admins/' + userId)
+                        .set('Authorization', 'Basic ' + new Buffer('userCanNotCreate:plaintext').toString('base64'))
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(403, err);
+                            done();
+                        });
+                }
+            );
+
+            it('should 404 when removing user admin in non-existing org DELETE /api/v1/orgs/noExist/admins/userAddedToOrg',
+                function (done) {
+                    var orgId = 'noExist',
+                        userId = 'userAddedToOrg';
+                    agent.del(server.getUrl() + '/api/v1/orgs/' + orgId + '/admins/' + userId)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(404, err);
+                            done();
+                        });
+                }
+            );
+
+            it('should 204 when removing non-existing user admin in org DELETE /api/v1/orgs/orgInit/admins/noExist',
+                function (done) {
+                    var orgId = 'orgInit',
+                        userId = 'noExist';
+                    agent.del(server.getUrl() + '/api/v1/orgs/' + orgId + '/admins/' + userId)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res2) {
+                            expect(res2.status).equal(204, err);
+                            done();
                         });
                 }
             );
