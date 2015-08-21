@@ -26,7 +26,13 @@ describe('GME authentication', function () {
                 return auth.connect();
             })
             .then(function () {
-                return auth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true});
+                return Q.allDone([
+                    auth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true}),
+                    auth.addUser('adminUser2', 'user@example.com', 'plaintext', true, {overwrite: true}),
+                    auth.addUser('adminUser3', 'user@example.com', 'plaintext', true, {overwrite: true}),
+                    auth.addUser('adminUser4', 'user@example.com', 'plaintext', true, {overwrite: true}),
+                    auth.addUser('adminUser5', 'user@example.com', 'plaintext', true, {overwrite: true})
+                ]);
             })
             .then(function () {
                 return auth.authorizeByUserId('user', 'project', 'create', {
