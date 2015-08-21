@@ -491,7 +491,7 @@ describe('storage project', function () {
                 })
                 .then(function (result) {
                     branch = project.branches['queueCommit_name'];
-                    branch.queueCommit(commitData);
+                    branch.queueCommit(commitData, function () {});
                     expect(branch.getCommitQueue().length).to.equal(1);
                     expect(branch.getFirstCommit()).to.equal(commitData);
                     expect(branch.getCommitQueue().length).to.equal(1);
@@ -544,8 +544,8 @@ describe('storage project', function () {
                     branch.updateHashes('hash', 'hash');
                     expect(branch.getCommitsForNewFork('hash_different')).to.equal(false);
                     expect(branch.getCommitsForNewFork()).to.deep.equal({commitHash: 'hash', queue: []});
-                    branch.queueCommit(commitData);
-                    branch.queueCommit(commitData2);
+                    branch.queueCommit(commitData, function () {});
+                    branch.queueCommit(commitData2, function () {});
                     expect(branch.getCommitQueue().length).to.equal(2);
                     expect(branch.getCommitQueue()[0]).to.equal(commitData);
                     expect(branch.getCommitsForNewFork('asd2').queue.length).to.equal(1);
