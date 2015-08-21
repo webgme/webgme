@@ -23,6 +23,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
 
         this.branchStatusHandlers = [];
         this.hashUpdateHandlers = [];
+        this.callbackQueue = [];
 
         this._remoteUpdateHandler = null;
 
@@ -70,8 +71,9 @@ define(['common/storage/constants'], function (CONSTANTS) {
         };
 
         // Queue related functions
-        this.queueCommit = function (commitData) {
+        this.queueCommit = function (commitData, commitCallback) {
             commitQueue.push(commitData);
+            this.callbackQueue.push(commitCallback);
             logger.debug('Adding new commit to queue', commitQueue.length);
         };
 
