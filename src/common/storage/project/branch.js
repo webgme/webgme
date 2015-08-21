@@ -43,7 +43,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
                 };
                 self.callbackQueue[i](null, commitResult);
             }
-            this.callbackQueue = [];
+            self.callbackQueue = [];
             commitQueue = [];
             updateQueue = [];
         };
@@ -72,7 +72,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
         // Queue related functions
         this.queueCommit = function (commitData, commitCallback) {
             commitQueue.push(commitData);
-            this.callbackQueue.push(commitCallback);
+            self.callbackQueue.push(commitCallback);
             logger.debug('Adding new commit to queue', commitQueue.length);
         };
 
@@ -80,7 +80,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             var commitData;
             if (shift) {
                 commitData = commitQueue.shift();
-                this.callbackQueue.shift();
+                self.callbackQueue.shift();
                 logger.debug('Removed commit from queue', commitQueue.length);
             } else {
                 commitData = commitQueue[0];
