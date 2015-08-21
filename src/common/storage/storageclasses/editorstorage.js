@@ -412,9 +412,8 @@ define([
             logger.debug('_commitToBranch, [oldCommitHash, localHash]', oldCommitHash, branch.getLocalHash());
 
             if (oldCommitHash === branch.getLocalHash()) {
-                commitData.callback = callback;
                 branch.updateHashes(newCommitHash, null);
-                branch.queueCommit(commitData);
+                branch.queueCommit(commitData, callback);
 
                 if (branch.inSync === false) {
                     branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
@@ -449,14 +448,11 @@ define([
         this._pushNextQueuedCommit = function (projectId, branchName) {
             var project = projects[projectId],
                 branch = project.branches[branchName],
-                commitData,
-                callback;
+                commitData;
 
             logger.debug('_pushNextQueuedCommit', branch.getCommitQueue());
 
             commitData = branch.getFirstCommit();
-            callback = commitData.callback;
-            delete commitData.callback;
 
             logger.debug('_pushNextQueuedCommit, makeCommit [from# -> to#]',
                 commitData.commitObject.parents[0], commitData.commitObject._id);
@@ -466,7 +462,7 @@ define([
                     logger.error('makeCommit failed', err);
                 }
 
-                callback(err, result);
+                branch.callbackQueue.shift()(err, result);
 
                 if (branch.isOpen && !err && result) {
                     if (result.status === CONSTANTS.SYNCED) {
@@ -565,6 +561,33 @@ define([
                 project,
                 branchName;
             logger.debug('_rejoinBranchRooms');
+            function afterReJoinFn(projectId, branchName) {
+                return function (err) {
+                    var project = projects[projectId],
+                        branch,
+                        firstCommit;
+                    if (err) {
+                        logger.error('Could not rejoin branch room', projectId, branchName);
+                        return;
+                    }
+                    if (!project || !project.branches[branchName]) {
+                        logger.error('Project and/or branch have been closed after disconnect',
+                            projectId, branchName);
+                        return;
+                    }
+                    branch = project.branches[branchName];
+
+                    if (branch.getCommitQueue().length > 0) {
+                        // 1. there is at least one commit queued
+                        firstCommit = branch.getFirstCommit();
+                        //if (typeof firstCommit.callback === 'function') {
+                            // 2. The first commit has not been pushed yet
+                            self._pushNextQueuedCommit(projectId, branchName);
+                            // FIXME: What else must hold to push?
+                        //}
+                    }
+                };
+            }
             for (projectId in projects) {
                 if (projects.hasOwnProperty(projectId)) {
                     project = projects[projectId];
@@ -576,7 +599,7 @@ define([
                                 projectId: projectId,
                                 branchName: branchName,
                                 join: true
-                            });
+                            }, afterReJoinFn(projectId, branchName));
                         }
                     }
                 }
