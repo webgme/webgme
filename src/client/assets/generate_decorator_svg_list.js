@@ -31,7 +31,8 @@ requirejs.config({
     nodeRequire: require,
     baseUrl: path.join(__dirname, '..', '..'),
     paths: {
-        underscore: 'client/lib/underscore/underscore-min'
+        underscore: 'client/lib/underscore/underscore-min',
+        js: 'client/js'
     }
 });
 
