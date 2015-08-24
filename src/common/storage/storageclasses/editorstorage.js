@@ -519,7 +519,9 @@ define([
                         logger.debug('New commit was successfully loaded, updating localHash.');
                         branch.updateHashes(originHash, null);
                         branch.getFirstUpdate(true);
-                        self._pullNextQueuedCommit(projectId, branchName, callback);
+                        if (branch.getCommitQueue().length === 0) {
+                            self._pullNextQueuedCommit(projectId, branchName, callback);
+                        }
                         return;
                     } else {
                         logger.warn('Loading of update commit was aborted', {metadata: updateData});
