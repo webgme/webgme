@@ -112,11 +112,8 @@ describe('TestAddOn', function () {
     });
 
     after(function (done) {
-        if (server) {
-            server.stop(done);
-        } else {
-            done();
-        }
+        socket.disconnect();
+        server.stop(done);
     });
 
     it('should start, query, update, query, and stop', function (done) {
