@@ -242,7 +242,7 @@ function Mongo(mainLogger, gmeConfig) {
                     $lt: before
                 }
             }).limit(number).sort({
-                $natural: -1
+                time: -1
             });
 
             return Q.ninvoke(mongoFind, 'toArray')
