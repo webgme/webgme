@@ -942,6 +942,16 @@ describe('Mongo storage', function () {
                 done();
             });
         });
+        it('5 vs 5 -> 5', function (done) {
+            project.getCommonAncestorCommit(commitChain[5], commitChain[5], function (err, c) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                c.should.be.equal(commitChain[5]);
+                done();
+            });
+        });
         it('first commit does not exist', function (done) {
             project.getCommonAncestorCommit('#doesNotExist', commitChain[5], function (err) {
                 expect(err.message).to.include('Commit object does not exist [#doesNotExist]');
