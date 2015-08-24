@@ -66,32 +66,14 @@ describe('storage project', function () {
                     importResult = results[0];
                     originalHash = importResult.commitHash;
 
-                    commitObject = importResult.project.createCommitObject([originalHash],
-                        importResult.rootHash,
-                        'tester1',
+                    return importResult.project.makeCommit(null, [originalHash], importResult.rootHash, {},
                         'commit msg 1');
-                    commitData = {
-                        projectId: projectName2Id(projectName),
-                        commitObject: commitObject,
-                        coreObjects: []
-                    };
-
-                    return safeStorage.makeCommit(commitData);
                 })
                 .then(function (result) {
                     commitHash1 = result.hash;
 
-                    commitObject = importResult.project.createCommitObject([originalHash],
-                        importResult.rootHash,
-                        'tester2',
+                    return importResult.project.makeCommit(null, [originalHash], importResult.rootHash, {},
                         'commit msg 2');
-                    commitData = {
-                        projectId: projectName2Id(projectName),
-                        commitObject: commitObject,
-                        coreObjects: []
-                    };
-
-                    return safeStorage.makeCommit(commitData);
                 })
                 .then(function (result) {
                     commitHash2 = result.hash;
