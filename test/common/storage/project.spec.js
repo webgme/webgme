@@ -246,6 +246,29 @@ describe('storage project', function () {
             .nodeify(done);
     });
 
+    it('should fail getCommonAncestorCommit when hash does not exist', function (done) {
+        var project,
+            branches,
+            access;
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function (result) {
+                project = result[0];
+                branches = result[1];
+                access = result[2];
+
+                return project.getCommonAncestorCommit(commitHash1, '#doesNotExist');
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err).to.include('Commit object does not exist');
+                done();
+            })
+            .done();
+    });
+
     it('should setBranchHash without branch open', function (done) {
         var project,
             branches,

@@ -867,5 +867,23 @@ describe('Memory storage', function () {
                 done();
             });
         });
+        it('first commit does not exist', function (done) {
+            project.getCommonAncestorCommit('#doesNotExist', commitChain[5], function (err) {
+                expect(err.message).to.include('Commit object does not exist [#doesNotExist]');
+                done();
+            });
+        });
+        it('second commit does not exist', function (done) {
+            project.getCommonAncestorCommit(commitChain[5], '#doesNotExist', function (err) {
+                expect(err.message).to.include('Commit object does not exist [#doesNotExist]');
+                done();
+            });
+        });
+        it('both commits does not exist', function (done) {
+            project.getCommonAncestorCommit('#doesNotExist1', '#doesNotExist2', function (err) {
+                expect(err.message).to.include('Commit object does not exist [#doesNotExist1]');
+                done();
+            });
+        });
     });
 });

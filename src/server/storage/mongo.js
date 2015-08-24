@@ -335,7 +335,25 @@ function Mongo(mainLogger, gmeConfig) {
             newAncestorsA = [commitA];
             ancestorsB[commitB] = true;
             newAncestorsB = [commitB];
-            loadStep();
+            collection.findOne({
+                _id: commitA,
+                type: 'commit'
+            }, function (err, commit) {
+                if (err || !commit) {
+                    deferred.reject('Commit object does not exist [' + commitA + ']');
+                    return;
+                }
+                collection.findOne({
+                    _id: commitB,
+                    type: 'commit'
+                }, function (err, commit) {
+                    if (err || !commit) {
+                        deferred.reject('Commit object does not exist [' + commitB + ']');
+                        return;
+                    }
+                    loadStep();
+                });
+            });
 
             return deferred.promise.nodeify(callback);
         };
