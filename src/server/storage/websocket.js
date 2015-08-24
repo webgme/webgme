@@ -492,7 +492,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 getUserIdFromSocket(socket).
                     then(function (userId) {
                         parameters.username = userId;
-                        return storage.getCommonAncestorCommit(parameters, callback);
+                        return storage.getCommonAncestorCommit(parameters);
+                    })
+                    .then(function (commonCommitHash) {
+                        callback(null, commonCommitHash);
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {
