@@ -265,17 +265,7 @@
         "name": "Speakers"
       },
       "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e",
-      "meta": {
-        "attributes": {
-          "function": {
-            "default": "",
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "assign": "cf0fc47b-c956-5a5e-87c1-10535a4d96ba",
@@ -295,13 +285,7 @@
         "name": "y"
       },
       "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "8d5bce4c-6635-a69a-f2d9-61acf9e277dd",
       "pointers": {
         "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d"
@@ -318,13 +302,7 @@
     "0253043c-3f62-3350-b2fc-c3ca6771bf68": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -343,13 +321,7 @@
     "03d6fbb1-7622-770f-669f-1c713a6ead9c": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -370,17 +342,7 @@
         "name": "Local Oscillator"
       },
       "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e",
-      "meta": {
-        "attributes": {
-          "function": {
-            "default": "",
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "assign": "0dc2293c-4792-a7d1-a125-80cf645df627",
@@ -400,13 +362,7 @@
         "name": "In"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "6af34e1f-01de-2f77-9003-20a3fa733f56",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -425,13 +381,7 @@
         "name": "LO"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "6069c7c0-0aa1-e5b3-b0c9-fb34cbfe0348",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -450,13 +400,7 @@
         "name": "Node3"
       },
       "base": "80fa6848-9f3e-a591-1f57-2f210b3e81a2",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "7d9bafce-e213-1f37-53e0-f0944b7694ca",
       "pointers": {
         "base": "80fa6848-9f3e-a591-1f57-2f210b3e81a2"
@@ -475,13 +419,7 @@
         "name": "Node1"
       },
       "base": "80fa6848-9f3e-a591-1f57-2f210b3e81a2",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "7d9bafce-e213-1f37-53e0-f0944b7694ca",
       "pointers": {
         "base": "80fa6848-9f3e-a591-1f57-2f210b3e81a2"
@@ -498,17 +436,7 @@
     "0e6578ed-90d0-b087-7c87-d15fd0b710b7": {
       "attributes": {},
       "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e",
-      "meta": {
-        "attributes": {
-          "function": {
-            "default": "",
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e"
@@ -525,13 +453,7 @@
     "11171a2c-2370-84bc-791d-13ff6e649577": {
       "attributes": {},
       "base": "a34bb6be-1d85-4559-fdf4-f8c949f7ccf5",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "7d9bafce-e213-1f37-53e0-f0944b7694ca",
       "pointers": {
         "base": "a34bb6be-1d85-4559-fdf4-f8c949f7ccf5",
@@ -552,31 +474,7 @@
         "name": "RxGain"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -595,13 +493,7 @@
         "name": "Input"
       },
       "base": "882cece1-4e38-6d44-5893-732a619c6038",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "36385250-6f6e-d1a1-3412-f3455ea900dd",
       "pointers": {
         "base": "882cece1-4e38-6d44-5893-732a619c6038"
@@ -624,13 +516,7 @@
     "1452902f-b079-950c-fec0-f04ef6950475": {
       "attributes": {},
       "base": "a34bb6be-1d85-4559-fdf4-f8c949f7ccf5",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "7d9bafce-e213-1f37-53e0-f0944b7694ca",
       "pointers": {
         "base": "a34bb6be-1d85-4559-fdf4-f8c949f7ccf5",
@@ -651,13 +537,7 @@
         "name": "FFT Display"
       },
       "base": "a9283781-fe0b-5ea4-9ef9-65bcdc8f578c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "assign": "0d5767b7-110f-bc9a-311b-4cd11fe2d80d",
@@ -677,13 +557,7 @@
         "name": "In"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "4a92f56a-f37b-a49c-787f-2ee0df7ebeb3",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -700,13 +574,7 @@
     "1be8ec57-b5be-d0e3-4daf-328d5816886e": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -727,13 +595,7 @@
         "name": "Ch2"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "162195c7-f792-7614-8e9b-26a71e0a3291",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -752,31 +614,7 @@
         "name": "Level"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "d35197a4-2c0f-04f7-6ee0-244229ec6088",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -795,13 +633,7 @@
         "name": "Audio"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "0090bb70-769d-ecb7-17a7-de93d91dc0be",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -820,13 +652,7 @@
         "name": "Out"
       },
       "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "9ba5dae7-2dec-1775-6323-4bcdaf51f9d3",
       "pointers": {
         "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d"
@@ -845,31 +671,7 @@
         "name": "Level"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "9b48e4b2-30bd-2261-fb58-adede7e173bf",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -888,13 +690,7 @@
         "name": "Output"
       },
       "base": "882cece1-4e38-6d44-5893-732a619c6038",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "36385250-6f6e-d1a1-3412-f3455ea900dd",
       "pointers": {
         "base": "882cece1-4e38-6d44-5893-732a619c6038"
@@ -919,13 +715,7 @@
         "name": "RF"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "6069c7c0-0aa1-e5b3-b0c9-fb34cbfe0348",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -945,11 +735,6 @@
       },
       "base": "50f9e9ed-7460-f999-226b-fd23a8dbfe8f",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "children": {
           "items": [
             "882cece1-4e38-6d44-5893-732a619c6038",
@@ -1000,13 +785,7 @@
     "2ef6f595-a5c0-29cc-6b7e-0ec547ab4eb2": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "831391af-6d4a-6c5e-d213-ba3bc86f4bc3",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -1025,13 +804,7 @@
     "31a5d9a9-65e0-f690-78f7-9b56d750f09f": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -1053,11 +826,6 @@
       },
       "base": "50f9e9ed-7460-f999-226b-fd23a8dbfe8f",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "children": {
           "items": [
             "50f9e9ed-7460-f999-226b-fd23a8dbfe8f"
@@ -1092,13 +860,7 @@
         "name": "Ch1"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "162195c7-f792-7614-8e9b-26a71e0a3291",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -1115,13 +877,7 @@
     "3a2f2eb2-1fab-79d0-e0a4-bc1aba7c416e": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -1143,13 +899,7 @@
         "name": "IF"
       },
       "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "6069c7c0-0aa1-e5b3-b0c9-fb34cbfe0348",
       "pointers": {
         "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d"
@@ -1663,13 +1413,7 @@
     "42d73ba8-454b-1f0d-723f-cb87af01cf20": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -1690,13 +1434,7 @@
         "name": "In"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "9b48e4b2-30bd-2261-fb58-adede7e173bf",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -1715,13 +1453,7 @@
         "name": "In"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "d35197a4-2c0f-04f7-6ee0-244229ec6088",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -1740,31 +1472,7 @@
         "name": "SamplingRate"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "162195c7-f792-7614-8e9b-26a71e0a3291",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -1783,13 +1491,7 @@
         "name": "Out"
       },
       "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "9b48e4b2-30bd-2261-fb58-adede7e173bf",
       "pointers": {
         "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d"
@@ -1806,13 +1508,7 @@
     "49e31111-430b-78ed-9f7e-82750dcd3a0d": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -1833,17 +1529,7 @@
         "name": "Gain"
       },
       "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e",
-      "meta": {
-        "attributes": {
-          "function": {
-            "default": "",
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "assign": "cf0fc47b-c956-5a5e-87c1-10535a4d96ba",
@@ -1899,31 +1585,7 @@
         "name": "IF Frequency"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "04025f95-8077-faf9-60c3-257c3ed8717e",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -1942,31 +1604,7 @@
         "name": "SQLevel"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -1985,31 +1623,7 @@
         "name": "ModulationIndex"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -2026,13 +1640,7 @@
     "54dc3706-9aef-0ce6-d859-ac51fe03442e": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -2054,31 +1662,7 @@
         "name": "CenterFreq"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "da7b2716-2641-9087-3ed1-ec7d57e0add0",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -2095,13 +1679,7 @@
     "5cf41c9a-a645-2b1e-d6ba-fe7fe2fd73d2": {
       "attributes": {},
       "base": "a34bb6be-1d85-4559-fdf4-f8c949f7ccf5",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "7d9bafce-e213-1f37-53e0-f0944b7694ca",
       "pointers": {
         "base": "a34bb6be-1d85-4559-fdf4-f8c949f7ccf5",
@@ -2122,13 +1700,7 @@
         "name": "Mixer"
       },
       "base": "a9283781-fe0b-5ea4-9ef9-65bcdc8f578c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "assign": "0dc2293c-4792-a7d1-a125-80cf645df627",
@@ -2146,13 +1718,7 @@
     "60e3b5b6-6ef9-4e03-8314-4c545c60b5a8": {
       "attributes": {},
       "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "0e6578ed-90d0-b087-7c87-d15fd0b710b7",
       "pointers": {
         "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d"
@@ -2171,31 +1737,7 @@
         "name": "RxGain"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "da7b2716-2641-9087-3ed1-ec7d57e0add0",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -2214,17 +1756,7 @@
         "name": "PlaceHolder"
       },
       "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e",
-      "meta": {
-        "attributes": {
-          "function": {
-            "default": "",
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "831391af-6d4a-6c5e-d213-ba3bc86f4bc3",
       "pointers": {
         "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e"
@@ -2241,13 +1773,7 @@
     "6c5b877b-90d1-fbf7-21f7-a5d8c850448d": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -2268,13 +1794,7 @@
         "name": "LO"
       },
       "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "04025f95-8077-faf9-60c3-257c3ed8717e",
       "pointers": {
         "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d"
@@ -2291,13 +1811,7 @@
     "733597cc-386b-37de-ccd9-dccc76693a59": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -2316,13 +1830,7 @@
     "734fc931-f2b7-f06f-26bb-cce53091d712": {
       "attributes": {},
       "base": "a34bb6be-1d85-4559-fdf4-f8c949f7ccf5",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "7d9bafce-e213-1f37-53e0-f0944b7694ca",
       "pointers": {
         "base": "a34bb6be-1d85-4559-fdf4-f8c949f7ccf5",
@@ -2343,31 +1851,7 @@
         "name": "AudioRate"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "0090bb70-769d-ecb7-17a7-de93d91dc0be",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -2384,13 +1868,7 @@
     "74a78224-7ef3-a325-d61d-fd5bd9aa0956": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "831391af-6d4a-6c5e-d213-ba3bc86f4bc3",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -2409,13 +1887,7 @@
     "77c50c45-ea8a-27b5-7ffa-decc22fad4d9": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "6069c7c0-0aa1-e5b3-b0c9-fb34cbfe0348",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8"
@@ -2435,11 +1907,6 @@
       },
       "base": "50f9e9ed-7460-f999-226b-fd23a8dbfe8f",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "pointers": {
           "dst": {
             "items": [
@@ -2492,13 +1959,7 @@
         "name": "Node2"
       },
       "base": "80fa6848-9f3e-a591-1f57-2f210b3e81a2",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "7d9bafce-e213-1f37-53e0-f0944b7694ca",
       "pointers": {
         "base": "80fa6848-9f3e-a591-1f57-2f210b3e81a2"
@@ -2517,13 +1978,7 @@
         "name": "HardwareModel"
       },
       "base": "a0d50dc5-077d-8534-e6ca-9dadf9e6a61c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "3e91f583-6d14-2508-5e72-718500bafc21",
       "pointers": {
         "base": "a0d50dc5-077d-8534-e6ca-9dadf9e6a61c"
@@ -2541,13 +1996,7 @@
     "7f1c0742-3173-a399-79c2-1e1f24b24dd8": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -2566,13 +2015,7 @@
     "80a3f944-72a1-5b81-92d7-5dfa1aaba1ff": {
       "attributes": {},
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "0e6578ed-90d0-b087-7c87-d15fd0b710b7",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -2591,13 +2034,7 @@
         "name": "HWNode"
       },
       "base": "50f9e9ed-7460-f999-226b-fd23a8dbfe8f",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "36385250-6f6e-d1a1-3412-f3455ea900dd",
       "pointers": {
         "base": "50f9e9ed-7460-f999-226b-fd23a8dbfe8f"
@@ -2616,13 +2053,7 @@
     "826c89b7-13b4-899a-ded8-7e35c3375c07": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -2644,13 +2075,7 @@
         "name": "WBFM Demod"
       },
       "base": "a9283781-fe0b-5ea4-9ef9-65bcdc8f578c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "assign": "cf0fc47b-c956-5a5e-87c1-10535a4d96ba",
@@ -2670,31 +2095,7 @@
         "name": "IFFreq"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -2713,13 +2114,7 @@
         "name": "Port"
       },
       "base": "50f9e9ed-7460-f999-226b-fd23a8dbfe8f",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "36385250-6f6e-d1a1-3412-f3455ea900dd",
       "pointers": {
         "base": "50f9e9ed-7460-f999-226b-fd23a8dbfe8f"
@@ -2741,11 +2136,6 @@
       },
       "base": "50f9e9ed-7460-f999-226b-fd23a8dbfe8f",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "children": {
           "items": [
             "2d72ffb9-40c4-2d91-8d00-79b430841ff3",
@@ -2790,17 +2180,7 @@
         "name": "Multiply"
       },
       "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e",
-      "meta": {
-        "attributes": {
-          "function": {
-            "default": "",
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "6069c7c0-0aa1-e5b3-b0c9-fb34cbfe0348",
       "pointers": {
         "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e"
@@ -2819,31 +2199,7 @@
         "name": "CenterFreq"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -2860,13 +2216,7 @@
     "930f0277-1918-2ac8-b4c7-bc54da3b41dd": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "6069c7c0-0aa1-e5b3-b0c9-fb34cbfe0348",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -2887,31 +2237,7 @@
         "name": "SamplingRate"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -2930,13 +2256,7 @@
         "name": "Squelch"
       },
       "base": "a9283781-fe0b-5ea4-9ef9-65bcdc8f578c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "assign": "0d5767b7-110f-bc9a-311b-4cd11fe2d80d",
@@ -2957,17 +2277,7 @@
         "name": "LowPass Filter"
       },
       "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e",
-      "meta": {
-        "attributes": {
-          "function": {
-            "default": "",
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "assign": "7d4768cf-425d-0d76-e637-7f977967b49a",
@@ -2987,31 +2297,7 @@
         "name": "AudioRate"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "831391af-6d4a-6c5e-d213-ba3bc86f4bc3",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -3031,11 +2317,6 @@
       },
       "base": "50f9e9ed-7460-f999-226b-fd23a8dbfe8f",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "children": {
           "items": [
             "80fa6848-9f3e-a591-1f57-2f210b3e81a2",
@@ -3072,31 +2353,7 @@
         "name": "SamplingRate"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "04025f95-8077-faf9-60c3-257c3ed8717e",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -3116,11 +2373,6 @@
       },
       "base": "50f9e9ed-7460-f999-226b-fd23a8dbfe8f",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "pointers": {
           "dst": {
             "items": [
@@ -3168,13 +2420,7 @@
     "a4549183-a574-0586-6fe8-c072a86506ed": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "9b48e4b2-30bd-2261-fb58-adede7e173bf",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -3196,11 +2442,6 @@
       },
       "base": "2d72ffb9-40c4-2d91-8d00-79b430841ff3",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "children": {
           "items": [
             "2d72ffb9-40c4-2d91-8d00-79b430841ff3",
@@ -3254,13 +2495,7 @@
     "a98edd8f-cb75-c81b-87f5-aea0b088cc38": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -3279,13 +2514,7 @@
     "aca3cec3-9d05-1b8b-2873-40416ae8ebd2": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -3304,13 +2533,7 @@
     "accbf212-6f6d-8e5f-d283-cbd8481a6660": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -3329,13 +2552,7 @@
     "b085e6c4-fd7b-68f2-285f-c242f443588c": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -3354,13 +2571,7 @@
     "b166c052-ce88-2f27-e85d-e36296eb9b71": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "6069c7c0-0aa1-e5b3-b0c9-fb34cbfe0348",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -3381,13 +2592,7 @@
         "name": "Out"
       },
       "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "d35197a4-2c0f-04f7-6ee0-244229ec6088",
       "pointers": {
         "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d"
@@ -3406,31 +2611,7 @@
         "name": "AudioRate"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -3447,13 +2628,7 @@
     "be6c4034-f4cc-6732-3c33-11197a42a5c6": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "9b48e4b2-30bd-2261-fb58-adede7e173bf",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -3474,31 +2649,7 @@
         "name": "Gain"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "4a92f56a-f37b-a49c-787f-2ee0df7ebeb3",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -3515,13 +2666,7 @@
     "bff5ee81-5b66-2e26-1fe2-cf802863fc5e": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -3542,13 +2687,7 @@
         "name": "FM Receiver"
       },
       "base": "a9283781-fe0b-5ea4-9ef9-65bcdc8f578c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "3e91f583-6d14-2508-5e72-718500bafc21",
       "pointers": {
         "base": "a9283781-fe0b-5ea4-9ef9-65bcdc8f578c"
@@ -3992,13 +3131,7 @@
         "name": "In"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "9ba5dae7-2dec-1775-6323-4bcdaf51f9d3",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -4017,13 +3150,7 @@
         "name": "BB"
       },
       "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "da7b2716-2641-9087-3ed1-ec7d57e0add0",
       "pointers": {
         "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d"
@@ -4040,13 +3167,7 @@
     "c95e75c6-c22b-a021-09a4-4fca443a0639": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "6069c7c0-0aa1-e5b3-b0c9-fb34cbfe0348",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -4065,13 +3186,7 @@
     "cb6a9642-75b9-13fe-2611-2904b1214ff0": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -4092,13 +3207,7 @@
         "name": "IF"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "831391af-6d4a-6c5e-d213-ba3bc86f4bc3",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -4115,13 +3224,7 @@
     "cddebc01-bcc7-ecd2-2e34-2fbc471e51ad": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -4142,13 +3245,7 @@
         "name": "Node4"
       },
       "base": "80fa6848-9f3e-a591-1f57-2f210b3e81a2",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "7d9bafce-e213-1f37-53e0-f0944b7694ca",
       "pointers": {
         "base": "80fa6848-9f3e-a591-1f57-2f210b3e81a2"
@@ -4165,13 +3262,7 @@
     "d092ab49-5fd0-2d92-dd09-4c1d1f9ee217": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -4197,9 +3288,6 @@
         "attributes": {
           "function": {
             "default": "",
-            "type": "string"
-          },
-          "name": {
             "type": "string"
           }
         },
@@ -4234,31 +3322,7 @@
         "name": "ModulationIndex"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "831391af-6d4a-6c5e-d213-ba3bc86f4bc3",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -4277,17 +3341,7 @@
         "name": "Threshold"
       },
       "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e",
-      "meta": {
-        "attributes": {
-          "function": {
-            "default": "",
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "9b48e4b2-30bd-2261-fb58-adede7e173bf",
       "pointers": {
         "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e"
@@ -4306,31 +3360,7 @@
         "name": "CutOff"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -4349,13 +3379,7 @@
         "name": "Audio"
       },
       "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "831391af-6d4a-6c5e-d213-ba3bc86f4bc3",
       "pointers": {
         "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d"
@@ -4374,17 +3398,7 @@
         "name": "USRP Source"
       },
       "base": "d0a4a3ca-4fb6-dba1-f53a-3e36d0d68c6e",
-      "meta": {
-        "attributes": {
-          "function": {
-            "default": "",
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "assign": "0dc2293c-4792-a7d1-a125-80cf645df627",
@@ -4402,13 +3416,7 @@
     "dae87f8a-d653-5e02-6884-503a991e6cbc": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -4429,13 +3437,7 @@
         "name": "a"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "8d5bce4c-6635-a69a-f2d9-61acf9e277dd",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
@@ -4476,9 +3478,6 @@
           "Size": {
             "default": 1,
             "type": "integer"
-          },
-          "name": {
-            "type": "string"
           }
         }
       },
@@ -4506,13 +3505,7 @@
         "name": "Out"
       },
       "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "6af34e1f-01de-2f77-9003-20a3fa733f56",
       "pointers": {
         "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d"
@@ -4529,13 +3522,7 @@
     "e7a88b61-f758-4734-abab-8ca53d629759": {
       "attributes": {},
       "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "9b48e4b2-30bd-2261-fb58-adede7e173bf",
       "pointers": {
         "base": "ed8d5f1b-c877-109b-7fa0-c04103366711",
@@ -4556,31 +3543,7 @@
         "name": "Gain"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -4599,31 +3562,7 @@
         "name": "SamplingRate"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "da7b2716-2641-9087-3ed1-ec7d57e0add0",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -4643,11 +3582,6 @@
       },
       "base": "50f9e9ed-7460-f999-226b-fd23a8dbfe8f",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "pointers": {
           "dst": {
             "items": [
@@ -4700,13 +3634,7 @@
     "ee1389a4-e585-00c5-2da4-c75bd334aa49": {
       "attributes": {},
       "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "c1a0c538-7834-2eb1-e995-e1793ef92a37",
       "pointers": {
         "base": "799584be-1fe4-7667-76eb-5d0e457625a8",
@@ -4727,13 +3655,7 @@
         "name": "Out"
       },
       "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "4a92f56a-f37b-a49c-787f-2ee0df7ebeb3",
       "pointers": {
         "base": "29bd5c0a-b16d-8ef6-96ae-81ca5d8db19d"
@@ -4753,11 +3675,6 @@
       },
       "base": "50f9e9ed-7460-f999-226b-fd23a8dbfe8f",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "pointers": {
           "assign": {
             "items": [
@@ -4808,31 +3725,7 @@
         "name": "CutOff"
       },
       "base": "e48c745e-6957-2b69-af28-8242d9d89729",
-      "meta": {
-        "attributes": {
-          "DataType": {
-            "default": "Integer",
-            "enum": [
-              "Integer",
-              "Double",
-              "Character",
-              "Pointer"
-            ],
-            "type": "string"
-          },
-          "InitValue": {
-            "default": "0",
-            "type": "string"
-          },
-          "Size": {
-            "default": 1,
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "9ba5dae7-2dec-1775-6323-4bcdaf51f9d3",
       "pointers": {
         "base": "e48c745e-6957-2b69-af28-8242d9d89729"
@@ -4851,13 +3744,7 @@
         "name": "b"
       },
       "base": "137a6c2a-a758-ee80-0d28-56a871530d9c",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "8d5bce4c-6635-a69a-f2d9-61acf9e277dd",
       "pointers": {
         "base": "137a6c2a-a758-ee80-0d28-56a871530d9c"
