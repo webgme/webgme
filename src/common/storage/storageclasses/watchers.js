@@ -52,7 +52,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             }
         } else if (this.watchers.database < 0) {
             this.logger.error('Number of database watchers became negative!');
-            callback('Number of database watchers became negative!');
+            callback(new Error('Number of database watchers became negative!'));
         } else {
             callback(null);
         }
@@ -95,7 +95,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             }
         } else if (this.watchers.projects[projectId] < 0) {
             this.logger.error('Number of project watchers became negative!:', projectId);
-            callback('Number of project watchers became negative!');
+            callback(new Error('Number of project watchers became negative!'));
         } else {
             callback(null);
         }

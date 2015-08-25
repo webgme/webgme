@@ -881,7 +881,7 @@ describe('Simple worker', function () {
                 done(new Error('missing error handling'));
             })
             .catch(function (err) {
-                expect(err.message).to.contain('Error: ASSERT failed');
+                expect(err.message).to.contain('ASSERT failed');
                 done();
             })
             .finally(restoreProcessFunctions)

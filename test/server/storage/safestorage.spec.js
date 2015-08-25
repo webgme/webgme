@@ -491,7 +491,7 @@ describe('SafeStorage', function () {
                 .catch(function (err) {
                     expect(err).to.not.equal(null);
                     expect(typeof err).to.equal('object');
-                    expect(err.message).to.equal('object does not exist ' + dummyHash);
+                    expect(err.message).to.include('object does not exist ' + dummyHash);
                     done();
                 })
                 .done();

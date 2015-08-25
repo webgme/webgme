@@ -172,6 +172,7 @@ Storage.prototype.makeCommit = function (data, callback) {
                     var failedInserts = [];
                     insertResults.map(function (res) {
                         if (res.state === 'rejected') {
+                            self.logger.error(res.reason);
                             failedInserts.push(res);
                         }
                     });
@@ -230,7 +231,7 @@ Storage.prototype.makeCommit = function (data, callback) {
                                                     deferred.resolve(result);
                                                 })
                                                 .catch(function (err) {
-                                                    if (err === 'branch hash mismatch') {
+                                                    if (err.message === 'branch hash mismatch') {
                                                         // TODO: Need to check error better here..
                                                         self.logger.debug('user got forked');
                                                         result.status = CONSTANTS.FORKED;
@@ -238,7 +239,7 @@ Storage.prototype.makeCommit = function (data, callback) {
                                                     } else {
                                                         self.logger.error('Failed updating hash', err);
                                                         // TODO: How to add meta data to error and decide on error codes
-                                                        deferred.reject(new Error(err));
+                                                        deferred.reject(err);
                                                     }
                                                 });
                                         } else {
@@ -286,7 +287,7 @@ Storage.prototype.loadObjects = function (data, callback) {
                     for (i = 0; i < loadResults.length; i += 1) {
                         if (loadResults[i].state === 'rejected') {
                             self.logger.error('failed loadingObject', {metadata: loadResults[i]});
-                            result[data.hashes[i]] = loadResults[i].reason;
+                            result[data.hashes[i]] = loadResults[i].reason.message;
                         } else {
                             result[data.hashes[i]] = loadResults[i].value;
                         }
@@ -378,9 +379,9 @@ Storage.prototype.setBranchHash = function (data, callback) {
                     deferred.resolve(project);
                 })
                 .catch(function (err) {
-                    err = err instanceof Error ? err : new Error(err);
-                    err.message = 'Tried to setBranchHash to invalid or non-existing commit, err: ' + err.message;
-                    deferred.reject(err);
+                    self.logger.error(err.message);
+                    deferred.reject(new Error('Tried to setBranchHash to invalid or non-existing commit, err: ' +
+                        err.message));
                 });
         } else {
             // When deleting a branch there no need to ensure this.
@@ -421,7 +422,6 @@ Storage.prototype.setBranchHash = function (data, callback) {
             }
         })
         .catch(function (err) {
-            err = err instanceof Error ? err : new Error(err);
             if (err.message === 'branch hash mismatch') {
                 self.logger.debug('user got forked');
                 deferred.resolve({status: CONSTANTS.FORKED, hash: data.newHash});

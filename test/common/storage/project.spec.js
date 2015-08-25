@@ -245,7 +245,7 @@ describe('storage project', function () {
                 throw new Error('Should have failed!');
             })
             .catch(function (err) {
-                expect(err).to.include('Commit object does not exist');
+                expect(err.message).to.include('Commit object does not exist');
                 done();
             })
             .done();

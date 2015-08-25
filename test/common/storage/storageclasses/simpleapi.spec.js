@@ -255,10 +255,10 @@ describe('storage storageclasses simpleapi', function () {
     it('should fail to transferProject when it does not exist', function (done) {
         Q.ninvoke(storage, 'transferProject', 'doesNotExist', 'someOwnerId')
             .then(function () {
-                throw 'Should have failed!';
+                throw new Error('Should have failed!');
             })
             .catch(function (err) {
-                expect(err).to.contain('Not authorized to delete project: doesNotExist');
+                expect(err.message).to.contain('Not authorized to delete project: doesNotExist');
             })
             .nodeify(done);
     });
@@ -314,7 +314,7 @@ describe('storage storageclasses simpleapi', function () {
                 done(new Error('missing error handling'));
             })
             .catch(function (err) {
-                expect(err).to.include('wrong request');
+                expect(err.message).to.include('wrong request');
                 done();
             })
             .done();

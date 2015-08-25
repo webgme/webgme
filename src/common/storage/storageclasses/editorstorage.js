@@ -25,6 +25,13 @@ define([
 ], function (StorageObjectLoaders, CONSTANTS, Project, Branch, ASSERT, GENKEY) {
     'use strict';
 
+    /**
+     *
+     * @param webSocket
+     * @param mainLogger
+     * @param gmeConfig
+     * @constructor
+     */
     function EditorStorage(webSocket, mainLogger, gmeConfig) {
         var self = this,
             logger = mainLogger.fork('storage'),
@@ -60,7 +67,7 @@ define([
         };
 
         this.close = function (callback) {
-            var error = '',
+            var error = null,
                 openProjects = Object.keys(projects),
                 projectCnt = openProjects.length;
 
@@ -68,8 +75,8 @@ define([
 
             function afterProjectClosed(err) {
                 if (err) {
-                    logger.error(err);
-                    error += err;
+                    logger.error(err.message);
+                    error = err;
                 }
                 logger.debug('inside afterProjectClosed projectCnt', projectCnt);
                 if (projectCnt === 0) {
@@ -83,7 +90,7 @@ define([
                     self.connected = false;
                     // Remove all local event-listeners.
                     webSocket.clearAllEvents();
-                    callback(error || null);
+                    callback(error);
                 }
             }
 
@@ -121,7 +128,7 @@ define([
             };
             if (projects[projectId]) {
                 logger.error('project is already open', projectId);
-                callback('project is already open');
+                callback(new Error('project is already open'));
             }
             webSocket.openProject(data, function (err, branches, access) {
                 if (err) {
@@ -130,21 +137,21 @@ define([
                 }
                 var project = new Project(projectId, self, logger, gmeConfig);
                 projects[projectId] = project;
-                callback(err, project, branches, access);
+                callback(null, project, branches, access);
             });
         };
 
         this.closeProject = function (projectId, callback) {
             var project = projects[projectId],
-                error = '',
+                error = null,
                 branchCnt,
                 branchNames;
             logger.debug('closeProject', projectId);
 
             function closeAndDelete(err) {
                 if (err) {
-                    logger.error(err);
-                    error += err;
+                    logger.error(err.message);
+                    error = err;
                 }
                 logger.debug('inside closeAndDelete branchCnt', branchCnt);
                 if (branchCnt === 0) {
@@ -184,12 +191,12 @@ define([
                 branch;
 
             if (!project) {
-                callback('Cannot open branch, ' + branchName + ', project ' + projectId + ' is not opened.');
+                callback(new Error('Cannot open branch, ' + branchName + ', project ' + projectId + ' is not opened.'));
                 return;
             }
 
             if (project.branches[branchName]) {
-                callback('Branch is already open ' + branchName + ', project: ' + projectId);
+                callback(new Error('Branch is already open ' + branchName + ', project: ' + projectId));
                 return;
             }
 
@@ -249,7 +256,8 @@ define([
             logger.debug('closeBranch', projectId, branchName);
 
             if (!project) {
-                callback('Cannot close branch, ' + branchName + ', project ' + projectId + ' is not opened.');
+                callback(new Error('Cannot close branch, ' + branchName + ', project ' + projectId +
+                    ' is not opened.'));
                 return;
             }
 
@@ -285,21 +293,21 @@ define([
             this.logger.debug('forkBranch', projectId, branchName, forkName, commitHash);
 
             if (!project) {
-                callback('Cannot fork branch, ' + branchName + ', project ' + projectId + ' is not opened.');
+                callback(new Error('Cannot fork branch, ' + branchName + ', project ' + projectId + ' is not opened.'));
                 return;
             }
 
             branch = project.branches[branchName];
 
             if (!branch) {
-                callback('Cannot fork branch, branch is not open ' + branchName + ', project: ' + projectId);
+                callback(new Error('Cannot fork branch, branch is not open ' + branchName + ', project: ' + projectId));
                 return;
             }
 
             forkData = branch.getCommitsForNewFork(commitHash, forkName); // commitHash = null defaults to latest commit
             self.logger.debug('forkBranch - forkData', forkData);
             if (forkData === false) {
-                callback('Could not find specified commitHash');
+                callback(new Error('Could not find specified commitHash'));
                 return;
             }
 
@@ -375,7 +383,8 @@ define([
                 project.loadObject(newHash, function (err, commitObject) {
                     var commitData;
                     if (err) {
-                        callback('loading commitObject failed with err, ' + err);
+                        logger.error('setBranchHash, faild to load in commitObject');
+                        callback(err);
                         return;
                     }
                     logger.debug('setBranchHash, loaded commitObject');
@@ -424,11 +433,11 @@ define([
                     logger.debug('_commitToBranch, dispatchHashUpdate done. [err, proceed]', err, proceed);
 
                     if (err) {
-                        callback('Commit failed being loaded in users: ' + err);
+                        callback(new Error('Commit failed being loaded in users: ' + err));
                     } else if (proceed === true) {
                         logger.debug('_commitToBranch, proceed only applicable when loading external updates');
                     } else {
-                        callback('Commit halted when loaded in users: ' + err);
+                        callback(new Error('Commit halted when loaded in users: ' + err));
                     }
                 });
             } else {
@@ -487,13 +496,15 @@ define([
             ASSERT(projects.hasOwnProperty(projectId), 'Project not opened: ' + projectId);
             var project = projects[projectId],
                 branch = project.branches[branchName],
+                error,
                 updateData;
 
             if (!branch) {
+                error = new Error('Branch, ' + branchName + ', not in project ' + projectId + '.');
                 if (callback) {
-                    callback('Branch, ' + branchName + ', not in project ' + projectId + '.');
+                    callback(error);
                 } else {
-                    throw new Error('Branch, ' + branchName + ', not in project ' + projectId + '.');
+                    throw error;
                 }
             }
 
@@ -563,6 +574,7 @@ define([
                     var project = projects[projectId];
                     if (err) {
                         logger.error('_rejoinBranchRooms, could not rejoin branch room', projectId, branchName);
+                        logger.error(err);
                         return;
                     }
                     logger.debug('_rejoinBranchRooms, rejoined branch room', projectId, branchName);

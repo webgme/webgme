@@ -590,7 +590,7 @@ describe('GME client', function () {
         it('should fail to create an already existing project', function (done) {
             var projectName = 'alreadyExists';
             client.createProject(projectName, function (err) {
-                expect(err).to.contain('Project already exist');
+                expect(err.message).to.contain('Project already exist');
                 done();
             });
         });
@@ -686,7 +686,7 @@ describe('GME client', function () {
                 expect(err).to.equal(null);
 
                 client.selectCommit('#unknown', function (err) {
-                    expect(err).to.equal('object does not exist #unknown');
+                    expect(err.message).to.include('object does not exist #unknown');
 
                     done();
                 });
@@ -1066,7 +1066,7 @@ describe('GME client', function () {
                 activeBranchName = client.getActiveBranchName();
 
                 client.forkCurrentBranch(forkName, commitHash, function (err /*, name, hash*/) {
-                    expect(err).to.include('Could not find specified commitHash');
+                    expect(err.message).to.include('Could not find specified commitHash');
 
                     client.getBranches(projectId, function (err, branches) {
                         expect(err).to.equal(null);
@@ -4224,8 +4224,8 @@ describe('GME client', function () {
 
             client.seedProject(seedConfig, function (err) {
                 expect(err).not.to.equal(null);
-
-                expect(err).to.contain('Project already exists');
+                console.error('seedProject', err);
+                expect(err.message).to.contain('Project already exists');
 
                 done();
             });
@@ -4242,7 +4242,7 @@ describe('GME client', function () {
             client.seedProject(seedConfig, function (err) {
                 expect(err).not.to.equal(null);
 
-                expect(err).to.contain('unknownBranch');
+                expect(err.message).to.contain('unknownBranch');
 
                 done();
             });
@@ -4259,7 +4259,7 @@ describe('GME client', function () {
             client.seedProject(seedConfig, function (err) {
                 expect(err).not.to.equal(null);
 
-                expect(err).to.contain('unknown file seed');
+                expect(err.message).to.contain('unknown file seed');
 
                 done();
             });

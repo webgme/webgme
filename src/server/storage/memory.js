@@ -94,7 +94,7 @@ function Memory(mainLogger, gmeConfig) {
                 object = JSON.parse(object);
                 deferred.resolve(object);
             } else {
-                deferred.reject('object does not exist ' + hash);
+                deferred.reject(new Error('object does not exist ' + hash));
             }
 
             return deferred.promise.nodeify(callback);
@@ -197,7 +197,7 @@ function Memory(mainLogger, gmeConfig) {
                 if (oldhash === hash) {
                     deferred.resolve();
                 } else {
-                    deferred.reject('branch hash mismatch');
+                    deferred.reject(new Error('branch hash mismatch'));
                 }
             } else {
                 if (oldhash === hash) {
@@ -211,7 +211,7 @@ function Memory(mainLogger, gmeConfig) {
                     }
                     deferred.resolve();
                 } else {
-                    deferred.reject('branch hash mismatch');
+                    deferred.reject(new Error('branch hash mismatch'));
                 }
             }
 
@@ -319,9 +319,9 @@ function Memory(mainLogger, gmeConfig) {
             newAncestorsB = [commitB];
 
             if (!storage.getItem(database + SEPARATOR + projectId + SEPARATOR + commitA)) {
-                deferred.reject('Commit object does not exist [' + commitA + ']');
+                deferred.reject(new Error('Commit object does not exist [' + commitA + ']'));
             } else if (!storage.getItem(database + SEPARATOR + projectId + SEPARATOR + commitB)) {
-                deferred.reject('Commit object does not exist [' + commitB + ']');
+                deferred.reject(new Error('Commit object does not exist [' + commitB + ']'));
             } else {
                 loadStep();
             }
