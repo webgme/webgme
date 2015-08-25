@@ -555,7 +555,7 @@ define([
 
                     currentProject = self.$scope.navigator.items[self.navIdProject];
                     currentBranch = self.$scope.navigator.items[self.navIdBranch];
-                    if (currentBranch.id === data.branchName && currentProject.id === projectId) {
+                    if (currentBranch && currentBranch.id === data.branchName && currentProject.id === projectId) {
                         self.gmeClient.selectCommit(self.gmeClient.getActiveCommitHash(), function (err) {
                             if (err) {
                                 self.logger.error('cannot select latest commit', {metadata: {error: err}});
