@@ -304,19 +304,13 @@ define([
             }
 
             function commitNext() {
-                var currentCommitData = forkData.queue.shift(),
-                    commitCallback;
+                var currentCommitData = forkData.queue.shift();
 
                 logger.debug('forkBranch - commitNext, currentCommitData', currentCommitData);
                 if (currentCommitData) {
-                    // Temporarily remove the callback while committing.
                     delete currentCommitData.branchName;
-                    commitCallback = currentCommitData.callback;
-                    delete currentCommitData.callback;
 
                     webSocket.makeCommit(currentCommitData, function (err, result) {
-                        // Add back the callback while committing (needed when closing original branch)
-                        currentCommitData.callback = commitCallback;
                         if (err) {
                             logger.error('forkBranch - failed committing', err);
                             callback(err);
@@ -412,9 +406,8 @@ define([
             logger.debug('_commitToBranch, [oldCommitHash, localHash]', oldCommitHash, branch.getLocalHash());
 
             if (oldCommitHash === branch.getLocalHash()) {
-                commitData.callback = callback;
                 branch.updateHashes(newCommitHash, null);
-                branch.queueCommit(commitData);
+                branch.queueCommit(commitData, callback);
 
                 if (branch.inSync === false) {
                     branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
@@ -449,14 +442,11 @@ define([
         this._pushNextQueuedCommit = function (projectId, branchName) {
             var project = projects[projectId],
                 branch = project.branches[branchName],
-                commitData,
-                callback;
+                commitData;
 
-            logger.debug('_pushNextQueuedCommit', branch.getCommitQueue());
+            logger.debug('_pushNextQueuedCommit, length=', branch.getCommitQueue().length);
 
             commitData = branch.getFirstCommit();
-            callback = commitData.callback;
-            delete commitData.callback;
 
             logger.debug('_pushNextQueuedCommit, makeCommit [from# -> to#]',
                 commitData.commitObject.parents[0], commitData.commitObject._id);
@@ -466,24 +456,25 @@ define([
                     logger.error('makeCommit failed', err);
                 }
 
-                callback(err, result);
-
-                if (branch.isOpen && !err && result) {
-                    if (result.status === CONSTANTS.SYNCED) {
-                        branch.inSync = true;
-                        branch.updateHashes(null, result.hash);
-                        branch.getFirstCommit(true);
-                        if (branch.getCommitQueue().length === 0) {
-                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
+                if (branch.isOpen) {
+                    branch.callbackQueue[0](err, result);
+                    if (!err && result) {
+                        if (result.status === CONSTANTS.SYNCED) {
+                            branch.inSync = true;
+                            branch.updateHashes(null, result.hash);
+                            branch.getFirstCommit(true);
+                            if (branch.getCommitQueue().length === 0) {
+                                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
+                            } else {
+                                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
+                                self._pushNextQueuedCommit(projectId, branchName);
+                            }
+                        } else if (result.status === CONSTANTS.FORKED) {
+                            branch.inSync = false;
+                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
                         } else {
-                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
-                            self._pushNextQueuedCommit(projectId, branchName);
+                            logger.error('Unsupported commit status ' + result.status);
                         }
-                    } else if (result.status === CONSTANTS.FORKED) {
-                        branch.inSync = false;
-                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
-                    } else {
-                        logger.error('Unsupported commit status ' + result.status);
                     }
                 } else {
                     logger.error('_pushNextQueuedCommit returned from server but the branch was closed, ' +
@@ -528,7 +519,9 @@ define([
                         logger.debug('New commit was successfully loaded, updating localHash.');
                         branch.updateHashes(originHash, null);
                         branch.getFirstUpdate(true);
-                        self._pullNextQueuedCommit(projectId, branchName, callback);
+                        if (branch.getCommitQueue().length === 0) {
+                            self._pullNextQueuedCommit(projectId, branchName, callback);
+                        }
                         return;
                     } else {
                         logger.warn('Loading of update commit was aborted', {metadata: updateData});
@@ -565,6 +558,102 @@ define([
                 project,
                 branchName;
             logger.debug('_rejoinBranchRooms');
+            function afterRejoinFn(projectId, branchName) {
+                return function (err) {
+                    var project = projects[projectId];
+                    if (err) {
+                        logger.error('_rejoinBranchRooms, could not rejoin branch room', projectId, branchName);
+                        return;
+                    }
+                    logger.debug('_rejoinBranchRooms, rejoined branch room', projectId, branchName);
+
+                    if (!project) {
+                        logger.error('_rejoinBranchRooms, project has been closed after disconnect',
+                            projectId, branchName);
+                        return;
+                    }
+                    project.getBranchHash(branchName)
+                        .then(function (branchHash) {
+                            var branch = project.branches[branchName],
+                                queuedCommitHash;
+                            logger.debug('_rejoinBranchRooms received branchHash', projectId, branchName, branchHash);
+                            if (!branch) {
+                                logger.error('_rejoinBranchRooms, branch had been closed disconnect',
+                                    projectId, branchName);
+                                return;
+                            }
+
+                            if (branch.getCommitQueue().length > 0) {
+                                queuedCommitHash = branch.getFirstCommit().commitObject._id;
+                                logger.debug('_rejoinBranchRooms, commits were queued length=, firstQueuedCommitHash',
+                                    branch.getCommitQueue().length, queuedCommitHash);
+
+                                project.getCommonAncestorCommit(branchHash, queuedCommitHash)
+                                    .then(function (commonCommitHash) {
+                                        var result,
+                                            branch = project.branches[branchName];
+
+                                        logger.debug('_rejoinBranchRooms getCommonAncestorCommit',
+                                            projectId, branchName, commonCommitHash);
+                                        if (!branch) {
+                                            logger.error('_rejoinBranchRooms, branch had been closed after disconnect',
+                                                projectId, branchName);
+                                            return;
+                                        }
+                                        function dispatchSynced() {
+                                            result = {status: CONSTANTS.SYNCED, hash: branchHash};
+
+                                            branch.callbackQueue[0](null, result);
+                                            branch.inSync = true;
+                                            branch.updateHashes(null, branchHash);
+                                            branch.getFirstCommit(true);
+                                            if (branch.getCommitQueue().length === 0) {
+                                                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
+                                            } else {
+                                                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
+                                                self._pushNextQueuedCommit(projectId, branchName);
+                                            }
+                                        }
+                                        function dispatchForked() {
+                                            result = {status: CONSTANTS.FORKED, hash: branchHash};
+
+                                            branch.callbackQueue[0](null, result);
+                                            branch.inSync = false;
+                                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
+                                        }
+
+                                        // The commit was inserted.
+                                        if (commonCommitHash === queuedCommitHash) {
+                                            // The commit is (or was) in sync with the branch.
+                                            dispatchSynced();
+                                        } else if (commonCommitHash === branchHash) {
+                                            // The branch has moved back since the commit was made.
+                                            // Treat it like the commit was forked.
+                                            dispatchForked();
+                                        } else {
+                                            // The branch has moved forward and the commit was forked.
+                                            dispatchForked();
+                                        }
+                                    })
+                                    .catch(function (err) {
+                                        if (err.indexOf('Commit object does not exist [' + queuedCommitHash) > -1) {
+                                            // Commit never made it to the server - push it.
+                                            logger.debug('First queued commit never made it to the server. push...');
+                                            self._pushNextQueuedCommit(projectId, branchName);
+                                        } else {
+                                            logger.error(err);
+                                        }
+                                    });
+                            } else {
+                                logger.debug('_rejoinBranchRooms, no commits were queued during disconnect.');
+                            }
+                        })
+                        .catch(function (err) {
+                            logger.error(err);
+                        });
+                };
+            }
+
             for (projectId in projects) {
                 if (projects.hasOwnProperty(projectId)) {
                     project = projects[projectId];
@@ -576,7 +665,7 @@ define([
                                 projectId: projectId,
                                 branchName: branchName,
                                 join: true
-                            });
+                            }, afterRejoinFn(projectId, branchName));
                         }
                     }
                 }

@@ -23,6 +23,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
 
         this.branchStatusHandlers = [];
         this.hashUpdateHandlers = [];
+        this.callbackQueue = [];
 
         this._remoteUpdateHandler = null;
 
@@ -34,16 +35,15 @@ define(['common/storage/constants'], function (CONSTANTS) {
             self.hashUpdateHandlers = [];
 
             self._remoteUpdateHandler = null;
-            for (i = 0; i < commitQueue.length; i += 1) {
+            for (i = 0; i < self.callbackQueue.length; i += 1) {
                 // Make sure there are no pending callbacks, invoke with status CANCELED.
                 commitResult = {
                     status: CONSTANTS.CANCELED,
                     hash: commitQueue[i].commitObject[CONSTANTS.MONGO_ID]
                 };
-                if (commitQueue[i].callback) {
-                    commitQueue[i].callback(null, commitResult);
-                }
+                self.callbackQueue[i](null, commitResult);
             }
+            self.callbackQueue = [];
             commitQueue = [];
             updateQueue = [];
         };
@@ -70,8 +70,9 @@ define(['common/storage/constants'], function (CONSTANTS) {
         };
 
         // Queue related functions
-        this.queueCommit = function (commitData) {
+        this.queueCommit = function (commitData, commitCallback) {
             commitQueue.push(commitData);
+            self.callbackQueue.push(commitCallback);
             logger.debug('Adding new commit to queue', commitQueue.length);
         };
 
@@ -79,6 +80,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             var commitData;
             if (shift) {
                 commitData = commitQueue.shift();
+                self.callbackQueue.shift();
                 logger.debug('Removed commit from queue', commitQueue.length);
             } else {
                 commitData = commitQueue[0];

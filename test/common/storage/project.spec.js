@@ -66,32 +66,14 @@ describe('storage project', function () {
                     importResult = results[0];
                     originalHash = importResult.commitHash;
 
-                    commitObject = importResult.project.createCommitObject([originalHash],
-                        importResult.rootHash,
-                        'tester1',
+                    return importResult.project.makeCommit(null, [originalHash], importResult.rootHash, {},
                         'commit msg 1');
-                    commitData = {
-                        projectId: projectName2Id(projectName),
-                        commitObject: commitObject,
-                        coreObjects: []
-                    };
-
-                    return safeStorage.makeCommit(commitData);
                 })
                 .then(function (result) {
                     commitHash1 = result.hash;
 
-                    commitObject = importResult.project.createCommitObject([originalHash],
-                        importResult.rootHash,
-                        'tester2',
+                    return importResult.project.makeCommit(null, [originalHash], importResult.rootHash, {},
                         'commit msg 2');
-                    commitData = {
-                        projectId: projectName2Id(projectName),
-                        commitObject: commitObject,
-                        coreObjects: []
-                    };
-
-                    return safeStorage.makeCommit(commitData);
                 })
                 .then(function (result) {
                     commitHash2 = result.hash;
@@ -244,6 +226,29 @@ describe('storage project', function () {
                 expect(commit).to.equal(originalHash);
             })
             .nodeify(done);
+    });
+
+    it('should fail getCommonAncestorCommit when hash does not exist', function (done) {
+        var project,
+            branches,
+            access;
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function (result) {
+                project = result[0];
+                branches = result[1];
+                access = result[2];
+
+                return project.getCommonAncestorCommit(commitHash1, '#doesNotExist');
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err).to.include('Commit object does not exist');
+                done();
+            })
+            .done();
     });
 
     it('should setBranchHash without branch open', function (done) {
@@ -491,7 +496,7 @@ describe('storage project', function () {
                 })
                 .then(function (result) {
                     branch = project.branches['queueCommit_name'];
-                    branch.queueCommit(commitData);
+                    branch.queueCommit(commitData, function () {});
                     expect(branch.getCommitQueue().length).to.equal(1);
                     expect(branch.getFirstCommit()).to.equal(commitData);
                     expect(branch.getCommitQueue().length).to.equal(1);
@@ -544,8 +549,8 @@ describe('storage project', function () {
                     branch.updateHashes('hash', 'hash');
                     expect(branch.getCommitsForNewFork('hash_different')).to.equal(false);
                     expect(branch.getCommitsForNewFork()).to.deep.equal({commitHash: 'hash', queue: []});
-                    branch.queueCommit(commitData);
-                    branch.queueCommit(commitData2);
+                    branch.queueCommit(commitData, function () {});
+                    branch.queueCommit(commitData2, function () {});
                     expect(branch.getCommitQueue().length).to.equal(2);
                     expect(branch.getCommitQueue()[0]).to.equal(commitData);
                     expect(branch.getCommitsForNewFork('asd2').queue.length).to.equal(1);

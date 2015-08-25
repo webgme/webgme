@@ -317,7 +317,15 @@ function Memory(mainLogger, gmeConfig) {
             newAncestorsA = [commitA];
             ancestorsB[commitB] = true;
             newAncestorsB = [commitB];
-            loadStep();
+
+            if (!storage.getItem(database + SEPARATOR + projectId + SEPARATOR + commitA)) {
+                deferred.reject('Commit object does not exist [' + commitA + ']');
+            } else if (!storage.getItem(database + SEPARATOR + projectId + SEPARATOR + commitB)) {
+                deferred.reject('Commit object does not exist [' + commitB + ']');
+            } else {
+                loadStep();
+            }
+
 
             return deferred.promise.nodeify(callback);
         };

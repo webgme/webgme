@@ -34,8 +34,25 @@ define([
                 self.socket = socket_;
 
                 self.socket.on('connect', function () {
+                    var i,
+                        sendBufferSave = [];
                     if (beenConnected) {
                         logger.debug('Socket got reconnected.');
+
+                        // #368
+                        for (i = 0; i < self.socket.sendBuffer.length; i += 1) {
+                            // Clear all makeCommits. If pushed - they would be broadcasted back to the socket.
+                            if (self.socket.sendBuffer[i].data[0] === 'makeCommit') {
+                                logger.debug('Removed makeCommit from sendBuffer...');
+                            } else {
+                                sendBufferSave.push(self.socket.sendBuffer[i]);
+                            }
+                        }
+                        if (self.socket.receiveBuffer.length > 0) {
+                            // TODO: In which cases is this applicable??
+                            logger.debug('receiveBuffer not empty after reconnect');
+                        }
+                        self.socket.sendBuffer = sendBufferSave;
                         networkHandler(null, CONSTANTS.RECONNECTED);
                     } else {
                         logger.debug('Socket got connected for the first time.');
