@@ -600,9 +600,7 @@ define([
                                                 projectId, branchName);
                                             return;
                                         }
-                                        // The commit was inserted.
-                                        if (commonCommitHash === queuedCommitHash) {
-                                            // The commit is (or was) in sync with the branch.
+                                        function dispatchSynced() {
                                             result = {status: CONSTANTS.SYNCED, hash: branchHash};
 
                                             branch.callbackQueue[0](null, result);
@@ -615,21 +613,26 @@ define([
                                                 branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
                                                 self._pushNextQueuedCommit(projectId, branchName);
                                             }
+                                        }
+                                        function dispatchForked() {
+                                            result = {status: CONSTANTS.FORKED, hash: branchHash};
+
+                                            branch.callbackQueue[0](null, result);
+                                            branch.inSync = false;
+                                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
+                                        }
+
+                                        // The commit was inserted.
+                                        if (commonCommitHash === queuedCommitHash) {
+                                            // The commit is (or was) in sync with the branch.
+                                            dispatchSynced();
                                         } else if (commonCommitHash === branchHash) {
                                             // The branch has moved back since the commit was made.
                                             // Treat it like the commit was forked.
-                                            result = {status: CONSTANTS.FORKED, hash: branchHash};
-
-                                            branch.callbackQueue[0](null, result);
-                                            branch.inSync = false;
-                                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
+                                            dispatchForked();
                                         } else {
                                             // The branch has moved forward and the commit was forked.
-                                            result = {status: CONSTANTS.FORKED, hash: branchHash};
-
-                                            branch.callbackQueue[0](null, result);
-                                            branch.inSync = false;
-                                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
+                                            dispatchForked();
                                         }
                                     })
                                     .catch(function (err) {
