@@ -522,13 +522,13 @@ define([
         self._client.createProjectFromFile(projectName, null, jsonContent, self._ownerId,
             function (err, projectId, branchName) {
                 if (err) {
-                    self._logger.error('CANNOT CREATE NEW PROJECT FROM FILE: ' + err);
+                    self._logger.error('CANNOT CREATE NEW PROJECT FROM FILE: ', err);
                     loader.stop();
                 } else {
                     self._logger.debug('CREATE NEW PROJECT FROM FILE FINISHED SUCCESSFULLY');
                     self._client.selectProject(projectId, branchName, function (err) {
                         if (err) {
-                            self._logger.error('CANNOT SELECT NEWLY CREATED PROJECT FROM FILE: ' + err.message);
+                            self._logger.error('CANNOT SELECT NEWLY CREATED PROJECT FROM FILE: ', err.message);
                         }
                         loader.stop();
                     });

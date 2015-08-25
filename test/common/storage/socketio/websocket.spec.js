@@ -586,7 +586,7 @@ describe('storage socketio websocket', function () {
                 done(new Error('missing error handling'));
             })
             .catch(function (err) {
-                expect(err).to.include('wrong request');
+                expect(err.message).to.include('wrong request');
                 done();
             })
             .done();

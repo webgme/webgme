@@ -26,6 +26,7 @@ function Mongo(mainLogger, gmeConfig) {
      * @param {string} projectId - identifier of the project (ownerId + '.' + projectName).
      * @param {object} collection - Mongo collection connected to database.
      * @constructor
+     * @private
      */
     function Project(projectId, collection) {
         this.projectId = projectId;
@@ -41,9 +42,9 @@ function Mongo(mainLogger, gmeConfig) {
         this.loadObject = function (hash, callback) {
             var deferred = Q.defer();
             if (typeof hash !== 'string') {
-                deferred.reject('loadObject - given hash is not a string : ' + typeof hash);
+                deferred.reject(new Error('loadObject - given hash is not a string : ' + typeof hash));
             } else if (!REGEXP.HASH.test(hash)) {
-                deferred.reject('loadObject - invalid hash :' + hash);
+                deferred.reject(new Error('loadObject - invalid hash :' + hash));
             } else {
                 logger.debug('loadObject ' + hash);
                 collection.findOne({_id: hash}, function (err, obj) {
@@ -54,7 +55,7 @@ function Mongo(mainLogger, gmeConfig) {
                         deferred.resolve(obj);
                     } else {
                         logger.error('object does not exist ' + hash);
-                        deferred.reject('object does not exist ' + hash);
+                        deferred.reject(new Error('object does not exist ' + hash));
                     }
                 });
             }
@@ -66,10 +67,10 @@ function Mongo(mainLogger, gmeConfig) {
             var deferred = Q.defer(),
                 rejected = false;
             if (object === null || typeof object !== 'object') {
-                deferred.reject('object is not an object');
+                deferred.reject(new Error('object is not an object'));
                 rejected = true;
             } else if (typeof object._id !== 'string' || !REGEXP.HASH.test(object._id)) {
-                deferred.reject('object._id is not a valid hash.');
+                deferred.reject(new Error('object._id is not a valid hash.'));
                 rejected = true;
             }
             if (rejected === false) {
@@ -103,37 +104,6 @@ function Mongo(mainLogger, gmeConfig) {
 
             return deferred.promise.nodeify(callback);
         };
-
-        //this.getInfo = function (callback) {
-        //    return Q.ninvoke(collection, 'findOne', {_id: CONSTANTS.PROJECT_INFO_ID})
-        //        .then(function (info) {
-        //            if (info) {
-        //                delete info._id;
-        //            }
-        //            return Q(info);
-        //        })
-        //        .nodeify(callback);
-        //};
-        //
-        //this.setInfo = function (info, callback) {
-        //    ASSERT(typeof info === 'object' && typeof callback === 'function');
-        //    info._id = CONSTANTS.PROJECT_INFO_ID;
-        //
-        //    return Q.ninvoke(collection, 'update', {_id: CONSTANTS.PROJECT_INFO_ID}, info, {upsert: true})
-        //        .nodeify(callback);
-        //};
-        //
-        //this.dumpObjects = function (callback) {
-        //    ASSERT(typeof callback === 'function');
-        //
-        //    collection.find().each(function (err, item) {
-        //        if (err || item === null) {
-        //            callback(err);
-        //        } else {
-        //            logger.debug(item);
-        //        }
-        //    });
-        //};
 
         this.getBranches = function (callback) {
             var mongoFind = collection.find({
@@ -175,7 +145,7 @@ function Mongo(mainLogger, gmeConfig) {
                     _id: branch
                 }, function (err, obj) {
                     if (!err && oldhash !== ((obj && obj.hash) || '')) {
-                        err = 'branch hash mismatch';
+                        err = new Error('branch hash mismatch');
                     }
                     if (err) {
                         deferred.reject(err);
@@ -189,7 +159,7 @@ function Mongo(mainLogger, gmeConfig) {
                     hash: oldhash
                 }, function (err, num) {
                     if (!err && num !== 1) {
-                        err = 'branch hash mismatch';
+                        err = new Error('branch hash mismatch');
                     }
                     if (err) {
                         deferred.reject(err);
@@ -204,7 +174,7 @@ function Mongo(mainLogger, gmeConfig) {
                 }, function (err) {
                     if (err) {
                         if (err.code === 11000) { // insertDocument :: caused by :: 11000 E11000 duplicate key error...
-                            deferred.reject('branch hash mismatch');
+                            deferred.reject(new Error('branch hash mismatch'));
                         } else {
                             deferred.reject(err);
                         }
@@ -222,7 +192,7 @@ function Mongo(mainLogger, gmeConfig) {
                     }
                 }, function (err, num) {
                     if (!err && num !== 1) {
-                        err = 'branch hash mismatch';
+                        err = new Error('branch hash mismatch');
                     }
                     if (err) {
                         deferred.reject(err);
@@ -340,7 +310,7 @@ function Mongo(mainLogger, gmeConfig) {
                 type: 'commit'
             }, function (err, commit) {
                 if (err || !commit) {
-                    deferred.reject('Commit object does not exist [' + commitA + ']');
+                    deferred.reject(new Error('Commit object does not exist [' + commitA + ']'));
                     return;
                 }
                 collection.findOne({
@@ -348,7 +318,7 @@ function Mongo(mainLogger, gmeConfig) {
                     type: 'commit'
                 }, function (err, commit) {
                     if (err || !commit) {
-                        deferred.reject('Commit object does not exist [' + commitB + ']');
+                        deferred.reject(new Error('Commit object does not exist [' + commitB + ']'));
                         return;
                     }
                     loadStep();

@@ -149,13 +149,14 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     commit = commit || branches[branchName];
 
                     if (!commit) {
-                        finish('Branch not found, projectId: "' + projectId + '", branchName: "' + branchName + '".');
+                        finish(new Error('Branch not found, projectId: "' + projectId + '", branchName: "' +
+                            branchName + '".'));
                         return;
                     }
 
                     project.loadObject(commit, function (err, commitObject) {
                         if (err) {
-                            finish('Failed loading commitHash: ' + err);
+                            finish(new Error('Failed loading commitHash: ' + err));
                             return;
                         }
 
@@ -164,7 +165,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     });
                 });
             } else {
-                finish('having error with the webgme server connection');
+                finish(new Error('having error with the webgme server connection'));
             }
         });
     },
@@ -251,7 +252,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     });
                 });
             } else {
-                finish('problems during connection to webgme');
+                finish(new Error('problems during connection to webgme'));
             }
         });
     },
@@ -299,7 +300,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     pluginManager.executePlugin(pluginName, context.pluginConfig, pluginContext,
                         function (err, result) {
                             if (err) {
-                                logger.error('Plugin failed', pluginName);
+                                logger.error('Plugin failed', pluginName, err);
                             }
                             storage.close(function (closeErr) {
                                 if (closeErr) {
@@ -317,7 +318,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     if (closeErr) {
                         logger.error('Problems closing storage', closeErr);
                     }
-                    callback(errMessage); //TODO: create pluginResult
+                    callback(new Error(errMessage)); //TODO: create pluginResult
                 });
 
             }
@@ -427,7 +428,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     logger.debug('seedProject - seeding from file:', parameters.seedName);
                     jsonSeed = getSeedFromFile(parameters.seedName);
                     if (jsonSeed === null) {
-                        finish('unknown file seed [' + parameters.seedName + ']');
+                        finish(new Error('unknown file seed [' + parameters.seedName + ']'));
                     } else {
                         seedReady();
                     }
@@ -481,7 +482,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                     });
                 }
             } else {
-                finish('problems connecting to the webgme server');
+                finish(new Error('problems connecting to the webgme server'));
             }
         });
     },
@@ -624,18 +625,20 @@ process.on('message', function (parameters) {
     var resultHandling = function (err, r) {
         r = r || null;
         logger.debug('resultHandling invoked');
+
         if (err) {
             logger.error('resultHandling called with error', err);
+            err = err instanceof Error ? err : new Error(err);
         }
 
         if (resultRequested === true) {
             logger.debug('result was requested, result:', {metadata: r});
             initResult();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err ? err.message : null, result: r});
         } else {
             logger.debug('result was NOT requested, result:', {metadata: r});
             resultReady = true;
-            error = err;
+            error = err ? err.message : null;
             result = r;
         }
     };

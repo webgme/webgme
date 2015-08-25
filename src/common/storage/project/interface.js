@@ -1,9 +1,8 @@
 /*globals define*/
 /*jshint node:true, browser: true*/
 /**
- * This class defines the common interface for a storage-project
+ * This class defines the common interface for a storage-project.
  *
- * @module ProjectInterface
  * @author pmeijer / https://github.com/pmeijer
  */
 
@@ -15,10 +14,10 @@ define([
 
     /**
      *
-     * @param {string} projectId
-     * @param {object} storageObjectsAccessor
-     * @param {object} mainLogger
-     * @param {object} gmeConfig
+     * @param {string} projectId - Id of project to be opened.
+     * @param {object} storageObjectsAccessor - Exposes loadObject towards the database.
+     * @param {object} mainLogger - Logger instance.
+     * @param {GmeConfig} gmeConfig
      * @alias ProjectInterface
      * @constructor
      */
@@ -31,7 +30,32 @@ define([
         this.projectCache = new ProjectCache(storageObjectsAccessor, this.projectId, this.logger, gmeConfig);
 
         // Functions forwarded to project cache.
+        /**
+         * Inserts the given object to project-cache.
+         *
+         * @param {object} obj - Object to be inserted in database.
+         * @param {object} [stackedObjects] - When used by the core, inserts between persists are stored here.
+         * @func
+         * @private
+         */
         this.insertObject = this.projectCache.insertObject;
+
+        /**
+         * Callback for loadObject.
+         *
+         * @callback ProjectInterface~loadObjectCallback
+         * @param {Error} err - If error occurred.
+         * @param {object} object - Object loaded from database, e.g. a commit object.
+         */
+
+        /**
+         * Attempts to load the object with hash key from the database or
+         * directly from the cache if recently loaded.
+         *
+         * @param {string} key - Hash of object to load.
+         * @param {ProjectInterface~loadObjectCallback} callback - Invoked when object is loaded.
+         * @func
+         */
         this.loadObject = this.projectCache.loadObject;
 
         /**
@@ -195,7 +219,7 @@ define([
          * Attempts to create a new branch with head pointing to the provided commit hash.
          * @param {string} branchName - Name of branch to create.
          * @param {string} newHash - New commit hash for branch head.
-         * @param {ProjectInterface~CommitResultCallback} [callback] - if provided no promise will be returned.
+         * @param {function} [callback] - if provided no promise will be returned.
          *
          * @return {external:Promise}  On success the promise will be resolved with
          * {@link ProjectInterface~CommitResult} <b>result</b>.<br>
@@ -209,7 +233,7 @@ define([
          * Attempts to delete the branch.
          * @param {string} branchName - Name of branch to create.
          * @param {string} newHash - New commit hash for branch head.
-         * @param {ProjectInterface~CommitResultCallback} [callback] - if provided no promise will be returned.
+         * @param {function} [callback] - if provided no promise will be returned.
          *
          * @return {external:Promise}  On success the promise will be resolved with
          * {@link ProjectInterface~CommitResult} <b>result</b>.<br>
