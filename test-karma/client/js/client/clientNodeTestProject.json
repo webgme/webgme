@@ -41,17 +41,7 @@
         "name": "member2"
       },
       "base": "63645253-2d02-f982-ce3d-90da1269c6f8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "integer",
-            "default": 10
-          }
-        }
-      },
+      "meta": {},
       "parent": "d890afdd-3a8a-13ae-18df-af3cba9fda87",
       "pointers": {
         "base": "63645253-2d02-f982-ce3d-90da1269c6f8",
@@ -73,17 +63,7 @@
         "name": "c2"
       },
       "base": "63645253-2d02-f982-ce3d-90da1269c6f8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "integer",
-            "default": 10
-          }
-        }
-      },
+      "meta": {},
       "parent": "b4c59092-3c77-ace8-cc52-66cd724c00f0",
       "pointers": {
         "base": "63645253-2d02-f982-ce3d-90da1269c6f8"
@@ -102,17 +82,7 @@
     "4a8c777e-0036-f696-753a-d900ca9060be": {
       "attributes": {},
       "base": "7a852f8a-4b01-8d82-6e7e-15121822b068",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "integer",
-            "default": 10
-          }
-        }
-      },
+      "meta": {},
       "parent": "d8a56045-7740-d7fc-d716-aadfa0fed026",
       "pointers": {},
       "registry": {},
@@ -126,17 +96,7 @@
         "name": "member1"
       },
       "base": "63645253-2d02-f982-ce3d-90da1269c6f8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "integer",
-            "default": 10
-          }
-        }
-      },
+      "meta": {},
       "parent": "d890afdd-3a8a-13ae-18df-af3cba9fda87",
       "pointers": {
         "base": "63645253-2d02-f982-ce3d-90da1269c6f8",
@@ -161,9 +121,6 @@
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
       "meta": {
         "attributes": {
-          "name": {
-            "type": "string"
-          },
           "value": {
             "type": "integer",
             "default": 10
@@ -232,17 +189,7 @@
     "709d3174-2df3-a62a-3bad-daee03e4ad90": {
       "attributes": {},
       "base": "40946980-66c4-dd3e-20e9-16fcd1567d46",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "integer",
-            "default": 10
-          }
-        }
-      },
+      "meta": {},
       "parent": "d8a56045-7740-d7fc-d716-aadfa0fed026",
       "pointers": {},
       "registry": {},
@@ -256,17 +203,7 @@
         "name": "c1"
       },
       "base": "63645253-2d02-f982-ce3d-90da1269c6f8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "integer",
-            "default": 10
-          }
-        }
-      },
+      "meta": {},
       "parent": "b4c59092-3c77-ace8-cc52-66cd724c00f0",
       "pointers": {
         "base": "63645253-2d02-f982-ce3d-90da1269c6f8"
@@ -287,17 +224,7 @@
         "name": "check"
       },
       "base": "63645253-2d02-f982-ce3d-90da1269c6f8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "integer",
-            "default": 10
-          }
-        }
-      },
+      "meta": {},
       "parent": "d890afdd-3a8a-13ae-18df-af3cba9fda87",
       "pointers": {
         "base": "63645253-2d02-f982-ce3d-90da1269c6f8"
@@ -339,17 +266,7 @@
         "name": "c3"
       },
       "base": "63645253-2d02-f982-ce3d-90da1269c6f8",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "integer",
-            "default": 10
-          }
-        }
-      },
+      "meta": {},
       "parent": "b4c59092-3c77-ace8-cc52-66cd724c00f0",
       "pointers": {
         "base": "63645253-2d02-f982-ce3d-90da1269c6f8"
@@ -501,17 +418,7 @@
         "name": "cPrime"
       },
       "base": "b4c59092-3c77-ace8-cc52-66cd724c00f0",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "integer",
-            "default": 10
-          }
-        }
-      },
+      "meta": {},
       "parent": "d890afdd-3a8a-13ae-18df-af3cba9fda87",
       "pointers": {
         "base": "b4c59092-3c77-ace8-cc52-66cd724c00f0"
@@ -530,17 +437,7 @@
     "f6702116-2a81-9aa8-9aed-e6aa1c0e985e": {
       "attributes": {},
       "base": "c67979e2-61b6-e1bc-81a9-2ab8cebc4888",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "integer",
-            "default": 10
-          }
-        }
-      },
+      "meta": {},
       "parent": "d8a56045-7740-d7fc-d716-aadfa0fed026",
       "pointers": {},
       "registry": {},

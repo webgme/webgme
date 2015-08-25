@@ -36,11 +36,6 @@
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "children": {
           "items": [
             "747d624d-6b22-6fa7-c13b-4811d2770cf5",
@@ -331,11 +326,6 @@
       },
       "base": "0eb1dae1-96b8-4f47-a3f9-a0cd533297b9",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "children": {
           "items": [
             "e3d8f760-c9ee-1c52-ceca-1e966158ec3a"
@@ -379,9 +369,6 @@
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
       "meta": {
         "attributes": {
-          "name": {
-            "type": "string"
-          },
           "aInt": {
             "type": "integer",
             "default": null
@@ -410,13 +397,7 @@
         "name": "empty2"
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "153d06f6-478c-0812-776b-94327a563db9",
       "pointers": {
         "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
@@ -435,13 +416,7 @@
         "name": "empty1"
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "153d06f6-478c-0812-776b-94327a563db9",
       "pointers": {
         "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
@@ -461,11 +436,6 @@
       },
       "base": "ff32967b-910f-97d8-76b8-7cd6489d43ce",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "pointers": {
           "ptr": {
             "items": [
@@ -557,17 +527,6 @@
       "base": "4718381b-9129-a50d-a185-f28e39736425",
       "meta": {
         "attributes": {
-          "name": {
-            "type": "string"
-          },
-          "aInt": {
-            "type": "integer",
-            "default": null
-          },
-          "aSt": {
-            "type": "string",
-            "default": "empty string"
-          },
           "aFloat": {
             "type": "float",
             "default": 0
@@ -592,13 +551,7 @@
         "name": "empty3"
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "153d06f6-478c-0812-776b-94327a563db9",
       "pointers": {
         "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
@@ -618,11 +571,6 @@
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "pointers": {
           "ptr": {
             "items": [
