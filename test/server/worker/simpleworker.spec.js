@@ -38,7 +38,7 @@ describe('Simple worker', function () {
             branch: 'master'
         },
         baseProjectJson = JSON.parse(
-            testFixture.fs.readFileSync('test/server/worker/simpleworker/baseProject.json', 'utf8')
+            testFixture.fs.readFileSync('seeds/ActivePanels.json')
         ),
 
         oldSend = process.send,
@@ -64,7 +64,7 @@ describe('Simple worker', function () {
             .then(function () {
                 return testFixture.importProject(storage,
                     {
-                        projectSeed: 'test/server/worker/simpleworker/baseProject.json',
+                        projectSeed: 'seeds/ActivePanels.json',
                         projectName: baseProjectContext.name,
                         branchName: baseProjectContext.branch,
                         gmeConfig: gmeConfig,

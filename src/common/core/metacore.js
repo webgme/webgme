@@ -318,8 +318,8 @@ define([
                 for (i = 0; i < names.length; i++) {
                     if (smaller.attributes[names[i]]) {
                         //they both have the attribute - if it differs we keep the whole of the bigger
-                        if (CANON.stringify(smaller.attributes[names[i]] !==
-                                CANON.stringify(bigger.attributes[names[i]]))) {
+                        if (CANON.stringify(smaller.attributes[names[i]]) !==
+                                CANON.stringify(bigger.attributes[names[i]])) {
 
                             diff.attributes = diff.attributes || {};
                             diff.attributes[names[i]] = bigger.attributes[names[i]];
