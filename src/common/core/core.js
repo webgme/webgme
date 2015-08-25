@@ -273,6 +273,12 @@ define([
         this.applyResolution = core.applyResolution;
         this.loadSubTree = core.loadSubTree;
         this.loadTree = core.loadTree;
+        this.isAbstract = core.isAbstract;
+        this.isConnection = core.isConnection;
+        this.getValidChildrenMetaNodes = core.getValidChildrenMetaNodes;
+        this.getValidSetElementsMetaNodes = core.getValidSetElementsMetaNodes;
+        this.getAllMetaNodes = core.getAllMetaNodes;
+        this.isMetaNode = core.isMetaNode;
 
 
     }
