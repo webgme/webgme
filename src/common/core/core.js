@@ -2,6 +2,8 @@
 /*jshint node: true, browser: true*/
 
 /**
+ * This class defines the public API of the WebGME-Core
+ *
  * @author kecso / https://github.com/kecso
  */
 
@@ -32,6 +34,21 @@ define([
              MetaCacheCore) {
     'use strict';
 
+    /**
+     * @typedef {object} Core~GmeCoreNode - the object that represents the atomic element of the containment hierarchy.
+     */
+    /**
+     * @typedef {object} Core~GmePersisted - the result object of a persist which contains information about the newly
+     * created data objects.
+     */
+
+
+    /**
+     * @param {object} storageObject
+     * @param {object} options - contains logging information
+     * @alias Core
+     * @constructor
+     */
     function Core(storage, options) {
         var core,
             coreLayers = [];
@@ -55,42 +72,100 @@ define([
             return new Class(inner, options);
         }, new CoreTree(storage, options));
 
-
+        /**
+         * Returns the parent of the node.
+         * @param {Core~GmeCoreNode} node - the node in question
+         *
+         * @return {Core~GmeCoreNode} Returns the parent of the node or NULL if it has no parent.
+         *
+         * @func
+         */
         this.getParent = core.getParent;
+
+        /**
+         * Returns the parent-relative identifier of the node.
+         * @param {Core~GmeCoreNode} node - the node in question.
+         *
+         * @return {string} Returns the id string or return NULL and UNDEFINED if there is no such id for the node.
+         *
+         * @func
+         */
         this.getRelid = core.getRelid;
-        this.getLevel = core.getLevel;
+        //this.getLevel = core.getLevel;
+
+        /**
+         * Returns the root node of the containment tree.
+         * @param {Core~GmeCoreNode} node - the node in question.
+         *
+         * @return {Core~GmeCoreNode} Returns the root of the containment hierarchy (it can be the node itself).
+         *
+         * @func
+         */
         this.getRoot = core.getRoot;
+
+        /**
+         * Retuns the complete path of the node in the containment hierarchy.
+         * @param {Core~GmeCoreNode} node - the node in question.
+         *
+         * @return {string} Returns a path string where each portion is a relative id and they are separated by '/'.
+         * The path can be empty as well if the node in question is the  root itself, otherwise it should be a chain
+         * of relative ids from the root of the containment hierarchy.
+         *
+         * @func
+         */
         this.getPath = core.getPath;
-        this.isValidPath = core.isValidPath;
-        this.splitPath = core.splitPath;
-        this.buildPath = core.buildPath;
-        this.joinPaths = core.joinPaths;
-        this.getCommonPathPrefixData = core.getCommonPathPrefixData;
-        this.normalize = core.normalize;
-        this.getAncestor = core.getAncestor;
-        this.isAncestor = core.isAncestor;
-        this.createRoot = core.createRoot;
-        this.createChild = core.createChild;
+        //this.isValidPath = core.isValidPath;
+        //this.splitPath = core.splitPath;
+        //this.buildPath = core.buildPath;
+        //this.joinPaths = core.joinPaths;
+        //this.getCommonPathPrefixData = core.getCommonPathPrefixData;
+        //this.normalize = core.normalize;
+        //this.getAncestor = core.getAncestor;
+        //this.isAncestor = core.isAncestor;
+        //this.createRoot = core.createRoot;
+        //this.createChild = core.createChild;
         this.getChild = core.getChild;
-        this.getDescendant = core.getDescendant;
-        this.getDescendantByPath = core.getDescendantByPath;
-        this.isMutable = core.isMutable;
-        this.isObject = core.isObject;
+        //this.getDescendant = core.getDescendant;
+        //this.getDescendantByPath = core.getDescendantByPath;
+        //this.isMutable = core.isMutable;
+        //this.isObject = core.isObject;
         this.isEmpty = core.isEmpty;
-        this.mutate = core.mutate;
-        this.getData = core.getData;
-        this.setData = core.setData;
-        this.deleteData = core.deleteData;
-        this.copyData = core.copyData;
-        this.getProperty = core.getProperty;
-        this.setProperty = core.setProperty;
-        this.deleteProperty = core.deleteProperty;
-        this.getKeys = core.getKeys;
-        this.getRawKeys = core.getRawKeys;
-        this.isHashed = core.isHashed;
-        this.setHashed = core.setHashed;
+        //this.mutate = core.mutate;
+        //this.getData = core.getData;
+        //this.setData = core.setData;
+        //this.deleteData = core.deleteData;
+        //this.copyData = core.copyData;
+        //this.getProperty = core.getProperty;
+        //this.setProperty = core.setProperty;
+        //this.deleteProperty = core.deleteProperty;
+        //this.getKeys = core.getKeys;
+        //this.getRawKeys = core.getRawKeys;
+        //this.isHashed = core.isHashed;
+        //this.setHashed = core.setHashed;
+        /**
+         * Returns the calculated database id of the data of the node.
+         * @param {Core~GmeCoreNode} node - the node in question.
+         *
+         * @return {string} Returns the so called Hash value of the data of the given node. If the string is empty,
+         * then it means that the node was mutated but not yet saved to the database, so it do not have a hash
+         * temporarily.
+         *
+         * @func
+         */
         this.getHash = core.getHash;
         this.persist = core.persist;
+        /**
+         * @callback Core~LoadRootCallback
+         * @param {Error} resultError - in case of success it is NULL
+         * @param {Core~GmeCoreNode} root - the loaded root
+         */
+        /**
+         * Loads the data object with the given hash and makes it a root of a containment hierarchy.
+         * @param {string} hash - the hash of the data object we like to load as root.
+         * @param {Core~LoadRootCallback} callback
+         *
+         * @func
+         */
         this.loadRoot = core.loadRoot;
         this.loadChild = core.loadChild;
         this.loadByPath = core.loadByPath;
