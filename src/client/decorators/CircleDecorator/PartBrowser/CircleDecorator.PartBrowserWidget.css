@@ -13,9 +13,9 @@ div.part .circle-decorator {
     position: relative; }
   div.part .circle-decorator .name {
     white-space: nowrap;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: bold;
-    text-transform: uppercase;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     position: relative; }
   div.part .circle-decorator .circle-shadow {
     position: absolute;
