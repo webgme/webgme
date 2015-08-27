@@ -591,7 +591,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 return Q.nfcall(middlewareOpts.workerManager.result,requestId);
             })
             .then(function(){
-                res.sendStatus(200);
+                res.sendStatus(204);
             })
             .catch(next); //TODO do we need special error handling???
     });
