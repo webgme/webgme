@@ -1580,11 +1580,11 @@ describe('API', function () {
                     .end(function (err, res) {
                         expect(res.status).to.equal(204);
 
-                        agent.get(server.getUrl()+'/api/projects')
-                            .end(function(err,res){
+                        agent.get(server.getUrl() + '/api/projects')
+                            .end(function (err, res) {
                                 expect(res.status).to.equal(200);
                                 expect(res.body).to.contain({
-                                    _id: 'guest+'+toBeCreatedProjectName,
+                                    _id: 'guest+' + toBeCreatedProjectName,
                                     name: toBeCreatedProjectName,
                                     owner: 'guest'
                                 });
@@ -1866,7 +1866,7 @@ describe('API', function () {
 
             it('should fail to create a project with unknown owner', function (done) {
                 var toBeCreatedProjectName = 'myVeryNewProject';
-                agent.put(server.getUrl() + '/api/projects/noRealOwner/'+toBeCreatedProjectName)
+                agent.put(server.getUrl() + '/api/projects/noRealOwner/' + toBeCreatedProjectName)
                     .send({type: 'file', seedName: 'EmptyProject'})
                     .end(function (err, res) {
                         expect(res.status).to.equal(500);
