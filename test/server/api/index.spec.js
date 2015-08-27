@@ -1009,7 +1009,7 @@ describe('API', function () {
                     .end(function (err, res) {
                         expect(res.status).equal(404, err); // user should not exist at this point
 
-                        agent.put(server.getUrl() + '/api/v1/orgs' + orgId)
+                        agent.put(server.getUrl() + '/api/v1/orgs/' + orgId)
                             .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                             .send(newOrg)
                             .end(function (err, res2) {
@@ -1038,7 +1038,7 @@ describe('API', function () {
                         .end(function (err, res) {
                             expect(res.status).equal(404, err); // org should not exist at this point
 
-                            agent.put(server.getUrl() + '/api/v1/orgs' + orgId)
+                            agent.put(server.getUrl() + '/api/v1/orgs/' + orgId)
                                 .set('Authorization', 'Basic ' + new Buffer('userCanCreate:plaintext')
                                     .toString('base64'))
                                 .send(newOrg)
@@ -1069,7 +1069,7 @@ describe('API', function () {
                         .end(function (err, res) {
                             expect(res.status).equal(404, err); // org should not exist at this point
 
-                            agent.put(server.getUrl() + '/api/v1/orgs' + orgId)
+                            agent.put(server.getUrl() + '/api/v1/orgs/' + orgId)
                                 .set('Authorization', 'Basic ' + new Buffer('userCanNotCreate:plaintext')
                                     .toString('base64'))
                                 .send(newOrg)
@@ -1094,7 +1094,7 @@ describe('API', function () {
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
 
-                            agent.put(server.getUrl() + '/api/v1/orgs' + orgId)
+                            agent.put(server.getUrl() + '/api/v1/orgs/' + orgId)
                                 .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                 .send(newOrg)
                                 .end(function (err, res2) {
