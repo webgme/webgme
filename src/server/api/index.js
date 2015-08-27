@@ -586,12 +586,14 @@ function createAPI(app, mountPath, middlewareOpts) {
 
         Q.nfcall(middlewareOpts.workerManager.request, command)
             .then(function (requestId) {
-                return Q.nfcall(middlewareOpts.workerManager.result,requestId);
+                return Q.nfcall(middlewareOpts.workerManager.result, requestId);
             })
-            .then(function(){
+            .then(function () {
                 res.sendStatus(204);
             })
-            .catch(next); //TODO do we need special error handling???
+            .catch(function (err) {
+                next(new Error(err));
+            }); //TODO do we need special error handling???
     });
 
     router.delete('/projects/:ownerId/:projectName', function (req, res, next) {
