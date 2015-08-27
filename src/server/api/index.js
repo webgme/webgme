@@ -391,7 +391,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.put('/orgs:orgId', function (req, res, next) {
+    router.put('/orgs/:orgId', function (req, res, next) {
 
         var userId = getUserId(req);
 
