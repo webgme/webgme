@@ -55,7 +55,8 @@ define([
      */
     ExportImport.prototype.getDescription = function () {
         return 'Example of how to export, import and update a library from and to webgme.\n' +
-            'The active node (i.e. open node on the canvas) will be the starting point.';
+            'The active node (i.e. open node on the canvas) will be the starting point, ' +
+            'expect when importing a project.';
     };
 
     /**
@@ -75,8 +76,9 @@ define([
                 valueType: 'string',
                 valueItems: [
                     'Export',
-                    'Import',
-                    'Update'
+                    'ImportProject',
+                    'ImportLibrary',
+                    'UpdateLibrary'
                 ]
             },
             {
@@ -108,10 +110,14 @@ define([
 
         if (currentConfig.type === 'Export') {
             self.exportLibrary(currentConfig, callback);
-        } else if (currentConfig.type === 'Import') {
+        } else if (currentConfig.type === 'ImportProject') {
             self.importOrUpdateLibrary(currentConfig, callback);
-        } else if (currentConfig.type === 'Update') {
+        } else if (currentConfig.type === 'ImportLibrary') {
             self.importOrUpdateLibrary(currentConfig, callback);
+        } else if (currentConfig.type === 'UpdateLibrary') {
+            self.importOrUpdateLibrary(currentConfig, callback);
+        } else {
+            callback('Unexpected type' + currentConfig.type, self.result);
         }
     };
 
@@ -155,14 +161,30 @@ define([
                 return;
             }
 
-            if (currentConfig.type === 'Import') {
+            if (currentConfig.type === 'ImportLibrary') {
+                if (libObject.root.path === '') {
+                    callback('Given root path is empty string and exported from a root - use ImportProject.',
+                        self.result);
+                    return;
+                }
                 libraryRoot = self.core.createNode({
                     parent: self.activeNode,
                     base: null
                 });
                 self.core.setAttribute(libraryRoot, 'name', 'Import Library');
-            } else {
+            } else if (currentConfig.type === 'UpdateLibrary') {
+                if (libObject.root.path === '') {
+                    callback('Given root path is empty string and exported from a root - use ImportProject.',
+                        self.result);
+                    return;
+                }
                 libraryRoot = self.activeNode;
+            } else if (currentConfig.type === 'ImportProject') {
+                if (libObject.root.path !== '') {
+                    callback('Given root path is not empty string and not exported from a root node.', self.result);
+                    return;
+                }
+                libraryRoot = self.rootNode;
             }
 
             serialization.import(self.core, libraryRoot, libObject, function (err) {
