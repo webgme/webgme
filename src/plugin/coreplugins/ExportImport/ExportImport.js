@@ -108,15 +108,10 @@ define([
 
         if (currentConfig.type === 'Export') {
             self.exportLibrary(currentConfig, callback);
-        } else {
-            if (!currentConfig.file) {
-                self.result.setError('Add a json file when importing or updating.');
-                callback(new Error('No file provided.'), self.result);
-            } else if (currentConfig.type === 'Import') {
-                self.importLibrary(currentConfig, callback);
-            } else if (currentConfig.type === 'Update') {
-                self.updateLibrary(currentConfig, callback);
-            }
+        } else if (currentConfig.type === 'Import') {
+            self.importOrUpdateLibrary(currentConfig, callback);
+        } else if (currentConfig.type === 'Update') {
+            self.importOrUpdateLibrary(currentConfig, callback);
         }
     };
 
@@ -150,12 +145,72 @@ define([
         });
     };
 
-    ExportImport.prototype.importLibrary = function (currentConfig, callback) {
-        callback(new Error('Not Implemented!'));
+    ExportImport.prototype.importOrUpdateLibrary = function (currentConfig, callback) {
+        var self = this,
+            libraryRoot;
+
+        self.getLibObject(currentConfig, function (err, libObject) {
+            if (err) {
+                callback(err, self.result);
+                return;
+            }
+
+            if (currentConfig.type === 'Import') {
+                libraryRoot = self.core.createNode({
+                    parent: self.activeNode,
+                    base: null
+                });
+                self.core.setAttribute(libraryRoot, 'name', 'Import Library');
+            } else {
+                libraryRoot = self.activeNode;
+            }
+
+            serialization.import(self.core, libraryRoot, libObject, function (err) {
+                if (err) {
+                    callback(err, self.result);
+                    return;
+                }
+                self.save('Imported Library to "' + self.core.getPath(self.activeNode) + '"', function (err) {
+                    if (err) {
+                        callback(err, self.result);
+                        return;
+                    }
+                    self.createMessage(self.activeNode, 'Library imported');
+                    self.result.setSuccess(true);
+                    callback(null, self.result);
+                });
+            });
+        });
     };
 
-    ExportImport.prototype.updateLibrary = function (currentConfig, callback) {
-        callback(new Error('Not Implemented!'));
+    ExportImport.prototype.getLibObject = function (currentConfig, callback) {
+        var self = this;
+        if (!currentConfig.file) {
+            self.result.setError('Add a json file when importing or updating.');
+            callback(new Error('No file provided.'));
+            return;
+        }
+
+        self.blobClient.getObject(currentConfig.file, function (err, libOrBuf) {
+            var libObject;
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            if (false) {
+                try {
+                    libOrBuf = String.fromCharCode.apply(null, new Uint8Array(libOrBuf));
+                    libObject = JSON.loads(libOrBuf);
+                    callback(null, libObject);
+                } catch (err) {
+                    callback(new Error('Failed to parse file.'));
+                    return;
+                }
+            } else {
+                callback(null, libOrBuf);
+            }
+        });
     };
 
     return ExportImport;
