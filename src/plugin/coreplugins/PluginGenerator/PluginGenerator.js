@@ -33,7 +33,7 @@ define([
     };
 
     PluginGeneratorPlugin.prototype.getVersion = function () {
-        return '0.1.1';
+        return '0.14.0';
     };
 
     PluginGeneratorPlugin.prototype.getConfigStructure = function () {
@@ -100,10 +100,10 @@ define([
                 readOnly: false
             },
             {
-                name: 'core',
-                displayName: 'Include core example',
-                description: '',
-                value: false,
+                name: 'meta',
+                displayName: 'Generate META',
+                description: 'Generates a static listing of the meta objects to facilitate coding.',
+                value: true,
                 valueType: 'boolean',
                 readOnly: false
             }
@@ -129,6 +129,7 @@ define([
         // Update date, projectName and paths
         self.currentConfig.date = new Date();
         self.currentConfig.projectName = self.projectName;
+        self.currentConfig.version = self.getVersion();
         dirCommon = '/plugins/' + self.projectName + '/' + self.currentConfig.pluginID + '/';
         self.pluginDir = 'src' + dirCommon;
         self.testDir = 'test' + dirCommon;
@@ -139,7 +140,9 @@ define([
                 ejs.render(TEMPLATES['unit_test.js.ejs'], self.currentConfig);
         }
         self.addTemplateFile();
-        self.addMetaFile();
+        if (self.currentConfig.meta) {
+            self.addMetaFile();
+        }
         // Add the plugin file.
         pluginFileContent = ejs.render(TEMPLATES['plugin.js.ejs'], self.currentConfig);
         pluginFileName = self.pluginDir + self.currentConfig.pluginID + '.js';
@@ -215,7 +218,8 @@ define([
         metaNodes.sort(compare);
         self.filesToAdd[self.pluginDir + 'meta.js'] = ejs.render(TEMPLATES['meta.js.ejs'], {
             metaNodes: metaNodes,
-            date: self.currentConfig.date
+            date: self.currentConfig.date,
+            version: self.currentConfig.version
         });
     };
 
@@ -244,7 +248,7 @@ define([
         if (self.currentConfig.templateType) {
             self.filesToAdd[fileName] = fileContent;
             self.filesToAdd[self.pluginDir + 'Templates/combine_templates.js'] =
-                ejs.render(TEMPLATES['combine_templates.js.ejs']);
+                ejs.render(TEMPLATES['combine_templates.js.ejs'], self.currentConfig);
         }
     };
 
