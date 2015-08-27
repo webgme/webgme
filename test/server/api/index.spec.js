@@ -32,7 +32,10 @@ describe('API', function () {
                     gmeAuth = gmeAuth_;
                     return Q.allDone([
                         gmeAuth.addUser('guest', 'guest@example.com', 'guest', true, {overwrite: true}),
-                        gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true}),
+                        gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {
+                            overwrite: true,
+                            siteAdmin: true
+                        }),
                         gmeAuth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true}),
                         gmeAuth.addUser('user_to_delete', 'user@example.com', 'plaintext', true, {overwrite: true}),
                         gmeAuth.addUser('self_delete_1', 'user@example.com', 'plaintext', true, {overwrite: true}),
@@ -922,7 +925,10 @@ describe('API', function () {
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
                     return Q.allDone([
-                        gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true}),
+                        gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {
+                            overwrite: true,
+                            siteAdmin: true
+                        }),
                         gmeAuth.addUser('userCanCreate', 'admin@example.com', 'plaintext', true, {overwrite: true}),
                         gmeAuth.addUser('userCanNotCreate', 'admin@example.com', 'plaintext', false, {overwrite: true}),
                         gmeAuth.addUser('userAdminOrg', 'user@example.com', 'plaintext', false, {overwrite: true}),
@@ -1565,11 +1571,32 @@ describe('API', function () {
                 });
             });
 
+            it.only('should create a project /projects/:ownerId/:projectName', function (done) {
+                var toBeCreatedProjectName = 'myVeryNewProject';
+                agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(toBeCreatedProjectName))
+                    .send({type: 'file', seedName: 'EmptyProject'})
+                    .end(function (err, res) {
+                        expect(res.status).to.equal(204);
+
+                        agent.get(server.getUrl()+'/api/projects')
+                            .end(function(err,res){
+                                expect(res.status).to.equal(200);
+                                expect(res.body).to.contain({
+                                    _id: 'guest+'+toBeCreatedProjectName,
+                                    name: toBeCreatedProjectName,
+                                    owner: 'guest'
+                                });
+                                done();
+                            });
+                    });
+            });
+
             it('should branches for project /projects/:ownerId/:projectId/branches', function (done) {
                 agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body).to.have.property('master');
+
                         done();
                     });
             });
