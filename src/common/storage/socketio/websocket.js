@@ -24,6 +24,16 @@ define([
         logger.debug('ctor');
         EventDispatcher.call(this);
 
+        function wrapError(callback) {
+            return function () {
+                if (typeof arguments[0] === 'string') {
+                    callback(new Error(arguments[0]));
+                } else {
+                    callback.apply(null, arguments);
+                }
+            };
+        }
+
         this.connect = function (networkHandler) {
             logger.debug('Connecting via ioClient.');
             ioClient.connect(function (err, socket_) {
@@ -118,94 +128,94 @@ define([
 
         // watcher functions
         this.watchDatabase = function (data, callback) {
-            self.socket.emit('watchDatabase', data, callback);
+            self.socket.emit('watchDatabase', data, wrapError(callback));
         };
 
         this.watchProject = function (data, callback) {
-            self.socket.emit('watchProject', data, callback);
+            self.socket.emit('watchProject', data, wrapError(callback));
         };
 
         this.watchBranch = function (data, callback) {
-            self.socket.emit('watchBranch', data, callback);
+            self.socket.emit('watchBranch', data, wrapError(callback));
         };
 
         // model editing functions
         this.openProject = function (data, callback) {
-            self.socket.emit('openProject', data, callback);
+            self.socket.emit('openProject', data, wrapError(callback));
         };
 
         this.closeProject = function (data, callback) {
-            self.socket.emit('closeProject', data, callback);
+            self.socket.emit('closeProject', data, wrapError(callback));
         };
 
         this.openBranch = function (data, callback) {
-            self.socket.emit('openBranch', data, callback);
+            self.socket.emit('openBranch', data, wrapError(callback));
         };
 
         this.closeBranch = function (data, callback) {
-            self.socket.emit('closeBranch', data, callback);
+            self.socket.emit('closeBranch', data, wrapError(callback));
         };
 
         this.makeCommit = function (data, callback) {
-            self.socket.emit('makeCommit', data, callback);
+            self.socket.emit('makeCommit', data, wrapError(callback));
         };
 
         this.loadObjects = function (data, callback) {
-            self.socket.emit('loadObjects', data, callback);
+            self.socket.emit('loadObjects', data, wrapError(callback));
         };
 
         this.setBranchHash = function (data, callback) {
-            self.socket.emit('setBranchHash', data, callback);
+            self.socket.emit('setBranchHash', data, wrapError(callback));
         };
 
         this.getBranchHash = function (data, callback) {
-            self.socket.emit('getBranchHash', data, callback);
+            self.socket.emit('getBranchHash', data, wrapError(callback));
         };
 
         // REST like functions
         this.getProjects = function (data, callback) {
-            self.socket.emit('getProjects', data, callback);
+            self.socket.emit('getProjects', data, wrapError(callback));
         };
 
         this.deleteProject = function (data, callback) {
-            self.socket.emit('deleteProject', data, callback);
+            self.socket.emit('deleteProject', data, wrapError(callback));
         };
 
         this.createProject = function (data, callback) {
-            self.socket.emit('createProject', data, callback);
+            self.socket.emit('createProject', data, wrapError(callback));
         };
 
         this.transferProject = function (data, callback) {
-            self.socket.emit('transferProject', data, callback);
+            self.socket.emit('transferProject', data, wrapError(callback));
         };
 
         this.getBranches = function (data, callback) {
-            self.socket.emit('getBranches', data, callback);
+            self.socket.emit('getBranches', data, wrapError(callback));
         };
 
         this.getCommits = function (data, callback) {
-            self.socket.emit('getCommits', data, callback);
+            self.socket.emit('getCommits', data, wrapError(callback));
         };
 
         this.getLatestCommitData = function (data, callback) {
-            self.socket.emit('getLatestCommitData', data, callback);
+            self.socket.emit('getLatestCommitData', data, wrapError(callback));
         };
 
         this.getCommonAncestorCommit = function (data, callback) {
-            self.socket.emit('getCommonAncestorCommit', data, callback);
+            self.socket.emit('getCommonAncestorCommit', data, wrapError(callback));
         };
 
         //temporary simple request / result functions
         this.simpleRequest = function (data, callback) {
-            self.socket.emit('simpleRequest', data, callback);
+            self.socket.emit('simpleRequest', data, wrapError(callback));
         };
 
         this.simpleResult = function (data, callback) {
-            self.socket.emit('simpleResult', data, callback);
+            self.socket.emit('simpleResult', data, wrapError(callback));
         };
 
         this.simpleQuery = function (workerId, data, callback) {
-            self.socket.emit('simpleQuery', workerId, data, callback);
+            self.socket.emit('simpleQuery', workerId, data, wrapError(callback));
         };
 
         // Helper functions

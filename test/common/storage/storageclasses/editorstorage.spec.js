@@ -398,8 +398,7 @@ describe('storage storageclasses editorstorage', function () {
                 done(new Error('Should have failed when makeCommit refers to non-existing root-object.'));
             })
             .catch(function (err) {
-                expect(typeof err).to.equal('string');
-                expect(err).to.include('Failed loading referred rootObject');
+                expect(err.message).to.include('Failed loading referred rootObject');
                 done();
             })
             .done();

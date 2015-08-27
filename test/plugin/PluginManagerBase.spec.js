@@ -433,7 +433,7 @@ describe('Plugin Manager Base', function () {
             pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
                 testFixture.expect(err).to.not.equal(null);
                 testFixture.expect(err.message)
-                    .to.equal('object does not exist #doesnotexist');
+                    .to.include('object does not exist #doesnotexist');
 
                 done();
             });

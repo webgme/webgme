@@ -700,15 +700,15 @@ describe('Memory storage', function () {
                     done(new Error('should have failed'));
                 })
                 .catch(function (err) {
-                    if (err === 'branch hash mismatch') {
+                    if (err.message === 'branch hash mismatch') {
                         done();
                     } else {
-                        done(new Error('should have failed to openProject'));
+                        done(new Error('should have failed to set branch hash'));
                     }
                 });
         });
 
-        it('should fail to set new branch hash if oldhash does not match', function (done) {
+        it('should fail to to set branch hash if oldhash does not match', function (done) {
             project.getBranchHash('master', '')
                 .then(function (hash) {
                     return project.setBranchHash('dummy', '', hash);
@@ -725,10 +725,10 @@ describe('Memory storage', function () {
                     done(new Error('should have failed'));
                 })
                 .catch(function (err) {
-                    if (err === 'branch hash mismatch') {
+                    if (err.message === 'branch hash mismatch') {
                         done();
                     } else {
-                        done(new Error('should have failed to openProject'));
+                        done(new Error('should have failed to to set branch hash'));
                     }
                 });
         });

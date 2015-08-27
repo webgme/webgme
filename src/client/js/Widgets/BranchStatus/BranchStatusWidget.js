@@ -57,14 +57,14 @@ define([
                         self._client.selectBranch(branchName, null, function (err) {
                             if (err) {
                                 self._logger.error('could not re-select the branch', branchName);
-                                throw new Error(err);
+                                throw err;
                             }
                         });
                     } else {
                         self._client.selectBranch(forkName, null, function (err) {
                             if (err) {
                                 self._logger.error('Could not select new branch', forkName);
-                                throw new Error(err);
+                                throw err;
                             }
                         });
                     }

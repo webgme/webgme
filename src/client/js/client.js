@@ -387,7 +387,7 @@ define([
                 closeProject(prevProjectId, function (err) {
                     if (err) {
                         logger.error('problems closing previous project', err);
-                        callback(new Error(err));
+                        callback(err);
                         return;
                     }
                     storage.openProject(projectId, projectOpened);
@@ -463,7 +463,7 @@ define([
                         if (err) {
                             logger.error('storage.openBranch returned with error', err);
                             self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
-                            callback(new Error(err));
+                            callback(err);
                             return;
                         }
 
@@ -516,7 +516,7 @@ define([
                                 callback(err);
                             } else if (aborted === true) {
                                 logState('warn', 'selectCommit loading');
-                                callback('Loading selected commit was aborted');
+                                callback(new Error('Loading selected commit was aborted'));
                             } else {
                                 logger.debug('loading complete for selectCommit rootHash', commitObj.root);
                                 logState('info', 'selectCommit loading');
@@ -836,13 +836,7 @@ define([
 
         this.deleteProject = function (projectId, callback) {
             if (isConnected()) {
-                storage.deleteProject(projectId, function (err, didExist) {
-                    if (err) {
-                        callback(new Error(err));
-                        return;
-                    }
-                    callback(null, didExist);
-                });
+                storage.deleteProject(projectId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
             }
@@ -850,13 +844,7 @@ define([
 
         this.transferProject = function (projectId, newOwnerId, callback) {
             if (isConnected()) {
-                storage.transferProject(projectId, newOwnerId, function (err, newProjectId) {
-                    if (err) {
-                        callback(new Error(err));
-                        return;
-                    }
-                    callback(null, newProjectId);
-                });
+                storage.transferProject(projectId, newOwnerId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
             }

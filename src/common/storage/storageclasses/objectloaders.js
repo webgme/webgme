@@ -87,7 +87,7 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
                     hashedObjects[i].cb(err);
                 } else if (typeof result[hashedObjects[i].hash] === 'string') {
                     self.logger.error(result[hashedObjects[i].hash]);
-                    hashedObjects[i].cb(result[hashedObjects[i].hash]);
+                    hashedObjects[i].cb(new Error(result[hashedObjects[i].hash]));
                 } else {
                     hashedObjects[i].cb(err, result[hashedObjects[i].hash]);
                 }
