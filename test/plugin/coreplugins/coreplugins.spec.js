@@ -22,6 +22,7 @@ describe('CorePlugins', function () {
         pluginNames = [
             'ConfigurationArtifact',
             'ExecutorPlugin',
+            'ExportImport',
             'MergeExample',
             'MetaGMEParadigmImporter',
             'MinimalWorkingExample',
