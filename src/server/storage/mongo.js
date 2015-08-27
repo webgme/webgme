@@ -18,6 +18,9 @@ var mongodb = require('mongodb'),
 
 function Mongo(mainLogger, gmeConfig) {
     var mongo = null,
+        connectionCnt = 0,
+        connectDeferred,
+        disconnectDeferred,
         logger = mainLogger.fork('mongo');
 
     /**
@@ -330,47 +333,66 @@ function Mongo(mainLogger, gmeConfig) {
     }
 
     function openDatabase(callback) {
-        var deferred = Q.defer();
-        logger.debug('openDatabase');
+        connectionCnt += 1;
+        logger.debug('openDatabase, connection counter:', connectionCnt);
 
-        if (mongo === null) {
-            logger.debug('Connecting to mongo...');
-            // connect to mongo
-            mongodb.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
-                if (!err && db) {
-                    mongo = db;
-                    logger.debug('Connected.');
-                    deferred.resolve();
-                } else {
-                    mongo = null;
-                    deferred.reject(err);
-                }
-            });
+        if (connectionCnt === 1) {
+            if (mongo === null) {
+                logger.debug('Connecting to mongo...');
+                connectDeferred = Q.defer();
+                // connect to mongo
+                mongodb.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
+                    if (!err && db) {
+                        mongo = db;
+                        logger.debug('Connected.');
+                        connectDeferred.resolve();
+                    } else {
+                        mongo = null;
+                        connectionCnt -= 1;
+                        logger.error('Failed to connect.', {metadata: err});
+                        connectDeferred.reject(err);
+                    }
+                });
+            } else {
+                logger.debug('Count is 1 but mongo is not null');
+            }
         } else {
             logger.debug('Reusing mongo connection.');
             // we are already connected
-            deferred.resolve();
         }
 
-        return deferred.promise.nodeify(callback);
+        return connectDeferred.promise.nodeify(callback);
     }
 
     function closeDatabase(callback) {
-        var deferred = Q.defer();
-        logger.debug('closeDatabase');
-        if (mongo !== null) {
-            logger.debug('Closing connection to mongo...');
-            mongo.close(function () {
-                mongo = null;
-                logger.debug('Closed.');
-                deferred.resolve();
-            });
-        } else {
-            logger.debug('No mongo connection was established.');
-            deferred.resolve();
+        connectionCnt -= 1;
+        logger.debug('closeDatabase, connection counter:', connectionCnt);
+
+        if (connectionCnt < 0) {
+            logger.error('connection counter became negative, too many closeDatabase. Setting it to 0.', connectionCnt);
+            connectionCnt = 0;
         }
 
-        return deferred.promise.nodeify(callback);
+        if (!disconnectDeferred) {
+            disconnectDeferred = Q.defer();
+        }
+
+        if (connectionCnt === 0) {
+            if (mongo) {
+                logger.debug('Closing connection to mongo...');
+                mongo.close(function () {
+                    mongo = null;
+                    logger.debug('Closed.');
+                    disconnectDeferred.resolve();
+                });
+            } else {
+                disconnectDeferred.resolve();
+            }
+        } else {
+            logger.debug('Connections still alive.');
+        }
+
+        return disconnectDeferred.promise.nodeify(callback);
     }
 
     function deleteProject(projectId, callback) {
