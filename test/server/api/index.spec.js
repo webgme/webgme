@@ -1571,7 +1571,7 @@ describe('API', function () {
                 });
             });
 
-            it.only('should create a project /projects/:ownerId/:projectName', function (done) {
+            it('should create a project /projects/:ownerId/:projectName', function (done) {
                 var toBeCreatedProjectName = 'myVeryNewProject';
                 agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(toBeCreatedProjectName))
                     .send({type: 'file', seedName: 'EmptyProject'})
@@ -1858,6 +1858,17 @@ describe('API', function () {
                     .send({})
                     .end(function (err, res) {
                         expect(res.status).equal(500, err);
+                        done();
+                    });
+            });
+
+            it('should fail to create a project with unknown owner', function (done) {
+                var toBeCreatedProjectName = 'myVeryNewProject';
+                agent.put(server.getUrl() + '/api/projects/noRealOwner/'+toBeCreatedProjectName)
+                    .send({type: 'file', seedName: 'EmptyProject'})
+                    .end(function (err, res) {
+                        expect(res.status).to.equal(500);
+
                         done();
                     });
             });
