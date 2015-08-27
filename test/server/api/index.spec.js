@@ -998,26 +998,27 @@ describe('API', function () {
             // AUTH METHODS
             // create organization
             it('should create a new organization as admin with valid data PUT /api/v1/orgs/newOrg', function (done) {
-                var newOrg = {
-                    orgId: 'newOrg',
+                var orgId = 'newOrg',
+                    newOrg = {
                     info: {
                         info: 'new'
                     }
                 };
 
-                agent.get(server.getUrl() + '/api/v1/orgs/' + newOrg.orgId)
+                agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
                     .end(function (err, res) {
                         expect(res.status).equal(404, err); // user should not exist at this point
 
-                        agent.put(server.getUrl() + '/api/v1/orgs')
+                        agent.put(server.getUrl() + '/api/v1/orgs/' + orgId)
                             .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                             .send(newOrg)
                             .end(function (err, res2) {
                                 expect(res2.status).equal(200, err);
 
-                                expect(res2.body._id).equal(newOrg.orgId);
+                                expect(res2.body._id).equal(orgId);
                                 expect(res2.body.info.info).equal(newOrg.info.info);
                                 expect(res2.body.admins).to.deep.equal(['admin']);
+                                expect(res2.body.users).to.deep.equal(['admin']);
 
                                 done();
                             });
@@ -1026,27 +1027,28 @@ describe('API', function () {
 
             it('should create a new organization when canCreate with valid data PUT /api/v1/orgs/newOrgCanCreate',
                 function (done) {
-                    var newOrg = {
-                        orgId: 'newOrgCanCreate',
+                    var orgId = 'newOrgCanCreate',
+                        newOrg = {
                         info: {
                             info: 'new'
                         }
                     };
 
-                    agent.get(server.getUrl() + '/api/v1/orgs/' + newOrg.orgId)
+                    agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
                         .end(function (err, res) {
                             expect(res.status).equal(404, err); // org should not exist at this point
 
-                            agent.put(server.getUrl() + '/api/v1/orgs')
+                            agent.put(server.getUrl() + '/api/v1/orgs/' + orgId)
                                 .set('Authorization', 'Basic ' + new Buffer('userCanCreate:plaintext')
                                     .toString('base64'))
                                 .send(newOrg)
                                 .end(function (err, res2) {
                                     expect(res2.status).equal(200, err);
 
-                                    expect(res2.body._id).equal(newOrg.orgId);
+                                    expect(res2.body._id).equal(orgId);
                                     expect(res2.body.info.info).equal(newOrg.info.info);
                                     expect(res2.body.admins).to.deep.equal(['userCanCreate']);
+                                    expect(res2.body.users).to.deep.equal(['userCanCreate']);
 
                                     done();
                                 });
@@ -1056,18 +1058,18 @@ describe('API', function () {
 
             it('should 403 when create a new organization when can not create with valid data PUT /api/v1/orgs/someOrg',
                 function (done) {
-                    var newOrg = {
-                        orgId: 'someOrg',
+                    var orgId = 'someOrg',
+                        newOrg = {
                         info: {
                             info: 'new'
                         }
                     };
 
-                    agent.get(server.getUrl() + '/api/v1/orgs/' + newOrg.orgId)
+                    agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
                         .end(function (err, res) {
                             expect(res.status).equal(404, err); // org should not exist at this point
 
-                            agent.put(server.getUrl() + '/api/v1/orgs')
+                            agent.put(server.getUrl() + '/api/v1/orgs/' + orgId)
                                 .set('Authorization', 'Basic ' + new Buffer('userCanNotCreate:plaintext')
                                     .toString('base64'))
                                 .send(newOrg)
@@ -1081,18 +1083,18 @@ describe('API', function () {
 
             it('should 500 when create a new organization when already exists with valid data PUT /api/v1/orgs/orgInit',
                 function (done) {
-                    var newOrg = {
-                        orgId: 'orgInit',
+                    var orgId = 'orgInit',
+                        newOrg = {
                         info: {
                             info: 'new'
                         }
                     };
 
-                    agent.get(server.getUrl() + '/api/v1/orgs/' + newOrg.orgId)
+                    agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
 
-                            agent.put(server.getUrl() + '/api/v1/orgs')
+                            agent.put(server.getUrl() + '/api/v1/orgs/' + orgId)
                                 .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                 .send(newOrg)
                                 .end(function (err, res2) {

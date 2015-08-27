@@ -391,7 +391,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.put('/orgs', function (req, res, next) {
+    router.put('/orgs/:orgId', function (req, res, next) {
 
         var userId = getUserId(req);
 
@@ -402,13 +402,16 @@ function createAPI(app, mountPath, middlewareOpts) {
                     throw new Error('site admin role or can create is required for this operation');
                 }
 
-                return gmeAuth.addOrganization(req.body.orgId, req.body.info);
+                return gmeAuth.addOrganization(req.params.orgId, req.body.info);
             })
             .then(function () {
-                return gmeAuth.setAdminForUserInOrganization(userId, req.body.orgId, true);
+                return gmeAuth.setAdminForUserInOrganization(userId, req.params.orgId, true);
             })
             .then(function () {
-                return gmeAuth.getOrganization(req.body.orgId);
+                return gmeAuth.addUserToOrganization(userId, req.params.orgId);
+            })
+            .then(function () {
+                return gmeAuth.getOrganization(req.params.orgId);
             })
             .then(function (orgData) {
                 res.json(orgData);
@@ -416,7 +419,6 @@ function createAPI(app, mountPath, middlewareOpts) {
             .catch(function (err) {
                 next(err);
             });
-
     });
 
     router.get('/orgs/:orgId', function (req, res, next) {
