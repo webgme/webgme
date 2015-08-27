@@ -573,6 +573,27 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
 
+    router.put('/projects/:ownerId/:projectName', function (req, res, next) {
+        var userId = getUserId(req),
+            command = req.body;
+        command.command = 'seedProject';
+        command.userId = userId;
+        command.webGMESessionId = req.session.id;
+        command.ownerId = req.params.ownerId;
+        command.projectName = req.params.projectName;
+
+        req.session.save(); //TODO why do we have to save manually
+
+        Q.nfcall(middlewareOpts.workerManager.request, command)
+            .then(function (requestId) {
+                return Q.nfcall(middlewareOpts.workerManager.result,requestId);
+            })
+            .then(function(){
+                res.sendStatus(200);
+            })
+            .catch(next); //TODO do we need special error handling???
+    });
+
     router.delete('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),
             data = {
