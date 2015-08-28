@@ -1573,10 +1573,30 @@ describe('API', function () {
                 });
             });
 
-            it('should create a project /projects/:ownerId/:projectName', function (done) {
-                var toBeCreatedProjectName = 'myVeryNewProject';
+            it('should create a project from fileSeed /projects/:ownerId/:projectName', function (done) {
+                var toBeCreatedProjectName = 'myVeryNewFileProject';
                 agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(toBeCreatedProjectName))
                     .send({type: 'file', seedName: 'EmptyProject'})
+                    .end(function (err, res) {
+                        expect(res.status).to.equal(204);
+
+                        agent.get(server.getUrl() + '/api/projects')
+                            .end(function (err, res) {
+                                expect(res.status).to.equal(200);
+                                expect(res.body).to.contain({
+                                    _id: 'guest+' + toBeCreatedProjectName,
+                                    name: toBeCreatedProjectName,
+                                    owner: 'guest'
+                                });
+                                done();
+                            });
+                    });
+            });
+
+            it('should create a project from dbSeed /projects/:ownerId/:projectName', function (done) {
+                var toBeCreatedProjectName = 'myVeryNewDBProject';
+                agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(toBeCreatedProjectName))
+                    .send({type: 'db', seedName: 'guest+project', seedBranch: 'master'})
                     .end(function (err, res) {
                         expect(res.status).to.equal(204);
 
