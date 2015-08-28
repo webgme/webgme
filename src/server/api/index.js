@@ -575,6 +575,39 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
 
+    /**
+     * Creating project by seed
+     * Available body parameters:
+     * type {string} - sets if the seed is coming from file (==='file') source or from some existing project(==='db') [mandatory]
+     * seedName {string} - the name of the seed (in case of db, it has to be the complete id of the project) [mandatory]
+     * seedBranch {string} - in case of db seed, it is possible to give the name of the source branch [default=master]
+     *
+     * @example {type:'file',seedName:'EmptyProject'}
+     * @example {type:'db',seedName:'me+myOldProject',seedBranch:'release'}
+     */
+    router.put('/projects/:ownerId/:projectName', function (req, res, next) {
+        var userId = getUserId(req),
+            command = req.body;
+        command.command = 'seedProject';
+        command.userId = userId;
+        command.webGMESessionId = req.session.id;
+        command.ownerId = req.params.ownerId;
+        command.projectName = req.params.projectName;
+
+        req.session.save(); //TODO why do we have to save manually
+
+        Q.nfcall(middlewareOpts.workerManager.request, command)
+            .then(function (requestId) {
+                return Q.nfcall(middlewareOpts.workerManager.result, requestId);
+            })
+            .then(function () {
+                res.sendStatus(204);
+            })
+            .catch(function (err) {
+                next(new Error(err));
+            }); //TODO do we need special error handling???
+    });
+
     router.delete('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),
             data = {
