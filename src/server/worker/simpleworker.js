@@ -301,6 +301,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                         function (err, result) {
                             if (err) {
                                 logger.error('Plugin failed', pluginName, err);
+                                err = err instanceof Error ? err : new Error(err);
                             }
                             storage.close(function (closeErr) {
                                 if (closeErr) {
@@ -705,7 +706,7 @@ process.on('message', function (parameters) {
                         safeSend({
                             pid: process.pid,
                             type: CONSTANT.msgTypes.result,
-                            error: err,
+                            error: err ? err.message : null,
                             result: result
                         });
                     }

@@ -179,7 +179,11 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
      * @param {string} time
      */
     PluginResult.prototype.setError = function (error) {
-        this.error = error;
+        if (error instanceof Error) {
+            this.error = error.message;
+        } else {
+            this.error = error;
+        }
     };
 
     /**
@@ -196,7 +200,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             pluginName: this.pluginName,
             startTime: this.startTime,
             finishTime: this.finishTime,
-            error: this.error
+            error: null
         },
             i;
 
