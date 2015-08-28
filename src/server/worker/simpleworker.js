@@ -306,7 +306,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                                 if (closeErr) {
                                     logger.error('error closing storage', closeErr);
                                 }
-                                callback(err, result ? result.serialize() : null);
+                                callback(new Error(err), result ? result.serialize() : null);
                             });
                         }
                     );
@@ -705,7 +705,7 @@ process.on('message', function (parameters) {
                         safeSend({
                             pid: process.pid,
                             type: CONSTANT.msgTypes.result,
-                            error: err,
+                            error: err ? err.message : null,
                             result: result
                         });
                     }
