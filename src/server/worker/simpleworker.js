@@ -301,12 +301,13 @@ var WEBGME = require(__dirname + '/../../../webgme'),
                         function (err, result) {
                             if (err) {
                                 logger.error('Plugin failed', pluginName, err);
+                                err = err instanceof Error ? err : new Error(err);
                             }
                             storage.close(function (closeErr) {
                                 if (closeErr) {
                                     logger.error('error closing storage', closeErr);
                                 }
-                                callback(new Error(err), result ? result.serialize() : null);
+                                callback(err, result ? result.serialize() : null);
                             });
                         }
                     );
