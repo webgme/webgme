@@ -578,7 +578,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     /**
      * Creating project by seed
      * Available body parameters:
-     * type {file|db} - sets if the seed is coming from file source or from some existing project [mandatory]
+     * type {string} - sets if the seed is coming from file (==='file') source or from some existing project(==='db') [mandatory]
      * seedName {string} - the name of the seed (in case of db, it has to be the complete id of the project) [mandatory]
      * seedBranch {string} - in case of db seed, it is possible to give the name of the source branch [default=master]
      *

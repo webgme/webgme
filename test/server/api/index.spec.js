@@ -1584,7 +1584,7 @@ describe('API', function () {
                             .end(function (err, res) {
                                 expect(res.status).to.equal(200);
                                 expect(res.body).to.contain({
-                                    _id: 'guest+' + toBeCreatedProjectName,
+                                    _id: testFixture.projectName2Id(toBeCreatedProjectName),
                                     name: toBeCreatedProjectName,
                                     owner: 'guest'
                                 });
@@ -1596,7 +1596,7 @@ describe('API', function () {
             it('should create a project from dbSeed /projects/:ownerId/:projectName', function (done) {
                 var toBeCreatedProjectName = 'myVeryNewDBProject';
                 agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(toBeCreatedProjectName))
-                    .send({type: 'db', seedName: 'guest+project', seedBranch: 'master'})
+                    .send({type: 'db', seedName: testFixture.projectName2Id('project'), seedBranch: 'master'})
                     .end(function (err, res) {
                         expect(res.status).to.equal(204);
 
@@ -1604,7 +1604,7 @@ describe('API', function () {
                             .end(function (err, res) {
                                 expect(res.status).to.equal(200);
                                 expect(res.body).to.contain({
-                                    _id: 'guest+' + toBeCreatedProjectName,
+                                    _id: testFixture.projectName2Id(toBeCreatedProjectName),
                                     name: toBeCreatedProjectName,
                                     owner: 'guest'
                                 });
