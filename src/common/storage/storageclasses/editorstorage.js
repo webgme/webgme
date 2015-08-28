@@ -648,14 +648,15 @@ define([
                                         }
                                     })
                                     .catch(function (err) {
-                                        if (err.indexOf('Commit object does not exist [' + queuedCommitHash) > -1) {
+                                        if (err.message.indexOf('Commit object does not exist [' + queuedCommitHash) > -1) {
                                             // Commit never made it to the server - push it.
                                             logger.debug('First queued commit never made it to the server. push...');
                                             self._pushNextQueuedCommit(projectId, branchName);
                                         } else {
                                             logger.error(err);
                                         }
-                                    });
+                                    })
+                                    .done();
                             } else {
                                 logger.debug('_rejoinBranchRooms, no commits were queued during disconnect.');
                             }
