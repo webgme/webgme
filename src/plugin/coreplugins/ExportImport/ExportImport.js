@@ -117,7 +117,7 @@ define([
         } else if (currentConfig.type === 'UpdateLibrary') {
             self.importOrUpdateLibrary(currentConfig, callback);
         } else {
-            callback('Unexpected type' + currentConfig.type, self.result);
+            callback(new Error('Unexpected type ' + currentConfig.type), self.result);
         }
     };
 
@@ -163,8 +163,8 @@ define([
 
             if (currentConfig.type === 'ImportLibrary') {
                 if (libObject.root.path === '') {
-                    callback('Given root path is empty string and exported from a root - use ImportProject.',
-                        self.result);
+                    callback(new Error('Root path in json is empty string and exported from a root - ' +
+                        'use ImportProject.'), self.result);
                     return;
                 }
                 libraryRoot = self.core.createNode({
@@ -174,14 +174,15 @@ define([
                 self.core.setAttribute(libraryRoot, 'name', 'Import Library');
             } else if (currentConfig.type === 'UpdateLibrary') {
                 if (libObject.root.path === '') {
-                    callback('Given root path is empty string and exported from a root - use ImportProject.',
-                        self.result);
+                    callback(new Error('Root path in json is empty string and exported from a root - ' +
+                        'use ImportProject.'), self.result);
                     return;
                 }
                 libraryRoot = self.activeNode;
             } else if (currentConfig.type === 'ImportProject') {
                 if (libObject.root.path !== '') {
-                    callback('Given root path is not empty string and not exported from a root node.', self.result);
+                    callback(new Error('Root path in json is not empty string and not exported from a root node - ' +
+                        'use Import/UpdateLibrary'), self.result);
                     return;
                 }
                 libraryRoot = self.rootNode;
@@ -220,13 +221,13 @@ define([
                 return;
             }
 
-            if (false) {
+            if (typeof Buffer !== 'undefined' && libOrBuf instanceof Buffer) {
                 try {
                     libOrBuf = String.fromCharCode.apply(null, new Uint8Array(libOrBuf));
-                    libObject = JSON.loads(libOrBuf);
+                    libObject = JSON.parse(libOrBuf);
                     callback(null, libObject);
                 } catch (err) {
-                    callback(new Error('Failed to parse file.'));
+                    callback(err);
                     return;
                 }
             } else {
