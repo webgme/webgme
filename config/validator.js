@@ -194,7 +194,6 @@ function validateConfig(configOrFileName) {
     // socketIO
     expectedKeys.push('socketIO');
     assertObject('config.socketIO', config.socketIO);
-    assertArray('config.socketIO.transports', config.socketIO.transports);
 
     // storage
     expectedKeys.push('storage');
