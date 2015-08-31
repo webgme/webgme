@@ -317,6 +317,17 @@ define([
             }
         };
 
+        /**
+         * If branchName is given and it does not exist, the project will be closed and callback resolved with an error.
+         * If branchName NOT given it will attempt the following in order and break if successful at any step:
+         *  1) Select the master if available.
+         *  2) Select any available branch.
+         *  3) Select the latest commit.
+         *  4) Close the project and resolve with error.
+         * @param {string} projectId
+         * @param {string} [branchName='master']
+         * @param {function} callback
+         */
         this.selectProject = function (projectId, branchName, callback) {
             if (callback === undefined && typeof branchName === 'function') {
                 callback = branchName;
@@ -362,17 +373,32 @@ define([
                     logger.debug('Picked "' + branchToOpen + '".');
                 }
 
-                ASSERT(branchToOpen, 'No branch available in project');
-
-                self.selectBranch(branchToOpen, null, function (err) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-                    logState('info', 'selectBranch');
-                    reLaunchUsers();
-                    callback(null);
-                });
+                if (branchToOpen) {
+                    self.selectBranch(branchToOpen, null, function (err) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+                        logState('info', 'selectBranch');
+                        reLaunchUsers();
+                        callback(null);
+                    });
+                } else {
+                    logger.warn('No branches available in project, will attempt to select latest commit.');
+                    self.getCommits(projectId, (new Date()).getTime(), 1, function (err, commitObjects) {
+                        if (err || commitObjects.length === 0) {
+                            logger.error(err);
+                            closeProject(projectId, function (err) {
+                                if (err) {
+                                    logger.error('closeProject after missing any commits failed with err', err);
+                                }
+                                callback(new Error('Project does not have any commits.'));
+                            });
+                            return;
+                        }
+                        self.selectCommit(commitObjects[0]._id, callback);
+                    });
+                }
             }
 
             if (state.project) {
