@@ -852,24 +852,20 @@ function StandAloneServer(gmeConfig) {
                 logger.error('worker/simpleResult err', err);
                 res.sendStatus(500);
             } else {
-                res.header('Content-Disposition', 'attachment;filename=\'' + filename + '\'');
+                res.header('Content-Disposition', 'attachment;filename=' + filename);
                 res.json(result);
             }
         });
     }
 
     __app.get('/worker/simpleResult/:resultId', function (req, res) {
-        var filename = 'simpleResult-' + req.params.resultId + '.json';
+        var filename = 'simpleResult-' + req.params.resultId;
         sendSimpleResult(res, req.params.resultId, filename);
     });
 
     // FIXME: filename should be in query string
     __app.get('/worker/simpleResult/:resultId/:filename', function (req, res) {
-        var filename = req.params.filename;
-        if (filename.indexOf('.json') === -1) {
-            filename += '.json';
-        }
-        sendSimpleResult(res, req.params.resultId, filename);
+        sendSimpleResult(res, req.params.resultId, req.params.filename);
     });
 
 

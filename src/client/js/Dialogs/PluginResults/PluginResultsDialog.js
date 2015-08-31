@@ -31,7 +31,7 @@ define(['js/util',
     //jscs:disable maximumLineLength
         RESULT_ARTIFACTS_BASE = $('<div class="artifacts collapse"><div class="artifacts-title">Generated artifacts</div><div class="artifacts-body"><ul></ul></div></div>'),
     //jscs:enable maximumLineLength
-        ARTIFACT_ENTRY_BASE = $('<li><a href="#" target="_blank">Loading...</a></li>'),
+        ARTIFACT_ENTRY_BASE = $('<li><a href="#" target="_self">Loading...</a></li>'),
         MESSAGE_PREFIX = 'Message #';
 
     PluginResultsDialog = function () {
