@@ -101,6 +101,10 @@ require.config({
         ],
 
         backbone: ['underscore'],
+        codemirror: [
+            'css!' + document.location.pathname + 'css/codemirror/codemirror.css',
+            'css!' + document.location.pathname + 'css/codemirror/codemirror.bootstrap.css'
+        ],
         'js/util': ['jquery'],
         'js/jquery.WebGME': ['bootstrap'],
         'jquery-dataTables': ['jquery'],
