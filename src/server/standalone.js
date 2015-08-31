@@ -24,6 +24,7 @@ var Path = require('path'),
     Http = require('http'),
     Https = require('https'),
     URL = require('url'),
+    contentDisposition = require('content-disposition'),
 
     Mongo = require('./storage/mongo'),
     Storage = require('./storage/safestorage'),
@@ -501,8 +502,8 @@ function StandAloneServer(gmeConfig) {
         __sessionStore,
         __workerManager,
         __users = {},
-        //__googleAuthenticationSet = false,
-        //__canCheckToken = true,
+    //__googleAuthenticationSet = false,
+    //__canCheckToken = true,
         __httpServer = null,
         __logoutUrl = gmeConfig.authentication.logOutUrl || '/',
         __baseDir = requireJS.s.contexts._.config.baseUrl,// TODO: this is ugly
@@ -852,20 +853,24 @@ function StandAloneServer(gmeConfig) {
                 logger.error('worker/simpleResult err', err);
                 res.sendStatus(500);
             } else {
-                res.header('Content-Disposition', 'attachment;filename=' + filename);
+                res.header('Content-Disposition', contentDisposition(filename));
                 res.json(result);
             }
         });
     }
 
     __app.get('/worker/simpleResult/:resultId', function (req, res) {
-        var filename = 'simpleResult-' + req.params.resultId;
+        var filename = 'simpleResult-' + req.params.resultId + '.json';
         sendSimpleResult(res, req.params.resultId, filename);
     });
 
     // FIXME: filename should be in query string
     __app.get('/worker/simpleResult/:resultId/:filename', function (req, res) {
-        sendSimpleResult(res, req.params.resultId, req.params.filename);
+        var filename = req.params.filename;
+        if (filename.indexOf('.json') === -1) {
+            filename += '.json';
+        }
+        sendSimpleResult(res, req.params.resultId, filename);
     });
 
 

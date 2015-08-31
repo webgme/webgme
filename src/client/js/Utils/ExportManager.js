@@ -7,10 +7,12 @@
 
 define(['jquery',
     'js/Constants',
-    'js/NodePropertyNames'
+    'js/NodePropertyNames',
+    'js/Utils/SaveToDisk'
 ], function (_jquery,
              CONSTANTS,
-             nodePropertyNames) {
+             nodePropertyNames,
+             saveToDisk) {
 
     'use strict';
 
@@ -30,7 +32,7 @@ define(['jquery',
             objIDs.length > 0) {
             client.getExportItemsUrl(objIDs, fileName, function (err, url) {
                 if (!err) {
-                    window.open(url);
+                    saveToDisk(url);
                 }
             });
         }
@@ -43,7 +45,7 @@ define(['jquery',
             objIDs.length > 0) {
             client.getExternalInterpreterConfigUrlAsync(objIDs, fileName, function (err, url) {
                 if (!err) {
-                    window.open(url);
+                    saveToDisk(url);
                 }
             });
         }
@@ -56,11 +58,11 @@ define(['jquery',
         if (typeof objID === 'string') {
             object = client.getNode(objID);
             fileName = client.getActiveProjectId() + '_' + client.getActiveBranchName() + '_' +
-                           object.getAttribute('name') + '_lib';
+                object.getAttribute('name') + '_lib';
 
             client.getExportLibraryUrl(objID, fileName, function (err, url) {
                 if (!err) {
-                    window.open(url);
+                    saveToDisk(url);
                 }
             });
         }
