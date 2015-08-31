@@ -18,7 +18,7 @@ define([
         INPUT_FILE_UPLOAD = $('<input type="file" />'),
         //MAX_FILE_SIZE = 100000000,
         ASSET_WIDGET_BASE = $('<div class="asset-widget" />'),
-        ASSET_LINK = $('<a href="" target="_blank"/>');
+        ASSET_LINK = $('<a href="" target="_self"/>');
 
     AssetWidget = function (propertyDesc) {
         AssetWidget.superclass.call(this, propertyDesc);

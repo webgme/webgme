@@ -16,7 +16,8 @@ define([
     'common/storage/util',
     'isis-ui-components/simpleDialog/simpleDialog',
     'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html',
-    'text!js/Dialogs/Projects/templates/TransferDialogTemplate.html'
+    'text!js/Dialogs/Projects/templates/TransferDialogTemplate.html',
+    'js/Utils/SaveToDisk'
 ], function (Logger,
              CONSTANTS,
              ng,
@@ -27,7 +28,8 @@ define([
              StorageUtil,
              ConfirmDialog,
              DeleteDialogTemplate,
-             TransferDialogTemplate) {
+             TransferDialogTemplate,
+             saveToDisk) {
     'use strict';
 
 
@@ -446,7 +448,7 @@ define([
                 transferProjectModal = self.$simpleDialog.open({
                     dialogTitle: 'Transfer',
                     dialogContentTemplate: 'TransferDialogTemplate.html',
-                    controller: function ( $scope, $modalInstance, dialogTitle, dialogContentTemplate) {
+                    controller: function ($scope, $modalInstance, dialogTitle, dialogContentTemplate) {
 
                         $scope.dialogTitle = dialogTitle;
                         $scope.dialogContentTemplate = dialogContentTemplate;
@@ -468,7 +470,7 @@ define([
                         };
 
                         $scope.cancel = function () {
-                            $modalInstance.dismiss( 'cancel' );
+                            $modalInstance.dismiss('cancel');
                         };
 
                         $scope.setNewOwnerId = function (ownerId) {
@@ -658,7 +660,7 @@ define([
                 self.gmeClient.getExportProjectBranchUrl(data.projectId,
                     data.branchId, data.projectId + '_' + data.branchId, function (err, url) {
                         if (!err && url) {
-                            window.open(url);
+                            saveToDisk(url);
                         } else {
                             self.logger.error('Failed to get project export url for', data);
                         }
