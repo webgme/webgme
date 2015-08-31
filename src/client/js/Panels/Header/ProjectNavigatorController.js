@@ -190,17 +190,37 @@ define([
                 self.gmeClient.watchDatabase(function (emitter, data) {
                     self.logger.debug('watchDatabase event', data);
                     if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_CREATED) {
+                        //TODO: This call should get the rights..
                         self.gmeClient.getBranches(data.projectId, function (err, branches) {
                             if (err) {
-                                self.logger.error('Could not get branches for newlycreated project ' + data.projectId);
-                                self.logger.error(err);
-                            } else {
-                                self.addProject(data.projectId); //TODO: Should include rights..
-
-                                Object.keys(branches).map(function (branchId) {
-                                    self.addBranch(data.projectId, branchId);
-                                });
+                                if (err.message.indexOf('Not authorized to read project') > -1) {
+                                    // This is anticipated when someone else created the project.
+                                    self.logger.debug(err.message);
+                                } else {
+                                    self.logger.error('Could not get branches for newly created project ' +
+                                        data.projectId);
+                                    self.logger.error(err);
+                                }
+                                return;
                             }
+                            self.logger.debug('Got branches before joining room:', Object.keys(branches));
+                            //TODO: Should include rights, for now complete rights are assumed.
+                            self.addProject(data.projectId, null, true, function (err) {
+                                if (err) {
+                                    self.logger.error(err);
+                                    return;
+                                }
+                                self.gmeClient.getBranches(data.projectId, function (err, branches) {
+                                    if (err) {
+                                        self.logger.error(err);
+                                        return;
+                                    }
+                                    self.logger.debug('Got branches after joining room:', Object.keys(branches));
+                                    Object.keys(branches).map(function (branchId) {
+                                        self.addBranch(data.projectId, branchId);
+                                    });
+                                });
+                            });
                         });
                     } else if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_DELETED) {
                         self.removeProject(data.projectId);
@@ -342,7 +362,7 @@ define([
         });
     };
 
-    ProjectNavigatorController.prototype.addProject = function (projectId, rights, noUpdate) {
+    ProjectNavigatorController.prototype.addProject = function (projectId, rights, noUpdate, callback) {
         var self = this,
             i,
             showHistory,
@@ -573,9 +593,10 @@ define([
         };
 
         if (self.gmeClient) {
-            self.gmeClient.watchProject(projectId, self.projects[projectId]._watcher);
+            self.gmeClient.watchProject(projectId, self.projects[projectId]._watcher, callback);
         } else {
             self.dummyBranchGenerator('Branch', 10, projectId);
+            callback(null);
         }
 
         for (i = 0; i < self.root.menu.length; i += 1) {
