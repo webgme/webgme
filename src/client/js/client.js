@@ -396,7 +396,20 @@ define([
                             });
                             return;
                         }
-                        self.selectCommit(commitObjects[0]._id, callback);
+                        self.selectCommit(commitObjects[0]._id, function (err) {
+                            if (err) {
+                                logger.error(err);
+                                closeProject(projectId, function (err) {
+                                    if (err) {
+                                        logger.error('closeProject after missing any commits failed with err', err);
+                                    }
+                                    callback(new Error('Failed selecting commit when opening project.'));
+                                });
+                                return;
+                            }
+                            reLaunchUsers();
+                            callback(null);
+                        });
                     });
                 }
             }
