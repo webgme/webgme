@@ -11,13 +11,17 @@
 define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CONSTANTS) {
     'use strict';
     function ProjectCache(storage, projectId, mainLogger, gmeConfig) {
-        var missing = {},
+        var self = this,
+            missing = {},
             backup = {},
             cache = {},
             logger = mainLogger.fork('ProjectCache'),
             cacheSize = 0;
 
         logger.debug('ctor', projectId);
+
+        this.queuedPersists = {};
+
         function cacheInsert(key, obj) {
             ASSERT(typeof cache[key] === 'undefined' && obj[CONSTANTS.MONGO_ID] === key);
             logger.debug('cacheInsert', key);
@@ -33,6 +37,7 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
         }
 
         this.loadObject = function (key, callback) {
+            var commitId;
             ASSERT(typeof key === 'string' && typeof callback === 'function');
             logger.debug('loadObject', {metadata: key});
 
@@ -40,33 +45,44 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
             if (typeof obj === 'undefined') {
                 obj = backup[key];
                 if (typeof obj === 'undefined') {
-                    obj = missing[key];
-                    if (typeof obj === 'undefined') {
-                        obj = [callback];
-                        missing[key] = obj;
-                        logger.debug('object set to be loaded from storage');
-                        storage.loadObject(projectId, key, function (err, obj2) {
-                            ASSERT(typeof obj2 === 'object' || typeof obj2 === 'undefined');
-
-                            if (obj.length !== 0) {
-                                ASSERT(missing[key] === obj);
-
-                                delete missing[key];
-                                if (!err && obj2) {
-                                    cacheInsert(key, obj2);
-                                }
-
-                                var cb;
-                                while ((cb = obj.pop())) {
-                                    cb(err, obj2);
-                                }
-                            }
-                        });
-                    } else {
-                        logger.debug('object was already queued to be loaded');
-                        obj.push(callback);
+                    for (commitId in self.queuedPersists) {
+                        if (self.queuedPersists.hasOwnProperty(commitId) && self.queuedPersists[commitId][key]) {
+                            obj = self.queuedPersists[commitId][key];
+                            break;
+                        }
                     }
-                    return;
+                    if (typeof obj === 'undefined') {
+                        obj = missing[key];
+                        if (typeof obj === 'undefined') {
+                            obj = [callback];
+                            missing[key] = obj;
+                            logger.debug('object set to be loaded from storage');
+                            storage.loadObject(projectId, key, function (err, obj2) {
+                                ASSERT(typeof obj2 === 'object' || typeof obj2 === 'undefined');
+
+                                if (obj.length !== 0) {
+                                    ASSERT(missing[key] === obj);
+
+                                    delete missing[key];
+                                    if (!err && obj2) {
+                                        cacheInsert(key, obj2);
+                                    }
+
+                                    var cb;
+                                    while ((cb = obj.pop())) {
+                                        cb(err, obj2);
+                                    }
+                                }
+                            });
+                        } else {
+                            logger.debug('object was already queued to be loaded');
+                            obj.push(callback);
+                        }
+                        return;
+                    } else {
+                        logger.debug('object was erased from cache and backup but present in queuedPersists');
+                        cacheInsert(key, obj);
+                    }
                 } else {
                     logger.debug('object was in backup');
                     cacheInsert(key, obj);
