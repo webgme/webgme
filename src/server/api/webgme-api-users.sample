@@ -1,0 +1,30 @@
+[
+    {
+        "_id": "asdf",
+        "email": "a@email.com",
+        "canCreate": true,
+        "projects": {
+            "aaaa": {
+                "read": true,
+                "write": true,
+                "delete": true
+            }
+        },
+        "orgs": [ ]
+    },
+    {
+        "_id": "user",
+        "email": "user@example.com",
+        "canCreate": null,
+        "projects": { },
+        "orgs": [ ]
+    },
+    {
+        "_id": "demo",
+        "email": "a@example.com",
+        "canCreate": false,
+        "projects": { },
+        "orgs": [ ],
+        "siteAdmin": false
+    }
+]

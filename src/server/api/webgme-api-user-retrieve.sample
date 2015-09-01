@@ -1,0 +1,8 @@
+{
+    "_id": "demo",
+    "email": "a@example.com",
+    "canCreate": true,
+    "projects": { },
+    "orgs": [ ],
+    "siteAdmin": false
+}

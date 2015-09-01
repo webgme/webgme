@@ -1,0 +1,117 @@
+#%RAML 0.8
+title: WebGME API
+version: 1.0
+
+resourceTypes:
+  - collection:
+      description: Collection of available <<resourcePathName>> in WebGME.
+      get:
+        description: Get a list of <<resourcePathName>>.
+        responses:
+          200:
+            body:
+              application/json:
+                example: |
+                  <<exampleCollection>>
+      post:
+        description: |
+          Add a new <<resourcePathName|!singularize>> to WebGME.
+        body:
+          application/json:
+            schema: <<resourcePathName|!singularize>>
+            example: |
+              <<exampleItem>>
+        responses:
+          200:
+            body:
+              application/json:
+                example: |
+                  { "message": "The <<resourcePathName|!singularize>> has been properly entered" }
+  - collection-item:
+      description: Entity representing a <<resourcePathName|!singularize>>
+      get:
+        description: |
+          Get the <<resourcePathName|!singularize>>
+          with <<resourcePathName|!singularize>>Id =
+          {<<resourcePathName|!singularize>>Id}
+        responses:
+          200:
+            body:
+              application/json:
+                example: |
+                  <<exampleItem>>
+          404:
+            body:
+              application/json:
+                example: |
+                  {"message": "<<resourcePathName|!singularize>> not found" }
+
+
+/:
+  get:
+    description: WebGME API entry point
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              {
+                "current_user_url": "http://localhost:8888/api/user",
+                "organization_url": "http://localhost:8888/api/orgs/{org}",
+                "project_url": "http://localhost:8888/api/projects/{owner}/{project}",
+                "user_url": "http://localhost:8888/api/users/{user}",
+                "documentation_url": "http://localhost:8888/developer/api"
+              }
+
+/user:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-user-retrieve.sample
+
+
+/users:
+  type:
+    collection:
+      exampleCollection: !include webgme-api-users.sample
+      exampleItem: !include webgme-api-user-new.sample
+  
+  /{username}:
+    type:
+      collection-item:
+        exampleItem: !include webgme-api-user-retrieve.sample   
+
+/orgs:
+  /{orgId}:
+    
+    /users/{username}:
+    
+    /admins/{username}:
+
+/projects:
+  type:
+    collection:
+      exampleCollection: !include webgme-api-projects.sample
+      exampleItem: !include webgme-api-project-new.sample
+  
+  /{ownerId}/{projectName}:
+    type:
+      collection-item:
+        exampleItem: !include webgme-api-project-retrieve.sample
+    
+    /commits:
+      get:
+    
+    /compare/{branchOrCommitA}...{branchOrCommitB}:
+      get:
+      
+      
+    /branches:
+      
+      /{branchId}:
+        
+      
+      
+      

@@ -20,12 +20,9 @@ function createAPI(app, mountPath, middlewareOpts) {
         router = express.Router(),
 
         Q = require('q'),
-        aglio = require('aglio'),// used to generate API docs from blue print Readme.md
         htmlDoc,
         htmlDocDeferred = Q.defer(),
-        fs = require('fs'),
-        blueprint = fs.readFileSync(__dirname + '/Readme.md', {encoding: 'utf8'}),
-        template = 'default',
+        path = require('path'),
         apiDocumentationMountPoint = '/developer/api',
 
         logger = middlewareOpts.logger.fork('api'),
@@ -37,26 +34,28 @@ function createAPI(app, mountPath, middlewareOpts) {
         StorageUtil = webgme.requirejs('common/storage/util'),
 
         versionedAPIPath = mountPath + '/v1',
-        latestAPIPath = mountPath;
+        latestAPIPath = mountPath,
+
+        raml2html,
+        configWithDefaultTemplates;
 
     if (global.TESTING) {
         htmlDocDeferred.resolve();
     } else {
         // FIXME: this does not work with tests well.
-        // generate api documentation based on blueprint when server starts
-        aglio.render(blueprint, template, function (err, html, warnings) {
-            if (err) {
-                logger.error(err);
-                htmlDocDeferred.reject(err);
-                return;
-            }
-            if (warnings && warnings.length) {
-                logger.warn('aglio', {metadata: warnings});
-            }
+        // generate api documentation based on raml file when server starts
+        raml2html = require('raml2html');
+        configWithDefaultTemplates = raml2html.getDefaultConfig();
+        //var configWithCustomTemplates = raml2html.getDefaultConfig('my-custom-template.nunjucks', __dirname);
 
-            htmlDoc = html;
-            logger.debug('html doc is ready: ' + apiDocumentationMountPoint);
+        // source can either be a filename, url, file contents (string) or parsed RAML object
+        raml2html.render(path.join(__dirname, 'webgme-api.raml'), configWithDefaultTemplates).then(function (result) {
+            // Save the result to a file or do something else with the result
+            htmlDoc = result;
             htmlDocDeferred.resolve();
+        }, function (error) {
+            // Output error
+            htmlDocDeferred.reject(error);
         });
     }
 
