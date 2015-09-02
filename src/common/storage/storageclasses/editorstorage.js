@@ -21,9 +21,8 @@ define([
     'common/storage/project/project',
     'common/storage/project/branch',
     'common/util/assert',
-    'common/util/key',
-    'common/util/guid'
-], function (StorageObjectLoaders, CONSTANTS, Project, Branch, ASSERT, GENKEY, GUID) {
+    'common/util/key'
+], function (StorageObjectLoaders, CONSTANTS, Project, Branch, ASSERT, GENKEY) {
     'use strict';
 
     /**
@@ -359,7 +358,7 @@ define([
 
             if (project) {
                 project.insertObject(commitData.commitObject);
-                commitId = GUID();
+                commitId = commitData.commitObject[CONSTANTS.MONGO_ID];
 
                 commitCallback = function commitCallback() {
                     delete project.projectCache.queuedPersists[commitId];
@@ -643,6 +642,7 @@ define([
                                                 self._pushNextQueuedCommit(projectId, branchName);
                                             }
                                         }
+
                                         function dispatchForked() {
                                             result = {status: CONSTANTS.FORKED, hash: branchHash};
 
@@ -665,7 +665,8 @@ define([
                                         }
                                     })
                                     .catch(function (err) {
-                                        if (err.message.indexOf('Commit object does not exist [' + queuedCommitHash) > -1) {
+                                        if (err.message.indexOf('Commit object does not exist [' +
+                                                queuedCommitHash) > -1) {
                                             // Commit never made it to the server - push it.
                                             logger.debug('First queued commit never made it to the server. push...');
                                             self._pushNextQueuedCommit(projectId, branchName);
