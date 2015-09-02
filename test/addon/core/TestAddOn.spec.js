@@ -84,9 +84,6 @@ describe('TestAddOn', function () {
                 return safeStorage.openDatabase();
             })
             .then(function () {
-                return safeStorage.deleteProject({projectId: projectId});
-            })
-            .then(function () {
                 return testFixture.importProject(safeStorage, {
                     projectName: projectName,
                     logger: logger.fork('import'),
@@ -98,6 +95,9 @@ describe('TestAddOn', function () {
             })
             .then(function (result) {
                 importResult = result;
+                return safeStorage.closeDatabase();
+            })
+            .then(function () {
                 server = WebGME.standaloneServer(gmeConfig);
                 serverBaseUrl = server.getUrl();
                 return Q.ninvoke(server, 'start');
