@@ -5,7 +5,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/assert'], function (ASSERT) {
+define(['common/util/assert', 'q'], function (ASSERT, Q) {
 
     'use strict';
     var _nodes = {},
@@ -29,6 +29,7 @@ define(['common/util/assert'], function (ASSERT) {
     }
 
     function exportLibrary(core, libraryRoot, callback) {
+        var deferred = Q.defer();
         //initialization
         _core = core;
         _nodes = {};
@@ -40,7 +41,8 @@ define(['common/util/assert'], function (ASSERT) {
         //loading all library element
         gatherNodesSlowly(libraryRoot, function (err) {
             if (err) {
-                return callback(err);
+                deferred.reject(err);
+                return;
             }
 
             _guidKeys = _guidKeys.sort();
@@ -65,9 +67,10 @@ define(['common/util/assert'], function (ASSERT) {
             //we export MetaSheet info only if not the whole project is exported!!!
             _export.metaSheets = core.getParent(libraryRoot) ? getMetaSheetInfo(_core.getRoot(libraryRoot)) : {};
 
-            callback(null, _export);
-
+            deferred.resolve(_export);
         });
+
+        return deferred.promise.nodeify(callback);
     }
 
     function getMetaSheetInfo(root) {
@@ -547,6 +550,7 @@ define(['common/util/assert'], function (ASSERT) {
     }
 
     function importLibrary(core, originLibraryRoot, updatedLibraryJson, callback) {
+        var deferred = Q.defer();
         _core = core;
         _import = updatedLibraryJson;
         _newNodeGuids = [];
@@ -558,13 +562,15 @@ define(['common/util/assert'], function (ASSERT) {
         exportLibrary(core, originLibraryRoot, function (err) {
             //we do not need the returned json object as that is stored in our global _export variable
             if (err) {
-                return callback(err);
+                deferred.reject(err);
+                return;
             }
 
             //now we will search for the bases of the import and load them
             loadImportBases(_import.bases, _core.getRoot(originLibraryRoot), function (err) {
                 if (err) {
-                    return callback(err);
+                    deferred.reject(err);
+                    return;
                 }
 
                 //now we fill the insert/update/remove lists of GUIDs
@@ -627,9 +633,11 @@ define(['common/util/assert'], function (ASSERT) {
                 //after everything is done we try to synchronize the metaSheet info
                 importMetaSheetInfo(_core.getRoot(originLibraryRoot));
 
-                callback(null, _log);
+                deferred.resolve(_log);
             });
         });
+
+        return deferred.promise.nodeify(callback);
     }
 
     function synchronizeRoots(oldRoot, newGuid) {
