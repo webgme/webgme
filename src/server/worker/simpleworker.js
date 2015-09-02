@@ -416,28 +416,41 @@ function _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, seedNam
             });
             rootNode = core.createNode({parent: null, base: null});
 
-            Serialization.import(core, rootNode, jsonSeed)
-                .then(function () {
-                    var persisted = core.persist(rootNode);
+            Serialization.import(core, rootNode, jsonSeed, function (err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                var persisted = core.persist(rootNode);
 
-                    return project.makeCommit(null, [], persisted.rootHash, persisted.objects,
-                        'seeding project[' + seedName + ']');
-                })
-                .then(function (commitResult) {
-                    logger.debug('seeding project, commitResult:', {metadata: commitResult});
-                    return project.createBranch('master', commitResult.hash);
-                })
-                .then(function () {
-                    logger.info('seeding [' + seedName + '] to [' + project.projectId + '] completed');
-                    return {projectId: projectId};
-                })
-                .nodeify(callback);
+                project.makeCommit(null, [], persisted.rootHash, persisted.objects, 'seeding project[' + seedName + ']')
+                    .then(function (commitResult) {
+                        logger.debug('seeding project, commitResult:', {metadata: commitResult});
+                        return project.createBranch('master', commitResult.hash);
+                    })
+                    .then(function () {
+                        logger.info('seeding [' + seedName + '] to [' + project.projectId + '] completed');
+                        callback(null, {projectId: projectId});
+                    })
+                    .catch(callback);
+            });
         });
     });
 }
 
-function seedProject(parameters, callback) {
-    var storage = getConnectedStorage(parameters.webGMESessionId),
+/**
+ *
+ * @param {string} webGMESessionId
+ * @param {string} projectName - Name of new project.
+ * @param {string} ownerId - Owner of new project.
+ * @param {object} parameters
+ * @param {string} parameters.seedName - Name of seed, file or projectId.
+ * @param {string} parameters.type - 'db' or 'file'
+ * @param {string} [parameters.seedBranch='master'] - If db - optional name of branch.
+ * @param [function} callback
+ */
+function seedProject(webGMESessionId, projectName, ownerId, parameters, callback) {
+    var storage = getConnectedStorage(webGMESessionId),
         finish = function (err, result) {
             storage.close(function (closeErr) {
                 callback(err || closeErr, result);
@@ -457,8 +470,7 @@ function seedProject(parameters, callback) {
                 if (jsonSeed === null) {
                     finish(new Error('unknown file seed [' + parameters.seedName + ']'));
                 } else {
-                    _createProjectFromSeed(storage, parameters.projectName, parameters.ownerId,
-                        jsonSeed, parameters.seedName, finish);
+                    _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, parameters.seedName, finish);
                 }
             } else if (parameters.type === 'db') {
                 logger.debug('seedProject - seeding from existing project:', parameters.seedName);
@@ -467,8 +479,7 @@ function seedProject(parameters, callback) {
                         logger.error('Failed to get seed from existing project', {metadata: err});
                         finish(err);
                     } else {
-                        _createProjectFromSeed(storage, parameters.projectName, parameters.ownerId,
-                            jsonSeed_, parameters.seedName, finish);
+                        _createProjectFromSeed(storage, projectName, ownerId, jsonSeed_, parameters.seedName, finish);
                     }
                 });
             } else {
@@ -623,7 +634,7 @@ process.on('message', function (parameters) {
         logger.debug('resultHandling invoked');
 
         if (err) {
-            logger.error('resultHandling called with error', err);
+            logger.error('resultHandling called with error', {metadata: err});
             err = err instanceof Error ? err : new Error(err);
         }
 
@@ -752,9 +763,19 @@ process.on('message', function (parameters) {
             });
         }
     } else if (parameters.command === CONSTANT.workerCommands.seedProject) {
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-        parameters.type = parameters.type || 'db';
-        seedProject(parameters, resultHandling);
+        if (typeof parameters.projectName === 'string') {
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+            parameters.type = parameters.type || 'db';
+            seedProject(parameters.webGMESessionId, parameters.projectName, parameters.ownerId, parameters,
+                resultHandling);
+        } else {
+            initResult();
+            safeSend({
+                pid: process.pid,
+                type: CONSTANT.msgTypes.request,
+                error: 'invalid parameters: ' + JSON.stringify(parameters)
+            });
+        }
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStart) {
         if (gmeConfig.addOn.enable === true) {
             initConnectedWorker(parameters.webGMESessionId, parameters.userId, parameters.workerName,

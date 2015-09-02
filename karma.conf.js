@@ -83,11 +83,11 @@ var testFixture = require('./test/_globals.js'),
                                 );
                             }
                         }
-                        return Q.all(createBranches);
+                        return Q.allDone(createBranches);
                     });
             }
 
-            return Q.all(PROJECTS_TO_IMPORT.map(importProject));
+            return Q.allDone(PROJECTS_TO_IMPORT.map(importProject));
         })
         .then(function () {
             // Close the storage
