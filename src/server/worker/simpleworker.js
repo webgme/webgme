@@ -753,6 +753,7 @@ process.on('message', function (parameters) {
         }
     } else if (parameters.command === CONSTANT.workerCommands.seedProject) {
         safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+        parameters.type = parameters.type || 'db';
         seedProject(parameters, resultHandling);
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStart) {
         if (gmeConfig.addOn.enable === true) {
