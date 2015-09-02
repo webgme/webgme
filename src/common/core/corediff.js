@@ -225,7 +225,7 @@ define(['common/util/canon',
                             for (j = 0; j < names.length; j++) {
                                 if (ovr[paths[i]][names[j]] === '/_nullptr') {
                                     data[paths[i]][names[j]] = null;
-                                } else if (names[j].slice(-4) !== '-inv' &&
+                                } else if (names[j].slice(-4) !== '-inv' && names[j].indexOf('_') === -1 &&
                                     ovr[paths[i]][names[j]].indexOf('_') === -1) {
 
                                     data[paths[i]][names[j]] = _core.joinPaths(base, ovr[paths[i]][names[j]]);

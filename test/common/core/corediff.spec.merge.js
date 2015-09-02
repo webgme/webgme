@@ -29,9 +29,12 @@ describe('corediff-merge', function () {
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
                 storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
-                return storage.openDatabase();
             })
             .nodeify(done);
+    });
+
+    after(function (done) {
+        gmeAuth.unload(done);
     });
 
 
@@ -72,9 +75,6 @@ describe('corediff-merge', function () {
 
         before(function (done) {
             storage.openDatabase()
-                .then(function () {
-                    return storage.deleteProject({projectId: projectId});
-                })
                 .then(function () {
                     return testFixture.importProject(storage, {
                         projectSeed: 'test/common/core/corediff/base002.json',
@@ -162,11 +162,13 @@ describe('corediff-merge', function () {
                         return;
                     }
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
-                        storage.getCommonAncestorCommit({projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+                        params = {projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash};
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
@@ -255,11 +257,14 @@ describe('corediff-merge', function () {
                         return;
                     }
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
-                        storage.getCommonAncestorCommit({projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+
+                        params = {projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash};
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
@@ -341,11 +346,13 @@ describe('corediff-merge', function () {
                         return;
                     }
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
-                        storage.getCommonAncestorCommit({projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+                        params = {projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash};
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
@@ -435,14 +442,20 @@ describe('corediff-merge', function () {
                     (core.getAttribute(rootNode, 'changeA') === undefined).should.be.true;
                     (core.getAttribute(rootNode, 'changeB') === undefined).should.be.true;
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
+                        params = {
+                            projectId: projectId,
+                            commitA: changeA.commitHash,
+                            commitB: changeB.commitHash
+                        };
                         core.getAttribute(changeB.root, 'changeB').should.be.true;
                         (core.getAttribute(rootNode, 'changeA') === undefined).should.be.true;
                         (core.getAttribute(rootNode, 'changeB') === undefined).should.be.true;
-                        storage.getCommonAncestorCommit({projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
@@ -575,7 +588,8 @@ describe('corediff-merge', function () {
                                         diff[579542227][2088994530].reg.position.x.should.be.equal(300);
                                         diff[579542227][2088994530].reg.position.y.should.be.equal(300);
                                         changeB.computedDiff = diff;
-                                        var conflict = core.tryToConcatChanges(changeA.computedDiff, changeB.computedDiff);
+                                        var conflict = core.tryToConcatChanges(changeA.computedDiff,
+                                            changeB.computedDiff);
                                         conflict.items.should.be.empty;
 
                                         //apply merged diff to base
@@ -642,11 +656,13 @@ describe('corediff-merge', function () {
                         return;
                     }
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
-                        storage.getCommonAncestorCommit({projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+                        params = {projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash};
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
@@ -731,11 +747,13 @@ describe('corediff-merge', function () {
                         return;
                     }
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
-                        storage.getCommonAncestorCommit({projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+                        params = {projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash};
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
@@ -819,11 +837,13 @@ describe('corediff-merge', function () {
                         return;
                     }
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
-                        storage.getCommonAncestorCommit({projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+                        params = {projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash};
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
