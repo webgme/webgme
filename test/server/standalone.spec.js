@@ -638,10 +638,15 @@ describe('standalone server', function () {
                             socket.disconnect();
                         });
                 })
-                .then(function (resId) {
+                .then(function (result) {
                     var deferred = Q.defer();
 
-                    agent.get(server.getUrl() + '/worker/simpleResult/' + resId + '/exported_branch')
+                    expect(typeof result).to.equal('object');
+                    expect(result).to.have.property('file');
+                    expect(typeof result.file.hash).to.equal('string');
+                    expect(result.file.url).to.include(server.getUrl());
+
+                    agent.get(result.file.url)
                         .end(function (err, res) {
                             expect(err).to.equal(null);
                             expect(res.status).to.equal(200);
@@ -672,10 +677,15 @@ describe('standalone server', function () {
                             socket.disconnect();
                         });
                 })
-                .then(function (resId) {
+                .then(function (result) {
                     var deferred = Q.defer();
 
-                    agent.get(server.getUrl() + '/worker/simpleResult/' + resId)
+                    expect(typeof result).to.equal('object');
+                    expect(result).to.have.property('file');
+                    expect(typeof result.file.hash).to.equal('string');
+                    expect(result.file.url).to.include(server.getUrl());
+
+                    agent.get(result.file.url)
                         .end(function (err, res) {
                             expect(err).to.equal(null);
                             expect(res.status).to.equal(200);

@@ -187,14 +187,14 @@ describe('ServerWorkerManager', function () {
                 webGMESessionId: webGMESessionId,
                 projectId: projectId,
                 path: '/323573539'
-            }, function (err, resultId) {
+            }, function (err, result) {
                 expect(err).to.equal(null);
 
-                swm.result(resultId, function (err, result) {
-                    expect(err).to.equal(null);
-                    expect(result).to.include.keys('bases', 'root', 'relids', 'containment', 'nodes', 'metaSheets');
-                    next();
-                });
+                expect(typeof result).to.equal('object');
+                expect(result).to.have.property('file');
+                expect(typeof result.file.hash).to.equal('string');
+                expect(result.file.url).to.include('http');
+                next();
             });
         }
 

@@ -8,7 +8,7 @@
 var testFixture = require('../../_globals.js');
 
 
-describe('Simple worker', function () {
+describe.skip('Simple worker', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,

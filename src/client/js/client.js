@@ -1554,13 +1554,11 @@ define([
         this.seedProject = function (parameters, callback) {
             logger.debug('seeding project', parameters);
             parameters.command = 'seedProject';
-            storage.simpleRequest(parameters, function (err, id) {
+            storage.simpleRequest(parameters, function (err, result) {
                 if (err) {
-                    callback(err);
-                    return;
+                    logger.error(err);
                 }
-
-                storage.simpleResult(id, callback);
+                callback(err, result);
             });
         };
 
@@ -1573,14 +1571,20 @@ define([
             command.path = ROOT_PATH;
             logger.debug('getExportProjectBranchUrl, command', command);
             if (command.projectId && command.branchName) {
-                storage.simpleRequest(command, function (err, resId) {
-                    var resultUrl = window.location.origin + '/worker/simpleResult/' + resId + '/' + fileName;
-                    logger.debug('getExportProjectBranchUrl', resultUrl);
+                storage.simpleRequest(command, function (err, result) {
+                    //var resultUrl = window.location.origin + '/worker/simpleResult/' + resId + '/' + fileName;
+                    //logger.debug('getExportProjectBranchUrl', resultUrl);
+                    //if (err) {
+                    //    logger.error('getExportProjectBranchUrl failed with error', err);
+                    //    callback(err);
+                    //} else {
+                    //    callback(null, resultUrl);
+                    //}
                     if (err) {
                         logger.error('getExportProjectBranchUrl failed with error', err);
                         callback(err);
                     } else {
-                        callback(null, resultUrl);
+                        callback(null, result.file.url);
                     }
                 });
             } else {
@@ -1589,23 +1593,23 @@ define([
         };
 
         //dump nodes
-        this.getExportItemsUrl = function (paths, filename, callback) {
-            storage.simpleRequest({
-                    command: 'dumpMoreNodes',
-                    projectId: state.project.projectId,
-                    hash: state.rootHash,
-                    nodes: paths
-                },
-                function (err, resId) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        callback(null,
-                            window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
-                            resId + '/' + filename);
-                    }
-                });
-        };
+        //this.getExportItemsUrl = function (paths, filename, callback) {
+        //    storage.simpleRequest({
+        //            command: 'dumpMoreNodes',
+        //            projectId: state.project.projectId,
+        //            hash: state.rootHash,
+        //            nodes: paths
+        //        },
+        //        function (err, resId) {
+        //            if (err) {
+        //                callback(err);
+        //            } else {
+        //                callback(null,
+        //                    window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
+        //                    resId + '/' + filename);
+        //            }
+        //        });
+        //};
 
         //library functions
         this.getExportLibraryUrl = function (libraryRootPath, filename, callback) {
@@ -1615,14 +1619,12 @@ define([
             command.hash = state.rootHash;
             command.path = libraryRootPath;
             if (command.projectId && command.hash) {
-                storage.simpleRequest(command, function (err, resId) {
+                storage.simpleRequest(command, function (err, result) {
                     if (err) {
                         logger.error('getExportLibraryUrl failed with error', err);
                         callback(err);
                     } else {
-                        callback(null,
-                            window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
-                            resId + '/' + filename);
+                        callback(null, result.file.url);
                     }
                 });
             } else {
@@ -1749,11 +1751,12 @@ define([
                 mine: mine,
                 theirs: theirs
             };
-            storage.simpleRequest(command, function (err, resId) {
+            storage.simpleRequest(command, function (err, result) {
                 if (err) {
+                    logger.error('autoMerge failed with error', err);
                     callback(err);
                 } else {
-                    storage.simpleResult(resId, callback);
+                    callback(null, result);
                 }
             });
         };
@@ -1763,11 +1766,12 @@ define([
                 command: 'resolve',
                 partial: mergeResult
             };
-            storage.simpleRequest(command, function (err, resId) {
+            storage.simpleRequest(command, function (err, result) {
                 if (err) {
+                    logger.error('resolve failed with error', err);
                     callback(err);
                 } else {
-                    storage.simpleResult(resId, callback);
+                    callback(null, result);
                 }
             });
         };
