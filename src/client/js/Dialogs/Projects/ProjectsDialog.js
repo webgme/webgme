@@ -9,6 +9,7 @@
 define([
     'angular',
     'js/logger',
+    'js/Constants',
     'js/Loader/LoaderCircles',
     'js/Utils/GMEConcepts',
     'js/Dialogs/Import/ImportDialog',
@@ -21,7 +22,7 @@ define([
 
     'css!./styles/ProjectsDialog.css'
 
-], function (ng, Logger, LoaderCircles, GMEConcepts, ImportDialog, CreateFromSeedDialog, StorageUtil,
+], function (ng, Logger, CONSTANTS, LoaderCircles, GMEConcepts, ImportDialog, CreateFromSeedDialog, StorageUtil,
              projectsDialogTemplate, ConfirmDialog, DeleteDialogTemplate) {
 
     'use strict';
@@ -66,13 +67,31 @@ define([
         this._dialog.modal('show');
 
         this._dialog.on('hidden.bs.model', function () {
-            self._loader.destroy();
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
+            self._client.unwatchDatabase(self._projectEventHandling, function (err) {
+                if (err) {
+                    self._logger.error('error during unsubscribe', err);
+                }
+            });
         });
 
         this._refreshProjectList();
+
+        this._projectEventHandling = function (emitter, data) {
+            if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_CREATED ||
+                data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_DELETED) {
+                self._logger.debug('projectList changed event', data);
+                self._refreshProjectList.call(self);
+            }
+        };
+
+        self._client.watchDatabase(self._projectEventHandling, function (err) {
+            if (err) {
+                self._logger.error('unable to follow project events', err);
+            }
+        });
     };
 
     ProjectsDialog.prototype._initDialog = function () {
@@ -184,7 +203,6 @@ define([
         this._btnDelete = this._dialog.find('.btn-delete');
         this._btnCreateNew = this._dialog.find('.btn-create-new');
         this._btnCreateFromFile = this._dialog.find('.btn-import-file');
-        this._btnRefresh = this._dialog.find('.btn-refresh');
 
         this._btnNewProjectCancel = this._dialog.find('.btn-cancel');
         this._btnNewProjectCreate = this._dialog.find('.btn-save');
@@ -193,9 +211,6 @@ define([
         this._txtNewProjectName = this._dialog.find('.txt-project-name');
         this._dialog.find('.username').text(this._client.getUserId());
         this._ownerId = this._client.getUserId(); //TODO: Get this from drop-down
-
-        this._loader = new LoaderCircles({containerElement: this._btnRefresh});
-        this._loader.setSize(14);
 
         this._dialog.find('.tabContainer').first().groupedAlphabetTabs({
             onClick: function (filter) {
@@ -297,8 +312,8 @@ define([
             var re = /^[0-9a-z_]+$/gi;
 
             return (
-            re.test(aProjectName) &&
-            self._projectNames.indexOf(projectId) === -1
+                re.test(aProjectName) &&
+                self._projectNames.indexOf(projectId) === -1
             );
         }
 
@@ -338,7 +353,7 @@ define([
 
             var enterPressed = event.which === 13,
                 newProjectName = self._txtNewProjectName.val(),
-                projectId =  StorageUtil.getProjectIdFromOwnerIdAndProjectName(self._dialog.find('.username').text(), newProjectName);
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(self._dialog.find('.username').text(), newProjectName);
 
 
             if (enterPressed && isValidProjectName(newProjectName, projectId)) {
@@ -352,14 +367,6 @@ define([
             }
 
         });
-
-
-        this._btnRefresh.on('click', function (event) {
-            self._refreshProjectList.call(self);
-
-            event.stopPropagation();
-            event.preventDefault();
-        });
     };
 
     ProjectsDialog.prototype._refreshProjectList = function () {
@@ -368,9 +375,6 @@ define([
                 rights: true
             };
 
-        this._loader.start();
-        this._btnRefresh.disable(true);
-        this._btnRefresh.find('i').css('opacity', '0');
 
         this._client.getProjects(params, function (err, projectList) {
             var i;
@@ -422,10 +426,6 @@ define([
             });
 
             self._updateProjectNameList();
-
-            self._loader.stop();
-            self._btnRefresh.find('i').css('opacity', '1');
-            self._btnRefresh.disable(false);
         });
     };
 
@@ -476,7 +476,7 @@ define([
                     displayProject = true;
                 } else {
                     displayProject = (this._projectNames[i].toUpperCase()[0] >= this._filter[0] &&
-                                      this._projectNames[i].toUpperCase()[0] <= this._filter[1]);
+                    this._projectNames[i].toUpperCase()[0] <= this._filter[1]);
                 }
 
                 if (displayProject) {
