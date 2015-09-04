@@ -45,9 +45,9 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
 
         this._name = params.name || undefined;
 
-        if (this._name === CONSTANTS.PROPERTY_GROUP_META) {
-            this._toggleClosed();
-        }
+        //if (this._name === CONSTANTS.PROPERTY_GROUP_META) {
+        //    this._toggleClosed();
+        //}
 
         this._parent = params.parent;
 
