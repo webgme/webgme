@@ -32,7 +32,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
     
     AddOnBase.prototype.init = function (parameters, callback) {
         var self = this,
-            hashUpdateHandler = function (data, commitQueue, updateQueue, callback) {
+            hashUpdateHandler = function (data, commitQueue, updateQueue, handlerCallback) {
                 function loadNewRoot(rootLoaded) {
                     self.rootHash = data.commitData.commitObject.root;
                     self.commit = data.commitData.commitObject[CONSTANTS.MONGO_ID];
@@ -51,24 +51,24 @@ define(['common/storage/constants'], function (CONSTANTS) {
                 if (self.running) {
                     loadNewRoot(function (err) {
                         if (err) {
-                            callback(err, false); // proceed: false
+                            handlerCallback(err, false); // proceed: false
                             return;
                         }
                         self.update(self.root, function (err) {
                             var proceed = !err;
 
-                            callback(err, proceed);
+                            handlerCallback(err, proceed);
                         });
                     });
                 } else if (self.initializing === true) {
                     loadNewRoot(function (err) {
                         if (err) {
-                            callback(err, false); // proceed: false
+                            handlerCallback(err, false); // proceed: false
                             return;
                         }
                         self.intializing = false;
                         self.running = true;
-                        callback(null, true);
+                        handlerCallback(null, true);
                     });
                 }
             },
