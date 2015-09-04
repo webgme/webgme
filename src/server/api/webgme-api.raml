@@ -2,6 +2,23 @@
 title: WebGME API
 version: 1.0
 
+securitySchemes:
+  - basic:
+      description: Basic authentication scheme
+      type: Basic Authentication
+      describedBy:
+        headers:
+          Authorization:
+            type: string
+            description: Basic authentication base64 encoded username and password
+            example: Basic Z3Vlc3Q6Z3Vlc3Q=
+        responses:
+          401:
+            description: Authentication required
+          403:
+            description: Forbidden
+
+
 resourceTypes:
   - collection:
       description: Collection of available <<resourcePathName>> in WebGME.
@@ -13,9 +30,10 @@ resourceTypes:
               application/json:
                 example: |
                   <<exampleCollection>>
-      post:
+      put:
         description: |
           Add a new <<resourcePathName|!singularize>> to WebGME.
+        securedBy: [ basic ]
         body:
           application/json:
             schema: <<resourcePathName|!singularize>>
@@ -27,6 +45,8 @@ resourceTypes:
               application/json:
                 example: |
                   { "message": "The <<resourcePathName|!singularize>> has been properly entered" }
+          400:
+          
   - collection-item:
       description: Entity representing a <<resourcePathName|!singularize>>
       get:
@@ -45,7 +65,15 @@ resourceTypes:
               application/json:
                 example: |
                   {"message": "<<resourcePathName|!singularize>> not found" }
-
+      put:
+          securedBy: [ basic ]
+      patch:
+          securedBy: [ basic ]
+      delete:
+          securedBy: [ basic ]
+          responses:
+            204:          
+        
 
 /:
   get:
@@ -65,12 +93,16 @@ resourceTypes:
 
 /user:
   get:
+    description: Returns with the current user
+    securedBy: [ basic ]
     responses:
       200:
         body:
           application/json:
             example: !include webgme-api-user-retrieve.sample
-
+  delete:
+    responses:
+      204:
 
 /users:
   type:
@@ -84,11 +116,38 @@ resourceTypes:
         exampleItem: !include webgme-api-user-retrieve.sample   
 
 /orgs:
+  type:
+    collection:
+      exampleCollection: !include webgme-api-orgs.sample
+      exampleItem: !include webgme-api-org-new.sample
+    
   /{orgId}:
+    type:
+      collection-item:
+        exampleItem: !include webgme-api-org-retrieve.sample
     
     /users/{username}:
-    
+      put:
+        securedBy: [ basic ]
+        responses:
+          200:
+        
+      delete:
+        securedBy: [ basic ]
+        responses:
+          204:
+          
     /admins/{username}:
+      put:
+        securedBy: [ basic ]
+        responses:
+          200:
+        
+      delete:
+        securedBy: [ basic ]
+        responses:
+          204:
+
 
 /projects:
   type:
@@ -97,6 +156,11 @@ resourceTypes:
       exampleItem: !include webgme-api-project-new.sample
   
   /{ownerId}/{projectName}:
+    uriParameters:
+      ownerId:
+        example: guest
+      projectName:
+        example: ActivePanels
     type:
       collection-item:
         exampleItem: !include webgme-api-project-retrieve.sample
@@ -109,8 +173,18 @@ resourceTypes:
       
       
     /branches:
-      
+      type:
+        collection:
+          exampleCollection: !include webgme-api-branches.sample
+          exampleItem: !include webgme-api-branch-new.sample
+        
       /{branchId}:
+        uriParameters:
+          branchId:
+            example: master
+        type:
+          collection-item:
+            exampleItem: !include webgme-api-branch-retrieve.sample
         
       
       
