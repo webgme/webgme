@@ -1,0 +1,21 @@
+ {
+      "_id":"demo",
+      "email":"demo",
+      "canCreate":true,
+      "projects":{
+         "guest+aaaaaa":{
+            "read":true,
+            "write":true,
+            "delete":false
+         },
+         "demo+ASDF":{
+            "read":true,
+            "write":true,
+            "delete":true
+         }
+      },
+      "orgs":[
+
+      ],
+      "siteAdmin":false
+   }
