@@ -203,6 +203,7 @@ define([
         this._btnDelete = this._dialog.find('.btn-delete');
         this._btnCreateNew = this._dialog.find('.btn-create-new');
         this._btnCreateFromFile = this._dialog.find('.btn-import-file');
+        this._btnRefresh = this._dialog.find('.btn-refresh');
 
         this._btnNewProjectCancel = this._dialog.find('.btn-cancel');
         this._btnNewProjectCreate = this._dialog.find('.btn-save');
@@ -211,6 +212,9 @@ define([
         this._txtNewProjectName = this._dialog.find('.txt-project-name');
         this._dialog.find('.username').text(this._client.getUserId());
         this._ownerId = this._client.getUserId(); //TODO: Get this from drop-down
+
+        this._loader = new LoaderCircles({containerElement: this._btnRefresh});
+        this._loader.setSize(14);
 
         this._dialog.find('.tabContainer').first().groupedAlphabetTabs({
             onClick: function (filter) {
@@ -365,7 +369,13 @@ define([
                 event.stopPropagation();
                 event.preventDefault();
             }
+        });
 
+        this._btnRefresh.on('click', function (event) {
+            self._refreshProjectList.call(self);
+
+            event.stopPropagation();
+            event.preventDefault();
         });
     };
 
@@ -375,6 +385,10 @@ define([
                 rights: true
             };
 
+
+        this._loader.start();
+        this._btnRefresh.disable(true);
+        this._btnRefresh.find('i').css('opacity', '0');
 
         this._client.getProjects(params, function (err, projectList) {
             var i;
@@ -426,6 +440,10 @@ define([
             });
 
             self._updateProjectNameList();
+
+            self._loader.stop();
+            self._btnRefresh.find('i').css('opacity', '1');
+            self._btnRefresh.disable(false);
         });
     };
 
