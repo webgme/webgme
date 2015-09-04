@@ -175,7 +175,7 @@ describe('standalone server', function () {
             //{code: 410, url: '/getToken'},
             //{code: 410, url: '/checktoken/does_not_exist'},
 
-            {code: 500, url: '/worker/simpleResult/bad_parameter'}
+            {code: 404, url: '/worker/simpleResult/bad_parameter'}
         ]
     }, {
         type: 'http',
@@ -621,6 +621,7 @@ describe('standalone server', function () {
                     done();
                 });
         });
+
 
         it('should be able to export an authorized project /worker/simpleResult/:id/exported_branch', function (done) {
             var projectName = 'project',

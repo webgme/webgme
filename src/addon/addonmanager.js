@@ -72,7 +72,7 @@ function AddOnManager(webGMESessionId, mainLogger, gmeConfig) {
         if (!addOnName) {
             //TODO: This assumes a single running addOn.
             addOnName = Object.keys(runningAddOns)[0];
-            logger.warn('No addOnName given for query picked on randomly', addOnName);
+            logger.warn('No addOnName given for query picked one randomly', addOnName);
         }
 
         addOn = runningAddOns[addOnName];

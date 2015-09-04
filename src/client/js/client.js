@@ -1586,7 +1586,8 @@ define([
 
         this.getExportItemsUrl = function (paths, filename, callback) {
             callback(new Error('getExportItemsUrl is no longer supported!'));
-        }
+        };
+
         //library functions
         this.getExportLibraryUrl = function (libraryRootPath, filename, callback) {
             var command = {};

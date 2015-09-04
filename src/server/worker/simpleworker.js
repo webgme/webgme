@@ -42,10 +42,12 @@ function safeSend(msg) {
 function initialize(parameters) {
     if (initialized !== true) {
         initialized = true;
+
         gmeConfig = parameters.gmeConfig;
         WEBGME.addToRequireJsPaths(gmeConfig);
         logger = Logger.create('gme:server:worker:simpleworker:pid_' + process.pid, gmeConfig.server.log, true);
         logger.debug('initializing');
+        logger.info('initialized worker');
         wr = new WorkerRequests(logger, gmeConfig);
         safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
     } else {
@@ -54,9 +56,21 @@ function initialize(parameters) {
 }
 
 //AddOn Functions
-function initConnectedWorker(webGMESessionId, userId, addOnName, projectId, branchName, callback) {
+function connectedWorkerStart(webGMESessionId, userId, addOnName, projectId, branchName, callback) {
+    logger.info('connectedWorkerStart', addOnName, projectId, branchName);
+    function finish(err) {
+        if (err) {
+            err = err instanceof Error ? err : new Error(err);
+            logger.error('connectedWorkerStart failed', {metadata: err});
+            callback(err);
+        } else {
+            logger.info('connectedWorkerStart done');
+            callback(null);
+        }
+    }
+
     if (!addOnName || !projectId || !branchName) {
-        callback(new Error('Required parameter was not provided'));
+        finish(new Error('Required parameter was not provided'));
         return;
     }
 
@@ -64,39 +78,59 @@ function initConnectedWorker(webGMESessionId, userId, addOnName, projectId, bran
 
     addOnManager.initialize(function (err) {
         if (err) {
-            callback(err);
+            finish(err);
             return;
         }
 
-        addOnManager.startNewAddOn(addOnName, projectId, branchName, userId, callback);
+        addOnManager.startNewAddOn(addOnName, projectId, branchName, userId, finish);
     });
 }
 
 function connectedWorkerQuery(parameters, callback) {
+    logger.info('connectedWorkerQuery');
+    logger.debug('connectedWorkerQuery', parameters);
+    function finish(err, message) {
+        if (err) {
+            err = err instanceof Error ? err : new Error(err);
+            logger.error('connectedWorkerQuery failed', {metadata: err});
+            callback(err);
+        } else {
+            logger.info('connectedWorkerQuery done');
+            callback(null, message);
+        }
+    }
+
     if (addOnManager) {
         //TODO: Should query a specific addOn.
         addOnManager.queryAddOn(null, parameters)
-            .then(function (message) {
-                callback(null, message);
-            })
-            .catch(function (err) {
-                callback(err);
-            });
+            .nodeify(finish);
     } else {
-        callback(new Error('No AddOn is running'));
+        finish(new Error('No AddOn is running'));
     }
 }
 
 function connectedWorkerStop(callback) {
+    logger.info('connectedWorkerStop');
+    function finish(err) {
+        if (err) {
+            err = err instanceof Error ? err : new Error(err);
+            logger.error('connectedWorkerStop failed', {metadata: err});
+            callback(err);
+        } else {
+            logger.info('connectedWorkerStop done');
+            callback(null);
+        }
+    }
+
     if (addOnManager) {
         addOnManager.close()
             .then(function () {
                 addOnManager = null;
-                callback(null);
+                finish(null);
             })
-            .catch(callback);
+            .catch(finish);
     } else {
-        callback(null);
+        finish(null);
     }
 }
 
@@ -173,7 +207,7 @@ process.on('message', function (parameters) {
         });
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStart) {
         if (gmeConfig.addOn.enable === true) {
-            initConnectedWorker(parameters.webGMESessionId, parameters.userId, parameters.workerName,
+            connectedWorkerStart(parameters.webGMESessionId, parameters.userId, parameters.workerName,
                 parameters.projectId, parameters.branch,
                 function (err) {
                     if (err) {
@@ -196,7 +230,7 @@ process.on('message', function (parameters) {
         } else {
             safeSend({
                 pid: process.pid,
-                type: CONSTANT.msgTypes.request,
+                type: CONSTANT.msgTypes.result,
                 error: 'addOn functionality not enabled',
                 resid: null
             });
@@ -232,7 +266,7 @@ process.on('message', function (parameters) {
         } else {
             safeSend({
                 pid: process.pid,
-                type: CONSTANT.msgTypes.request,
+                type: CONSTANT.msgTypes.result,
                 error: 'addOn functionality not enabled',
                 resid: null
             });

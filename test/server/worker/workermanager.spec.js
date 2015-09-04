@@ -274,7 +274,7 @@ describe('ServerWorkerManager', function () {
         it('should start and stop connected worker', function (done) {
             swm.request(getConnectedWorkerStartRequest(), function (err, id) {
                 expect(err).to.equal(null);
-                swm.result(id, function (err) {
+                swm.query(id, {command: workerConstants.workerCommands.connectedWorkerStop}, function (err) {
                     expect(err).to.equal(null);
 
                     done();
@@ -288,7 +288,7 @@ describe('ServerWorkerManager', function () {
                 swm.query(id, {}, function (err/*, result*/) {
                     expect(err).to.equal(null);
 
-                    swm.result(id, function (err) {
+                    swm.query(id, {command: workerConstants.workerCommands.connectedWorkerStop}, function (err) {
                         expect(err).to.equal(null);
 
                         done();
@@ -324,7 +324,7 @@ describe('ServerWorkerManager', function () {
                     expect(err).to.equal(null);
 
                     swm.stop(function () {
-                        swm.result(id, function (err) {
+                        swm.query(id, {command: workerConstants.workerCommands.connectedWorkerStop}, function (err) {
                             expect(err).not.to.equal(null);
 
                             expect(err).to.contain('handler cannot be found');

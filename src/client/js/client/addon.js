@@ -45,7 +45,8 @@ define([], function () {
 
         function stopAddOn(name, callback) {
             if (_addOns[name] && _addOns[name] !== 'loading') {
-                storage.simpleResult(_addOns[name], callback);
+                // TODO: connectedworkerStop should come from constants!!
+                storage.simpleQuery(_addOns[name], {command: 'connectedworkerStop'}, callback);
                 delete _addOns[name];
             } else {
                 callback(_addOns[name] ? new Error('addon loading') : null);

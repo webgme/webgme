@@ -528,24 +528,24 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     });
             });
 
-            socket.on('simpleResult', function (resultId, callback) {
-                getUserIdFromSocket(socket).
-                    then(function (/*userId*/) {
-                        workerManager.result(resultId, callback);
-                    })
-                    .catch(function (err) {
-                        if (typeof err === 'string') {
-                            //FIXME: server-worker manager should return errors.
-                            callback(err);
-                            return;
-                        }
-                        if (gmeConfig.debug) {
-                            callback(err.stack);
-                        } else {
-                            callback(err.message);
-                        }
-                    });
-            });
+            //socket.on('simpleResult', function (resultId, callback) {
+            //    getUserIdFromSocket(socket).
+            //        then(function (/*userId*/) {
+            //            workerManager.result(resultId, callback);
+            //        })
+            //        .catch(function (err) {
+            //            if (typeof err === 'string') {
+            //                //FIXME: server-worker manager should return errors.
+            //                callback(err);
+            //                return;
+            //            }
+            //            if (gmeConfig.debug) {
+            //                callback(err.stack);
+            //            } else {
+            //                callback(err.message);
+            //            }
+            //        });
+            //});
 
             socket.on('simpleQuery', function (workerId, parameters, callback) {
                 getUserIdFromSocket(socket).

@@ -210,10 +210,6 @@ define([
             self.socket.emit('simpleRequest', data, wrapError(callback));
         };
 
-        this.simpleResult = function (data, callback) {
-            self.socket.emit('simpleResult', data, wrapError(callback));
-        };
-
         this.simpleQuery = function (workerId, data, callback) {
             self.socket.emit('simpleQuery', workerId, data, wrapError(callback));
         };

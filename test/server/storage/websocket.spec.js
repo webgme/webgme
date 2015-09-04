@@ -984,7 +984,7 @@ describe('WebSocket', function () {
                 'getLatestCommitData',
                 'getCommonAncestorCommit',
                 'simpleRequest',
-                'simpleResult',
+                //'simpleResult',
 
             ],
             i;

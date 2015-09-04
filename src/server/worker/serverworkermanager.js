@@ -229,36 +229,15 @@ function ServerWorkerManager(_parameters) {
         }
     }
 
-    function result(id, callback) {
-        var worker, message = null;
-        if (_idToPid[id]) {
-            worker = _workers[_idToPid[id]];
-            if (worker) {
-                //FIXME it is ok for now to ignore the assert, but how could we get here in a wrong state?
-                //ASSERT(worker.state === CONSTANTS.workerStates.waiting);
-                worker.state = CONSTANTS.workerStates.working;
-                worker.cb = callback;
-                worker.resid = null;
-                if (worker.type === CONSTANTS.workerTypes.connected) {
-                    message = {command: CONSTANTS.workerCommands.connectedWorkerStop};
-                }
-                worker.worker.send(message);
-            } else {
-                delete _idToPid[id];
-                callback('request handler cannot be found');
-            }
-        } else {
-            callback('wrong request identification');
-        }
-    }
-
     function query(id, parameters, callback) {
         var worker;
         if (_idToPid[id]) {
             worker = _workers[_idToPid[id]];
             if (worker) {
                 worker.cb = callback;
-                parameters.command = CONSTANTS.workerCommands.connectedWorkerQuery;
+                if (!parameters.command) {
+                    parameters.command = CONSTANTS.workerCommands.connectedWorkerQuery;
+                }
                 worker.worker.send(parameters);
             } else {
                 delete _idToPid[id];
@@ -319,9 +298,11 @@ function ServerWorkerManager(_parameters) {
     }
 
     return {
+        // Worker related
         request: request,
-        result: result,
         query: query,
+
+        // Manager related
         stop: stop,
         start: start
     };
