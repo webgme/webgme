@@ -1572,14 +1572,6 @@ define([
             logger.debug('getExportProjectBranchUrl, command', command);
             if (command.projectId && command.branchName) {
                 storage.simpleRequest(command, function (err, result) {
-                    //var resultUrl = window.location.origin + '/worker/simpleResult/' + resId + '/' + fileName;
-                    //logger.debug('getExportProjectBranchUrl', resultUrl);
-                    //if (err) {
-                    //    logger.error('getExportProjectBranchUrl failed with error', err);
-                    //    callback(err);
-                    //} else {
-                    //    callback(null, resultUrl);
-                    //}
                     if (err) {
                         logger.error('getExportProjectBranchUrl failed with error', err);
                         callback(err);
@@ -1591,25 +1583,6 @@ define([
                 callback(new Error('invalid parameters!'));
             }
         };
-
-        //dump nodes
-        //this.getExportItemsUrl = function (paths, filename, callback) {
-        //    storage.simpleRequest({
-        //            command: 'dumpMoreNodes',
-        //            projectId: state.project.projectId,
-        //            hash: state.rootHash,
-        //            nodes: paths
-        //        },
-        //        function (err, resId) {
-        //            if (err) {
-        //                callback(err);
-        //            } else {
-        //                callback(null,
-        //                    window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
-        //                    resId + '/' + filename);
-        //            }
-        //        });
-        //};
 
         //library functions
         this.getExportLibraryUrl = function (libraryRootPath, filename, callback) {

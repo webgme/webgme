@@ -283,7 +283,6 @@ describe('ServerWorkerManager', function () {
         });
 
         it('should proxy the query to the connected worker', function (done) {
-
             swm.request(getConnectedWorkerStartRequest(), function (err, id) {
                 expect(err).to.equal(null);
                 swm.query(id, {}, function (err/*, result*/) {
@@ -299,7 +298,6 @@ describe('ServerWorkerManager', function () {
         });
 
         it('should fail to proxy queries after swm stop', function (done) {
-
             swm.request(getConnectedWorkerStartRequest(), function (err, id) {
                 expect(err).to.equal(null);
                 swm.query(id, {}, function (err/*, result*/) {
@@ -319,7 +317,6 @@ describe('ServerWorkerManager', function () {
         });
 
         it('should fail to proxy connected worker close after swm stop', function (done) {
-
             swm.request(getConnectedWorkerStartRequest(), function (err, id) {
                 expect(err).to.equal(null);
 

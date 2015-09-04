@@ -52,7 +52,14 @@ function ServerWorkerManager(_parameters) {
 
         if (Object.keys(_workers || {}).length < gmeConfig.server.maxWorkers) {
             var worker = Child.fork(SIMPLE_WORKER_JS, [], {execArgv: execArgv});
-            _workers[worker.pid] = {worker: worker, state: CONSTANTS.workerStates.initializing, type: null, cb: null};
+
+            _workers[worker.pid] = {
+                worker: worker,
+                state: CONSTANTS.workerStates.initializing,
+                type: null,
+                cb: null
+            };
+
             logger.debug('workerPid forked ' + worker.pid);
             worker.on('message', messageHandling);
             worker.on('exit', function (code, signal) {
@@ -97,12 +104,6 @@ function ServerWorkerManager(_parameters) {
         if (len === 0) {
             callback(null);
         }
-    }
-
-    function stop(callback) {
-        clearInterval(_managerId);
-        _managerId = null;
-        freeAllWorkers(callback);
     }
 
     function assignRequest(workerPid) {
@@ -210,7 +211,8 @@ function ServerWorkerManager(_parameters) {
 
     function reserveWorkerIfNecessary() {
         var workerIds = Object.keys(_workers || {}),
-            i, initializingWorkers = 0,
+            i,
+            initializingWorkers = 0,
             freeWorkers = 0;
 
         for (i = 0; i < workerIds.length; i++) {
@@ -308,6 +310,12 @@ function ServerWorkerManager(_parameters) {
             _managerId = setInterval(queueManager, 10);
         }
         reserveWorkerIfNecessary();
+    }
+
+    function stop(callback) {
+        clearInterval(_managerId);
+        _managerId = null;
+        freeAllWorkers(callback);
     }
 
     return {

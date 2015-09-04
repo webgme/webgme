@@ -8,7 +8,7 @@
 var testFixture = require('../../_globals.js');
 
 
-describe.skip('Simple worker', function () {
+describe('Simple worker', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,
@@ -40,7 +40,8 @@ describe.skip('Simple worker', function () {
         baseProjectJson = JSON.parse(
             testFixture.fs.readFileSync('seeds/ActivePanels.json')
         ),
-
+        protocol = gmeConfig.server.https.enable ? 'https' : 'http',
+        blobDownloadUrl = protocol + '://127.0.0.1:' + gmeConfig.server.port + '/rest/blob/download/',
         oldSend = process.send,
         oldOn = process.on,
         oldExit = process.exit;
@@ -269,20 +270,12 @@ describe.skip('Simple worker', function () {
             })
             .then(function (msg) {
                 expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
                 expect(msg.type).equal(CONSTANTS.msgTypes.result);
                 expect(msg.error).equal(null);
 
                 expect(msg.result).not.equal(null);
-                expect(msg.result).deep.equal(baseProjectJson);
+                expect(typeof msg.result.file.hash).to.equal('string');
+                expect(msg.result.file.url).to.include(blobDownloadUrl);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
@@ -306,20 +299,12 @@ describe.skip('Simple worker', function () {
             })
             .then(function (msg) {
                 expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
                 expect(msg.type).equal(CONSTANTS.msgTypes.result);
                 expect(msg.error).equal(null);
 
                 expect(msg.result).not.equal(null);
-                expect(msg.result).deep.equal(baseProjectJson);
+                expect(typeof msg.result.file.hash).to.equal('string');
+                expect(msg.result.file.url).to.include(blobDownloadUrl);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
@@ -343,20 +328,12 @@ describe.skip('Simple worker', function () {
             })
             .then(function (msg) {
                 expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
                 expect(msg.type).equal(CONSTANTS.msgTypes.result);
                 expect(msg.error).equal(null);
 
                 expect(msg.result).not.equal(null);
-                expect(msg.result).deep.equal(baseProjectJson);
+                expect(typeof msg.result.file.hash).to.equal('string');
+                expect(msg.result.file.url).to.include(blobDownloadUrl);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
@@ -554,7 +531,7 @@ describe.skip('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should exportLibrary given a branchName when result requested with delay', function (done) {
+    it.skip('should exportLibrary given a branchName when result requested with delay', function (done) {
         var worker = getSimpleWorker();
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
@@ -594,7 +571,7 @@ describe.skip('Simple worker', function () {
     });
 
     // dumpMoreNodes
-    it('should dumpMoreNodes of a project', function (done) {
+    it.skip('should dumpMoreNodes of a project', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -631,7 +608,7 @@ describe.skip('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should fail to dumpMoreNodes if invalid hash is given', function (done) {
+    it.skip('should fail to dumpMoreNodes if invalid hash is given', function (done) {
         var worker = getSimpleWorker(),
             invalidHash = '#4242424242424242424242424242424242424242';
 
@@ -668,7 +645,7 @@ describe.skip('Simple worker', function () {
             .done();
     });
 
-    it('should fail to dumpMoreNodes if invalid projectId is given', function (done) {
+    it.skip('should fail to dumpMoreNodes if invalid projectId is given', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -704,7 +681,7 @@ describe.skip('Simple worker', function () {
             .done();
     });
 
-    it('should fail to dumpMoreNodes when command parameters are invalid', function (done) {
+    it.skip('should fail to dumpMoreNodes when command parameters are invalid', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -742,6 +719,7 @@ describe.skip('Simple worker', function () {
                 return worker.send({
                     command: CONSTANTS.workerCommands.seedProject,
                     projectName: projectName,
+                    ownerId: gmeConfig.authentication.guestAccount,
                     webGMESessionId: webGMESessionId,
                     type: 'db',
                     seedName: baseProjectContext.id,
@@ -749,13 +727,7 @@ describe.skip('Simple worker', function () {
             })
             .then(function (msg) {
                 expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
                 expect(msg.result).not.equal(null);
                 expect(msg.result).to.include.keys('projectId');
                 expect(msg.result.projectId).to.equal(projectId);
@@ -790,13 +762,14 @@ describe.skip('Simple worker', function () {
                     command: CONSTANTS.workerCommands.seedProject,
                     projectName: projectName,
                     webGMESessionId: webGMESessionId,
+                    ownerId: gmeConfig.authentication.guestAccount,
                     type: 'db',
                     seedName: 'invalidProjectId',
                 });
             })
             .then(function (msg) {
                 expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
                 expect(msg.error).equal(null);
 
                 expect(msg.resid).not.equal(null);
@@ -826,6 +799,7 @@ describe.skip('Simple worker', function () {
                     command: CONSTANTS.workerCommands.seedProject,
                     projectName: projectName,
                     webGMESessionId: webGMESessionId,
+                    ownerId: gmeConfig.authentication.guestAccount,
                     type: 'db',
                     seedName: baseProjectContext.id,
                     seedBranch: 'invalidBranch'
@@ -864,20 +838,13 @@ describe.skip('Simple worker', function () {
                     command: CONSTANTS.workerCommands.seedProject,
                     projectName: projectName,
                     webGMESessionId: webGMESessionId,
+                    ownerId: gmeConfig.authentication.guestAccount,
                     type: 'db',
                     seedName: baseProjectContext.id,
                     seedBranch: 'corruptBranch'
                 });
             })
             .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (/*msg*/) {
                 done(new Error('missing error handling'));
             })
             .catch(function (err) {
@@ -902,22 +869,20 @@ describe.skip('Simple worker', function () {
                     command: CONSTANTS.workerCommands.seedProject,
                     webGMESessionId: webGMESessionId,
                     projectName: projectName,
+                    ownerId: gmeConfig.authentication.guestAccount,
                     type: 'file',
                     seedName: 'EmptyProject',
                 });
             })
             .then(function (msg) {
                 expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
                 expect(msg.error).equal(null);
 
-                expect(msg.resid).not.equal(null);
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
                 expect(msg.result).not.equal(null);
                 expect(msg.result).to.include.keys('projectId');
                 expect(msg.result.projectId).to.equal(projectId);
+
                 return storage.getProjects({branches: true});
             })
             .then(function (projects) {
@@ -1037,7 +1002,7 @@ describe.skip('Simple worker', function () {
                 done(new Error('missing error handling'));
             })
             .catch(function (err) {
-                expect(err.message).to.contain('not running');
+                expect(err.message).to.contain('No AddOn is running');
 
                 done();
             })
