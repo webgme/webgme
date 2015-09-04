@@ -14,13 +14,11 @@ var Core = requireJS('common/core/core'),
 
     FS = require('fs'),
 
-    AddOnManager = require('../../addon/addonmanager'),
     PluginNodeManager = require('../../plugin/nodemanager');
 
 
-function WorkerFunctions(mainLogger, gmeConfig) {
-    var logger = mainLogger.fork('WorkerFunctions'),
-        addOnManager;
+function WorkerRequests(mainLogger, gmeConfig) {
+    var logger = mainLogger.fork('WorkerFunctions');
 
     function getConnectedStorage(webGMESessionId) {
         var host = '127.0.0.1', //TODO: this should come from gmeConfig
@@ -390,6 +388,11 @@ function WorkerFunctions(mainLogger, gmeConfig) {
             };
 
         logger.info('seedProject');
+        if (typeof projectName !== 'string' || parameters === null || typeof parameters !== 'object' ||
+            typeof parameters.seedName !== 'string' || typeof parameters.type !== 'string') {
+            callback(new Error('Invalid parameters'));
+            return;
+        }
 
         storage.open(function (networkState) {
             var jsonSeed;
@@ -515,72 +518,13 @@ function WorkerFunctions(mainLogger, gmeConfig) {
         });
     }
 
-    function initConnectedWorker(webGMESessionId, userId, addOnName, projectId, branchName, callback) {
-        if (gmeConfig.addOn.enable === false) {
-            callback(new Error('AddOns are disabled, set gmeConfig.addOn.enable=true'));
-            return;
-        }
-
-        addOnManager = new AddOnManager(webGMESessionId, mainLogger, gmeConfig);
-
-        addOnManager.initialize(function (err) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            addOnManager.startNewAddOn(addOnName, projectId, branchName, userId, callback);
-        });
-    }
-
-    function connectedWorkerQuery(parameters, callback) {
-        if (gmeConfig.addOn.enable === false) {
-            callback(new Error('AddOns are disabled, set gmeConfig.addOn.enable=true'));
-            return;
-        }
-        if (addOnManager) {
-            //TODO: Should query a specific addOn.
-            addOnManager.queryAddOn(null, parameters)
-                .then(function (message) {
-                    callback(null, message);
-                })
-                .catch(function (err) {
-                    callback(err);
-                });
-        } else {
-            callback(new Error('No AddOn is running'));
-        }
-    }
-
-    function connectedWorkerStop(callback) {
-        if (gmeConfig.addOn.enable === false) {
-            callback(new Error('AddOns are disabled, set gmeConfig.addOn.enable=true'));
-            return;
-        }
-        if (addOnManager) {
-            addOnManager.close()
-                .then(function () {
-                    addOnManager = null;
-                    callback(null);
-                })
-                .catch(callback);
-        } else {
-            callback(null);
-        }
-    }
-
     return {
         exportLibrary: exportLibrary,
         executePlugin: executePlugin,
         seedProject: seedProject,
         autoMerge: autoMerge,
-        resolve: resolve,
-
-        // AddOn
-        initConnectedWorker: initConnectedWorker,
-        connectedWorkerQuery: connectedWorkerQuery,
-        connectedWorkerStop: connectedWorkerStop
+        resolve: resolve
     };
 }
 
-module.exports = WorkerFunctions;
+module.exports = WorkerRequests;

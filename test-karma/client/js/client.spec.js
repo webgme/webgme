@@ -3652,62 +3652,14 @@ describe('GME client', function () {
             });
         });
 
-        it('should return a url which would download the given list of nodes', function (done) {
-            this.timeout(10000);
-            client.getExportItemsUrl(['', '/1'], 'output', function (err, url) {
-                expect(err).to.equal(null);
-                expect(url).to.contain('output');
-                expect(url).to.contain('/worker/simpleResult/');
-
-                //FIXME why server crashes at the end if we get the result??
-                superagent.get(url).end(function (err, res) {
-
-                    expect(err).to.equal(null);
-
-                    expect(res.status).to.equal(200);
-
-                    expect(res.body).not.to.equal(null);
-
-                    expect(res.body).to.have.length(2);
-
-                    done();
-                });
-            });
-        });
-
         it('should return a url where the given library (sub-tree) is available', function (done) {
             this.timeout(5000);
             client.getExportLibraryUrl('', 'output', function (err, url) {
                 expect(err).to.equal(null);
-                expect(url).to.contain('output');
-                expect(url).to.contain('/worker/simpleResult/');
+                expect(url).to.contain('/rest/blob/download');
 
                 done();
             });
-        });
-
-        it.skip('should return a json format of the node (or a sub-tree)', function (done) {
-            client.dumpNodeAsync('', function (err, dump) {
-                expect(err).to.equal(null);
-
-                expect(dump).not.to.equal(null);
-
-                done();
-            });
-        });
-
-        it.skip('should fail to dump not loaded node', function (done) {
-            // dumpNodeAsync
-            client.dumpNodeAsync('/42/42', function (err) {
-                expect(err).not.to.equal(null);
-
-                done();
-            });
-        });
-
-        //TODO modify this test to use the getExportProjectBranchUrlAsync function
-        it.skip('should return a url for dumping the whole project', function () {
-            expect(client.getDumpURL({})).to.contain('dump_url.out');
         });
     });
 
@@ -4044,9 +3996,13 @@ describe('GME client', function () {
 
                 client.getExportProjectBranchUrl(projectId, 'master', 'seedTestOutPut',
                     function (err, url) {
+                        var karmaUrl;
                         expect(err).to.equal(null);
+                        expect(url).to.contain('http://127.0.0.1:9001/rest/blob/download/');
 
-                        superagent.get(url, function (err, result) {
+                        karmaUrl = url.replace('http://127.0.0.1:9001', window.location.origin);
+
+                        superagent.get(karmaUrl, function (err, result) {
                             expect(err).to.equal(null);
 
                             expect(result.body).to.deep.equal(refNodeProj);
@@ -4077,9 +4033,13 @@ describe('GME client', function () {
 
                 client.getExportProjectBranchUrl(projectId, 'master', 'seedTestOutPut',
                     function (err, url) {
+                        var karmaUrl;
                         expect(err).to.equal(null);
+                        expect(url).to.contain('http://127.0.0.1:9001/rest/blob/download/');
 
-                        superagent.get(url, function (err, result) {
+                        karmaUrl = url.replace('http://127.0.0.1:9001', window.location.origin);
+
+                        superagent.get(karmaUrl, function (err, result) {
                             expect(err).to.equal(null);
 
                             expect(result.body).to.deep.equal(refSFSProj);
@@ -4192,7 +4152,7 @@ describe('GME client', function () {
             client.seedProject(seedConfig, function (err) {
                 expect(err).to.equal(null);
 
-                client.getExportProjectBranchUrl(projectId, 'other', 'seedTestOutPut',
+                client.getExportProjectBranchUrl(projectId, 'master', 'seedTestOutPut',
                     function (err, url) {
                         expect(err).to.equal(null);
 

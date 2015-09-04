@@ -11,10 +11,13 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
     CONSTANT = require('./constants'),
     Logger = require('../logger'),
-    WorkerFunctions = require('./workerfunctions'),
+    WorkerRequests = require('./workerrequests'),
+    wr,
+    AddOnManager = require('../../addon/addonmanager'),
+
+    addOnManager,
     initialized = false,
     gmeConfig,
-    wf,
     logger;
 
 function safeSend(msg) {
@@ -36,7 +39,6 @@ function safeSend(msg) {
     }
 }
 
-// Helper functions
 function initialize(parameters) {
     if (initialized !== true) {
         initialized = true;
@@ -44,10 +46,57 @@ function initialize(parameters) {
         WEBGME.addToRequireJsPaths(gmeConfig);
         logger = Logger.create('gme:server:worker:simpleworker:pid_' + process.pid, gmeConfig.server.log, true);
         logger.debug('initializing');
-        wf = new WorkerFunctions(logger, gmeConfig);
+        wr = new WorkerRequests(logger, gmeConfig);
         safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
     } else {
         safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
+    }
+}
+
+//AddOn Functions
+function initConnectedWorker(webGMESessionId, userId, addOnName, projectId, branchName, callback) {
+    if (!addOnName || !projectId || !branchName) {
+        callback(new Error('Required parameter was not provided'));
+        return;
+    }
+
+    addOnManager = new AddOnManager(webGMESessionId, logger, gmeConfig);
+
+    addOnManager.initialize(function (err) {
+        if (err) {
+            callback(err);
+            return;
+        }
+
+        addOnManager.startNewAddOn(addOnName, projectId, branchName, userId, callback);
+    });
+}
+
+function connectedWorkerQuery(parameters, callback) {
+    if (addOnManager) {
+        //TODO: Should query a specific addOn.
+        addOnManager.queryAddOn(null, parameters)
+            .then(function (message) {
+                callback(null, message);
+            })
+            .catch(function (err) {
+                callback(err);
+            });
+    } else {
+        callback(new Error('No AddOn is running'));
+    }
+}
+
+function connectedWorkerStop(callback) {
+    if (addOnManager) {
+        addOnManager.close()
+            .then(function () {
+                addOnManager = null;
+                callback(null);
+            })
+            .catch(callback);
+    } else {
+        callback(null);
     }
 }
 
@@ -72,7 +121,7 @@ process.on('message', function (parameters) {
     logger.debug('Incoming message:', {metadata: parameters});
 
     if (parameters.command === CONSTANT.workerCommands.executePlugin) {
-        wf.executePlugin(parameters.webGMESessionId, parameters.name, parameters.context, function (err, result) {
+        wr.executePlugin(parameters.webGMESessionId, parameters.name, parameters.context, function (err, result) {
                 safeSend({
                     pid: process.pid,
                     type: CONSTANT.msgTypes.result,
@@ -82,7 +131,7 @@ process.on('message', function (parameters) {
             }
         );
     } else if (parameters.command === CONSTANT.workerCommands.exportLibrary) {
-        wf.exportLibrary(parameters.webGMESessionId, parameters.projectId, parameters.path, parameters,
+        wr.exportLibrary(parameters.webGMESessionId, parameters.projectId, parameters.path, parameters,
             function (err, result) {
                 safeSend({
                     pid: process.pid,
@@ -93,27 +142,18 @@ process.on('message', function (parameters) {
             }
         );
     } else if (parameters.command === CONSTANT.workerCommands.seedProject) {
-        if (typeof parameters.projectName === 'string' && parameters.ownerId) {
-            parameters.type = parameters.type || 'db';
-            wf.seedProject(parameters.webGMESessionId, parameters.projectName, parameters.ownerId, parameters,
-                function (err, result) {
-                    safeSend({
-                        pid: process.pid,
-                        type: CONSTANT.msgTypes.result,
-                        error: err ? err.message : null,
-                        result: result
-                    });
+        parameters.type = parameters.type || 'db';
+        wr.seedProject(parameters.webGMESessionId, parameters.projectName, parameters.ownerId, parameters,
+            function (err, result) {
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANT.msgTypes.result,
+                    error: err ? err.message : null,
+                    result: result
                 });
-        } else {
-            safeSend({
-                pid: process.pid,
-                type: CONSTANT.msgTypes.result,
-                error: 'invalid parameters: ' + JSON.stringify(parameters)
             });
-        }
     } else if (parameters.command === CONSTANT.workerCommands.autoMerge) {
-        //TODO Check parameters.
-        wf.autoMerge(parameters.webGMESessionId, parameters.projectId, parameters.mine, parameters.theirs,
+        wr.autoMerge(parameters.webGMESessionId, parameters.projectId, parameters.mine, parameters.theirs,
             function (err, result) {
                 safeSend({
                     pid: process.pid,
@@ -123,8 +163,7 @@ process.on('message', function (parameters) {
                 });
             });
     } else if (parameters.command === CONSTANT.workerCommands.resolve) {
-        //TODO Check parameters.
-        wf.resolve(parameters.webGMESessionId, parameters.partial, function (err, result) {
+        wr.resolve(parameters.webGMESessionId, parameters.partial, function (err, result) {
             safeSend({
                 pid: process.pid,
                 type: CONSTANT.msgTypes.result,
@@ -134,14 +173,14 @@ process.on('message', function (parameters) {
         });
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStart) {
         if (gmeConfig.addOn.enable === true) {
-            wf.initConnectedWorker(parameters.webGMESessionId, parameters.userId, parameters.workerName,
+            initConnectedWorker(parameters.webGMESessionId, parameters.userId, parameters.workerName,
                 parameters.projectId, parameters.branch,
                 function (err) {
                     if (err) {
                         safeSend({
                             pid: process.pid,
-                            type: CONSTANT.msgTypes.request,
-                            error: err ? err.message : null,
+                            type: CONSTANT.msgTypes.result,
+                            error: err.message,
                             resid: null
                         });
                     } else {
@@ -164,7 +203,7 @@ process.on('message', function (parameters) {
         }
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerQuery) {
         if (gmeConfig.addOn.enable === true) {
-            wf.connectedWorkerQuery(parameters, function (err, result) {
+            connectedWorkerQuery(parameters, function (err, result) {
                 safeSend({
                     pid: process.pid,
                     type: CONSTANT.msgTypes.query,
@@ -175,14 +214,14 @@ process.on('message', function (parameters) {
         } else {
             safeSend({
                 pid: process.pid,
-                type: CONSTANT.msgTypes.request,
+                type: CONSTANT.msgTypes.result,
                 error: 'addOn functionality not enabled',
                 resid: null
             });
         }
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStop) {
         if (gmeConfig.addOn.enable === true) {
-            wf.connectedWorkerStop(function (err) {
+            connectedWorkerStop(function (err) {
                 safeSend({
                     pid: process.pid,
                     type: CONSTANT.msgTypes.result,
