@@ -345,8 +345,6 @@ define([
         this.makeCommit = function (projectId, branchName, parents, rootHash, coreObjects, msg, callback) {
             var project = projects[projectId],
                 branch,
-                commitId,
-                commitCallback,
                 commitData = {
                     projectId: projectId,
                     commitObject: null,
@@ -358,20 +356,6 @@ define([
 
             if (project) {
                 project.insertObject(commitData.commitObject);
-                commitId = commitData.commitObject[CONSTANTS.MONGO_ID];
-
-                commitCallback = function commitCallback() {
-                    delete project.projectCache.queuedPersists[commitId];
-                    self.logger.debug('Removed now persisted core-objects from cache: ',
-                        Object.keys(project.projectCache.queuedPersists).length);
-                    callback.apply(null, arguments);
-                };
-
-                project.projectCache.queuedPersists[commitId] = coreObjects;
-                logger.debug('Queued non-persisted core-objects in cache: ',
-                    Object.keys(project.projectCache.queuedPersists).length);
-            } else {
-                commitCallback = callback;
             }
 
             if (typeof branchName === 'string') {
@@ -382,9 +366,9 @@ define([
             logger.debug('makeCommit', commitData);
             if (branch) {
                 logger.debug('makeCommit, branch is open will commit using commitQueue. branchName:', branchName);
-                self._commitToBranch(projectId, branchName, commitData, parents[0], commitCallback);
+                self._commitToBranch(projectId, branchName, commitData, parents[0], callback);
             } else {
-                webSocket.makeCommit(commitData, commitCallback);
+                webSocket.makeCommit(commitData, callback);
             }
         };
 
@@ -642,7 +626,6 @@ define([
                                                 self._pushNextQueuedCommit(projectId, branchName);
                                             }
                                         }
-
                                         function dispatchForked() {
                                             result = {status: CONSTANTS.FORKED, hash: branchHash};
 
@@ -665,8 +648,7 @@ define([
                                         }
                                     })
                                     .catch(function (err) {
-                                        if (err.message.indexOf('Commit object does not exist [' +
-                                                queuedCommitHash) > -1) {
+                                        if (err.message.indexOf('Commit object does not exist [' + queuedCommitHash) > -1) {
                                             // Commit never made it to the server - push it.
                                             logger.debug('First queued commit never made it to the server. push...');
                                             self._pushNextQueuedCommit(projectId, branchName);
