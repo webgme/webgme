@@ -26,7 +26,6 @@ describe('storage project', function () {
         guestAccount = gmeConfig.authentication.guestAccount,
         server,
         gmeAuth,
-        safeStorage,
         storage,
 
         projectName = 'StorageProject',
@@ -36,50 +35,46 @@ describe('storage project', function () {
         commitHash2;
 
     before(function (done) {
-        var commitObject,
-            commitData;
-
+        var safeStorage;
         server = WebGME.standaloneServer(gmeConfig);
-        server.start(function (err) {
-            if (err) {
-                done(new Error(err));
-                return;
-            }
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, [projectName])
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                return safeStorage.openDatabase();
+            })
+            .then(function () {
+                return Q.allDone([
+                    testFixture.importProject(safeStorage, {
+                        projectSeed: 'seeds/EmptyProject.json',
+                        projectName: projectName,
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    })
+                ]);
+            })
+            .then(function (results) {
+                importResult = results[0];
+                originalHash = importResult.commitHash;
 
-            testFixture.clearDBAndGetGMEAuth(gmeConfig, [projectName])
-                .then(function (gmeAuth_) {
-                    gmeAuth = gmeAuth_;
-                    safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-                    return safeStorage.openDatabase();
-                })
-                .then(function () {
-                    return Q.allDone([
-                        testFixture.importProject(safeStorage, {
-                            projectSeed: 'seeds/EmptyProject.json',
-                            projectName: projectName,
-                            gmeConfig: gmeConfig,
-                            logger: logger
-                        })
-                    ]);
-                })
-                .then(function (results) {
-                    importResult = results[0];
-                    originalHash = importResult.commitHash;
+                return importResult.project.makeCommit(null, [originalHash], importResult.rootHash, {},
+                    'commit msg 1');
+            })
+            .then(function (result) {
+                commitHash1 = result.hash;
 
-                    return importResult.project.makeCommit(null, [originalHash], importResult.rootHash, {},
-                        'commit msg 1');
-                })
-                .then(function (result) {
-                    commitHash1 = result.hash;
+                return importResult.project.makeCommit(null, [originalHash], importResult.rootHash, {},
+                    'commit msg 2');
+            })
+            .then(function (result) {
+                commitHash2 = result.hash;
 
-                    return importResult.project.makeCommit(null, [originalHash], importResult.rootHash, {},
-                        'commit msg 2');
-                })
-                .then(function (result) {
-                    commitHash2 = result.hash;
-                })
-                .nodeify(done);
-        });
+                return safeStorage.closeDatabase();
+            })
+            .then(function () {
+                return Q.ninvoke(server, 'start');
+            })
+            .nodeify(done);
     });
 
     after(function (done) {
@@ -90,8 +85,7 @@ describe('storage project', function () {
             }
 
             Q.allDone([
-                gmeAuth.unload(),
-                safeStorage.closeDatabase()
+                gmeAuth.unload()
             ])
                 .nodeify(done);
         });
