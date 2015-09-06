@@ -34,7 +34,7 @@ define(['./AutoRouter', 'common/util/assert'], function (AutoRouter, assert) {
      * @param {Array<Number>} indices
      * @return {undefined}
      */
-    AutoRouterActionApplier.prototype._lookupItem = function (dictionary, array, indices) {//jshint ignore:line
+    AutoRouterActionApplier.prototype._lookupItem = function (dictionary, array, indices) {  // jshint ignore:line
         var index,
             id;
 
