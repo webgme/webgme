@@ -152,4 +152,18 @@ describe('export CLI tests', function () {
             })
             .catch(done);
     });
+
+    it('should export using the programmatic interface', function (done) {
+        exportCli.run({gmeConfig: gmeConfig,
+                       projectName: projectName,
+                       source: 'master',
+                       outFile: outputPath})
+            .then(function () {
+                var output = JSON.parse(testFixture.fs.readFileSync(outputPath));
+                expect(output).to.deep.equal(jsonProject);
+
+                done();
+            })
+            .catch(done);
+    });
 });
