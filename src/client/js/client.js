@@ -743,7 +743,7 @@ define([
 
         function canUndo() {
             var result = false;
-            if (state.undoRedoChain && state.undoRedoChain.previous) {
+            if (state.undoRedoChain && state.undoRedoChain.previous && state.undoRedoChain.previous.commitHash) {
                 result = true;
             }
 
