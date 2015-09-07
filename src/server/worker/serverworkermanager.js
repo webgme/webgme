@@ -204,7 +204,7 @@ function ServerWorkerManager(_parameters) {
     }
 
     function request(parameters, callback) {
-        logger.debug('Adding new request', {metadata: parameters});
+        logger.debug('Incoming request', {metadata: parameters});
         _waitingRequests.push({request: parameters, cb: callback});
         reserveWorkerIfNecessary();
     }
@@ -231,6 +231,7 @@ function ServerWorkerManager(_parameters) {
 
     function query(id, parameters, callback) {
         var worker;
+        logger.debug('Incoming query', id, {metadata: parameters});
         if (_idToPid[id]) {
             worker = _workers[_idToPid[id]];
             if (worker) {
@@ -298,7 +299,7 @@ function ServerWorkerManager(_parameters) {
     }
 
     return {
-        // Worker related
+        // Workers related
         request: request,
         query: query,
 

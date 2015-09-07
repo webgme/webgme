@@ -86,8 +86,8 @@ function connectedWorkerStart(webGMESessionId, userId, addOnName, projectId, bra
     });
 }
 
-function connectedWorkerQuery(parameters, callback) {
-    logger.info('connectedWorkerQuery');
+function connectedWorkerQuery(addOnName, parameters, callback) {
+    logger.info('connectedWorkerQuery', addOnName);
     logger.debug('connectedWorkerQuery', parameters);
     function finish(err, message) {
         if (err) {
@@ -101,8 +101,7 @@ function connectedWorkerQuery(parameters, callback) {
     }
 
     if (addOnManager) {
-        //TODO: Should query a specific addOn.
-        addOnManager.queryAddOn(null, parameters)
+        addOnManager.queryAddOn(addOnName, parameters)
             .nodeify(finish);
     } else {
         finish(new Error('No AddOn is running'));
@@ -207,7 +206,7 @@ process.on('message', function (parameters) {
         });
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStart) {
         if (gmeConfig.addOn.enable === true) {
-            connectedWorkerStart(parameters.webGMESessionId, parameters.userId, parameters.workerName,
+            connectedWorkerStart(parameters.webGMESessionId, parameters.userId, parameters.addOnName,
                 parameters.projectId, parameters.branch,
                 function (err) {
                     if (err) {
@@ -237,7 +236,7 @@ process.on('message', function (parameters) {
         }
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerQuery) {
         if (gmeConfig.addOn.enable === true) {
-            connectedWorkerQuery(parameters, function (err, result) {
+            connectedWorkerQuery(parameters.addOnName, parameters, function (err, result) {
                 safeSend({
                     pid: process.pid,
                     type: CONSTANT.msgTypes.query,
@@ -254,6 +253,7 @@ process.on('message', function (parameters) {
             });
         }
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStop) {
+        // TODO: We need a timeout here when clients disconnects, e.g. browser is closed.
         if (gmeConfig.addOn.enable === true) {
             connectedWorkerStop(function (err) {
                 safeSend({
