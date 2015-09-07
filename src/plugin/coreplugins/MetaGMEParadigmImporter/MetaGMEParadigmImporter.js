@@ -363,7 +363,7 @@ define([
                     }
 
                     self.core.setAttributeMeta(node, xmpAttribute['@name'], attributeDescriptor);
-                    self.core.setAttribute(node, xmpAttribute['@name'], xmpAttribute['@defvalue']);
+                    self.core.setAttribute(node, xmpAttribute['@name'], attributeDescriptor.default);
 
                 } else {
                     self.logger.error('Attribute was not found in global or local cache: ',
