@@ -251,7 +251,7 @@ describe('ServerWorkerManager', function () {
             getConnectedWorkerStartRequest = function () {
                 return {
                     command: workerConstants.workerCommands.connectedWorkerStart,
-                    workerName: 'TestAddOn',
+                    addOnName: 'TestAddOn',
                     projectId: projectId,
                     webGMESessionId: webGMESessionId,
                     branch: 'master'

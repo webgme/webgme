@@ -981,7 +981,7 @@ describe('Simple worker', function () {
                     webGMESessionId: webGMESessionId,
                     projectId: baseProjectContext.id,
                     branch: baseProjectContext.branch,
-                    workerName: 'TestAddOn'
+                    addOnName: 'TestAddOn'
                 });
             })
             .then(function (msg) {
