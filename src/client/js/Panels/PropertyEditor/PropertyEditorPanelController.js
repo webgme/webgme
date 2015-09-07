@@ -42,9 +42,10 @@ define(['js/logger',
             REGISTRY_KEYS.PORT_SVG_ICON],
         NON_INVALID_PTRS = [CONSTANTS.POINTER_BASE];
 
-    PropertyEditorController = function (client, propertyGrid) {
+    PropertyEditorController = function (client, propertyGrid, type) {
         this._client = client;
         this._propertyGrid = propertyGrid;
+        this._type = type || null; // CONSTANTS.PROPERTY_GROUP_ATTRIBUTES ...
         this._logger = Logger.create('gme:Panels:PropertyEditor:PropertyEditorController',
             WebGMEGlobal.gmeConfig.client.log);
         //it should be sorted alphabetically
@@ -137,7 +138,8 @@ define(['js/logger',
     };
 
     PropertyEditorController.prototype._getCommonPropertiesForSelection = function (selectedObjIDs) {
-        var propList = {},
+        var self = this,
+            propList = {},
             selectionLength = selectedObjIDs.length,
             cNode,
             i,
@@ -611,42 +613,51 @@ define(['js/logger',
                 }
             }
 
-            propList[CONSTANTS.PROPERTY_GROUP_ATTRIBUTES] = {
-                name: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
-                text: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
-                value: undefined
-            };
+            if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_ATTRIBUTES) {
+                propList[CONSTANTS.PROPERTY_GROUP_ATTRIBUTES] = {
+                    name: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
+                    text: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
+                    value: undefined
+                };
 
-            propList[CONSTANTS.PROPERTY_GROUP_PREFERENCES] = {
-                name: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
-                text: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
-                value: undefined
-            };
+                _addItemsToResultList(commonAttrs, CONSTANTS.PROPERTY_GROUP_ATTRIBUTES, propList, true, false, false);
+            }
 
-            propList[CONSTANTS.PROPERTY_GROUP_META] = {
-                name: CONSTANTS.PROPERTY_GROUP_META,
-                text: CONSTANTS.PROPERTY_GROUP_META,
-                value: undefined
-            };
+            if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_PREFERENCES) {
+                propList[CONSTANTS.PROPERTY_GROUP_PREFERENCES] = {
+                    name: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
+                    text: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
+                    value: undefined
+                };
 
-            propList[CONSTANTS.PROPERTY_GROUP_POINTERS] = {
-                name: CONSTANTS.PROPERTY_GROUP_POINTERS,
-                text: CONSTANTS.PROPERTY_GROUP_POINTERS,
-                value: undefined
-            };
+                _addItemsToResultList(commonPreferences,
+                    CONSTANTS.PROPERTY_GROUP_PREFERENCES,
+                    propList,
+                    false,
+                    true,
+                    false);
+            }
 
-            _addItemsToResultList(commonAttrs, CONSTANTS.PROPERTY_GROUP_ATTRIBUTES, propList, true, false, false);
+            if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_META) {
+                propList[CONSTANTS.PROPERTY_GROUP_META] = {
+                    name: CONSTANTS.PROPERTY_GROUP_META,
+                    text: CONSTANTS.PROPERTY_GROUP_META,
+                    value: undefined
+                };
 
-            _addItemsToResultList(commonPreferences,
-                CONSTANTS.PROPERTY_GROUP_PREFERENCES,
-                propList,
-                false,
-                true,
-                false);
+                _addItemsToResultList(commonMeta, CONSTANTS.PROPERTY_GROUP_META, propList, false, true, false);
+            }
 
-            _addItemsToResultList(commonMeta, CONSTANTS.PROPERTY_GROUP_META, propList, false, true, false);
+            if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_POINTERS) {
+                propList[CONSTANTS.PROPERTY_GROUP_POINTERS] = {
+                    name: CONSTANTS.PROPERTY_GROUP_POINTERS,
+                    text: CONSTANTS.PROPERTY_GROUP_POINTERS,
+                    value: undefined
+                };
 
-            _addItemsToResultList(commonPointers, CONSTANTS.PROPERTY_GROUP_POINTERS, propList, false, false, true);
+                _addItemsToResultList(commonPointers, CONSTANTS.PROPERTY_GROUP_POINTERS, propList, false, false, true);
+            }
+
         }
 
         return propList;
