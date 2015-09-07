@@ -190,7 +190,6 @@ describe('GME client', function () {
                 'validateModelAsync',
                 'validateNodeAsync',
                 'setValidationCallback',
-                'getDetailedHistoryAsync',
                 'getRunningAddOnNames',
                 'addOnsAllowed'
             );
