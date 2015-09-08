@@ -134,8 +134,11 @@ define([
         var i = this._highlightedElements.length;
 
         while (i--) {
-            this._diagramDesigner.items[this._highlightedElements[i]].unHighlight();
+            if (this._diagramDesigner.items.hasOwnProperty(this._highlightedElements[i])) {
+                this._diagramDesigner.items[this._highlightedElements[i]].unHighlight();
+            }
         }
+
         this._highlightedElements = [];
 
         this._lastSearchDesc = '';
