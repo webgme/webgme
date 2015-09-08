@@ -1573,6 +1573,35 @@ define([
             });
         };
 
+        //meta rules checking
+        /**
+         *
+         * @param {string[]} nodePaths - Paths to nodes of which to check.
+         * @param includeChildren
+         * @param callback
+         */
+        this.checkMetaRules = function (nodePaths, includeChildren, callback) {
+            var parameters = {
+                command: 'checkMetaRules',
+                includeChildren: includeChildren,
+                nodePaths: nodePaths,
+                commitHash: state.commitHash,
+                projectId: state.project.projectId
+            };
+
+            storage.simpleRequest(parameters, function (err, result) {
+                if (err) {
+                    logger.error(err);
+                }
+
+                self.dispatchEvent(CONSTANTS.META_RULES_RESULT, result);
+
+                if (callback) {
+                    callback(err, result);
+                }
+            });
+        };
+
         //seed
         this.seedProject = function (parameters, callback) {
             logger.debug('seeding project', parameters);

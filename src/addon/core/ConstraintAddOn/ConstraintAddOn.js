@@ -23,7 +23,7 @@ define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (Add
     ConstraintAddOn.prototype.update = function (root, callback) {
         //TODO if we would like a continuous constraint checking we should use this function as well
         this.root = root;
-        this.constraintChecker.initialize(this.root, this.commit, constraint.TYPES.CUSTOM);
+        this.constraintChecker.reinitialize(this.root, this.commit, constraint.TYPES.CUSTOM);
         callback(null);
     };
 
@@ -32,28 +32,16 @@ define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (Add
         //several query will be available but the first is the simple run constraint
         switch (parameters.querytype) {
             case 'checkProject':
-                self.constraintChecker.checkModel(self.root, callback);
+                self.constraintChecker.checkModel(self.core.getPath(self.root), callback);
                 break;
             case 'checkModel':
-                self._loadNode(parameters.path, function (err, node) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-                    self.constraintChecker.checkModel(node, callback);
-                });
+                self.constraintChecker.checkModel(parameters.path, callback);
                 break;
             case 'checkNode':
-                self._loadNode(parameters.path, function (err, node) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-                    self.constraintChecker.checkNode(node, callback);
-                });
+                self.constraintChecker.checkNode(parameters.path, callback);
                 break;
             default:
-                callback('unknown command');
+                callback(new Error('Unknown command'));
         }
     };
 
@@ -68,10 +56,6 @@ define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (Add
                 callback(null);
             }
         });
-    };
-
-    ConstraintAddOn.prototype._loadNode = function (path, callback) {
-        this.core.loadByPath(this.root, path, callback);
     };
 
     return ConstraintAddOn;

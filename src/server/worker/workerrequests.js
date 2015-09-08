@@ -11,8 +11,10 @@ var Core = requireJS('common/core/core'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
     merger = requireJS('common/core/users/merge'),
     BlobClient = requireJS('common/blob/BlobClient'),
+    constraint = requireJS('common/core/users/constraintchecker'),
 
     FS = require('fs'),
+    Q = require('q'),
 
     PluginNodeManager = require('../../plugin/nodemanager');
 
@@ -25,6 +27,52 @@ function WorkerRequests(mainLogger, gmeConfig) {
             storage = Storage.createStorage(host, webGMESessionId, logger, gmeConfig);
 
         return storage;
+    }
+
+    function _getCoreAndRootNode(storage, projectId, commitHash, branchName, callback) {
+        var deferred = Q.defer();
+
+        storage.openProject(projectId, function (err, project, branches) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            if (branchName) {
+                if (branches.hasOwnProperty(branchName) === false) {
+                    deferred.reject(new Error('Branch did not exist [' + branchName + ']'));
+                    return;
+                }
+                commitHash = branches[branchName];
+            }
+
+            project.loadObject(commitHash, function (err, commitObject) {
+                if (err) {
+                    deferred.reject(new Error(err));
+                    return;
+                }
+
+                var core = new Core(project, {
+                    globConf: gmeConfig,
+                    logger: logger.fork('core')
+                });
+
+                core.loadRoot(commitObject.root, function (err, rootNode) {
+                    if (err) {
+                        deferred.reject(new Error(err));
+                        return;
+                    }
+                    deferred.resolve({
+                        project: project,
+                        core: core,
+                        rootNode: rootNode,
+                        commitObject: commitObject
+                    });
+                });
+            });
+        });
+
+        return deferred.promise.nodeify(callback);
     }
 
     // Export functionality
@@ -257,6 +305,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
     }
 
     // Seeding functionality
+
     function _getSeedFromFile(name) {
         var i, names;
         if (gmeConfig.seedProjects.enable !== true) {
@@ -281,42 +330,19 @@ function WorkerRequests(mainLogger, gmeConfig) {
     function _getSeedFromProject(storage, projectId, branchName, callback) {
         branchName = branchName || 'master';
 
-        storage.openProject(projectId, function (err, project, branches) {
-            if (err) {
-                callback(err);
-                return;
-            }
-            if (branches.hasOwnProperty(branchName) === false) {
-                callback(new Error('Branch did not exist [' + branchName + ']'));
-                return;
-            }
-            project.loadObject(branches[branchName], function (err, commit) {
-                if (err) {
-                    callback(new Error(err));
-                    return;
-                }
-
-                var core = new Core(project, {
-                    globConf: gmeConfig,
-                    logger: logger.fork('core')
-                });
-
-                core.loadRoot(commit.root, function (err, root) {
+        _getCoreAndRootNode(storage, projectId, null, branchName)
+            .then(function (res) {
+                Serialization.export(res.core, res.rootNode, function (err, jsonExport) {
                     if (err) {
                         callback(new Error(err));
                         return;
                     }
-
-                    Serialization.export(core, root, function (err, jsonExport) {
-                        if (err) {
-                            callback(new Error(err));
-                            return;
-                        }
-                        callback(null, jsonExport);
-                    });
+                    callback(null, jsonExport);
                 });
+            })
+            .catch(function (err) {
+                callback(err);
             });
-        });
     }
 
     function _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, seedName, callback) {
@@ -518,12 +544,57 @@ function WorkerRequests(mainLogger, gmeConfig) {
         });
     }
 
+    function checkMetaRules(webGMESessionId, projectId, parameters, callback) {
+        var storage = getConnectedStorage(webGMESessionId),
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('checkMetaRules [' + projectId + '] failed with error', {metadata: err});
+                } else {
+                    logger.info('checkMetaRules [' + projectId + '] completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        logger.info('checkMetaRules ' + projectId);
+
+        if (typeof projectId !== 'string' || typeof parameters.commitHash !== 'string' ||
+            typeof parameters.nodePaths !== 'object' || parameters.nodePaths instanceof Array !== true) {
+            callback(new Error('invalid parameters: ' + JSON.stringify(parameters)));
+            return;
+        }
+
+        storage.open(function (networkState) {
+            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
+                _getCoreAndRootNode(storage, projectId, parameters.commitHash)
+                    .then(function (res) {
+                        var constraintChecker = new constraint.Checker(res.core, logger);
+                        function checkFromPath(nodePath) {
+                            if (parameters.includeChildren) {
+                                return constraintChecker.checkModel(nodePath);
+                            } else {
+                                return constraintChecker.checkNode(nodePath);
+                            }
+                        }
+                        constraintChecker.initialize(res.rootNode, parameters.commitHash, constraint.TYPES.META);
+                        return Q.all(parameters.nodePaths.map(checkFromPath));
+                    })
+                    .nodeify(finish);
+            } else {
+                finish(new Error('Problems connecting to the webgme server, network state: ' + networkState));
+            }
+        });
+    }
+
     return {
         exportLibrary: exportLibrary,
         executePlugin: executePlugin,
         seedProject: seedProject,
         autoMerge: autoMerge,
-        resolve: resolve
+        resolve: resolve,
+        checkMetaRules: checkMetaRules
     };
 }
 

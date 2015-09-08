@@ -1155,6 +1155,7 @@ define(['js/logger',
             MENU_EXPLIB = 'exportlib',
             MENU_UPDLIB = 'updatelib',
             MENU_CON_NODE = 'connode',
+            MENU_META_RULES = 'metaNodeRules',
             self = this;
 
         /*menuItems[MENU_EXINTCONF] = {
@@ -1170,13 +1171,21 @@ define(['js/logger',
                 name: 'Update library...',
                 icon: 'glyphicon glyphicon-refresh'
             };
+            menuItems[MENU_META_RULES] = {
+                name: 'Check Meta rules for node...',
+                icon: 'glyphicon glyphicon-ok-sign'
+            };
             if (self._client.getRunningAddOnNames().indexOf('ConstraintAddOn') !== -1) {
                 menuItems[MENU_CON_NODE] = {
                     name: 'Check Node Constraints...',
                     icon: 'glyphicon glyphicon-fire'
                 };
             }
-
+        } else if (selectedIds.length > 1) {
+            menuItems[MENU_META_RULES] = {
+                name: 'Check Meta rules for nodes...',
+                icon: 'glyphicon glyphicon-ok-sign'
+            };
         }
 
         this.designerCanvas.createMenu(menuItems, function (key) {
@@ -1188,6 +1197,8 @@ define(['js/logger',
                     self._updLib(selectedIds);
                 } else if (key === MENU_CON_NODE) {
                     self._nodeConCheck(selectedIds);
+                } else if (key === MENU_META_RULES) {
+                    self._metaRulesCheck(selectedIds);
                 }
             },
             this.designerCanvas.posToPageXY(mousePos.mX,
@@ -1205,6 +1216,7 @@ define(['js/logger',
 
         ExportManager.exIntConf(gmeIDs);
     };
+
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._expLib = function (selectedIds) {
         var i = selectedIds.length,
             gmeIDs = [],
@@ -1218,6 +1230,7 @@ define(['js/logger',
 
         ExportManager.expLib(id);
     };
+
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._updLib = function (selectedIds) {
         var i = selectedIds.length,
             gmeIDs = [],
@@ -1230,6 +1243,19 @@ define(['js/logger',
         id = gmeIDs[0] || null;
 
         ImportManager.importLibrary(id);
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._metaRulesCheck = function (selectedIds) {
+        var i = selectedIds.length,
+            gmeIDs = [];
+
+        while (i--) {
+            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
+        }
+
+        if (gmeIDs.length > 0) {
+            this._client.checkMetaRules(gmeIDs, false);
+        }
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._nodeConCheck = function (selectedIds) {

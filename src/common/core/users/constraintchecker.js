@@ -33,12 +33,34 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
         this.commitHash = null;
     }
 
+    ConstraintChecker.prototype.reinitialize =
     ConstraintChecker.prototype.initialize = function (rootNode, commitHash, constraintType) {
         this.rootNode = rootNode;
         this.logger.debug('ConstraintChecker constraintType', constraintType);
         this.type = constraintType || CONSTRAINT_TYPES.META;
         this.commitHash = commitHash;
         this.initialized = true;
+    };
+
+    ConstraintChecker.prototype._loadNode = function (path, callback) {
+        var self = this,
+            deferred = new Q.defer();
+
+        if (this.initialized === false) {
+            deferred.reject(new Error('ConstraintChecker was never initialized!'));
+        } else {
+            self.core.loadByPath(self.rootNode, path, function (err, node) {
+                if (err) {
+                    deferred.reject(new Error(err));
+                } else if (self.core.isValidNode(node) === false) {
+                    deferred.reject(new Error('Given nodePath does not exist "' + path + '"!'));
+                } else {
+                    deferred.resolve(node);
+                }
+            });
+        }
+
+        return deferred.promise.nodeify(callback);
     };
 
     ConstraintChecker.prototype._checkNode = function (node, callback) {
@@ -143,7 +165,7 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
         return deferred.promise.nodeify(callback);
     };
 
-    ConstraintChecker.prototype.checkModel = function (node, callback) {
+    ConstraintChecker.prototype.checkModel = function (nodePath, callback) {
         var self = this,
             deferred = Q.defer(),
             error = null,
@@ -191,38 +213,49 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
             });
         }
 
-        if (self.core.getPath(node) === self.core.getPath(self.core.getRoot(node))) {
-            message.info = 'project validation';
-        } else {
-            message.info = 'model [' + self.core.getPath(node) + '] validation';
-        }
+        self._loadNode(nodePath)
+            .then(function (node) {
+                if (self.core.getPath(node) === self.core.getPath(self.core.getRoot(node))) {
+                    message.info = 'Project Validation';
+                } else {
+                    message.info = 'Model [' + self.core.getPath(node) + '] Validation';
+                }
 
-        checkChild(node, function (err, message_) {
-            if (err) {
+                checkChild(node, function (err, message_) {
+                    if (err) {
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve(message_);
+                    }
+                });
+            })
+            .catch(function (err) {
                 deferred.reject(err);
-            } else {
-                deferred.resolve(message_);
-            }
-        });
+            });
 
         return deferred.promise.nodeify(callback);
     };
 
-    ConstraintChecker.prototype.checkNode = function (node, callback) {
+    ConstraintChecker.prototype.checkNode = function (nodePath, callback) {
         var self = this,
-            deferred = Q.defer(),
-            //TODO what should be the proper identification
-            message = {
-                info: 'node [' + (self.core.getAttribute(node, 'name') || '') + '] validation',
-                commit: self.commitHash,
-                hasViolation: false
-            };
+            node,
+            deferred = Q.defer();
 
-        self._checkNode(node)
+        self._loadNode(nodePath)
+            .then(function (node_) {
+                node = node_;
+                return self._checkNode(node);
+            })
             .then(function (result) {
+                var message = {
+                    info: 'Node [' + (self.core.getAttribute(node, 'name') || '') + '] Validation',
+                    commit: self.commitHash,
+                    hasViolation: false
+                };
+
                 message[self.core.getGuid(node)] = result;
                 message.hasViolation = result.hasViolation;
-                deferred.resolve(result);
+                deferred.resolve(message);
             })
             .catch(function (err) {
                 deferred.reject(err);
