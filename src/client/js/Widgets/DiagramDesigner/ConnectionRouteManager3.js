@@ -487,10 +487,11 @@ define([
         }
     };
 
-    ConnectionRouteManager3.prototype._updateBoxConnectionAreas = function (objId, boxObject) {
+    ConnectionRouteManager3.prototype._updateBoxConnectionAreas = function (objId) {
         var areas = this.diagramDesigner.items[objId].getConnectionAreas() || [],
             newIds = {},
             connInfo = [],
+            boxObject = this._autorouterBoxes[objId],
             id,
             j;
 
