@@ -50,13 +50,7 @@
     "138e7076-9c15-edf6-aea4-23effabebb86": {
       "attributes": {},
       "base": "18eb3c1d-c951-b757-c8c4-0ea8736c2470",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
       "pointers": {
         "base": "18eb3c1d-c951-b757-c8c4-0ea8736c2470"
@@ -75,13 +69,7 @@
         "name": "InSet"
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "d926b4e8-676d-709b-e10e-a6fe730e71f5",
       "pointers": {
         "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
@@ -100,13 +88,7 @@
     "45657d4d-f82d-13ce-1acb-0aadebb5c8b5": {
       "attributes": {},
       "base": "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
       "pointers": {
         "base": "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb"
@@ -146,13 +128,7 @@
     "56213d7f-3e44-6a23-3e2b-95adaf702b4d": {
       "attributes": {},
       "base": "5f73946c-68aa-9de1-7979-736d884171af",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "cbfe379c-c527-700e-3041-a0c22ca2a5d6",
       "pointers": {
         "base": "5f73946c-68aa-9de1-7979-736d884171af"
@@ -172,11 +148,6 @@
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "children": {
           "items": [
             "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
@@ -206,13 +177,7 @@
     "6d844797-2b03-60fc-a01d-d5249984495b": {
       "attributes": {},
       "base": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "dea8d757-8ea3-1748-d82e-7e2b33f3e720",
       "pointers": {
         "base": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e"
@@ -266,8 +231,8 @@
         },
         "usedAddOns": "ConstraintAddOn",
         "validDecorators": "ModelDecorator",
-        "validVisualizers": "ModelEditor METAAspect",
-        "validPlugins": ""
+        "validPlugins": "",
+        "validVisualizers": "ModelEditor METAAspect"
       },
       "sets": {
         "MetaAspectSet": [
@@ -402,13 +367,7 @@
         "name": "Model"
       },
       "base": "5f73946c-68aa-9de1-7979-736d884171af",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
       "pointers": {
         "base": "5f73946c-68aa-9de1-7979-736d884171af"
@@ -425,13 +384,7 @@
     "bbaf81cd-07b8-c4c6-b333-280cae75ff4a": {
       "attributes": {},
       "base": "5f73946c-68aa-9de1-7979-736d884171af",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "cbfe379c-c527-700e-3041-a0c22ca2a5d6",
       "pointers": {
         "base": "5f73946c-68aa-9de1-7979-736d884171af"
@@ -451,11 +404,6 @@
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "children": {
           "items": [
             "5f73946c-68aa-9de1-7979-736d884171af"
@@ -488,13 +436,7 @@
         "name": "InSet2"
       },
       "base": "18eb3c1d-c951-b757-c8c4-0ea8736c2470",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
       "pointers": {
         "base": "18eb3c1d-c951-b757-c8c4-0ea8736c2470"
@@ -511,13 +453,7 @@
     "cbfe379c-c527-700e-3041-a0c22ca2a5d6": {
       "attributes": {},
       "base": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
       "pointers": {
         "base": "be36b1a1-8d82-8aba-9eda-03d655a8bf3e"
@@ -577,13 +513,7 @@
     "d8f6c058-f180-f9ea-a0fc-5909e42811ae": {
       "attributes": {},
       "base": "5f73946c-68aa-9de1-7979-736d884171af",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42",
       "pointers": {
         "base": "5f73946c-68aa-9de1-7979-736d884171af"
@@ -603,11 +533,6 @@
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "children": {
           "items": [
             "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
@@ -637,13 +562,7 @@
     "dea8d757-8ea3-1748-d82e-7e2b33f3e720": {
       "attributes": {},
       "base": "5f73946c-68aa-9de1-7979-736d884171af",
-      "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
+      "meta": {},
       "parent": "56213d7f-3e44-6a23-3e2b-95adaf702b4d",
       "pointers": {
         "base": "5f73946c-68aa-9de1-7979-736d884171af"
@@ -663,11 +582,6 @@
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
       "meta": {
-        "attributes": {
-          "name": {
-            "type": "string"
-          }
-        },
         "pointers": {
           "setPtr": {
             "items": [

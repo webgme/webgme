@@ -1,0 +1,16 @@
+# Save as .codeclimate.yml (note leading .) in project root directory
+languages:
+  Ruby: false
+  JavaScript: true
+  PHP: false
+  Python: true
+exclude_paths:
+ - "src/client/bower_components/**/*"
+ - "src/client/isis-ui-components/**/*"
+ - "src/client/lib/**/*"
+ - "src/common/util/cannon.js"
+ - "src/common/util/ejs.js"
+ - "src/common/util/jszip.js"
+ - "src/common/util/sax.js"
+ - "src/server/middleware/executor/worker/node_worker.classes.build.js"
+ - "test-karma/**/*"

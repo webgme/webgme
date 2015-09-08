@@ -2,6 +2,9 @@
 /*jshint browser: true, node:true*/
 
 /**
+ * A module representing a PluginMessage.
+ *
+ * @module PluginMessage
  * @author lattmann / https://github.com/lattmann
  */
 
@@ -16,6 +19,7 @@ define(['plugin/PluginNodeDescription'], function (PluginNodeDescription) {
      *
      * @param config - deserializes an existing configuration to this object.
      * @constructor
+     * @alias PluginMessage
      */
     var PluginMessage = function (config) {
         if (config) {

@@ -3,7 +3,7 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-define([], function () {
+define(['q'], function (Q) {
     'use strict';
 
     function AddOn(state, storage, logger__, gmeConfig) {
@@ -11,55 +11,89 @@ define([], function () {
             logger = logger__.fork('addOn'),
             _constraintCallback = function () {
             };
-        //addOn functions
-        function startAddOn(name) {
-            if (_addOns[name] === undefined) {
+
+        function startAddOn(name, callback) {
+            var deferred = Q.defer();
+
+            if (_addOns.hasOwnProperty(name)) {
+                deferred.resolve(_addOns[name]);
+            } else {
+                //TODO: Each addOn should have more data, initializing, stopping, id, name etc.
                 _addOns[name] = 'loading';
                 logger.debug('loading addOn ' + name);
                 storage.simpleRequest({
                         command: 'connectedWorkerStart',
-                        workerName: name,
-                        project: state.project.name,
+                        addOnName: name,
+                        projectId: state.project.projectId,
                         branch: state.branchName
                     },
                     function (err, id) {
                         if (err) {
-                            logger.error('starting addon failed ' + err);
+                            logger.error('starting addon failed ', err);
                             delete _addOns[name];
-                            return logger.error(err);
+                            deferred.reject(err);
+                            return;
                         }
 
                         logger.debug('started addon ' + name + ' ' + id);
                         _addOns[name] = id;
+                        deferred.resolve(id);
                     });
             }
 
+            return deferred.promise.nodeify(callback);
         }
 
         function queryAddOn(name, query, callback) {
+            var deferred = Q.defer();
+
             if (!_addOns[name] || _addOns[name] === 'loading') {
-                return callback(new Error('no such addOn is ready for queries'));
+                deferred.reject(new Error('no such addOn is ready for queries'));
+            } else {
+                query.addOnName = name;
+                storage.simpleQuery(_addOns[name], query, function (err, message) {
+                    if (err) {
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve(message);
+                    }
+                });
             }
-            storage.simpleQuery(_addOns[name], query, callback);
+
+            return deferred.promise.nodeify(callback);
         }
 
         function stopAddOn(name, callback) {
+            var deferred = Q.defer();
             if (_addOns[name] && _addOns[name] !== 'loading') {
-                storage.simpleResult(_addOns[name], callback);
+                // FIXME: addOn state should be stopping
+                // TODO: connectedworkerStop should come from constants!!
+                storage.simpleQuery(_addOns[name], {command: 'connectedworkerStop'}, function (err) {
+                    if (err) {
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve();
+                    }
+                });
                 delete _addOns[name];
             } else {
-                callback(_addOns[name] ? new Error('addon loading') : null);
+                if (_addOns[name]) {
+                    logger.error('Worker was loading when being stopped', name);
+                    deferred.reject(new Error('addon was loading'));
+                } else {
+                    deferred.resolve();
+                }
             }
+
+            return deferred.promise.nodeify(callback);
         }
 
         //generic project related addOn handling
-        function updateRunningAddOns(root) {
+        function updateRunningAddOns(root, callback) {
             var i,
+                pendingRequests = [],
                 neededAddOns,
-                runningAddOns,
-                callback = function (err) {
-                    logger.error(err);
-                };
+                runningAddOns;
 
             if (gmeConfig.addOn.enable === true) {
                 neededAddOns = state.core.getRegistry(root, 'usedAddOns');
@@ -67,34 +101,33 @@ define([], function () {
                 neededAddOns = neededAddOns ? neededAddOns.split(' ') : [];
                 for (i = 0; i < neededAddOns.length; i += 1) {
                     if (!_addOns[neededAddOns[i]]) {
-                        startAddOn(neededAddOns[i]);
+                        pendingRequests.push(startAddOn(neededAddOns[i]));
                     }
                 }
                 for (i = 0; i < runningAddOns.length; i += 1) {
                     if (neededAddOns.indexOf(runningAddOns[i]) === -1) {
-                        stopAddOn(runningAddOns[i], callback);
+                        pendingRequests.push(stopAddOn(runningAddOns[i]));
                     }
                 }
             }
+
+            return Q.all(pendingRequests).nodeify(callback);
         }
 
-        function stopRunningAddOns() {
+        function stopRunningAddOns(callback) {
             var i,
-                keys,
-                callback;
+                pendingRequests = [],
+                keys;
 
             if (gmeConfig.addOn.enable === true) {
                 keys = Object.keys(_addOns);
-                callback = function (err) {
-                    if (err) {
-                        logger.error('stopAddOn' + err);
-                    }
-                };
 
                 for (i = 0; i < keys.length; i++) {
-                    stopAddOn(keys[i], callback);
+                    pendingRequests.push(stopAddOn(keys[i]));
                 }
             }
+
+            return Q.all(pendingRequests).nodeify(callback);
         }
 
         function getRunningAddOnNames() {
@@ -110,14 +143,6 @@ define([], function () {
         }
 
         //core addOns
-        //history
-        function getDetailedHistoryAsync(callback) {
-            if (_addOns.hasOwnProperty('HistoryAddOn') && _addOns.HistoryAddOn !== 'loading') {
-                queryAddOn('HistoryAddOn', {}, callback);
-            } else {
-                callback(new Error('history information is not available'));
-            }
-        }
 
         //constraint
         function validateProjectAsync(callback) {
@@ -159,12 +184,8 @@ define([], function () {
         //core addOns end
 
         return {
-            startAddOn: startAddOn,
-            queryAddOn: queryAddOn,
-            stopAddOn: stopAddOn,
             updateRunningAddOns: updateRunningAddOns,
             stopRunningAddOns: stopRunningAddOns,
-            getDetailedHistoryAsync: getDetailedHistoryAsync,
             validateProjectAsync: validateProjectAsync,
             validateModelAsync: validateModelAsync,
             validateNodeAsync: validateNodeAsync,

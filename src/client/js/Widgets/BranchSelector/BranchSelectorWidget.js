@@ -117,7 +117,7 @@ define([
         };
 
         try {
-            this._client.getBranches(this._client.getActiveProjectName(), branchesLoaded);
+            this._client.getBranches(this._client.getActiveProjectId(), branchesLoaded);
         } catch (exp) {
             this._logger.error('_client.getBranchesAsync failed.... SHOULD NEVER HAPPEN');
         }

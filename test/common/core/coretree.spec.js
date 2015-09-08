@@ -12,11 +12,11 @@ describe('CoreTree', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
         should = require('chai').should(),
+        expect = testFixture.expect,
         requirejs = require('requirejs'),
         projectName = 'CoreTreeTest',
+        projectId = testFixture.projectName2Id(projectName),
         CoreTree = requirejs('common/core/coretree'),
-
-    // TODO: replace with in memory storage
 
         logger = testFixture.logger.fork('coretree.spec'),
         storage,
@@ -33,12 +33,10 @@ describe('CoreTree', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
-            })
-            .then(function () {
                 return storage.createProject({projectName: projectName});
             })
-            .then(function (project) {
+            .then(function (dbProject) {
+                var project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
                 coreTree = new CoreTree(project, {
                     globConf: gmeConfig,
                     logger: testFixture.logger.fork('CoreTree:core')
@@ -49,14 +47,36 @@ describe('CoreTree', function () {
     });
 
     after(function (done) {
-        storage.deleteProject({projectName: projectName})
+        storage.deleteProject({projectId: projectId})
             .then(function () {
-                return Q.all([
+                return Q.allDone([
                     storage.closeDatabase(),
                     gmeAuth.unload()
                 ]);
             })
             .nodeify(done);
+    });
+
+    it('should setData, getData, deleteData', function () {
+        var node = coreTree.createRoot(),
+            data = {
+                a: [],
+                b: true,
+                c: 'c',
+                d: 42
+            };
+
+        coreTree.setData(node, data);
+        expect(coreTree.getData(node)).to.deep.equal(data);
+        expect(coreTree.deleteData(node)).to.deep.equal(data);
+        expect(coreTree.getData(node)).to.deep.equal({});
+    });
+
+
+    it('should getDescendant', function () {
+        var node = coreTree.createRoot();
+
+        expect(coreTree.getDescendant(node, node, undefined /* base */)).to.deep.equal(node);
     });
 
     describe('core.getParent', function () {

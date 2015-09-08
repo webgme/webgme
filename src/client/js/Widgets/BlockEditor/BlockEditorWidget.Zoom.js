@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, $*/
 /*jshint browser: true*/
 
 /**
@@ -7,7 +7,7 @@
 
 define(['jquery-csszoom'], function () {
 
-    "use strict";
+    'use strict';
 
     var BlockEditorWidgetZoom,
         DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10];
@@ -20,13 +20,13 @@ define(['jquery-csszoom'], function () {
             zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
 
         //zoom
-        this._zoomSlider = $('<div/>', {'class': 'block-editor-zoom'});
+        this._zoomSlider = $('<div/>', {class: 'block-editor-zoom'});
         this.$el.parent().append(this._zoomSlider);
 
         this._zoomSlider.csszoom({
-            'zoomTarget': this.skinParts.$itemsContainer,
-            'zoomLevels': zoomValues,
-            'onZoom': function (zoomLevel) {
+            zoomTarget: this.skinParts.$itemsContainer,
+            zoomLevels: zoomValues,
+            onZoom: function (zoomLevel) {
                 self._zoomRatio = zoomLevel;
                 self._resizeItemContainer();
             }

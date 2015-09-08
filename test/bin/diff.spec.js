@@ -14,46 +14,50 @@ describe('diff CLI tests', function () {
         expect = testFixture.expect,
         logger = testFixture.logger.fork('diff.spec'),
         diffCLI = require('../../src/bin/diff'),
-        importCLI = require('../../src/bin/import'),
         filename = require('path').normalize('src/bin/diff.js'),
-        FS = testFixture.fs,
         rimraf = testFixture.rimraf,
         Q = testFixture.Q,
-        getJsonProject = function (path) {
-            return JSON.parse(FS.readFileSync(path, 'utf-8'));
-        },
         oldLogFunction = console.log,
         oldWarnFunction = console.warn,
         oldStdOutFunction = process.stdout.write,
 
-        diffCliTest = 'diffCliTest';
+        projectName = 'diffCliTest';
 
     before(function (done) {
-        var jsonProject;
-
-        testFixture.clearDBAndGetGMEAuth(gmeConfig, diffCliTest)
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth__) {
                 gmeAuth = gmeAuth__;
                 storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
             })
             .then(function () {
-                return storage.deleteProject({projectName: diffCliTest});
+                return testFixture.importProject(storage, {
+                    projectName: projectName,
+                    logger: logger.fork('import'),
+                    gmeConfig: gmeConfig,
+                    branchName: 'source',
+                    userName: gmeConfig.authentication.guestAccount,
+                    projectSeed: './test/bin/diff/source001.json',
+
+                });
             })
-            .then(function () {
-                jsonProject = getJsonProject('./test/bin/diff/source001.json');
-                return Q.nfcall(importCLI.import,
-                    storage, gmeConfig, diffCliTest, jsonProject, 'source', true, undefined);
-            })
-            .then(function () {
-                return Q.nfcall(importCLI.import,
-                    storage, gmeConfig, diffCliTest, jsonProject, 'target', true, undefined);
+            .then(function (result) {
+                /*status: result.status,
+                 branchName: branchName,
+                 commitHash: commitObject._id,
+                 project: project,
+                 projectId: project.projectId,
+                 core: core,
+                 jsonProject: projectJson,
+                 rootNode: rootNode,
+                 rootHash: persisted.rootHash*/
+                return result.project.createBranch('target', result.commitHash);
             })
             .nodeify(done);
     });
 
     after(function (done) {
-        Q.all([
+        Q.allDone([
             gmeAuth.unload(),
             storage.closeDatabase(),
             Q.nfcall(rimraf, './test-tmp/diffCli.out')
@@ -100,14 +104,19 @@ describe('diff CLI tests', function () {
             })
             .catch(function (err) {
                 expect(err).not.to.equal(null);
-                expect(err.toString()).to.contain('unknownProject');
+                expect(err.message).to.contain('unknownProject');
                 done();
-            });
+            })
+            .done();
     });
 
     it('should work if all parameters are fine', function (done) {
-        diffCLI.main(['node',
-            filename, '-p', diffCliTest, '-s', 'source', '-t', 'target', '-u', gmeConfig.authentication.guestAccount])
+        diffCLI.main(['node', filename,
+            '-m', gmeConfig.mongo.uri,
+            '-p', projectName,
+            '-s', 'source',
+            '-t', 'target',
+            '-u', gmeConfig.authentication.guestAccount])
             .then(function () {
                 done();
             })
@@ -115,8 +124,13 @@ describe('diff CLI tests', function () {
     });
 
     it('should write its output to file', function (done) {
-        diffCLI.main(['node', filename, '-p', diffCliTest, '-s', 'source', '-t', 'target',
-            '-u', gmeConfig.authentication.guestAccount, '-o', './test-tmp/diffCli.out'])
+        diffCLI.main(['node', filename,
+            '-p', projectName,
+            '-o', gmeConfig.authentication.guestAccount,
+            '-s', 'source',
+            '-t', 'target',
+            '-u', gmeConfig.authentication.guestAccount,
+            '-f', './test-tmp/diffCli.out'])
             .then(function () {
                 done();
             })

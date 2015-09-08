@@ -7,10 +7,12 @@
 
 define(['jquery',
     'js/Constants',
-    'js/NodePropertyNames'
+    'js/NodePropertyNames',
+    'js/Utils/SaveToDisk'
 ], function (_jquery,
              CONSTANTS,
-             nodePropertyNames) {
+             nodePropertyNames,
+             saveToDisk) {
 
     'use strict';
 
@@ -24,26 +26,26 @@ define(['jquery',
     }
 
     function exportMultiple(objIDs) {
-        var fileName = client.getActiveProjectName() + '_' + client.getActiveBranchName() + '_multiple';
+        var fileName = client.getActiveProjectId() + '_' + client.getActiveBranchName() + '_multiple';
 
         if (_.isArray(objIDs) &&
             objIDs.length > 0) {
             client.getExportItemsUrl(objIDs, fileName, function (err, url) {
                 if (!err) {
-                    window.location = url;
+                    saveToDisk(url);
                 }
             });
         }
     }
 
     function exIntConf(objIDs) {
-        var fileName = client.getActiveProjectName() + '_' + client.getActiveBranchName() + '_conf';
+        var fileName = client.getActiveProjectId() + '_' + client.getActiveBranchName() + '_conf';
 
         if (_.isArray(objIDs) &&
             objIDs.length > 0) {
             client.getExternalInterpreterConfigUrlAsync(objIDs, fileName, function (err, url) {
                 if (!err) {
-                    window.location = url;
+                    saveToDisk(url);
                 }
             });
         }
@@ -55,12 +57,12 @@ define(['jquery',
 
         if (typeof objID === 'string') {
             object = client.getNode(objID);
-            fileName = client.getActiveProjectName() + '_' + client.getActiveBranchName() + '_' +
-                           object.getAttribute('name') + '_lib';
+            fileName = client.getActiveProjectId() + '_' + client.getActiveBranchName() + '_' +
+                object.getAttribute('name') + '_lib';
 
             client.getExportLibraryUrl(objID, fileName, function (err, url) {
                 if (!err) {
-                    window.location = url;
+                    saveToDisk(url);
                 }
             });
         }

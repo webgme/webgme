@@ -38,7 +38,7 @@ define(['js/logger',
         var self = this;
 
         this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:MetaEditor:MetaEditorControl',
-            WebGMEGlobal.gmeConfig.client.log);
+                WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
 
@@ -187,7 +187,7 @@ define(['js/logger',
             //the opened model has been deleted....
             //most probably a project / branch / whatever change
             this.logger.debug('The currently opened aspect has been deleted --- GMEID: "' +
-                              this.metaAspectContainerNodeID + '"');
+                this.metaAspectContainerNodeID + '"');
             setTimeout(function () {
                 self._loadMetaAspectContainerNode();
             }, 10);
@@ -240,16 +240,18 @@ define(['js/logger',
                 REGISTRY_KEYS.POSITION);
         }
 
+        //setSelected sheet
+        //this._selectedMetaAspectSet
         //process the sheets
         positionsUpdated = this._processMetaAspectSheetsRegistry();
 
         this.logger.debug('_metaAspectMembersAll: \n' + JSON.stringify(this._metaAspectMembersAll));
         this.logger.debug('_metaAspectMembersCoordinatesGlobal: \n' +
-                          JSON.stringify(this._metaAspectMembersCoordinatesGlobal));
+            JSON.stringify(this._metaAspectMembersCoordinatesGlobal));
 
         this.logger.debug('_metaAspectMembersPerSheet: \n' + JSON.stringify(this._metaAspectMembersPerSheet));
         this.logger.debug('_metaAspectMembersCoordinatesPerSheet: \n' +
-                          JSON.stringify(this._metaAspectMembersCoordinatesPerSheet));
+            JSON.stringify(this._metaAspectMembersCoordinatesPerSheet));
 
         //check to see if the territory needs to be changed
         //the territory contains the nodes that are on the currently opened sheet
@@ -760,9 +762,9 @@ define(['js/logger',
                     if (connDesc[0] === connType) {
                         if (connType !== MetaRelations.META_RELATIONS.POINTER ||
                             (connType === MetaRelations.META_RELATIONS.POINTER &&
-                             pointerName &&
-                             pointerName !== '' &&
-                             connDesc[1].name === pointerName)) {
+                            pointerName &&
+                            pointerName !== '' &&
+                            connDesc[1].name === pointerName)) {
                             connDesc[1] = connTexts;
                         }
                     }
@@ -775,9 +777,9 @@ define(['js/logger',
                     if (connDesc[0] === connType) {
                         if (connType !== MetaRelations.META_RELATIONS.POINTER ||
                             (connType === MetaRelations.META_RELATIONS.POINTER &&
-                             pointerName &&
-                             pointerName !== '' &&
-                             connDesc[1].name === pointerName)) {
+                            pointerName &&
+                            pointerName !== '' &&
+                            connDesc[1].name === pointerName)) {
                             connDesc[1] = connTexts;
                         }
                     }
@@ -951,9 +953,9 @@ define(['js/logger',
 
                         if (isSet) {
                             newMetaPointers[combinedName].multiplicity = '' +
-                                                                         (pointerMetaDescriptor[lenTargets].min || 0) +
-                                                                         '..' +
-                                                                         (pointerMetaDescriptor[lenTargets].max || '*');
+                                (pointerMetaDescriptor[lenTargets].min || 0) +
+                                '..' +
+                                (pointerMetaDescriptor[lenTargets].max || '*');
                         }
 
                     }
@@ -1228,24 +1230,23 @@ define(['js/logger',
     };
 
 
-    MetaEditorControl.prototype._createInheritanceRelationship = function (/* parentID, objectID */) {
-        //TEMPORARILY DO NOT ALLOW CREATING INHERITANCE RELATIONSHIP
-        /*var parentNode = this._client.getNode(parentID),
-         objectNode = this._client.getNode(objectID),
-         objectBase;
+    MetaEditorControl.prototype._createInheritanceRelationship = function (newBaseID, objectID) {
+        var newBaseNode = this._client.getNode(newBaseID),
+            objectNode = this._client.getNode(objectID),
+            objectBase;
 
-         if (parentNode && objectNode) {
-         objectBase = objectNode.getBaseId();
+        if (newBaseNode && objectNode) {
+            objectBase = objectNode.getBaseId();
 
-         if (objectBase && !_.isEmpty(objectBase)) {
-         this.logger.debug('InheritanceRelationship from "' +
-         objectNode.getAttribute(nodePropertyNames.Attributes.name) +
-          '" (' + objectID + ') to parent "' + objectBase + '" already exists, but overwriting to "' +
-          parentNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + parentID + ')"');
-         }
+            if (objectBase && !_.isEmpty(objectBase)) {
+                this.logger.debug('InheritanceRelationship from "' +
+                    objectNode.getAttribute(nodePropertyNames.Attributes.name) +
+                    '" (' + objectID + ') to parent "' + objectBase + '" already exists, but overwriting to "' +
+                    newBaseNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + newBaseID + ')"');
+            }
 
-         this._client.setBase(objectID, parentID);
-         }*/
+            this._client.setBase(objectID, newBaseID);
+        }
     };
 
 
@@ -1263,13 +1264,13 @@ define(['js/logger',
                     objectBaseId = baseNode.getAttribute(nodePropertyNames.Attributes.name) + ' (' + objectBaseId + ')';
                 }
                 /*this.logger.debug('Deleting InheritanceRelationship from "' +
-                objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' +
+                 objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' +
                  objectBaseId + '"');
                  this._client.delBase(objectID);*/
                 //TEMPORARILY DO NOT ALLOW DELETING INHERITANCE RELATIONSHIP
-                this.logger.warn('Deleting InheritanceRelationship from "' +
-                                 objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID +
-                                 ') to parent "' + objectBaseId + '" is not allowed...');
+                this.logger.error('Deleting InheritanceRelationship from "' +
+                    objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID +
+                    ') to parent "' + objectBaseId + '" is not allowed...');
             }
         }
     };
@@ -1313,7 +1314,7 @@ define(['js/logger',
 
     MetaEditorControl.prototype._filterConnType = function (connType) {
         var len = this._connectionListByType &&
-                  this._connectionListByType.hasOwnProperty(connType) ? this._connectionListByType[connType].length : 0,
+            this._connectionListByType.hasOwnProperty(connType) ? this._connectionListByType[connType].length : 0,
             connComponentId,
             gmeSrcId,
             gmeDstId,
@@ -1346,7 +1347,7 @@ define(['js/logger',
     MetaEditorControl.prototype._unfilterConnType = function (connType) {
         //FIXME: What does this mean?
         var len = this._filteredOutConnectionDescriptors &&
-                  this._filteredOutConnectionDescriptors.hasOwnProperty(connType) ?
+            this._filteredOutConnectionDescriptors.hasOwnProperty(connType) ?
                 this._filteredOutConnectionDescriptors[connType].length : 0,
             gmeSrcId,
             gmeDstId,
@@ -1612,10 +1613,12 @@ define(['js/logger',
             icon: MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.CONTAINMENT)
         });
 
-        /*this._radioButtonGroupMetaRelationType.addButton({ "title": "Inheritance",
-         "selected": false,
-         "data": { "connType": MetaRelations.META_RELATIONS.INHERITANCE },
-         "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)});*/
+        this._radioButtonGroupMetaRelationType.addButton({
+            title: 'Inheritance',
+            selected: false,
+            data: {connType: MetaRelations.META_RELATIONS.INHERITANCE},
+            icon: MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)
+        });
 
         this._radioButtonGroupMetaRelationType.addButton({
             title: 'Pointer',
@@ -1771,6 +1774,13 @@ define(['js/logger',
                     }
                 }
             }
+        }
+
+        //setting selectedSheetID from global STATE
+        if (WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB) !== null &&
+            WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB) !== undefined &&
+            metaAspectSheetsRegistry.length > WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB)) {
+            selectedSheetID = WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB);
         }
 
         if (!selectedSheetID) {

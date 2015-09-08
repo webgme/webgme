@@ -11,6 +11,7 @@ describe('coretype', function () {
         Q = testFixture.Q,
         logger = testFixture.logger.fork('coretype.spec'),
         storage,
+        expect = testFixture.expect,
         Type = testFixture.requirejs('common/core/coretype'),
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),
@@ -19,10 +20,9 @@ describe('coretype', function () {
             return new Type(new Rel(new Tree(s, options), options), options);
         },
         projectName = 'coreTypeTesting',
-        project,
+        projectId = testFixture.projectName2Id(projectName),
         core,
         root,
-
         gmeAuth;
 
     before(function (done) {
@@ -32,14 +32,11 @@ describe('coretype', function () {
                 storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
             })
-            .then(function () {
-                return storage.deleteProject({projectName: projectName});
-            })
             .nodeify(done);
     });
 
     after(function (done) {
-        Q.all([
+        Q.allDone([
             storage.closeDatabase(),
             gmeAuth.unload()
         ])
@@ -49,15 +46,13 @@ describe('coretype', function () {
     beforeEach(function (done) {
         storage.openDatabase()
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
-            })
-            .then(function () {
                 return storage.createProject({projectName: projectName});
             })
-            .then(function (project) {
+            .then(function (dbProject) {
                 var base,
                     bChild,
-                    instance;
+                    instance,
+                    project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
 
                 core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('coretype:core')});
                 root = core.createNode();
@@ -77,7 +72,7 @@ describe('coretype', function () {
     });
 
     afterEach(function (done) {
-        storage.deleteProject({projectName: projectName})
+        storage.deleteProject({projectId: projectId})
             .then(function () {
                 storage.closeDatabase(done);
             })
@@ -241,5 +236,110 @@ describe('coretype', function () {
         }, core.loadChildren(root));
     });
 
+    it('changing base changes attributes', function () {
+        var oldType = core.createNode({parent: root, base: null}),
+            newType = core.createNode({parent: root, base: null}),
+            instance = core.createNode({parent: root, base: oldType});
 
+        //pre-check
+        expect(core.getAttributeNames(oldType)).to.eql([]);
+        expect(core.getAttributeNames(newType)).to.eql([]);
+        expect(core.getAttributeNames(instance)).to.eql([]);
+
+        //adding attributes to the types
+        core.setAttribute(oldType, 'old', 'oldValue');
+        core.setAttribute(newType, 'new', 'newValue');
+        expect(core.getAttributeNames(oldType)).to.have.members(['old']);
+        expect(core.getAttributeNames(newType)).to.have.members(['new']);
+        expect(core.getAttributeNames(instance)).to.have.members(['old']);
+        expect(core.getAttribute(instance, 'old')).to.equal('oldValue');
+        expect(core.getAttribute(instance, 'new')).to.equal(undefined);
+
+        //changing base
+        core.setBase(instance, newType);
+        expect(core.getAttributeNames(oldType)).to.have.members(['old']);
+        expect(core.getAttributeNames(newType)).to.have.members(['new']);
+        expect(core.getAttributeNames(instance)).to.have.members(['new']);
+        expect(core.getAttribute(instance, 'old')).to.equal(undefined);
+        expect(core.getAttribute(instance, 'new')).to.equal('newValue');
+    });
+
+    it('changing base changes attributes and keep overridden ones', function () {
+        var oldType = core.createNode({parent: root, base: null}),
+            newType = core.createNode({parent: root, base: null}),
+            instance = core.createNode({parent: root, base: oldType});
+
+        //pre-check
+        expect(core.getAttributeNames(oldType)).to.eql([]);
+        expect(core.getAttributeNames(newType)).to.eql([]);
+        expect(core.getAttributeNames(instance)).to.eql([]);
+
+        //adding attributes to the types
+        core.setAttribute(oldType, 'old', 'oldValue');
+        core.setAttribute(newType, 'new', 'newValue');
+        expect(core.getAttributeNames(oldType)).to.have.members(['old']);
+        expect(core.getAttributeNames(newType)).to.have.members(['new']);
+        expect(core.getAttributeNames(instance)).to.have.members(['old']);
+        expect(core.getAttribute(instance, 'old')).to.equal('oldValue');
+        expect(core.getAttribute(instance, 'new')).to.equal(undefined);
+
+        //override attribute
+        core.setAttribute(instance, 'old', 'myValue');
+        expect(core.getAttribute(instance, 'old')).to.equal('myValue');
+        expect(core.getAttribute(instance, 'new')).to.equal(undefined);
+
+        //changing base
+        core.setBase(instance, newType);
+        expect(core.getAttributeNames(oldType)).to.have.members(['old']);
+        expect(core.getAttributeNames(newType)).to.have.members(['new']);
+        expect(core.getAttributeNames(instance)).to.have.members(['new', 'old']);
+        expect(core.getAttribute(instance, 'old')).to.equal('myValue');
+        expect(core.getAttribute(instance, 'new')).to.equal('newValue');
+    });
+
+    it('changing base should fail if oldBase has children', function () {
+        var oldType = core.createNode({parent: root, base: null}),
+            newType = core.createNode({parent: root, base: null}),
+            instance = core.createNode({parent: root, base: oldType});
+
+        //pre-check
+        expect(core.getAttributeNames(oldType)).to.eql([]);
+        expect(core.getAttributeNames(newType)).to.eql([]);
+        expect(core.getAttributeNames(instance)).to.eql([]);
+
+        //adding child to oldType
+        core.createNode({parent: oldType, base: null});
+
+        //try to change base
+        try {
+            core.setBase(instance, newType);
+            throw new Error('changing from a base that has children should be prohibited');
+        } catch (e) {
+            //it should fail
+            expect(e).not.to.equal(null);
+        }
+    });
+
+    it('changing base should fail if newBase has children', function () {
+        var oldType = core.createNode({parent: root, base: null}),
+            newType = core.createNode({parent: root, base: null}),
+            instance = core.createNode({parent: root, base: oldType});
+
+        //pre-check
+        expect(core.getAttributeNames(oldType)).to.eql([]);
+        expect(core.getAttributeNames(newType)).to.eql([]);
+        expect(core.getAttributeNames(instance)).to.eql([]);
+
+        //adding child to oldType
+        core.createNode({parent: newType, base: null});
+
+        //try to change base
+        try {
+            core.setBase(instance, newType);
+            throw new Error('changing from a base that has children should be prohibited');
+        } catch (e) {
+            //it should fail
+            expect(e).not.to.equal(null);
+        }
+    });
 });

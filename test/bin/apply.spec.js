@@ -20,42 +20,34 @@ describe('apply CLI tests', function () {
         oldLogFunction = console.log,
         oldWarnFunction = console.warn,
         oldStdOutFunction = process.stdout.write,
-        applyCliTestProject = 'applyCliTest';
+        projectName = 'applyCliTest',
+        projectId = testFixture.projectName2Id(projectName, gmeConfig.authentication.guestAccount);
 
     before(function (done) {
-        testFixture.clearDBAndGetGMEAuth(gmeConfig, applyCliTestProject)
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth__) {
                 gmeAuth = gmeAuth__;
                 storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
             })
             .then(function () {
-                return storage.deleteProject({projectName: applyCliTestProject});
-            })
-            .then(function () {
                 testFixture.importProject(storage, {
-                    projectName: applyCliTestProject,
+                    projectName: projectName,
                     logger: logger.fork('import'),
                     gmeConfig: gmeConfig,
                     branchName: 'master',
-                    userName: gmeConfig.authentication.guestAccount,
-                    projectSeed: './test/bin/apply/base001.json',
-
+                    username: gmeConfig.authentication.guestAccount,
+                    projectSeed: './test/bin/apply/base001.json'
                 });
             })
             .nodeify(done);
     });
 
     after(function (done) {
-        storage.deleteProject({
-            projectName: applyCliTestProject
-        })
-            .then(function () {
-                return Q.all([
-                    gmeAuth.unload(),
-                    storage.closeDatabase()
-                ]);
-            })
+        Q.allDone([
+            gmeAuth.unload(),
+            storage.closeDatabase()
+        ])
             .nodeify(done);
     });
 
@@ -86,34 +78,35 @@ describe('apply CLI tests', function () {
             })
             .catch(function (err) {
                 expect(err).not.to.equal(null);
-                expect(err.toString()).to.contain('invalid argument');
-                done();
-            });
-    });
-
-    it('should prin all projects', function (done) {
-        storage.getProjectNames({username: gmeConfig.authentication.guestAccount})
-            .then(function (names) {
-                logger.error(names);
+                expect(err.message).to.contain('invalid argument');
                 done();
             })
-            .catch(done);
+            .done();
     });
 
     it('should succeed if all parameter is given', function (done) {
         applyCLI.main(['node', filename,
             './test/bin/apply/patch.json',
-            '-p', applyCliTestProject,
+            '-p', projectName,
+            '-t', 'master',
+            '-m', gmeConfig.mongo.uri])
+            .nodeify(done);
+    });
+
+    it('should succeed with specific user name given as well', function (done) {
+        applyCLI.main(['node', filename,
+            './test/bin/apply/patch.json',
+            '-p', projectName,
             '-t', 'master',
             '-u', gmeConfig.authentication.guestAccount,
             '-m', gmeConfig.mongo.uri])
             .nodeify(done);
     });
 
-    it('should succeed with a bad user', function (done) {
+    it('should fail with a bad user', function (done) {
         applyCLI.main(['node', filename,
             './test/bin/apply/patch.json',
-            '-p', applyCliTestProject,
+            '-p', projectId,
             '-t', 'master',
             '-u', 'badUser',
             '-m', gmeConfig.mongo.uri])
@@ -122,8 +115,27 @@ describe('apply CLI tests', function () {
             })
             .catch(function (err) {
                 expect(err).not.to.equal(null);
-                expect(err.toString()).to.contain('badUser');
+                expect(err.message).to.contain('badUser');
                 done();
             });
     });
-});
+
+    it('should fail with a bad owner', function (done) {
+        applyCLI.main(['node', filename,
+            './test/bin/apply/patch.json',
+            '-p', projectId,
+            '-t', 'master',
+            '-o', 'badOwner',
+            '-m', gmeConfig.mongo.uri])
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err).not.to.equal(null);
+                expect(err.message).to.contain('badOwner');
+                done();
+            })
+            .done();
+    });
+})
+;

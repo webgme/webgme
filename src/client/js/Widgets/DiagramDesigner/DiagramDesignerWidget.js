@@ -69,7 +69,6 @@ define([
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
-        DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager3,
         GUID_DIGITS = 6,
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30,
@@ -91,9 +90,9 @@ define([
 
         //merge dfault values with the given parameters
         _.extend(params, defaultParams, par);
-
+        this.gmeConfig = WebGMEGlobal.gmeConfig;
         //create logger instance with specified name
-        this.logger = Logger.create(params.loggerName, WebGMEGlobal.gmeConfig.client.log);
+        this.logger = Logger.create(params.loggerName, this.gmeConfig.client.log);
 
         //save DOM container
         this.$el = container;
@@ -205,9 +204,16 @@ define([
         //this.dragManager.initialize(this.skinParts.$itemsContainer);
 
         /*********** CONNECTION DRAWING COMPONENT *************/
-            //initiate Connection Router (if needed)
-        this.connectionRouteManager = params.connectionRouteManager ||
-        new DEFAULT_CONNECTION_ROUTE_MANAGER({diagramDesigner: this});
+        //initiate Connection Router (if needed)
+        if (params.connectionRouteManager) {
+            this.connectionRouteManager = params.connectionRouteManager;
+        } else if (this.gmeConfig.client.defaultConnectionRouter === 'basic') {
+            this.connectionRouteManager = new ConnectionRouteManagerBasic({diagramDesigner: this});
+        } else if (this.gmeConfig.client.defaultConnectionRouter === 'basic2') {
+            this.connectionRouteManager = new ConnectionRouteManager2({diagramDesigner: this});
+        } else if (this.gmeConfig.client.defaultConnectionRouter === 'basic3') {
+            this.connectionRouteManager = new ConnectionRouteManager3({diagramDesigner: this});
+        }
 
         this.connectionRouteManager.initialize();
 
@@ -432,12 +438,12 @@ define([
 
         if (type === DiagramDesignerWidgetConstants.LINE_TYPES.BEZIER) {
             path = paper.path('M 5,' + (Math.round(vSize / 2) + 0.5) + ' C' + (5 + bezierControlOffset) + ',' +
-            (Math.round(vSize / 2) + 0.5 - bezierControlOffset * 2) + ' ' + (hSize - bezierControlOffset) + ',' +
-            (Math.round(vSize / 2) + 0.5 + bezierControlOffset * 2) + ' ' + (hSize - 5) + ',' +
-            (Math.round(vSize / 2) + 0.5));
+                (Math.round(vSize / 2) + 0.5 - bezierControlOffset * 2) + ' ' + (hSize - bezierControlOffset) + ',' +
+                (Math.round(vSize / 2) + 0.5 + bezierControlOffset * 2) + ' ' + (hSize - 5) + ',' +
+                (Math.round(vSize / 2) + 0.5));
         } else {
             path = paper.path('M 5,' + (Math.round(vSize / 2) + 0.5) + ' L' + (hSize - 5) + ',' +
-            (Math.round(vSize / 2) + 0.5));
+                (Math.round(vSize / 2) + 0.5));
         }
 
         path.attr({
@@ -730,7 +736,7 @@ define([
         connectionIDsToUpdate = _.uniq(connectionIDsToUpdate).sort();
 
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' +
-        this.connectionIds.length);
+            this.connectionIds.length);
 
         redrawnConnectionIDs = this._redrawConnections(connectionIDsToUpdate);
 
@@ -876,7 +882,7 @@ define([
         connectionIDsToUpdate = this._getAssociatedConnectionsForItems(allDraggedItemIDs).sort();
 
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' +
-        this.connectionIds.length);
+            this.connectionIds.length);
 
         redrawnConnectionIDs = this._redrawConnections(connectionIDsToUpdate) || [];
 
@@ -908,12 +914,12 @@ define([
 
     DiagramDesignerWidget.prototype.onSelectionDelete = function (selectedIds) {
         this.logger.warn('DiagramDesignerWidget.onSelectionDelete IS NOT OVERRIDDEN IN A CONTROLLER. ID: "' +
-        selectedIds + '"');
+            selectedIds + '"');
     };
 
     DiagramDesignerWidget.prototype.onSelectionContextMenu = function (selectedIds, mousePos) {
         this.logger.warn('DiagramDesignerWidget.onSelectionContextMenu IS NOT OVERRIDDEN IN A CONTROLLER. ID: "' +
-        selectedIds + '", mousePos: ' + JSON.stringify(mousePos));
+            selectedIds + '", mousePos: ' + JSON.stringify(mousePos));
     };
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
@@ -1248,7 +1254,7 @@ define([
 
     DiagramDesignerWidget.prototype.onClipboardCopy = function (selectedIds) {
         this.logger.warn('DiagramDesignerWidget.prototype.onClipboardCopy not overridden in controller!!!' +
-        'selectedIds: "' + selectedIds + '"');
+            'selectedIds: "' + selectedIds + '"');
     };
 
     DiagramDesignerWidget.prototype.onClipboardPaste = function () {
@@ -1260,7 +1266,7 @@ define([
     /************************* CONNECTION SEGMENT POINTS CHANGE ************************/
     DiagramDesignerWidget.prototype.onConnectionSegmentPointsChange = function (params) {
         this.logger.warn('DiagramDesignerWidget.prototype.onConnectionSegmentPointsChange not overridden in ' +
-        'controller. params: ' + JSON.stringify(params));
+            'controller. params: ' + JSON.stringify(params));
     };
     /************************* END OF --- CONNECTION SEGMENT POINTS CHANGE ************************/
 
@@ -1329,7 +1335,7 @@ define([
     /************************* DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
     DiagramDesignerWidget.prototype.onDragStartDesignerItemDraggable = function (itemID) {
         this.logger.warn('DiagramDesignerWidget.prototype.onDesignerItemDraggable not overridden in controller. ' +
-        'itemID: ' + itemID);
+            'itemID: ' + itemID);
 
         return true;
     };
@@ -1337,7 +1343,7 @@ define([
 
     DiagramDesignerWidget.prototype.onDragStartDesignerItemCopyable = function (itemID) {
         this.logger.warn('DiagramDesignerWidget.prototype.onDragStartDesignerItemCopyable not overridden in ' +
-        'controller. itemID: ' + itemID);
+            'controller. itemID: ' + itemID);
 
         return true;
     };
@@ -1345,7 +1351,7 @@ define([
 
     DiagramDesignerWidget.prototype.onDragStartDesignerConnectionCopyable = function (connectionID) {
         this.logger.warn('DiagramDesignerWidget.prototype.onDragStartDesignerConnectionCopyable not overridden in ' +
-        'controller. connectionID: ' + connectionID);
+            'controller. connectionID: ' + connectionID);
 
         return true;
     };
@@ -1358,31 +1364,31 @@ define([
 
     DiagramDesignerWidget.prototype.onUnhighlight = function (idList) {
         this.logger.warn('DiagramDesignerWidget.prototype.onUnhighlight not overridden in controller. idList: ' +
-        idList);
+            idList);
     };
     /************************* HIGHLIGHTED / UNHIGHLIGHTED EVENT *****************************/
 
 
     DiagramDesignerWidget.prototype.onSelectionRotated = function (deg, selectedIds) {
         this.logger.warn('DiagramDesignerWidget.prototype.onSelectionRotated IS NOT OVERRIDDEN IN CONTROLLER. deg: "' +
-        deg + '", selectedIds: ' + selectedIds);
+            deg + '", selectedIds: ' + selectedIds);
     };
 
     /*********************** CONNECTION TEXT CHANGED HANDLERS **************************/
 
     DiagramDesignerWidget.prototype.onConnectionNameChanged = function (connId, oldValue, newValue) {
         this.logger.warn('DiagramDesignerWidget.prototype.onConnectionNameChanged IS NOT OVERRIDDEN IN CONTROLLER.' +
-        ' connId: "' + connId + '", oldValue: "' + oldValue + '", newValue: "' + newValue + '"');
+            ' connId: "' + connId + '", oldValue: "' + oldValue + '", newValue: "' + newValue + '"');
     };
 
     DiagramDesignerWidget.prototype.onConnectionSrcTextChanged = function (connId, oldValue, newValue) {
         this.logger.warn('DiagramDesignerWidget.prototype.onConnectionSrcTextChanged IS NOT OVERRIDDEN IN CONTROLLER.' +
-        'connId: "' + connId + '", oldValue: "' + oldValue + '", newValue: "' + newValue + '"');
+            'connId: "' + connId + '", oldValue: "' + oldValue + '", newValue: "' + newValue + '"');
     };
 
     DiagramDesignerWidget.prototype.onConnectionDstTextChanged = function (connId, oldValue, newValue) {
         this.logger.warn('DiagramDesignerWidget.prototype.onConnectionDstTextChanged IS NOT OVERRIDDEN IN ' +
-        'CONTROLLER. ' + 'connId: "' + connId + '", oldValue: "' + oldValue + '", newValue: "' + newValue + '"');
+            'CONTROLLER. ' + 'connId: "' + connId + '", oldValue: "' + oldValue + '", newValue: "' + newValue + '"');
     };
 
     /*********************** END OF CONNECTION TEXT CHANGED HANDLERS **************************/
@@ -1419,7 +1425,7 @@ define([
 
     DiagramDesignerWidget.prototype.onSetConnectionProperty = function (params) {
         this.logger.warn('DiagramDesignerWidget.prototype.onSetConnectionProperty IS NOT OVERRIDDEN IN CONTROLLER.' +
-        'params: ' + JSON.stringify(params));
+            'params: ' + JSON.stringify(params));
     };
     /*********************** ENBD OF --- SET CONNECTION VISUAL PROPERTIES *****************************/
 
@@ -1457,17 +1463,17 @@ define([
 
     DiagramDesignerWidget.prototype.onSelectionFillColorChanged = function (selectedElements, color) {
         this.logger.warn('DiagramDesignerWidget.prototype.onSelectionFillColorChanged(selectedElements, color) ' +
-        'IS NOT OVERRIDDEN IN CONTROLLER. color: ' + color);
+            'IS NOT OVERRIDDEN IN CONTROLLER. color: ' + color);
     };
 
     DiagramDesignerWidget.prototype.onSelectionBorderColorChanged = function (selectedElements, color) {
         this.logger.warn('DiagramDesignerWidget.prototype.onSelectionBorderColorChanged(selectedElements, color) ' +
-        'IS NOT OVERRIDDEN IN CONTROLLER. color: ' + color);
+            'IS NOT OVERRIDDEN IN CONTROLLER. color: ' + color);
     };
 
     DiagramDesignerWidget.prototype.onSelectionTextColorChanged = function (selectedElements, color) {
         this.logger.warn('DiagramDesignerWidget.prototype.onSelectionTextColorChanged(selectedElements, color) ' +
-        'IS NOT OVERRIDDEN IN CONTROLLER. color: ' + color);
+            'IS NOT OVERRIDDEN IN CONTROLLER. color: ' + color);
     };
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/

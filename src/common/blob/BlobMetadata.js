@@ -36,7 +36,7 @@ define(['blob/BlobConfig'], function (BlobConfig) {
                 for (key in this.content) {
                     if (this.content.hasOwnProperty(key)) {
                         if (BlobConfig.hashRegex.test(this.content[key].content) === false) {
-                            throw Error('BlobMetadata is malformed: hash \'' + this.content[key].content + '\'is invalid');
+                            throw new Error('BlobMetadata is malformed: hash \'' + this.content[key].content + '\'is invalid');
                         }
                     }
                 }
@@ -63,7 +63,7 @@ define(['blob/BlobConfig'], function (BlobConfig) {
      *  size: number,
      *  mime: string,
      *  tags: Array.<string>,
-     *  content: (string|Object},
+     *  content: (string|Object),
      *  contentType: string}}
      */
     BlobMetadata.prototype.serialize = function () {

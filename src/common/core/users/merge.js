@@ -5,7 +5,17 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], function (REGEXP, Core, CONSTANTS, Q) {
+define([
+    'common/regexp',
+    'common/core/core',
+    'common/storage/constants',
+    'q',
+    'common/core/users/getroot'
+], function (REGEXP,
+             Core,
+             CONSTANTS,
+             Q,
+             getRoot) {
     'use strict';
 
     function save(parameters, callback) {
@@ -40,54 +50,6 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
 
                 deferred.resolve(saveResult);
             });
-
-        return deferred.promise.nodeify(callback);
-    }
-
-    function getRoot(parameters, callback) {
-        var deferred = Q.defer(),
-            loadRoot = function (hash) {
-                parameters.core.loadRoot(hash, function (err, root) {
-                    if (err) {
-                        deferred.reject(err);
-                        return;
-                    }
-
-                    result.root = root;
-                    deferred.resolve(result);
-                });
-            },
-            loadCommit = function (hash) {
-                result.commitHash = hash;
-                parameters.project.loadObject(hash, function (err, commitObj) {
-                    if (err) {
-                        deferred.reject(err);
-                        return;
-                    }
-
-                    result.rootHash = commitObj.root;
-                    loadRoot(commitObj.root);
-                });
-            },
-            result = {};
-
-        if (REGEXP.HASH.test(parameters.id)) {
-            loadCommit(parameters.id);
-        } else {
-            parameters.project.getBranches(function (err, branches) {
-                if (err) {
-                    deferred.reject(err);
-                    return;
-                }
-                if (branches[parameters.id]) {
-                    result.branchName = parameters.id;
-                    loadCommit(branches[parameters.id]);
-                } else {
-                    deferred.reject(new Error('there is no branch [' + parameters.id + '] in the project'));
-                    return;
-                }
-            });
-        }
 
         return deferred.promise.nodeify(callback);
     }
@@ -173,24 +135,29 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
                 globConf: parameters.gmeConfig,
                 logger: parameters.logger.fork('core')
             }),
-            branchName = REGEXP.HASH.test(parameters.theirBranchOrCommit) ? null : parameters.theirBranchOrCommit;
+            branchName = REGEXP.HASH.test(parameters.theirBranchOrCommit) ? null : parameters.theirBranchOrCommit,
+            updateBranch = function () {
+                var branchDeferred = Q.defer();
 
-        Q.all([
-            getRoot({project: parameters.project, core: core, id: parameters.myBranchOrCommit}),
-            getRoot({project: parameters.project, core: core, id: parameters.theirBranchOrCommit})
-        ])
-            .then(function (results) {
-                myRoot = results[0].root;
-                theirRoot = results[1].root;
-                result.myCommitHash = results[0].commitHash;
-                result.theirCommitHash = results[1].commitHash;
+                parameters.project.setBranchHash(
+                    branchName,
+                    result.finalCommitHash,
+                    result.theirCommitHash,
+                    function (err) {
+                        if (!err) {
+                            result.updatedBranch = branchName;
+                        }
+                        branchDeferred.resolve();
+                    }
+                );
 
-                return Q.nfcall(parameters.project.getCommonAncestorCommit,
-                    result.myCommitHash, result.theirCommitHash);
-            })
-            .then(function (commitHash) {
-                result.baseCommitHash = commitHash;
-                return Q.all([
+                return branchDeferred.promise;
+            },
+            doMerge = function () {
+                var mergeDeferred = Q.defer(),
+                    noApply = false;
+
+                Q.allSettled([
                     diff({
                         gmeConfig: parameters.gmeConfig,
                         logger: parameters.logger,
@@ -205,63 +172,97 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
                         branchOrCommitA: result.baseCommitHash,
                         branchOrCommitB: parameters.theirBranchOrCommit
                     })
-                ]);
-            })
-            .then(function (diffs) {
-                result.diff = {
-                    mine: diffs[0],
-                    theirs: diffs[1]
-                };
+                ])
+                    .then(function (diffs) {
+                        result.diff = {
+                            mine: diffs[0].value,
+                            theirs: diffs[1].value
+                        };
 
-                result.conflict = core.tryToConcatChanges(result.diff.mine, result.diff.theirs);
-                if (!parameters.auto) {
-                    deferred.resolve(result);
-                    return;
-                }
-
-                if (!result.conflict) {
-                    throw new Error('error during merged patch calculation');
-                }
-
-                if (result.conflict.items.length > 0) {
-                    //the user will find out that there were no update done
-                    if (branchName) {
-                        result.targetBranchName = branchName;
-                    }
-                    result.projectName = parameters.project.name;
-                    deferred.resolve(result);
-                    return;
-                }
-
-                return apply({
-                    gmeConfig: parameters.gmeConfig,
-                    logger: parameters.logger,
-                    project: parameters.project,
-                    branchOrCommit: result.baseCommitHash,
-                    noUpdate: true,
-                    patch: result.conflict.merge,
-                    parents: [result.theirCommitHash, result.myCommitHash]
-                });
-            })
-            .then(function (applyResult) {
-                //we made the commit, but now we also have try to update the branch of necessary
-                result.finalCommitHash = applyResult.hash;
-                if (!branchName) {
-                    deferred.resolve(result);
-                    return;
-                }
-
-                parameters.project.setBranchHash(
-                    branchName,
-                    result.finalCommitHash,
-                    result.theirCommitHash,
-                    function (err) {
-                        if (!err) {
-                            result.updatedBranch = branchName;
+                        result.conflict = core.tryToConcatChanges(result.diff.mine, result.diff.theirs);
+                        if (!parameters.auto) {
+                            noApply = true;
+                            return;
                         }
-                        deferred.resolve(result);
+
+                        if (!result.conflict) {
+                            throw new Error('error during merged patch calculation');
+                        }
+
+                        if (result.conflict.items.length > 0) {
+                            //the user will find out that there were no update done
+                            if (branchName) {
+                                result.targetBranchName = branchName;
+                            }
+                            result.projectId = parameters.project.projectId;
+                            noApply = true;
+                            return;
+                        }
+
+                        return apply({
+                            gmeConfig: parameters.gmeConfig,
+                            logger: parameters.logger,
+                            project: parameters.project,
+                            branchOrCommit: result.baseCommitHash,
+                            noUpdate: true,
+                            patch: result.conflict.merge,
+                            parents: [result.theirCommitHash, result.myCommitHash]
+                        });
+                    })
+                    .then(function (applyResult) {
+                        if (noApply) {
+                            return;
+                        }
+                        //we made the commit, but now we also have try to update the branch of necessary
+                        result.finalCommitHash = applyResult.hash;
+                        if (branchName) {
+                            return updateBranch();
+                        }
+                    })
+                    .then(mergeDeferred.resolve)
+                    .catch(mergeDeferred.reject);
+
+                return mergeDeferred.promise;
+            };
+
+        Q.allSettled([
+            getRoot({project: parameters.project, core: core, id: parameters.myBranchOrCommit}),
+            getRoot({project: parameters.project, core: core, id: parameters.theirBranchOrCommit})
+        ])
+            .then(function (results) {
+                myRoot = results[0].value.root;
+                theirRoot = results[1].value.root;
+                result.myCommitHash = results[0].value.commitHash;
+                result.theirCommitHash = results[1].value.commitHash;
+
+                return Q.nfcall(parameters.project.getCommonAncestorCommit,
+                    result.myCommitHash, result.theirCommitHash);
+            })
+            .then(function (commitHash) {
+                result.baseCommitHash = commitHash;
+
+                //no change
+                if (result.myCommitHash === result.baseCommitHash) {
+                    if (branchName) {
+                        result.updatedBranch = branchName;
                     }
-                );
+                    result.finalCommitHash = result.theirCommitHash;
+                    return;
+                }
+                
+                //check fast-forward
+                if (result.theirCommitHash === result.baseCommitHash) {
+                    result.finalCommitHash = result.myCommitHash;
+                    if (branchName) {
+                        return updateBranch();
+                    }
+                    return;
+                }
+
+                return doMerge();
+            })
+            .then(function () {
+                deferred.resolve(result);
             })
             .catch(deferred.reject);
 
@@ -282,7 +283,7 @@ define(['common/regexp', 'common/core/core', 'common/storage/constants', 'q'], f
             gmeConfig: parameters.gmeConfig,
             logger: parameters.logger,
             project: parameters.project,
-            branchOrCommit: parameters.partial.targetBranchName,
+            branchOrCommit: parameters.partial.baseCommitHash,
             noUpdate: true,
             patch: finalPatch,
             parents: [parameters.partial.theirCommitHash, parameters.partial.myCommitHash],

@@ -114,7 +114,7 @@ define(['js/logger',
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
             if (self._settingVisualizer !== true) {
-                WebGMEGlobal.State.registerActiveVisualizer(activeVisualizer);
+                self._setActiveVisualizer(activeVisualizer,self._ul1);
             }
         });
 
@@ -138,6 +138,11 @@ define(['js/logger',
         this._settingVisualizer = true;
 
         if (this._activeVisualizer[panel] !== visualizer && this._visualizers.hasOwnProperty(visualizer)) {
+            //we should change the selected tab to 0 in case of visualizer change to get the 'default' behaviour
+            WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB,0);
+            WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_ASPECT,'All');
+
+
             //destroy current visualizer
             if (this._activePanel[panel]) {
                 this._activePanel[panel].destroy();

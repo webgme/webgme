@@ -18,6 +18,7 @@ describe('Run PluginForked', function () {
         PluginCliManager = require('../../../src/plugin/climanager'),
         project,
         projectName = 'plugin_forked',
+        projectId = testFixture.projectName2Id(projectName),
         commitHash,
 
         gmeAuth;
@@ -33,7 +34,7 @@ describe('Run PluginForked', function () {
     });
 
     after(function (done) {
-        Q.all([
+        Q.allDone([
             storage.closeDatabase(),
             gmeAuth.unload()
         ])
@@ -48,7 +49,7 @@ describe('Run PluginForked', function () {
             gmeConfig: gmeConfig
         };
 
-        storage.deleteProject({projectName: projectName})
+        storage.deleteProject({projectId: projectId})
             .then(function () {
                 return testFixture.importProject(storage, importParam);
             })
@@ -75,11 +76,11 @@ describe('Run PluginForked', function () {
         pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
             expect(err).to.equal(null);
             expect(result.commits.length).to.equal(2);
-            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
-            expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
+            expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
             expect(result.commits[1].branchName).to.equal('master');
 
-            storage.getBranches({projectName: projectName})
+            storage.getBranches({projectId: projectId})
                 .then(function (branches) {
                     expect(typeof branches).to.equal('object');
 
@@ -105,10 +106,10 @@ describe('Run PluginForked', function () {
         pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
             expect(err).to.equal(null);
             expect(result.commits.length).to.equal(2);
-            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
             expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.FORKED);
             expect(result.commits[1].branchName).not.to.equal('master');
-            storage.getBranches({projectName: projectName})
+            storage.getBranches({projectId: projectId})
                 .then(function (branches) {
                     expect(typeof branches).to.equal('object');
 
@@ -139,21 +140,21 @@ describe('Run PluginForked', function () {
             },
             pluginConfig = {
                 fork: true,
-                forkName: 'fork'
+                forkName: 'fork1'
             },
             pluginManager = new PluginCliManager(project, logger, gmeConfig);
 
         pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
             expect(err).to.equal(null);
             expect(result.commits.length).to.equal(2);
-            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+            expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
             expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.FORKED);
-            expect(result.commits[1].branchName).to.equal('fork');
+            expect(result.commits[1].branchName).to.equal('fork1');
 
-            storage.getBranches({projectName: projectName})
+            storage.getBranches({projectId: projectId})
                 .then(function (branches) {
                     expect(typeof branches).to.equal('object');
-                    expect(branches.fork).to.equal(result.commits[1].commitHash);
+                    expect(branches.fork1).to.equal(result.commits[1].commitHash);
 
                     done();
                 })
@@ -169,19 +170,19 @@ describe('Run PluginForked', function () {
             },
             pluginConfig = {
                 fork: true,
-                forkName: 'fork'
+                forkName: 'fork2'
             },
             pluginManager = new PluginCliManager(project, logger, gmeConfig);
 
-        storage.createBranch({projectName: projectName, branchName: 'fork', hash: commitHash})
+        storage.createBranch({projectId: projectId, branchName: 'fork2', hash: commitHash})
             .then(function (result) {
                 expect(typeof result).to.equal('object');
-                expect(result.status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+                expect(result.status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
 
                 pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
-                    expect(err).to.equal('Plugin got forked from "master". And got forked from "fork" too.');
+                    expect(err).to.equal('Plugin got forked from "master". And got forked from "fork2" too.');
                     expect(result.commits.length).to.equal(2);
-                    expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCH);
+                    expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
                     expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.FORKED);
                     expect(result.commits[1].branchName).to.equal(null);
                     done();

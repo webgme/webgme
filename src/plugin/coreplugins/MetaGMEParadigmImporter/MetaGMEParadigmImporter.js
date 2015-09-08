@@ -157,7 +157,7 @@ define([
             if (error) {
                 self.result.setSuccess(false);
                 self.result.setError(error.message);
-                callback(error, self.result);
+                callback(error.stack, self.result);
                 return;
             }
 
@@ -274,6 +274,7 @@ define([
         // TODO: set default view to META
 
         self.core.setRegistry(languageNode, 'position', {x: 100, y: 200});
+        self.core.setRegistry(languageNode, 'decorator', 'DefaultDecorator');
 
 
         self.cache.languageNode = languageNode;
@@ -286,8 +287,7 @@ define([
             i,
             j,
             type,
-            types = ['atom', 'folder', 'model', 'set', 'connection', 'reference'],
-            error;
+            types = ['atom', 'folder', 'model', 'set', 'connection', 'reference'];
 
         self.logger.debug('Creating nodes ...');
 
@@ -363,7 +363,7 @@ define([
                     }
 
                     self.core.setAttributeMeta(node, xmpAttribute['@name'], attributeDescriptor);
-                    self.core.setAttribute(node, xmpAttribute['@name'], xmpAttribute['@defvalue']);
+                    self.core.setAttribute(node, xmpAttribute['@name'], attributeDescriptor.default);
 
                 } else {
                     self.logger.error('Attribute was not found in global or local cache: ',

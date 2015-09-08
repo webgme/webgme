@@ -115,8 +115,8 @@
           "x": 914,
           "y": 272
         },
-        "validVisualizers": "ModelEditor METAAspect SetEditor Crosscut GraphViz",
-        "validPlugins": "ExecutorPlugin"
+        "validPlugins": "ExecutorPlugin",
+        "validVisualizers": "ModelEditor METAAspect SetEditor Crosscut GraphViz"
       },
       "sets": {},
       "constraints": {}

@@ -5,7 +5,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
+define(['common/core/users/tojson'], function (toJson) {
     'use strict';
 
     var _refTypes = {
@@ -14,7 +14,6 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
             guid: 'guid'
         },
         _cache = {},
-        _rootPath = '',
         _refType = 'url',
         _core = null,
         _urlPrefix = '';
@@ -36,7 +35,7 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
                         result = null;
                     } else {
                         refValue = refValue.split('/');
-                        result = URL.removeSpecialChars(refValue[refValue.length - 1]);
+                        result = decodeURIComponent(refValue[refValue.length - 1]);
                     }
                     break;
                 case _refTypes.path:
@@ -52,72 +51,9 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
         return result;
     };
 
-    //var pathToRelRefObject = function (path) {
-    //    if (_cache[path]) {
-    //        return {$ref: _cache[path]};
-    //    }
-    //    return {$ref: null};
-    //};
-
     var refToRelRefObj = function (path, refObj) {
         if (_cache[path]) {
             refObj.$ref = _cache[path];
-        }
-    };
-
-    //var isSubordinate = function (path) {
-    //    if (path.indexOf(_rootPath) === 0) {
-    //        return true;
-    //    }
-    //    return false;
-    //};
-
-    var dumpChildren = function (node, dumpObject, urlPrefix, relPath, callback) {
-        var needed = dumpObject.children.length;
-        if (needed > 0) {
-            _core.loadChildren(node, function (err, children) {
-                if (err) {
-                    callback(err);
-                } else {
-                    if (children === null || children === undefined || !children.length > 0) {
-                        callback(new Error('invalid children info found'));
-                    } else {
-                        var setChildJson = function (child, cb) {
-                            toJson(_core, child, urlPrefix, _refType, function (err, jChild) {
-                                if (err) {
-                                    cb(err);
-                                } else {
-                                    if (jChild) {
-                                        var childRelPath,
-                                            childPath = _core.getPath(child);
-                                        for (var j = 0; j < dumpObject.children.length; j++) {
-                                            if (childPath === getRefObjectPath(dumpObject.children[j])) {
-                                                childRelPath = relPath + '/children[' + j + ']';
-                                                _cache[childPath] = childRelPath;
-                                                dumpObject.children[j] = jChild;
-                                                break;
-                                            }
-                                        }
-                                        dumpChildren(child, dumpObject.children[j], urlPrefix, childRelPath, cb);
-                                    }
-                                }
-                            });
-                        };
-                        var error = null;
-
-                        for (var i = 0; i < children.length; i++) {
-                            setChildJson(children[i], function (err) {
-                                error = error || err;
-                                if (--needed === 0) {
-                                    callback(error);
-                                }
-                            });
-                        }
-                    }
-                }
-            });
-        } else {
-            callback(null);
         }
     };
 
@@ -136,35 +72,10 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
         }
     };
 
-    //var dumpJsonNode = function (core, node, urlPrefix, refType, callback) {
-    //    _cache = {};
-    //    _core = core;
-    //    _rootPath = core.getPath(node);
-    //    _refType = refType;
-    //
-    //    //TODO this needs to be done in another way
-    //    toJson(core, node, urlPrefix, _refType, function (err, jDump) {
-    //        if (err) {
-    //            callback(err, null);
-    //        } else {
-    //            if (jDump) {
-    //                _cache[_rootPath] = '#';
-    //            }
-    //            dumpChildren(node, jDump, urlPrefix, _cache[_rootPath], function (err) {
-    //                if (err) {
-    //                    callback(err);
-    //                } else {
-    //                    checkForInternalReferences(jDump);
-    //                    callback(null, jDump);
-    //                }
-    //            });
-    //        }
-    //    });
-    //};
-
     var dumpNode = function (node, relPath, containerDump, index, callback) {
         //first we should check if the node is already dumped or not
         var path = _core.getPath(node);
+
         if (_cache[path]) {
             containerDump[index] = {
                 GUID: _core.getGuid(node),
@@ -174,6 +85,13 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
         } else {
             //we try to dump this path for the first time
             toJson(_core, node, _urlPrefix, _refType, function (err, jNode) {
+                var dumped = function (err) {
+                    error = error || err;
+                    if (--needed === 0) {
+                        callback(error);
+                    }
+                };
+
                 if (err) {
                     callback(err);
                 } else {
@@ -190,13 +108,7 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
                             } else {
                                 for (var i = 0; i < children.length; i++) {
                                     dumpNode(children[i], relPath + '/children[' + i + ']',
-                                        containerDump[index].children, i, function (err) {
-                                            error = error || err;
-                                            if (--needed === 0) {
-                                                callback(error);
-                                            }
-                                        }
-                                    );
+                                        containerDump[index].children, i, dumped);
                                 }
                             }
                         });
@@ -217,6 +129,12 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
         var dumpNodes = [],
             needed = nodes.length,
             error = null,
+            dumped = function (err) {
+                error = error || err;
+                if (--needed === 0) {
+                    postProcessing(error);
+                }
+            },
             postProcessing = function (err) {
                 if (err) {
                     callback(err);
@@ -228,12 +146,7 @@ define(['common/core/users/tojson', 'common/util/url'], function (toJson, URL) {
         if (needed > 0) {
             for (var i = 0; i < nodes.length; i++) {
                 dumpNodes.push({});
-                dumpNode(nodes[i], '#[' + i + ']', dumpNodes, i, function (err) {
-                    error = error || err;
-                    if (--needed === 0) {
-                        postProcessing(error);
-                    }
-                });
+                dumpNode(nodes[i], '#[' + i + ']', dumpNodes, i, dumped);
             }
         } else {
             callback('no node to dump!!!', null);

@@ -66,7 +66,7 @@ require.config({
         jszip: 'lib/jszip/jszip',
         superagent: 'lib/superagent/superagent-' + _superagentVersion,
         debug: 'lib/debug/debug',
-        Q: 'lib/q/q',
+        q: 'lib/q/q',
 
 
         codemirror: 'lib/codemirror/codemirror.amd',
@@ -101,6 +101,10 @@ require.config({
         ],
 
         backbone: ['underscore'],
+        codemirror: [
+            'css!' + document.location.pathname + 'css/codemirror/codemirror.css',
+            'css!' + document.location.pathname + 'css/codemirror/codemirror.bootstrap.css'
+        ],
         'js/util': ['jquery'],
         'js/jquery.WebGME': ['bootstrap'],
         'jquery-dataTables': ['jquery'],

@@ -1,5 +1,6 @@
 /*jshint node: true*/
 /**
+ * @module Bin:Diff
  * @author kecso / https://github.com/kecso
  */
 'use strict';
@@ -14,7 +15,7 @@ var webgme = require('../../webgme'),
     path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
     logger = webgme.Logger.create('gme:bin:diff', gmeConfig.bin.log, false),
-    Project = require('../../src/server/storage/userproject');
+    STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants');
 
 
 webgme.addToRequireJsPaths(gmeConfig);
@@ -49,13 +50,15 @@ main = function (argv) {
         badArgument = false;
 
     program
-        .version('0.1.0')
-        .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
-        .option('-u, --user [string]', 'the user of the command')
-        .option('-p, --project-identifier [value]', 'project identifier')
-        .option('-s, --source [branch/commit]', 'the source or base of the diff to be created')
-        .option('-t, --target [branch/commit]', 'the target or end of the diff to be created')
-        .option('-o, --out [path]', 'the output path of the diff [by default it is printed to the console]')
+        .version('0.2.0')
+        .option('-m, --mongo-database-uri [url]',
+        'URI of the MongoDB [by default we use the one from the configuration file]')
+        .option('-u, --user [string]', 'the user of the command [if not given we use the default user]')
+        .option('-p, --project-name [string]', 'project name [mandatory]')
+        .option('-o, --owner [string]', 'the owner of the project [by default, the user is the owner]')
+        .option('-s, --source [branch/commit]', 'the source or base of the diff to be created [mandatory]')
+        .option('-t, --target [branch/commit]', 'the target or end of the diff to be created [mandatory]')
+        .option('-f, --output-file [path]', 'the output path of the diff [by default it is printed to the console]')
         .parse(argv);
 
     if (program.mongoDatabaseUri) {
@@ -65,7 +68,7 @@ main = function (argv) {
         gmeConfig.mongo.uri = program.mongoDatabaseUri;
     }
 
-    if (!program.projectIdentifier) {
+    if (!program.projectName) {
         console.warn('project identifier is a mandatory parameter!');
         badArgument = true;
     }
@@ -92,16 +95,26 @@ main = function (argv) {
             return cliStorage.openDatabase();
         })
         .then(function () {
-            var openProjectData = {
-                projectName: program.projectIdentifier
+            var params = {
+                projectId: ''
             };
-            if (program.user) {
-                openProjectData.username = program.user;
+
+            if (program.owner) {
+                params.projectId = program.owner + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+            } else if (program.user) {
+                params.projectId = program.user + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+            } else {
+                params.projectId = gmeConfig.authentication.guestAccount +
+                    STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
             }
-            return cliStorage.openProject(openProjectData);
+
+            if (program.user) {
+                params.username = program.user;
+            }
+
+            return cliStorage.openProject(params);
         })
-        .then(function (dbProject) {
-            var project = new Project(dbProject, cliStorage, logger.fork('project'), gmeConfig);
+        .then(function (project) {
             if (program.user) {
                 project.setUser(program.user);
             }
@@ -115,8 +128,8 @@ main = function (argv) {
             });
         })
         .then(function (diff) {
-            if (program.out) {
-                FS.writeFileSync(program.out, JSON.stringify(diff, null, 2));
+            if (program.outputFile) {
+                FS.writeFileSync(program.outputFile, JSON.stringify(diff, null, 2));
             } else {
                 console.log('generated diff:');
                 console.log(JSON.stringify(diff, null, 2));

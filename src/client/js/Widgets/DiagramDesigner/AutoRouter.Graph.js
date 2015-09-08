@@ -313,6 +313,7 @@ define([
             return !parentBox.ptInRect(pt);
         } : exitCondition;
 
+        _logger.info('About to hug child boxes to find a path');
         while (hasExit && !exitCondition(point, bufferObject)) {
             old = new ArPoint(point);
             nextChild = this._goToNextBox(point, dir, Utils.getRectOuterCoord(child, dir), children);
@@ -334,7 +335,6 @@ define([
             } else if (!finalPoint.equals(old)) {
                 hasExit = !point.equals(finalPoint);
             }
-
         }
 
         if (points[0].equals(initPoint)) {
@@ -451,10 +451,6 @@ define([
         return {min: min, max: max};
     };
 
-    AutoRouterGraph.prototype._isPointInBox = function (point) {
-        return this.getBoxAt(point) !== null;
-    };
-
     AutoRouterGraph.prototype._connect = function (path) {
         var startport = path.getStartPort(),
             endport = path.getEndPort(),
@@ -531,10 +527,6 @@ define([
             points = this._connectPoints(start, end, startdir, enddir);
         }
 
-        if (!isAutoRouted) {
-            points = path.applyCustomizationsBeforeAutoConnectPoints();
-        }
-
         path.points = points;
         path.points.unshift(startpoint);
         path.points.push(endpoint);
@@ -547,16 +539,12 @@ define([
         }
         path.setState(CONSTANTS.PathStateConnected);
 
-        // Apply custom edge modifications - step 1
-        // (Step 1: Move the desired edges - see in AutoRouterGraph::Connect(AutoRouterPath* path, ArPoint& startpoint,
-        //                                                                      ArPoint& endpoint)
-        //  Step 2: Fix the desired edges - see in AutoRouterEdgeList::addEdges(AutoRouterPath* path))
         return this.horizontal.addPathEdges(path) && this.vertical.addPathEdges(path);
     };
 
     AutoRouterGraph.prototype._connectPointsSharingParentBox = function (path, startpoint, endpoint, startdir) {
-        //Connect points that share a parentbox and face each other
-        //These will not need the simplification and complicated path finding
+        // Connect points that share a parent box and face each other
+        // These will not need the simplification and complicated path finding
         var start = new ArPoint(startpoint),
             dx = endpoint.x - start.x,
             dy = endpoint.y - start.y;
@@ -612,6 +600,7 @@ define([
                     ( Utils.isPointInDirFrom(pt, end, dir1));
             };
 
+
         //This is where we create the original path that we will later adjust
         while (!start.equals(end)) {
 
@@ -666,6 +655,7 @@ define([
                     }
                 } else if (bufferObject.box.ptInRect(end)) {
                     if (!flipped) {
+                        _logger.info('Could not find path from',start,'to', end,'. Flipping start and end points');
                         oldEnd = new ArPoint(end);
 
                         ret2 = this._connectPoints(end, start, hintenddir, dir1, true);
@@ -678,16 +668,16 @@ define([
                         assert(start.equals(end), 'ArGraph.connectPoints: start.equals(end) FAILED');
                         old = CONSTANTS.EMPTY_POINT;
                         start = end = oldEnd;
-                    } else { //If we have flipped and both points are in the same bufferbox
-                        //We will hugchildren until we can connect both points.
-                        //If we can't, force it
+                    } else {  //If we have flipped and both points are in the same bufferbox
+                        // We will hugchildren until we can connect both points.
+                        // If we can't, force it
                         pts = this._hugChildren(bufferObject, start, dir1, dir2, findExitToEndpoint);
-                        if (pts !== null) {//There is a path from start -> end
-                            if (pts.length) {  //Add new points to the current list 
+                        if (pts !== null) {  // There is a path from start -> end
+                            if (pts.length) {  // Add new points to the current list 
                                 ret = ret.concat(pts);
-                                ret.push(new ArPoint(start));
                             }
-                            start.assign(end);
+                            ret.push(new ArPoint(start));
+                            start.assign(end);  // These should not be skew! FIXME
 
                         } else { //Force to the endpoint
                             assert(Utils.isRightAngle(dir1), 'ARGraph.connectPoints: Utils.isRightAngle (dir1) FAILED');
@@ -708,10 +698,10 @@ define([
 
                             ret.push(new ArPoint(start));
 
-                            assert(start.equals(end));//We are forcing out so these should be the same now
+                            assert(start.equals(end));  // We are forcing out so these should be the same now
 
                         }
-                        assert(!start.equals(old));//We are forcing out so these should be the same now
+                        assert(!start.equals(old));
                     }
                 } else if (Utils.isPointInDirFrom(end, rect, dir2)) {
 
@@ -1122,7 +1112,7 @@ define([
             assert(nnnedge.startpointPrev.equals(npoint) && nnnedge.startpoint.equals(nnpoint),
                 'ARGraph.deleteTwoEdgesAt: nnnedge.startpointPrev.equals(npoint)' +
                 '&& nnnedge.startpoint.equals(nnpoint) FAILED');
-            nnnedge.setStartPointPrev(ppoint);
+            nnnedge.startpointPrev = ppoint;
         }
 
         if (nnpoint.equals(newpoint)) {
@@ -1194,14 +1184,14 @@ define([
             'ARGraph.deleteSamePointsAt: nnedge.startpoint.equals(npoint) && nnedge.startpointPrev.equals(point)' +
             ' FAILED');
         nnedge.setStartPoint(ppoint);
-        nnedge.setStartPointPrev(pppoint);
+        nnedge.startpointPrev = pppoint;
 
         if (nnnpointpos < points.length) {
             var nnnedge = vlist.getEdgeByPointer(nnpoint, (nnnpointpos)); //&*
             assert(nnnedge !== null && nnnedge.startpointPrev.equals(npoint) && nnnedge.startpoint.equals(nnpoint),
                 'ARGraph.deleteSamePointsAt: nnnedge !== null && nnnedge.startpointPrev.equals(npoint) && ' +
                 'nnnedge.startpoint.equals(nnpoint) FAILED');
-            nnnedge.setStartPointPrev(ppoint);
+            nnnedge.startpointPrev = ppoint;
         }
 
         if (CONSTANTS.DEBUG_DEEP) {
@@ -1949,9 +1939,17 @@ define([
             callbackFn = options.callback || Utils.nop,
             time = options.time || 5,
             optimizeFn = function (state) {
+                _logger.info('Async optimization cycle started');
+
+                // If a path has been disconnected, start the routing over
+                if (!self.completelyConnected) {
+                    _logger.info('Async optimization interrupted');
+                    return setTimeout(startRouting, time);
+                }
 
                 updateFn(self.paths);
-                if (state.finished || !self.completelyConnected) {
+                if (state.finished) {
+                    _logger.info('Async routing finished');
                     return callbackFn(self.paths);
                 } else {
                     state = self._optimize(state);
@@ -1959,6 +1957,7 @@ define([
                 }
             },
             startRouting = function () {
+                _logger.info('Async routing started');
                 var state = {finished: false};
                 self._connectAllDisconnectedPaths();
 
@@ -1966,7 +1965,23 @@ define([
                 setTimeout(optimizeFn, time, state);
             };
 
+        _logger.info('Async routing triggered');
         // Connect all disconnected paths with a straight line
+        var disconnected = this._quickConnectDisconnectedPaths();
+        firstFn(disconnected);
+
+        this._disconnectTempPaths(disconnected);
+
+        setTimeout(startRouting, time);
+    };
+
+    /**
+     * Connect all disconnected paths in a quick way while a better layout is
+     * being calculated.
+     *
+     * @return {Array<Path>} disconnected paths
+     */
+    AutoRouterGraph.prototype._quickConnectDisconnectedPaths = function () {
         var path,
             disconnected = [];
         for (var i = this.paths.length; i--;) {
@@ -1977,10 +1992,13 @@ define([
                 disconnected.push(path);
             }
         }
+        return disconnected;
+    };
 
-        firstFn(disconnected);
-
-        setTimeout(startRouting, time);
+    AutoRouterGraph.prototype._disconnectTempPaths = function (paths) {
+        for (var i = paths.length; i--;) {
+            paths[i].points = new ArPointListPath();
+        }
     };
 
     /**

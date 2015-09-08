@@ -216,7 +216,7 @@ define(['js/logger',
      */
     CrosscutController.prototype.displayNoTabMessage = function () {
         this._widget.setBackgroundText('No crosscuts defined yet. Press the + button in the top-left corner to ' +
-        'create one...');
+            'create one...');
     };
 
 
@@ -365,8 +365,8 @@ define(['js/logger',
 
                 if (this._widget.itemIds.indexOf(componentID) !== -1) {
                     territoryChanged = territoryChanged ||
-                    this._updateDecoratorTerritoryQuery(
-                        this._widget.items[componentID]._decoratorInstance, true);
+                        this._updateDecoratorTerritoryQuery(
+                            this._widget.items[componentID]._decoratorInstance, true);
                 }
 
                 this._widget.deleteComponent(componentID);
@@ -871,7 +871,7 @@ define(['js/logger',
             if (gmeID) {
                 //deleting a box --> remove from crosscut's set
                 logger.debug('removeMember memberListContainerID: ' + memberListContainerID + ', gmeID: ' + gmeID +
-                ', memberListToRemoveFrom: ' + memberListToRemoveFrom);
+                    ', memberListToRemoveFrom: ' + memberListToRemoveFrom);
                 //_client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
 
                 //check if this GME object is a connection and whether it's parent is the crosscut container
@@ -1205,30 +1205,10 @@ define(['js/logger',
 
     CrosscutController.prototype._attachClientEventListeners = function () {
         DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._attachClientEventListeners.call(this);
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_CROSSCUT, this._stateActiveCrosscutChanged, this);
     };
 
     CrosscutController.prototype._detachClientEventListeners = function () {
         DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._detachClientEventListeners.call(this);
-        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_CROSSCUT, this._stateActiveCrosscutChanged);
-    };
-
-    CrosscutController.prototype._stateActiveCrosscutChanged = function (model, activeCrosscutId) {
-        var tabKeys = Object.keys(this._tabIDMemberListID),
-            len = tabKeys.length,
-            tabToSelect;
-
-        while (len--) {
-            if (this._tabIDMemberListID[tabKeys[len]] === activeCrosscutId) {
-                tabToSelect = tabKeys[len];
-                break;
-            }
-        }
-
-        WebGMEGlobal.State.unset(CONSTANTS.STATE_ACTIVE_CROSSCUT, {silent: true});
-        if (tabToSelect) {
-            this._widget.selectTab(tabToSelect);
-        }
     };
 
     return CrosscutController;

@@ -12,7 +12,7 @@
         util: 'empty:',
         events: 'empty:',
         path: 'empty:',
-        child_process: 'empty:',
+        child_process: 'empty:', // jshint ignore:line
         minimatch: 'empty:',
         rimraf: 'empty:',
         url: 'empty:'
@@ -21,6 +21,6 @@
     include: ['./node_modules/requirejs/require'],
     wrap: {
         end: 'module.exports.require = require;\n' +
-        'module.exports.requirejs = requirejs;\nmodule.exports.define = define;\n'
+             'module.exports.requirejs = requirejs;\nmodule.exports.define = define;\n'
     }
-})
+});

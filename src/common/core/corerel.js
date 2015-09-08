@@ -54,7 +54,7 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
 
                 return true;
             } catch (error) {
-                logger.error(error.message, {stack: error.stack, node: node});
+                logger.error(error.message, {metadata: {stack: error.stack, node: node}});
                 return false;
             }
         }
@@ -162,6 +162,10 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
             ASSERT(node && coretree.getProperty(node, name) === target);
             coretree.deleteProperty(node, name);
 
+            if (coretree.getKeys(node).length === 0) {
+                coretree.deleteProperty(overlays, source);
+            }
+
             node = coretree.getChild(overlays, target);
             ASSERT(node);
 
@@ -183,6 +187,10 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
 
                 coretree.setProperty(node, name, array);
             }
+
+            if (coretree.getKeys(node).length === 0) {
+                coretree.deleteProperty(overlays, target);
+            }
         }
 
         function overlayQuery(overlays, prefix) {
@@ -197,7 +205,7 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
                 if (path === prefix || path.substr(0, prefix2.length) === prefix2) {
                     var node = coretree.getChild(overlays, path);
                     var names = coretree.getKeys(node);
-                    
+
                     for (var j = 0; j < names.length; ++j) {
                         var name = names[j];
                         if (isPointerName(name)) {

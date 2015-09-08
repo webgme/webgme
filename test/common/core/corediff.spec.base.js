@@ -19,11 +19,14 @@ describe('corediff-base', function () {
         describe('straight line', function () {
             var project,
                 projectName = 'straightLineTest',
+                projectId = testFixture.projectName2Id(projectName),
                 gmeAuth,
                 commitChain = [],
                 chainLength = 1000; // FIXME: Do we really need 1000 commits?
 
             before(function (done) {
+                this.timeout(4000); // creating 1000 commits on windows times out if tests are running with coverage.
+
                 testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
                     .then(function (gmeAuth_) {
                         gmeAuth = gmeAuth_;
@@ -31,7 +34,7 @@ describe('corediff-base', function () {
                         return storage.openDatabase();
                     })
                     .then(function () {
-                        return storage.deleteProject({projectName: projectName});
+                        return storage.deleteProject({projectId: projectId});
                     })
                     .then(function () {
                         return testFixture.importProject(storage, {
@@ -75,9 +78,9 @@ describe('corediff-base', function () {
             });
 
             after(function (done) {
-                storage.deleteProject({projectName: projectName})
+                storage.deleteProject({projectId: projectId})
                     .then(function () {
-                        return Q.all([
+                        return Q.allDone([
                             storage.closeDatabase(),
                             gmeAuth.unload()
                         ]);
@@ -125,6 +128,7 @@ describe('corediff-base', function () {
         describe('complex chain', function () {
             var project,
                 projectName = 'complexChainTest',
+                projectId = testFixture.projectName2Id(projectName),
                 commitChain = [],
                 gmeAuth;
 
@@ -136,7 +140,7 @@ describe('corediff-base', function () {
                         return storage.openDatabase();
                     })
                     .then(function () {
-                        return storage.deleteProject({projectName: projectName});
+                        return storage.deleteProject({projectId: projectId});
                     })
                     .then(function () {
                         return testFixture.importProject(storage, {
@@ -164,7 +168,7 @@ describe('corediff-base', function () {
                                 id.toString());
 
                             commitDatas.push({
-                                projectName: 'complexChainTest',
+                                projectId: projectId,
                                 commitObject: commitObject,
                                 coreObjects: []
                             });
@@ -191,7 +195,7 @@ describe('corediff-base', function () {
                             return storage.makeCommit(commitData);
                         }
 
-                        return Q.all(commitDatas.map(makeCommit));
+                        return Q.allDone(commitDatas.map(makeCommit));
                     })
                     .then(function (/*commitResults*/) {
                         done();
@@ -200,9 +204,9 @@ describe('corediff-base', function () {
             });
 
             after(function (done) {
-                storage.deleteProject({projectName: projectName})
+                storage.deleteProject({projectId: projectId})
                     .then(function () {
-                        return Q.all([
+                        return Q.allDone([
                             storage.closeDatabase(),
                             gmeAuth.unload()
                         ]);

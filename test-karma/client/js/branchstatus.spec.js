@@ -15,7 +15,8 @@ describe('branch status', function () {
         originalCommitHash,
         currentBranchName,
         currentBranchHash,
-        projectName = 'branchStatus';
+        projectName = 'branchStatus',
+        projectId;
 
     before(function (done) {
         requirejs([
@@ -28,9 +29,11 @@ describe('branch status', function () {
             gmeConfig = JSON.parse(gmeConfigJSON);
             logger = Logger.create('test:branchStatus', gmeConfig.client.log);
             client = new Client(gmeConfig);
+            projectId = gmeConfig.authentication.guestAccount + client.CONSTANTS.STORAGE.PROJECT_ID_SEP +
+                    projectName;
             client.connectToDatabase(function (err) {
                 expect(err).to.equal(null);
-                client.selectProject(projectName, function (err) {
+                client.selectProject(projectId, null, function (err) {
                     expect(err).to.equal(null);
 
                     storage = Storage.getStorage(logger, gmeConfig, true);
@@ -38,7 +41,7 @@ describe('branch status', function () {
                         logger.debug('storage is open');
                         expect(status).to.equal(client.CONSTANTS.STORAGE.CONNECTED);
 
-                        storage.openProject(projectName, function (err, project_, branches) {
+                        storage.openProject(projectId, function (err, project_, branches) {
                             expect(err).to.equal(null);
 
                             project = project_;
@@ -67,14 +70,14 @@ describe('branch status', function () {
 
     afterEach(function (done) {
         client.selectBranch('master', null, function (err) {
-            client.deleteBranch(projectName, currentBranchName, currentBranchHash, function (err2) {
+            client.deleteBranch(projectId, currentBranchName, currentBranchHash, function (err2) {
                 done(err || err2);
             });
         });
     });
 
     function createSelectBranch(branchName, callback) {
-        client.createBranch(projectName, branchName, originalCommitHash, function (err) {
+        client.createBranch(projectId, branchName, originalCommitHash, function (err) {
             expect(err).to.equal(null);
             client.selectBranch(branchName, null, callback);
         });
@@ -204,7 +207,7 @@ describe('branch status', function () {
                 project.setBranchHash(branchName, newHash, currentHash,
                     function (err, result) {
                         expect(err).to.equal(null);
-                        expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
+                        expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCED);
                     }
                 );
             });
@@ -225,9 +228,15 @@ describe('branch status', function () {
 
             function eventHandler(__client, eventData) {
                 if (prevStatus === client.CONSTANTS.BRANCH_STATUS.SYNC) {
+                    // 1) Here it starts pulling the external changes..
+                    expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.PULLING);
+                    prevStatus = eventData.status;
+                } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.PULLING) {
+                    // 2) It starts with its own commit and disregards the pulling
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
                     prevStatus = eventData.status;
                 } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC) {
+                    // 3) When the commit returns its forked and the client is not in sync.
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
                     removeHandler();
                     currentBranchHash = client.getActiveCommitHash();
@@ -265,7 +274,7 @@ describe('branch status', function () {
                                 project.setBranchHash(branchName, newHash, currentHash,
                                     function (err, result) {
                                         expect(err).to.equal(null);
-                                        expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
+                                        expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCED);
                                         client.setAttributes('', 'name', 'newRootyName', 'conflicting change');
                                         client.completeTransaction('sync_aheadSync_aheadNotSync__stop');
                                     }
@@ -297,15 +306,18 @@ describe('branch status', function () {
             function eventHandler(__client, eventData) {
                 if (prevStatus === client.CONSTANTS.BRANCH_STATUS.SYNC) {
                     prevStatus = eventData.status;
+                    expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.PULLING);
+                } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.PULLING) {
+                    prevStatus = eventData.status;
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
                 } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC) {
                     prevStatus = eventData.status;
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
-                    expect(eventData.details.length).to.equal(1);
+                    expect(eventData.commitQueue.length).to.equal(1);
                     client.setAttributes('', 'name', 'newRootyName2Test2', 'change when ahead not sync');
                 } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC) {
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
-                    expect(eventData.details.length).to.equal(2);
+                    expect(eventData.commitQueue.length).to.equal(2);
                     removeHandler();
                     currentBranchHash = client.getActiveCommitHash();
                     done();
@@ -342,7 +354,7 @@ describe('branch status', function () {
                                 project.setBranchHash(branchName, newHash, currentHash,
                                     function (err, result) {
                                         expect(err).to.equal(null);
-                                        expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCH);
+                                        expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCED);
                                         client.setAttributes('', 'name', 'newRootyNameTest2', 'conflicting change');
                                         client.completeTransaction('sync_aheadSync_aheadNotSync_aheadNotSync__stop');
                                     }

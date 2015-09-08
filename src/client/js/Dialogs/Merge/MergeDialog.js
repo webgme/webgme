@@ -40,6 +40,7 @@ define([
             if (mergeResult) {
                 this._addDiff(mergeResult);
                 this._btnResolve.show();
+                this._btnAbort.show();
             } else {
                 this._warningNoDiff.show();
                 this._btnOk.show();
@@ -76,6 +77,11 @@ define([
                 mergeDialog.show(err, result);
             });
         });
+
+        //this._btnAbort.on('click', function () {
+        //    //just simply exit the dialog
+        //    self._dialog.modal('hide');
+        //});
     };
 
     MergeDialog.prototype._initDialog = function () {
@@ -91,6 +97,7 @@ define([
         this._diffPlaceholder = this._dialog.find('.diff-placeholder');
 
         this._btnResolve = this._dialog.find('.btn-resolve');
+        this._btnAbort = this._dialog.find('.btn-abort');
         this._btnOk = this._dialog.find('.btn-ok');
 
         this._alertSuccess.hide();
@@ -98,6 +105,7 @@ define([
 
         this._warningNoDiff.hide();
         this._btnResolve.hide();
+        this._btnAbort.hide();
         this._btnOk.hide();
     };
 
@@ -107,10 +115,10 @@ define([
             conflictsE,
             conflictItem,
             conflictItemTemplate = $('<div class="row conflict-item">' +
-                                     '<div class="col-md-6 path"></div>' +
-                                     '<div class="col-md-3 value-theirs"></div>' +
-                                     '<div class="col-md-3 value-mine"></div>' +
-                                     '</div>'),
+                '<div class="col-md-6 path"></div>' +
+                '<div class="col-md-3 value-theirs"></div>' +
+                '<div class="col-md-3 value-mine"></div>' +
+                '</div>'),
             conflictItemE,
             mineText,
             valueMineE,
@@ -123,7 +131,11 @@ define([
         // regular expression matching:
         // /1/2/3/4/5/attr/name -> '/1/2/3/4/5' -> nodeId
         // /attr/name -> '' -> root node
-            pathRegExp = /((\/\d+)*)/;
+            pathRegExp = /((\/\d+)*)/,
+            getParentPath = function (path) {
+                //in case of root object it return the root itself
+                return path.slice(0, path.lastIndexOf('/'));
+            };
 
         this.resolution = mergeResult;
 
@@ -166,16 +178,16 @@ define([
                 conflictItemE = conflictItemTemplate.clone();
                 conflictItemE.find('.path').text(conflictItem.theirs.path);
 
-                linkTheirs = '?project=' + encodeURIComponent(self._client.getActiveProjectName()) +
-                             '&commit=' + encodeURIComponent(mergeResult.theirCommitHash) +
-                             // FIXME: regexp parses out the path
-                             '&node=' + encodeURIComponent(pathRegExp.exec(conflictItem.theirs.path)[0]);
+                linkTheirs = '?project=' + encodeURIComponent(self._client.getActiveProjectId()) +
+                    '&commit=' + encodeURIComponent(mergeResult.theirCommitHash) +
+                        // FIXME: regexp parses out the path
+                    '&node=' + encodeURIComponent(getParentPath(pathRegExp.exec(conflictItem.theirs.path)[0])) +
+                    '&selection=' + encodeURIComponent(pathRegExp.exec(conflictItem.theirs.path)[0]);
 
                 valueTheirsE = $('<div>' +
-                                 // FIXME: should we use fa-link instead ???
-                                 '<a class="fa fa-eye" href="' + linkTheirs + '" target="_blank" tooltip="Open"></a>' +
-                                 '<span>' + JSON.stringify(conflictItem.theirs.value) + '</span>' +
-                                 '</div>');
+                    '<a class="glyphicon glyphicon-link" href="' + linkTheirs + '" target="_blank" tooltip="Open"></a>' +
+                    '<span>' + JSON.stringify(conflictItem.theirs.value) + '</span>' +
+                    '</div>');
 
                 conflictItemE.find('.value-theirs').append(valueTheirsE);
 
@@ -185,15 +197,16 @@ define([
                     mineText = conflictItem.mine.path + ': ' + JSON.stringify(conflictItem.mine.value);
                 }
 
-                linkMine = '?project=' + encodeURIComponent(self._client.getActiveProjectName()) +
-                           '&commit=' + encodeURIComponent(mergeResult.myCommitHash) +
-                           '&node=' + encodeURIComponent(pathRegExp.exec(conflictItem.mine.path)[0]);  // FIXME: regexp parses out the path
-
+                linkMine = '?project=' + encodeURIComponent(self._client.getActiveProjectId()) +
+                    '&commit=' + encodeURIComponent(mergeResult.myCommitHash) +
+                        // FIXME: regexp parses out the path
+                    '&node=' + encodeURIComponent(getParentPath(pathRegExp.exec(conflictItem.mine.path)[0])) +
+                    '&selection=' + encodeURIComponent(pathRegExp.exec(conflictItem.mine.path)[0]);
                 valueMineE = $('<div>' +
-                               // FIXME: should we use fa-link instead ???
-                               '<a class="fa fa-eye" href="' + linkMine + '"  target="_blank" tooltip="Open"></a>' +
-                               '<span>' + mineText + '</span>' +
-                               '</div>');
+                        // FIXME: should we use fa-link instead ???
+                    '<a class="glyphicon glyphicon-link" href="' + linkMine + '"  target="_blank" tooltip="Open"></a>' +
+                    '<span>' + mineText + '</span>' +
+                    '</div>');
 
                 conflictItemE.find('.value-mine').append(valueMineE);
 

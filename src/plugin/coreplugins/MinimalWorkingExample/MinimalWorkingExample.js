@@ -37,6 +37,34 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
     };
 
     /**
+     * Gets the configuration structure for the MetaGMEParadigmImporter.
+     * The ConfigurationStructure defines the configuration for the plugin
+     * and will be used to populate the GUI when invoking the plugin from webGME.
+     * @returns {object} The version of the plugin.
+     * @public
+     */
+    MinimalWorkingExample.prototype.getConfigStructure = function () {
+        return [
+            {
+                name: 'shouldFail',
+                displayName: 'Should fail',
+                description: 'Example if the plugin execution fails',
+                value: false,
+                valueType: 'boolean',
+                readOnly: false
+            },
+            {
+                name: 'save',
+                displayName: 'Should save the model',
+                description: 'Will update the model if true',
+                value: true,
+                valueType: 'boolean',
+                readOnly: false
+            }
+        ];
+    };
+
+    /**
     * Main function for the plugin to execute. This will perform the execution.
     * Notes:
     * - Always log with the provided logger.[error,warning,info,debug].
@@ -48,7 +76,8 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
     MinimalWorkingExample.prototype.main = function (callback) {
         // Use self to access core, project, result, logger etc from PluginBase.
         // These are all instantiated at this point.
-        var self = this;
+        var self = this,
+            currentConfiguration = self.getCurrentConfig();
         self.updateMETA(self.metaTypes);
         // Using the logger.
         self.logger.debug('This is a debug message.');
@@ -75,14 +104,31 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
         // This will save the changes. If you don't want to save;
         // exclude self.save and call callback directly from this scope.
         self.result.setSuccess(true);
-        self.save('added obj', function (err, status) {
-            if (err) {
+        if (currentConfiguration.save === true) {
+            self.save('added obj', function (err, status) {
+                if (err) {
+                    self.result.setSuccess(false);
+                    self.result.setError(err);
+                }
+                self.logger.info('saved returned with status', status);
+
+                if (currentConfiguration.shouldFail) {
+                    self.result.setSuccess(false);
+                    self.result.setError('Failed on purpose.');
+                    callback('Failed on purpose.', self.result);
+                } else {
+                    callback(null, self.result);
+                }
+            });
+        } else {
+            if (currentConfiguration.shouldFail) {
                 self.result.setSuccess(false);
-                self.result.setError(err);
+                self.result.setError('Failed on purpose.');
+                callback('Failed on purpose.', self.result);
+            } else {
+                callback(null, self.result);
             }
-            self.logger.info('saved returned with status', status);
-            callback(null, self.result);
-        });
+        }
 
     };
 

@@ -29,7 +29,7 @@ function sessionStore(parentLogger, gmeConfig) {
             gmeConfig.server.sessionStore.type +
             ' supported types: Memory, Mongo, Redis'
         );
-        // FIXME: throw an exception? hard error?
+        throw new Error('Not supported session store type: ' + gmeConfig.server.sessionStore.type);
     }
 
 
@@ -42,6 +42,7 @@ function sessionStore(parentLogger, gmeConfig) {
             }
         });
     };
+
     store.getSessionUser = function (sid, callback) {
         store.get(sid, function (err, data) {
             if (err) {

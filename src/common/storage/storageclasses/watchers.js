@@ -52,50 +52,50 @@ define(['common/storage/constants'], function (CONSTANTS) {
             }
         } else if (this.watchers.database < 0) {
             this.logger.error('Number of database watchers became negative!');
-            callback('Number of database watchers became negative!');
+            callback(new Error('Number of database watchers became negative!'));
         } else {
             callback(null);
         }
     };
 
-    StorageWatcher.prototype.watchProject = function (projectName, eventHandler, callback) {
-        this.logger.debug('watchProject - handler added for project', projectName);
-        this.webSocket.addEventListener(CONSTANTS.BRANCH_DELETED + projectName, eventHandler);
-        this.webSocket.addEventListener(CONSTANTS.BRANCH_CREATED + projectName, eventHandler);
-        this.webSocket.addEventListener(CONSTANTS.BRANCH_HASH_UPDATED + projectName, eventHandler);
+    StorageWatcher.prototype.watchProject = function (projectId, eventHandler, callback) {
+        this.logger.debug('watchProject - handler added for project', projectId);
+        this.webSocket.addEventListener(CONSTANTS.BRANCH_DELETED + projectId, eventHandler);
+        this.webSocket.addEventListener(CONSTANTS.BRANCH_CREATED + projectId, eventHandler);
+        this.webSocket.addEventListener(CONSTANTS.BRANCH_HASH_UPDATED + projectId, eventHandler);
 
-        this.watchers.projects[projectName] = this.watchers.projects.hasOwnProperty(projectName) ?
-        this.watchers.projects[projectName] + 1 : 1;
-        this.logger.debug('Nbr of watchers for project:', projectName, this.watchers.projects[projectName]);
-        if (this.watchers.projects[projectName] === 1) {
-            this.logger.debug('First watcher will enter project room:', projectName);
-            this.webSocket.watchProject({projectName: projectName, join: true}, callback);
+        this.watchers.projects[projectId] = this.watchers.projects.hasOwnProperty(projectId) ?
+        this.watchers.projects[projectId] + 1 : 1;
+        this.logger.debug('Nbr of watchers for project:', projectId, this.watchers.projects[projectId]);
+        if (this.watchers.projects[projectId] === 1) {
+            this.logger.debug('First watcher will enter project room:', projectId);
+            this.webSocket.watchProject({projectId: projectId, join: true}, callback);
         } else {
             callback(null);
         }
     };
 
-    StorageWatcher.prototype.unwatchProject = function (projectName, eventHandler, callback) {
-        this.logger.debug('unwatchProject - handler will be removed', projectName);
-        this.logger.debug('Nbr of database watchers (before removal):', projectName,
-            this.watchers.projects[projectName]);
-        this.webSocket.removeEventListener(CONSTANTS.BRANCH_DELETED + projectName, eventHandler);
-        this.webSocket.removeEventListener(CONSTANTS.BRANCH_CREATED + projectName, eventHandler);
-        this.webSocket.removeEventListener(CONSTANTS.BRANCH_HASH_UPDATED + projectName, eventHandler);
+    StorageWatcher.prototype.unwatchProject = function (projectId, eventHandler, callback) {
+        this.logger.debug('unwatchProject - handler will be removed', projectId);
+        this.logger.debug('Nbr of database watchers (before removal):', projectId,
+            this.watchers.projects[projectId]);
+        this.webSocket.removeEventListener(CONSTANTS.BRANCH_DELETED + projectId, eventHandler);
+        this.webSocket.removeEventListener(CONSTANTS.BRANCH_CREATED + projectId, eventHandler);
+        this.webSocket.removeEventListener(CONSTANTS.BRANCH_HASH_UPDATED + projectId, eventHandler);
 
-        this.watchers.projects[projectName] = this.watchers.projects.hasOwnProperty(projectName) ?
-        this.watchers.projects[projectName] - 1 : -1;
-        if (this.watchers.projects[projectName] === 0) {
-            this.logger.debug('No more watchers will exit project room:', projectName);
-            delete this.watchers.projects[projectName];
+        this.watchers.projects[projectId] = this.watchers.projects.hasOwnProperty(projectId) ?
+        this.watchers.projects[projectId] - 1 : -1;
+        if (this.watchers.projects[projectId] === 0) {
+            this.logger.debug('No more watchers will exit project room:', projectId);
+            delete this.watchers.projects[projectId];
             if (this.connected) {
-                this.webSocket.watchProject({projectName: projectName, join: false}, callback);
+                this.webSocket.watchProject({projectId: projectId, join: false}, callback);
             } else {
                 callback(null);
             }
-        } else if (this.watchers.database < 0) {
-            this.logger.error('Number of project watchers became negative!:', projectName);
-            callback('Number of project watchers became negative!');
+        } else if (this.watchers.projects[projectId] < 0) {
+            this.logger.error('Number of project watchers became negative!:', projectId);
+            callback(new Error('Number of project watchers became negative!'));
         } else {
             callback(null);
         }
@@ -103,7 +103,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
 
     StorageWatcher.prototype._rejoinWatcherRooms = function () {
         var self = this,
-            projectName,
+            projectId,
             callback = function (err) {
                 //TODO: Add a callback here too.
                 if (err) {
@@ -115,10 +115,10 @@ define(['common/storage/constants'], function (CONSTANTS) {
             this.logger.debug('Rejoining database room.');
             this.webSocket.watchDatabase({join: true}, callback);
         }
-        for (projectName in this.watchers.projects) {
-            if (this.watchers.projects.hasOwnProperty(projectName) && this.watchers.projects[projectName] > 0) {
-                this.logger.debug('Rejoining project room', projectName, this.watchers.projects[projectName]);
-                this.webSocket.watchProject({projectName: projectName, join: true}, callback);
+        for (projectId in this.watchers.projects) {
+            if (this.watchers.projects.hasOwnProperty(projectId) && this.watchers.projects[projectId] > 0) {
+                this.logger.debug('Rejoining project room', projectId, this.watchers.projects[projectId]);
+                this.webSocket.watchProject({projectId: projectId, join: true}, callback);
             }
         }
     };

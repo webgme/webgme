@@ -57,9 +57,10 @@ define(['js/logger',
             self.selectedObjectChanged(activeObject);
         });
 
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_ASPECT, function (model, activeAspect) {
-            if (activeAspect !== undefined) {
-                self.selectedAspectChanged(activeAspect);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, function (model, activeAspect) {
+            //TODO we may need constants for the different visualizers, or have some feature table...
+            if (activeAspect !== undefined && WebGMEGlobal.State.getActiveVisualizer() === 'ModelEditor') {
+                self.selectedAspectChanged(WebGMEGlobal.State.getActiveAspect());
             }
         });
     };
@@ -246,7 +247,8 @@ define(['js/logger',
                 this._doUpdateTerritory(true);
             } else {
                 this._logger.debug('_processContainerNode territory did not change _suppressDecoratorUpdate=false');
-                this._suppressDecoratorUpdate = false;
+                this._suppressDecoratorUpdate = true;
+                this._logger.debug('WARN - Forcing _suppressDecoratorUpdate=true see issue #492');
             }
         }
     };

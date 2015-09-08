@@ -31,7 +31,7 @@ define(['js/util',
     //jscs:disable maximumLineLength
         RESULT_ARTIFACTS_BASE = $('<div class="artifacts collapse"><div class="artifacts-title">Generated artifacts</div><div class="artifacts-body"><ul></ul></div></div>'),
     //jscs:enable maximumLineLength
-        ARTIFACT_ENTRY_BASE = $('<li><a href="#" target="_blank">Loading...</a></li>'),
+        ARTIFACT_ENTRY_BASE = $('<li><a href="#" target="_self">Loading...</a></li>'),
         MESSAGE_PREFIX = 'Message #';
 
     PluginResultsDialog = function () {
@@ -108,18 +108,21 @@ define(['js/util',
                 delete result.__unread;
             }
 
+            pluginName = result.getPluginName ? result.getPluginName() : 'PluginName N/A';
+            spanResultTitle = RESULT_NAME_BASE.clone();
+
+
             resultHeader = PLUGIN_RESULT_HEADER_BASE.clone();
             if (result.getSuccess() === true) {
                 resultHeader.append(ICON_SUCCESS.clone());
                 resultHeader.addClass(RESULT_SUCCESS_CLASS);
+                spanResultTitle.text(pluginName);
             } else {
                 resultHeader.addClass(RESULT_ERROR_CLASS);
                 resultHeader.append(ICON_ERROR.clone());
+                spanResultTitle.text(pluginName + ' - ' + result.error);
             }
 
-            pluginName = result.getPluginName ? result.getPluginName() : 'PluginName N/A';
-            spanResultTitle = RESULT_NAME_BASE.clone();
-            spanResultTitle.text(pluginName);
             resultHeader.append(spanResultTitle);
 
             pluginTime = result.getFinishTime ? clientUtil.formattedDate(new Date(result.getFinishTime()),

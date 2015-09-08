@@ -49,7 +49,7 @@ define([
 
         this._ddBranchStatus.onItemClicked = function (value) {
             var branchName = self._client.getActiveBranchName(),
-                projectName = self._client.getActiveProjectName();
+                projectName = self._client.getActiveProjectId();
             if (value === ITEM_VALUE_FORK) {
                 self._client.forkCurrentBranch(null, null, function (err, forkName) {
                     if (err) {
@@ -57,14 +57,14 @@ define([
                         self._client.selectBranch(branchName, null, function (err) {
                             if (err) {
                                 self._logger.error('could not re-select the branch', branchName);
-                                throw new Error(err);
+                                throw err;
                             }
                         });
                     } else {
                         self._client.selectBranch(forkName, null, function (err) {
                             if (err) {
                                 self._logger.error('Could not select new branch', forkName);
-                                throw new Error(err);
+                                throw err;
                             }
                         });
                     }
@@ -132,14 +132,15 @@ define([
         };
 
         this._client.addEventListener(CONSTANTS.CLIENT.BRANCH_STATUS_CHANGED, function (__client, eventData) {
-            self._refreshBranchStatus(eventData);
-        });
+                self._refreshBranchStatus(eventData);
+            }
+        );
 
-        this._refreshBranchStatus();
+        this._refreshBranchStatus({status: this._client.getBranchStatus()});
     };
 
     BranchStatusWidget.prototype._refreshBranchStatus = function (eventData) {
-        var status = this._client.getBranchStatus();
+        var status = eventData.status;
 
         switch (status) {
             case CONSTANTS.CLIENT.BRANCH_STATUS.SYNC:
@@ -186,7 +187,7 @@ define([
             text: 'Try to merge',
             value: ITEM_VALUE_MERGE
         });
-        this._ddBranchStatus.setTitle('AHEAD[' + eventData.details.length + ']');
+        this._ddBranchStatus.setTitle('AHEAD[' + eventData.commitQueue.length + ']');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);
         this._popoverBox = this._popoverBox || new PopoverBox(this._ddBranchStatus.getEl());
         this._popoverBox.show('You are out of sync from the origin.',
@@ -195,13 +196,13 @@ define([
 
     BranchStatusWidget.prototype._branchAhead = function (eventData) {
         this._ddBranchStatus.clear();
-        this._ddBranchStatus.setTitle('AHEAD[' + eventData.details.length + ']');
+        this._ddBranchStatus.setTitle('AHEAD[' + eventData.commitQueue.length + ']');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.LIGHT_BLUE);
     };
 
     BranchStatusWidget.prototype._branchPulling = function (eventData) {
         this._ddBranchStatus.clear();
-        this._ddBranchStatus.setTitle('PULLING[' + eventData.details.toString() + ']');
+        this._ddBranchStatus.setTitle('PULLING[' + eventData.updateQueue.length + ']');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.GRAY);
     };
 

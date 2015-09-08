@@ -1,0 +1,64 @@
+{
+  "children": {
+    "minItems": [
+      -1
+    ],
+    "maxItems": [
+      10
+    ],
+    "items": [
+      {
+        "$ref": "/1"
+      }
+    ],
+    "min": 1,
+    "max": 100
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "default": "FCO"
+    },
+    "number": {
+      "type": "integer",
+      "default": 0
+    },
+    "floatNumber": {
+      "type": "float",
+      "default": 0.0
+    },
+    "enumText": {
+      "type": "string",
+      "default": "one",
+      "enum": [
+        "one",
+        "two",
+        "three"
+      ]
+    }
+  },
+  "pointers": {
+    "ptr": {
+      "minItems": [
+        -1
+      ],
+      "maxItems": [
+        1
+      ],
+      "items": [
+        {
+          "$ref": "/1"
+        }
+      ],
+      "min": 1,
+      "max": 1
+    }
+  },
+  "aspects": {
+    "testAspect": {
+      "items": [
+        {"$ref": "/1"}
+      ]
+    }
+  }
+}

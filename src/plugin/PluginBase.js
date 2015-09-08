@@ -32,6 +32,7 @@ define([
         this.core = null;
         this.project = null;
         this.projectName = null;
+        this.projectId = null;
         this.branchName = null;
         this.branchHash = null;
         this.commitHash = null;
@@ -248,7 +249,7 @@ define([
      */
     PluginBase.prototype.createMessage = function (node, message, severity) {
         var severityLevel = severity || 'info';
-        //this occurence of the function will always handle a single node
+        //this occurrence of the function will always handle a single node
 
         var descriptor = new PluginNodeDescription({
             name: node ? this.core.getAttribute(node, 'name') : '',
@@ -284,117 +285,8 @@ define([
         if (Object.keys(persisted.objects).length === 0) {
             self.logger.warn('save invoked with no changes, will still proceed');
         }
-        if (self.branch) {
-            self._commitWithClient(persisted, commitMessage, callback);
-        } else {
-            // Make commit w/o depending on a client.
-            self._makeCommit(persisted, commitMessage, callback);
-        }
-    };
 
-    PluginBase.prototype._commitWithClient = function (persisted, commitMessage, callback) {
-        var self = this,
-            forkName;
-        if (self.currentHash !== self.branch.getLocalHash()) {
-            // If the client has made local changes  since the plugin started - create a new branch.
-            forkName = self.forkName || self.branchName + '_' + (new Date()).getTime();
-            self.logger.warn('Client has made local change since the plugin started in "' + self.branchName + '". ' +
-                'Trying to create a new branch "' + forkName + '".');
-            self.branch = null; // Set the branch to null - from now on the plugin is detached from the client branch.
-            self.project.makeCommit(null,
-                [self.currentHash],
-                persisted.rootHash,
-                persisted.objects,
-                commitMessage,
-                function (err, commitResult) {
-                    var originalBranchName;
-                    if (err) {
-                        self.logger.error('project.makeCommit failed.');
-                        callback(err);
-                        return;
-                    }
-                    self.commitHash = commitResult.hash;
-                    self.project.setBranchHash(forkName, commitResult.hash, '',
-                        function (err, updateResult) {
-                            if (err) {
-                                self.logger.error('setBranchHash failed with error.');
-                                callback(err);
-                                return;
-                            }
-                            self.currentHash = commitResult.hash;
-                            if (updateResult.status === STORAGE_CONSTANTS.SYNCH) {
-                                self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
-                                    '(Successive saves will try to save to this new branch.)');
-                                self.branchName = forkName;
-                                self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
-
-                                callback(null, {status: STORAGE_CONSTANTS.FORKED, forkName: forkName});
-
-                            } else if (updateResult.status === STORAGE_CONSTANTS.FORKED) {
-                                originalBranchName = self.branchName;
-                                self.branchName = null;
-                                self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
-                                callback('Plugin got forked from "' + originalBranchName + '". ' +
-                                    'And got forked from name "' + forkName + '" too.');
-                            }
-                        }
-                    );
-
-                }
-            );
-        } else {
-            var commitObject,
-                updateData;
-
-            commitObject = self.project.makeCommit(self.branch.name,
-                [self.currentHash],
-                persisted.rootHash,
-                persisted.objects,
-                commitMessage,
-                function (err, commmitResult) {
-                    if (err) {
-                        self.logger.error('project.makeCommit failed in _commitWithClient.');
-                        callback(err);
-                        return;
-                    }
-                    self.currentHash = commmitResult.hash;
-
-                    if (commmitResult.status === STORAGE_CONSTANTS.SYNCH) {
-                        self.logger.info('"' + self.branchName + '" was updated to the new commit.');
-
-                        self.addCommitToResult(STORAGE_CONSTANTS.SYNCH);
-
-                        callback(null, {status: STORAGE_CONSTANTS.SYNCH});
-                    } else if (commmitResult.status === STORAGE_CONSTANTS.FORKED) {
-                        self.logger.warn('Plugin and client are forked from "' + self.branchName + '". ');
-                        // Set the branch to null - from now on the plugin is detached from the client branch.
-                        self.branch = null;
-                        self._createFork(callback);
-                    } else {
-                        callback('makeCommit returned unexpected status, ' + commmitResult.status);
-                    }
-                }
-            );
-
-            // Locally update the client with the new data.
-            updateData = {
-                projectName: self.projectName,
-                branchName: self.branchName,
-                commitObject: commitObject,
-                coreObjects: persisted.objects
-            };
-
-            self.branch.localUpdateHandler(self.branch.getUpdateQueue(), updateData, function (aborted) {
-                if (aborted) {
-                    self.logger.warn('Updates were not loaded in client. Expect a fork..');
-                }
-            });
-        }
-    };
-
-    PluginBase.prototype._makeCommit = function (persisted, commitMessage, callback) {
-        var self = this;
-        self.project.makeCommit(null,
+        self.project.makeCommit(self.branchName,
             [self.currentHash],
             persisted.rootHash,
             persisted.objects,
@@ -405,27 +297,34 @@ define([
                     callback(err);
                     return;
                 }
-                self.project.setBranchHash(self.branchName, commitResult.hash, self.currentHash,
-                    function (err, updateResult) {
-                        if (err) {
-                            self.logger.error('setBranchHash failed with error.');
-                            callback(err);
-                            return;
-                        }
-                        self.currentHash = commitResult.hash;
-                        if (updateResult.status === STORAGE_CONSTANTS.SYNCH) {
-                            self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+                self.currentHash = commitResult.hash;
 
-                            self.addCommitToResult(STORAGE_CONSTANTS.SYNCH);
-
-                            callback(null, {status: STORAGE_CONSTANTS.SYNCH});
-                        } else if (updateResult.status === STORAGE_CONSTANTS.FORKED) {
+                if (commitResult.status === STORAGE_CONSTANTS.SYNCED) {
+                    self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+                    self.addCommitToResult(STORAGE_CONSTANTS.SYNCED);
+                    callback(null, {status: STORAGE_CONSTANTS.SYNCED});
+                } else if (commitResult.status === STORAGE_CONSTANTS.FORKED) {
+                    self._createFork(callback);
+                } else if (commitResult.status === STORAGE_CONSTANTS.CANCELED) {
+                    // Plugin running in the browser and the client has made changes since plugin was invoked.
+                    // Since the commitData was never sent to the server, a commit w/o branch is made before forking.
+                    self.project.makeCommit(null,
+                        [self.currentHash],
+                        persisted.rootHash,
+                        persisted.objects,
+                        commitMessage,
+                        function (err, commitResult) {
+                            if (err) {
+                                self.logger.error('project.makeCommit failed.');
+                                callback(err);
+                                return;
+                            }
+                            self.currentHash = commitResult.hash; // This is needed in case hash is randomly generated.
                             self._createFork(callback);
-                        } else {
-                            callback('setBranchHash returned unexpected status' + updateResult.status);
-                        }
-                    }
-                );
+                        });
+                } else {
+                    callback('setBranchHash returned unexpected status' + commitResult.status);
+                }
             }
         );
     };
@@ -443,7 +342,7 @@ define([
                 callback(err);
                 return;
             }
-            if (forkResult.status === STORAGE_CONSTANTS.SYNCH) {
+            if (forkResult.status === STORAGE_CONSTANTS.SYNCED) {
                 self.branchName = forkName;
                 self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
                     '(Successive saves will try to save to this new branch.)');
@@ -515,6 +414,7 @@ define([
         this.project = config.project;
         this.branch = config.branch;  // This is only for client side.
         this.projectName = config.projectName;
+        this.projectId = config.projectId;
         this.branchName = config.branchName;
         this.branchHash = config.branchName ? config.commitHash : null;
 
@@ -528,7 +428,7 @@ define([
 
         this.result = new PluginResult();
 
-        this.addCommitToResult(STORAGE_CONSTANTS.SYNCH);
+        this.addCommitToResult(STORAGE_CONSTANTS.SYNCED);
 
         this.isConfigured = true;
     };

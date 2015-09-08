@@ -24,10 +24,12 @@ var WebGME = require('../webgme'),
     },
     Core = requireJS('common/core/core'),
     NodeStorage = requireJS('../src/common/storage/nodestorage'),
+    storageUtil = requireJS('common/storage/util'),
     Mongo = require('../src/server/storage/mongo'),
     Memory = require('../src/server/storage/memory'),
     SafeStorage = require('../src/server/storage/safestorage'),
     Logger = require('../src/server/logger'),
+
     logger = Logger.create('gme:test', {
         //patterns: ['gme:test:*cache'],
         transports: [{
@@ -59,7 +61,6 @@ var WebGME = require('../webgme'),
 
     ExecutorClient = requireJS('common/executor/ExecutorClient'),
     BlobClient = requireJS('blob/BlobClient'),
-    openContext = require('../src/server/util/opencontext'),
     Project = require('../src/server/storage/userproject'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
 
@@ -70,8 +71,41 @@ var WebGME = require('../webgme'),
     mongodb = require('mongodb'),
     Q = require('q'),
     fs = require('fs'),
+    path = require('path'),
     rimraf = require('rimraf'),
     childProcess = require('child_process');
+
+/**
+ * A combination of Q.allSettled and Q.all. It works like Q.allSettled in the sense that
+ * the promise is not rejected until all promises have finished and like Q.all in that it
+ * is rejected with the first encountered rejection and resolves with an array of "values".
+ *
+ * The rejection is always an Error.
+ * @param promises
+ * @returns {*|promise}
+ */
+Q.allDone = function (promises) {
+    var deferred = Q.defer();
+    Q.allSettled(promises)
+        .then(function (results) {
+            var i,
+                values = [];
+            for (i = 0; i < results.length; i += 1) {
+                if (results[i].state === 'rejected') {
+                    deferred.reject(new Error(results[i].reason));
+                    break;
+                } else if (results[i].state === 'fulfilled') {
+                    values.push(results[i].value);
+                } else {
+                    deferred.reject(new Error('Unexpected promise state' + results[i].state));
+                    break;
+                }
+            }
+            deferred.resolve(values);
+        });
+
+    return deferred.promise;
+};
 
 function clearDatabase(gmeConfigParameter, callback) {
     var deferred = Q.defer(),
@@ -80,20 +114,18 @@ function clearDatabase(gmeConfigParameter, callback) {
     Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfigParameter.mongo.uri, gmeConfigParameter.mongo.options)
         .then(function (db_) {
             db = db_;
-            return Q.all([
-                Q.ninvoke(db, 'collection', '_users')
-                    .then(function (collection_) {
-                        return Q.ninvoke(collection_, 'remove');
-                    }),
-                Q.ninvoke(db, 'collection', '_organizations')
-                    .then(function (orgs_) {
-                        return Q.ninvoke(orgs_, 'remove');
-                    }),
-                Q.ninvoke(db, 'collection', '_projects')
-                    .then(function (projects_) {
-                        return Q.ninvoke(projects_, 'remove');
-                    })
-            ]);
+            return Q.ninvoke(db, 'collectionNames');
+        })
+        .then(function (collectionNames) {
+            var collectionPromises = [];
+            collectionNames.map(function (collData) {
+                if (collData.name.indexOf('system.') === -1) {
+                    collectionPromises.push(Q.ninvoke(db, 'dropCollection', collData.name));
+                } else {
+
+                }
+            });
+            return Q.allDone(collectionPromises);
         })
         .then(function () {
             return Q.ninvoke(db, 'close');
@@ -137,7 +169,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
         })
         .then(function (gmeAuth_) {
             gmeAuth = gmeAuth_;
-            return Q.all([
+            return Q.allDone([
                 gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
                 gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
             ]);
@@ -145,12 +177,14 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
         .then(function () {
             var projectsToAuthorize = [],
                 projectName,
+                projectId,
                 i;
 
             if (typeof projectNameOrNames === 'string') {
                 projectName = projectNameOrNames;
+                projectId = guestAccount + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
                 projectsToAuthorize.push(
-                    gmeAuth.authorizeByUserId(guestAccount, projectName, 'create', {
+                    gmeAuth.authorizeByUserId(guestAccount, projectId, 'create', {
                         read: true,
                         write: true,
                         delete: true
@@ -158,8 +192,9 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
                 );
             } else if (projectNameOrNames instanceof Array) {
                 for (i = 0; i < projectNameOrNames.length; i += 1) {
+                    projectId = guestAccount + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectNameOrNames[i];
                     projectsToAuthorize.push(
-                        gmeAuth.authorizeByUserId(guestAccount, projectNameOrNames[i], 'create', {
+                        gmeAuth.authorizeByUserId(guestAccount, projectId, 'create', {
                             read: true,
                             write: true,
                             delete: true
@@ -170,7 +205,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
                 logger.warn('No projects to authorize...', projectNameOrNames);
             }
 
-            return Q.all(projectsToAuthorize);
+            return Q.allDone(projectsToAuthorize);
         })
         .then(function () {
             deferred.resolve(gmeAuth);
@@ -217,9 +252,8 @@ function importProject(storage, parameters, callback) {
     data.projectName = parameters.projectName;
 
     storage.createProject(data)
-        .then(function (dbProject) {
-            var project = new Project(dbProject, storage, parameters.logger, parameters.gmeConfig),
-                core = new Core(project, {
+        .then(function (project) {
+            var core = new Core(project, {
                     globConf: parameters.gmeConfig,
                     logger: parameters.logger
                 }),
@@ -233,20 +267,14 @@ function importProject(storage, parameters, callback) {
                 }
                 persisted = core.persist(rootNode);
 
-                var commitObject = project.createCommitObject([''], persisted.rootHash, 'test', 'project imported'),
-                    commitData = {
-                        projectName: parameters.projectName,
-                        branchName: branchName,
-                        commitObject: commitObject,
-                        coreObjects: persisted.objects
-                    };
-                storage.makeCommit(commitData)
+                project.makeCommit(branchName, [''], persisted.rootHash, persisted.objects, 'project imported')
                     .then(function (result) {
                         deferred.resolve({
                             status: result.status,
                             branchName: branchName,
-                            commitHash: commitObject._id,
+                            commitHash: result.hash,
                             project: project,
+                            projectId: project.projectId,
                             core: core,
                             jsonProject: projectJson,
                             rootNode: rootNode,
@@ -291,40 +319,76 @@ function saveChanges(parameters, done) {
     });
 }
 
-function checkWholeProject(/*parameters, done*/) {
-    //TODO this should export the given project and check against a file or a jsonObject to be deeply equal
+/**
+ * This uses the guest account by default
+ * @param {string} projectName
+ * @param {string} [userId=gmeConfig.authentication.guestAccount]
+ * @returns {string} projectId
+ */
+function projectName2Id(projectName, userId) {
+    userId = userId || gmeConfig.authentication.guestAccount;
+    return storageUtil.getProjectIdFromOwnerIdAndProjectName(userId, projectName);
 }
 
-function exportProject(/*parameters, done*/) {
-    //TODO gives back a jsonObject which is the export of the project
-    //should work with project object, or mongoUri as well
-    //in case of mongoUri it should open the connection before and close after - or just simply use the exportCLI
+function logIn(server, agent, userName, password) {
+    var serverBaseUrl = server.getUrl(),
+        deferred = Q.defer();
+
+    agent.post(serverBaseUrl + '/login?redirect=%2F')
+        .type('form')
+        .send({username: userName})
+        .send({password: password})
+        .end(function (err, res) {
+            if (err) {
+                deferred.reject(new Error(err));
+            } else if (res.status !== 200) {
+                deferred.reject(new Error('Status code was not 200'));
+            } else {
+                deferred.resolve(res);
+            }
+        });
+
+    return deferred.promise;
 }
 
-function deleteProject(parameters, done) {
-    /*
-     parameters:
-     storage - a storage object, where the project should be created (if not given and mongoUri is not defined we
-     create a new local one and use it
-     projectName - the name of the project
-     */
+function openSocketIo(server, agent, userName, password) {
+    var io = require('socket.io-client'),
+        serverBaseUrl = server.getUrl(),
+        deferred = Q.defer(),
+        socket,
+        socketReq = {url: serverBaseUrl},
+        webGMESessionId;
 
-    if (!parameters.storage) {
-        return done(new Error('cannot delete project without database'));
-    }
+    logIn(server, agent, userName, password)
+        .then(function (/*res*/) {
+            agent.attachCookies(socketReq);
+            webGMESessionId = /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1];
 
-    if (!parameters.projectName) {
-        return done(new Error('no project name was given'));
-    }
+            socket = io.connect(serverBaseUrl,
+                {
+                    query: 'webGMESessionId=' + webGMESessionId,
+                    transports: gmeConfig.socketIO.transports,
+                    multiplex: false
+                });
 
-    parameters.storage.openDatabase(function (err) {
-        if (err) {
-            return done(err);
-        }
+            socket.on('error', function (err) {
+                logger.error(err);
+                deferred.reject(err || 'could not connect');
+                socket.disconnect();
+            });
 
-        parameters.storage.deleteProject({projectName:parameters.projectName}, done);
-    });
+            socket.on('connect', function () {
+                deferred.resolve({socket: socket, webGMESessionId: webGMESessionId});
+            });
+        })
+        .catch(function (err) {
+            deferred.reject(err);
+        });
+
+
+    return deferred.promise;
 }
+
 
 WebGME.addToRequireJsPaths(gmeConfig);
 
@@ -346,6 +410,7 @@ module.exports = {
     getMemoryStorage: getMemoryStorage,
     Project: Project,
     Logger: Logger,
+    Core: Core,
     // test logger instance, used by all tests and only tests
     logger: logger,
     generateKey: generateKey,
@@ -359,6 +424,7 @@ module.exports = {
     requirejs: requireJS,
     Q: Q,
     fs: fs,
+    path: path,
     superagent: superagent,
     mongodb: mongodb,
     rimraf: rimraf,
@@ -373,11 +439,11 @@ module.exports = {
 
     loadJsonFile: loadJsonFile,
     importProject: importProject,
-    checkWholeProject: checkWholeProject,
-    exportProject: exportProject,
-    deleteProject: deleteProject,
     saveChanges: saveChanges,
-
-    STORAGE_CONSTANTS: STORAGE_CONSTANTS,
-    openContext: openContext.openContext
+    projectName2Id: projectName2Id,
+    logIn: logIn,
+    openSocketIo: openSocketIo,
+    storageUtil: storageUtil,
+    SEED_DIR: path.join(__dirname, '../seeds/'),
+    STORAGE_CONSTANTS: STORAGE_CONSTANTS
 };

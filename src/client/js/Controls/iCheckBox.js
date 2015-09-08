@@ -63,8 +63,13 @@ define(['jquery', 'css!./styles/iCheckBox.css'], function () {
 
     iCheckBox.prototype.setChecked = function (isChecked) {
         var checkBox = this.el,
-            checkState = this.el.hasClass(CHECKED_CLASS),
+            checkState = this.isChecked(),
             data = this.el.data();
+
+        // be prepared if the isChecked is a string
+        if (isChecked === 'false') {
+            isChecked = false;
+        }
 
         if (!checkBox.hasClass(DISABLED_CLASS)) {
 

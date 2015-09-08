@@ -59,7 +59,8 @@ var path = require('path'),
                 name: null,
                 branch: null,
                 node: null
-            }
+            },
+            defaultConnectionRouter: 'basic3' //'basic', 'basic2', 'basic3'
         },
 
         debug: false,
@@ -77,12 +78,12 @@ var path = require('path'),
             options: {
                 db: {
                     w: 1,
-                    native_parser: true
+                    native_parser: true // jshint ignore: line
                 },
                 server: {
-                    auto_reconnect: true,
-                    socketOptions: {keepAlive: 1},
-                    poolSize: 20
+                    auto_reconnect: true, // jshint ignore: line
+                    socketOptions: {keepAlive: 1}
+                    //poolSize: 5 // default pool size is 5
                 }
             }
         },
@@ -161,8 +162,8 @@ var path = require('path'),
             reconnection: true,
             'connect timeout': 10,
             'reconnection delay': 1,
-            'force new connection': true,
-            transports: ['websocket']
+            'force new connection': true
+            //transports: ['websocket', 'polling']
         },
 
         storage: {
@@ -171,6 +172,7 @@ var path = require('path'),
             // If true events such as PROJECT_CREATED and BRANCH_CREATED will only be broadcasted
             // and not emitted back to the web-socket that triggered the event.
             broadcastProjectEvents: false,
+            emitCommittedCoreObjects: false,
             loadBucketSize: 100,
             loadBucketTimer: 10,
             clientCacheSize: 2000, // overwrites cache on client

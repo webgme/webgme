@@ -173,6 +173,14 @@ define(['common/core/users/tojson'], function (toJson) {
             return meta.getValidChildrenTypes(_id);
         }
 
+        function getValidAttributeNames() {
+            return state.core.getValidAttributeNames(state.nodes[_id].node);
+        }
+
+        function getValidPointerNames() {
+            return state.core.getValidPointerNames(state.nodes[_id].node);
+        }
+
         //constraint functions
         function getConstraintNames() {
             return state.core.getConstraintNames(state.nodes[_id].node);
@@ -184,14 +192,6 @@ define(['common/core/users/tojson'], function (toJson) {
 
         function getConstraint(name) {
             return state.core.getConstraint(state.nodes[_id].node, name);
-        }
-
-        function printData() {
-            //probably we will still use it for test purposes, but now it goes officially
-            // into printing the node's json representation
-            toJson(state.core, state.nodes[_id].node, '', 'guid', function (err, jNode) {
-                state.logger.debug('node in JSON format[status = ', err, ']:', jNode);
-            });
         }
 
         function toString() {
@@ -239,13 +239,14 @@ define(['common/core/users/tojson'], function (toJson) {
 
                 //META functions
                 getValidChildrenTypes: getValidChildrenTypes,
+                getValidAttributeNames: getValidAttributeNames,
+                getValidPointerNames: getValidPointerNames,
 
                 //constraint functions
                 getConstraintNames: getConstraintNames,
                 getOwnConstraintNames: getOwnConstraintNames,
                 getConstraint: getConstraint,
 
-                printData: printData,
                 toString: toString,
 
                 getCollectionPaths: getCollectionPaths

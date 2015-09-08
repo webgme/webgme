@@ -13,9 +13,10 @@ describe('Mongo storage', function () {
         logger = testFixture.logger.fork('mongo'),
         Q = testFixture.Q,
         projectName = 'newProject',
+        projectId = gmeConfig.authentication.guestAccount + testFixture.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName,
         projectDoesNotHaveAccessName = projectName + '_does_not_have_access',
-
-        storage,
+        projectDoesNotHaveAccessId = gmeConfig.authentication.guestAccount +
+            testFixture.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectDoesNotHaveAccessName,
 
         gmeAuth,
 
@@ -23,13 +24,11 @@ describe('Mongo storage', function () {
 
 
     before(function (done) {
-        testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, [projectName, projectDoesNotHaveAccessName])
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
-                storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-                return Q.all([
-                    storage.openDatabase(),
-                    gmeAuth.authorizeByUserId(guestAccount, projectName + '_does_not_have_access', 'create',
+                return Q.allDone([
+                    gmeAuth.authorizeByUserId(guestAccount, projectDoesNotHaveAccessId, 'create',
                         {
                             read: true,
                             write: true,
@@ -41,7 +40,7 @@ describe('Mongo storage', function () {
     });
 
     after(function (done) {
-        Q.all([
+        Q.allDone([
             gmeAuth.unload()
         ])
             .nodeify(done);
@@ -52,7 +51,7 @@ describe('Mongo storage', function () {
 
         expect(mongoStorage).to.have.property('openDatabase');
         expect(mongoStorage).to.have.property('closeDatabase');
-        expect(mongoStorage).to.have.property('getProjectNames');
+        expect(mongoStorage).to.have.property('getProjects');
         expect(mongoStorage).to.have.property('openProject');
         expect(mongoStorage).to.have.property('deleteProject');
         expect(mongoStorage).to.have.property('createProject');
@@ -110,8 +109,7 @@ describe('Mongo storage', function () {
             .catch(done);
     });
 
-
-    it('should allow multiple open calls', function (done) {
+    it('should allow multiple open calls with same instance', function (done) {
         var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
         mongoStorage.openDatabase()
@@ -119,17 +117,277 @@ describe('Mongo storage', function () {
                 return mongoStorage.openDatabase();
             })
             .then(function () {
+                return mongoStorage.createProject({projectName: 'someProject'});
+            })
+            .then(function (project) {
+                return project.getBranches();
+            })
+            .then(function () {
+                return Q.allDone([
+                    mongoStorage.closeDatabase(),
+                    mongoStorage.closeDatabase()
+                ]);
+            })
+            .then(function () {
+                mongoStorage.createProject({projectName: 'someOtherProject'})
+                    .then(function () {
+                        throw new Error('should have failed to create project when db closed!');
+                    })
+                    .catch(function (err) {
+                        expect(err.message).to.contain('Database is not open');
+                        done();
+                    })
+                    .done();
+            })
+            .done();
+    });
+
+    it('should allow multiple concurrent open calls with same instance', function (done) {
+        var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+
+        Q.allDone([
+            mongoStorage.openDatabase(),
+            mongoStorage.openDatabase()
+        ])
+            .then(function () {
+                return mongoStorage.createProject({projectName: 'someConProject'});
+            })
+            .then(function (project) {
+                return project.getBranches();
+            })
+            .then(function () {
+                return Q.allDone([
+                    mongoStorage.closeDatabase(),
+                    mongoStorage.closeDatabase()
+                ]);
+            })
+            .then(function () {
+                mongoStorage.createProject({projectName: 'someOtherConProject'})
+                    .then(function () {
+                        throw new Error('should have failed to create project when db closed!');
+                    })
+                    .catch(function (err) {
+                        expect(err.message).to.contain('Database is not open');
+                        done();
+                    })
+                    .done();
+            })
+            .done();
+    });
+
+    it('should allow multiple open and close with same instances', function (done) {
+        var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth),
+            cnt = 2;
+
+        mongoStorage.openDatabase()
+            .then(function () {
                 return mongoStorage.openDatabase();
             })
             .then(function () {
+                mongoStorage.closeDatabase()
+                    .then(function () {
+                        // This will not resolve until the second closeDatabase has finished.
+                        cnt -= 1;
+                        if (cnt === 0) {
+                            done();
+                        }
+                    });
+                return mongoStorage.createProject({projectName: 'someProj'});
+            })
+            .then(function (project) {
+                return project.getBranches();
+            })
+            .then(function () {
+                return mongoStorage.closeDatabase();
+            })
+            .then(function () {
+                mongoStorage.createProject({projectName: 'someOtherProj'})
+                    .then(function () {
+                        throw new Error('should have failed to create project when db closed!');
+                    })
+                    .catch(function (err) {
+                        expect(err.message).to.contain('Database is not open');
+                        cnt -= 1;
+                        if (cnt === 0) {
+                            done();
+                        }
+                    })
+                    .done();
+            })
+            .done();
+    });
+
+    it('should allow multiple open and close with same instances 2', function (done) {
+        var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth),
+            cnt = 2;
+
+        mongoStorage.openDatabase()
+            .then(function () {
                 return mongoStorage.openDatabase();
+            })
+            .then(function () {
+                mongoStorage.closeDatabase()
+                    .then(function () {
+                        // This will not resolve until the second closeDatabase has finished.
+                        cnt -= 1;
+                        if (cnt === 0) {
+                            done();
+                        }
+                    });
+                return mongoStorage.createProject({projectName: 'someProj2'});
+            })
+            .then(function (project) {
+                return project.getBranches();
+            })
+            .then(function () {
+                return mongoStorage.closeDatabase();
+            })
+            .then(function () {
+                mongoStorage.createProject({projectName: 'someOtherProj2'})
+                    .then(function () {
+                        throw new Error('should have failed to create project when db closed!');
+                    })
+                    .catch(function (err) {
+                        expect(err.message).to.contain('Database is not open');
+                        cnt -= 1;
+                        if (cnt === 0) {
+                            done();
+                        }
+                    })
+                    .done();
+            })
+            .done();
+    });
+
+    it('should allow multiple open calls with different instances', function (done) {
+        var mongoStorage1 = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth),
+            mongoStorage2 = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+
+        mongoStorage1.openDatabase()
+            .then(function () {
+                return mongoStorage2.openDatabase();
+            })
+            .then(function () {
+                return mongoStorage1.createProject({projectName: 'someProject1'});
+            })
+            .then(function (project) {
+                return project.getBranches();
+            })
+            .then(function () {
+                return Q.allDone([
+                    mongoStorage1.closeDatabase(),
+                    mongoStorage2.closeDatabase()
+                ]);
+            })
+            .then(function () {
+                mongoStorage1.createProject({projectName: 'someOtherProject1'})
+                    .then(function () {
+                        throw new Error('should have failed to create project when db closed!');
+                    })
+                    .catch(function (err) {
+                        expect(err.message).to.contain('Database is not open');
+                        done();
+                    })
+                    .done();
+            })
+            .done();
+    });
+
+    it('should allow multiple concurrent open calls with different instances', function (done) {
+        var mongoStorage1 = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth),
+            mongoStorage2 = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+
+        Q.allDone([
+            mongoStorage1.openDatabase(),
+            mongoStorage2.openDatabase()
+        ])
+            .then(function () {
+                return mongoStorage2.createProject({projectName: 'someConProject1'});
+            })
+            .then(function (project) {
+                return project.getBranches();
+            })
+            .then(function () {
+                return Q.allDone([
+                    mongoStorage1.closeDatabase(),
+                    mongoStorage2.closeDatabase()
+                ]);
+            })
+            .then(function () {
+                mongoStorage1.createProject({projectName: 'someOtherConProject1'})
+                    .then(function () {
+                        throw new Error('should have failed to create project when db closed!');
+                    })
+                    .catch(function (err) {
+                        expect(err.message).to.contain('Database is not open');
+                        done();
+                    })
+                    .done();
+            })
+            .done();
+    });
+
+    it('should allow multiple open and close with different instances', function (done) {
+        var mongoStorage1 = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth),
+            mongoStorage2 = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+
+
+        mongoStorage1.openDatabase()
+            .then(function () {
+                return mongoStorage2.openDatabase();
+            })
+            .then(function () {
+                return mongoStorage1.closeDatabase();
+            })
+            .then(function () {
+                return mongoStorage2.createProject({projectName: 'someProj1'});
+            })
+            .then(function (project) {
+                return project.getBranches();
+            })
+            .then(function () {
+                return Q.allDone([
+                    mongoStorage2.closeDatabase()
+                ]);
+            })
+            .then(function () {
+                mongoStorage1.createProject({projectName: 'someOtherProj1'})
+                    .then(function () {
+                        throw new Error('should have failed to create project when db closed!');
+                    })
+                    .catch(function (err) {
+                        expect(err.message).to.contain('Database is not open');
+                        done();
+                    })
+                    .done();
+            })
+            .done();
+    });
+
+    it('should allow open then multiple close calls when open', function (done) {
+        var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+
+        mongoStorage.openDatabase()
+            .then(function () {
+                return mongoStorage.closeDatabase();
+            })
+            .then(function () {
+                return mongoStorage.closeDatabase();
+            })
+            .then(function () {
+                return mongoStorage.closeDatabase();
+            })
+            .then(function () {
+                return mongoStorage.openDatabase();
+            })
+            .then(function () {
+                return mongoStorage.closeDatabase();
             })
             .then(done)
             .catch(done);
     });
 
-
-    it('should allow multiple close calls', function (done) {
+    it('should allow open then multiple close calls although not open', function (done) {
         var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
         mongoStorage.closeDatabase()
@@ -140,21 +398,46 @@ describe('Mongo storage', function () {
                 return mongoStorage.closeDatabase();
             })
             .then(function () {
+                return mongoStorage.openDatabase();
+            })
+            .then(function () {
                 return mongoStorage.closeDatabase();
             })
             .then(done)
             .catch(done);
     });
 
-    it('should allow open then multiple close calls', function (done) {
+    it('should allow open then multiple concurrent close calls although not open', function (done) {
+        var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+
+        Q.allDone([
+                mongoStorage.closeDatabase(),
+                mongoStorage.closeDatabase(),
+                mongoStorage.closeDatabase()
+            ])
+            .then(function () {
+                return mongoStorage.openDatabase();
+            })
+            .then(function () {
+                return mongoStorage.closeDatabase();
+            })
+            .then(done)
+            .catch(done);
+    });
+
+    it('should not connect twice although counter is 0', function (done) {
         var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
         mongoStorage.openDatabase()
             .then(function () {
-                return mongoStorage.closeDatabase();
+                return Q.allDone([
+                    mongoStorage.closeDatabase(),
+                    mongoStorage.openDatabase(),
+                    mongoStorage.closeDatabase()
+                    ]);
             })
             .then(function () {
-                return mongoStorage.closeDatabase();
+                return mongoStorage.openDatabase();
             })
             .then(function () {
                 return mongoStorage.closeDatabase();
@@ -163,220 +446,240 @@ describe('Mongo storage', function () {
             .catch(done);
     });
 
+    it('should not connect twice although counter is 0 case 2', function (done) {
+        var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+
+        mongoStorage.openDatabase()
+            .then(function () {
+                return Q.allDone([
+                    mongoStorage.closeDatabase(),
+                    mongoStorage.closeDatabase(),
+                    mongoStorage.openDatabase(),
+                    mongoStorage.closeDatabase()
+                ]);
+            })
+            .then(function () {
+                return mongoStorage.openDatabase();
+            })
+            .then(function () {
+                return mongoStorage.closeDatabase();
+            })
+            .then(done)
+            .catch(done);
+    });
 
     describe('project operations', function () {
+        var mongoStorage;
 
-        beforeEach(function (done) {
-            Q.all([
-                storage.deleteProject({projectName: projectName}),
-                storage.deleteProject({projectName: projectDoesNotHaveAccessName})
-            ])
-                .nodeify(done);
+        afterEach(function (done) {
+            if (mongoStorage) {
+                mongoStorage.closeDatabase(function (err) {
+                    mongoStorage = null;
+                    done(err);
+                });
+            } else {
+                done();
+            }
         });
 
         it('should fail to open a project if not connected to database', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-
-            mongoStorage.openProject({projectName: 'something'})
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+            gmeAuth.authorizeByUserId(guestAccount, projectId, 'create',
+                {
+                    read: true,
+                    write: true,
+                    delete: true
+                })
+                .then(function () {
+                    return mongoStorage.openProject({projectId: projectId});
+                })
                 .then(function () {
                     done(new Error('should have failed to openProject'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to openProject'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.contain('Database is not open.');
+                    done();
+                })
+                .done();
         });
 
         it('should fail to delete a project if not connected to database', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-
-            mongoStorage.deleteProject({projectName: 'something'})
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+            gmeAuth.authorizeByUserId(guestAccount, projectId, 'create',
+                {
+                    read: true,
+                    write: true,
+                    delete: true
+                })
+                .then(function () {
+                    return mongoStorage.deleteProject({projectId: projectId});
+                })
                 .then(function () {
                     done(new Error('should have failed to deleteProject'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to deleteProject'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.contain('Database is not open.');
+                    done();
+                })
+                .done();
         });
 
         it('should fail to create a project if not connected to database', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
             mongoStorage.createProject({projectName: 'something'})
                 .then(function () {
                     done(new Error('should have failed to createProject'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to createProject'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.contain('Database is not open.');
+                    done();
+                })
+                .done();
         });
 
-        it('should fail to get project names if not connected to database', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-
-            mongoStorage.getProjectNames({})
+        it('should fail to get project ids if not connected to database', function (done) {
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+            gmeAuth.authorizeByUserId(guestAccount, testFixture.projectName2Id('something1'),
+                'create',
+                {
+                    read: true,
+                    write: true,
+                    delete: true
+                })
                 .then(function () {
-                    done(new Error('should have failed to getProjectNames'));
+                    return gmeAuth.addProject(guestAccount, 'something1', null);
+                })
+                .then(function () {
+                    return mongoStorage.getProjects({branches: true});
+                })
+                .then(function () {
+                    done(new Error('should have failed to getProjects'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to getProjectNames'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.contain('Database is not open.');
+                    done();
+                })
+                .done();
         });
 
-        it('should get project names', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+        it('should get projects', function (done) {
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectNames({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
+                .then(function (projects) {
+                    expect(projects instanceof Array).to.equal(true);
                     done();
                 })
                 .catch(done);
         });
 
-
         it('should create a project', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+            var nbrOfProjectsStart;
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectNames({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
+                .then(function (projects) {
+                    nbrOfProjectsStart = projects.length;
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
-                    return mongoStorage.getProjectNames({});
+                    return mongoStorage.getProjects({branches: true});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([projectName]);
+                .then(function (projects) {
+                    expect(projects.length > nbrOfProjectsStart).to.equal(true);
                     done();
                 })
                 .catch(done);
         });
 
         it('should not have access to project', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+            var startProjects;
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectNames({username: guestAccount});
+                    return mongoStorage.getProjects({username: 'admin', branches: true});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
+                .then(function (projects) {
+                    startProjects = projects;
                     return mongoStorage.createProject({
                         username: guestAccount,
-                        projectName: projectName + '_does_not_have_access'
+                        projectName: projectDoesNotHaveAccessName
                     });
                 })
                 .then(function () {
-                    return mongoStorage.getProjectNames({username: 'admin'});
+                    return mongoStorage.getProjects({username: 'admin', branches: true});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
+                .then(function (projects) {
+                    expect(projects).deep.equal(startProjects);
                 })
                 .nodeify(done);
         });
 
         it('should fail to create a project if it already exists', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+            var projectName = 'createdTwice',
+                projectId = testFixture.projectName2Id(projectName);
+
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectNames({});
-                })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
-                    return mongoStorage.getProjectNames({});
-                })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([projectName]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
                     done(new Error('should have failed to createProject'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to createProject'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.include('Error: Project already exists ' + projectId);
+                    done();
+                })
+                .done();
         });
 
         it('should create and delete a project', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+            var projectName = 'createAndDelete',
+                projectId = testFixture.projectName2Id(projectName);
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectNames({});
-                })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
-                    return mongoStorage.getProjectNames({});
+                    return mongoStorage.deleteProject({projectId: projectId});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([projectName]);
-                    return mongoStorage.deleteProject({projectName: projectName});
-                })
-                .then(function () {
-                    return mongoStorage.getProjectNames({});
-                })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
-                    done();
-                })
-                .catch(done);
+                .nodeify(done);
         });
 
         it('should open an existing project', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+            var projectName = 'toBeOpened',
+                projectId = testFixture.projectName2Id(projectName);
+
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectNames({});
-                })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
                 .then(function () {
-                    return mongoStorage.getProjectNames({});
+                    return mongoStorage.openProject({projectId: projectId});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([projectName]);
-                    return mongoStorage.getBranches({projectName: projectName});
+                .then(function (project) {
+                    return project.getBranches();
                 })
                 .then(function (branches) {
                     // expect names of branches
@@ -387,84 +690,81 @@ describe('Mongo storage', function () {
         });
 
         it('should get an existing project', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+            var projectName = 'toGet',
+                projectId = testFixture.projectName2Id(projectName);
+
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectNames({});
-                })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
                     return mongoStorage.createProject({projectName: projectName});
                 })
-                .then(function () {
-                    return mongoStorage.getProjectNames({});
+                .then(function (/*project_*/) {
+                    return mongoStorage._getProject({projectId: projectId});
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([projectName]);
-                    return mongoStorage.openProject({projectName: projectName});
-                })
-                .then(function (project) {
+                .then(function (dbProject) {
 
-                    expect(project.name).equal(projectName);
+                    expect(dbProject.projectId).equal(projectId);
 
-                    expect(project).to.have.property('closeProject');
-                    expect(project).to.have.property('loadObject');
-                    expect(project).to.have.property('insertObject');
-                    expect(project).to.have.property('getBranches');
-                    expect(project).to.have.property('getBranchHash');
-                    expect(project).to.have.property('setBranchHash');
-                    expect(project).to.have.property('getCommits');
-                    expect(project).to.have.property('getCommonAncestorCommit');
+                    expect(dbProject).to.have.property('closeProject');
+                    expect(dbProject).to.have.property('loadObject');
+                    expect(dbProject).to.have.property('insertObject');
+                    expect(dbProject).to.have.property('getBranches');
+                    expect(dbProject).to.have.property('getBranchHash');
+                    expect(dbProject).to.have.property('setBranchHash');
+                    expect(dbProject).to.have.property('getCommits');
+                    expect(dbProject).to.have.property('getCommonAncestorCommit');
 
                     done();
                 })
                 .catch(done);
         });
 
-
         it('should fail to open a non-existing project', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjectNames({});
+                    return gmeAuth.authorizeByUserId(guestAccount, testFixture.projectName2Id('project_does_not_exist'),
+                        'create',
+                        {
+                            read: true,
+                            write: true,
+                            delete: true
+                        });
                 })
-                .then(function (projectNames) {
-                    expect(projectNames).deep.equal([]);
-                    return mongoStorage.openProject({projectName: 'project_does_not_exist'});
+                .then(function () {
+                    return gmeAuth.addProject(guestAccount, 'project_does_not_exist', null);
+                })
+                .then(function () {
+                    return mongoStorage.openProject({projectId: testFixture.projectName2Id('project_does_not_exist')});
                 })
                 .then(function () {
                     done(new Error('expected to fail'));
                 })
                 .catch(function (err) {
-                    if (err instanceof Error) {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to openProject'));
-                    }
-                });
+                    expect(err instanceof Error).to.equal(true);
+                    expect(err.message).to.include('Project does not exist');
+                    done();
+                })
+                .done();
         });
 
         it('should import, open, and close a project', function (done) {
-            var mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+            mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.deleteProject({projectName: projectName});
-                })
-                .then(function () {
-                    return testFixture.importProject(storage, {
+                    return testFixture.importProject(mongoStorage, {
                         projectSeed: 'seeds/EmptyProject.json',
-                        projectName: projectName,
+                        projectName: 'importedAndGet',
                         gmeConfig: gmeConfig,
                         logger: logger
                     });
                 })
-                .then(function (result) {
+                .then(function (/*result*/) {
                     //console.log(result);
-                    return mongoStorage.openProject({projectName: projectName});
+                    return mongoStorage._getProject({projectId: projectId});
                 })
                 .then(function (project) {
                     return project.closeProject();
@@ -474,33 +774,42 @@ describe('Mongo storage', function () {
         });
     });
 
-
     describe('project specific functions', function () {
         var project,
+            projectId,
             mongoStorage;
 
-        beforeEach(function (done) {
+        before(function (done) {
             mongoStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+            mongoStorage.openDatabase(done);
+        });
 
-            mongoStorage.openDatabase()
-                .then(function () {
-                    return mongoStorage.deleteProject({projectName: projectName});
-                })
-                .then(function () {
-                    return testFixture.importProject(mongoStorage, {
-                        projectSeed: 'seeds/EmptyProject.json',
-                        projectName: projectName,
-                        gmeConfig: gmeConfig,
-                        logger: logger
-                    });
-                })
+        beforeEach(function (done) {
+            testFixture.importProject(mongoStorage, {
+                projectSeed: 'seeds/EmptyProject.json',
+                projectName: 'projectSpecific',
+                gmeConfig: gmeConfig,
+                logger: logger
+            })
                 .then(function (result) {
-                    return mongoStorage.openProject({projectName: projectName});
+                    projectId = result.projectId;
+                    return mongoStorage._getProject({projectId: projectId});
                 })
                 .then(function (p) {
                     project = p;
                 })
                 .nodeify(done);
+        });
+
+        afterEach(function (done) {
+            mongoStorage.deleteProject({projectId: projectId})
+                .finally(function () {
+                    done(); // Don't care if we can't delete the project or it doesn't exist
+                });
+        });
+
+        after(function (done) {
+            mongoStorage.closeDatabase(done);
         });
 
         it('should getBranches', function (done) {
@@ -552,13 +861,10 @@ describe('Mongo storage', function () {
                     done(new Error('should have failed to loadObject'));
                 })
                 .catch(function (err) {
-                    if (err === 'loadObject - given hash is not a string : undefined') {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to loadObject'));
-                    }
-                });
+                    expect(err.message).to.contain('loadObject - given hash is not a string : undefined');
+                    done();
+                })
+                .done();
         });
 
         it('should fail to load object if hash is an object', function (done) {
@@ -567,13 +873,10 @@ describe('Mongo storage', function () {
                     done(new Error('should have failed to loadObject'));
                 })
                 .catch(function (err) {
-                    if (err === 'loadObject - given hash is not a string : object') {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to loadObject'));
-                    }
-                });
+                    expect(err.message).to.contain('loadObject - given hash is not a string : object');
+                    done();
+                })
+                .done();
         });
 
         it('should fail to load object if hash is invalid', function (done) {
@@ -582,13 +885,10 @@ describe('Mongo storage', function () {
                     done(new Error('should have failed to loadObject'));
                 })
                 .catch(function (err) {
-                    if (err === 'loadObject - invalid hash :invalid') {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to loadObject'));
-                    }
-                });
+                    expect(err.message).to.contain('loadObject - invalid hash :invalid');
+                    done();
+                })
+                .done();
         });
 
         it('should fail to load object if hash is not found', function (done) {
@@ -597,13 +897,10 @@ describe('Mongo storage', function () {
                     done(new Error('should have failed to loadObject'));
                 })
                 .catch(function (err) {
-                    if (err === 'object does not exist #123') {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to loadObject'));
-                    }
-                });
+                    expect(err.message).to.contain('object does not exist #123');
+                    done();
+                })
+                .done();
         });
 
         it('should fail to insert object if argument is not an object', function (done) {
@@ -612,13 +909,10 @@ describe('Mongo storage', function () {
                     done(new Error('should have failed to insertObject'));
                 })
                 .catch(function (err) {
-                    if (err === 'object is not an object') {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to insertObject'));
-                    }
-                });
+                    expect(err.message).to.contain('object is not an object');
+                    done();
+                })
+                .done();
         });
 
         it('should fail to insert object if argument\'s _id is not a valid hash', function (done) {
@@ -627,13 +921,10 @@ describe('Mongo storage', function () {
                     done(new Error('should have failed to insertObject'));
                 })
                 .catch(function (err) {
-                    if (err === 'object._id is not a valid hash.') {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to insertObject'));
-                    }
-                });
+                    expect(err.message).to.contain('object._id is not a valid hash.');
+                    done();
+                })
+                .done();
         });
 
         it('should insert object', function (done) {
@@ -643,10 +934,10 @@ describe('Mongo storage', function () {
         });
 
         it('should insert object multiple times if the content is the same', function (done) {
-            Q.all([
-                project.insertObject({_id: '#blabla22', num: 42, str: '35', arr: ['', 'ss']}),
-                project.insertObject({_id: '#blabla22', num: 42, str: '35', arr: ['', 'ss']})
-                ])
+            project.insertObject({_id: '#blabla22', num: 42, str: '35', arr: ['', 'ss']})
+                .then(function () {
+                    return project.insertObject({_id: '#blabla22', num: 42, str: '35', arr: ['', 'ss']});
+                })
                 .then(function () {
                     done();
                 })
@@ -654,10 +945,10 @@ describe('Mongo storage', function () {
         });
 
         it('should fail to insert object multiple times if the content is different', function (done) {
-            Q.all([
-                project.insertObject({_id: '#blabla223', num: 42, str: '35', arr: ['', 'ss']}),
-                project.insertObject({_id: '#blabla223', num: 4200, str: 'different', arr: ['', 'ss']})
-            ])
+            project.insertObject({_id: '#blabla223', num: 42, str: '35', arr: ['', 'ss']})
+                .then(function () {
+                    return project.insertObject({_id: '#blabla223', num: 4200, str: 'different', arr: ['', 'ss']});
+                })
                 .then(function () {
                     done(new Error('should have failed to insertObject'));
                 })
@@ -672,11 +963,11 @@ describe('Mongo storage', function () {
         });
 
         it('should getBranchHash', function (done) {
-            project.getBranchHash('master', '')
+            project.getBranchHash('master')
                 .then(function (hash) {
-                    return project.getBranchHash('master', hash);
+                    return project.setBranchHash('master', hash, hash);
                 })
-                .then(function (hash) {
+                .then(function () {
                     done();
                 })
                 .catch(done);
@@ -765,13 +1056,10 @@ describe('Mongo storage', function () {
                     done(new Error('should have failed'));
                 })
                 .catch(function (err) {
-                    if (err === "branch hash mismatch") {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to openProject'));
-                    }
-                });
+                    expect(err.message).to.contain('branch hash mismatch');
+                    done();
+                })
+                .done();
         });
 
         it('should fail to set new branch hash if oldhash does not match', function (done) {
@@ -791,19 +1079,18 @@ describe('Mongo storage', function () {
                     done(new Error('should have failed'));
                 })
                 .catch(function (err) {
-                    if (err === "branch hash mismatch") {
-                        // TODO: check error message
-                        done();
-                    } else {
-                        done(new Error('should have failed to openProject'));
-                    }
-                });
+                    expect(err.message).to.contain('branch hash mismatch');
+                    done();
+                })
+                .done();
         });
     });
 
     describe('complex chain', function () {
         var project,
             projectName = 'complexChainTest',
+            projectId = gmeConfig.authentication.guestAccount + testFixture.STORAGE_CONSTANTS.PROJECT_ID_SEP +
+                projectName,
             mongoStorage,
             commitChain = [];
 
@@ -836,7 +1123,7 @@ describe('Mongo storage', function () {
                             id.toString());
 
                         commitDatas.push({
-                            projectName: 'complexChainTest',
+                            projectId: projectId,
                             commitObject: commitObject,
                             coreObjects: []
                         });
@@ -863,7 +1150,7 @@ describe('Mongo storage', function () {
                         return mongoStorage.makeCommit(commitData);
                     }
 
-                    return Q.all(commitDatas.map(makeCommit));
+                    return Q.allDone(commitDatas.map(makeCommit));
                 })
                 .then(function (/*commitResults*/) {
                     done();
@@ -872,7 +1159,7 @@ describe('Mongo storage', function () {
         });
 
         after(function (done) {
-            mongoStorage.deleteProject({projectName: projectName})
+            mongoStorage.deleteProject({projectId: projectId})
                 .then(function () {
                     mongoStorage.closeDatabase(done);
                 })
@@ -929,6 +1216,34 @@ describe('Mongo storage', function () {
                     return;
                 }
                 c.should.be.equal(commitChain[2]);
+                done();
+            });
+        });
+        it('5 vs 5 -> 5', function (done) {
+            project.getCommonAncestorCommit(commitChain[5], commitChain[5], function (err, c) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                c.should.be.equal(commitChain[5]);
+                done();
+            });
+        });
+        it('first commit does not exist', function (done) {
+            project.getCommonAncestorCommit('#doesNotExist', commitChain[5], function (err) {
+                expect(err.message).to.include('Commit object does not exist [#doesNotExist]');
+                done();
+            });
+        });
+        it('second commit does not exist', function (done) {
+            project.getCommonAncestorCommit(commitChain[5], '#doesNotExist', function (err) {
+                expect(err.message).to.include('Commit object does not exist [#doesNotExist]');
+                done();
+            });
+        });
+        it('both commits does not exist', function (done) {
+            project.getCommonAncestorCommit('#doesNotExist1', '#doesNotExist2', function (err) {
+                expect(err.message).to.include('Commit object does not exist [#doesNotExist1]');
                 done();
             });
         });

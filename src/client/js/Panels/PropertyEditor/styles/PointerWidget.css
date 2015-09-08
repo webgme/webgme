@@ -10,3 +10,24 @@
     position: absolute;
     right: 2px;
     cursor: pointer; }
+
+.property-editor ul.nav {
+  position: relative;
+  margin-bottom: 0;
+  height: 24px;
+  white-space: nowrap; }
+  .property-editor ul.nav.nav-tabs > li {
+    display: inline-block;
+    float: none; }
+    .property-editor ul.nav.nav-tabs > li > a {
+      padding: 5px 3px 5px 3px;
+      line-height: 13px;
+      font-size: 11px; }
+      .property-editor ul.nav.nav-tabs > li > a .tab-title {
+        white-space: nowrap;
+        display: inline-block;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis; }
+.property-editor .tab-content {
+  overflow: visible; }

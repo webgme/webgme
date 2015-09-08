@@ -12,12 +12,7 @@ define(['common/storage/constants'], function (STORAGE_CONSTANTS) {
 
         STORAGE: STORAGE_CONSTANTS,
 
-        BRANCH_STATUS: {
-            SYNC: 'SYNC',
-            AHEAD_SYNC: 'AHEAD_SYNC',
-            AHEAD_NOT_SYNC: 'AHEAD_NOT_SYNC',
-            PULLING: 'PULLING'
-        },
+        BRANCH_STATUS: STORAGE_CONSTANTS.BRANCH_STATUS,
 
         // Events
         NETWORK_STATUS_CHANGED: 'NETWORK_STATUS_CHANGED',

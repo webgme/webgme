@@ -343,7 +343,7 @@ define([], function () {
             if (node) {
                 var own = getMeta(path);
                 var base = getMeta(_core.getPath(_core.getBase(node)));
-                return own === base;
+                return own !== base;
             }
             return false;
         }

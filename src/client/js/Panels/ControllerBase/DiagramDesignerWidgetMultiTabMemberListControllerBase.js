@@ -186,13 +186,23 @@ define(['js/logger',
         this.selectedObjectChanged(activeObjectId);
     };
 
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveTabChanged = function (model, tabId) {
+        if (this._selectedMemberListID !== this._tabIDMemberListID[tabId]) {
+            this._widget.selectTab(tabId + '');
+        }
+    };
+
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged, this);
+
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged);
+
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.onActivate = function () {
@@ -318,6 +328,13 @@ define(['js/logger',
 
                 this._widget.addMultipleTabsEnd();
 
+                //set tab based on the UI state
+                if (!selectedMemberListTabID &&
+                    WebGMEGlobal.State.getActiveTab() !== null && WebGMEGlobal.State.getActiveTab() !== undefined &&
+                    WebGMEGlobal.State.getActiveTab() < Object.keys(this._tabIDMemberListID).length) {
+                    selectedMemberListTabID = WebGMEGlobal.State.getActiveTab();
+                }
+
                 if (!selectedMemberListTabID) {
                     for (selectedMemberListTabID in this._tabIDMemberListID) {
                         if (this._tabIDMemberListID.hasOwnProperty(selectedMemberListTabID)) {
@@ -413,14 +430,14 @@ define(['js/logger',
          */
 
         this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getOrderedMemberListInfo(memberList' +
-        'ContainerObject) is not overridden for object "' + memberListContainerObject + '", returning default...');
+            'ContainerObject) is not overridden for object "' + memberListContainerObject + '", returning default...');
 
         return undefined;
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistryKey = function () {
         this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistryKey is not ' +
-        'overridden, returning default value...');
+            'overridden, returning default value...');
         return undefined;
     };
 
@@ -431,6 +448,7 @@ define(['js/logger',
             this.logger.debug('_selectedMemberListID changed to : ' + this._selectedMemberListID);
 
             this._initializeSelectedMemberList();
+            WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB, tabID);
         }
     };
 
@@ -1109,7 +1127,7 @@ define(['js/logger',
                 this._ComponentID2GMEID[uiComponent.id] = gmeID;
 
                 territoryChanged = territoryChanged ||
-                this._updateDecoratorTerritoryQuery(uiComponent._decoratorInstance, false);
+                    this._updateDecoratorTerritoryQuery(uiComponent._decoratorInstance, false);
             } else {
 
                 srcDst = this._getAllSourceDestinationPairsForConnection(desc.srcID, desc.dstID);
@@ -1248,7 +1266,7 @@ define(['js/logger',
                             len -= 1;
                         } else {
                             this.logger.warn('Updating connections...Existing connections are less than the needed ' +
-                            'src-dst combo...');
+                                'src-dst combo...');
                             //let's create a connection
                             uiComponent = this._widget.createConnection(objDesc);
                             this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + gmeID);
@@ -1296,9 +1314,9 @@ define(['js/logger',
 
                 if (this._widget.itemIds.indexOf(componentID) !== -1) {
                     territoryChanged = territoryChanged ||
-                    this._updateDecoratorTerritoryQuery(
-                        this._widget.items[componentID]._decoratorInstance,
-                        true);
+                        this._updateDecoratorTerritoryQuery(
+                            this._widget.items[componentID]._decoratorInstance,
+                            true);
                 }
 
                 //query the associated connections
@@ -1414,7 +1432,7 @@ define(['js/logger',
         for (gmeID in this._notifyPackage) {
             if (this._notifyPackage.hasOwnProperty(gmeID)) {
                 this.logger.debug('NotifyPartDecorator: ' + gmeID + ', componentIDs: ' +
-                JSON.stringify(this._notifyPackage[gmeID]));
+                    JSON.stringify(this._notifyPackage[gmeID]));
 
                 if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
                     //src is a DesignerItem
@@ -1474,18 +1492,25 @@ define(['js/logger',
             memberListSetsRegistry,
             i,
             j,
+            oldIDList = this._tabIDMemberListID,
+            urlTab = WebGMEGlobal.State.getActiveTab(),
             setID;
 
-        if (memberListContainerID &&
+        if (typeof memberListContainerID === 'string' &&
             memberListSetsRegistryKey &&
             memberListSetsRegistryKey !== '') {
             memberListContainer = this._client.getNode(memberListContainerID);
             memberListSetsRegistry = memberListContainer.getEditableRegistry(memberListSetsRegistryKey) || [];
 
+            this._tabIDMemberListID = {};
             for (i = 0; i < newTabIDOrder.length; i += 1) {
                 //i is the new order number
                 //newTabIDOrder[i] is the tab identifier
-                setID = this._tabIDMemberListID[newTabIDOrder[i]];
+                if (urlTab === newTabIDOrder[i]) {
+                    WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB, i);
+                }
+                setID = oldIDList[newTabIDOrder[i]];
+                this._tabIDMemberListID[i] = setID;
                 for (j = 0; j < memberListSetsRegistry.length; j += 1) {
                     if (memberListSetsRegistry[j].SetID === setID) {
                         memberListSetsRegistry[j].order = i;
@@ -1502,9 +1527,8 @@ define(['js/logger',
                 }
             });
 
-            this._client.startTransaction();
+
             this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
-            this._client.completeTransaction();
         }
     };
 
@@ -1517,7 +1541,7 @@ define(['js/logger',
             i,
             setID;
 
-        if (memberListContainerID &&
+        if (typeof memberListContainerID === 'string' &&
             memberListSetsRegistryKey &&
             memberListSetsRegistryKey !== '') {
             memberListContainer = this._client.getNode(memberListContainerID);
@@ -1631,7 +1655,7 @@ define(['js/logger',
         };
 
         this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getNewSetNamePrefixDesc ' +
-        'is not overridden, returning default value: ' + JSON.stringify(result));
+            'is not overridden, returning default value: ' + JSON.stringify(result));
         return result;
     };
 
@@ -1735,7 +1759,7 @@ define(['js/logger',
                                                                                                         metaInfo) {
         //store that a subcomponent with a given ID has been added to object with objID
         this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] = this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] ||
-        {};
+            {};
         this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]][objID] = sCompID;
 
         this._Subcomponent2GMEID[objID] = this._Subcomponent2GMEID[objID] || {};

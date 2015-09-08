@@ -753,7 +753,7 @@ define([
 
         this._rotateAngle = deg;
 
-        this._rotationDegree.html((deg >= 0 ? '+' : '') + deg + '°');
+        this._rotationDegree.html((deg >= 0 ? '+' : '') + deg + '&deg;');
 
         this._diagramDesigner.skinParts.$selectionOutline.css({
             'transform-origin': '50% 50%',

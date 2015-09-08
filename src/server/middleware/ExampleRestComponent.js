@@ -13,10 +13,12 @@ var counter = 0,
 
 var ExampleRestComponent = function (req, res/*, next*/) {
     var handleRequest = function () {
-        counter++;
         if (counter % 10) {
+            logger.debug(counter);
+        } else {
             logger.info(JSON.stringify(gmeConfig, null, 2));
         }
+        counter++;
 
         // call next if request is not handled here.
 

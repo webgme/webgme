@@ -18,6 +18,7 @@ describe('MultipleMainCallbackCalls', function () {
         PluginCliManager = require('../../../src/plugin/climanager'),
         project,
         projectName = 'plugin_mmcc',
+        projectId = testFixture.projectName2Id(projectName),
         branchName = 'master',
         commitHash,
         gmeAuth;
@@ -38,7 +39,7 @@ describe('MultipleMainCallbackCalls', function () {
             })
             .then(function () {
                 logger.info('Database is opened.');
-                return storage.deleteProject({projectName: projectName});
+                return storage.deleteProject({projectId: projectId});
             })
             .then(function () {
                 return testFixture.importProject(storage, importParam);
@@ -52,7 +53,7 @@ describe('MultipleMainCallbackCalls', function () {
     });
 
     after(function (done) {
-        Q.all([
+        Q.allDone([
             storage.closeDatabase(),
             gmeAuth.unload()
         ])

@@ -5,7 +5,7 @@
 
 var testFixture = require('./../_globals.js');
 
-describe.only('issue410 testing', function () {
+describe('issue410 testing', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
@@ -14,6 +14,7 @@ describe.only('issue410 testing', function () {
         storage = null,
 
         projectName = 'issue410test',
+        projectId = testFixture.projectName2Id(projectName),
         gmeAuth;
 
     before(function (done) {
@@ -24,15 +25,15 @@ describe.only('issue410 testing', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
+                return storage.deleteProject({projectId: projectId});
             })
             .nodeify(done);
     });
 
     after(function (done) {
-        storage.deleteProject({projectName: projectName})
+        storage.deleteProject({projectId: projectId})
             .then(function () {
-                return Q.all([
+                return Q.allDone([
                     storage.closeDatabase(),
                     gmeAuth.unload()
                 ]);

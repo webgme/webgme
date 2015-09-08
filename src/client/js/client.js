@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, console*/
 /*jshint browser: true*/
 /**
  * @author kecso / https://github.com/kecso
@@ -41,11 +41,10 @@ define([
             storage = Storage.getStorage(logger, gmeConfig, true),
             state = {
                 connection: null, // CONSTANTS.STORAGE. CONNECTED/DISCONNECTED/RECONNECTED
-                project: null, //CONSTANTS.BRANCH_STATUS. SYNCH/FORKED/AHEAD/PULLING
+                project: null,
                 core: null,
                 branchName: null,
-                branchStatus: null,
-                inSync: true,
+                branchStatus: null, //CONSTANTS.BRANCH_STATUS. SYNC/AHEAD_SYNC/AHEAD_FORKED/PULLING or null
                 readOnlyProject: false,
                 viewer: false, // This means that a specific commit is selected w/o regards to any branch.
 
@@ -55,16 +54,12 @@ define([
                 // FIXME: This should be the same as nodes (need to make sure they are not modified in meta).
                 metaNodes: {},
 
-                root: {
-                    current: null,
-                    previous: null,
-                    object: null
-                },
-                commit: {
-                    current: null,
-                    previous: null
-                },
-                undoRedoChain: null, //{commit: '#hash', root: '#hash', previous: object, next: object}
+                rootHash: null,
+                rootObject: null,
+                commitHash: null,
+
+                undoRedoChain: null, //{commitHash: '#hash', rootHash: '#hash', previous: object, next: object}
+
                 inTransaction: false,
                 msg: '',
                 gHash: 0,
@@ -107,11 +102,8 @@ define([
                     return Object.keys(value);
                 } else if (key === 'users') {
                     return Object.keys(value);
-                } else if (key === 'root') {
-                    return {
-                        current: value.current,
-                        previous: value.previous
-                    };
+                } else if (key === 'rootObject') {
+                    return;
                 } else if (key === 'undoRedoChain') {
                     if (value) {
                         chain = {
@@ -125,7 +117,7 @@ define([
                         chainItem = value;
                         while (chainItem.previous) {
                             prevChain.previous = {
-                                commit: chainItem.commit,
+                                commitHash: chainItem.commitHash,
                                 previous: null
                             };
                             prevChain = prevChain.previous;
@@ -138,7 +130,7 @@ define([
                         chainItem = value;
                         while (chainItem.next) {
                             nextChain.next = {
-                                commit: chainItem.commit,
+                                commitHash: chainItem.commitHash,
                                 next: null
                             };
                             nextChain = nextChain.next;
@@ -156,7 +148,7 @@ define([
             } else {
                 lightState = {
                     connection: self.getNetworkStatus(),
-                    projectName: self.getActiveProjectName(),
+                    projectId: self.getActiveProjectId(),
                     branchName: self.getActiveBranchName(),
                     branchStatus: self.getBranchStatus(),
                     commitHash: self.getActiveCommitHash(),
@@ -164,7 +156,11 @@ define([
                     projectReadOnly: self.isProjectReadOnly(),
                     commitReadOnly: self.isCommitReadOnly()
                 };
-                logger[level]('state at ' + msg, JSON.stringify(lightState));
+                if (level === 'console') {
+                    console.log('state at ' + msg, JSON.stringify(lightState));
+                } else {
+                    logger[level]('state at ' + msg, JSON.stringify(lightState));
+                }
             }
         }
 
@@ -172,13 +168,28 @@ define([
         function saveRoot(msg, callback) {
             var persisted,
                 numberOfPersistedObjects,
-                beforeLoading = true,
-                commitQueue,
+                wrappedCallback,
                 newCommitObject;
             logger.debug('saveRoot msg', msg);
-
-            callback = callback || function () {
+            if (callback) {
+                wrappedCallback = function (err, result) {
+                    if (err) {
+                        logger.error('saveRoot failure', err);
+                    } else {
+                        logger.debug('saveRoot', result);
+                    }
+                    callback(err, result);
                 };
+            } else {
+                wrappedCallback = function (err, result) {
+                    if (err) {
+                        logger.error('saveRoot failure', err);
+                    } else {
+                        logger.debug('saveRoot', result);
+                    }
+                };
+            }
+
             if (!state.viewer && !state.readOnlyProject) {
                 if (state.msg) {
                     state.msg += '\n' + msg;
@@ -187,57 +198,30 @@ define([
                 }
                 if (!state.inTransaction) {
                     ASSERT(state.project && state.core && state.branchName);
+
                     logger.debug('is NOT in transaction - will persist.');
                     persisted = state.core.persist(state.nodes[ROOT_PATH].node);
                     logger.debug('persisted', persisted);
                     numberOfPersistedObjects = Object.keys(persisted.objects).length;
                     if (numberOfPersistedObjects === 0) {
                         logger.warn('No changes after persist will return from saveRoot.');
-                        callback(null);
+                        wrappedCallback(null);
                         return;
                     } else if (numberOfPersistedObjects > 200) {
                         //This is just for debugging
                         logger.warn('Lots of persisted objects', numberOfPersistedObjects);
                     }
 
-                    // Calling event-listeners (users)
-                    // N.B. it is no longer waiting for the setBranchHash to return from server.
-                    // Which also was the case before:
-                    // https://github.com/webgme/webgme/commit/48547c33f638aedb60866772ca5638f9e447fa24
-
-                    loading(persisted.rootHash, function (err) {
-                        if (err) {
-                            logger.error('Saveroot - loading failed', err);
-                        }
-                        // TODO: Are local updates really guaranteed to be synchronous?
-                        if (beforeLoading === false) {
-                            logger.error('SaveRoot - was not synchronous!');
-                        }
-                    });
-
-                    beforeLoading = false;
+                    // Make the commit on the storage (will emit hashUpdated)
                     newCommitObject = storage.makeCommit(
-                        state.project.name,
+                        state.project.projectId,
                         state.branchName,
-                        [state.commit.current],
+                        [state.commitHash],
                         persisted.rootHash,
                         persisted.objects,
                         state.msg,
-                        callback
+                        wrappedCallback
                     );
-                    commitQueue = state.project.getBranch(state.branchName, true).getCommitQueue();
-                    if (state.inSync === true) {
-                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC, commitQueue);
-                    } else {
-                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC, commitQueue);
-                    }
-
-
-                    addCommit(newCommitObject[CONSTANTS.STORAGE.MONGO_ID]);
-                    //undo-redo
-                    addModification(newCommitObject, false);
-                    self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-                    self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
                     state.msg = '';
                 } else {
@@ -246,7 +230,7 @@ define([
             } else {
                 //TODO: Why is this set to empty here?
                 state.msg = '';
-                callback(null);
+                wrappedCallback(null);
             }
         }
 
@@ -323,7 +307,7 @@ define([
 
             if (isConnected()) {
                 if (state.project) {
-                    closeProject(state.project.name, closeStorage);
+                    closeProject(state.project.projectId, closeStorage);
                 } else {
                     closeStorage(null);
                 }
@@ -333,12 +317,29 @@ define([
             }
         };
 
-        this.selectProject = function (projectName, callback) {
+        /**
+         * If branchName is given and it does not exist, the project will be closed and callback resolved with an error.
+         * If branchName NOT given it will attempt the following in order and break if successful at any step:
+         *  1) Select the master if available.
+         *  2) Select any available branch.
+         *  3) Select the latest commit.
+         *  4) Close the project and resolve with error.
+         * @param {string} projectId
+         * @param {string} [branchName='master']
+         * @param {function} callback
+         */
+        this.selectProject = function (projectId, branchName, callback) {
+            if (callback === undefined && typeof branchName === 'function') {
+                callback = branchName;
+                branchName = undefined;
+            }
             if (isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
             }
-            var prevProjectName,
-                branchToOpen = 'master';
+            var prevProjectId,
+                branchToOpen = branchName || 'master';
+
+            logger.debug('selectProject', projectId, branchToOpen);
 
             function projectOpened(err, project, branches, access) {
                 if (err) {
@@ -353,82 +354,130 @@ define([
                 });
                 self.meta.initialize(state.core, state.metaNodes, saveRoot);
                 logState('info', 'projectOpened');
-                self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectName);
+                logger.debug('projectOpened, branches: ', branches);
+                self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectId);
 
-                if (branches.hasOwnProperty('master') === false) {
-                    branchToOpen = Object.keys(branches)[0] || null;
-                    logger.debug('Project "' + projectName + '" did not have a master branch, picked:', branchToOpen);
-                }
-                ASSERT(branchToOpen, 'No branch avaliable in project'); // TODO: Deal with this
-                self.selectBranch(branchToOpen, null, function (err) {
-                    if (err) {
-                        callback(err);
+                if (branches.hasOwnProperty(branchToOpen) === false) {
+                    if (branchName) {
+                        logger.error('Given branch does not exist "' + branchName + '"');
+                        closeProject(projectId, function (err) {
+                            if (err) {
+                                logger.error('closeProject after missing branch failed with err', err);
+                            }
+                            callback(new Error('Given branch does not exist "' + branchName + '"'));
+                        });
                         return;
                     }
-                    logState('info', 'selectBranch');
-                    reLaunchUsers();
-                    callback(null);
-                });
+                    logger.warn('Project "' + projectId + '" did not have branch', branchToOpen);
+                    branchToOpen = Object.keys(branches)[0] || null;
+                    logger.debug('Picked "' + branchToOpen + '".');
+                }
+
+                if (branchToOpen) {
+                    self.selectBranch(branchToOpen, null, function (err) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+                        logState('info', 'selectBranch');
+                        reLaunchUsers();
+                        callback(null);
+                    });
+                } else {
+                    logger.warn('No branches available in project, will attempt to select latest commit.');
+                    self.getCommits(projectId, (new Date()).getTime(), 1, function (err, commitObjects) {
+                        if (err || commitObjects.length === 0) {
+                            logger.error(err);
+                            closeProject(projectId, function (err) {
+                                if (err) {
+                                    logger.error('closeProject after missing any commits failed with err', err);
+                                }
+                                callback(new Error('Project does not have any commits.'));
+                            });
+                            return;
+                        }
+                        self.selectCommit(commitObjects[0]._id, function (err) {
+                            if (err) {
+                                logger.error(err);
+                                closeProject(projectId, function (err) {
+                                    if (err) {
+                                        logger.error('closeProject after missing any commits failed with err', err);
+                                    }
+                                    callback(new Error('Failed selecting commit when opening project.'));
+                                });
+                                return;
+                            }
+                            reLaunchUsers();
+                            callback(null);
+                        });
+                    });
+                }
             }
 
             if (state.project) {
-                prevProjectName = state.project.name;
-                logger.debug('A project was open, closing it', prevProjectName);
+                prevProjectId = state.project.projectId;
+                logger.debug('A project was open, closing it', prevProjectId);
 
-                if (prevProjectName === projectName) {
-                    logger.warn('projectName is already opened', projectName);
+                if (prevProjectId === projectId) {
+                    logger.warn('projectId is already opened', projectId);
                     callback(null);
                     return;
                 }
-                closeProject(prevProjectName, function (err) {
+                closeProject(prevProjectId, function (err) {
                     if (err) {
                         logger.error('problems closing previous project', err);
                         callback(err);
                         return;
                     }
-                    storage.openProject(projectName, projectOpened);
+                    storage.openProject(projectId, projectOpened);
                 });
             } else {
-                storage.openProject(projectName, projectOpened);
+                storage.openProject(projectId, projectOpened);
             }
         };
 
-        function closeProject(projectName, callback) {
+        function closeProject(projectId, callback) {
             state.project = null;
             //TODO what if for some reason we are in transaction?
-            storage.closeProject(projectName, function (err) {
+            storage.closeProject(projectId, function (err) {
                 if (err) {
                     callback(err);
                     return;
                 }
                 state.core = null;
                 state.branchName = null;
-                changeBranchStatus(null);
+                //self.dispatchEvent(null);
                 state.patterns = {};
                 //state.gHash = 0;
                 state.nodes = {};
                 state.metaNodes = {};
                 state.loadNodes = {};
                 state.loadError = 0;
-                state.root.current = null;
-                state.root.previous = null;
-                //state.root.object = null;
+                state.rootHash = null;
+                //state.rootObject = null;
                 state.inTransaction = false;
                 state.msg = '';
 
                 cleanUsersTerritories();
-                self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, projectName);
-                callback(null);
+                self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, projectId);
+                addOnFunctions.stopRunningAddOns(function (err) {
+                    if (err) {
+                        logger.error('Errors stopping addOns when closeProject, (ignoring)', err);
+                    }
+
+                    callback(null);
+                });
             });
         }
 
         /**
          *
          * @param {string} branchName - name of branch to open.
-         * @param {function} [commitHandler=getDefaultCommitHandler()] - Handles returned statuses after commits.
+         * @param {function} [branchStatusHandler=getDefaultCommitHandler()] - Handles returned statuses after commits.
          * @param callback
          */
-        this.selectBranch = function (branchName, commitHandler, callback) {
+        this.selectBranch = function (branchName, branchStatusHandler, callback) {
+            var prevBranchName = state.branchName;
             logger.debug('selectBranch', branchName);
             if (isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
@@ -439,7 +488,10 @@ define([
                 return;
             }
 
-            var prevBranchName = state.branchName;
+            if (branchStatusHandler) {
+                logger.warn('passing branchStatusHandler is deprecated, use addHashUpdateHandler or' +
+                    ' addBranchStatusHandler on the branch object instead (getProjectObject().branches[branchName]).');
+            }
 
             function openBranch(err) {
                 if (err) {
@@ -447,52 +499,40 @@ define([
                     callback(err);
                     return;
                 }
-                commitHandler = commitHandler || getDefaultCommitHandler();
-                storage.openBranch(state.project.name, branchName, getUpdateHandler(), commitHandler,
-                    function (err, latestCommit) {
-                        var commitObject;
+
+                state.branchName = branchName;
+                logger.debug('openBranch, calling storage openBranch', state.project.projectId, branchName);
+                storage.openBranch(state.project.projectId, branchName,
+                    getHashUpdateHandler(), getBranchStatusHandler(),
+                    function (err /*, latestCommit*/) {
                         if (err) {
                             logger.error('storage.openBranch returned with error', err);
-                            callback(new Error(err));
+                            self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
+                            callback(err);
                             return;
                         }
-
-                        commitObject = latestCommit.commitObject;
-                        logger.debug('Branch opened latestCommit', latestCommit);
-
-                        //undo-redo
-                        logger.debug('changing branch - cleaning undo-redo chain');
-                        addModification(commitObject, true);
-                        self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-                        self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
                         state.viewer = false;
                         state.branchName = branchName;
                         self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
                         logState('info', 'openBranch');
-
-                        loading(commitObject.root, function (err) {
-                            if (err) {
-                                logger.error('loading failed after opening branch', branchName);
-                            } else {
-                                addCommit(commitObject[CONSTANTS.STORAGE.MONGO_ID]);
-                            }
-                            changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
-                            // TODO: Make sure this is always the case.
-                            callback(err);
-                        });
-
+                        callback(null);
                     }
                 );
             }
 
-            if (state.branchName !== null) {
-                logger.debug('Branch was open, closing it first', state.branchName);
-                prevBranchName = state.branchName;
-                storage.closeBranch(state.project.name, prevBranchName, openBranch);
-            } else {
-                openBranch(null);
-            }
+            addOnFunctions.stopRunningAddOns(function (err) {
+                if (err) {
+                    logger.error('Errors stopping addOns when selectBranch (ignoring)', err);
+                }
+
+                if (prevBranchName !== null) {
+                    logger.debug('Branch was open, closing it first', prevBranchName);
+                    storage.closeBranch(state.project.projectId, prevBranchName, openBranch);
+                } else {
+                    openBranch(null);
+                }
+            });
         };
 
         this.selectCommit = function (commitHash, callback) {
@@ -515,23 +555,23 @@ define([
                 }
 
                 state.viewer = true;
-                changeBranchStatus(null);
+
                 state.project.loadObject(commitHash, function (err, commitObj) {
                     if (!err && commitObj) {
                         logState('info', 'selectCommit loaded commit');
-                        loading(commitObj.root, function (err, aborted) {
+                        self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
+                        loading(commitObj.root, commitHash, function (err, aborted) {
                             if (err) {
                                 logger.error('loading returned error', commitObj.root, err);
                                 logState('error', 'selectCommit loading');
                                 callback(err);
                             } else if (aborted === true) {
                                 logState('warn', 'selectCommit loading');
-                                callback('Loading selected commit was aborted');
+                                callback(new Error('Loading selected commit was aborted'));
                             } else {
-                                addCommit(commitHash);
                                 logger.debug('loading complete for selectCommit rootHash', commitObj.root);
                                 logState('info', 'selectCommit loading');
-                                changeBranchStatus(null);
+                                self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
                                 callback(null);
                             }
                         });
@@ -543,99 +583,77 @@ define([
                 });
             }
 
-            if (state.branchName !== null) {
-                logger.debug('Branch was open, closing it first', state.branchName);
-                prevBranchName = state.branchName;
-                state.branchName = null;
-                //state.branchStatus = null;
-                storage.closeBranch(state.project.name, prevBranchName, openCommit);
-            } else {
-                openCommit(null);
-            }
+            addOnFunctions.stopRunningAddOns(function (err) {
+                if (err) {
+                    logger.error('Errors stopping addOns when selectCommit (ignoring)', err);
+                }
+
+                if (state.branchName !== null) {
+                    logger.debug('Branch was open, closing it first', state.branchName);
+                    prevBranchName = state.branchName;
+                    state.branchName = null;
+                    storage.closeBranch(state.project.projectId, prevBranchName, openCommit);
+                } else {
+                    openCommit(null);
+                }
+            });
         };
 
-        function getDefaultCommitHandler() {
-            return function (commitQueue, result, callback) {
-                logger.debug('default commitHandler invoked, result: ', result);
-                logger.debug('commitQueue', commitQueue);
-
-                if (result.status === CONSTANTS.STORAGE.SYNCH) {
-                    logger.debug('You are in synch.');
-                    logState('info', 'commitHandler');
-                    if (commitQueue.length === 1) {
-                        logger.debug('No commits queued.');
-                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
-                    } else {
-                        logger.debug('Will proceed with next queued commit...');
-                        changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC, commitQueue);
-                    }
-                    callback(true); // push:true
-                } else if (result.status === CONSTANTS.STORAGE.FORKED) {
-                    logger.debug('You got forked');
-                    logState('info', 'commitHandler');
-                    changeBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC, commitQueue);
-                    callback(false); // push:false
-                } else {
-                    callback(false);
-                    changeBranchStatus(null);
-                    throw new Error('Unexpected result', result);
-                }
+        function getBranchStatusHandler () {
+            return function (branchStatus, commitQueue, updateQueue) {
+                logger.debug('branchStatus changed', branchStatus, commitQueue, updateQueue);
+                logState('debug', 'branchStatus');
+                state.branchStatus = branchStatus;
+                self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {
+                    status: branchStatus,
+                    commitQueue: commitQueue,
+                    updateQueue: updateQueue}
+                );
             };
         }
 
-        function getUpdateHandler() {
-            return function (updateQueue, eventData, callback) {
-                var commitHash = eventData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
-                logger.debug('updateHandler invoked. project, branch', eventData.projectName, eventData.branchName);
+        function getHashUpdateHandler() {
+            return function (data, commitQueue, updateQueue, callback) {
+                var commitData = data.commitData,
+                    clearUndoRedo = data.local !== true,
+                    commitHash = commitData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
+                logger.debug('hashUpdateHandler invoked. project, branch, commitHash',
+                    commitData.projectId, commitData.branchName, commitHash);
+
                 if (state.inTransaction) {
                     logger.warn('Is in transaction, will not load in changes');
-                    callback(true); // aborted: true
+                    callback(null, false); // proceed: false
                     return;
                 }
-                logger.debug('loading commitHash', commitHash);
+
                 //undo-redo
-                logger.debug('foreign modification clearing undo-redo chain');
-                addModification(eventData.commitObject, true);
+                addModification(commitData.commitObject, clearUndoRedo);
                 self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
                 self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
-                changeBranchStatus(CONSTANTS.BRANCH_STATUS.PULLING, updateQueue.length);
-                loading(eventData.commitObject.root, function (err, aborted) {
+
+                logger.debug('loading commitHash, local?', commitHash, data.local);
+                loading(commitData.commitObject.root, commitHash, function (err, aborted) {
                     if (err) {
-                        logger.error('updateHandler invoked loading and it returned error',
-                            eventData.commitObject.root, err);
-                        logState('error', 'updateHandler');
-                        callback(true); // aborted: true
+                        logger.error('hashUpdateHandler invoked loading and it returned error',
+                            commitData.commitObject.root, err);
+                        logState('error', 'hashUpdateHandler');
+                        callback(err, false); // proceed: false
                     } else if (aborted === true) {
-                        logState('warn', 'updateHandler');
-                        callback(true); // aborted: true
+                        logState('warn', 'hashUpdateHandler');
+                        callback(null, false); // proceed: false
                     } else {
-                        addCommit(commitHash);
-                        logger.debug('loading complete for incoming rootHash', eventData.commitObject.root);
-                        logState('debug', 'updateHandler');
-                        if (updateQueue.length === 1) {
-                            changeBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
-                        }
-                        callback(false); // aborted: false
+                        logger.debug('loading complete for incoming rootHash', commitData.commitObject.root);
+                        logState('debug', 'hashUpdateHandler');
+                        callback(null, true); // proceed: true
                     }
                 });
             };
         }
 
-        function changeBranchStatus(branchStatus, details) {
-            logger.debug('changeBranchStatus, prev, new, details', state.branchStatus, branchStatus, details);
-            state.branchStatus = branchStatus;
-            if (branchStatus === CONSTANTS.BRANCH_STATUS.SYNC) {
-                state.inSync = true;
-            } else if (branchStatus === CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC) {
-                state.inSync = false;
-            }
-            self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {status: branchStatus, details: details});
-        }
-
         this.forkCurrentBranch = function (newName, commitHash, callback) {
             var self = this,
                 activeBranchName = self.getActiveBranchName(),
-                activeProjectName = self.getActiveProjectName(),
+                activeProjectId = self.getActiveProjectId(),
                 forkName;
 
             logger.debug('forkCurrentBranch', newName, commitHash);
@@ -648,7 +666,7 @@ define([
                 return;
             }
             forkName = newName || activeBranchName + '_' + (new Date()).getTime();
-            storage.forkBranch(activeProjectName, activeBranchName, forkName, commitHash,
+            storage.forkBranch(activeProjectId, activeBranchName, forkName, commitHash,
                 function (err, forkHash) {
                     if (err) {
                         logger.error('Could not fork branch:', newName, err);
@@ -669,8 +687,8 @@ define([
             return state.branchStatus;
         };
 
-        this.getActiveProjectName = function () {
-            return state.project && state.project.name;
+        this.getActiveProjectId = function () {
+            return state.project && state.project.projectId;
         };
 
         this.getActiveBranchName = function () {
@@ -678,11 +696,11 @@ define([
         };
 
         this.getActiveCommitHash = function () {
-            return state.commit.current;
+            return state.commitHash;
         };
 
         this.getActiveRootHash = function () {
-            return state.root.current;
+            return state.rootHash;
         };
 
         this.isProjectReadOnly = function () {
@@ -700,20 +718,40 @@ define([
 
         // Undo/Redo functionality
         function addModification(commitObject, clear) {
-            var newItem;
+            var newItem,
+                commitHash = commitObject[CONSTANTS.STORAGE.MONGO_ID],
+                currItem;
             if (clear) {
+                logger.debug('foreign modification clearing undo-redo chain');
                 state.undoRedoChain = {
-                    commit: commitObject[CONSTANTS.STORAGE.MONGO_ID],
-                    root: commitObject.root,
+                    commitHash: commitHash,
+                    rootHash: commitObject.root,
                     previous: null,
                     next: null
                 };
                 return;
             }
 
+            // Check if the modification already exist, i.e. commit is from undoing or redoing.
+            currItem = state.undoRedoChain;
+            while (currItem) {
+                if (currItem.commitHash === commitHash) {
+                    return;
+                }
+                currItem = currItem.previous;
+            }
+
+            currItem = state.undoRedoChain;
+            while (currItem) {
+                if (currItem.commitHash === commitHash) {
+                    return;
+                }
+                currItem = currItem.next;
+            }
+
             newItem = {
-                commit: commitObject[CONSTANTS.STORAGE.MONGO_ID],
-                root: commitObject.root,
+                commitHash: commitHash,
+                rootHash: commitObject.root,
                 previous: state.undoRedoChain,
                 next: null
             };
@@ -723,7 +761,7 @@ define([
 
         function canUndo() {
             var result = false;
-            if (state.undoRedoChain && state.undoRedoChain.previous) {
+            if (state.undoRedoChain && state.undoRedoChain.previous && state.undoRedoChain.previous.commitHash) {
                 result = true;
             }
 
@@ -747,24 +785,14 @@ define([
 
             state.undoRedoChain = state.undoRedoChain.previous;
 
-            loading(state.undoRedoChain.root, function (err) {
-                //TODO do we need to handle this??
-                if (err) {
-                    logger.error(err);
-                }
-            });
-            self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-            self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
             logState('info', 'undo [before setBranchHash]');
-            storage.setBranchHash(state.project.name,
-                state.branchName, state.undoRedoChain.commit, state.commit.current, function (err) {
+            storage.setBranchHash(state.project.projectId, branchName, state.undoRedoChain.commitHash, state.commitHash,
+                function (err) {
                     if (err) {
                         //TODO do we need to handle this? How?
                         callback(err);
                         return;
                     }
-
-                    state.commit.current = state.undoRedoChain.commit;
                     logState('info', 'undo [after setBranchHash]');
                     callback(null);
                 }
@@ -780,23 +808,14 @@ define([
 
             state.undoRedoChain = state.undoRedoChain.next;
 
-            loading(state.undoRedoChain.root, function (err) {
-                //TODO do we need to handle this??
-                if (err) {
-                    logger.error(err);
-                }
-            });
-            self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-            self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
             logState('info', 'redo [before setBranchHash]');
-            storage.setBranchHash(state.project.name,
-                state.branchName, state.undoRedoChain.commit, state.commit.current, function (err) {
+            storage.setBranchHash(state.project.projectId, branchName, state.undoRedoChain.commitHash, state.commitHash,
+                function (err) {
                     if (err) {
                         //TODO do we need to handle this? How?
                         callback(err);
                         return;
                     }
-                    state.commit.current = state.undoRedoChain.commit;
                     logState('info', 'redo [after setBranchHash]');
                     callback(null);
                 }
@@ -806,65 +825,58 @@ define([
         // REST-like functions and forwarded to storage TODO: add these to separate base class
 
         //  Getters
-        this.getProjects = function (callback) {
+        this.getProjects = function (options, callback) {
+            var asObject;
             if (isConnected()) {
-                storage.getProjects(callback);
-            } else {
-                callback(new Error('There is no open database connection!'));
-            }
-        };
-
-        this.getBranches = function (projectName, callback) {
-            if (isConnected()) {
-                storage.getBranches(projectName, callback);
-            } else {
-                callback(new Error('There is no open database connection!'));
-            }
-        };
-
-        this.getCommits = function (projectName, before, number, callback) {
-            if (isConnected()) {
-                storage.getCommits(projectName, before, number, callback);
-            } else {
-                callback(new Error('There is no open database connection!'));
-            }
-        };
-
-        this.getLatestCommitData = function (projectName, branchName, callback) {
-            if (isConnected()) {
-                storage.getLatestCommitData(projectName, branchName, callback);
+                if (options.asObject) {
+                    asObject = true;
+                    delete options.asObject;
+                }
+                storage.getProjects(options, function (err, result) {
+                    var i,
+                        resultObj = {};
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    if (asObject === true) {
+                        for (i = 0; i < result.length; i += 1) {
+                            resultObj[result[i]._id] = result[i];
+                        }
+                        callback(null, resultObj);
+                    } else {
+                        callback(null, result);
+                    }
+                });
             } else {
                 callback(new Error('There is no open database connection!'));
             }
         };
 
         this.getProjectsAndBranches = function (asObject, callback) {
-            if (isConnected()) {
-                storage.getProjectsAndBranches(function (err, projectsWithBranches) {
-                    var i,
-                        result = {};
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-                    if (asObject === true) {
-                        //Move the result in the same format as before.
-                        for (i = 0; i < projectsWithBranches.length; i += 1) {
-                            result[projectsWithBranches[i].name] = {
-                                branches: projectsWithBranches[i].branches,
-                                rights: {
-                                    read: projectsWithBranches[i].read,
-                                    write: projectsWithBranches[i].write,
-                                    delete: projectsWithBranches[i].delete,
-                                }
-                            };
-                        }
-                        callback(null, result);
-                    } else {
-                        callback(null, projectsWithBranches);
-                    }
+            //This is kept for the tests.
+            self.getProjects({rights: true, branches: true, asObject: asObject}, callback);
+        };
 
-                });
+        this.getBranches = function (projectId, callback) {
+            if (isConnected()) {
+                storage.getBranches(projectId, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
+        this.getCommits = function (projectId, before, number, callback) {
+            if (isConnected()) {
+                storage.getCommits(projectId, before, number, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
+        this.getLatestCommitData = function (projectId, branchName, callback) {
+            if (isConnected()) {
+                storage.getLatestCommitData(projectId, branchName, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
             }
@@ -879,31 +891,33 @@ define([
             }
         };
 
-        this.deleteProject = function (projectName, callback) {
+        this.deleteProject = function (projectId, callback) {
             if (isConnected()) {
-                storage.deleteProject(projectName, function (err, didExist) {
-                    if (err) {
-                        callback(new Error(err));
-                        return;
-                    }
-                    callback(null, didExist);
-                });
+                storage.deleteProject(projectId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
             }
         };
 
-        this.createBranch = function (projectName, branchName, newHash, callback) {
+        this.transferProject = function (projectId, newOwnerId, callback) {
             if (isConnected()) {
-                storage.createBranch(projectName, branchName, newHash, callback);
+                storage.transferProject(projectId, newOwnerId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
             }
         };
 
-        this.deleteBranch = function (projectName, branchName, oldHash, callback) {
+        this.createBranch = function (projectId, branchName, newHash, callback) {
             if (isConnected()) {
-                storage.deleteBranch(projectName, branchName, oldHash, callback);
+                storage.createBranch(projectId, branchName, newHash, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
+        this.deleteBranch = function (projectId, branchName, oldHash, callback) {
+            if (isConnected()) {
+                storage.deleteBranch(projectId, branchName, oldHash, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
             }
@@ -915,7 +929,7 @@ define([
          *
          * eventData = {
          *    etype: PROJECT_CREATED||DELETED,
-         *    projectName: %name of project%
+         *    projectId: %id of project%
          * }
          *
          * @param {function} eventHandler
@@ -941,37 +955,37 @@ define([
 
         /**
          * Triggers eventHandler(storage, eventData) on BRANCH_CREATED, BRANCH_DELETED and BRANCH_HASH_UPDATED
-         * for the given projectName.
+         * for the given projectId.
          *
          *
          * eventData = {
          *    etype: BRANCH_CREATED||DELETED||HASH_UPDATED,
-         *    projectName: %name of project%,
+         *    projectId: %id of project%,
          *    branchName: %name of branch%,
          *    newHash: %new commitHash (='' when DELETED)%
          *    oldHash: %previous commitHash (='' when CREATED)%
          * }
          *
-         * @param {string} projectName
+         * @param {string} projectId
          * @param {function} eventHandler
          * @param {function} [callback]
          */
-        this.watchProject = function (projectName, eventHandler, callback) {
+        this.watchProject = function (projectId, eventHandler, callback) {
             callback = callback || function (err) {
                     if (err) {
-                        logger.error('Problems watching project room', projectName);
+                        logger.error('Problems watching project room', projectId);
                     }
                 };
-            storage.watchProject(projectName, eventHandler, callback);
+            storage.watchProject(projectId, eventHandler, callback);
         };
 
-        this.unwatchProject = function (projectName, eventHandler, callback) {
+        this.unwatchProject = function (projectId, eventHandler, callback) {
             callback = callback || function (err) {
                     if (err) {
-                        logger.error('Problems unwatching project room', projectName);
+                        logger.error('Problems unwatching project room', projectId);
                     }
                 };
-            storage.unwatchProject(projectName, eventHandler, callback);
+            storage.unwatchProject(projectId, eventHandler, callback);
         };
 
         // Internal functions
@@ -1264,34 +1278,39 @@ define([
 
                 ASSERT(err || root);
 
-                state.root.object = root;
-                addOnFunctions.updateRunningAddOns(root);
+                state.rootObject = root;
+
                 error = error || err;
                 if (!err) {
-                    //_clientGlobal.addOn.updateRunningAddOns(root); //FIXME: ADD ME BACK!!
-                    state.loadNodes[state.core.getPath(root)] = {
-                        node: root,
-                        incomplete: true,
-                        basic: true,
-                        hash: getStringHash(root)
-                    };
-                    state.metaNodes[state.core.getPath(root)] = root;
-                    if (orderedPatternIds.length === 0 && Object.keys(state.users) > 0) {
-                        //we have user, but they do not interested in any object -> let's relaunch them :D
-                        callback(null);
-                        reLaunchUsers();
-                    } else {
-                        _loadPattern = TASYNC.throttle(TASYNC.wrap(loadPattern), 1);
-                        fut = TASYNC.lift(
-                            orderedPatternIds.map(function (pattern /*, index */) {
-                                return TASYNC.apply(_loadPattern,
-                                    [state.core, pattern, patterns[pattern], state.loadNodes],
-                                    this);
-                            }));
-                        TASYNC.unwrap(function () {
-                            return fut;
-                        })(callback);
-                    }
+                    addOnFunctions.updateRunningAddOns(root)
+                        .then(function () {
+                            state.loadNodes[state.core.getPath(root)] = {
+                                node: root,
+                                incomplete: true,
+                                basic: true,
+                                hash: getStringHash(root)
+                            };
+                            state.metaNodes[state.core.getPath(root)] = root;
+                            if (orderedPatternIds.length === 0 && Object.keys(state.users) > 0) {
+                                //we have user, but they do not interested in any object -> let's relaunch them :D
+                                callback(null);
+                                reLaunchUsers();
+                            } else {
+                                _loadPattern = TASYNC.throttle(TASYNC.wrap(loadPattern), 1);
+                                fut = TASYNC.lift(
+                                    orderedPatternIds.map(function (pattern /*, index */) {
+                                        return TASYNC.apply(_loadPattern,
+                                            [state.core, pattern, patterns[pattern], state.loadNodes],
+                                            this);
+                                    }));
+                                TASYNC.unwrap(function () {
+                                    return fut;
+                                })(callback);
+                            }
+                        })
+                        .catch(function (err) {
+                            callback(err);
+                        });
                 } else {
                     callback(err);
                 }
@@ -1299,18 +1318,20 @@ define([
         }
 
         //this is just a first brute implementation it needs serious optimization!!!
-        function loading(newRootHash, callback) {
+        function loading(newRootHash, newCommitHash, callback) {
             var firstRoot = !state.nodes[ROOT_PATH],
                 originatingRootHash = state.nodes[ROOT_PATH] ? state.core.getHash(state.nodes[ROOT_PATH].node) : null,
                 finalEvents = function () {
                     var modifiedPaths,
                         i;
-
+                    logger.debug('firing finalEvents from loading for new rootHash', newRootHash);
                     modifiedPaths = getModifiedNodes(state.loadNodes);
                     state.nodes = state.loadNodes;
                     state.loadNodes = {};
-                    state.root.previous = state.root.current;
-                    state.root.current = newRootHash;
+                    // We have now loaded the new root from the commit, update the state
+                    state.rootHash = newRootHash;
+                    state.commitHash = newCommitHash;
+
                     for (i in state.users) {
                         if (state.users.hasOwnProperty(i)) {
                             userEvents(i, modifiedPaths);
@@ -1318,7 +1339,7 @@ define([
                     }
                     callback(null);
                 };
-            logger.debug('loading newRootHash', newRootHash);
+            logger.debug('loading originatingRootHash, newRootHash', originatingRootHash, newRootHash);
 
             callback = callback || function (/*err*/) {
                 };
@@ -1326,7 +1347,7 @@ define([
 
             loadRoot(newRootHash, function (err) {
                 if (err) {
-                    state.root.current = null;
+                    state.rootHash = null;
                     callback(err);
                 } else {
                     if (firstRoot ||
@@ -1361,11 +1382,6 @@ define([
                 saveRoot(msg, callback);
             }
         };
-
-        function addCommit(commitHash) {
-            state.commit.previous = state.commit.current;
-            state.commit.current = commitHash;
-        }
 
         //territory functions
         this.addUI = function (ui, fn, guid) {
@@ -1486,95 +1502,104 @@ define([
         };
 
         //create from file
-        this.createProjectFromFile = function (projectName, jProject, callback) {
-            //TODO somehow the export / import should contain the INFO field
-            // so the tags and description could come from it
-            storage.createProject(projectName, function (err, project) {
+        this.createProjectFromFile = function (projectName, branchName, jProject, ownerId, callback) {
+            branchName = branchName || 'master';
+            if (callback === undefined && typeof ownerId === 'function') {
+                callback = ownerId;
+                ownerId = undefined;
+            }
+
+            storage.createProject(projectName, ownerId, function (err, projectId) {
                 if (err) {
                     callback(err);
                     return;
                 }
+                storage.openProject(projectId, function (err, project) {
+                    var core,
+                        rootNode,
+                        persisted;
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
 
-                var core = new Core(project, {
+                    core = new Core(project, {
                         globConf: gmeConfig,
                         logger: logger.fork('core')
-                    }),
-                    root = core.createNode({parent: null, base: null}),
-                    persisted = core.persist(root);
+                    });
 
-                storage.makeCommit(projectName,
-                    null,
-                    [],
-                    persisted.rootHash,
-                    persisted.objects,
-                    'creating project from a file',
-                    function (err, commitResult) {
+                    rootNode = core.createNode({parent: null, base: null});
+                    Serialization.import(core, rootNode, jProject, function (err) {
                         if (err) {
-                            logger.error('cannot make initial commit for project creation from file');
-                            callback(err);
-                            return;
+                            return callback(err);
                         }
 
-                        project.createBranch('master', commitResult.hash, function (err) {
-                            if (err) {
-                                logger.error('cannot set branch \'master\' for project creation from file');
-                                callback(err);
-                                return;
-                            }
+                        persisted = core.persist(rootNode);
 
-                            storage.closeProject(projectName, function (err) {
+                        storage.makeCommit(projectId,
+                            null,
+                            [],
+                            persisted.rootHash,
+                            persisted.objects,
+                            'creating project from a file',
+                            function (err, commitResult) {
                                 if (err) {
+                                    logger.error('cannot make initial commit for project creation from file');
                                     callback(err);
                                     return;
                                 }
-                                self.selectProject(projectName, function (err) {
+
+                                project.createBranch(branchName, commitResult.hash, function (err) {
                                     if (err) {
+                                        logger.error('cannot set branch \'master\' for project creation from file');
                                         callback(err);
                                         return;
                                     }
 
-                                    Serialization.import(state.core, state.root.object, jProject, function (err) {
+                                    storage.closeProject(projectId, function (err) {
                                         if (err) {
-                                            return callback(err);
+                                            logger.error('Closing temporary project failed in project creation ' +
+                                                'from file', err);
+                                            callback(err);
+                                            return;
                                         }
-                                        saveRoot('project created from file', callback);
+                                        callback(null, projectId, branchName);
                                     });
                                 });
-                            });
-                        });
-                    }
-                );
+                            }
+                        );
+                    });
+                });
             });
         };
 
         //seed
         this.seedProject = function (parameters, callback) {
+            logger.debug('seeding project', parameters);
             parameters.command = 'seedProject';
-            storage.simpleRequest(parameters, function (err, id) {
+            storage.simpleRequest(parameters, function (err, result) {
                 if (err) {
-                    callback(err);
-                    return;
+                    logger.error(err);
                 }
-
-                storage.simpleResult(id, callback);
+                callback(err, result);
             });
         };
 
         //export branch
-        this.getExportProjectBranchUrl = function (projectName, branchName, fileName, callback) {
+        this.getExportProjectBranchUrl = function (projectId, branchName, fileName, callback) {
             var command = {};
             command.command = 'exportLibrary';
-            command.name = projectName;
-            command.branch = branchName;
+            command.projectId = projectId;
+            command.branchName = branchName;
             command.path = ROOT_PATH;
-            if (command.name && command.branch) {
-                storage.simpleRequest(command, function (err, resId) {
+            logger.debug('getExportProjectBranchUrl, command', command);
+            if (command.projectId && command.branchName) {
+                storage.simpleRequest(command, function (err, result) {
                     if (err) {
+                        logger.error('getExportProjectBranchUrl failed with error', err);
                         callback(err);
                     } else {
-                        callback(null,
-                            window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
-                            resId + '/' + fileName);
+                        callback(null, result.file.url);
                     }
                 });
             } else {
@@ -1582,40 +1607,24 @@ define([
             }
         };
 
-        //dump nodes
         this.getExportItemsUrl = function (paths, filename, callback) {
-            storage.simpleRequest({
-                    command: 'dumpMoreNodes',
-                    name: state.project.name,
-                    hash: state.root.current,
-                    nodes: paths
-                },
-                function (err, resId) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        callback(null,
-                            window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
-                            resId + '/' + filename);
-                    }
-                });
+            callback(new Error('getExportItemsUrl is no longer supported!'));
         };
 
         //library functions
         this.getExportLibraryUrl = function (libraryRootPath, filename, callback) {
             var command = {};
             command.command = 'exportLibrary';
-            command.name = state.project.name;
-            command.hash = state.root.current;
+            command.projectId = state.project.projectId;
+            command.hash = state.rootHash;
             command.path = libraryRootPath;
-            if (command.name && command.hash) {
-                storage.simpleRequest(command, function (err, resId) {
+            if (command.projectId && command.hash) {
+                storage.simpleRequest(command, function (err, result) {
                     if (err) {
+                        logger.error('getExportLibraryUrl failed with error', err);
                         callback(err);
                     } else {
-                        callback(null,
-                            window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
-                            resId + '/' + filename);
+                        callback(null, result.file.url);
                     }
                 });
             } else {
@@ -1655,7 +1664,7 @@ define([
          * @param {string} name - name of plugin.
          * @param {object} context
          * @param {object} context.managerConfig - where the plugin should execute.
-         * @param {string} context.managerConfig.project - name of project.
+         * @param {string} context.managerConfig.project - id of project.
          * @param {string} context.managerConfig.activeNode - path to activeNode.
          * @param {string} [context.managerConfig.activeSelection=[]] - paths to selected nodes.
          * @param {string} context.managerConfig.commit - commit hash to start the plugin from.
@@ -1711,15 +1720,15 @@ define([
         };
 
         //addOn
-        this.validateProjectAsync = addOnFunctions.validateProjectAsync;
-        this.validateModelAsync = addOnFunctions.validateModelAsync;
-        this.validateNodeAsync = addOnFunctions.validateNodeAsync;
-        this.setValidationCallback = addOnFunctions.setValidationCallback;
-        this.getDetailedHistoryAsync = addOnFunctions.getDetailedHistoryAsync;
         this.getRunningAddOnNames = addOnFunctions.getRunningAddOnNames;
         this.addOnsAllowed = gmeConfig.addOn.enable === true;
 
         //constraint
+        this.validateProjectAsync = addOnFunctions.validateProjectAsync;
+        this.validateModelAsync = addOnFunctions.validateModelAsync;
+        this.validateNodeAsync = addOnFunctions.validateNodeAsync;
+        this.setValidationCallback = addOnFunctions.setValidationCallback;
+
         this.setConstraint = function (path, name, constraintObj) {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 state.core.setConstraint(state.nodes[path].node, name, constraintObj);
@@ -1735,18 +1744,19 @@ define([
         };
 
         //automerge
-        this.autoMerge = function (projectName, mine, theirs, callback) {
+        this.autoMerge = function (projectId, mine, theirs, callback) {
             var command = {
                 command: 'autoMerge',
-                project: projectName,
+                projectId: projectId,
                 mine: mine,
                 theirs: theirs
             };
-            storage.simpleRequest(command, function (err, resId) {
+            storage.simpleRequest(command, function (err, result) {
                 if (err) {
+                    logger.error('autoMerge failed with error', err);
                     callback(err);
                 } else {
-                    storage.simpleResult(resId, callback);
+                    callback(null, result);
                 }
             });
         };
@@ -1756,18 +1766,19 @@ define([
                 command: 'resolve',
                 partial: mergeResult
             };
-            storage.simpleRequest(command, function (err, resId) {
+            storage.simpleRequest(command, function (err, result) {
                 if (err) {
+                    logger.error('resolve failed with error', err);
                     callback(err);
                 } else {
-                    storage.simpleResult(resId, callback);
+                    callback(null, result);
                 }
             });
         };
     }
 
 
-// Inherit from the EventDispatcher
+    // Inherit from the EventDispatcher
     Client.prototype = Object.create(EventDispatcher.prototype);
     Client.prototype.constructor = Client;
 

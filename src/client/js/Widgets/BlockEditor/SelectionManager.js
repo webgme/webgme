@@ -1,4 +1,4 @@
-/*globals define, WebGMEGlobal*/
+/*globals define, WebGMEGlobal, $*/
 /*jshint browser: true*/
 
 /**
@@ -7,13 +7,13 @@
 
 define(['js/logger', 'js/util'], function (Logger, clientUtil) {
 
-    "use strict";
+    'use strict';
 
     var SelectionManager,
         SELECTION_OVERLAP_RATIO = 0.5,
         SELECTION_OUTLINE_MARGIN = 15,
         SELECTION_OUTLINE_MIN_WIDTH = 100,
-        MOUSE_EVENT_POSTFIX = "SelectionManager";
+        MOUSE_EVENT_POSTFIX = 'SelectionManager';
 
     SelectionManager = function (options) {
         var loggerName = options && options.loggerName || 'gme:Widgets:BlockEditor:SelectionManager';
@@ -22,14 +22,14 @@ define(['js/logger', 'js/util'], function (Logger, clientUtil) {
         this._blockEditor = options ? options.blockEditor : null;
 
         if (this._blockEditor === undefined || this._blockEditor === null) {
-            this.logger.error("Trying to initialize a SelectionManager without a blockEditor...");
-            throw ("SelectionManager can not be created");
+            this.logger.error('Trying to initialize a SelectionManager without a blockEditor...');
+            throw ('SelectionManager can not be created');
         }
 
         this._selectedElement = null;
         this._rotationEnabled = true;
 
-        this.logger.debug("SelectionManager ctor finished");
+        this.logger.debug('SelectionManager ctor finished');
     };
 
     SelectionManager.prototype.activate = function () {
@@ -91,11 +91,11 @@ define(['js/logger', 'js/util'], function (Logger, clientUtil) {
     };
 
     SelectionManager.prototype.onSelectionCommandClicked = function (command, selectedIds) {
-        this.logger.warn("SelectionManager.prototype.onSelectionCommandClicked IS NOT OVERRIDDEN IN HOST COMPONENT. command: '" + command + "', selectedIds: " + selectedIds);
+        this.logger.warn('SelectionManager.prototype.onSelectionCommandClicked IS NOT OVERRIDDEN IN HOST COMPONENT. command: "' + command + '", selectedIds: ' + selectedIds);
     };
 
     SelectionManager.prototype.onSelectionChanged = function (selectedIDs) {
-        this.logger.warn("SelectionManager.prototype.onSelectionChanged IS NOT OVERRIDDEN IN HOST COMPONENT. selectedIDs: " + selectedIDs);
+        this.logger.warn('SelectionManager.prototype.onSelectionChanged IS NOT OVERRIDDEN IN HOST COMPONENT. selectedIDs: ' + selectedIDs);
     };
 
 
@@ -114,7 +114,7 @@ define(['js/logger', 'js/util'], function (Logger, clientUtil) {
     };
 
     SelectionManager.prototype._onBackgroundMouseMove = function (event) {
-        var mousePos = {'mX': event.mouseX, 'mY': event.mouseY};
+        var mousePos = {mX: event.mouseX, mY: event.mouseY};
 
         if (this._rubberbandSelection) {
             this._rubberbandSelection.x2 = mousePos.mX;
@@ -124,7 +124,7 @@ define(['js/logger', 'js/util'], function (Logger, clientUtil) {
     };
 
     SelectionManager.prototype._onBackgroundMouseUp = function (event) {
-        var mousePos = {'mX': event.mouseX, 'mY': event.mouseY},
+        var mousePos = {mX: event.mouseX, mY: event.mouseY},
             params;
 
         if (this._rubberbandSelection) {
@@ -134,11 +134,11 @@ define(['js/logger', 'js/util'], function (Logger, clientUtil) {
             this._drawSelectionRubberBand();
 
             params = {
-                "addToExistingSelection": this._rubberbandSelection.addToExistingSelection,
-                "x": Math.min(this._rubberbandSelection.x, this._rubberbandSelection.x2),
-                "x2": Math.max(this._rubberbandSelection.x, this._rubberbandSelection.x2),
-                "y": Math.min(this._rubberbandSelection.y, this._rubberbandSelection.y2),
-                "y2": Math.max(this._rubberbandSelection.y, this._rubberbandSelection.y2)
+                addToExistingSelection: this._rubberbandSelection.addToExistingSelection,
+                x: Math.min(this._rubberbandSelection.x, this._rubberbandSelection.x2),
+                x2: Math.max(this._rubberbandSelection.x, this._rubberbandSelection.x2),
+                y: Math.min(this._rubberbandSelection.y, this._rubberbandSelection.y2),
+                y2: Math.max(this._rubberbandSelection.y, this._rubberbandSelection.y2)
             };
 
             this._selectItemsByRubberBand(params);
@@ -187,7 +187,7 @@ define(['js/logger', 'js/util'], function (Logger, clientUtil) {
             items = this._blockEditor.items,
             changed = false;
 
-        this.logger.debug("setSelection: " + id);
+        this.logger.debug('setSelection: ' + id);
 
         if (this._selectedElement !== id) {
             changed = true;
@@ -229,14 +229,14 @@ define(['js/logger', 'js/util'], function (Logger, clientUtil) {
 
     /*********************** SHOW SELECTION OUTLINE *********************************/
     var SELECTION_OUTLINE_BASE = $('<div/>', {
-        "class": "selection-outline"
+        class: 'selection-outline'
     });
     SelectionManager.prototype.showSelectionOutline = function () {
         var bBox = this._getSelectionBoundingBox(),
             cW = this._blockEditor._actualSize.w,
             cH = this._blockEditor._actualSize.h;
 
-        if (bBox && bBox.hasOwnProperty("x")) {
+        if (bBox && bBox.hasOwnProperty('x')) {
 
             bBox.x -= SELECTION_OUTLINE_MARGIN;
             bBox.y -= SELECTION_OUTLINE_MARGIN;
@@ -276,10 +276,10 @@ define(['js/logger', 'js/util'], function (Logger, clientUtil) {
             }
 
             this._blockEditor.skinParts.$selectionOutline.css({
-                "left": bBox.x,
-                "top": bBox.y,
-                "width": bBox.w,
-                "height": bBox.h
+                left: bBox.x,
+                top: bBox.y,
+                width: bBox.w,
+                height: bBox.h
             });
 
             this._renderSelectionActions();
@@ -319,10 +319,10 @@ define(['js/logger', 'js/util'], function (Logger, clientUtil) {
 
                 if (!bBox) {
                     bBox = {
-                        "x": this._blockEditor._actualSize.w,
-                        "y": this._blockEditor._actualSize.h,
-                        "x2": 0,
-                        "y2": 0
+                        x: this._blockEditor._actualSize.w,
+                        y: this._blockEditor._actualSize.h,
+                        x2: 0,
+                        y2: 0
                     };
                 }
 
@@ -365,8 +365,8 @@ define(['js/logger', 'js/util'], function (Logger, clientUtil) {
     /************* RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
 
     var DELETE_BUTTON_BASE = $('<div/>', {
-        "class": "s-btn delete",
-        "command": "delete"
+        class: 's-btn delete',
+        command: 'delete'
     });
 
     DELETE_BUTTON_BASE.html('<i class="glyphicon glyphicon-remove"></i>');
@@ -382,12 +382,12 @@ define(['js/logger', 'js/util'], function (Logger, clientUtil) {
         }
 
         //detach mousedown handler on selection outline
-        this._blockEditor.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
-        this._blockEditor.skinParts.$selectionOutline.on("mousedown", function (event) {
+        this._blockEditor.skinParts.$selectionOutline.off('mousedown').off('click', '.s-btn');
+        this._blockEditor.skinParts.$selectionOutline.on('mousedown', function (event) {
             event.stopPropagation();
-        }).on("click", ".s-btn", function (event) {
-            var command = $(this).attr("command");
-            self.logger.debug("Selection button clicked with command: '" + command + "'");
+        }).on('click', '.s-btn', function (event) {
+            var command = $(this).attr('command');
+            self.logger.debug('Selection button clicked with command: "' + command + '"');
 
             self.onSelectionCommandClicked(command, self._selectedElement, event);
 

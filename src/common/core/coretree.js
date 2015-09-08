@@ -8,9 +8,8 @@
 define([
     'common/util/assert',
     'common/util/key',
-    'common/core/future',
     'common/core/tasync'
-], function (ASSERT, GENKEY, FUTURE, TASYNC) {
+], function (ASSERT, GENKEY, TASYNC) {
 
     'use strict';
 
@@ -32,20 +31,20 @@ define([
         return '' + relid;
     };
 
-    // make relids deterministic
-    if (false) {
-        var nextRelid = 0;
-        createRelid = function (data) {
-            ASSERT(data && typeof data === 'object');
-
-            var relid;
-            do {
-                relid = (nextRelid += -1);
-            } while (data[relid] !== undefined);
-
-            return '' + relid;
-        };
-    }
+    //// make relids deterministic
+    //if (false) {
+    //    var nextRelid = 0;
+    //    createRelid = function (data) {
+    //        ASSERT(data && typeof data === 'object');
+    //
+    //        var relid;
+    //        do {
+    //            relid = (nextRelid += -1);
+    //        } while (data[relid] !== undefined);
+    //
+    //        return '' + relid;
+    //    };
+    //}
 
     var rootCounter = 0;
 
@@ -445,11 +444,13 @@ define([
         };
 
         var __isEmptyData = function (data) {
-            // TODO: better way to check if object has keys?
-            for (var keys in data) {
+            if (typeof data === 'string') {
+                return false;
+            } else if (typeof data === 'object' && Object.keys(data).length === 0) {
+                return true;
+            } else {
                 return false;
             }
-            return true;
         };
 
         var __areEquivalent = function (data1, data2) {
@@ -501,7 +502,9 @@ define([
             }
 
             if (node.parent !== null) {
-                ASSERT(__areEquivalent(__getChildData(node.parent.data, node.relid), node.data));
+                //inherited child doesn't have an entry in the parent as long as it has not been modified
+                ASSERT(node.parent.data[node.relid] === undefined ||
+                    __areEquivalent(__getChildData(node.parent.data, node.relid), node.data));
                 node.parent.data[node.relid] = copy;
             }
 

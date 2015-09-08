@@ -14,6 +14,7 @@ describe('issue110 testing', function () {
         storage = null,
 
         projectName = 'issue110test',
+        projectId = testFixture.projectName2Id(projectName),
         gmeAuth;
 
     before(function (done) {
@@ -24,13 +25,13 @@ describe('issue110 testing', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
+                return storage.deleteProject({projectId: projectId});
             })
             .nodeify(done);
     });
 
     after(function (done) {
-        Q.all([
+        Q.allDone([
             storage.closeDatabase(),
             gmeAuth.unload()
         ])
@@ -38,8 +39,18 @@ describe('issue110 testing', function () {
     });
 
     beforeEach(function (done) {
-        storage.deleteProject({projectName: projectName})
+        gmeAuth.authorizeByUserId(gmeConfig.authentication.guestAccount, projectId, 'create',
+            {
+                read: true,
+                write: true,
+                delete: true
+            }
+        )
+            .then(function () {
+                return storage.deleteProject({projectId: projectId});
+            })
             .nodeify(done);
+
     });
 
     it('import the problematic project', function (done) {

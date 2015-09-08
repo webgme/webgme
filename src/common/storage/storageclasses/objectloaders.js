@@ -7,6 +7,9 @@
  * that is loaded when the bucket is full (gmeConfig.storage.loadBucketSize) or when a
  * timeout is triggered (gmeConfig.storage.loadBucketTimer).
  *
+ * N.B. when used directly, the user need to make sure that the same object (by hash) is not loaded within in the
+ * same bucket, (see the project-cache for example).
+ *
  * @author pmeijer / https://github.com/pmeijer
  */
 
@@ -30,11 +33,11 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
     StorageObjectLoaders.prototype.constructor = StorageObjectLoaders;
 
     // Getters
-    StorageObjectLoaders.prototype.loadObject = function (projectName, hash, callback) {
+    StorageObjectLoaders.prototype.loadObject = function (projectId, hash, callback) {
         var self = this;
-        this.logger.debug('loadObject', projectName, hash);
+        this.logger.debug('loadObject', projectId, hash);
 
-        self.loadBucket.push({projectName: projectName, hash: hash, cb: callback});
+        self.loadBucket.push({projectId: projectId, hash: hash, cb: callback});
         self.loadBucketSize += 1;
 
         function resetBucketAndLoadObjects() {
@@ -42,7 +45,7 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
             self.loadBucket = [];
             self.loadBucketTimer = null;
             self.loadBucketSize = 0;
-            self.loadObjects(projectName, myBucket);
+            self.loadObjects(projectId, myBucket);
         }
 
         if (self.loadBucketSize === 1) {
@@ -60,7 +63,7 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
         }
     };
 
-    StorageObjectLoaders.prototype.loadObjects = function (projectName, hashedObjects) {
+    StorageObjectLoaders.prototype.loadObjects = function (projectId, hashedObjects) {
         var self = this,
             hashes = {},
             data,
@@ -71,18 +74,20 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
         hashes = Object.keys(hashes);
         data = {
             hashes: hashes,
-            projectName: projectName
+            projectId: projectId
         };
 
         this.webSocket.loadObjects(data, function (err, result) {
-            if (err) {
-                throw new Error(err);
-            }
-            self.logger.debug('loadObjects returned', result);
+            //if (err) {
+            //    throw new Error(err);
+            //}
+            self.logger.debug('loadObjects returned', {metadata: result});
             for (i = 0; i < hashedObjects.length; i++) {
-                if (typeof result[hashedObjects[i].hash] === 'string') {
+                if (err) {
+                    hashedObjects[i].cb(err);
+                } else if (typeof result[hashedObjects[i].hash] === 'string') {
                     self.logger.error(result[hashedObjects[i].hash]);
-                    hashedObjects[i].cb(result[hashedObjects[i].hash]);
+                    hashedObjects[i].cb(new Error(result[hashedObjects[i].hash]));
                 } else {
                     hashedObjects[i].cb(err, result[hashedObjects[i].hash]);
                 }

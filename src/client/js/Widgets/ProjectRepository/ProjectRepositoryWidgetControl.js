@@ -31,7 +31,7 @@ define(['js/logger'], function (Logger) {
         };
 
         self._view.onDeleteBranchClick = function (branchName, oldHash) {
-            var projectName = self._client.getActiveProjectName();
+            var projectName = self._client.getActiveProjectId();
             self._client.deleteBranch(projectName, branchName, oldHash, function (err) {
                 if (err) {
                     self._logger.error(err);
@@ -43,7 +43,7 @@ define(['js/logger'], function (Logger) {
         };
 
         self._view.onCreateBranchFromCommit = function (params) {
-            var projectName = self._client.getActiveProjectName();
+            var projectName = self._client.getActiveProjectId();
             self._client.createBranch(
                 projectName,
                 params.name,
@@ -128,7 +128,7 @@ define(['js/logger'], function (Logger) {
 
         self._view.showProgressbar();
 
-        self._client.getCommits(self._client.getActiveProjectName(),
+        self._client.getCommits(self._client.getActiveProjectId(),
             this._lastCommitID || (new Date()).getTime() + 1,
             num,
             commitsLoaded);
@@ -140,7 +140,7 @@ define(['js/logger'], function (Logger) {
 
     RepositoryLogControl.prototype._refreshBranches = function () {
         var self = this,
-            projectName = self._client.getActiveProjectName();
+            projectName = self._client.getActiveProjectId();
 
         self._view.clearBranches();
 

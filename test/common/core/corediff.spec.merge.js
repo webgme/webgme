@@ -1,4 +1,5 @@
-/* jshint node:true, mocha: true, expr:true*/
+/*jshint node:true, mocha: true, expr:true*/
+/*jscs:disable disallowQuotedKeysInObjects*/
 
 /**
  * @author kecso / https://github.com/kecso
@@ -10,32 +11,30 @@ var testFixture = require('../../_globals.js');
 describe('corediff-merge', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        FS = testFixture.fs,
-        Q = testFixture.Q,
-        WebGME = testFixture.WebGME,
         logger = testFixture.logger.fork('corediff.spec.merge'),
+        expect = testFixture.expect,
         storage,
-        getJsonProject = testFixture.loadJsonFile,
-        jsonProject,
         projectName = 'corediffMergeTesting',
+        projectId = testFixture.projectName2Id(projectName),
         project,
         core,
         rootNode,
         commit,
         baseRootHash,
 
-        gmeAuth,
-
-        guestAccount = gmeConfig.authentication.guestAccount;
+        gmeAuth;
 
     before(function (done) {
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
                 storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
-                return storage.openDatabase();
             })
             .nodeify(done);
+    });
+
+    after(function (done) {
+        gmeAuth.unload(done);
     });
 
 
@@ -53,7 +52,7 @@ describe('corediff-merge', function () {
                     project.makeCommit(null,
                         [commit],
                         changeObject.rootHash,
-                        [], // no core-objects
+                        persisted.objects,
                         'apply change finished ' + new Date().getTime(),
                         function (err, commitResult) {
                             if (err) {
@@ -68,7 +67,7 @@ describe('corediff-merge', function () {
                                     return;
                                 }
                                 rootNode = r;
-                                next();
+                                next(null);
                             });
                         });
                 });
@@ -76,9 +75,6 @@ describe('corediff-merge', function () {
 
         before(function (done) {
             storage.openDatabase()
-                .then(function () {
-                    return storage.deleteProject({projectName: projectName});
-                })
                 .then(function () {
                     return testFixture.importProject(storage, {
                         projectSeed: 'test/common/core/corediff/base002.json',
@@ -100,14 +96,7 @@ describe('corediff-merge', function () {
         });
 
         after(function (done) {
-            storage.deleteProject({projectName: projectName})
-                .then(function () {
-                    storage.closeDatabase(done);
-                })
-                .catch(function (err) {
-                    logger.error(err);
-                    storage.closeDatabase(done);
-                });
+            storage.closeDatabase(done);
         });
 
         beforeEach(function (done) {
@@ -173,11 +162,13 @@ describe('corediff-merge', function () {
                         return;
                     }
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
-                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+                        params = {projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash};
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
@@ -266,11 +257,14 @@ describe('corediff-merge', function () {
                         return;
                     }
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
-                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+
+                        params = {projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash};
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
@@ -352,11 +346,13 @@ describe('corediff-merge', function () {
                         return;
                     }
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
-                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+                        params = {projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash};
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
@@ -446,14 +442,20 @@ describe('corediff-merge', function () {
                     (core.getAttribute(rootNode, 'changeA') === undefined).should.be.true;
                     (core.getAttribute(rootNode, 'changeB') === undefined).should.be.true;
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
+                        params = {
+                            projectId: projectId,
+                            commitA: changeA.commitHash,
+                            commitB: changeB.commitHash
+                        };
                         core.getAttribute(changeB.root, 'changeB').should.be.true;
                         (core.getAttribute(rootNode, 'changeA') === undefined).should.be.true;
                         (core.getAttribute(rootNode, 'changeB') === undefined).should.be.true;
-                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
@@ -556,72 +558,68 @@ describe('corediff-merge', function () {
                     'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
                 };
                 applyChange(changeA, function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    applyChange(changeB, function (err) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
-                            if (err) {
-                                done(err);
-                                return;
-                            }
-                            hash.should.be.equal(commit);
+                    expect(err).to.equal(null);
 
-                            //generate diffs
-                            core.generateTreeDiff(rootNode, changeA.root, function (err, diff) {
-                                if (err) {
-                                    done(err);
-                                    return;
-                                }
-                                diff[579542227][651215756].reg.position.x.should.be.equal(200);
-                                diff[579542227][651215756].reg.position.y.should.be.equal(200);
-                                changeA.computedDiff = diff;
-                                core.generateTreeDiff(rootNode, changeB.root, function (err, diff) {
+                    applyChange(changeB, function (err) {
+                        expect(err).to.equal(null);
+
+                        storage.getCommonAncestorCommit(
+                            {
+                                projectId: projectId,
+                                commitA: changeA.commitHash,
+                                commitB: changeB.commitHash
+                            }, function (err, hash) {
+                                expect(err).to.equal(null);
+
+                                hash.should.be.equal(commit);
+
+                                //generate diffs
+                                core.generateTreeDiff(rootNode, changeA.root, function (err, diff) {
                                     if (err) {
                                         done(err);
                                         return;
                                     }
-                                    diff[579542227][2088994530].reg.position.x.should.be.equal(300);
-                                    diff[579542227][2088994530].reg.position.y.should.be.equal(300);
-                                    changeB.computedDiff = diff;
-                                    var conflict = core.tryToConcatChanges(changeA.computedDiff, changeB.computedDiff);
-                                    conflict.items.should.be.empty;
+                                    diff[579542227][651215756].reg.position.x.should.be.equal(200);
+                                    diff[579542227][651215756].reg.position.y.should.be.equal(200);
+                                    changeA.computedDiff = diff;
+                                    core.generateTreeDiff(rootNode, changeB.root, function (err, diff) {
+                                        expect(err).to.equal(null);
 
-                                    //apply merged diff to base
-                                    var merged = {diff: conflict.merge};
-                                    applyChange(merged, function (err) {
-                                        if (err) {
-                                            done(err);
-                                            return;
-                                        }
+                                        diff[579542227][2088994530].reg.position.x.should.be.equal(300);
+                                        diff[579542227][2088994530].reg.position.y.should.be.equal(300);
+                                        changeB.computedDiff = diff;
+                                        var conflict = core.tryToConcatChanges(changeA.computedDiff,
+                                            changeB.computedDiff);
+                                        conflict.items.should.be.empty;
 
-                                        //check values
-                                        core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
-                                            if (err) {
-                                                done(err);
-                                                return;
-                                            }
-                                            core.getRegistry(a, 'position').x.should.be.equal(200);
-                                            core.getRegistry(a, 'position').y.should.be.equal(200);
-                                            core.loadByPath(merged.root, '/579542227/2088994530', function (err, a) {
+                                        //apply merged diff to base
+                                        var merged = {diff: conflict.merge};
+                                        applyChange(merged, function (err) {
+                                            expect(err).to.equal(null);
+
+                                            //check values
+                                            core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
                                                 if (err) {
                                                     done(err);
                                                     return;
                                                 }
-                                                core.getRegistry(a, 'position').x.should.be.equal(300);
-                                                core.getRegistry(a, 'position').y.should.be.equal(300);
-                                                done();
+                                                core.getRegistry(a, 'position').x.should.be.equal(200);
+                                                core.getRegistry(a, 'position').y.should.be.equal(200);
+                                                core.loadByPath(merged.root, '/579542227/2088994530',
+                                                    function (err, a) {
+                                                        expect(err).to.equal(null);
+
+                                                        core.getRegistry(a, 'position').x.should.be.equal(300);
+                                                        core.getRegistry(a, 'position').y.should.be.equal(300);
+                                                        done();
+                                                    }
+                                                );
                                             });
                                         });
                                     });
                                 });
-                            });
-                        });
+                            }
+                        );
                     });
                 });
             });
@@ -658,11 +656,13 @@ describe('corediff-merge', function () {
                         return;
                     }
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
-                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+                        params = {projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash};
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
@@ -747,11 +747,13 @@ describe('corediff-merge', function () {
                         return;
                     }
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
-                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+                        params = {projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash};
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;
@@ -835,11 +837,13 @@ describe('corediff-merge', function () {
                         return;
                     }
                     applyChange(changeB, function (err) {
+                        var params;
                         if (err) {
                             done(err);
                             return;
                         }
-                        storage.getCommonAncestorCommit({projectName: projectName, commitA: changeA.commitHash, commitB: changeB.commitHash}, function (err, hash) {
+                        params = {projectId: projectId, commitA: changeA.commitHash, commitB: changeB.commitHash};
+                        storage.getCommonAncestorCommit(params, function (err, hash) {
                             if (err) {
                                 done(err);
                                 return;

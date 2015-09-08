@@ -8,13 +8,17 @@
 var testFixture = require('../../_globals.js');
 
 
-describe.skip('Simple worker', function () {
+describe('Simple worker', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,
         gmeConfig = testFixture.getGmeConfig(),
+        guestAccount = gmeConfig.authentication.guestAccount,
         Q = testFixture.Q,
         expect = testFixture.expect,
+        agent = testFixture.superagent.agent(),
+        openSocketIo = testFixture.openSocketIo,
+        webGMESessionId,
         CONSTANTS = require('./../../../src/server/worker/constants'),
         server,
 
@@ -28,61 +32,73 @@ describe.skip('Simple worker', function () {
         storage,
         baseProjectContext = {
             name: 'WorkerProject',
+            id: '',
             commitHash: '',
             rootHash: '',
             branch: 'master'
         },
         baseProjectJson = JSON.parse(
-            testFixture.fs.readFileSync('test/server/worker/simpleworker/baseProject.json', 'utf8')
+            testFixture.fs.readFileSync('seeds/ActivePanels.json')
         ),
-        deleteProject = function (projectName, next) {
-            testFixture.deleteProject({
-                storage: storage,
-                projectName: projectName
-            }, next);
-        },
-
-
+        protocol = gmeConfig.server.https.enable ? 'https' : 'http',
+        blobDownloadUrl = protocol + '://127.0.0.1:' + gmeConfig.server.port + '/rest/blob/download/',
         oldSend = process.send,
         oldOn = process.on,
         oldExit = process.exit;
 
 
     before(function (done) {
-
-        gmeConfig.authentication.enable = false;
-        gmeConfig.authentication.allowGuests = false;
+        var project;
+        //gmeConfig.authentication.enable = true;
+        gmeConfig.authentication.allowGuests = true;
         gmeConfig.addOn.enable = true;
         gmeConfig.plugin.allowServerExecution = true;
 
         server = WebGME.standaloneServer(gmeConfig);
-        server.start(function (err) {
-            expect(err).to.equal(null);
-            testFixture.clearDBAndGetGMEAuth(gmeConfig, usedProjectNames)
-                .then(function (gmeAuth_) {
-                    gmeAuth = gmeAuth_;
-                    storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-                    return storage.openDatabase();
-                })
-                .then(function () {
-                    return storage.deleteProject({projectName: baseProjectContext.name});
-                })
-                .then(function () {
-                    return testFixture.importProject(storage,
-                        {
-                            projectSeed: 'test/server/worker/simpleworker/baseProject.json',
-                            projectName: baseProjectContext.name,
-                            branchName: baseProjectContext.branch,
-                            gmeConfig: gmeConfig,
-                            logger: logger
-                        });
-                })
-                .then(function (result) {
-                    baseProjectContext.commitHash = result.commitHash;
-                    baseProjectContext.rootHash = result.core.getHash(result.rootNode);
-                })
-                .nodeify(done);
-        });
+
+        testFixture.clearDBAndGetGMEAuth(gmeConfig, usedProjectNames)
+            .then(function (gmeAuth_) {
+                gmeAuth = gmeAuth_;
+                storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                return storage.openDatabase();
+            })
+            .then(function () {
+                return testFixture.importProject(storage,
+                    {
+                        projectSeed: 'seeds/ActivePanels.json',
+                        projectName: baseProjectContext.name,
+                        branchName: baseProjectContext.branch,
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+            })
+            .then(function (result) {
+                baseProjectContext.commitHash = result.commitHash;
+                baseProjectContext.id = result.project.projectId;
+                baseProjectContext.rootHash = result.core.getHash(result.rootNode);
+                project = result.project;
+                return project.createBranch('corruptBranch', result.commitHash);
+            })
+            .then(function (result) {
+                var invalidRoot = '#424242424242424242424',
+                    coreObjs = {};
+                coreObjs.invalidRoot = {_id: invalidRoot};
+                expect(result.status).to.equal(project.CONSTANTS.SYNCED);
+
+                return project.makeCommit('corruptBranch', [baseProjectContext.commitHash],
+                    invalidRoot, coreObjs, 'bad commit');
+            })
+            .then(function (result) {
+                expect(result.status).to.equal(project.CONSTANTS.SYNCED);
+                return Q.ninvoke(server, 'start');
+            })
+            .then(function () {
+                return openSocketIo(server, agent, guestAccount, guestAccount);
+            })
+            .then(function (result) {
+                webGMESessionId = result.webGMESessionId;
+            })
+            .nodeify(done);
     });
 
     after(function (done) {
@@ -90,13 +106,10 @@ describe.skip('Simple worker', function () {
             if (err) {
                 logger.error(err);
             }
-            storage.deleteProject({projectName: baseProjectContext.name})
-                .then(function () {
-                    return Q.all([
-                        storage.closeDatabase(),
-                        gmeAuth.unload()
-                    ]);
-                })
+            return Q.allDone([
+                storage.closeDatabase(),
+                gmeAuth.unload()
+            ])
                 .nodeify(done);
         });
     });
@@ -196,6 +209,25 @@ describe.skip('Simple worker', function () {
             .nodeify(done);
     });
 
+    it('should respond with no error to a second initialization request', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+
+    });
+
     it('should fail to execute command without initialization', function (done) {
         var worker = getSimpleWorker();
 
@@ -203,14 +235,8 @@ describe.skip('Simple worker', function () {
             command: CONSTANTS.workerCommands.getAllProjectsInfo,
             userId: 'myUser'
         })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
+            .then(function () {
+                done(new Error('missing error handling'));
             })
             .catch(function (err) {
                 expect(err.message).equal('worker has not been initialized yet');
@@ -219,158 +245,8 @@ describe.skip('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should get all projects info', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.getAllProjectsInfo,
-                    userId: 'myUser'
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.error).equal(null);
-
-                expect(msg.result).not.equal(null);
-                expect(msg.result).to.include.keys(baseProjectContext.name);
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should echo back the received parameter', function (done) {
-        var worker = getSimpleWorker(),
-            parameter = {
-                arbitrary: 'object'
-            };
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.generateJsonURL,
-                    object: parameter
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.error).equal(null);
-
-                expect(msg.result).not.equal(null);
-                expect(msg.result).deep.equal(parameter);
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should get seed info and 3 seed project files must exist', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({command: CONSTANTS.workerCommands.getSeedInfo});
-            })
-            .then(function (msg) {
-                // FIXME: anything else to check???
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
-                // FIXME: anything else to check???
-                expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.result.file).deep.equal(['ActivePanels', 'EmptyProject', 'SignalFlowSystem']);
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should create a project from a JSON object', function (done) {
-        var worker = getSimpleWorker(),
-            projectName = 'workerCreateFromFile';
-        deleteProject(projectName, function (err) {
-            expect(err).equal(null);
-
-            worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-                .then(function (msg) {
-                    expect(msg.pid).equal(process.pid);
-                    expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                    return worker.send({
-                        command: CONSTANTS.workerCommands.createProjectFromFile,
-                        name: baseProjectContext.name,
-                        json: baseProjectJson
-                    });
-                })
-                .then(function (msg) {
-                    expect(msg.pid).equal(process.pid);
-                    expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                    expect(msg.error).equal(null);
-
-                    expect(msg.resid).not.equal(null);
-
-                    return worker.send({command: CONSTANTS.workerCommands.getResult});
-                })
-                .then(function (msg) {
-                    expect(msg.pid).equal(process.pid);
-                    expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                    expect(msg.error).equal(null);
-
-                    expect(msg.result).equal(null);
-                })
-                .finally(restoreProcessFunctions)
-                .nodeify(done);
-        });
-    });
-
-    it('should fail createProjectFromFile with no parameters name and json', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({command: CONSTANTS.workerCommands.createProjectFromFile});
-            })
-            .catch(function (err) {
-                expect(err.message).equal('invalid parameters');
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should export a sub-tree of a project', function (done) {
+    // exportLibrary
+    it('should exportLibrary given a branchName.', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -380,8 +256,260 @@ describe.skip('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportLibrary,
-                    name: baseProjectContext.name,
+                    webGMESessionId: webGMESessionId,
+                    projectId: baseProjectContext.id,
+                    branchName: 'master',
+                    path: ''
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(typeof msg.result.file.hash).to.equal('string');
+                expect(msg.result.file.url).to.include(blobDownloadUrl);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should exportLibrary given a hash (rootHash)', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportLibrary,
+                    webGMESessionId: webGMESessionId,
+                    projectId: baseProjectContext.id,
                     hash: baseProjectContext.rootHash,
+                    path: ''
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(typeof msg.result.file.hash).to.equal('string');
+                expect(msg.result.file.url).to.include(blobDownloadUrl);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should exportLibrary given a commit (commitHash).', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportLibrary,
+                    webGMESessionId: webGMESessionId,
+                    projectId: baseProjectContext.id,
+                    commit: baseProjectContext.commitHash,
+                    path: ''
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(typeof msg.result.file.hash).to.equal('string');
+                expect(msg.result.file.url).to.include(blobDownloadUrl);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to exportLibrary when branchName does not exist.', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportLibrary,
+                    webGMESessionId: webGMESessionId,
+                    projectId: baseProjectContext.id,
+                    branchName: 'doesNotExist',
+                    path: ''
+                });
+            })
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Branch not found');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to exportLibrary when hash (rootHash) does not exist.', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportLibrary,
+                    webGMESessionId: webGMESessionId,
+                    projectId: baseProjectContext.id,
+                    hash: 'wrong hash',
+                    path: ''
+                });
+            })
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('ASSERT'); //because of the wrong hash format
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to exportLibrary when commit (commitHash) does not exist.', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportLibrary,
+                    webGMESessionId: webGMESessionId,
+                    projectId: baseProjectContext.id,
+                    commit: 'wrong hash',
+                    path: ''
+                });
+            })
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Failed loading commitHash');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to exportLibrary when projectId is not correct', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportLibrary,
+                    webGMESessionId: webGMESessionId,
+                    projectId: 'badProjectId',
+                    commit: baseProjectContext.commitHash,
+                    path: ''
+                });
+            })
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('badProjectId');
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should fail to exportLibrary when command parameters are invalid', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportLibrary
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('parameters');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    //TODO decide if this is a good behaviour, now the loadByPath load any path (creating empty objects on its way)
+    it.skip('should fail to export sub-tree with an unknown starting path', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportLibrary,
+                    webGMESessionId: webGMESessionId,
+                    projectId: baseProjectContext.id,
+                    commit: baseProjectContext.commitHash,
+                    path: '/bad/path'
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.request);
+                expect(msg.error).equal(null);
+
+                expect(msg.resid).not.equal(null);
+
+                return worker.send({command: CONSTANTS.workerCommands.getResult});
+            })
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Failed loading commitHashyyy');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it.skip('should exportLibrary given a branchName when result requested with delay', function (done) {
+        var worker = getSimpleWorker();
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportLibrary,
+                    webGMESessionId: webGMESessionId,
+                    projectId: baseProjectContext.id,
+                    branchName: 'master',
                     path: ''
                 });
             })
@@ -392,6 +520,9 @@ describe.skip('Simple worker', function () {
 
                 expect(msg.resid).not.equal(null);
 
+                return Q.delay(1000);
+            })
+            .then(function () {
                 return worker.send({command: CONSTANTS.workerCommands.getResult});
             })
             .then(function (msg) {
@@ -406,80 +537,146 @@ describe.skip('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should fail to export a sub-tree of a project if wrong root hash is given', function (done) {
-        var worker = getSimpleWorker();
+    // dumpMoreNodes
+    //it.skip('should dumpMoreNodes of a project', function (done) {
+    //    var worker = getSimpleWorker();
+    //
+    //    worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+    //        .then(function (msg) {
+    //            expect(msg.pid).equal(process.pid);
+    //            expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+    //
+    //            return worker.send({
+    //                command: CONSTANTS.workerCommands.dumpMoreNodes,
+    //                webGMESessionId: webGMESessionId,
+    //                projectId: baseProjectContext.id,
+    //                hash: baseProjectContext.rootHash,
+    //                nodes: ['', '/1']
+    //            });
+    //        })
+    //        .then(function (msg) {
+    //            expect(msg.pid).equal(process.pid);
+    //            expect(msg.type).equal(CONSTANTS.msgTypes.request);
+    //            expect(msg.error).equal(null);
+    //
+    //            expect(msg.resid).not.equal(null);
+    //
+    //            return worker.send({command: CONSTANTS.workerCommands.getResult});
+    //        })
+    //        .then(function (msg) {
+    //            expect(msg.pid).equal(process.pid);
+    //            expect(msg.type).equal(CONSTANTS.msgTypes.result);
+    //            expect(msg.error).equal(null);
+    //
+    //            expect(msg.result).not.equal(null);
+    //            expect(msg.result).to.have.length(2);
+    //        })
+    //        .finally(restoreProcessFunctions)
+    //        .nodeify(done);
+    //});
+    //
+    //it.skip('should fail to dumpMoreNodes if invalid hash is given', function (done) {
+    //    var worker = getSimpleWorker(),
+    //        invalidHash = '#4242424242424242424242424242424242424242';
+    //
+    //    worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+    //        .then(function (msg) {
+    //            expect(msg.pid).equal(process.pid);
+    //            expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+    //
+    //            return worker.send({
+    //                command: CONSTANTS.workerCommands.dumpMoreNodes,
+    //                webGMESessionId: webGMESessionId,
+    //                projectId: baseProjectContext.id,
+    //                hash: invalidHash,
+    //                nodes: ['', '/1']
+    //            });
+    //        })
+    //        .then(function (msg) {
+    //            expect(msg.pid).equal(process.pid);
+    //            expect(msg.type).equal(CONSTANTS.msgTypes.request);
+    //            expect(msg.error).equal(null);
+    //
+    //            expect(msg.resid).not.equal(null);
+    //
+    //            return worker.send({command: CONSTANTS.workerCommands.getResult});
+    //        })
+    //        .then(function () {
+    //            done(new Error('missing error handling'));
+    //        })
+    //        .catch(function (err) {
+    //            expect(err.message).to.include(invalidHash);
+    //            done();
+    //        })
+    //        .finally(restoreProcessFunctions)
+    //        .done();
+    //});
+    //
+    //it.skip('should fail to dumpMoreNodes if invalid projectId is given', function (done) {
+    //    var worker = getSimpleWorker();
+    //
+    //    worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+    //        .then(function (msg) {
+    //            expect(msg.pid).equal(process.pid);
+    //            expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+    //
+    //            return worker.send({
+    //                command: CONSTANTS.workerCommands.dumpMoreNodes,
+    //                webGMESessionId: webGMESessionId,
+    //                projectId: 'badProjectId',
+    //                hash: baseProjectContext.rootHash,
+    //                nodes: ['', '/1']
+    //            });
+    //        })
+    //        .then(function (msg) {
+    //            expect(msg.pid).equal(process.pid);
+    //            expect(msg.type).equal(CONSTANTS.msgTypes.request);
+    //            expect(msg.error).equal(null);
+    //
+    //            expect(msg.resid).not.equal(null);
+    //
+    //            return worker.send({command: CONSTANTS.workerCommands.getResult});
+    //        })
+    //        .then(function () {
+    //            done(new Error('missing error handling'));
+    //        })
+    //        .catch(function (err) {
+    //            expect(err.message).to.include('badProjectId');
+    //            done();
+    //        })
+    //        .finally(restoreProcessFunctions)
+    //        .done();
+    //});
+    //
+    //it.skip('should fail to dumpMoreNodes when command parameters are invalid', function (done) {
+    //    var worker = getSimpleWorker();
+    //
+    //    worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+    //        .then(function (msg) {
+    //            expect(msg.pid).equal(process.pid);
+    //            expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+    //
+    //            return worker.send({
+    //                command: CONSTANTS.workerCommands.dumpMoreNodes
+    //            });
+    //        })
+    //        .then(function (/*msg*/) {
+    //            done(new Error('missing error handling'));
+    //        })
+    //        .catch(function (err) {
+    //            expect(err.message).to.include('parameters');
+    //
+    //            done();
+    //        })
+    //        .finally(restoreProcessFunctions)
+    //        .done();
+    //});
 
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.exportLibrary,
-                    name: baseProjectContext.name,
-                    hash: 'wrong hash',
-                    path: ''
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .catch(function (err) {
-                expect(err.message).to.contain('ASSERT'); //because of the wrong hash format
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it.skip('should fail to export sub-tree with an unknown starting path');
-
-    it('should dump nodes of a project', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.dumpMoreNodes,
-                    name: baseProjectContext.name,
-                    hash: baseProjectContext.rootHash,
-                    nodes: ['', '/1']
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.error).equal(null);
-
-                expect(msg.result).not.equal(null);
-                expect(msg.result).to.have.length(2);
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should set and get a project\'s info', function (done) {
+    // seedProject
+    it('should seedProject from an existing project', function (done) {
         var worker = getSimpleWorker(),
-            projectInfo = {
-                arbitrary: 'json object'
-            };
+            projectName = 'workerSeedFromDB',
+            projectId = testFixture.projectName2Id(projectName);
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
@@ -487,58 +684,41 @@ describe.skip('Simple worker', function () {
                 expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
 
                 return worker.send({
-                    command: CONSTANTS.workerCommands.setProjectInfo,
-                    webGMESessionId: 'mySession',
-                    projectId: baseProjectContext.name,
-                    info: projectInfo
+                    command: CONSTANTS.workerCommands.seedProject,
+                    projectName: projectName,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    webGMESessionId: webGMESessionId,
+                    type: 'db',
+                    seedName: baseProjectContext.id,
                 });
             })
             .then(function (msg) {
                 expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
                 expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.error).equal(null);
-
-                expect(msg.result).equal(null);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.getProjectInfo,
-                    webGMESessionId: 'mySession',
-                    projectId: baseProjectContext.name
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.error).equal(null);
-
                 expect(msg.result).not.equal(null);
-
-                expect(msg.result).deep.equal(projectInfo);
+                expect(msg.result).to.include.keys('projectId');
+                expect(msg.result.projectId).to.equal(projectId);
+                return storage.getProjects({branches: true});
+            })
+            .then(function (projects) {
+                var i,
+                    hadProject = false;
+                for (i = 0; i < projects.length; i += 1) {
+                    if (projects[i]._id === projectId) {
+                        hadProject = true;
+                        break;
+                    }
+                }
+                expect(hadProject).to.equal(true,
+                    'getProjects did not return the seeded project' + projectId);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
     });
 
-    it('should return all used info tags from the database', function (done) {
-        var worker = getSimpleWorker();
+    it('should fail to seedProject from an invalid project', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'workerSeedFromDB2';
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
@@ -546,181 +726,248 @@ describe.skip('Simple worker', function () {
                 expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
 
                 return worker.send({
-                    command: CONSTANTS.workerCommands.getAllInfoTags,
-                    webGMESessionId: 'mySession',
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.error).equal(null);
-
-                expect(msg.result).not.equal(null);
-                expect(typeof msg.result).equal('object');
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should create a project from db seed', function (done) {
-        var worker = getSimpleWorker(),
-            projectName = 'workerSeedFromDB';
-
-        deleteProject(projectName, function (err) {
-            expect(err).equal(null);
-
-            worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-                .then(function (msg) {
-                    expect(msg.pid).equal(process.pid);
-                    expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                    return worker.send({
-                        command: CONSTANTS.workerCommands.seedProject,
-                        projectName: projectName,
-                        type: 'db',
-                        seedName: baseProjectContext.name,
-                    });
-                })
-                .then(function (msg) {
-                    expect(msg.pid).equal(process.pid);
-                    expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                    expect(msg.error).equal(null);
-
-                    expect(msg.resid).not.equal(null);
-                    return worker.send({command: CONSTANTS.workerCommands.getResult});
-                })
-                .then(function (msg) {
-                    expect(msg.error).equal(null);
-
-
-                    return worker.send({
-                        command: CONSTANTS.workerCommands.getAllProjectsInfo,
-                        userId: 'myUser'
-                    });
-                })
-                .then(function (/*msg*/) {
-
-                    return worker.send({command: CONSTANTS.workerCommands.getResult});
-                })
-                .then(function (msg) {
-
-                    expect(msg.result).not.equal(null);
-                    expect(msg.result).to.include.keys(projectName);
-                })
-                .finally(restoreProcessFunctions)
-                .nodeify(done);
-        });
-    });
-
-    it('should create a project from file seed', function (done) {
-        var worker = getSimpleWorker(),
-            projectName = 'workerSeedFromFile';
-
-        deleteProject(projectName, function (err) {
-            expect(err).equal(null);
-
-            worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-                .then(function (msg) {
-                    expect(msg.pid).equal(process.pid);
-                    expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                    return worker.send({
-                        command: CONSTANTS.workerCommands.seedProject,
-                        projectName: 'workerSeedFromFile',
-                        type: 'file',
-                        seedName: 'EmptyProject',
-                    });
-                })
-                .then(function (msg) {
-                    expect(msg.pid).equal(process.pid);
-                    expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                    expect(msg.error).equal(null);
-
-                    expect(msg.resid).not.equal(null);
-                    return worker.send({command: CONSTANTS.workerCommands.getResult});
-                })
-                .then(function (msg) {
-                    expect(msg.error).equal(null);
-
-
-                    return worker.send({
-                        command: CONSTANTS.workerCommands.getAllProjectsInfo,
-                        userId: 'myUser'
-                    });
-                })
-                .then(function (/*msg*/) {
-
-                    return worker.send({command: CONSTANTS.workerCommands.getResult});
-                })
-                .then(function (msg) {
-
-                    expect(msg.result).not.equal(null);
-                    expect(msg.result).to.include.keys(projectName);
-                })
-                .finally(restoreProcessFunctions)
-                .nodeify(done);
-        });
-    });
-
-    it('should create and delete branches of project', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.setBranch,
-                    webGMESessionId: 'mySession',
-                    project: baseProjectContext.name,
-                    branch: 'wrokerSetBranch',
-                    old: '',
-                    new: baseProjectContext.commitHash
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
-                expect(msg.error).equal(null);
-
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.setBranch,
-                    webGMESessionId: 'mySession',
-                    project: baseProjectContext.name,
-                    branch: 'wrokerSetBranch',
-                    old: baseProjectContext.commitHash,
-                    new: ''
+                    command: CONSTANTS.workerCommands.seedProject,
+                    projectName: projectName,
+                    webGMESessionId: webGMESessionId,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    type: 'db',
+                    seedName: 'invalidProjectId',
                 });
             })
             .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('invalidProjectId');
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
 
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
+    it('should fail to seedProject from an invalid branch', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'workerSeedFromDB2';
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    projectName: projectName,
+                    webGMESessionId: webGMESessionId,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    type: 'db',
+                    seedName: baseProjectContext.id,
+                    seedBranch: 'invalidBranch'
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Branch did not exist [invalidBranch');
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+
+    });
+
+    it('should fail to seedProject from a corrupted branch', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'workerSeedFromDB3';
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    projectName: projectName,
+                    webGMESessionId: webGMESessionId,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    type: 'db',
+                    seedName: baseProjectContext.id,
+                    seedBranch: 'corruptBranch'
+                });
+            })
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('ASSERT failed');
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should seedProject from a file seed', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'workerSeedFromFile1',
+            projectId = testFixture.projectName2Id(projectName);
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    webGMESessionId: webGMESessionId,
+                    projectName: projectName,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    type: 'file',
+                    seedName: 'EmptyProject',
+                });
             })
             .then(function (msg) {
-
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
                 expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(msg.result).to.include.keys('projectId');
+                expect(msg.result.projectId).to.equal(projectId);
+
+                return storage.getProjects({branches: true});
+            })
+            .then(function (projects) {
+                var i,
+                    hadProject = false;
+                for (i = 0; i < projects.length; i += 1) {
+                    if (projects[i]._id === projectId) {
+                        hadProject = true;
+                        break;
+                    }
+                }
+                expect(hadProject).to.equal(true,
+                    'getProjects did not return the seeded project' + projectId);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
     });
 
+    it('should fail to seedProject from an unknown file seed', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'workerSeedFromFile2';
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    webGMESessionId: webGMESessionId,
+                    projectName: projectName,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    type: 'file',
+                    seedName: 'UnknownSeed',
+                });
+            })
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('unknown file seed [UnknownSeed');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should fail to seedProject when disabled', function (done) {
+        var worker = getSimpleWorker(),
+            altConfig = JSON.parse(JSON.stringify(gmeConfig)),
+            projectName = 'workerSeedFromFile2';
+        altConfig.seedProjects.enable = false;
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: altConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    webGMESessionId: webGMESessionId,
+                    projectName: projectName,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    type: 'file',
+                    seedName: 'UnknownSeed',
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('unknown file seed [UnknownSeed');
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should fail to seedProject with invalid parameters', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    webGMESessionId: webGMESessionId,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    type: 'file',
+                    seedName: 'UnknownSeed',
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Invalid parameters');
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should fail to seedProject with invalid parameters', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    webGMESessionId: webGMESessionId,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    type: 'unknownType',
+                    projectName: 'someProject',
+                    seedName: 'UnknownSeed',
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Unknown seeding type [unknownType');
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+    // addOn
     it('should be able to start-query-stop addon', function (done) {
         var worker = getSimpleWorker();
 
@@ -731,10 +978,10 @@ describe.skip('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerStart,
-                    webGMESessionId: 'mySession',
-                    project: baseProjectContext.name,
+                    webGMESessionId: webGMESessionId,
+                    projectId: baseProjectContext.id,
                     branch: baseProjectContext.branch,
-                    workerName: 'TestAddOn'
+                    addOnName: 'TestAddOn'
                 });
             })
             .then(function (msg) {
@@ -744,6 +991,7 @@ describe.skip('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerQuery,
+                    webGMESessionId: webGMESessionId,
                     arbitrary: 'object'
                 });
             })
@@ -765,15 +1013,139 @@ describe.skip('Simple worker', function () {
             .nodeify(done);
     });
 
+    it('should fail to query addon without stopping it', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.connectedWorkerQuery,
+                    webGMESessionId: webGMESessionId,
+                    arbitrary: 'object'
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('No AddOn is running');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should fail to start addOn with invalid parameters', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.connectedWorkerStart,
+                    webGMESessionId: webGMESessionId,
+                    workerName: 'TestAddOn'
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('Missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('parameter');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should respond with error to connectedWorkerStart if addOn is not allowed', function (done) {
+        var worker = getSimpleWorker(),
+            altConfig = JSON.parse(JSON.stringify(gmeConfig));
+
+        altConfig.addOn.enable = false;
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: altConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.connectedWorkerStart
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling in addOn functionality of worker'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('not enabled');
+            })
+            .finally(restoreProcessFunctions)
+            .done(done);
+    });
+
+    it('should respond with error to connectedWorkerQuery if addOn is not allowed', function (done) {
+        var worker = getSimpleWorker(),
+            altConfig = JSON.parse(JSON.stringify(gmeConfig));
+
+        altConfig.addOn.enable = false;
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: altConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.connectedWorkerQuery
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling in addOn functionality of worker'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('not enabled');
+            })
+            .finally(restoreProcessFunctions)
+            .done(done);
+    });
+
+    it('should respond with error to connectedWorkerStop if addOn is not allowed', function (done) {
+        var worker = getSimpleWorker(),
+            altConfig = JSON.parse(JSON.stringify(gmeConfig));
+
+        altConfig.addOn.enable = false;
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: altConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.connectedWorkerStop
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling in addOn functionality of worker'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('not enabled');
+            })
+            .finally(restoreProcessFunctions)
+            .done(done);
+    });
+
+    // executePlugin
     it('should execute a plugin', function (done) {
         var worker = getSimpleWorker(),
-            projectName = 'workerSeedFromFile',
             pluginContext = {
                 managerConfig: {
                     host: '127.0.0.1', //FIXME
                     port: '27017', //FIXME
-                    database: "webgme_tests", //FIXME
-                    project: baseProjectContext.name,
+                    database: 'webgme_tests', //FIXME
+                    project: baseProjectContext.id,
                     token: '',
                     selected: '',
                     commit: baseProjectContext.commitHash,
@@ -782,39 +1154,34 @@ describe.skip('Simple worker', function () {
                 }
             };
 
-        //deleteProject(projectName, function (err) {
-        //    expect(err).equal(null);
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
 
-            worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-                .then(function (msg) {
-                    expect(msg.pid).equal(process.pid);
-                    expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+                return worker.send({
+                    command: CONSTANTS.workerCommands.executePlugin,
+                    name: 'MinimalWorkingExample',
+                    userId: 'myUser',
+                    webGMESessionId: webGMESessionId,
+                    context: pluginContext
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
 
-                    return worker.send({
-                        command: CONSTANTS.workerCommands.executePlugin,
-                        name: 'MinimalWorkingExample',
-                        userId: 'myUser',
-                        webGMESessionId: 'mySession',
-                        context: pluginContext
-                    });
-                })
-                .then(function (msg) {
-                    expect(msg.pid).equal(process.pid);
-                    expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                    expect(msg.error).equal(null);
-
-                    expect(msg.result).not.equal(null);
-                    expect(msg.result.success).equal(true);
-                    expect(msg.result.pluginName).equal('Minimal Working Example');
-                })
-                .finally(restoreProcessFunctions)
-                .nodeify(done);
-//        });
+                expect(msg.result).not.equal(null);
+                expect(msg.result.success).equal(true);
+                expect(msg.result.pluginName).equal('Minimal Working Example');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
     });
 
     it('should fail to execute a plugin if the server execution is not allowed', function (done) {
         var worker = getSimpleWorker(),
-            projectName = 'workerSeedFromFile',
             gmeConfigCopy = JSON.parse(JSON.stringify(gmeConfig)),
             pluginContext = {
                 managerConfig: {
@@ -831,33 +1198,329 @@ describe.skip('Simple worker', function () {
             };
 
         gmeConfigCopy.plugin.allowServerExecution = false;
-        deleteProject(projectName, function (err) {
-            expect(err).equal(null);
 
-            worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfigCopy})
-                .then(function (msg) {
-                    expect(msg.pid).equal(process.pid);
-                    expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfigCopy})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
 
-                    return worker.send({
-                        command: CONSTANTS.workerCommands.executePlugin,
-                        name: 'MinimalWorkingExample',
-                        userId: 'myUser',
-                        webGMESessionId: 'mySession',
-                        context: pluginContext
-                    });
-                })
-                .then(function (msg) {
-                    expect(msg.pid).equal(process.pid);
-                    expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                    expect(msg.error).equal(null);
+                return worker.send({
+                    command: CONSTANTS.workerCommands.executePlugin,
+                    name: 'MinimalWorkingExample',
+                    userId: 'myUser',
+                    webGMESessionId: 'mySession',
+                    context: pluginContext
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
 
-                    expect(msg.result).not.equal(null);
-                    expect(msg.result.success).equal(false);
-                    expect(msg.result.messages[0].message).equal('plugin execution on server side is disabled');
-                })
-                .finally(restoreProcessFunctions)
-                .nodeify(done);
-        });
+                expect(msg.result).not.equal(null);
+                expect(msg.result.success).equal(false);
+                expect(msg.result.messages[0].message).equal('plugin execution on server side is disabled');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to execute a plugin on an invalid project', function (done) {
+        var worker = getSimpleWorker(),
+            pluginContext = {
+                managerConfig: {
+                    project: 'invalidProjectId',
+                    token: '',
+                    selected: '',
+                    commit: baseProjectContext.commitHash,
+                    branchName: baseProjectContext.branch,
+                    activeSelection: []
+                }
+            };
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.executePlugin,
+                    name: 'MinimalWorkingExample',
+                    userId: 'myUser',
+                    webGMESessionId: webGMESessionId,
+                    context: pluginContext
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('invalidProjectId');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should fail to execute a non-existent plugin', function (done) {
+        var worker = getSimpleWorker(),
+            pluginContext = {
+                managerConfig: {
+                    project: baseProjectContext.id,
+                    selected: '',
+                    commit: baseProjectContext.commitHash,
+                    branchName: baseProjectContext.branch,
+                    activeSelection: []
+                }
+            };
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.executePlugin,
+                    name: 'NonExistentPlugin',
+                    userId: 'myUser',
+                    webGMESessionId: webGMESessionId,
+                    context: pluginContext
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('NonExistentPlugin');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should fail to execute a plugin with invalid command parameters', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.executePlugin,
+                    name: 'MinimalWorkingExample',
+                    userId: 'myUser',
+                    webGMESessionId: webGMESessionId,
+                    context: 'no context'
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('invalid parameters');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    // merge
+    it('should merge automatically an empty change into the master branch', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'WorkerProject',
+            projectId = testFixture.projectName2Id(projectName),
+            context = baseProjectContext;
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.autoMerge,
+                    projectId: projectId,
+                    webGMESessionId: webGMESessionId,
+                    mine: context.commitHash,
+                    theirs: context.commitHash
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+                expect(msg.resid).not.equal(null);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+
+    });
+
+    it('should fail to merge automatically if project id is invalid', function (done) {
+        var worker = getSimpleWorker(),
+            context = baseProjectContext;
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.autoMerge,
+                    projectId: 'invalidProjectId',
+                    webGMESessionId: webGMESessionId,
+                    mine: context.commitHash,
+                    theirs: context.commitHash
+                });
+            })
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('invalidProjectId');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+
+    });
+
+    it('should resolve automatically an empty change into the master branch', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'WorkerProject',
+            projectId = testFixture.projectName2Id(projectName);
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.resolve,
+                    projectId: projectId,
+                    userId: gmeConfig.authentication.guestAccount,
+                    webGMESessionId: webGMESessionId,
+                    partial: {
+                        projectId: baseProjectContext.id,
+                        baseCommitHash: baseProjectContext.commitHash,
+                        conflict: {
+                            items: [],
+                            merge: {}
+                        }
+                    }
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+                expect(msg.resid).not.equal(null);
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+
+    });
+
+    it('should fail to resolve an invalidProject', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.resolve,
+                    projectId: 'invalidProjectId',
+                    userId: gmeConfig.authentication.guestAccount,
+                    webGMESessionId: webGMESessionId,
+                    partial: {
+                        projectId: 'invalidProjectId',
+                        baseCommitHash: baseProjectContext.commitHash,
+                        conflict: {
+                            items: [],
+                            merge: {}
+                        }
+                    }
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.request);
+                expect(msg.error).equal(null);
+                expect(msg.resid).not.equal(null);
+
+                return worker.send({command: CONSTANTS.workerCommands.getResult});
+            })
+            .then(function (/*msg*/) {
+                done(new Error('Missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('invalidProjectId');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+
+    });
+
+    // wrong / no command
+    it('should fail to execute wrong command', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: 'unknown command'
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('unknown command');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should fail to execute request without command', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({});
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('unknown command');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
     });
 });

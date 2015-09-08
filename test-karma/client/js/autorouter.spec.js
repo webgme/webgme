@@ -205,6 +205,13 @@ describe('AutoRouter', function () {
             });
         });
 
+        it('issue/404_setStartPointPrev_is_not_a_function', function (done) {
+            requirejs(['text!aRtestCases/issue404.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions));
+                done();
+            });
+        });
+
         it('should not move box that doesn\'t exist', function (done) {
             requirejs(['text!aRtestCases/finding_correct_buffer_box.json'], function (actions) {
                 bugPlayer.expectedErrors.push(/Box does not exist/);
@@ -215,11 +222,20 @@ describe('AutoRouter', function () {
         it('should not contain skew edge w/ async routing', function (done) {
             requirejs(['text!aRtestCases/simplifyPathsbug.json'], function (actions) {
                 bugPlayer.test(JSON.parse(actions), {}, function() {
-                    bugPlayer.getPathPoints('C_000032', function(points) {
+                    bugPlayer.getPathPoints('C_000032', function(/*points*/) {
                         // TODO: Add API for executing stuff after routeAsync is done...
                         // utils.validatePoints(points);
                         done();
                     });
+                });
+            });
+        });
+
+        it('issue/447_autorouter_cant_retrieve_end_port', function (done) {
+            requirejs(['text!aRtestCases/issue447.json'], function (actions) {
+                bugPlayer.test(JSON.parse(actions), {}, function() {
+                    // Check that paths are routed
+                    setTimeout(done,200);
                 });
             });
         });
@@ -522,6 +538,12 @@ describe('AutoRouter', function () {
                 router.addPath({src: box1.ports[srcId], dst: box2.ports[dstId]});
 
                 router.routeAsync({
+                    first: function() {
+                        // Check that there is a temp path
+                        path = router.graph.paths[0];
+                        assert(path, 'Missing path');
+                        assert(path.points.length >= 2, 'Path missing temporary points');
+                    },
                     callback: function (paths) {
                         var path = paths[0];
                         assert(path.points.length > 2,
@@ -530,33 +552,28 @@ describe('AutoRouter', function () {
                     }
                 });
 
-                // Check that there is a temp path
-                path = router.graph.paths[0];
-                assert(path, 'Missing path');
-                assert(path.points.length >= 2, 'Path missing temporary points');
             });
 
-            it('routeAsync should stop optimizing if path is disconnected', function (done) {
+            it('should reconnect paths disconnected during routeAsync', function (done) {
                 var boxes = utils.addBoxes([[100, 100], [200, 200], [300, 300]]),
-                    called = false,
-                    testFn = function () {
-                        assert(called, 'Callback (redrawing connections) was not called!');
-                        done();
-                    },
+                    first = true,
                     path;
 
                 utils.connectAll(boxes);
                 router.routeAsync({
                     update: function () {
-                        path = router.graph.paths[0];
-                        router.graph.disconnect(path);
+                        if (first) {
+                            path = router.graph.paths[0];
+                            router.graph.disconnect(path);
+                            first = false;
+                        }
                     },
                     callback: function (/* paths */) {
-                        called = true;
+                        // Check that the disconnected path has been connected
+                        assert(router.graph.paths[0].points.length > 0);
+                        done();
                     }
                 });
-
-                setTimeout(testFn, 100);
             });
         });
 
@@ -964,7 +981,7 @@ describe('AutoRouter', function () {
 
     });
 
-    describe.skip('Replay tests', function() {
+    describe('Replay tests', function() {
         describe('Standard', function () {
             // Set up the Autorouter as a web worker
             before(function() {
@@ -973,7 +990,7 @@ describe('AutoRouter', function () {
             describe('Tests', replayTests);
         });
 
-        describe('Web Worker', function () {
+        describe.skip('Web Worker', function () {
             // Set up the Autorouter as a web worker
             before(function() {
                 bugPlayer.useWebWorker(true);

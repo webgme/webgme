@@ -13,6 +13,7 @@ describe('meta core', function () {
         logger = testFixture.logger.fork('metacore.spec'),
         storage,
         projectName = 'coreMetaTesting',
+        projectId = testFixture.projectName2Id(projectName),
         project,
         core,
         root,
@@ -31,14 +32,11 @@ describe('meta core', function () {
                 storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
             })
-            .then(function () {
-                return storage.deleteProject({projectName: projectName});
-            })
             .nodeify(done);
     });
 
     after(function (done) {
-        Q.all([
+        Q.allDone([
             storage.closeDatabase(),
             gmeAuth.unload()
         ])
@@ -48,12 +46,10 @@ describe('meta core', function () {
     beforeEach(function (done) {
         storage.openDatabase()
             .then(function () {
-                return storage.deleteProject({projectName: projectName});
-            })
-            .then(function () {
                 return storage.createProject({projectName: projectName});
             })
-            .then(function (project) {
+            .then(function (dbProject) {
+                var project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
                 core = new testFixture.WebGME.core(project, {
                     globConf: gmeConfig,
                     logger: testFixture.logger.fork('meta-core:core')
@@ -94,7 +90,7 @@ describe('meta core', function () {
     });
 
     afterEach(function (done) {
-        storage.deleteProject({projectName: projectName})
+        storage.deleteProject({projectId: projectId})
             .then(function () {
                 storage.closeDatabase(done);
             })

@@ -20,9 +20,9 @@
   box-shadow: inset 0px 0px 7px 0px rgba(0, 0, 0, 0.15); }
   .model-decorator .name {
     white-space: nowrap;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: bold;
-    text-transform: uppercase;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -38,7 +38,6 @@
     font-size: 10px;
     min-height: 1px;
     width: 121px;
-    z-index: 10;
     position: relative; }
     .model-decorator .ports .left {
       display: inline-block;

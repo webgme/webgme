@@ -17,7 +17,9 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         CSS_NAMESPACE = 'pgp',
         CLASS_CLOSED = 'closed',
         CLASS_CONTROLLER_ROW = 'cr',
-        RESET_BUTTON_BASE = $('<i class="glyphicon glyphicon-remove-circle btn-reset" title="Reset value"/>');
+        RESET_BUTTON_BASE = $('<i class="glyphicon glyphicon-remove-circle btn-reset" title="Reset value"/>'),
+        INVALID_BUTTON_BASE = $('<i class="glyphicon glyphicon-exclamation-sign btn-reset" ' +
+            'title="Remove META-invalid property"/>');
 
     PropertyGridPart = function (params) {
         if (params.el) {
@@ -43,9 +45,9 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
 
         this._name = params.name || undefined;
 
-        if (this._name === CONSTANTS.PROPERTY_GROUP_META) {
-            this._toggleClosed();
-        }
+        //if (this._name === CONSTANTS.PROPERTY_GROUP_META) {
+        //    this._toggleClosed();
+        //}
 
         this._parent = params.parent;
 
@@ -150,11 +152,11 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         var widget,
             container = $('<div/>'),
             spnName = $('<span/>', {class: 'property-name'}),
-            divReset = $('<div/>', {class: 'p-reset'}),
+            divAction = $('<div/>', {class: 'p-reset'}),
             li,
             self = this,
             extraCss = {},
-            resetBtn;
+            actionBtn;
 
         if (this.__widgets[propertyDesc.name] !== undefined) {
             throw new Error('You already have a widget with the name "' + propertyDesc.name + '"');
@@ -196,14 +198,20 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
 
             spnName.css(extraCss);
 
-            //resettable
-            if (propertyDesc.options.resetable === true) {
-                resetBtn = RESET_BUTTON_BASE.clone();
-                divReset.append(resetBtn);
+            //invalid
+            if (propertyDesc.options.invalid === true) {
+                actionBtn = INVALID_BUTTON_BASE.clone();
+
+            } else if (propertyDesc.options.resetable === true) {
+                actionBtn = RESET_BUTTON_BASE.clone();
+            }
+
+            if (actionBtn) {
+                divAction.append(actionBtn);
 
                 spnName.addClass('p-reset');
 
-                resetBtn.on('click', function (event) {
+                actionBtn.on('click', function (event) {
                     self._reset(propertyDesc.id);
                     event.stopPropagation();
                     event.preventDefault();
@@ -211,7 +219,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
             }
         }
 
-        container.append(spnName).append(divReset).append(widget.el);
+        container.append(spnName).append(divAction).append(widget.el);
 
         li = this._addRow(undefined, container, undefined);
 

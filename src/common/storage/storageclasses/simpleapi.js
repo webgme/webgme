@@ -33,25 +33,6 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     StorageSimpleAPI.prototype.constructor = StorageSimpleAPI;
 
     /**
-     * Callback for getProjectNames.
-     *
-     * @callback StorageSimpleAPI~getProjectNamesCallback
-     * @param {string} err - error string.
-     * @param {string[]} projectNames - Names of all projects the user has at least read-access to.
-     */
-
-    /**
-     * Retrieves all the project names where the user has at least read access.
-     *
-     * @param {StorageSimpleAPI~getProjectNamesCallback} callback
-     */
-    StorageSimpleAPI.prototype.getProjectNames = function (callback) {
-        var data = {};
-        this.logger.debug('invoking getProjectNames', data);
-        this.webSocket.getProjectNames(data, callback);
-    };
-
-    /**
      * Callback for getProjects.
      *
      * @callback StorageSimpleAPI~getProjectsCallback
@@ -59,7 +40,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
      * @param {{object[]} projects - All projects in the database.
      * @example
      * // projects is of the form
-     * // [{ name: 'ProjectName', read: true, write: false, delete: false} ]
+     * // [{ name: 'projectId', read: true, write: false, delete: false} ]
      */
 
     /**
@@ -67,10 +48,9 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
      *
      * @param {StorageSimpleAPI~getProjectsCallback} callback
      */
-    StorageSimpleAPI.prototype.getProjects = function (callback) {
-        var data = {};
-        this.logger.debug('invoking getProjects', data);
-        this.webSocket.getProjects(data, callback);
+    StorageSimpleAPI.prototype.getProjects = function (options, callback) {
+        this.logger.debug('invoking getProjects', {metadata: options});
+        this.webSocket.getProjects(options, callback);
     };
 
     /**
@@ -82,7 +62,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
      * @example
      * // projectsWithBranches is of the form
      * // [{
-     * //    name: 'ProjectName',
+     * //    name: 'projectId',
      * //    read: true, //will always be true
      * //    write: false,
      * //    delete: false
@@ -93,99 +73,138 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
      * // }]
      */
 
-    /**
-     * Retrieves all the access info for all projects.
-     *
-     * @param {StorageSimpleAPI~getProjectsAndBranches} callback
-     */
-    StorageSimpleAPI.prototype.getProjectsAndBranches = function (callback) {
-        var data = {};
-        this.logger.debug('invoking getProjectsAndBranches', data);
-        this.webSocket.getProjectsAndBranches(data, callback);
-    };
 
-
-    StorageSimpleAPI.prototype.getBranches = function (projectName, callback) {
+    StorageSimpleAPI.prototype.getBranches = function (projectId, callback) {
         var data = {
-            projectName: projectName
+            projectId: projectId
         };
-        this.logger.debug('invoking getBranches', data);
+        this.logger.debug('invoking getBranches', {metadata: data});
         this.webSocket.getBranches(data, callback);
     };
 
-    StorageSimpleAPI.prototype.getCommits = function (projectName, before, number, callback) {
+    StorageSimpleAPI.prototype.getCommits = function (projectId, before, number, callback) {
         var data = {
-            projectName: projectName,
+            projectId: projectId,
             before: before,
             number: number
         };
-        this.logger.debug('invoking getCommits', data);
+        this.logger.debug('invoking getCommits', {metadata: data});
         this.webSocket.getCommits(data, callback);
     };
 
-    StorageSimpleAPI.prototype.getLatestCommitData = function (projectName, branchName, callback) {
+    StorageSimpleAPI.prototype.getBranchHash = function (projectId, branchName, callback) {
         var data = {
-            projectName: projectName,
+            projectId: projectId,
             branchName: branchName
         };
-        this.logger.debug('invoking getLatestCommitData', data);
+        this.logger.debug('invoking getBranchHash', {metadata: data});
+        this.webSocket.getBranchHash(data, callback);
+    };
+
+    StorageSimpleAPI.prototype.getLatestCommitData = function (projectId, branchName, callback) {
+        var data = {
+            projectId: projectId,
+            branchName: branchName
+        };
+        this.logger.debug('invoking getLatestCommitData', {metadata: data});
         this.webSocket.getLatestCommitData(data, callback);
     };
 
-    // Setters
-    //StorageSimpleAPI.prototype.createProject = function (projectName, parameters, callback) {
-    //    var data = {
-    //        projectName: projectName,
-    //        parameters: parameters
-    //    };
-    //
-    //    this.logger.debug('invoking createProject');
-    //    this.webSocket.createProject(data, callback);
-    //};
-
-    StorageSimpleAPI.prototype.deleteProject = function (projectName, callback) {
+    StorageSimpleAPI.prototype.getCommonAncestorCommit = function (projectId, commitA, commitB, callback) {
         var data = {
-            projectName: projectName
+            commitA: commitA,
+            commitB: commitB,
+            projectId: projectId
         };
-        this.logger.debug('invoking deleteProject', data);
+        this.logger.debug('invoking getCommonAncestorCommit', {metadata: data});
+        this.webSocket.getCommonAncestorCommit(data, callback);
+    };
+
+    // Setters
+    StorageSimpleAPI.prototype.createProject = function (projectName, ownerId, callback) {
+        var self = this,
+            data = {
+                projectName: projectName,
+                ownerId: ownerId
+            };
+
+        if (callback === undefined && typeof ownerId === 'function') {
+            callback = ownerId;
+            data.ownerId = undefined;
+        }
+
+        this.logger.debug('invoking createProject', {metadata: data});
+
+        this.webSocket.createProject(data, function (err, projectId) {
+            if (err) {
+                self.logger.error('cannot create project ', projectName, err);
+                callback(err);
+                return;
+            }
+            self.logger.debug('Project created, projectId', projectId);
+
+            callback(err, projectId);
+        });
+    };
+
+    StorageSimpleAPI.prototype.deleteProject = function (projectId, callback) {
+        var data = {
+            projectId: projectId
+        };
+        this.logger.debug('invoking deleteProject', {metadata: data});
         this.webSocket.deleteProject(data, callback);
     };
 
-    StorageSimpleAPI.prototype.createBranch = function (projectName, branchName, newHash, callback) {
+    StorageSimpleAPI.prototype.transferProject = function (projectId, newOwnerId, callback) {
         var data = {
-            projectName: projectName,
+            projectId: projectId,
+            newOwnerId: newOwnerId
+        };
+        this.logger.debug('invoking transferProject', {metadata: data});
+        this.webSocket.transferProject(data, callback);
+    };
+
+    StorageSimpleAPI.prototype.setBranchHash = function (projectId, branchName, newHash, oldHash, callback) {
+        var data = {
+            projectId: projectId,
+            branchName: branchName,
+            newHash: newHash,
+            oldHash: oldHash
+        };
+        this.logger.debug('invoking setBranchHash', {metadata: data});
+        this.webSocket.setBranchHash(data, callback);
+    };
+
+    StorageSimpleAPI.prototype.createBranch = function (projectId, branchName, newHash, callback) {
+        var data = {
+            projectId: projectId,
             branchName: branchName,
             newHash: newHash,
             oldHash: ''
         };
-        this.logger.debug('invoking createBranch', data);
+        this.logger.debug('invoking createBranch', {metadata: data});
         this.webSocket.setBranchHash(data, callback);
     };
 
-    StorageSimpleAPI.prototype.deleteBranch = function (projectName, branchName, oldHash, callback) {
+    StorageSimpleAPI.prototype.deleteBranch = function (projectId, branchName, oldHash, callback) {
         var data = {
-            projectName: projectName,
+            projectId: projectId,
             branchName: branchName,
             newHash: '',
             oldHash: oldHash
         };
-        this.logger.debug('invoking deleteBranch', data);
+        this.logger.debug('invoking deleteBranch', {metadata: data});
         this.webSocket.setBranchHash(data, callback);
     };
 
     //temporary simple request and result functions
     StorageSimpleAPI.prototype.simpleRequest = function (parameters, callback) {
-        this.logger.debug('invoking simpleRequest', parameters);
+        this.logger.debug('invoking simpleRequest', {metadata: parameters});
         this.webSocket.simpleRequest(parameters, callback);
     };
 
-    StorageSimpleAPI.prototype.simpleResult = function (resultId, callback) {
-        this.logger.debug('invoking simpleResult', resultId);
-        this.webSocket.simpleResult(resultId, callback);
-    };
-
     StorageSimpleAPI.prototype.simpleQuery = function (workerId, parameters, callback) {
-        this.logger.debug('invoking simpleQuery; workerId, parameters', workerId, parameters);
+        this.logger.debug('invoking simpleQuery; workerId, parameters', workerId, {metadata: parameters});
         this.webSocket.simpleQuery(workerId, parameters, callback);
     };
 

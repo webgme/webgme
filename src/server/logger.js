@@ -15,6 +15,7 @@
  * Windows
  * > set DEBUG=gme:*:worker* & npm start
  *
+ * @module Server:Logger
  * @author pmeijer / https://github.com/pmeijer
  */
 

@@ -65,19 +65,21 @@ define([
             this.toolbarItems.radioButtonGroupRouteManager.addButton({
                 title: 'Basic route manager',
                 icon: btnIconBase.clone().addClass('gme icon-gme_diagonal-arrow'),
+                selected: WebGMEGlobal.gmeConfig.client.defaultConnectionRouter === 'basic',
                 data: {type: 'basic'}
             });
 
             this.toolbarItems.radioButtonGroupRouteManager.addButton({
                 title: 'Basic+ route manager',
                 icon: btnIconBase.clone().addClass('gme icon-gme_broken-arow'),
+                selected: WebGMEGlobal.gmeConfig.client.defaultConnectionRouter === 'basic2',
                 data: {type: 'basic2'}
             });
 
             this.toolbarItems.radioButtonGroupRouteManager.addButton({
                 title: 'AutoRouter',
                 icon: btnIconBase.clone().addClass('gme icon-gme_broken-arrow-with-box'),
-                selected: true,
+                selected: WebGMEGlobal.gmeConfig.client.defaultConnectionRouter === 'basic3',
                 data: {type: 'basic3'}
             });
             /************** END OF - ROUTING MANAGER SELECTION **************************/
@@ -186,7 +188,7 @@ define([
                         title: pattern,
                         icon: self._createLineStyleMenuItem(null, null,
                             DiagramDesignerWidgetConstants.LINE_PATTERNS[pattern], null, null),
-                        data: {'pattern': pattern},
+                        data: {pattern: pattern},
                         clickFn: function (data) {
                             var p = {};
                             p[DiagramDesignerWidgetConstants.LINE_PATTERN] =

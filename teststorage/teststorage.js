@@ -1,4 +1,4 @@
-/*globals define, alert*/
+/*globals define*/
 /*jshint browser: true*/
 /**
  * @author pmeijer / https://github.com/pmeijer

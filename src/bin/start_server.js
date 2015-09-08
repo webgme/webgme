@@ -1,7 +1,10 @@
 /*jshint node: true*/
 /**
+ * @module Bin:StartServer
  * @author kecso / https://github.com/kecso
  */
+
+'use strict';
 
 var path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
@@ -11,4 +14,9 @@ var path = require('path'),
 webgme.addToRequireJsPaths(gmeConfig);
 
 myServer = new webgme.standaloneServer(gmeConfig);
-myServer.start();
+myServer.start(function (err) {
+    if (err) {
+        console.error(err);
+        process.exit(1);
+    }
+});
