@@ -843,35 +843,34 @@ function StandAloneServer(gmeConfig) {
     apiReady = api.createAPI(__app, '/api', middlewareOpts);
 
 
-    logger.debug('creating server-worker related routing rules');
-
-    function sendSimpleResult(res, resultId, filename) {
-        logger.debug('worker/simpleResult requested, urlArray', {metadata: {id: resultId, filename: filename}});
-
-        __workerManager.result(resultId, function (err, result) {
-            if (err) {
-                logger.error('worker/simpleResult err', err);
-                res.sendStatus(500);
-            } else {
-                res.header('Content-Disposition', contentDisposition(filename));
-                res.json(result);
-            }
-        });
-    }
-
-    __app.get('/worker/simpleResult/:resultId', function (req, res) {
-        var filename = 'simpleResult-' + req.params.resultId + '.json';
-        sendSimpleResult(res, req.params.resultId, filename);
-    });
-
-    // FIXME: filename should be in query string
-    __app.get('/worker/simpleResult/:resultId/:filename', function (req, res) {
-        var filename = req.params.filename;
-        if (filename.indexOf('.json') === -1) {
-            filename += '.json';
-        }
-        sendSimpleResult(res, req.params.resultId, filename);
-    });
+    //logger.debug('creating server-worker related routing rules');
+    //function sendSimpleResult(res, resultId, filename) {
+    //    logger.debug('worker/simpleResult requested, urlArray', {metadata: {id: resultId, filename: filename}});
+    //
+    //    __workerManager.result(resultId, function (err, result) {
+    //        if (err) {
+    //            logger.error('worker/simpleResult err', err);
+    //            res.sendStatus(500);
+    //        } else {
+    //            res.header('Content-Disposition', contentDisposition(filename));
+    //            res.json(result);
+    //        }
+    //    });
+    //}
+    //
+    //__app.get('/worker/simpleResult/:resultId', function (req, res) {
+    //    var filename = 'simpleResult-' + req.params.resultId + '.json';
+    //    sendSimpleResult(res, req.params.resultId, filename);
+    //});
+    //
+    //// FIXME: filename should be in query string
+    //__app.get('/worker/simpleResult/:resultId/:filename', function (req, res) {
+    //    var filename = req.params.filename;
+    //    if (filename.indexOf('.json') === -1) {
+    //        filename += '.json';
+    //    }
+    //    sendSimpleResult(res, req.params.resultId, filename);
+    //});
 
 
     logger.debug('creating list asset rules');

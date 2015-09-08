@@ -175,7 +175,7 @@ describe('standalone server', function () {
             //{code: 410, url: '/getToken'},
             //{code: 410, url: '/checktoken/does_not_exist'},
 
-            {code: 500, url: '/worker/simpleResult/bad_parameter'}
+            {code: 404, url: '/worker/simpleResult/bad_parameter'}
         ]
     }, {
         type: 'http',
@@ -622,6 +622,7 @@ describe('standalone server', function () {
                 });
         });
 
+
         it('should be able to export an authorized project /worker/simpleResult/:id/exported_branch', function (done) {
             var projectName = 'project',
                 projectId = testFixture.projectName2Id(projectName),
@@ -638,10 +639,15 @@ describe('standalone server', function () {
                             socket.disconnect();
                         });
                 })
-                .then(function (resId) {
+                .then(function (result) {
                     var deferred = Q.defer();
 
-                    agent.get(server.getUrl() + '/worker/simpleResult/' + resId + '/exported_branch')
+                    expect(typeof result).to.equal('object');
+                    expect(result).to.have.property('file');
+                    expect(typeof result.file.hash).to.equal('string');
+                    expect(result.file.url).to.include(server.getUrl());
+
+                    agent.get(result.file.url)
                         .end(function (err, res) {
                             expect(err).to.equal(null);
                             expect(res.status).to.equal(200);
@@ -672,10 +678,15 @@ describe('standalone server', function () {
                             socket.disconnect();
                         });
                 })
-                .then(function (resId) {
+                .then(function (result) {
                     var deferred = Q.defer();
 
-                    agent.get(server.getUrl() + '/worker/simpleResult/' + resId)
+                    expect(typeof result).to.equal('object');
+                    expect(result).to.have.property('file');
+                    expect(typeof result.file.hash).to.equal('string');
+                    expect(result.file.url).to.include(server.getUrl());
+
+                    agent.get(result.file.url)
                         .end(function (err, res) {
                             expect(err).to.equal(null);
                             expect(res.status).to.equal(200);

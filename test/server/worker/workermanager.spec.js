@@ -187,14 +187,14 @@ describe('ServerWorkerManager', function () {
                 webGMESessionId: webGMESessionId,
                 projectId: projectId,
                 path: '/323573539'
-            }, function (err, resultId) {
+            }, function (err, result) {
                 expect(err).to.equal(null);
 
-                swm.result(resultId, function (err, result) {
-                    expect(err).to.equal(null);
-                    expect(result).to.include.keys('bases', 'root', 'relids', 'containment', 'nodes', 'metaSheets');
-                    next();
-                });
+                expect(typeof result).to.equal('object');
+                expect(result).to.have.property('file');
+                expect(typeof result.file.hash).to.equal('string');
+                expect(result.file.url).to.include('http');
+                next();
             });
         }
 
@@ -251,7 +251,7 @@ describe('ServerWorkerManager', function () {
             getConnectedWorkerStartRequest = function () {
                 return {
                     command: workerConstants.workerCommands.connectedWorkerStart,
-                    workerName: 'TestAddOn',
+                    addOnName: 'TestAddOn',
                     projectId: projectId,
                     webGMESessionId: webGMESessionId,
                     branch: 'master'
@@ -274,7 +274,7 @@ describe('ServerWorkerManager', function () {
         it('should start and stop connected worker', function (done) {
             swm.request(getConnectedWorkerStartRequest(), function (err, id) {
                 expect(err).to.equal(null);
-                swm.result(id, function (err) {
+                swm.query(id, {command: workerConstants.workerCommands.connectedWorkerStop}, function (err) {
                     expect(err).to.equal(null);
 
                     done();
@@ -283,13 +283,12 @@ describe('ServerWorkerManager', function () {
         });
 
         it('should proxy the query to the connected worker', function (done) {
-
             swm.request(getConnectedWorkerStartRequest(), function (err, id) {
                 expect(err).to.equal(null);
                 swm.query(id, {}, function (err/*, result*/) {
                     expect(err).to.equal(null);
 
-                    swm.result(id, function (err) {
+                    swm.query(id, {command: workerConstants.workerCommands.connectedWorkerStop}, function (err) {
                         expect(err).to.equal(null);
 
                         done();
@@ -299,7 +298,6 @@ describe('ServerWorkerManager', function () {
         });
 
         it('should fail to proxy queries after swm stop', function (done) {
-
             swm.request(getConnectedWorkerStartRequest(), function (err, id) {
                 expect(err).to.equal(null);
                 swm.query(id, {}, function (err/*, result*/) {
@@ -319,7 +317,6 @@ describe('ServerWorkerManager', function () {
         });
 
         it('should fail to proxy connected worker close after swm stop', function (done) {
-
             swm.request(getConnectedWorkerStartRequest(), function (err, id) {
                 expect(err).to.equal(null);
 
@@ -327,7 +324,7 @@ describe('ServerWorkerManager', function () {
                     expect(err).to.equal(null);
 
                     swm.stop(function () {
-                        swm.result(id, function (err) {
+                        swm.query(id, {command: workerConstants.workerCommands.connectedWorkerStop}, function (err) {
                             expect(err).not.to.equal(null);
 
                             expect(err).to.contain('handler cannot be found');

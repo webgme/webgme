@@ -596,9 +596,6 @@ function createAPI(app, mountPath, middlewareOpts) {
         req.session.save(); //TODO why do we have to save manually
 
         Q.nfcall(middlewareOpts.workerManager.request, command)
-            .then(function (requestId) {
-                return Q.nfcall(middlewareOpts.workerManager.result, requestId);
-            })
             .then(function () {
                 res.sendStatus(204);
             })

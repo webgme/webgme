@@ -203,11 +203,6 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         this.webSocket.simpleRequest(parameters, callback);
     };
 
-    StorageSimpleAPI.prototype.simpleResult = function (resultId, callback) {
-        this.logger.debug('invoking simpleResult', resultId);
-        this.webSocket.simpleResult(resultId, callback);
-    };
-
     StorageSimpleAPI.prototype.simpleQuery = function (workerId, parameters, callback) {
         this.logger.debug('invoking simpleQuery; workerId, parameters', workerId, {metadata: parameters});
         this.webSocket.simpleQuery(workerId, parameters, callback);

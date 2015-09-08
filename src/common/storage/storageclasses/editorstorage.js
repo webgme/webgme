@@ -221,7 +221,7 @@ define([
                 branch.addHashUpdateHandler(hashUpdateHandler);
                 branch.addBranchStatusHandler(branchStatusHandler);
 
-                branch._remoteUpdateHandler = function (_ws, updateData, callback) {
+                branch._remoteUpdateHandler = function (_ws, updateData, initCallback) {
                     var j,
                         originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                     logger.debug('_remoteUpdateHandler invoked for project, branch', projectId, branchName);
@@ -234,7 +234,7 @@ define([
 
                     if (branch.getCommitQueue().length === 0) {
                         if (branch.getUpdateQueue().length === 1) {
-                            self._pullNextQueuedCommit(projectId, branchName, callback); // hashUpdateHandlers
+                            self._pullNextQueuedCommit(projectId, branchName, initCallback); // hashUpdateHandlers
                         }
                     } else {
                         logger.debug('commitQueue is not empty, only updating originHash.');
@@ -554,7 +554,7 @@ define([
                         logger.warn('Loading of update commit was aborted', {metadata: updateData});
                     }
                     if (callback) {
-                        callback(err || 'Loading the first commit was aborted');
+                        callback(new Error('Loading the first commit was aborted'));
                     }
                 });
             } else {

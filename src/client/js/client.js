@@ -460,7 +460,13 @@ define([
 
                 cleanUsersTerritories();
                 self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, projectId);
-                callback(null);
+                addOnFunctions.stopRunningAddOns(function (err) {
+                    if (err) {
+                        logger.error('Errors stopping addOns when closeProject, (ignoring)', err);
+                    }
+
+                    callback(null);
+                });
             });
         }
 
@@ -515,12 +521,18 @@ define([
                 );
             }
 
-            if (prevBranchName !== null) {
-                logger.debug('Branch was open, closing it first', prevBranchName);
-                storage.closeBranch(state.project.projectId, prevBranchName, openBranch);
-            } else {
-                openBranch(null);
-            }
+            addOnFunctions.stopRunningAddOns(function (err) {
+                if (err) {
+                    logger.error('Errors stopping addOns when selectBranch (ignoring)', err);
+                }
+
+                if (prevBranchName !== null) {
+                    logger.debug('Branch was open, closing it first', prevBranchName);
+                    storage.closeBranch(state.project.projectId, prevBranchName, openBranch);
+                } else {
+                    openBranch(null);
+                }
+            });
         };
 
         this.selectCommit = function (commitHash, callback) {
@@ -571,14 +583,20 @@ define([
                 });
             }
 
-            if (state.branchName !== null) {
-                logger.debug('Branch was open, closing it first', state.branchName);
-                prevBranchName = state.branchName;
-                state.branchName = null;
-                storage.closeBranch(state.project.projectId, prevBranchName, openCommit);
-            } else {
-                openCommit(null);
-            }
+            addOnFunctions.stopRunningAddOns(function (err) {
+                if (err) {
+                    logger.error('Errors stopping addOns when selectCommit (ignoring)', err);
+                }
+
+                if (state.branchName !== null) {
+                    logger.debug('Branch was open, closing it first', state.branchName);
+                    prevBranchName = state.branchName;
+                    state.branchName = null;
+                    storage.closeBranch(state.project.projectId, prevBranchName, openCommit);
+                } else {
+                    openCommit(null);
+                }
+            });
         };
 
         function getBranchStatusHandler () {
@@ -1261,33 +1279,38 @@ define([
                 ASSERT(err || root);
 
                 state.rootObject = root;
-                addOnFunctions.updateRunningAddOns(root);
+
                 error = error || err;
                 if (!err) {
-                    //_clientGlobal.addOn.updateRunningAddOns(root); //FIXME: ADD ME BACK!!
-                    state.loadNodes[state.core.getPath(root)] = {
-                        node: root,
-                        incomplete: true,
-                        basic: true,
-                        hash: getStringHash(root)
-                    };
-                    state.metaNodes[state.core.getPath(root)] = root;
-                    if (orderedPatternIds.length === 0 && Object.keys(state.users) > 0) {
-                        //we have user, but they do not interested in any object -> let's relaunch them :D
-                        callback(null);
-                        reLaunchUsers();
-                    } else {
-                        _loadPattern = TASYNC.throttle(TASYNC.wrap(loadPattern), 1);
-                        fut = TASYNC.lift(
-                            orderedPatternIds.map(function (pattern /*, index */) {
-                                return TASYNC.apply(_loadPattern,
-                                    [state.core, pattern, patterns[pattern], state.loadNodes],
-                                    this);
-                            }));
-                        TASYNC.unwrap(function () {
-                            return fut;
-                        })(callback);
-                    }
+                    addOnFunctions.updateRunningAddOns(root)
+                        .then(function () {
+                            state.loadNodes[state.core.getPath(root)] = {
+                                node: root,
+                                incomplete: true,
+                                basic: true,
+                                hash: getStringHash(root)
+                            };
+                            state.metaNodes[state.core.getPath(root)] = root;
+                            if (orderedPatternIds.length === 0 && Object.keys(state.users) > 0) {
+                                //we have user, but they do not interested in any object -> let's relaunch them :D
+                                callback(null);
+                                reLaunchUsers();
+                            } else {
+                                _loadPattern = TASYNC.throttle(TASYNC.wrap(loadPattern), 1);
+                                fut = TASYNC.lift(
+                                    orderedPatternIds.map(function (pattern /*, index */) {
+                                        return TASYNC.apply(_loadPattern,
+                                            [state.core, pattern, patterns[pattern], state.loadNodes],
+                                            this);
+                                    }));
+                                TASYNC.unwrap(function () {
+                                    return fut;
+                                })(callback);
+                            }
+                        })
+                        .catch(function (err) {
+                            callback(err);
+                        });
                 } else {
                     callback(err);
                 }
@@ -1554,13 +1577,11 @@ define([
         this.seedProject = function (parameters, callback) {
             logger.debug('seeding project', parameters);
             parameters.command = 'seedProject';
-            storage.simpleRequest(parameters, function (err, id) {
+            storage.simpleRequest(parameters, function (err, result) {
                 if (err) {
-                    callback(err);
-                    return;
+                    logger.error(err);
                 }
-
-                storage.simpleResult(id, callback);
+                callback(err, result);
             });
         };
 
@@ -1573,14 +1594,12 @@ define([
             command.path = ROOT_PATH;
             logger.debug('getExportProjectBranchUrl, command', command);
             if (command.projectId && command.branchName) {
-                storage.simpleRequest(command, function (err, resId) {
-                    var resultUrl = window.location.origin + '/worker/simpleResult/' + resId + '/' + fileName;
-                    logger.debug('getExportProjectBranchUrl', resultUrl);
+                storage.simpleRequest(command, function (err, result) {
                     if (err) {
                         logger.error('getExportProjectBranchUrl failed with error', err);
                         callback(err);
                     } else {
-                        callback(null, resultUrl);
+                        callback(null, result.file.url);
                     }
                 });
             } else {
@@ -1588,23 +1607,8 @@ define([
             }
         };
 
-        //dump nodes
         this.getExportItemsUrl = function (paths, filename, callback) {
-            storage.simpleRequest({
-                    command: 'dumpMoreNodes',
-                    projectId: state.project.projectId,
-                    hash: state.rootHash,
-                    nodes: paths
-                },
-                function (err, resId) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        callback(null,
-                            window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
-                            resId + '/' + filename);
-                    }
-                });
+            callback(new Error('getExportItemsUrl is no longer supported!'));
         };
 
         //library functions
@@ -1615,14 +1619,12 @@ define([
             command.hash = state.rootHash;
             command.path = libraryRootPath;
             if (command.projectId && command.hash) {
-                storage.simpleRequest(command, function (err, resId) {
+                storage.simpleRequest(command, function (err, result) {
                     if (err) {
                         logger.error('getExportLibraryUrl failed with error', err);
                         callback(err);
                     } else {
-                        callback(null,
-                            window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' +
-                            resId + '/' + filename);
+                        callback(null, result.file.url);
                     }
                 });
             } else {
@@ -1718,15 +1720,15 @@ define([
         };
 
         //addOn
-        this.validateProjectAsync = addOnFunctions.validateProjectAsync;
-        this.validateModelAsync = addOnFunctions.validateModelAsync;
-        this.validateNodeAsync = addOnFunctions.validateNodeAsync;
-        this.setValidationCallback = addOnFunctions.setValidationCallback;
-        this.getDetailedHistoryAsync = addOnFunctions.getDetailedHistoryAsync;
         this.getRunningAddOnNames = addOnFunctions.getRunningAddOnNames;
         this.addOnsAllowed = gmeConfig.addOn.enable === true;
 
         //constraint
+        this.validateProjectAsync = addOnFunctions.validateProjectAsync;
+        this.validateModelAsync = addOnFunctions.validateModelAsync;
+        this.validateNodeAsync = addOnFunctions.validateNodeAsync;
+        this.setValidationCallback = addOnFunctions.setValidationCallback;
+
         this.setConstraint = function (path, name, constraintObj) {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 state.core.setConstraint(state.nodes[path].node, name, constraintObj);
@@ -1749,11 +1751,12 @@ define([
                 mine: mine,
                 theirs: theirs
             };
-            storage.simpleRequest(command, function (err, resId) {
+            storage.simpleRequest(command, function (err, result) {
                 if (err) {
+                    logger.error('autoMerge failed with error', err);
                     callback(err);
                 } else {
-                    storage.simpleResult(resId, callback);
+                    callback(null, result);
                 }
             });
         };
@@ -1763,11 +1766,12 @@ define([
                 command: 'resolve',
                 partial: mergeResult
             };
-            storage.simpleRequest(command, function (err, resId) {
+            storage.simpleRequest(command, function (err, result) {
                 if (err) {
+                    logger.error('resolve failed with error', err);
                     callback(err);
                 } else {
-                    storage.simpleResult(resId, callback);
+                    callback(null, result);
                 }
             });
         };

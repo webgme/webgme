@@ -293,14 +293,11 @@ describe('storage storageclasses simpleapi', function () {
         };
 
         Q.ninvoke(storage, 'simpleRequest', command)
-            .then(function (resultId) {
-                expect(typeof resultId).to.equal('string');
-                expect(resultId).to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-                    'should be an id');
-                return Q.ninvoke(storage, 'simpleResult', resultId);
-            })
             .then(function (result) {
-                expect(result).to.have.property('root');
+                expect(typeof result).to.equal('object');
+                expect(result).to.have.property('file');
+                expect(typeof result.file.hash).to.equal('string');
+                expect(result.file.url).to.include('http');
                 done();
             })
             .catch(function (err) {
