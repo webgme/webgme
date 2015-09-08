@@ -27,6 +27,8 @@ define([
 
         this._highlightedElements = [];
 
+        this._lastSearchDesc = '';
+
         this.logger.debug('SearchManager ctor finished');
     };
 
@@ -68,6 +70,12 @@ define([
         }
     };
 
+    SearchManager.prototype.applyLastSearch = function () {
+        var lastSearchDesc = this._lastSearchDesc;
+        this._clear();
+        this.filterItems(lastSearchDesc);
+    };
+
     SearchManager.prototype._doSearch = function (searchDesc) {
         var results = [],
             itemIDs = this._diagramDesigner.itemIds,
@@ -76,6 +84,8 @@ define([
             id,
             diff,
             idx;
+
+        this._lastSearchDesc = searchDesc;
 
         //go through the items first
         len = itemIDs.length;
@@ -127,6 +137,8 @@ define([
             this._diagramDesigner.items[this._highlightedElements[i]].unHighlight();
         }
         this._highlightedElements = [];
+
+        this._lastSearchDesc = '';
     };
 
     return SearchManager;
