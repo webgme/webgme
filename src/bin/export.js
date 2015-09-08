@@ -2,32 +2,104 @@
 /**
  * @module Bin:Export
  * @author kecso / https://github.com/kecso
+ * @author brollb / https://github.com/brollb
  */
 'use strict';
 var webgme = require('../../webgme'),
     FS = require('fs'),
     Q = require('q'),
     cliStorage,
-    Project = require('../../src/server/storage/userproject'),
     gmeAuth,
     getRoot = webgme.requirejs('common/core/users/getroot'),
     MongoURI = require('mongo-uri'),
     path = require('path'),
-    gmeConfig = require(path.join(process.cwd(), 'config')),
-    logger = webgme.Logger.create('gme:bin:export', gmeConfig.bin.log, false),
+    gmeConfig,
+    logger,
     Serialization = webgme.serializer,
     STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
-    main;
+    main,
+    mainDeferred,
+    runInternal,
+    run,
+    getMissingRequiredParam;
 
+/**
+ * Check for missing required parameters
+ *
+ * @param {Object} params
+ * @return {String|null} missing param
+ */
+getMissingRequiredParam = function(params) {
+    var requiredParams = ['projectName', 'source'];
+    for (var i = requiredParams.length; i--;) {
+        if (!params[requiredParams[i]]) {
+            return requiredParams[i];
+        }
+    }
+    return null;
+};
 
-webgme.addToRequireJsPaths(gmeConfig);
-
+/**
+ * Entrypoint for CLI usage
+ *
+ * @param {Array<String>} argv
+ * @return {undefined}
+ */
 main = function (argv) {
-    var mainDeferred = Q.defer(),
-        Command = require('commander').Command,
+    var Command = require('commander').Command,
         program = new Command(),
-        syntaxFailure = false,
-        core,
+        syntaxFailure = false;
+
+    gmeConfig = require(path.join(process.cwd(), 'config'));
+    logger = webgme.Logger.create('gme:bin:export', gmeConfig.bin.log, false);
+    webgme.addToRequireJsPaths(gmeConfig);
+    mainDeferred = Q.defer();
+    program
+        .version('0.2.0')
+        .option('-m, --mongo-database-uri [url]',
+        'URI of the MongoDB [by default we use the one from the configuration file]')
+        .option('-u, --user [string]', 'the user of the command [if not given we use the default user]')
+        .option('-p, --project-name [string]', 'project name [mandatory]')
+        .option('-o, --owner [string]', 'the owner of the project [by default, the user is the owner]')
+        .option('-s, --source [branch/commit]', 'the branch or commit that should be exported')
+        .option('-f, --out-file [path]', 'the path of the output file')
+        .parse(argv);
+
+    if (getMissingRequiredParam(program)) {
+        logger.error(getMissingRequiredParam(program)+' is a mandatory parameter!');
+        syntaxFailure = true;
+    }
+
+    if (syntaxFailure) {
+        program.outputHelp();
+        mainDeferred.reject(new SyntaxError('invalid argument'));
+        return mainDeferred.promise;
+    }
+    return runInternal(program);
+};
+
+/**
+ * Entry point for usage as a module.
+ *
+ * @param {Dictionary<String,String>} params
+ * @return {undefined}
+ */
+run = function(params) {
+    var missingParam = getMissingRequiredParam(params);
+    gmeConfig = params.gmeConfig;
+    mainDeferred = Q.defer();
+
+    if (missingParam) {
+        logger.error(missingParam+' is a mandatory parameter!');
+    }
+    logger = webgme.Logger.create('gme:bin:export', gmeConfig.bin.log, false);
+    webgme.addToRequireJsPaths(gmeConfig);
+
+    return runInternal(params);
+};
+
+runInternal = function (params) {
+    var core,
         finishUp = function (error) {
             var ended = function () {
                 if (error) {
@@ -52,37 +124,11 @@ main = function (argv) {
             }
         };
 
-    program
-        .version('0.2.0')
-        .option('-m, --mongo-database-uri [url]',
-        'URI of the MongoDB [by default we use the one from the configuration file]')
-        .option('-u, --user [string]', 'the user of the command [if not given we use the default user]')
-        .option('-p, --project-name [string]', 'project name [mandatory]')
-        .option('-o, --owner [string]', 'the owner of the project [by default, the user is the owner]')
-        .option('-s, --source [branch/commit]', 'the branch or commit that should be exported')
-        .option('-f, --out-file [path]', 'the path of the output file')
-        .parse(argv);
-
-    if (program.mongoDatabaseUri) {
+    if (params.mongoDatabaseUri) {
         // this line throws a TypeError for invalid databaseConnectionString
-        MongoURI.parse(program.mongoDatabaseUri);
+        MongoURI.parse(params.mongoDatabaseUri);
 
-        gmeConfig.mongo.uri = program.mongoDatabaseUri;
-    }
-
-    if (!program.projectName) {
-        logger.error('project name is a mandatory parameter!');
-        syntaxFailure = true;
-    }
-    if (!program.source) {
-        logger.error('source is a mandatory parameter!');
-        syntaxFailure = true;
-    }
-
-    if (syntaxFailure) {
-        program.outputHelp();
-        mainDeferred.reject(new SyntaxError('invalid argument'));
-        return mainDeferred.promise;
+        gmeConfig.mongo.uri = params.mongoDatabaseUri;
     }
 
     webgme.getGmeAuth(gmeConfig)
@@ -92,24 +138,24 @@ main = function (argv) {
             return cliStorage.openDatabase();
         })
         .then(function () {
-            var params = {
+            var projectParams = {
                 projectId: ''
             };
 
-            if (program.owner) {
-                params.projectId = program.owner + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
-            } else if (program.user) {
-                params.projectId = program.user + STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+            if (params.owner) {
+                projectParams.projectId = params.owner + STORAGE_CONSTANTS.PROJECT_ID_SEP + params.projectName;
+            } else if (params.user) {
+                projectParams.projectId = params.user + STORAGE_CONSTANTS.PROJECT_ID_SEP + params.projectName;
             } else {
-                params.projectId = gmeConfig.authentication.guestAccount +
-                    STORAGE_CONSTANTS.PROJECT_ID_SEP + program.projectName;
+                projectParams.projectId = gmeConfig.authentication.guestAccount +
+                    STORAGE_CONSTANTS.PROJECT_ID_SEP + params.projectName;
             }
 
-            if (program.user) {
-                params.username = program.user;
+            if (params.user) {
+                projectParams.username = params.user;
             }
 
-            return cliStorage.openProject(params);
+            return cliStorage.openProject(projectParams);
         })
         .then(function (project) {
             core = new webgme.core(project, {
@@ -117,32 +163,32 @@ main = function (argv) {
                 logger: logger.fork('core')
             });
 
-            if (program.user) {
-                project.setUser(program.user);
+            if (params.user) {
+                project.setUser(params.user);
             }
 
-            return getRoot({project: project, core: core, id: program.source});
+            return getRoot({project: project, core: core, id: params.source});
         })
         .then(function (result) {
             return Q.nfcall(Serialization.export, core, result.root);
         })
         .then(function (jsonExport) {
-            if (program.outFile) {
-                FS.writeFileSync(program.outFile, JSON.stringify(jsonExport, null, 2));
+            if (params.outFile) {
+                FS.writeFileSync(params.outFile, JSON.stringify(jsonExport, null, 2));
             } else {
-                console.log('project \'' + program.projectName + '\':');
+                console.log('project \'' + params.projectName + '\':');
                 console.log(JSON.stringify(jsonExport, null, 2));
             }
             finishUp(null);
         })
         .catch(finishUp);
 
-
     return mainDeferred.promise;
 };
 
 module.exports = {
-    main: main
+    main: main,
+    run: run
 };
 
 if (require.main === module) {
