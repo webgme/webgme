@@ -84,7 +84,7 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
                     if (result.state === 'rejected') {
                         msg.message = result.reason instanceof Error ? result.reason.message : result.reason;
                         msg.hasViolation = true;
-                    } else if (result.state === 'resolved') {
+                    } else if (result.state === 'fulfilled') {
                         msg.message = result.value.message;
                         msg.hasViolation = result.value.hasViolation;
                     } else {
