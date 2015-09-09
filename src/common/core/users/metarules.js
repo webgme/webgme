@@ -8,6 +8,13 @@
 define(['q'], function (Q) {
     'use strict';
 
+    /**
+     *
+     * @param core
+     * @param node
+     * @param [callback]
+     * @returns {*}
+     */
     function checkMetaRules(core, node, callback) {
         var error = null,
             deferred = Q.defer(),

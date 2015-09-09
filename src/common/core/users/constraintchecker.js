@@ -52,7 +52,7 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
             self.core.loadByPath(self.rootNode, path, function (err, node) {
                 if (err) {
                     deferred.reject(new Error(err));
-                } else if (self.core.isValidNode(node) === false) {
+                } else if (self.core.isEmpty(node)) {
                     deferred.reject(new Error('Given nodePath does not exist "' + path + '"!'));
                 } else {
                     deferred.resolve(node);

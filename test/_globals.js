@@ -320,6 +320,30 @@ function saveChanges(parameters, done) {
 }
 
 /**
+ *
+ * @param core
+ * @param rootNode
+ * @param nodePath
+ * @param [callback]
+ * @returns {Q.Promise}
+ */
+function loadNode(core, rootNode, nodePath, callback) {
+    var deferred = new Q.defer();
+
+    core.loadByPath(rootNode, nodePath, function (err, node) {
+        if (err) {
+            deferred.reject(new Error(err));
+        } else if (core.isEmpty(node)) {
+            deferred.reject(new Error('Given nodePath does not exist "' + nodePath + '"!'));
+        } else {
+            deferred.resolve(node);
+        }
+    });
+
+    return deferred.promise.nodeify(callback);
+}
+
+/**
  * This uses the guest account by default
  * @param {string} projectName
  * @param {string} [userId=gmeConfig.authentication.guestAccount]
@@ -443,6 +467,8 @@ module.exports = {
     projectName2Id: projectName2Id,
     logIn: logIn,
     openSocketIo: openSocketIo,
+    loadNode: loadNode,
+
     storageUtil: storageUtil,
     SEED_DIR: path.join(__dirname, '../seeds/'),
     STORAGE_CONSTANTS: STORAGE_CONSTANTS
