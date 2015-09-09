@@ -52,9 +52,18 @@ define(['q'], function (Q) {
 
     function checkSetRules(meta, core, node, callback) {
         var result = {
-            hasViolation: false,
-            message: ''
-        };
+                hasViolation: false,
+                message: ''
+            },
+            setNames = core.getSetNames(node);
+
+        console.log('\n###### ' + core.getAttribute(node, 'name') + ' ######\n');
+        console.log(meta);
+        console.log(setNames);
+
+        setNames.map(function (setName) {
+            console.log(core.getMemberPaths(node, setName));
+        });
 
         return Q(result).nodeify(callback);
     }

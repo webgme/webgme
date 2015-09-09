@@ -17,6 +17,7 @@ describe('Meta Rules', function () {
         checkMetaRules = requireJS('common/core/users/metarules'),
         projectName = 'MetaRules',
         branchName = 'master',
+        languagePath = '/822429792/',
         ir,
 
         gmeAuth;
@@ -30,7 +31,7 @@ describe('Meta Rules', function () {
             })
             .then(function () {
                 var importParam = {
-                    projectSeed: './seeds/EmptyProject.json',
+                    projectSeed: './test/common/core/users/meta/metaRules2.json',
                     projectName: projectName,
                     branchName: branchName,
                     logger: logger,
@@ -54,13 +55,64 @@ describe('Meta Rules', function () {
     });
 
     it('FCO should pass', function (done) {
-        testFixture.loadNode(ir.core, ir.rootNode, '/1')
-            .then(function (fcoNode) {
-                return checkMetaRules(ir.core, fcoNode);
+        var nodePath = '/1';
+
+        testFixture.loadNode(ir.core, ir.rootNode, nodePath)
+            .then(function (node) {
+                return checkMetaRules(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(false, result.message);
             })
             .nodeify(done);
     });
+
+    it('SetElement should pass', function (done) {
+        var nodePath = languagePath + '1578427941';
+        testFixture.loadNode(ir.core, ir.rootNode, nodePath)
+            .then(function (node) {
+                return checkMetaRules(ir.core, node);
+            })
+            .then(function (result) {
+                expect(result.hasViolation).to.equal(false, result.message);
+            })
+            .nodeify(done);
+    });
+
+    it('ModelElement should pass', function (done) {
+        var nodePath = languagePath + '942380411';
+        testFixture.loadNode(ir.core, ir.rootNode, nodePath)
+            .then(function (node) {
+                return checkMetaRules(ir.core, node);
+            })
+            .then(function (result) {
+                expect(result.hasViolation).to.equal(false, result.message);
+            })
+            .nodeify(done);
+    });
+
+    it.only('ModelElementInstance should pass', function (done) {
+        var nodePath = '/1936712753';
+        testFixture.loadNode(ir.core, ir.rootNode, nodePath)
+            .then(function (node) {
+                return checkMetaRules(ir.core, node);
+            })
+            .then(function (result) {
+                expect(result.hasViolation).to.equal(false, result.message);
+            })
+            .nodeify(done);
+    });
+
+    it('ConnectionElement should pass', function (done) {
+        var nodePath = languagePath + '1686535233';
+        testFixture.loadNode(ir.core, ir.rootNode, nodePath)
+            .then(function (node) {
+                return checkMetaRules(ir.core, node);
+            })
+            .then(function (result) {
+                expect(result.hasViolation).to.equal(false, result.message);
+            })
+            .nodeify(done);
+    });
+
 });
