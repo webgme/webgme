@@ -1186,6 +1186,13 @@ define([
         }
 
         function loadPattern(core, id, pattern, nodesSoFar, callback) {
+            //console.log('LP',id,pattern);
+            //var _callback = callback;
+            //callback = function(error){
+            //    console.log('LPF',id,pattern);
+            //    _callback(error);
+            //};
+
             var base = null,
                 baseLoaded = function () {
                     if (pattern.children && pattern.children > 0) {
@@ -1437,9 +1444,12 @@ define([
             //};
 
             var i, j,
-                havePattern = false,
                 userIds,
                 patternPaths;
+
+            if (state.ongoingLoadPatternsCounter !== 0) {
+                logger.error('at the start of loading the counter should be zero!!! [' + state.ongoingTerritoryUpdateCounter + ']');
+            }
 
             state.loadingStatus = null;
             state.loadNodes = {};
@@ -1460,12 +1470,31 @@ define([
                     basic: true,
                     hash: getStringHash(root)
                 };
+
+                //we first only set the counter of patterns
+                userIds = Object.keys(state.users);
+                for (i = 0; i < userIds.length; i += 1) {
+                    state.ongoingLoadPatternsCounter += Object.keys(state.users[userIds[i]].PATTERNS || {}).length;
+                }
+                userIds = Object.keys(state.pendingTerritoryUpdatePatterns);
+                for (i = 0; i < userIds.length; i += 1) {
+                    state.ongoingLoadPatternsCounter += Object.keys(state.pendingTerritoryUpdatePatterns[userIds[i]] || {}).length;
+                }
+
+                //empty load check
+                if (state.ongoingLoadPatternsCounter === 0) {
+                    if (canSwitchStates()) {
+                        switchStates();
+                        reLaunchUsers();
+                    }
+                    return;
+                }
+
+
                 userIds = Object.keys(state.users);
                 for (i = 0; i < userIds.length; i += 1) {
                     patternPaths = Object.keys(state.users[userIds[i]].PATTERNS || {});
                     for (j = 0; j < patternPaths.length; j += 1) {
-                        havePattern = true;
-                        state.ongoingLoadPatternsCounter += 1;
                         loadPatternThrottled(state.core,
                             patternPaths[j],
                             state.users[userIds[i]].PATTERNS[patternPaths[j]],
@@ -1479,20 +1508,11 @@ define([
                 for (i = 0; i < userIds.length; i += 1) {
                     patternPaths = Object.keys(state.pendingTerritoryUpdatePatterns[userIds[i]] || {});
                     for (j = 0; j < patternPaths.length; j += 1) {
-                        havePattern = true;
-                        state.ongoingLoadPatternsCounter += 1;
                         loadPatternThrottled(state.core,
                             patternPaths[j],
                             COPY(state.pendingTerritoryUpdatePatterns[userIds[i]][patternPaths[j]]),
                             state.loadNodes,
                             loadingPatternFinished);
-                    }
-                }
-
-                if (!havePattern) {
-                    if (canSwitchStates()) {
-                        switchStates();
-                        reLaunchUsers();
                     }
                 }
             });
