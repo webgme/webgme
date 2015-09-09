@@ -63,11 +63,24 @@ define([
                 inTransaction: false,
                 msg: '',
                 gHash: 0,
-                loadError: null
+                loadError: null,
+                ongoingTerritoryUpdateCounter: 0,
+                ongoingLoadPatternsCounter: 0,
+                pendingTerritoryUpdatePatterns: {},
+                loadingStatus: null,
+                inLoading: false,
+                loading: {
+                    rootHash: null,
+                    commitHash: null,
+                    next: null
+                }
+
             },
             monkeyPatchKey,
             nodeSetterFunctions,
-            addOnFunctions = new AddOn(state, storage, logger, gmeConfig);
+            addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
+            loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
+        //loadPatternThrottled = loadPattern; //magic number could be fine-tuned
 
         EventDispatcher.call(this);
 
@@ -599,15 +612,16 @@ define([
             });
         };
 
-        function getBranchStatusHandler () {
+        function getBranchStatusHandler() {
             return function (branchStatus, commitQueue, updateQueue) {
                 logger.debug('branchStatus changed', branchStatus, commitQueue, updateQueue);
                 logState('debug', 'branchStatus');
                 state.branchStatus = branchStatus;
                 self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {
-                    status: branchStatus,
-                    commitQueue: commitQueue,
-                    updateQueue: updateQueue}
+                        status: branchStatus,
+                        commitQueue: commitQueue,
+                        updateQueue: updateQueue
+                    }
                 );
             };
         }
@@ -1147,7 +1161,7 @@ define([
                         callback(error);
                     }
                 };
-            state.metaNodes[path] = node;
+
             if (!nodesSoFar[path]) {
                 nodesSoFar[path] = {node: node, incomplete: true, basic: true, hash: getStringHash(node)};
             }
@@ -1186,17 +1200,15 @@ define([
                 base = nodesSoFar[id].node;
                 baseLoaded();
             } else {
-                base = null;
-                if (state.loadNodes[ROOT_PATH]) {
-                    base = state.loadNodes[ROOT_PATH].node;
-                } else if (state.nodes[ROOT_PATH]) {
-                    base = state.nodes[ROOT_PATH].node;
+                if (!nodesSoFar[ROOT_PATH]) {
+                    logger.error('pattern cannot be loaded if there is no root!!!');
                 }
+                base = nodesSoFar[ROOT_PATH].node;
+
                 core.loadByPath(base, id, function (err, node) {
                     var path;
                     if (!err && node && !core.isEmpty(node)) {
                         path = core.getPath(node);
-                        state.metaNodes[path] = node;
                         if (!nodesSoFar[path]) {
                             nodesSoFar[path] = {
                                 node: node,
@@ -1235,131 +1247,6 @@ define([
                 }
             }
             return ordered;
-        }
-
-        function loadRoot(newRootHash, callback) {
-            //with the newer approach we try to optimize a bit the mechanism of the loading and
-            // try to get rid of the parallelism behind it
-            var patterns = {},
-                orderedPatternIds = [],
-                error = null,
-                i,
-                j,
-                keysi,
-                keysj;
-
-            state.loadNodes = {};
-            state.loadError = 0;
-
-            //gathering the patterns
-            keysi = Object.keys(state.users);
-            for (i = 0; i < keysi.length; i++) {
-                keysj = Object.keys(state.users[keysi[i]].PATTERNS);
-                for (j = 0; j < keysj.length; j++) {
-                    if (patterns[keysj[j]]) {
-                        //we check if the range is bigger for the new definition
-                        if (patterns[keysj[j]].children < state.users[keysi[i]].PATTERNS[keysj[j]].children) {
-                            patterns[keysj[j]].children = state.users[keysi[i]].PATTERNS[keysj[j]].children;
-                        }
-                    } else {
-                        patterns[keysj[j]] = state.users[keysi[i]].PATTERNS[keysj[j]];
-                    }
-                }
-            }
-            //getting an ordered key list
-            orderedPatternIds = Object.keys(patterns);
-            orderedPatternIds = orderStringArrayByElementLength(orderedPatternIds);
-
-
-            //and now the one-by-one loading
-            state.core.loadRoot(newRootHash, function (err, root) {
-                var fut,
-                    _loadPattern;
-
-                ASSERT(err || root);
-
-                state.rootObject = root;
-
-                error = error || err;
-                if (!err) {
-                    addOnFunctions.updateRunningAddOns(root)
-                        .then(function () {
-                            state.loadNodes[state.core.getPath(root)] = {
-                                node: root,
-                                incomplete: true,
-                                basic: true,
-                                hash: getStringHash(root)
-                            };
-                            state.metaNodes[state.core.getPath(root)] = root;
-                            if (orderedPatternIds.length === 0 && Object.keys(state.users) > 0) {
-                                //we have user, but they do not interested in any object -> let's relaunch them :D
-                                callback(null);
-                                reLaunchUsers();
-                            } else {
-                                _loadPattern = TASYNC.throttle(TASYNC.wrap(loadPattern), 1);
-                                fut = TASYNC.lift(
-                                    orderedPatternIds.map(function (pattern /*, index */) {
-                                        return TASYNC.apply(_loadPattern,
-                                            [state.core, pattern, patterns[pattern], state.loadNodes],
-                                            this);
-                                    }));
-                                TASYNC.unwrap(function () {
-                                    return fut;
-                                })(callback);
-                            }
-                        })
-                        .catch(function (err) {
-                            callback(err);
-                        });
-                } else {
-                    callback(err);
-                }
-            });
-        }
-
-        //this is just a first brute implementation it needs serious optimization!!!
-        function loading(newRootHash, newCommitHash, callback) {
-            var firstRoot = !state.nodes[ROOT_PATH],
-                originatingRootHash = state.nodes[ROOT_PATH] ? state.core.getHash(state.nodes[ROOT_PATH].node) : null,
-                finalEvents = function () {
-                    var modifiedPaths,
-                        i;
-                    logger.debug('firing finalEvents from loading for new rootHash', newRootHash);
-                    modifiedPaths = getModifiedNodes(state.loadNodes);
-                    state.nodes = state.loadNodes;
-                    state.loadNodes = {};
-                    // We have now loaded the new root from the commit, update the state
-                    state.rootHash = newRootHash;
-                    state.commitHash = newCommitHash;
-
-                    for (i in state.users) {
-                        if (state.users.hasOwnProperty(i)) {
-                            userEvents(i, modifiedPaths);
-                        }
-                    }
-                    callback(null);
-                };
-            logger.debug('loading originatingRootHash, newRootHash', originatingRootHash, newRootHash);
-
-            callback = callback || function (/*err*/) {
-                };
-
-
-            loadRoot(newRootHash, function (err) {
-                if (err) {
-                    state.rootHash = null;
-                    callback(err);
-                } else {
-                    if (firstRoot ||
-                        state.core.getHash(state.nodes[ROOT_PATH].node) === originatingRootHash) {
-                        finalEvents();
-                    } else {
-                        // This relies on the fact that loading is synchronous for local updates.
-                        logger.warn('Modifications were done during loading - load aborted.');
-                        callback(null, true);
-                    }
-                }
-            });
         }
 
         this.startTransaction = function (msg) {
@@ -1409,66 +1296,207 @@ define([
         }
 
         function _updateTerritoryAllDone(guid, patterns, error) {
+            refreshMetaNodes(state.nodes, state.nodes);
+
             if (state.users[guid]) {
-                state.users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
+                state.users[guid].PATTERNS = COPY(patterns);
                 if (!error) {
                     userEvents(guid, []);
                 }
             }
         }
 
+        function canSwitchStates() {
+            if (state.inLoading && state.ongoingTerritoryUpdateCounter === 0 && state.ongoingLoadPatternsCounter === 0) {
+                return true;
+            }
+            return false;
+        }
+
+        function loadingPatternFinished(err) {
+            state.loadingStatus = state.loadingStatus || err;
+            state.ongoingLoadPatternsCounter -= 1;
+
+            if (canSwitchStates()) {
+                switchStates();
+            }
+        }
+
         this.updateTerritory = function (guid, patterns) {
-            var missing,
-                error,
-                patternLoaded,
-                i;
-
-            if (state.users[guid]) {
-                if (state.project) {
-                    if (state.nodes[ROOT_PATH]) {
-                        //TODO: this has to be optimized
-                        missing = 0;
-                        error = null;
-
-                        patternLoaded = function (err) {
-                            error = error || err;
-                            missing -= 1;
-                            if (missing === 0) {
-                                //allDone();
-                                _updateTerritoryAllDone(guid, patterns, error);
-                            }
-                        };
-
-                        for (i in patterns) {
-                            missing += 1;
+            var loadRequestCounter = 0,
+                updateRequestId = GUID(),
+                error = null,
+                keys = Object.keys(patterns || {}),
+                i,
+                patternLoaded = function (err) {
+                    error = error || err;
+                    if (--loadRequestCounter === 0) {
+                        delete state.pendingTerritoryUpdatePatterns[updateRequestId];
+                        _updateTerritoryAllDone(guid, patterns, error);
+                        state.ongoingTerritoryUpdateCounter -= 1;
+                        if (state.ongoingTerritoryUpdateCounter < 0) {
+                            logger.error('patternLoaded callback have been called multiple times!!');
+                            state.ongoingTerritoryUpdateCounter = 0; //FIXME
                         }
-                        if (missing > 0) {
-                            for (i in patterns) {
-                                if (patterns.hasOwnProperty(i)) {
-                                    loadPattern(state.core, i, patterns[i], state.nodes, patternLoaded);
-                                }
-                            }
-                        } else {
-                            //allDone();
-                            _updateTerritoryAllDone(guid, patterns, error);
-                        }
-                    } else {
-                        //something funny is going on
-                        if (state.loadNodes[ROOT_PATH]) {
-                            //probably we are in the loading process,
-                            // so we should redo this update when the loading finishes
-                            //setTimeout(updateTerritory, 100, guid, patterns);
-                        } else {
-                            //root is not in nodes and has not even started to load it yet...
-                            state.users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
+                        if (canSwitchStates()) {
+                            switchStates();
                         }
                     }
+                };
+
+            if (!state.nodes[ROOT_PATH]) {
+                if (state.users[guid]) {
+                    state.users[guid].PATTERNS = COPY(patterns);
+                }
+                return;
+            }
+
+            //empty territory check
+            if (keys.length === 0) {
+                _updateTerritoryAllDone(guid, patterns, null);
+                return;
+            }
+
+            state.ongoingTerritoryUpdateCounter += 1;
+
+            //first we have to set the internal counter as the actual load can get synchronous :(
+            loadRequestCounter = keys.length;
+
+            for (i = 0; i < keys.length; i += 1) {
+                if (state.inLoading) {
+                    state.ongoingLoadPatternsCounter += 1;
+                    loadPatternThrottled(state.core,
+                        keys[i], patterns[keys[i]], state.loadNodes, loadingPatternFinished);
                 } else {
-                    //we should update the patterns, but that is all
-                    state.users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
+                    //we should save the patterns to a pending directory
+                    state.pendingTerritoryUpdatePatterns[updateRequestId] = patterns;
+                }
+                loadPatternThrottled(state.core, keys[i], patterns[keys[i]], state.nodes, patternLoaded);
+            }
+
+        };
+
+        function refreshMetaNodes(oldSource, newSource) {
+            var pathsToRemove = [],
+                i,
+                oldPaths = Object.keys(oldSource),
+                newPaths = Object.keys(newSource);
+
+            for (i = 0; i < oldPaths.length; i += 1) {
+                if (newPaths.indexOf(oldPaths[i]) === -1) {
+                    pathsToRemove.push(oldPaths[i]);
                 }
             }
-        };
+
+            for (i = 0; i < newPaths.length; i += 1) {
+                state.metaNodes[newPaths[i]] = newSource[newPaths[i]].node;
+            }
+
+            for (i = 0; i < pathsToRemove.length; i += 1) {
+                delete state.metaNodes[pathsToRemove[i]];
+            }
+        }
+
+        function switchStates() {
+            //it is safe now to move the loadNodes into nodes,
+            // refresh the metaNodes and generate events - all in a synchronous manner!!!
+            var modifiedPaths,
+                i;
+
+            refreshMetaNodes(state.nodes, state.loadNodes);
+
+            modifiedPaths = getModifiedNodes(state.loadNodes);
+            state.nodes = state.loadNodes;
+            state.loadNodes = {};
+
+            state.inLoading = false;
+            state.rootHash = state.loading.rootHash;
+            state.loading.rootHash = null;
+            state.commitHash = state.loading.commitHash;
+            state.loading.commitHash = null;
+
+            for (i in state.users) {
+                if (state.users.hasOwnProperty(i)) {
+                    userEvents(i, modifiedPaths);
+                }
+            }
+
+            if (state.loadingStatus) {
+                state.loading.next(state.loadingStatus);
+            } else {
+                addOnFunctions.updateRunningAddOns(state.nodes[ROOT_PATH], state.loading.next);
+            }
+        }
+
+        function loading(newRootHash, newCommitHash, callback) {
+            //console.log('loading called');
+            //var _callback = callback;
+            //callback = function (err, aborted) {
+            //    console.log('loading finished');
+            //    _callback(err, aborted);
+            //};
+
+            var i, j,
+                havePattern = false,
+                userIds,
+                patternPaths;
+
+            state.loadingStatus = null;
+            state.loadNodes = {};
+            state.loading.rootHash = newRootHash;
+            state.loading.commitHash = newCommitHash;
+            state.loading.next = callback || function () {
+                };
+
+            state.core.loadRoot(state.loading.rootHash, function (err, root) {
+                if (err) {
+                    return state.loading.next(err);
+                }
+
+                state.inLoading = true;
+                state.loadNodes[state.core.getPath(root)] = {
+                    node: root,
+                    incomplete: true,
+                    basic: true,
+                    hash: getStringHash(root)
+                };
+                userIds = Object.keys(state.users);
+                for (i = 0; i < userIds.length; i += 1) {
+                    patternPaths = Object.keys(state.users[userIds[i]].PATTERNS || {});
+                    for (j = 0; j < patternPaths.length; j += 1) {
+                        havePattern = true;
+                        state.ongoingLoadPatternsCounter += 1;
+                        loadPatternThrottled(state.core,
+                            patternPaths[j],
+                            state.users[userIds[i]].PATTERNS[patternPaths[j]],
+                            state.loadNodes,
+                            loadingPatternFinished);
+                    }
+                }
+
+                //now we go through the pending patterns if there is any
+                userIds = Object.keys(state.pendingTerritoryUpdatePatterns);
+                for (i = 0; i < userIds.length; i += 1) {
+                    patternPaths = Object.keys(state.pendingTerritoryUpdatePatterns[userIds[i]] || {});
+                    for (j = 0; j < patternPaths.length; j += 1) {
+                        havePattern = true;
+                        state.ongoingLoadPatternsCounter += 1;
+                        loadPatternThrottled(state.core,
+                            patternPaths[j],
+                            COPY(state.pendingTerritoryUpdatePatterns[userIds[i]][patternPaths[j]]),
+                            state.loadNodes,
+                            loadingPatternFinished);
+                    }
+                }
+
+                if (!havePattern) {
+                    if (canSwitchStates()) {
+                        switchStates();
+                        reLaunchUsers();
+                    }
+                }
+            });
+        }
 
         function cleanUsersTerritories() {
             //look out as the user can remove itself at any time!!!
