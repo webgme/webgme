@@ -41,10 +41,6 @@ describe('Meta Rules', function () {
             })
             .then(function (importResult) {
                 ir = importResult;
-                return Q.allDone([
-                    ir.project.createBranch('b1', ir.commitHash),
-                    ir.project.createBranch('b1', ir.commitHash)
-                ]);
             })
             .nodeify(done);
     });
@@ -57,14 +53,13 @@ describe('Meta Rules', function () {
             .nodeify(done);
     });
 
-    it('EmptyProject FCO should pass', function (done) {
+    it('FCO should pass', function (done) {
         testFixture.loadNode(ir.core, ir.rootNode, '/1')
             .then(function (fcoNode) {
                 return checkMetaRules(ir.core, fcoNode);
             })
             .then(function (result) {
-                //FIXME: Should be false
-                expect(result.hasViolation).to.equal(true, result.message);
+                expect(result.hasViolation).to.equal(false, result.message);
             })
             .nodeify(done);
     });

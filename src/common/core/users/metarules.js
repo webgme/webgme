@@ -8,166 +8,197 @@
 define(['q'], function (Q) {
     'use strict';
 
+
+    function checkPointerRules(meta, core, node, callback) {
+        //TODO currently there is no quantity check
+        var result = {
+                hasViolation: false,
+                message: ''
+            },
+            pointerNames = core.getPointerNames(node),
+            validNames = core.getValidPointerNames(node);
+
+        function checkPointer(name) {
+            var deferred = Q.defer();
+
+            if (validNames.indexOf(name) === -1) {
+                result.hasViolation = true;
+                result.message += 'Invalid pointer "' + name + '"\n';
+                deferred.resolve();
+            } else {
+                core.loadPointer(node, name, function (err, target) {
+                    if (err || !target) {
+                        result.hasViolation = true;
+                        result.message += 'error during pointer ' + name + ' load\n';
+                    } else if (!core.isValidTargetOf(target, node, name)) {
+                        result.hasViolation = true;
+                        result.message += 'Target [' + core.getPath(target) + '] of pointer "' + name +
+                            '" is invalid\n';
+                    }
+                    deferred.resolve();
+                });
+            }
+
+            return deferred.promise;
+        }
+
+        if (validNames.indexOf('base') === -1) {
+            validNames.push('base'); // Base pointer is always a valid pointer.
+        }
+
+        return Q.all(pointerNames.map(checkPointer))
+            .nodeify(callback);
+    }
+
+    function checkSetRules(meta, core, node, callback) {
+        var result = {
+            hasViolation: false,
+            message: ''
+        };
+
+        return Q(result).nodeify(callback);
+    }
+
+    function checkChildrenRules(meta, core, node, callback) {
+        var result = {
+                hasViolation: false,
+                message: ''
+            },
+            deferred = Q.defer(),
+            childCount = [],
+            index;
+
+        function typeIndexOfChild(typePathsArray, childNode) {
+            var index = -1;
+
+            while (childNode && index === -1) {
+                index = typePathsArray.indexOf(core.getPath(childNode));
+                childNode = core.getBase(childNode);
+            }
+
+            return index;
+        }
+
+        core.loadChildren(node, function (err, children) {
+            var i;
+            if (err) {
+                result.message += 'error during loading of node\'s children: ' + err + '\n';
+                result.hasViolation = true;
+                deferred.resolve(result);
+                return;
+            }
+
+            //global count check
+            //min
+            if (meta.children.min && meta.children.min !== -1) {
+                if (children.length < meta.children.min) {
+                    result.hasViolation = true;
+                    result.message += 'node has fewer children than needed ( ' + children.length +
+                        ' < ' +  meta.children.min + ' )\n';
+                }
+            }
+            //max
+            if (meta.children.max && meta.children.max !== -1) {
+                if (children.length > meta.children.max) {
+                    result.hasViolation = true;
+                    result.message += 'Node has more children than allowed ( ' + children.length +
+                        ' > ' +  meta.children.max + ' )\n';
+                }
+            }
+
+            //typedCounts
+            for (i = 0; i < meta.children.items.length; i += 1) {
+                childCount.push(0);
+            }
+            for (i = 0; i < children.length; i++) {
+                index = typeIndexOfChild(meta.children.items, children[i]);
+                if (index === -1) {
+                    result.hasViolation = true;
+                    result.message += 'child ' + core.getGuid(children[i]) + ' is from prohibited type\n';
+                } else {
+                    childCount[index]++;
+                }
+            }
+            for (i = 0; i < meta.children.items.length; i++) {
+                //min
+                if (meta.children.minItems[i] !== -1) {
+                    if (meta.children.minItems[i] > childCount[i]) {
+                        result.hasViolation = true;
+                        result.message += 'Too few type ' + meta.children.items[i] + ' children ( ' + childCount[i] +
+                            ' < ' + meta.children.minItems[i] + ' )\n';
+                    }
+                }
+                //max
+                if (meta.children.maxItems[i] !== -1) {
+                    if (meta.children.maxItems[i] < childCount[i]) {
+                        result.hasViolation = true;
+                        result.message += 'Too many type ' + meta.children.items[i] + ' children ( ' + childCount[i] +
+                            ' > ' + meta.children.maxItems[i] + ' )\n';
+                    }
+                }
+            }
+
+            deferred.resolve(result);
+        });
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function checkAttributeRules(meta, core, node) {
+        var result = {
+                hasViolation: false,
+                message: ''
+            },
+            names = core.getAttributeNames(node),
+            validNames = core.getValidAttributeNames(node),
+            i;
+
+        for (i = 0; i < names.length; i++) {
+            if (validNames.indexOf(names[i]) !== -1) {
+                if (!core.isValidAttributeValueOf(node, names[i], core.getAttribute(node, names[i]))) {
+                    result.hasViolation = true;
+                    result.message += 'attribute ' + names[i] + ' has invalid value\n';
+                }
+            } else {
+                result.hasViolation = true;
+                result.message += 'node has an undefined attribute: ' + names[i];
+            }
+        }
+
+        return Q(result);
+    }
+
     /**
      *
      * @param core
      * @param node
      * @param [callback]
-     * @returns {*}
+     * @returns {Q.Promise}
      */
     function checkMetaRules(core, node, callback) {
-        var error = null,
-            deferred = Q.defer(),
-            returnValue = {hasViolation: false, message: ''},
-            i,
-            neededChecks = 4,
-            meta = core.getJsonMeta(node),
-            typeIndexOfChild = function (typePathsArray, childNode) {
-                var index = -1;
-
-                while (childNode && index === -1) {
-                    index = typePathsArray.indexOf(core.getPath(childNode));
-                    childNode = core.getBase(childNode);
-                }
-
-                return index;
+        var result = {
+                hasViolation: false,
+                message: ''
             },
-            checkChildrenRules = function () {
-                var childCount = [],
-                    index;
-                core.loadChildren(node, function (err, children) {
-                    if (err) {
-                        returnValue.message += 'error during loading of node\'s children\n';
-                        error = error || err;
-                        return checkingDone();
-                    }
+            meta = core.getJsonMeta(node);
 
-                    //global count check
-                    //min
-                    if (meta.children.min && meta.children.min !== -1) {
-                        if (children.length < meta.children.min) {
-                            returnValue.hasViolation = true;
-                            returnValue.message += 'node has fewer nodes than needed\n';
-                        }
-                    }
-                    //max
-                    if (meta.children.max && meta.children.max !== -1) {
-                        if (children.length > meta.children.max) {
-                            returnValue.hasViolation = true;
-                            returnValue.message += 'node has more nodes than allowed\n';
-                        }
-                    }
-
-                    //typedCounts
-                    for (i = 0; i < meta.children.items.length; i++) {
-                        childCount.push(0);
-                    }
-                    for (i = 0; i < children.length; i++) {
-                        index = typeIndexOfChild(meta.children.items, children[i]);
-                        if (index === -1) {
-                            returnValue.hasViolation = true;
-                            returnValue.message += 'child ' + core.getGuid(children[i]) + ' is from prohibited type\n';
-                        } else {
-                            childCount[index]++;
-                        }
-                    }
-                    for (i = 0; i < meta.children.items.length; i++) {
-                        //min
-                        if (meta.children.minItems[i] !== -1) {
-                            if (meta.children.minItems[i] > childCount[i]) {
-                                returnValue.hasViolation = true;
-                                returnValue.message += 'too few type ' + meta.children.items[i] + ' children\n';
-                            }
-                        }
-                        //max
-                        if (meta.children.maxItems[i] !== -1) {
-                            if (meta.children.maxItems[i] < childCount[i]) {
-                                returnValue.hasViolation = true;
-                                returnValue.message += 'too many type ' + meta.children.items[i] + ' children\n';
-                            }
-                        }
-                    }
-                    return checkingDone();
-                });
-            },
-            checkPointerRules = function () {
-                //TODO currently there is no quantity check
-                var validNames = core.getValidPointerNames(node),
-                    names = core.getPointerNames(node),
-                    checkPointer = function (name) {
-                        core.loadPointer(node, name, function (err, target) {
-                            if (err || !target) {
-                                error = error || err;
-                                returnValue.message += 'error during pointer ' + name + ' load\n';
-                                return checkDone();
-                            }
-
-                            if (!core.isValidTargetOf(target, node, name)) {
-                                returnValue.hasViolation = true;
-                                returnValue.message += 'target of pointer ' + name + ' is invalid\n';
-                            }
-                            return checkDone();
-                        });
-                    },
-                    checkDone = function () {
-                        if (--needs === 0) {
-                            checkingDone();
-                        }
-                    },
-                    needs, i;
-
-                needs = names.length;
-                if (needs > 0) {
-                    for (i = 0; i < names.length; i++) {
-                        if (validNames.indexOf(names[i]) === -1) {
-                            returnValue.hasViolation = true;
-                            returnValue.message += ' invalid pointer ' + names[i] + ' has been found\n';
-                            checkDone();
-                        } else {
-                            checkPointer(names[i]);
-                        }
-
-                    }
-                } else {
-                    checkDone();
-                }
-
-            },
-            checkSetRules = function () {
-                //TODO this part is missing yet
-                checkingDone();
-            },
-            checkAttributeRules = function () {
-                var names = core.getAttributeNames(node),
-                    validNames = core.getValidAttributeNames(node);
-                for (i = 0; i < names.length; i++) {
-                    if (validNames.indexOf(names[i]) !== -1) {
-                        if (!core.isValidAttributeValueOf(node, names[i], core.getAttribute(node, names[i]))) {
-                            returnValue.hasViolation = true;
-                            returnValue.message += 'attribute ' + names[i] + ' has invalid value\n';
-                        }
-                    } else {
-                        returnValue.hasViolation = true;
-                        returnValue.message += 'node has an undefined attribute: ' + names[i];
+        return Q.all([
+            checkPointerRules(meta, core, node),
+            checkSetRules(meta, core, node),
+            checkChildrenRules(meta, core, node),
+            checkAttributeRules(meta, core, node)
+        ])
+            .then(function (results) {
+                var i;
+                for (i = 0; i < results.length; i += 1) {
+                    if (results[i].hasViolation === true) {
+                        result.hasViolation = true;
+                        result.message += results[i].message;
                     }
                 }
-                checkingDone();
-            },
-            checkingDone = function () {
-                if (--neededChecks === 0) {
-                    if (error) {
-                        deferred.reject(error instanceof Error ? error : new Error(error));
-                    } else {
-                        deferred.resolve(returnValue);
-                    }
-                }
-            };
-
-        checkChildrenRules();
-        checkPointerRules();
-        checkSetRules();
-        checkAttributeRules();
-        return deferred.promise.nodeify(callback);
+                return result;
+            })
+            .nodeify(callback);
     }
 
     return checkMetaRules;
