@@ -854,24 +854,6 @@ define([
         return result;
     };
 
-    /**
-     * Perform a deep copy of an object
-     *
-     * @param {Object} obj
-     * @return {undefined}
-     */
-    var deepCopy = function (obj) {
-        var res = obj instanceof Array ? [] : {};
-        for (var k in obj) {
-            if (typeof obj[k] === 'object') {
-                res[k] = deepCopy(obj[k]);
-            } else {
-                res[k] = obj[k];
-            }
-        }
-        return res;
-    };
-
     var pick = function(keys, obj) {
         var res = {};
         for (var i = keys.length; i--;) {
@@ -925,7 +907,6 @@ define([
         stringify: stringify,
         floatEquals: floatEquals,
         roundTrunc: roundTrunc,
-        deepCopy: deepCopy,
         toArray: toArray,
         nop: nop,
         pick: pick 

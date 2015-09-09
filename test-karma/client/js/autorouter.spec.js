@@ -1042,18 +1042,6 @@ describe('AutoRouter', function () {
             });
         });
 
-        describe('deepCopy tests', function () {
-            it('should copy nested arrays', function() {
-                var inner = [0,1],
-                    array = [0, inner],
-                    result = arUtils.deepCopy(array);
-
-                inner.pop();
-                assert(result[1].length === 2, 
-                    'Nested array should have length 2 but has length: '+result[1].length);
-            });
-        });
-
         describe('floatEquals tests', function () {
             it('should return true for 8, 8.09', function() {
                 assert(arUtils.floatEquals(8, 8.09));
