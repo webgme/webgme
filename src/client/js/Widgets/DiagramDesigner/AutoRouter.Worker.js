@@ -71,25 +71,27 @@ var startWorker = function() {
 
         AutoRouterWorker.prototype._handleMessage = function(msg) {
             var response,
+                action = msg[0],
                 result;
 
-            response = Utils.deepCopy(msg);
+            response = [action, msg[1].slice()];  // Copy the input args
+
             // If routing async, decorate the request
-            if (msg[0] === 'routeAsync') {
+            if (action === 'routeAsync') {
                 // Send getPathPoints response for each path on each update
                 msg[1] = [{callback: this._updatePaths.bind(this),
                            first: this._updatePaths.bind(this)}];
             }
 
             try {
-                result = this._invokeAutoRouterMethodUnsafe.apply(this, msg.slice());
+                result = this._invokeAutoRouterMethodUnsafe.apply(this, msg);
             } catch(e) {
                 // Send error message
                 worker.postMessage(['BugReplayList', this._getActionSequence()]);
             }
 
             response.push(result);
-            if (this.respondTo[msg[0]]) {
+            if (this.respondTo[action]) {
                 this.logger.debug('Response:', response);
                 worker.postMessage(response);
             }
