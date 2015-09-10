@@ -1369,6 +1369,7 @@ define([
             //first we have to set the internal counter as the actual load can get synchronous :(
             loadRequestCounter = keys.length;
 
+
             for (i = 0; i < keys.length; i += 1) {
                 if (state.inLoading) {
                     state.ongoingLoadPatternsCounter += 1;
@@ -1436,16 +1437,10 @@ define([
         }
 
         function loading(newRootHash, newCommitHash, callback) {
-            //console.log('loading called');
-            //var _callback = callback;
-            //callback = function (err, aborted) {
-            //    console.log('loading finished');
-            //    _callback(err, aborted);
-            //};
-
             var i, j,
                 userIds,
-                patternPaths;
+                patternPaths,
+                patternsToLoad = [];
 
             if (state.ongoingLoadPatternsCounter !== 0) {
                 logger.error('at the start of loading the counter should be zero!!! [' + state.ongoingTerritoryUpdateCounter + ']');
@@ -1471,14 +1466,30 @@ define([
                     hash: getStringHash(root)
                 };
 
-                //we first only set the counter of patterns
+                //we first only set the counter of patterns but we also generate a completely separate pattern queue
+                //as we cannot be sure if all the users will remain at the point of giving the actual load command!!!
                 userIds = Object.keys(state.users);
                 for (i = 0; i < userIds.length; i += 1) {
                     state.ongoingLoadPatternsCounter += Object.keys(state.users[userIds[i]].PATTERNS || {}).length;
+                    patternPaths = Object.keys(state.users[userIds[i]].PATTERNS || {});
+                    for (j = 0; j < patternPaths.length; j += 1) {
+                        patternsToLoad.push({
+                            id: patternPaths[j],
+                            pattern: COPY(state.users[userIds[i]].PATTERNS[patternPaths[j]])
+                        });
+                    }
                 }
                 userIds = Object.keys(state.pendingTerritoryUpdatePatterns);
                 for (i = 0; i < userIds.length; i += 1) {
-                    state.ongoingLoadPatternsCounter += Object.keys(state.pendingTerritoryUpdatePatterns[userIds[i]] || {}).length;
+                    state.ongoingLoadPatternsCounter +=
+                        Object.keys(state.pendingTerritoryUpdatePatterns[userIds[i]] || {}).length;
+                    patternPaths = Object.keys(state.pendingTerritoryUpdatePatterns[userIds[i]] || {});
+                    for (j = 0; j < patternPaths.length; j += 1) {
+                        patternsToLoad.push({
+                            id: patternPaths[j],
+                            pattern: COPY(state.pendingTerritoryUpdatePatterns[userIds[i]][patternPaths[j]])
+                        });
+                    }
                 }
 
                 //empty load check
@@ -1490,30 +1501,9 @@ define([
                     return;
                 }
 
-
-                userIds = Object.keys(state.users);
-                for (i = 0; i < userIds.length; i += 1) {
-                    patternPaths = Object.keys(state.users[userIds[i]].PATTERNS || {});
-                    for (j = 0; j < patternPaths.length; j += 1) {
-                        loadPatternThrottled(state.core,
-                            patternPaths[j],
-                            state.users[userIds[i]].PATTERNS[patternPaths[j]],
-                            state.loadNodes,
-                            loadingPatternFinished);
-                    }
-                }
-
-                //now we go through the pending patterns if there is any
-                userIds = Object.keys(state.pendingTerritoryUpdatePatterns);
-                for (i = 0; i < userIds.length; i += 1) {
-                    patternPaths = Object.keys(state.pendingTerritoryUpdatePatterns[userIds[i]] || {});
-                    for (j = 0; j < patternPaths.length; j += 1) {
-                        loadPatternThrottled(state.core,
-                            patternPaths[j],
-                            COPY(state.pendingTerritoryUpdatePatterns[userIds[i]][patternPaths[j]]),
-                            state.loadNodes,
-                            loadingPatternFinished);
-                    }
+                for (i = 0; i < patternsToLoad.length; i += 1) {
+                    loadPatternThrottled(state.core,
+                        patternsToLoad[i].id, patternsToLoad[i].pattern, state.loadNodes, loadingPatternFinished);
                 }
             });
         }
