@@ -6,7 +6,7 @@
     'webgme.classes': '../utils/build/webgme.classes/webgme.classes',
     blob: './common/blob',
     executor: './common/executor',
-    superagent: './client/lib/superagent/superagent-1.2.0',
+    superagent: './client/lib/superagent/superagent',
     debug: './client/lib/debug/debug',
     q: './client/lib/q/q',
     js: './client/js/',

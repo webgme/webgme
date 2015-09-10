@@ -17,7 +17,7 @@ define('webgme.classes', [
     'common/core/core',
     'common/storage/browserstorage',
     'js/logger',
-    'lib/superagent/superagent-1.2.0',
+    'lib/superagent/superagent',
     'teststorage/teststorage'
 ], function (Client,
              BlobClient,
