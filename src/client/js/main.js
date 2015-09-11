@@ -11,7 +11,6 @@ var DEBUG = false,
     _jqueryUIVersion = '1.10.4',
     _bootstrapVersion = '3.1.1',
     _angularVersion = '1.3.15',
-    _superagentVersion = '1.2.0',
     WebGMEGlobal = WebGMEGlobal || {};
 
 
@@ -64,7 +63,7 @@ require.config({
 
         //node_modules
         jszip: 'lib/jszip/jszip',
-        superagent: 'lib/superagent/superagent-' + _superagentVersion,
+        superagent: 'lib/superagent/superagent',
         debug: 'lib/debug/debug',
         q: 'lib/q/q',
 
