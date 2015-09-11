@@ -611,6 +611,8 @@ define([
 
         this._updating = false;
         this._tryRefreshScreen();
+
+        this.searchManager.applyLastSearch();
     };
 
     DiagramDesignerWidget.prototype._tryRefreshScreen = function () {
