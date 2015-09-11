@@ -41,7 +41,7 @@ var WebGME = require('../webgme'),
                 prettyPrint: true,
                 //handleExceptions: true, // ignored by default when you create the logger, see the logger.create
                 //exitOnError: false,
-                depth: 2,
+                depth: 4,
                 debugStdout: true
             }
         }]

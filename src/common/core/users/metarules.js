@@ -8,6 +8,82 @@
 define(['q'], function (Q) {
     'use strict';
 
+    function loadNode(core, nodePath) {
+        var deferred = new Q.defer(),
+            rootNode = core.getRoot();
+
+        core.loadByPath(rootNode, nodePath, function (err, node) {
+            if (err) {
+                deferred.reject(new Error(err));
+            } else if (core.isEmpty(node)) {
+                deferred.reject(new Error('Given nodePath does not exist "' + nodePath + '"!'));
+            } else {
+                deferred.resolve(node);
+            }
+        });
+
+        return deferred.promise;
+    }
+
+    function loadNodes(core, nodePaths) {
+        var i,
+            loadPromises = [];
+
+        for (i = 0; i < nodePaths.length; i += 1) {
+            loadPromises.push(loadNode(core, nodePaths[i]));
+        }
+
+        return Q.all(loadPromises);
+    }
+
+    function filterPointerRules(meta) {
+        var result = {
+                pointers: {},
+                sets: {}
+            },
+            pointerNames = Object.keys(meta.pointers);
+
+        pointerNames.map(function (name) {
+            if (meta.pointers[name].min !== undefined) {
+                // These are single pointers (e.g. connection pointers)
+                result.pointers[name] = meta.pointers[name];
+            } else {
+                // These are actual sets
+                result.sets[name] = meta.pointers[name];
+            }
+        });
+
+        return result;
+    }
+
+    function getMatchedItemIndices(core, node, items) {
+        var i,
+            indices = [];
+
+        function isInstanceOf(basePath, node) {
+            var result = false,
+                baseNode;
+            baseNode = node;
+
+            while (baseNode) {
+                if (core.getPath(baseNode) === basePath) {
+                    result = true;
+                    break;
+                }
+                baseNode = core.getBase(baseNode);
+            }
+
+            return result;
+        }
+
+        for (i = 0; i < items.length; i += 1) {
+            if (isInstanceOf(items[i], node)) {
+                indices.push(i);
+            }
+        }
+
+        return indices;
+    }
 
     function checkPointerRules(meta, core, node, callback) {
         //TODO currently there is no quantity check
@@ -55,14 +131,32 @@ define(['q'], function (Q) {
                 hasViolation: false,
                 message: ''
             },
+            metaSets = filterPointerRules(meta).sets,
+            members = [],
             setNames = core.getSetNames(node);
 
         console.log('\n###### ' + core.getAttribute(node, 'name') + ' ######\n');
-        console.log(meta);
+        console.log(filterPointerRules(meta));
         console.log(setNames);
 
+        function checkSet(setName, metaSet) {
+            var memberPaths = core.getMemberPaths(node, setName, metaSet);
+
+            return loadNodes(core, memberPaths)
+                .then(function (members) {
+
+                });
+        }
+
         setNames.map(function (setName) {
-            console.log(core.getMemberPaths(node, setName));
+            var metaSet = metaSets[setName],
+                memberPaths;
+            if (!metaSet) {
+                result.hasViolation = true;
+                result.message += 'Invalid set "' + setName + '"\n';
+            } else {
+                members.push(checkSet(setName, metaSet));
+            }
         });
 
         return Q(result).nodeify(callback);
@@ -84,7 +178,7 @@ define(['q'], function (Q) {
                 index = typePathsArray.indexOf(core.getPath(childNode));
                 childNode = core.getBase(childNode);
             }
-
+            //TODO: This is not correct!!
             return index;
         }
 
@@ -103,7 +197,7 @@ define(['q'], function (Q) {
                 if (children.length < meta.children.min) {
                     result.hasViolation = true;
                     result.message += 'node has fewer children than needed ( ' + children.length +
-                        ' < ' +  meta.children.min + ' )\n';
+                        ' < ' + meta.children.min + ' )\n';
                 }
             }
             //max
@@ -111,7 +205,7 @@ define(['q'], function (Q) {
                 if (children.length > meta.children.max) {
                     result.hasViolation = true;
                     result.message += 'Node has more children than allowed ( ' + children.length +
-                        ' > ' +  meta.children.max + ' )\n';
+                        ' > ' + meta.children.max + ' )\n';
                 }
             }
 

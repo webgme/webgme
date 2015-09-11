@@ -115,4 +115,16 @@ describe('Meta Rules', function () {
             .nodeify(done);
     });
 
+    it('ConnectionElementInstance should pass', function (done) {
+        var nodePath = '/31060956';
+        testFixture.loadNode(ir.core, ir.rootNode, nodePath)
+            .then(function (node) {
+                return checkMetaRules(ir.core, node);
+            })
+            .then(function (result) {
+                expect(result.hasViolation).to.equal(false, result.message);
+            })
+            .nodeify(done);
+    });
+
 });
