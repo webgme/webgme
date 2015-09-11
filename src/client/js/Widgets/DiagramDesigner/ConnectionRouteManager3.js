@@ -170,42 +170,56 @@ define([
             if (self.diagramDesigner.itemIds.indexOf(ID) !== -1) {
                 if (self.diagramDesigner.items[ID].rotation !== self._autorouterBoxRotation[ID]) {
                     //Item has been rotated
-                    self._resizeItem(ID);
+                    var resizeFn = self._resizeItem.bind(self, ID);
+                    self._modifyItem(ID, resizeFn);
                 }
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
 
         this._onComponentCreate = function (_canvas, ID) {
-            if (self.diagramDesigner.itemIds.indexOf(ID) !== -1 && self._autorouterBoxes[ID] === undefined) {
-                self.insertBox(ID);
-            } else if (self.diagramDesigner.connectionIds.indexOf(ID) !== -1) {
-                self.insertConnection(ID);
+            if (self._onItemCreateQueue[ID] === undefined) {  // New item
+                if (self.diagramDesigner.itemIds.indexOf(ID) !== -1) {
+                    self.insertBox(ID);
+                } else if (self.diagramDesigner.connectionIds.indexOf(ID) !== -1) {
+                    self.insertConnection(ID);
+                }
+            } else {  // Already created the item
+                self.logger.warn('Received ON_COMPONENT_CREATE event for already created item! ('+ID+')');
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
         this._onComponentResize = function (_canvas, ID) {
-            if (self._autorouterBoxes[ID.ID]) {
-                self._resizeItem(ID.ID);
+            if (self._onItemCreateQueue[ID.ID] !== undefined) {
+                var resizeFn = self._resizeItem.bind(self, ID.ID);
+                self._modifyItem(ID.ID, resizeFn);
             } else {
+                self.logger.warn('Received ITEM_SIZE_CHANGED event for nonexistent item! ('+ID.ID+')');
                 self.insertBox(ID.ID);
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);
 
         this._onComponentDelete = function (_canvas, ID) {  // Boxes and lines
-            self.deleteItem(ID);
+            if (self._onItemCreateQueue[ID] !== undefined) {
+                self.deleteItem(ID);
+            } else {
+                self.logger.warn('Received ON_COMPONENT_DELETE event for nonexistent item! ('+ID+')');
+            }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_DELETE, this._onComponentDelete);
         //ON_UNREGISTER_SUBCOMPONENT
 
         this._onItemPositionChanged = function (_canvas, eventArgs) {
-            if (self._autorouterBoxes[eventArgs.ID]) {
+            if (self._onItemCreateQueue[eventArgs.ID] !== undefined) {
                 var x = self.diagramDesigner.items[eventArgs.ID].getBoundingBox().x,
                     y = self.diagramDesigner.items[eventArgs.ID].getBoundingBox().y;
 
-                self._invokeAutoRouterMethod('move', [eventArgs.ID, {x: x, y: y}]);
+                self._modifyItem(eventArgs.ID, self._invokeAutoRouterMethod
+                    .bind(self, 'move', [eventArgs.ID, {x: x, y: y}]));
+            } else {
+                self.logger.warn('Received ITEM_POSITION_CHANGED event for nonexistent item! ('+eventArgs.ID+')');
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED,
@@ -218,8 +232,10 @@ define([
 
         this._onUnregisterSubcomponent = function (sender, ids) {
             var longid = ids.objectID + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + ids.subComponentID;
-            if (self._autorouterBoxes[longid]) {
+            if (self._onItemCreateQueue[longid] !== undefined) {
                 self.deleteItem(longid);
+            } else {
+                self.logger.warn('Received UNREGISTER event for nonexistent item! ('+longid+')');
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_UNREGISTER_SUBCOMPONENT,
