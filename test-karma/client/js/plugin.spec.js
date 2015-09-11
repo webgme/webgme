@@ -36,10 +36,10 @@ describe('Plugin', function () {
             window.WebGMEGlobal.plugins = {};
             window.WebGMEGlobal.plugins.MinimalWorkingExample = MinimalWorkingExample;
             window.WebGMEGlobal.plugins.PluginForked = PluginForked;
-            superagent.get('/listAllPlugins')
+            superagent.get('/api/plugins')
                 .end(function (err, res) {
                     if (res.status === 200) {
-                        allPlugins = res.body.allPlugins;
+                        allPlugins = res.body;
                         client.connectToDatabase(function (err) {
                             expect(err).to.equal(null);
                             client.selectProject(projectId, null, function (err) {
@@ -50,7 +50,7 @@ describe('Plugin', function () {
                             });
                         });
                     } else {
-                        done(new Error('/listAllPlugins failed'));
+                        done(new Error('/api/plugins failed'));
                     }
                 });
         });

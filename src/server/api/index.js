@@ -23,6 +23,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         htmlDoc,
         htmlDocDeferred = Q.defer(),
         path = require('path'),
+        fs = require('fs'),
         apiDocumentationMountPoint = '/developer/api',
 
         logger = middlewareOpts.logger.fork('api'),
@@ -32,6 +33,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         webgme = require('../../../webgme'),
         merge = webgme.requirejs('common/core/users/merge'),
         StorageUtil = webgme.requirejs('common/storage/util'),
+        webgmeUtils = require('../../utils'),
 
         versionedAPIPath = mountPath + '/v1',
         latestAPIPath = mountPath,
@@ -522,43 +524,6 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    // AUTHENTICATED
-    //router.get('/user/orgs', ensureAuthenticated, function (req, res) {
-    //
-    //    res.json({
-    //        message: 'Not implemented yet'
-    //    });
-    //});
-    //
-    //router.post('/user/projects', function (req, res) {
-    //
-    //    res.json({
-    //        message: 'Not implemented yet'
-    //    });
-    //});
-    //
-    //router.post('/orgs/:org/projects', function (req, res) {
-    //
-    //    res.json({
-    //        message: 'Not implemented yet'
-    //    });
-    //});
-
-    // USERS
-    //router.put('/users/:username/site_admin', function (req, res) {
-    //
-    //    res.json({
-    //        message: 'Not implemented yet'
-    //    });
-    //});
-    //
-    //router.delete('/users/:username/site_admin', function (req, res) {
-    //
-    //    res.json({
-    //        message: 'Not implemented yet'
-    //    });
-    //});
-
 
     // PROJECTS
 
@@ -768,47 +733,90 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    //// FIXME: requires auth
-    //    router.get('/projects/:owner/:project/collaborators', function (req, res) {
-    //        // array of users with permissions
-    //
-    //        res.json({
-    //            message: 'Not implemented yet'
-    //        });
-    //    });
-    //
-    //
-    //    router.patch('/projects/:owner/:project/collaborators', function (req, res) {
-    //
-    //
-    //        res.json({
-    //            message: 'Not implemented yet'
-    //        });
-    //    });
-    //
-    //// FIXME: requires auth
-    //    router.get('/projects/:owner/:project/collaborators/:username', function (req, res) {
-    //
-    //        res.json({
-    //            message: 'Not implemented yet'
-    //        });
-    //    });
-    //
-    //
-    //    router.put('/projects/:owner/:project/collaborators/:username', function (req, res) {
-    //
-    //        res.json({
-    //            message: 'Not implemented yet'
-    //        });
-    //    });
-    //
-    //
-    //    router.delete('/projects/:owner/:project/collaborators/:username', function (req, res) {
-    //
-    //        res.json({
-    //            message: 'Not implemented yet'
-    //        });
-    //    });
+    logger.debug('creating list asset rules');
+    router.get('/decorators', ensureAuthenticated, function (req, res) {
+        var result = webgmeUtils.getComponentNames(middlewareOpts.gmeConfig.visualization.decoratorPaths);
+        logger.debug('/decorators', {metadata: result});
+        res.send(result);
+    });
+
+    router.get('/plugins', ensureAuthenticated, function (req, res) {
+        var result = webgmeUtils.getComponentNames(middlewareOpts.gmeConfig.plugin.basePaths);
+        logger.debug('/plugins', {metadata: result});
+        res.send(result);
+    });
+
+    router.get('/seeds', ensureAuthenticated, function (req, res) {
+        var names = [],
+            result = [],
+            seedName,
+            i,
+            j;
+        if (middlewareOpts.gmeConfig.seedProjects.enable === true) {
+            for (i = 0; i < middlewareOpts.gmeConfig.seedProjects.basePaths.length; i++) {
+                names = fs.readdirSync(middlewareOpts.gmeConfig.seedProjects.basePaths[i]);
+                for (j = 0; j < names.length; j++) {
+                    seedName = path.basename(names[j], '.json');
+                    if (result.indexOf(seedName) === -1) {
+                        result.push(seedName);
+                    }
+                }
+            }
+        }
+        logger.debug('/seeds', {metadata: result});
+        res.send(result);
+    });
+
+    function getVisualizersDescriptor() {
+        //we merge the contents of the CONFIG.visualizerDescriptors by id
+        var indexById = function (objectArray, id) {
+                var i,
+                    index = -1;
+                for (i = 0; i < objectArray.length; i++) {
+                    if (objectArray[i].id === id) {
+                        index = i;
+                        break;
+                    }
+                }
+
+                return index;
+            },
+            getVisualizerDescriptor = function (path) {
+                try {
+                    var descriptor = fs.readFileSync(path, 'utf-8');
+                    descriptor = JSON.parse(descriptor);
+                    return descriptor;
+                } catch (e) {
+                    //we do not care much of the error just give back an empty array
+                    logger.error(e);
+                    return [];
+                }
+            },
+            allVisualizersDescriptor = [],
+            i, j;
+
+        for (i = 0; i < middlewareOpts.gmeConfig.visualization.visualizerDescriptors.length; i++) {
+            var descriptor = getVisualizerDescriptor(middlewareOpts.gmeConfig.visualization.visualizerDescriptors[i]);
+            if (descriptor.length) {
+                for (j = 0; j < descriptor.length; j++) {
+                    var index = indexById(allVisualizersDescriptor, descriptor[j].id);
+                    if (index !== -1) {
+                        allVisualizersDescriptor[index] = descriptor[j];
+                    } else {
+                        allVisualizersDescriptor.push(descriptor[j]);
+                    }
+                }
+            }
+        }
+        return allVisualizersDescriptor;
+    }
+
+    // FIXME: this should be JSON
+    router.get('/visualizers', ensureAuthenticated, function (req, res, next) {
+        var result = getVisualizersDescriptor();
+        logger.debug('/visualizers', {metadata: result});
+        res.send(result);
+    });
 
     router.use('*', function (req, res, next) {
         res.status(404);

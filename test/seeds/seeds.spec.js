@@ -83,9 +83,9 @@ describe('Seeds', function () {
     it('should get all seed project names', function (done) {
         var agent = superagent.agent();
 
-        agent.get(serverBaseUrl + '/listAllSeeds', function (err, res) {
+        agent.get(serverBaseUrl + '/api/seeds', function (err, res) {
             expect(err).to.equal(null);
-            expect(res.body.allSeeds).to.deep.equal(seedNames); // ensures that we test all available seeds
+            expect(res.body).to.deep.equal(seedNames); // ensures that we test all available seeds
             done();
         });
     });

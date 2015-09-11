@@ -388,33 +388,33 @@ define([
 
             //This is still asychronous but has a better chance to finish here rather than from the client.
             function getAvaliablePluginsAndDecoratorsAndSeeds() {
-                superagent.get('/listAllPlugins')
+                superagent.get('/api/plugins')
                     .end(function (err, res) {
                         if (res.status === 200) {
-                            WebGMEGlobal.allPlugins = res.body.allPlugins;
-                            logger.debug('/listAllPlugins', WebGMEGlobal.allPlugins);
+                            WebGMEGlobal.allPlugins = res.body;
+                            logger.debug('/api/plugins', WebGMEGlobal.allPlugins);
                         } else {
-                            logger.error('/listAllPlugins failed');
+                            logger.error('/api/plugins failed');
                             WebGMEGlobal.allPlugins = [];
                         }
                     });
-                superagent.get('/listAllDecorators')
+                superagent.get('/api/decorators')
                     .end(function (err, res) {
                         if (res.status === 200) {
-                            WebGMEGlobal.allDecorators = res.body.allDecorators;
-                            logger.debug('/listAllDecorators', WebGMEGlobal.allDecorators);
+                            WebGMEGlobal.allDecorators = res.body;
+                            logger.debug('/api/decorators', WebGMEGlobal.allDecorators);
                         } else {
-                            logger.error('/listAllDecorators failed', err);
+                            logger.error('/api/decorators failed', err);
                             WebGMEGlobal.allDecorators = [];
                         }
                     });
-                superagent.get('/listAllSeeds')
+                superagent.get('/api/seeds')
                     .end(function (err, res) {
                         if (res.status === 200) {
-                            WebGMEGlobal.allSeeds = res.body.allSeeds;
-                            logger.debug('/listAllSeeds', WebGMEGlobal.allSeeds);
+                            WebGMEGlobal.allSeeds = res.body;
+                            logger.debug('/api/seeds', WebGMEGlobal.allSeeds);
                         } else {
-                            logger.error('/listAllSeeds failed', err);
+                            logger.error('/api/seeds failed', err);
                             WebGMEGlobal.allSeeds = [];
                         }
                     });

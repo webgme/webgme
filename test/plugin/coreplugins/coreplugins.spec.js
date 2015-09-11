@@ -26,9 +26,9 @@ describe('CorePlugins', function () {
             'MergeExample',
             'MetaGMEParadigmImporter',
             'MinimalWorkingExample',
-            'PluginGenerator',
             'MultipleMainCallbackCalls',
-            'PluginForked'
+            'PluginForked',
+            'PluginGenerator'
         ],
 
         pluginsShouldFail = [
@@ -118,9 +118,9 @@ describe('CorePlugins', function () {
     it('should get all core plugins', function (done) {
         var agent = superagent.agent();
 
-        agent.get(serverBaseUrl + '/listAllPlugins', function (err, res) {
+        agent.get(serverBaseUrl + '/api/plugins', function (err, res) {
             expect(err).to.equal(null);
-            expect(res.body.allPlugins).to.deep.equal(pluginNames); // ensures that we test all available core plugins
+            expect(res.body).to.deep.equal(pluginNames); // ensures that we test all available core plugins
             done();
         });
     });
