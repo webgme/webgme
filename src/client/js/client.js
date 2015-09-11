@@ -1303,6 +1303,12 @@ define([
         }
 
         function _updateTerritoryAllDone(guid, patterns, error) {
+
+            logger.debug('updateTerritory related loads finished', {
+                metadata: {
+                    userId: guid, patterns: patterns, error: error
+                }
+            });
             refreshMetaNodes(state.nodes, state.nodes);
 
             if (state.users[guid]) {
@@ -1314,7 +1320,8 @@ define([
         }
 
         function canSwitchStates() {
-            if (state.inLoading && state.ongoingTerritoryUpdateCounter === 0 && state.ongoingLoadPatternsCounter === 0) {
+            if (state.inLoading && state.ongoingTerritoryUpdateCounter === 0 &&
+                state.ongoingLoadPatternsCounter === 0) {
                 return true;
             }
             return false;
@@ -1351,8 +1358,16 @@ define([
                     }
                 };
 
+            logger.debug('updatingTerritory', {
+                metadata: {
+                    userId: guid,
+                    patterns: patterns
+                }
+            });
+
             if (!state.nodes[ROOT_PATH]) {
                 if (state.users[guid]) {
+                    logger.debug('early updateTerritory for user[' + guid + ']. No loaded project state yet.');
                     state.users[guid].PATTERNS = COPY(patterns);
                 }
                 return;
@@ -1411,6 +1426,9 @@ define([
             var modifiedPaths,
                 i;
 
+            logger.debug('switching project state [C#' +
+                state.commitHash + ']->[C#' + state.loading.commitHash + '] : [R#' +
+                state.rootHash + ']->[R#' + state.loading.rootHash + ']');
             refreshMetaNodes(state.nodes, state.loadNodes);
 
             modifiedPaths = getModifiedNodes(state.loadNodes);
@@ -1443,15 +1461,15 @@ define([
                 patternsToLoad = [];
 
             if (state.ongoingLoadPatternsCounter !== 0) {
-                logger.error('at the start of loading the counter should be zero!!! [' + state.ongoingTerritoryUpdateCounter + ']');
+                throw new Error('at the start of loading counter should bee zero!!! [' +
+                    state.ongoingLoadPatternsCounter + ']');
             }
 
             state.loadingStatus = null;
             state.loadNodes = {};
             state.loading.rootHash = newRootHash;
             state.loading.commitHash = newCommitHash;
-            state.loading.next = callback || function () {
-                };
+            state.loading.next = callback;
 
             state.core.loadRoot(state.loading.rootHash, function (err, root) {
                 if (err) {
