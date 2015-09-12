@@ -91,7 +91,7 @@ describe('Meta Rules', function () {
             .nodeify(done);
     });
 
-    it.only('ModelElementInstance should pass', function (done) {
+    it('ModelElementInstance should pass', function (done) {
         var nodePath = '/1936712753';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
