@@ -660,7 +660,7 @@ define([
                 self.gmeClient.getExportProjectBranchUrl(data.projectId,
                     data.branchId, data.projectId + '_' + data.branchId, function (err, url) {
                         if (!err && url) {
-                            saveToDisk(url);
+                            saveToDisk.saveUrlToDisk(url);
                         } else {
                             self.logger.error('Failed to get project export url for', data);
                         }
