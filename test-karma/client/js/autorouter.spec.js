@@ -5,7 +5,7 @@
  */
 
 // Tests
-describe.only('AutoRouter', function () {
+describe('AutoRouter', function () {
     'use strict';
     var global = {};
     global.WebGMEGlobal = {};
