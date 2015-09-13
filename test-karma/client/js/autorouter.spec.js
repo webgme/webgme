@@ -5,7 +5,7 @@
  */
 
 // Tests
-describe('AutoRouter', function () {
+describe.only('AutoRouter', function () {
     'use strict';
     var global = {};
     global.WebGMEGlobal = {};
@@ -41,6 +41,10 @@ describe('AutoRouter', function () {
     });
 
     var replayTests = function () {
+
+        beforeEach(function() {
+            bugPlayer.expectedErrors = [];
+        });
 
         it('basic model with ports', function (done) {
             requirejs(['text!aRtestCases/basic.json'], function (actions) {
@@ -213,6 +217,7 @@ describe('AutoRouter', function () {
         });
 
         it('should not move box that doesn\'t exist', function (done) {
+            this.timeout(30000);  // Too slow with web worker on my dev box
             requirejs(['text!aRtestCases/finding_correct_buffer_box.json'], function (actions) {
                 bugPlayer.expectedErrors.push(/Box does not exist/);
                 bugPlayer.test(JSON.parse(actions), {}, done);
@@ -982,15 +987,15 @@ describe('AutoRouter', function () {
     });
 
     describe('Replay tests', function() {
-        describe('Standard', function () {
-            // Set up the Autorouter as a web worker
+        describe.skip('Standard', function () {
+            // Set up the Autorouter on the same thread
             before(function() {
                 bugPlayer.useWebWorker(false);
             });
             describe('Tests', replayTests);
         });
 
-        describe.skip('Web Worker', function () {
+        describe('Web Worker', function () {
             // Set up the Autorouter as a web worker
             before(function() {
                 bugPlayer.useWebWorker(true);

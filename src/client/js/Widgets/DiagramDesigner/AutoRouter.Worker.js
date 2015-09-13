@@ -6,6 +6,7 @@ importScripts('../../../lib/require/require.js');
 var worker = this,
     window = {},  //jshint ignore: line
     WebGMEGlobal = {gmeConfig: {}},
+    respondToAll = false,
     msgQueue = [];
 
 /**
@@ -89,7 +90,7 @@ var startWorker = function() {
             }
 
             response.push(result);
-            if (this.respondTo[msg[0]]) {
+            if (respondToAll || this.respondTo[msg[0]]) {
                 this.logger.debug('Response:', response);
                 worker.postMessage(response);
             }
@@ -138,5 +139,6 @@ worker.onmessage = function(msg) {
     'use strict';
     
     WebGMEGlobal.gmeConfig.client = msg.data[0];
+    respondToAll = msg.data[1];
     startWorker();
 };
