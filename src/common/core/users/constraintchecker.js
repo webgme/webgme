@@ -91,18 +91,18 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
             promises = customNames.map(checkCustom);
             promises.push(metaRules(self.core, node));
         } else {
-            deferred.reject(new Error('Unknown CONSTRAINT_TYPE' + self.type));
+            deferred.reject(new Error('Unknown CONSTRAINT_TYPE: ' + self.type));
         }
 
         Q.allSettled(promises)
             .then(function (results) {
-                var customCountDown = customNames.length;
+                var counter = 0;
                 results.map(function (result) {
                     var msg = {
                         hasViolation: false,
                         message: ''
                     };
-                    customCountDown -= 1;
+                    counter += 1;
                     if (result.state === 'rejected') {
                         msg.message = result.reason instanceof Error ? result.reason.message : result.reason;
                         msg.hasViolation = true;
@@ -114,11 +114,12 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
                         msg.hasViolation = true;
                     }
 
-                    if (customCountDown > -1) {
-                        message[customNames[customCountDown]] = msg;
-                    } else {
+                    if (counter > customNames.length) {
                         // This is the meta constraint.
                         message.META_RULES = msg;
+
+                    } else {
+                        message[customNames[counter - 1]] = msg;
                     }
 
                     if (msg.hasViolation) {
@@ -196,7 +197,7 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
                 };
             self._checkNode(node, function (err, msg) {
                 error = error || err;
-                if (msg.hasViolation === true) {
+                if (msg && msg.hasViolation === true) {
                     message.hasViolation = true;
                 }
                 message[self.core.getGuid(node)] = msg;

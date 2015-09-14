@@ -9,6 +9,8 @@
         "04e226bc-0e20-dc68-2892-975f0ffba97f": "1232831412",
         "0aa5c895-f0f3-3198-219a-99d1470cf979": "767879236",
         "173e00a1-5193-3f56-d165-a8d22fd786d4": "2048951527",
+        "191f6e2f-391b-09ea-4e42-af1654fb5605": "902005954",
+        "208f3d41-20e3-4464-c404-6488985d019e": "132634291",
         "230015dd-dc97-18e5-8d16-aa4d61e623ae": "31060956",
         "2994da8f-84c6-75f6-113b-053f7aad7803": "942380411",
         "2bff7f8a-a58e-405d-5c66-5e98195bf2db": "1686535233",
@@ -17,14 +19,17 @@
         "3873bb87-8d89-7a75-c336-c6e403acd2a0": "551635397",
         "3bbc15f3-f0d9-d947-08c4-97ff0bfbf1ab": "1315106673",
         "48690da2-3b88-c830-3500-fd13febeaf43": "1936712753",
+        "4a24c736-7199-dc8c-2b68-535d4be7de31": "2046278624",
         "4d38864a-050a-0b3e-ca07-bc19e05202fb": "331912205",
         "50ec539b-64dd-dbf6-e373-69ed9069e042": "1208704677",
         "549829e7-4288-d1f7-d46f-db7584b74d02": "1672466581",
         "6764f8b9-91ef-531f-5978-586e2be17902": "1266119167",
         "6be9243a-8a9c-40ff-cdb4-ad393d152cae": "1808366743",
         "7fdf124b-8168-0fb8-34aa-215f5f4f9720": "1694245053",
+        "8790acf4-2e23-949f-6303-862d10937614": "479453594",
         "a7209aa2-eb96-68fe-d1f4-0bba1faf7a6c": "361739760",
         "aeeb7ce1-e906-1817-c2b0-9b67a94f3b43": "474747191",
+        "b2cd27f8-2dc1-79ed-3e6c-7bf3c5960c8d": "343492672",
         "b2f1052e-feff-4cfe-cf4b-a96873b7f13d": "990231279",
         "c81fa28e-e412-1874-7897-219c3a358a05": "1578427941",
         "cab37512-9256-6d3a-a1c7-9bdbf81645ca": "822429792",
@@ -37,22 +42,27 @@
         "04e226bc-0e20-dc68-2892-975f0ffba97f": {},
         "0aa5c895-f0f3-3198-219a-99d1470cf979": {},
         "173e00a1-5193-3f56-d165-a8d22fd786d4": {},
+        "191f6e2f-391b-09ea-4e42-af1654fb5605": {},
+        "208f3d41-20e3-4464-c404-6488985d019e": {},
         "230015dd-dc97-18e5-8d16-aa4d61e623ae": {},
         "2e341676-f76a-51b9-f78f-8fede9f19326": {},
         "2f34a055-2f82-21f8-75a2-e0f48134fa3b": {},
         "3873bb87-8d89-7a75-c336-c6e403acd2a0": {},
         "3bbc15f3-f0d9-d947-08c4-97ff0bfbf1ab": {},
         "48690da2-3b88-c830-3500-fd13febeaf43": {},
+        "4a24c736-7199-dc8c-2b68-535d4be7de31": {},
         "4d38864a-050a-0b3e-ca07-bc19e05202fb": {},
         "50ec539b-64dd-dbf6-e373-69ed9069e042": {},
         "549829e7-4288-d1f7-d46f-db7584b74d02": {},
         "6be9243a-8a9c-40ff-cdb4-ad393d152cae": {},
         "7fdf124b-8168-0fb8-34aa-215f5f4f9720": {},
         "a7209aa2-eb96-68fe-d1f4-0bba1faf7a6c": {},
+        "b2cd27f8-2dc1-79ed-3e6c-7bf3c5960c8d": {},
         "b2f1052e-feff-4cfe-cf4b-a96873b7f13d": {},
         "cab37512-9256-6d3a-a1c7-9bdbf81645ca": {
             "2994da8f-84c6-75f6-113b-053f7aad7803": {},
             "2bff7f8a-a58e-405d-5c66-5e98195bf2db": {},
+            "8790acf4-2e23-949f-6303-862d10937614": {},
             "aeeb7ce1-e906-1817-c2b0-9b67a94f3b43": {},
             "c81fa28e-e412-1874-7897-219c3a358a05": {},
             "fd466d37-e975-06c8-4ae0-80c43b24888b": {}
@@ -116,6 +126,26 @@
                 "MetaAspectSet": [
                     {
                         "attributes": {},
+                        "guid": "191f6e2f-391b-09ea-4e42-af1654fb5605",
+                        "registry": {
+                            "position": {
+                                "x": 289,
+                                "y": 635
+                            }
+                        }
+                    },
+                    {
+                        "attributes": {},
+                        "guid": "208f3d41-20e3-4464-c404-6488985d019e",
+                        "registry": {
+                            "position": {
+                                "x": 277,
+                                "y": 518
+                            }
+                        }
+                    },
+                    {
+                        "attributes": {},
                         "guid": "2994da8f-84c6-75f6-113b-053f7aad7803",
                         "registry": {
                             "position": {
@@ -141,6 +171,16 @@
                             "position": {
                                 "x": 948,
                                 "y": 217
+                            }
+                        }
+                    },
+                    {
+                        "attributes": {},
+                        "guid": "8790acf4-2e23-949f-6303-862d10937614",
+                        "registry": {
+                            "position": {
+                                "x": 68,
+                                "y": 506
                             }
                         }
                     },
@@ -198,6 +238,26 @@
                 "MetaAspectSet_19e8629c-a855-76b3-cdc2-e59aeeb8bbbc": [
                     {
                         "attributes": {},
+                        "guid": "191f6e2f-391b-09ea-4e42-af1654fb5605",
+                        "registry": {
+                            "position": {
+                                "x": 291,
+                                "y": 631
+                            }
+                        }
+                    },
+                    {
+                        "attributes": {},
+                        "guid": "208f3d41-20e3-4464-c404-6488985d019e",
+                        "registry": {
+                            "position": {
+                                "x": 277,
+                                "y": 518
+                            }
+                        }
+                    },
+                    {
+                        "attributes": {},
                         "guid": "2994da8f-84c6-75f6-113b-053f7aad7803",
                         "registry": {
                             "position": {
@@ -223,6 +283,16 @@
                             "position": {
                                 "x": 948,
                                 "y": 217
+                            }
+                        }
+                    },
+                    {
+                        "attributes": {},
+                        "guid": "8790acf4-2e23-949f-6303-862d10937614",
+                        "registry": {
+                            "position": {
+                                "x": 68,
+                                "y": 506
                             }
                         }
                     },
@@ -373,6 +443,56 @@
             },
             "sets": {},
             "constraints": {}
+        },
+        "191f6e2f-391b-09ea-4e42-af1654fb5605": {
+            "attributes": {
+                "name": "CustomConstraintErrors"
+            },
+            "base": "8790acf4-2e23-949f-6303-862d10937614",
+            "meta": {},
+            "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+            "pointers": {
+                "base": "8790acf4-2e23-949f-6303-862d10937614"
+            },
+            "registry": {
+                "position": {
+                    "x": 416,
+                    "y": 653
+                }
+            },
+            "sets": {},
+            "constraints": {
+                "Error": {
+                    "script": "function(core, node, callback) {\ncallback('Callback called with error',{hasViolation:false,message:''});\n}",
+                    "priority": 1,
+                    "info": ""
+                }
+            }
+        },
+        "208f3d41-20e3-4464-c404-6488985d019e": {
+            "attributes": {
+                "name": "ConstraintRaisesExpection"
+            },
+            "base": "8790acf4-2e23-949f-6303-862d10937614",
+            "meta": {},
+            "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+            "pointers": {
+                "base": "8790acf4-2e23-949f-6303-862d10937614"
+            },
+            "registry": {
+                "position": {
+                    "x": 587,
+                    "y": 648
+                }
+            },
+            "sets": {},
+            "constraints": {
+                "Raises": {
+                    "script": "function(core, node, callback) {\n  var a = node.doesNotExist.doesNotExist;\n  callback(null,{hasViolation:false,message:a.message});\n}",
+                    "priority": 1,
+                    "info": ""
+                }
+            }
         },
         "230015dd-dc97-18e5-8d16-aa4d61e623ae": {
             "attributes": {},
@@ -639,6 +759,26 @@
             },
             "constraints": {}
         },
+        "4a24c736-7199-dc8c-2b68-535d4be7de31": {
+            "attributes": {
+                "name": "CustomConstraintWillFail",
+                "succeed": false
+            },
+            "base": "8790acf4-2e23-949f-6303-862d10937614",
+            "meta": {},
+            "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+            "pointers": {
+                "base": "8790acf4-2e23-949f-6303-862d10937614"
+            },
+            "registry": {
+                "position": {
+                    "x": 579,
+                    "y": 586
+                }
+            },
+            "sets": {},
+            "constraints": {}
+        },
         "4d38864a-050a-0b3e-ca07-bc19e05202fb": {
             "attributes": {
                 "name": "PortElementInstance2"
@@ -756,6 +896,39 @@
             "sets": {},
             "constraints": {}
         },
+        "8790acf4-2e23-949f-6303-862d10937614": {
+            "attributes": {
+                "name": "CustomConstraint",
+                "succeed": true
+            },
+            "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+            "meta": {
+                "attributes": {
+                    "succeed": {
+                        "type": "boolean",
+                        "default": true
+                    }
+                }
+            },
+            "parent": "cab37512-9256-6d3a-a1c7-9bdbf81645ca",
+            "pointers": {
+                "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+            },
+            "registry": {
+                "position": {
+                    "x": 157,
+                    "y": 358
+                }
+            },
+            "sets": {},
+            "constraints": {
+                "willSucceed": {
+                    "script": "function(core, node, callback) {\n  var success = core.getAttribute(node, 'succeed');\n  if (success === true) {\n    callback(null,{hasViolation:false, message:''});\n  } else {\n    callback(null,{hasViolation:true, message:'succeed not true'});\n  }\n}",
+                    "priority": 1,
+                    "info": ""
+                }
+            }
+        },
         "a7209aa2-eb96-68fe-d1f4-0bba1faf7a6c": {
             "attributes": {
                 "name": "PortElementInstance"
@@ -807,6 +980,25 @@
                 "position": {
                     "x": 626,
                     "y": 252
+                }
+            },
+            "sets": {},
+            "constraints": {}
+        },
+        "b2cd27f8-2dc1-79ed-3e6c-7bf3c5960c8d": {
+            "attributes": {
+                "name": "CustomConstraintWillSucceed"
+            },
+            "base": "8790acf4-2e23-949f-6303-862d10937614",
+            "meta": {},
+            "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+            "pointers": {
+                "base": "8790acf4-2e23-949f-6303-862d10937614"
+            },
+            "registry": {
+                "position": {
+                    "x": 431,
+                    "y": 590
                 }
             },
             "sets": {},

@@ -6,7 +6,7 @@
 
 var testFixture = require('../../../_globals');
 
-describe.only('Meta Rules', function () {
+describe('Meta Rules', function () {
     'use strict';
 
     var logger = testFixture.logger.fork('MetaRules'),
@@ -67,7 +67,7 @@ describe.only('Meta Rules', function () {
             .nodeify(done);
     });
 
-    describe('META Nodes', function () {
+    describe('Language Nodes', function () {
         it('FCO should pass', function (done) {
             var nodePath = '/1';
 
@@ -142,7 +142,7 @@ describe.only('Meta Rules', function () {
         });
     });
 
-    describe('direct META-instances', function () {
+    describe('Direct Language-instances', function () {
         // Direct instances of META nodes.
         it('SetElementInstance should pass', function (done) {
             var nodePath = '/1936712753';
