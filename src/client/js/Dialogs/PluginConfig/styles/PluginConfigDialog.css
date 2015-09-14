@@ -3,23 +3,28 @@
  * 
  * Author: Robert Kereskenyi
  */
-.plugin-config-dialog .control-group .controls .widget span {
+.plugin-config-dialog .form-group .row {
+  margin: 0 0; }
+.plugin-config-dialog .form-group .controls .widget span {
   margin-top: 5px;
   font-size: 14px;
   line-height: 20px;
   display: block; }
-.plugin-config-dialog .control-group .controls .widget .iCheckBox {
+.plugin-config-dialog .form-group .controls .widget .iCheckBox {
   margin-top: 6px; }
-.plugin-config-dialog .control-group .controls .widget div.color-picker {
+.plugin-config-dialog .form-group .controls .widget div.color-picker {
   height: 30px;
-  width: 220px;
+  width: 100%;
   margin-top: 0;
   cursor: pointer;
   border-radius: 4px; }
-.plugin-config-dialog .control-group .controls .widget div.asset-widget {
+.plugin-config-dialog .form-group .controls .widget div.asset-widget {
   height: 30px;
   line-height: 30px;
-  width: 220px;
+  width: 100%;
   margin-top: 0; }
-.plugin-config-dialog .control-group div.desc {
-  margin-left: 180px; }
+  .plugin-config-dialog .form-group .controls .widget div.asset-widget .btn-dialog-open {
+    padding: 3px; }
+.plugin-config-dialog .form-group .controls .widget input[type="text"] {
+  width: 100%;
+  padding: 0.5ex; }
