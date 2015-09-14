@@ -42,10 +42,6 @@ var path = require('path'),
             s3: {}
         },
 
-        core: {
-            enableCustomConstraints: false,
-        },
-
         client: {
             appDir: path.join(__dirname, '../src/client'),
             log: {
@@ -65,6 +61,10 @@ var path = require('path'),
                 node: null
             },
             defaultConnectionRouter: 'basic3' //'basic', 'basic2', 'basic3'
+        },
+
+        core: {
+            enableCustomConstraints: false,
         },
 
         debug: false,

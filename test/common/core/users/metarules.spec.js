@@ -31,7 +31,7 @@ describe('Meta Rules', function () {
             })
             .then(function () {
                 var importParam = {
-                    projectSeed: './test/common/core/users/meta/metaRules2.json',
+                    projectSeed: './test/common/core/users/meta/metaRules.json',
                     projectName: projectName,
                     branchName: branchName,
                     logger: logger,
@@ -99,6 +99,19 @@ describe('Meta Rules', function () {
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(false, result.message);
+            })
+            .nodeify(done);
+    });
+
+    it('ModelElementInstance should fail with extra child', function (done) {
+        var nodePath = '/994621516';
+        testFixture.loadNode(ir.core, ir.rootNode, nodePath)
+            .then(function (node) {
+                return checkMetaRules(ir.core, node);
+            })
+            .then(function (result) {
+                expect(result.hasViolation).to.equal(true);
+                expect(result.message).to.contain('more');
             })
             .nodeify(done);
     });

@@ -6,21 +6,38 @@
     },
     "relids": {
         "03d36072-9e09-7866-cb4e-d0a36ff825f6": null,
+        "0aa5c895-f0f3-3198-219a-99d1470cf979": "767879236",
+        "230015dd-dc97-18e5-8d16-aa4d61e623ae": "31060956",
         "2994da8f-84c6-75f6-113b-053f7aad7803": "942380411",
         "2bff7f8a-a58e-405d-5c66-5e98195bf2db": "1686535233",
+        "48690da2-3b88-c830-3500-fd13febeaf43": "1936712753",
+        "4d38864a-050a-0b3e-ca07-bc19e05202fb": "331912205",
+        "6764f8b9-91ef-531f-5978-586e2be17902": "1266119167",
+        "a7209aa2-eb96-68fe-d1f4-0bba1faf7a6c": "361739760",
         "aeeb7ce1-e906-1817-c2b0-9b67a94f3b43": "474747191",
         "c81fa28e-e412-1874-7897-219c3a358a05": "1578427941",
         "cab37512-9256-6d3a-a1c7-9bdbf81645ca": "822429792",
+        "cd7c6471-4716-ab16-9b02-55ede47be67d": "994621516",
         "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": "1",
+        "df9d3b94-4f1d-fcda-576f-31424e6abb19": "673727814",
         "fd466d37-e975-06c8-4ae0-80c43b24888b": "756310648"
     },
     "containment": {
+        "0aa5c895-f0f3-3198-219a-99d1470cf979": {},
+        "230015dd-dc97-18e5-8d16-aa4d61e623ae": {},
+        "48690da2-3b88-c830-3500-fd13febeaf43": {},
+        "4d38864a-050a-0b3e-ca07-bc19e05202fb": {},
+        "a7209aa2-eb96-68fe-d1f4-0bba1faf7a6c": {},
         "cab37512-9256-6d3a-a1c7-9bdbf81645ca": {
             "2994da8f-84c6-75f6-113b-053f7aad7803": {},
             "2bff7f8a-a58e-405d-5c66-5e98195bf2db": {},
             "aeeb7ce1-e906-1817-c2b0-9b67a94f3b43": {},
             "c81fa28e-e412-1874-7897-219c3a358a05": {},
             "fd466d37-e975-06c8-4ae0-80c43b24888b": {}
+        },
+        "cd7c6471-4716-ab16-9b02-55ede47be67d": {
+            "6764f8b9-91ef-531f-5978-586e2be17902": {},
+            "df9d3b94-4f1d-fcda-576f-31424e6abb19": {}
         },
         "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": {}
     },
@@ -233,6 +250,44 @@
             },
             "constraints": {}
         },
+        "0aa5c895-f0f3-3198-219a-99d1470cf979": {
+            "attributes": {
+                "name": "ModelElementInstance"
+            },
+            "base": "2994da8f-84c6-75f6-113b-053f7aad7803",
+            "meta": {},
+            "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+            "pointers": {
+                "base": "2994da8f-84c6-75f6-113b-053f7aad7803"
+            },
+            "registry": {
+                "position": {
+                    "x": 694,
+                    "y": 211
+                }
+            },
+            "sets": {},
+            "constraints": {}
+        },
+        "230015dd-dc97-18e5-8d16-aa4d61e623ae": {
+            "attributes": {},
+            "base": "2bff7f8a-a58e-405d-5c66-5e98195bf2db",
+            "meta": {},
+            "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+            "pointers": {
+                "base": "2bff7f8a-a58e-405d-5c66-5e98195bf2db",
+                "dst": "a7209aa2-eb96-68fe-d1f4-0bba1faf7a6c",
+                "src": "4d38864a-050a-0b3e-ca07-bc19e05202fb"
+            },
+            "registry": {
+                "position": {
+                    "x": 100,
+                    "y": 100
+                }
+            },
+            "sets": {},
+            "constraints": {}
+        },
         "2994da8f-84c6-75f6-113b-053f7aad7803": {
             "attributes": {
                 "Artie": "",
@@ -286,7 +341,7 @@
                         -1
                     ],
                     "maxItems": [
-                        5,
+                        1,
                         -1
                     ]
                 }
@@ -356,6 +411,97 @@
                 "position": {
                     "x": 231,
                     "y": 240
+                }
+            },
+            "sets": {},
+            "constraints": {}
+        },
+        "48690da2-3b88-c830-3500-fd13febeaf43": {
+            "attributes": {
+                "name": "SetElementInstance"
+            },
+            "base": "c81fa28e-e412-1874-7897-219c3a358a05",
+            "meta": {},
+            "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+            "pointers": {
+                "base": "c81fa28e-e412-1874-7897-219c3a358a05"
+            },
+            "registry": {
+                "position": {
+                    "x": 356,
+                    "y": 327
+                }
+            },
+            "sets": {
+                "Contains": [
+                    {
+                        "attributes": {},
+                        "guid": "cd7c6471-4716-ab16-9b02-55ede47be67d",
+                        "registry": {
+                            "position": {
+                                "x": 500,
+                                "y": 249
+                            }
+                        }
+                    }
+                ],
+                "ModelRefs": []
+            },
+            "constraints": {}
+        },
+        "4d38864a-050a-0b3e-ca07-bc19e05202fb": {
+            "attributes": {
+                "name": "PortElementInstance2"
+            },
+            "base": "fd466d37-e975-06c8-4ae0-80c43b24888b",
+            "meta": {},
+            "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+            "pointers": {
+                "base": "fd466d37-e975-06c8-4ae0-80c43b24888b"
+            },
+            "registry": {
+                "position": {
+                    "x": 97,
+                    "y": 437
+                }
+            },
+            "sets": {},
+            "constraints": {}
+        },
+        "6764f8b9-91ef-531f-5978-586e2be17902": {
+            "attributes": {},
+            "base": "c81fa28e-e412-1874-7897-219c3a358a05",
+            "meta": {},
+            "parent": "cd7c6471-4716-ab16-9b02-55ede47be67d",
+            "pointers": {
+                "base": "c81fa28e-e412-1874-7897-219c3a358a05"
+            },
+            "registry": {
+                "position": {
+                    "x": 209,
+                    "y": 209
+                }
+            },
+            "sets": {
+                "Contains": [],
+                "ModelRefs": []
+            },
+            "constraints": {}
+        },
+        "a7209aa2-eb96-68fe-d1f4-0bba1faf7a6c": {
+            "attributes": {
+                "name": "PortElementInstance"
+            },
+            "base": "fd466d37-e975-06c8-4ae0-80c43b24888b",
+            "meta": {},
+            "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+            "pointers": {
+                "base": "fd466d37-e975-06c8-4ae0-80c43b24888b"
+            },
+            "registry": {
+                "position": {
+                    "x": 509,
+                    "y": 456
                 }
             },
             "sets": {},
@@ -479,6 +625,25 @@
             "sets": {},
             "constraints": {}
         },
+        "cd7c6471-4716-ab16-9b02-55ede47be67d": {
+            "attributes": {
+                "name": "ModelElementInstance"
+            },
+            "base": "2994da8f-84c6-75f6-113b-053f7aad7803",
+            "meta": {},
+            "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+            "pointers": {
+                "base": "2994da8f-84c6-75f6-113b-053f7aad7803"
+            },
+            "registry": {
+                "position": {
+                    "x": 451,
+                    "y": 200
+                }
+            },
+            "sets": {},
+            "constraints": {}
+        },
         "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": {
             "attributes": {
                 "name": "FCO"
@@ -514,6 +679,26 @@
                 "validVisualizers": "ModelEditor METAAspect SetEditor Crosscut GraphViz"
             },
             "sets": {},
+            "constraints": {}
+        },
+        "df9d3b94-4f1d-fcda-576f-31424e6abb19": {
+            "attributes": {},
+            "base": "c81fa28e-e412-1874-7897-219c3a358a05",
+            "meta": {},
+            "parent": "cd7c6471-4716-ab16-9b02-55ede47be67d",
+            "pointers": {
+                "base": "c81fa28e-e412-1874-7897-219c3a358a05"
+            },
+            "registry": {
+                "position": {
+                    "x": 204,
+                    "y": 144
+                }
+            },
+            "sets": {
+                "Contains": [],
+                "ModelRefs": []
+            },
             "constraints": {}
         },
         "fd466d37-e975-06c8-4ae0-80c43b24888b": {

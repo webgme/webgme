@@ -131,7 +131,7 @@ define(['q'], function (Q) {
             }
         }
 
-        for (i = 0; i < subMetaRules.items; i += 1) {
+        for (i = 0; i < subMetaRules.items.length; i += 1) {
             if (subMetaRules.minItems[i] > -1 && subMetaRules.minItems[i] > matches[i]) {
                 result.hasViolation = true;
                 result.message += 'node has fewer ' + checkTypeText + '(s) than needed ( ' +
@@ -139,7 +139,7 @@ define(['q'], function (Q) {
             } else if (subMetaRules.maxItems[i] > -1 && subMetaRules.maxItems[i] < matches[i]) {
                 result.hasViolation = true;
                 result.message += 'node has more ' + checkTypeText + '(s) than needed ( ' +
-                    matches[i] + ' < ' + subMetaRules.minItems[i] + ' )\n';
+                    matches[i] + ' < ' + subMetaRules.maxItems[i] + ' )\n';
             }
         }
 
