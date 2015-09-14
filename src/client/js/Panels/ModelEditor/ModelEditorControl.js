@@ -696,8 +696,8 @@ define(['js/logger',
                         l = destinations.length;
                         len -= 1;
 
-                        while (k--) {
-                            while (l--) {
+                        for (k = sources.length - 1; k >= 0; k -= 1) {
+                            for (l = destinations.length - 1; l >= 0; l -= 1) {
                                 objDesc.srcObjId = sources[k].objId;
                                 objDesc.srcSubCompId = sources[k].subCompId;
                                 objDesc.dstObjId = destinations[l].objId;
