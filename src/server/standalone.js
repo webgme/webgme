@@ -642,9 +642,7 @@ function StandAloneServer(gmeConfig) {
     // Basic authentication
 
     logger.debug('creating login routing rules for the static server');
-    __app.get('/', ensureAuthenticated, function (req, res) {
-        expressFileSending(res, __clientBaseDir + '/index.html');
-    });
+    __app.get('/', ensureAuthenticated, Express.static(__clientBaseDir));
     __app.get('/logout', function (req, res) {
         res.clearCookie('webgme');
         req.logout();
@@ -652,10 +650,9 @@ function StandAloneServer(gmeConfig) {
         delete req.session.udmId;
         res.redirect(__logoutUrl);
     });
-    __app.get('/login', function (req, res) {
-        res.location('/login');
-        expressFileSending(res, __clientBaseDir + '/login.html');
-    });
+
+    __app.get('/login', Express.static(__clientBaseDir, {extensions: ['html'], index: false}));
+
     __app.post('/login', function (req, res, next) {
         var queryParams = [],
             url = URL.parse(req.url, true);
@@ -752,6 +749,7 @@ function StandAloneServer(gmeConfig) {
         });
     });
 
+
     logger.debug('creating external library specific routing rules');
     __app.get(/^\/extlib\/.*/, ensureAuthenticated, function (req, res) {
         //first we try to give back the common extlib/modules
@@ -774,33 +772,19 @@ function StandAloneServer(gmeConfig) {
     logger.debug('creating basic static content related routing rules');
     //static contents
     //javascripts - core and transportation related files //TODO: remove config, middleware and bin
-    __app.get(/^\/(common|config|bin|middleware)\/.*\.js$/, function (req, res) {
-        expressFileSending(res, Path.join(__baseDir, req.path));
-    });
+    __app.get(/^\/(common|config|bin|middleware)\/.*\.js$/, Express.static(__baseDir, {index: false}));
 
     //TODO remove this part as this is only temporary!!!
-    __app.get('/docs/*', function (req, res) {
-        expressFileSending(res, Path.join(__baseDir, '..', req.path));
-    });
-
+    __app.get('/docs/*', Express.static(Path.join(__baseDir, '..'), {index: false}));
 
     __app.use('/rest/blob', BlobServer.createExpressBlob(middlewareOpts));
 
     //client contents - js/html/css
-    //stuff that considered not protected
-    __app.get(/^\/.*\.(css|ico|ttf|woff|js|cur)$/, function (req, res) {
-        expressFileSending(res, Path.join(__clientBaseDir, req.path));
-    });
+    __app.get(/^\/.*\.(css|ico|ttf|woff|js|cur)$/, Express.static(__clientBaseDir));
 
 
-    __app.get(/^\/.*\.(_js|html|gif|png|bmp|svg|json|map)$/, ensureAuthenticated, function (req, res) {
-        //package.json
-        if (req.path === '/package.json') {
-            expressFileSending(res, Path.join(__baseDir, '..', req.path));
-        } else {
-            expressFileSending(res, Path.join(__clientBaseDir, req.path));
-        }
-    });
+    __app.get('/package.json', ensureAuthenticated, Express.static(Path.join(__baseDir, '..')));
+    __app.get(/^\/.*\.(_js|html|gif|png|bmp|svg|json|map)$/, ensureAuthenticated, Express.static(__clientBaseDir));
 
     //logger.debug('creating token related routing rules');
     //__app.get('/gettoken', ensureAuthenticated, function (req, res) {
