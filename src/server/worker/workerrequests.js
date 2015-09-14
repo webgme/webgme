@@ -544,26 +544,48 @@ function WorkerRequests(mainLogger, gmeConfig) {
         });
     }
 
-    function checkMetaRules(webGMESessionId, projectId, parameters, callback) {
+    /**
+     *
+     * @param {string} webGMESessionId
+     * @param {string} projectId
+     * @param {object} parameters
+     * @param {string} parameters.commitHash - State of project to check.
+     * @param {string[]} parameters.nodePaths - Paths to nodes to be check.
+     * @param {boolean} parameters.includeChildren - If truthy - will recursively check all the children of the nodes.
+     * @param {string} [parameters.checkType='META'] - 'META', 'CUSTOM' or 'BOTH'.
+     * @param {function} callback
+     */
+    function checkConstraints(webGMESessionId, projectId, parameters, callback) {
         var storage = getConnectedStorage(webGMESessionId),
+            checkType,
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
-                    logger.error('checkMetaRules [' + projectId + '] failed with error', {metadata: err});
+                    logger.error('checkConstraints [' + projectId + '] failed with error', {metadata: err});
                 } else {
-                    logger.info('checkMetaRules [' + projectId + '] completed');
+                    logger.info('checkConstraints [' + projectId + '] completed');
                 }
                 storage.close(function (closeErr) {
                     callback(err || closeErr, result);
                 });
             };
 
-        logger.info('checkMetaRules ' + projectId);
+        logger.info('checkConstraints ' + projectId);
 
         if (typeof projectId !== 'string' || typeof parameters.commitHash !== 'string' ||
             typeof parameters.nodePaths !== 'object' || parameters.nodePaths instanceof Array !== true) {
             callback(new Error('invalid parameters: ' + JSON.stringify(parameters)));
             return;
+        }
+
+        if (parameters.checkType === constraint.TYPES.CUSTOM || parameters.checkType === constraint.TYPES.BOTH) {
+            checkType = parameters.checkType;
+            if (gmeConfig.core.enableCustomConstraints !== true) {
+                callback(new Error('Custom constraints is not enabled!'));
+                return;
+            }
+        } else {
+            checkType = constraint.TYPES.META;
         }
 
         storage.open(function (networkState) {
@@ -578,7 +600,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
                                 return constraintChecker.checkNode(nodePath);
                             }
                         }
-                        constraintChecker.initialize(res.rootNode, parameters.commitHash, constraint.TYPES.META);
+
+                        constraintChecker.initialize(res.rootNode, parameters.commitHash, checkType);
+
                         return Q.all(parameters.nodePaths.map(checkFromPath));
                     })
                     .nodeify(finish);
@@ -594,7 +618,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         seedProject: seedProject,
         autoMerge: autoMerge,
         resolve: resolve,
-        checkMetaRules: checkMetaRules
+        checkConstraints: checkConstraints
     };
 }
 

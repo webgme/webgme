@@ -1582,7 +1582,8 @@ define([
          */
         this.checkMetaRules = function (nodePaths, includeChildren, callback) {
             var parameters = {
-                command: 'checkMetaRules',
+                command: 'checkConstraints',
+                checkType: 'META', //TODO this should come from a constant
                 includeChildren: includeChildren,
                 nodePaths: nodePaths,
                 commitHash: state.commitHash,

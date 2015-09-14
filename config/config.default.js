@@ -42,6 +42,10 @@ var path = require('path'),
             s3: {}
         },
 
+        core: {
+            enableCustomConstraints: false,
+        },
+
         client: {
             appDir: path.join(__dirname, '../src/client'),
             log: {

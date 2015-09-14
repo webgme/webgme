@@ -32,7 +32,6 @@ module.exports = {
         seedProject: 'seedProject',
         autoMerge: 'autoMerge',
         resolve: 'resolve',
-        checkMetaRules: 'checkMetaRules',
         checkConstraints: 'checkConstraints',
 
         // AddOn related
