@@ -1673,12 +1673,6 @@ define(['js/logger',
             }
         }
 
-        //nobody is selected on the canvas
-        //set the active selection to the opened guy
-        if (gmeIDs.length === 0 && this._memberListContainerID) {
-            gmeIDs.push(this._memberListContainerID);
-        }
-
         WebGMEGlobal.State.registerActiveSelection(gmeIDs);
     };
 
