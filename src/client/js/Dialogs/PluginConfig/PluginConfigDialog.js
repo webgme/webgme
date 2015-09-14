@@ -18,9 +18,9 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         ATTRIBUTE_DATA_KEY = 'attribute',
     //jscs:disable maximumLineLength
         PLUGIN_CONFIG_SECTION_BASE = $('<div><fieldset><legend></legend><form class="form-horizontal" role="form"></form><fieldset></div>'),
-        ENTRY_BASE = $('<div class="form-group"><label class="col-sm-4 control-label">NAME</label><div class="col-sm-8 controls"></div></div>'),
+        ENTRY_BASE = $('<div class="form-group"><div class="row"><label class="col-sm-4 control-label">NAME</label><div class="col-sm-8 controls"></div></div><div class="row description"><div class="col-sm-4"></div></div></div>'),
     //jscs:enable maximumLineLength
-        DESCRIPTION_BASE = $('<div class="desc muted"></div>');
+        DESCRIPTION_BASE = $('<div class="desc muted col-sm-8"></div>');
 
     PluginConfigDialog = function () {
         this._propertyGridWidgetManager = new PropertyGridWidgetManager();
@@ -142,7 +142,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
             }
 
             if (descEl) {
-                el.append(descEl);
+                el.find('.description').append(descEl);
             }
 
             containerEl.append(el);

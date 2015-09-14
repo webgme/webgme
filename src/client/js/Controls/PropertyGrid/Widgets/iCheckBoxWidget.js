@@ -20,8 +20,8 @@ define([
         iCheckBoxWidget.superclass.call(this, propertyDesc);
 
         this.__checkbox = new ICheckBox({
-            checkedText: 'YES',
-            uncheckedText: 'NO',
+            checkedText: 'TRUE',
+            uncheckedText: 'FALSE',
             checkChangedFn: function (data, isChecked) {
                 self.setValue(isChecked);
                 self.fireFinishChange();

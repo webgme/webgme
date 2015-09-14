@@ -1,6 +1,6 @@
 div.iCheckBox {
-  width: 60px;
-  height: 18px;
+  width: 70px;
+  height: 18.2px;
   display: inline-block;
   border-radius: 3px;
   position: relative;
@@ -29,13 +29,13 @@ div.iCheckBox {
       position: relative;
       top: -6%; }
   div.iCheckBox .txt {
-    width: 31.4px;
-    height: 18px;
-    line-height: 18px;
+    width: 36.8px;
+    height: 18.2px;
+    line-height: 18.2px;
     display: inline-block;
     position: absolute;
-    left: 28.6px;
-    font-size: 9px;
+    left: 33.2px;
+    font-size: 9.1px;
     font-weight: bold;
     text-align: center;
     color: #666666;
@@ -46,7 +46,7 @@ div.iCheckBox {
     background: -o-linear-gradient(top, #3160ab, #082c67);
     background: linear-gradient(to bottom, #3160ab, #082c67); }
     div.iCheckBox.checked .sw {
-      left: 31.4px; }
+      left: 36.8px; }
     div.iCheckBox.checked .txt {
       left: 0;
       color: white; }
