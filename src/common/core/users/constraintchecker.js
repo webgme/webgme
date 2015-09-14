@@ -8,8 +8,8 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
     'use strict';
 
     var CONSTRAINT_TYPES = {
-        META: 'META_RULES',
-        CUSTOM: 'CUSTOM_CONSTRAINTS',
+        META: 'META',
+        CUSTOM: 'CUSTOM',
         BOTH: 'BOTH'
     };
 

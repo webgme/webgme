@@ -209,6 +209,7 @@ define(['q'], function (Q) {
             var metaSet = metaSets[setName],
                 memberPaths;
             if (!metaSet) {
+                // TODO: Is this possible? Or core.getSetNames already filters?
                 return Q({
                     hasViolation: true,
                     message: 'Invalid set "' + setName + '"\n'
@@ -280,7 +281,14 @@ define(['q'], function (Q) {
                 hasViolation: false,
                 message: ''
             },
-            meta = core.getJsonMeta(node);
+            meta;
+
+        if (core.getPath(node) === '') {
+            // Do not check the meta-rules for the root-node
+            return Q(result);
+        }
+
+        meta = core.getJsonMeta(node);
 
         return Q.all([
             checkPointerRules(meta, core, node),
