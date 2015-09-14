@@ -8,7 +8,7 @@
 var testFixture = require('../../_globals.js');
 
 
-describe.only('Simple worker', function () {
+describe('Simple worker', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,
@@ -1710,6 +1710,36 @@ describe.only('Simple worker', function () {
             })
             .catch(function (err) {
                 expect(err.message).to.contain('invalid parameters');
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should return error when a nodePath does not exist', function (done) {
+        var command = {
+                command: CONSTANTS.workerCommands.checkConstraints,
+                projectId: constraintProjectImportResult.project.projectId,
+                commitHash: constraintProjectImportResult.commitHash,
+                nodePaths: ['/1', '/11'],
+                includeChildren: false,
+                webGMESessionId: webGMESessionId
+            },
+            worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send(command);
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Given nodePath does not exist');
                 done();
             })
             .finally(restoreProcessFunctions)

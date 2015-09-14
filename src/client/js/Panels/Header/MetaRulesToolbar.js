@@ -12,7 +12,7 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
 
     MetaRulesToolbar = function (client) {
         this._client = client;
-        this.listenerAdded = false;
+
         this._initialize();
     };
 
@@ -49,8 +49,8 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
                 }
 
                 $btnCheckMetaRules.addButton({
-                    title: 'Check meta rules for project',
-                    text: 'Check meta rules for project',
+                    title: 'Check meta rules for entire project',
+                    text: 'Check meta rules for entire project',
                     clickFn: function () {
                         self._client.checkMetaRules([''], true);
                     }
@@ -68,8 +68,8 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
                 }
             } else {
                 $btnCheckMetaRules.addButton({
-                    title: 'No Project opened',
-                    text: 'No Project opened...',
+                    title: 'No Project is opened',
+                    text: 'No Project is opened...',
                     clickFn: function () {
                     }
                 });

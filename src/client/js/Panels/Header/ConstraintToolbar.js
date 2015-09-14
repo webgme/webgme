@@ -7,22 +7,21 @@
 define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], function (ConstraintCheckResultsDialog) {
     'use strict';
 
-    var PluginToolbar,
+    var ConstraintToolbar,
         BADGE_BASE = $('<span class="label label-info"></span>');
 
-    PluginToolbar = function (client) {
+    ConstraintToolbar = function (client) {
         this._client = client;
 
         this._initialize();
     };
 
-    PluginToolbar.prototype._initialize = function () {
-        var toolbar = WebGMEGlobal.Toolbar,
+    ConstraintToolbar.prototype._initialize = function () {
+        var self = this,
+            toolbar = WebGMEGlobal.Toolbar,
             fillMenuItems,
-            $btnExecuteAddOn,
+            $btnCheckConstraint,
             validateProject,
-            checkCallback,
-            client = this._client,
             unreadResults = 0,
             BADGE_CLASS = 'label',
             showResults,
@@ -31,48 +30,69 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
             badge;
 
         setBadgeText = function (text) {
-            $btnExecuteAddOn.el.find('.' + BADGE_CLASS).text(text);
+            $btnCheckConstraint.el.find('.' + BADGE_CLASS).text(text);
         };
 
         fillMenuItems = function () {
-
+            var activeNode;
             //clear dropdown
-            $btnExecuteAddOn.clear();
+            $btnCheckConstraint.clear();
 
-            if (client.getRunningAddOnNames().indexOf('ConstraintAddOn') !== -1) {
-                //add read menu if needed
+            if (self._client.getActiveProjectId()) {
                 if (results.length > 0) {
-                    $btnExecuteAddOn.addButton({
-                        title: 'Check results...',
-                        text: 'Check results...',
+                    $btnCheckConstraint.addButton({
+                        title: 'Show results...',
+                        text: 'Show results...',
                         clickFn: function () {
                             showResults();
                         }
                     });
-                    $btnExecuteAddOn.addDivider();
+                    $btnCheckConstraint.addDivider();
                 }
 
-                $btnExecuteAddOn.addButton({
-                    title: 'Validate project',
-                    text: 'Validate project',
+                $btnCheckConstraint.addButton({
+                    title: 'Check custom constraints for entire project',
+                    text: 'Check custom constraints for entire project',
                     clickFn: function () {
-                        validateProject();
+                        self._client.checkCustomConstraints([''], true);
+                    }
+                });
+
+                activeNode = WebGMEGlobal.State.getActiveObject();
+                if (activeNode) {
+                    $btnCheckConstraint.addButton({
+                        title: 'Check custom constraints model',
+                        text: 'Check custom constraints for model [' + activeNode + ']',
+                        clickFn: function () {
+                            self._client.checkCustomConstraints([activeNode], true);
+                        }
+                    });
+                }
+            } else {
+                $btnCheckConstraint.addButton({
+                    title: 'No Project is opened',
+                    text: 'No Project is opened...',
+                    clickFn: function () {
                     }
                 });
             }
         };
 
-        checkCallback = function (err, result) {
-            //console.log(err, result);
-            result = result || {};
-            result.__error = err;
-            result.__time = new Date().getTime();
-            result.__unread = true;
-            results.splice(0, 0, result);
-            unreadResults += 1;
-            setBadgeText(unreadResults);
-        };
-        WebGMEGlobal.Client.setValidationCallback(checkCallback);
+        function onResults(emitter, results_) {
+            var i,
+                result;
+
+            for (i = 0; i < results_.length; i += 1) {
+                result = results_[i];
+                result.__time = new Date().getTime();
+                result.__unread = true;
+                results.splice(0, 0, result);
+                unreadResults += 1;
+                setBadgeText(unreadResults);
+            }
+        }
+
+        self._client.addEventListener(self._client.CONSTANTS.CONSTRAINT_RESULT, onResults);
 
         validateProject = function () {
             WebGMEGlobal.Client.validateProjectAsync();
@@ -81,13 +101,13 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
 
         showResults = function () {
             var dialog = new ConstraintCheckResultsDialog();
-            dialog.show(client, results);
+            dialog.show(self._client, results);
             unreadResults = 0;
             setBadgeText('');
         };
 
         /************** EXECUTE PLUG-IN BUTTON ****************/
-        $btnExecuteAddOn = toolbar.addDropDownButton(
+        $btnCheckConstraint = toolbar.addDropDownButton(
             {
                 title: 'Check constraints',
                 icon: 'glyphicon glyphicon-fire',
@@ -97,13 +117,13 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
                 }
             });
 
-        $btnExecuteAddOn.el.find('a > i').css({'margin-top': '0px'});
+        $btnCheckConstraint.el.find('a > i').css({'margin-top': '0px'});
 
         badge = BADGE_BASE.clone();
-        badge.insertAfter($btnExecuteAddOn.el.find('a > i'));
+        badge.insertAfter($btnCheckConstraint.el.find('a > i'));
         badge.css('margin-left', '3px');
     };
 
 
-    return PluginToolbar;
+    return ConstraintToolbar;
 });

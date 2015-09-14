@@ -25,6 +25,8 @@ define(['common/storage/constants'], function (STORAGE_CONSTANTS) {
         UNDO_AVAILABLE: 'UNDO_AVAILABLE',
         REDO_AVAILABLE: 'REDO_AVAILABLE',
 
-        META_RULES_RESULT: 'META_RULES_RESULT'
+        // Constraint Checking
+        META_RULES_RESULT: 'META_RULES_RESULT',
+        CONSTRAINT_RESULT: 'CONSTRAINT_RESULT'
     };
 });

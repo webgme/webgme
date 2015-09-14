@@ -67,7 +67,7 @@ define(['q'], function (Q) {
             var deferred = Q.defer();
             if (_addOns[name] && _addOns[name] !== 'loading') {
                 // FIXME: addOn state should be stopping
-                // TODO: connectedworkerStop should come from constants!!
+                // TODO: connectedworkerStop should come from constants
                 storage.simpleQuery(_addOns[name], {command: 'connectedworkerStop'}, function (err) {
                     if (err) {
                         deferred.reject(err);

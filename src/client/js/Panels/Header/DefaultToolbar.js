@@ -45,7 +45,7 @@ define([
         this._pluginToolBar = new PluginToolbar(this._client);
         this._metaRulesToolBar = new MetaRulesToolbar(this._client);
         //TODO the toolbar also has to be optional, but how???
-        if (this._client.addOnsAllowed === true) {
+        if (this._client.gmeConfig.core.enableCustomConstraints === true) {
             this._constraintToolBar = new ConstraintToolBar(this._client);
         }
     };
