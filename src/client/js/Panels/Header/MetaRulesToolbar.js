@@ -65,6 +65,13 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
                             self._client.checkMetaRules([activeNode], true);
                         }
                     });
+                    $btnCheckMetaRules.addButton({
+                        title: 'Check meta rules model',
+                        text: 'Check meta rules for node [' + activeNode + '] and its children...',
+                        clickFn: function () {
+                            self._client.checkMetaRules([activeNode], true);
+                        }
+                    });
                 }
             } else {
                 $btnCheckMetaRules.addButton({
@@ -102,7 +109,7 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
         /************** CHECK META RULES BUTTON ****************/
         $btnCheckMetaRules = toolbar.addDropDownButton(
             {
-                title: 'Check meta rules',
+                title: 'Meta Rules',
                 icon: 'glyphicon glyphicon-ok-sign',
                 menuClass: 'no-min-width',
                 clickFn: function () {

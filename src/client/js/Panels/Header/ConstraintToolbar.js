@@ -51,8 +51,8 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
                 }
 
                 $btnCheckConstraint.addButton({
-                    title: 'Check custom constraints for entire project',
-                    text: 'Check custom constraints for entire project',
+                    title: 'Check entire project',
+                    text: 'Check constraints for entire project',
                     clickFn: function () {
                         self._client.checkCustomConstraints([''], true);
                     }
@@ -61,8 +61,15 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
                 activeNode = WebGMEGlobal.State.getActiveObject();
                 if (activeNode) {
                     $btnCheckConstraint.addButton({
-                        title: 'Check custom constraints model',
-                        text: 'Check custom constraints for model [' + activeNode + ']',
+                        title: 'Check custom constraints node',
+                        text: 'Check constraints for node [' + activeNode + ']',
+                        clickFn: function () {
+                            self._client.checkCustomConstraints([activeNode], true);
+                        }
+                    });
+                    $btnCheckConstraint.addButton({
+                        title: 'Check constraints model',
+                        text: 'Check constraints for node [' + activeNode + '] and its children...',
                         clickFn: function () {
                             self._client.checkCustomConstraints([activeNode], true);
                         }
@@ -109,7 +116,7 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
         /************** EXECUTE PLUG-IN BUTTON ****************/
         $btnCheckConstraint = toolbar.addDropDownButton(
             {
-                title: 'Check constraints',
+                title: 'Custom Constraints',
                 icon: 'glyphicon glyphicon-fire',
                 menuClass: 'no-min-width',
                 clickFn: function () {
