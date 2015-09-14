@@ -884,9 +884,9 @@ define(['js/logger',
     BlockEditorControl.prototype._constraintCheck = function () {
         var self = this;
 
-        self._client.validateProjectAsync(function (err, result) {
+        self._client.checkCustomConstraints([''], true, function (err, results) {
             //TODO here we should pop up the result dialog...
-            console.log('project validation finished', err, result);
+            console.log('project validation finished', err, results);
         });
     };
 

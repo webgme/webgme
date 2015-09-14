@@ -21,7 +21,6 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
             toolbar = WebGMEGlobal.Toolbar,
             fillMenuItems,
             $btnCheckConstraint,
-            validateProject,
             unreadResults = 0,
             BADGE_CLASS = 'label',
             showResults,
@@ -100,11 +99,6 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
         }
 
         self._client.addEventListener(self._client.CONSTANTS.CONSTRAINT_RESULT, onResults);
-
-        validateProject = function () {
-            WebGMEGlobal.Client.validateProjectAsync();
-        };
-
 
         showResults = function () {
             var dialog = new ConstraintCheckResultsDialog();

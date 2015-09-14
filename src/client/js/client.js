@@ -1784,9 +1784,6 @@ define([
 
         //constraint
         this.validateProjectAsync = addOnFunctions.validateProjectAsync;
-        this.validateModelAsync = addOnFunctions.validateModelAsync;
-        this.validateNodeAsync = addOnFunctions.validateNodeAsync;
-        this.setValidationCallback = addOnFunctions.setValidationCallback;
 
         this.setConstraint = function (path, name, constraintObj) {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {

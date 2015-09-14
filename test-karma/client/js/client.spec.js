@@ -184,16 +184,6 @@ describe('GME client', function () {
                 'getAspectTerritoryPattern'
             );
 
-            //addOn related API
-            expect(client).to.include.keys(
-                'validateProjectAsync',
-                'validateModelAsync',
-                'validateNodeAsync',
-                'setValidationCallback',
-                'getRunningAddOnNames',
-                'addOnsAllowed'
-            );
-
             //territory related API
             expect(client).to.include.keys(
                 'addUI',
