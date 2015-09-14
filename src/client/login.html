@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>-= Login =- WebGME</title>
+    <title>WebGME - Sign in</title>
 
     <!-- CSS libraries -->
-    <link type="text/css" rel="stylesheet" href="/lib/bootstrap/3.1.1/css/bootstrap.min.css">
-    <link type="text/css" rel="stylesheet" href="/lib/bootstrap/3.1.1/css/bootstrap-theme.min.css">
-    <link href="css/main.css" type="text/css" rel="stylesheet"/>
-    <link type="text/css" rel="stylesheet" href="/css/themes/dawn.css">
-    <link type="text/css" rel="stylesheet" href="/fonts/webgme-icons/style.css">
+    <link type="text/css" rel="stylesheet" href="lib/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="lib/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+    <link type="text/css" rel="stylesheet" href="css/main.css"/>
+    <link type="text/css" rel="stylesheet" href="css/themes/dawn.css">
+    <link type="text/css" rel="stylesheet" href="fonts/webgme-icons/style.css">
 
     <!-- favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
@@ -46,6 +46,7 @@
             height: auto;
             margin-bottom: 15px;
             padding: 7px 9px;
+            width: 100%;
         }
 
         .form-error {
@@ -80,21 +81,21 @@
 <body>
 <div class="container">
     <form id="loginForm" class="form-signin" method="post">
-        <h2 class="form-signin-heading">WebGME sign in</h2>
+        <h2 class="form-signin-heading">Sign in to WebGME</h2>
 
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <input id="username_input" name="username" type="text" autocomplete="off" class="input-block-level"
                        placeholder="Username">
             </div>
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <input id="password_input" name="password" type="password" autocomplete="off" class="input-block-level"
                        placeholder="Password">
             </div>
-            <div class="col-md-8" id="failed_holder"></div>
+            <div class="col-md-12" id="failed_holder"></div>
         </div>
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <label class="checkbox">
                     <input type="checkbox" value="remember-me"> Remember me
                 </label>
@@ -102,7 +103,7 @@
         </div>
         <div class="row">
             <div class="col-md-6">
-                <button class="btn btn-large btn-primary" type="submit">Sign in</button>
+                <button class="btn btn-large btn-primary pull-left" type="submit">Sign in</button>
             </div>
             <div class="col-md-6">
                 <a class="btn btn-danger pull-right gPlusButton disabled" type="button"
@@ -114,9 +115,9 @@
     </form>
 </div>
 </body>
-<script>
+<script  type="application/javascript">
     function getParameterByName(name) {
-        var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search),
+        var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search),
                 result;
         if (match) {
             result = decodeURIComponent(match[1].replace(/\+/g, ' '));
@@ -131,11 +132,12 @@
     }
     form.setAttribute('action', location.origin + '/login' + redirectQuery);
 </script>
-<script src="/lib/jquery/jquery-2.1.0.js"></script>
-<script>
+<script src="lib/jquery/jquery-2.1.0.js" type="application/javascript"></script>
+<script type="application/javascript">
     if (window.location.hash === '#failed') {
-        $('#password_input').addClass('form-error');
-        $('#password_input').focus();
+        var passwordInputEl = $('#password_input');
+        passwordInputEl.addClass('form-error');
+        passwordInputEl.focus();
         document.getElementById('failed_holder').innerHTML = 'Invalid username or password';
     } else {
         $('#username_input').focus();
