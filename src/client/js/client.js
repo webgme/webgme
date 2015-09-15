@@ -1782,9 +1782,6 @@ define([
         this.getRunningAddOnNames = addOnFunctions.getRunningAddOnNames;
         this.addOnsAllowed = gmeConfig.addOn.enable === true;
 
-        //constraint
-        this.validateProjectAsync = addOnFunctions.validateProjectAsync;
-
         this.setConstraint = function (path, name, constraintObj) {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 state.core.setConstraint(state.nodes[path].node, name, constraintObj);
