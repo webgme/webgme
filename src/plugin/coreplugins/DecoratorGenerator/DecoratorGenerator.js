@@ -22,9 +22,13 @@ define([
     var DecoratorGenerator = function () {
         // Call base class' constructor.
         PluginBase.call(this);
+        this.jsRegExpStr = '^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void' +
+            '|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|' +
+            'static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|' +
+            'arguments|interface|protected|implements|instanceof)$)[a-zA-Z_$][0-9a-zA-Z_$]*';
     };
 
-    // Prototypal inheritance from PluginBase.
+    // Prototypical inheritance from PluginBase.
     DecoratorGenerator.prototype = Object.create(PluginBase.prototype);
     DecoratorGenerator.prototype.constructor = DecoratorGenerator;
 
@@ -52,7 +56,39 @@ define([
      * @public
      */
     DecoratorGenerator.prototype.getDescription = function () {
-        return 'Generates all necessary files for a dsml decorator.';
+        return 'Generates all necessary files for a decorator.';
+    };
+
+    /**
+     * Gets the configuration structure for the DecoratorGenerator.
+     * The ConfigurationStructure defines the configuration for the plugin
+     * and will be used to populate the GUI when invoking the plugin from webGME.
+     * @returns {object} The version of the plugin.
+     * @public
+     */
+    DecoratorGenerator.prototype.getConfigStructure = function () {
+        var self = this;
+        return [
+            {
+                name: 'decoratorName',
+                displayName: 'Name of decorator',
+                regex: self.jsRegExpStr,
+                regexMessage: 'No spaces and special characters allowed. This value is used as the name of the ' +
+                'generated plugin class.',
+                description: 'Unique name for the decorator ("Decorator" will be appended).',
+                value: 'NewDecorator',
+                valueType: 'string',
+                readOnly: false
+            },
+            {
+                name: 'meta',
+                displayName: 'Generate META',
+                description: 'Generates a static listing of the meta objects to facilitate coding.',
+                value: false,
+                valueType: 'boolean',
+                readOnly: false
+            }
+        ];
     };
 
     /**
@@ -68,59 +104,96 @@ define([
         // Use self to access core, project, result, logger etc from PluginBase.
         // These are all instantiated at this point.
         var self = this,
-            baseDir = 'src/decorators/' + self.projectName + 'Decorator/',
+            config = self.getCurrentConfig(),
+            baseDir = 'src/decorators/' + config.decoratorName + 'Decorator/',
             filesToAdd = {},
-            metaNodeName,
-            metaNodes = [],
+            metaNodes,
             templateName,
             filePath,
             artifact;
 
-        for (metaNodeName in self.META) {
-            if (self.META.hasOwnProperty(metaNodeName)) {
-                metaNodes.push({
-                    name: metaNodeName,
-                    path: self.core.getPath(self.META[metaNodeName])
-                });
+        if (config.meta) {
+            metaNodes = this.getMetaNodesInfo();
+            if (metaNodes === false) {
+                self.result.setSuccess(false);
+                callback(null, self.result);
+                return;
             }
         }
-        metaNodes = metaNodes.sort(function (a, b) {
-            return a.name.localeCompare(b.name);
-        });
 
         for (templateName in TEMPLATES) {
             if (TEMPLATES.hasOwnProperty(templateName)) {
                 filePath = templateName.substring(0, templateName.length - 4);
-                filePath = baseDir + filePath.replace('Template', self.projectName);
+                filePath = baseDir + filePath.replace('Template', config.decoratorName);
                 if (self.endsWith(filePath, 'META.js')) {
-                    filesToAdd[filePath] = ejs.render(TEMPLATES[templateName], {
-                        name: self.projectName,
-                        metaNodes: metaNodes
-                    });
+                    if (config.meta) {
+                        filesToAdd[filePath] = ejs.render(TEMPLATES[templateName], {
+                            decorator: {
+                                name: config.decoratorName
+                            },
+                            config: config,
+                            metaNodes: metaNodes
+                        });
+                    }
                 } else {
                     filesToAdd[filePath] = ejs.render(TEMPLATES[templateName], {
                         decorator: {
-                            name: self.projectName
-                        }
+                            name: config.decoratorName
+                        },
+                        config: config
                     });
                 }
             }
         }
+
         artifact = self.blobClient.createArtifact('decoratorFiles');
         artifact.addFiles(filesToAdd, function (err /*, hashes*/) {
             if (err) {
                 callback(err, self.result);
                 return;
             }
+
             artifact.save(function (err, hash) {
                 if (err) {
-                    return callback(err, self.result);
+                    callback(err, self.result);
+                    return;
                 }
+
                 self.result.addArtifact(hash);
                 self.result.setSuccess(true);
                 callback(null, self.result);
             });
         });
+    };
+
+    DecoratorGenerator.prototype.getMetaNodesInfo = function () {
+        var metaNodes = [],
+            success = true,
+            regExp = new RegExp(this.jsRegExpStr),
+            metaNodeName;
+
+        for (metaNodeName in this.META) {
+            if (this.META.hasOwnProperty(metaNodeName)) {
+                if (regExp.test(metaNodeName)) {
+                    metaNodes.push({
+                        name: metaNodeName,
+                        path: this.core.getPath(this.META[metaNodeName])
+                    });
+                } else {
+                    success = false,
+                    this.createMessage(this.META[metaNodeName], 'Cannot generate META helper class. Name of meta-' +
+                        'node is invalid JavaScript "' + metaNodeName + '".');
+                }
+            }
+        }
+
+        if (success === false) {
+            return false;
+        } else {
+            return metaNodes.sort(function (a, b) {
+                return a.name.localeCompare(b.name);
+            });
+        }
     };
 
     DecoratorGenerator.prototype.endsWith = function (str, ending) {

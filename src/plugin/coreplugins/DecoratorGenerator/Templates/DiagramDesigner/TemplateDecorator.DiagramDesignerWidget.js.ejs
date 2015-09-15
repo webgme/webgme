@@ -1,32 +1,35 @@
-/*
+/*globals define, _, $*/
+/**
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Authors:
  */
 
-"use strict";
-
-define(['js/Constants',
+define([
+    'js/Constants',
     'js/Utils/METAAspectHelper',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     '../Core/<%= decorator.name %>Decorator.Core.js',
     '../Core/<%= decorator.name %>Decorator.Constants',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-    'css!./<%= decorator.name %>Decorator.DiagramDesignerWidget'], function (CONSTANTS,
-                                                       METAAspectHelper,
-                                                       nodePropertyNames,
-                                                       DiagramDesignerWidgetDecoratorBase,
-                                                       <%= decorator.name %>DecoratorCore,
-                                                       <%= decorator.name %>DecoratorConstants,
-                                                       DiagramDesignerWidgetConstants) {
+    'css!./<%= decorator.name %>Decorator.DiagramDesignerWidget'
+], function (
+    CONSTANTS,
+    METAAspectHelper,
+    nodePropertyNames,
+    DiagramDesignerWidgetDecoratorBase,
+    <%= decorator.name %>DecoratorCore,
+    <%= decorator.name %>DecoratorConstants,
+    DiagramDesignerWidgetConstants) {
+
+    'use strict';
+
     /**
-    * A module representing DiagramDesignerWidget specific functionality for the <%= decorator.name %>ModelingLanguage.
-    * @exports <%= decorator.name %>DecoratorDiagramDesignerWidget
-    * @version 1.0
-    */
+     * A module representing DiagramDesignerWidget specific functionality for the <%= decorator.name %>.
+     * @exports <%= decorator.name %>DecoratorDiagramDesignerWidget
+     * @version 1.0
+     */
     var <%= decorator.name %>DecoratorDiagramDesignerWidget,
-        DECORATOR_ID = "<%= decorator.name %>DecoratorDiagramDesignerWidget";
+        DECORATOR_ID = '<%= decorator.name %>DecoratorDiagramDesignerWidget';
 
     /**
      * Initializes a new instance of <%= decorator.name %>DecoratorDiagramDesignerWidget
@@ -39,9 +42,9 @@ define(['js/Constants',
         DiagramDesignerWidgetDecoratorBase.apply(this, [opts]);
 
         // this widget supports connectors and connections
-        this._initializeDecorator({"connectors": true});
+        this._initializeDecorator({connectors: true});
 
-        this.logger.debug("<%= decorator.name %>DecoratorDiagramDesignerWidget ctor");
+        this.logger.debug('<%= decorator.name %>DecoratorDiagramDesignerWidget ctor');
     };
 
     _.extend(<%= decorator.name %>DecoratorDiagramDesignerWidget.prototype, DiagramDesignerWidgetDecoratorBase.prototype);
@@ -68,11 +71,11 @@ define(['js/Constants',
         } else {
             // set name editable on double-click
             if (this.$name) {
-                this.$name.on("dblclick.editOnDblClick", null, function (event) {
+                this.$name.on('dblclick.editOnDblClick', null, function (event) {
                     if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                         self.hostDesignerItem.canvas.selectNone();
-                        $(this).editInPlace({"class": "",
-                            "onChange": function (oldValue, newValue) {
+                        $(this).editInPlace({class: '',
+                            onChange: function (oldValue, newValue) {
                                 self._onNodeTitleChanged(oldValue, newValue);
                             }});
                     }
@@ -133,7 +136,7 @@ define(['js/Constants',
 
 
     /**** Override from ModelDecoratorCore ****/
-    <%= decorator.name %>DecoratorDiagramDesignerWidget.prototype._registerForNotification = function(portId) {
+    <%= decorator.name %>DecoratorDiagramDesignerWidget.prototype._registerForNotification = function (portId) {
         var partId = this._metaInfo[CONSTANTS.GME_ID];
 
         this._control.registerComponentIDForPartID(portId, partId);
@@ -141,7 +144,7 @@ define(['js/Constants',
 
 
     /**** Override from ModelDecoratorCore ****/
-    <%= decorator.name %>DecoratorDiagramDesignerWidget.prototype._unregisterForNotification = function(portId) {
+    <%= decorator.name %>DecoratorDiagramDesignerWidget.prototype._unregisterForNotification = function (portId) {
         var partId = this._metaInfo[CONSTANTS.GME_ID];
 
         this._control.unregisterComponentIDFromPartID(portId, partId);
