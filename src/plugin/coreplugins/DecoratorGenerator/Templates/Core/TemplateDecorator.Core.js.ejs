@@ -1,27 +1,30 @@
-/*
+/*globals define, _, $*/
+/**
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
  */
 
 
-define(['js/Constants',
+define([
+    'js/Constants',
     'js/Utils/METAAspectHelper',
     'js/NodePropertyNames',
     'js/RegistryKeys',
-    './<%= decorator.name %>Base',
-    './<%= decorator.name %>.META',
+    './<%= decorator.name %>Base',<%if (config.meta) {%>
+    './<%= decorator.name %>.META',<%}%>
     './<%= decorator.name %>Decorator.Constants',
     'text!./<%= decorator.name %>Decorator.html',
-    'text!../default.svg'], function (CONSTANTS,
-        METAAspectHelper,
-        nodePropertyNames,
-        REGISTRY_KEYS,
-        <%= decorator.name %>Base,
-        <%= decorator.name %>META,
-        ADConstants,
-        <%= decorator.name %>DecoratorTemplate,
-        DefaultSvgTemplate
-    ) {
+    'text!../default.svg'
+], function (
+    CONSTANTS,
+    METAAspectHelper,
+    nodePropertyNames,
+    REGISTRY_KEYS,
+    <%= decorator.name %>Base,<%if (config.meta) {%>
+    <%= decorator.name %>META,<%}%>
+    ADConstants,
+    <%= decorator.name %>DecoratorTemplate,
+    DefaultSvgTemplate) {
+
     'use strict';
 
     /**
@@ -30,7 +33,7 @@ define(['js/Constants',
     * @version 1.0
     */
     var <%= decorator.name %>DecoratorCore,
-        SVG_ICON_PATH = "/decorators/<%= decorator.name %>Decorator/Icons/";
+        SVG_ICON_PATH = '/decorators/<%= decorator.name %>Decorator/Icons/';
 
     /**
      * Contains downloaded svg elements from the server.
@@ -53,27 +56,26 @@ define(['js/Constants',
      */
     var _metaAspectTypes = <%= decorator.name %>META.META_TYPES;
 
+    function downloadMetaSvgSync(metaType) {
+        // get the svg's url from the server for this META type
+        var svgResourceUrl = SVG_ICON_PATH + metaType + '.svg';
+
+        // get the svg from the server in SYNC mode, may take some time
+        $.ajax(svgResourceUrl, {async: false})
+            .done(function (data) {
+                // downloaded successfully
+                // cache the downloaded content
+                svgCache[metaType] = $(data.childNodes[0]);
+            })
+            .fail(function () {
+                // download failed for this type
+                // TODO: Deal with error
+            });
+    }
+
     for (var m in _metaAspectTypes) {
-        // TODO: use the right code to do this
         if (_metaAspectTypes.hasOwnProperty(m)) {
-
-            // get the svg's url on the server for this META type
-            var svg_resource_url = SVG_ICON_PATH + m + ".svg";
-
-            // get the svg from the server in SYNC mode, may take some time
-            $.ajax(svg_resource_url, {'async': false})
-                .done(function ( data ) {
-
-                    // TODO: console.debug('Successfully downloaded: ' + svg_resource_url + ' for ' + metaType);
-                    // downloaded successfully
-                    // cache the downloaded content
-                    svgCache[m] = $(data.childNodes[0]);
-                })
-                .fail(function () {
-
-                    // download failed for this type
-                    // TODO: console.warning('Failed to download: ' + svg_resource_url);
-                });
+            downloadMetaSvgSync(m);
         }
     }
 
@@ -99,7 +101,7 @@ define(['js/Constants',
     <%= decorator.name %>DecoratorCore.prototype.getTerritoryQuery = function () {
         var territoryRule = {};
 
-        territoryRule[this._metaInfo[CONSTANTS.GME_ID]] = { "children": 1 };
+        territoryRule[this._metaInfo[CONSTANTS.GME_ID]] = { children: 1 };
 
         return territoryRule;
     };
@@ -144,10 +146,10 @@ define(['js/Constants',
             // get current the META type name
             <%= decorator.name %>ClassName = <%= decorator.name %>ClassNames[len];
 
-            if (<%= decorator.name %>ClassName === undefined || <%= decorator.name %>ClassName === null || <%= decorator.name %>ClassName === "") {
+            if (<%= decorator.name %>ClassName === undefined || <%= decorator.name %>ClassName === null || <%= decorator.name %>ClassName === '') {
                 // if the META type name is invalid return with an error SVG
                 returnSVG = errorSVGBase.clone();
-            } else if (<%= decorator.name %>ClassName != "Action"){
+            } else if (<%= decorator.name %>ClassName !== 'Action') {
                 // META type name is valid
                 if (svgCache[<%= decorator.name %>ClassName]) {
                     returnSVG = svgCache[<%= decorator.name %>ClassName].clone();
@@ -195,7 +197,7 @@ define(['js/Constants',
 
         if (DEBUG) {
             //render GME-ID in the DOM, for debugging
-            self.$el.attr({"data-id": gmeID});
+            self.$el.attr({'data-id': gmeID});
         }
 
         // setting the name of component
@@ -263,19 +265,23 @@ define(['js/Constants',
         }
 
         if (this.borderColor) {
-            this.skinParts.$svg.css({'border-color': this.borderColor,
-                          'box-shadow': '0px 0px 7px 0px ' + this.borderColor + ' inset'});
+            this.skinParts.$svg.css({
+                'border-color': this.borderColor,
+                'box-shadow': '0px 0px 7px 0px ' + this.borderColor + ' inset'
+            });
             this.skinParts.$name.css({'border-color': this.borderColor});
         } else {
-            this.$el.css({'border-color': '',
-                'box-shadow': ''});
+            this.$el.css({
+                'border-color': '',
+                'box-shadow': ''
+            });
             this.skinParts.$name.css({'border-color': ''});
         }
 
         if (this.textColor) {
-            this.$el.css({'color': this.textColor});
+            this.$el.css({color: this.textColor});
         } else {
-            this.$el.css({'color': ''});
+            this.$el.css({color: ''});
         }
     };
 
@@ -334,7 +340,7 @@ define(['js/Constants',
      * @param portId {string} GME ID for getting notification about this object.
      * @private
      */
-    <%= decorator.name %>DecoratorCore.prototype._registerForNotification = function(portId) {
+    <%= decorator.name %>DecoratorCore.prototype._registerForNotification = function (portId) {
 
     };
 
@@ -343,7 +349,7 @@ define(['js/Constants',
      * @param portId {string} GME ID for getting notification about this object.
      * @private
      */
-    <%= decorator.name %>DecoratorCore.prototype._unregisterForNotification = function(portId) {
+    <%= decorator.name %>DecoratorCore.prototype._unregisterForNotification = function (portId) {
 
     };
 

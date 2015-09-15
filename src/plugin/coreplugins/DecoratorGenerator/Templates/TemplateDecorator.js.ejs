@@ -1,16 +1,19 @@
-/*
+/*globals define, _*/
+/**
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Authors:
  */
 
 
-define(['js/Decorators/DecoratorBase',
+define([
+    'js/Decorators/DecoratorBase',
     './DiagramDesigner/<%= decorator.name %>Decorator.DiagramDesignerWidget',
-    './PartBrowser/<%= decorator.name %>Decorator.PartBrowserWidget'], function (DecoratorBase,
-        <%= decorator.name %>DecoratorDiagramDesignerWidget,
-        <%= decorator.name %>DecoratorPartBrowserWidget
-    ) {
+    './PartBrowser/<%= decorator.name %>Decorator.PartBrowserWidget'
+], function (
+    DecoratorBase,
+    <%= decorator.name %>DecoratorDiagramDesignerWidget,
+    <%= decorator.name %>DecoratorPartBrowserWidget) {
+
     'use strict';
 
     /**
@@ -21,7 +24,7 @@ define(['js/Decorators/DecoratorBase',
     var <%= decorator.name %>Decorator,
         __parent__ = DecoratorBase,
         __parent_proto__ = DecoratorBase.prototype,
-        DECORATOR_ID = "<%= decorator.name %>Decorator";
+        DECORATOR_ID = '<%= decorator.name %>Decorator';
 
     /**
      * Represents a <%= decorator.name %>Decorator factory.
@@ -29,11 +32,11 @@ define(['js/Decorators/DecoratorBase',
      * @param {object} params Parameters for this object.
      */
     <%= decorator.name %>Decorator = function (params) {
-        var opts = _.extend( {"loggerName": this.DECORATORID}, params);
+        var opts = _.extend( {loggerName: this.DECORATORID}, params);
 
         __parent__.apply(this, [opts]);
 
-        this.logger.debug("<%= decorator.name %>Decorator ctor");
+        this.logger.debug('<%= decorator.name %>Decorator ctor');
     };
 
     _.extend(<%= decorator.name %>Decorator.prototype, __parent_proto__);
@@ -48,8 +51,10 @@ define(['js/Decorators/DecoratorBase',
      * @see <%= decorator.name %>DecoratorPartBrowserWidget:<%= decorator.name %>DecoratorPartBrowserWidget
      */
     <%= decorator.name %>Decorator.prototype.initializeSupportedWidgetMap = function () {
-        this.supportedWidgetMap = {'DiagramDesigner': <%= decorator.name %>DecoratorDiagramDesignerWidget,
-                                   'PartBrowser': <%= decorator.name %>DecoratorPartBrowserWidget};
+        this.supportedWidgetMap = {
+            DiagramDesigner: <%= decorator.name %>DecoratorDiagramDesignerWidget,
+            PartBrowser: <%= decorator.name %>DecoratorPartBrowserWidget
+        };
     };
 
     return <%= decorator.name %>Decorator;

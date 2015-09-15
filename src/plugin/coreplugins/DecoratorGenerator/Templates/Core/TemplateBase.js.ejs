@@ -1,21 +1,25 @@
-/*
+/*globals define, $*/
+/**
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  */
 
 
-define(['js/NodePropertyNames',
-        'js/Utils/METAAspectHelper',
-        './<%= decorator.name %>Decorator.Constants',
-        './<%= decorator.name %>.META',
-        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-        'js/Constants'], function (nodePropertyNames,
-            METAAspectHelper,
-            <%= decorator.name %>DecoratorConstants,
-            <%= decorator.name %>META,
-            DiagramDesignerWidgetConstants,
-            CONSTANTS
-    ) {
+define([
+    'js/NodePropertyNames',
+    'js/Utils/METAAspectHelper',
+    './<%= decorator.name %>Decorator.Constants',
+    './<%= decorator.name %>.META',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
+    'js/Constants'
+], function (
+    nodePropertyNames,
+    METAAspectHelper,
+    <%= decorator.name %>DecoratorConstants,
+    <%= decorator.name %>META,
+    DiagramDesignerWidgetConstants,
+    CONSTANTS) {
+
     'use strict';
 
     /**
@@ -53,7 +57,7 @@ define(['js/NodePropertyNames',
 
         // positioning the connectors' connection areas
 
-         // TOP
+        // TOP
         self._connectionAreas[0] = {
             x1: SVGWidth / 2,
             y1: 0
@@ -98,7 +102,7 @@ define(['js/NodePropertyNames',
                 if (self.hostDesignerItem) {
                     self.hostDesignerItem.registerConnectors(connectorE);
                 } else {
-                    self.logger.error("Decorator's hostDesignerItem is not set");
+                    self.logger.error('Decorator\'s hostDesignerItem is not set');
                 }
 
                 self.skinParts.$connectorContainer.append(connectorE);

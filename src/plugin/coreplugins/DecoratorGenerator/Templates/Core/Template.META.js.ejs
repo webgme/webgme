@@ -1,14 +1,20 @@
-/*
+/*globals define, _*/
+/**
  * Copyright (C) 2014 Vanderbilt University, All rights reserved.
  * 
- * AUTO GENERATED CODE FOR PROJECT <%=name%>
+ * AUTO GENERATED CODE FOR PROJECT <%=decorator.name%>
  */
 
 
-define(['underscore',
-        'js/Utils/METAAspectHelper'], function (_underscore,
-                                                METAAspectHelper) {
-    "use strict";
+define([
+    'underscore',
+    'js/Utils/METAAspectHelper'
+], function (
+    _underscore,
+    METAAspectHelper) {
+
+    'use strict';
+
     var _metaID = '<%=name%>.META.js';
 
     //META ASPECT TYPES
@@ -16,22 +22,24 @@ define(['underscore',
 <%var metaNodeInfo, i;
 for (i = 0; i < metaNodes.length; i += 1) {
     metaNodeInfo = metaNodes[i];
-%>        '<%=metaNodeInfo.name%>': '<%=metaNodeInfo.path%>',
+%>        <%=metaNodeInfo.name%>: '<%=metaNodeInfo.path%>',
 <%}%>
     };
 
     //META ASPECT TYPE CHECKING
 <%for (i = 0; i < metaNodes.length; i += 1) {
         metaNodeInfo = metaNodes[i];
-%>    var _is<%=metaNodeInfo.name%> = function (objID) { return METAAspectHelper.isMETAType(objID, _metaTypes.<%=metaNodeInfo.name%>); };
+%>    var _is<%=metaNodeInfo.name%> = function (objID) {
+        return METAAspectHelper.isMETAType(objID, _metaTypes.<%=metaNodeInfo.name%>);
+    };
 <%}%>
 
     var _queryMetaTypes = function () {
         var nMetaTypes = METAAspectHelper.getMETAAspectTypes(),
             m;
 
-        if (!_.isEqual(_metaTypes,nMetaTypes)) {
-            var metaOutOfDateMsg = _metaID + " is not up to date with the latest META aspect. Please update your local copy!";
+        if (!_.isEqual(_metaTypes, nMetaTypes)) {
+            var metaOutOfDateMsg = _metaID + ' is not up to date with the latest META aspect. Please update your local copy!';
             if (console.error) {
                 console.error(metaOutOfDateMsg);
             } else {

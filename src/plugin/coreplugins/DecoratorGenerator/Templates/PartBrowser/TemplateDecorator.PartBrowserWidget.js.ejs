@@ -1,31 +1,33 @@
-/*
+/*globals define, _*/
+/**
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Authors:
  */
 
-"use strict";
-
-define(['js/Constants',
+define([
+    'js/Constants',
     'js/Utils/METAAspectHelper',
     'js/NodePropertyNames',
     'js/Widgets/PartBrowser/PartBrowserWidget.DecoratorBase',
     '../Core/<%= decorator.name %>Decorator.Core.js',
     '../Core/<%= decorator.name %>Decorator.Constants',
-    'css!./<%= decorator.name %>Decorator.PartBrowserWidget'], function (CONSTANTS,
-                                                       METATypesHelper,
-                                                       nodePropertyNames,
-                                                       PartBrowserWidgetDecoratorBase,
-                                                       <%= decorator.name %>DecoratorCore,
-                                                       <%= decorator.name %>DecoratorConstants) {
+    'css!./<%= decorator.name %>Decorator.PartBrowserWidget'
+], function (
+    CONSTANTS,
+    METATypesHelper,
+    nodePropertyNames,
+    PartBrowserWidgetDecoratorBase,
+    <%= decorator.name %>DecoratorCore,
+    <%= decorator.name %>DecoratorConstants) {
+
+    'use strict';
 
     /**
-     * A module representing PartBrowserWidget specific functionality for the <%= decorator.name %>ModelingLanguage.
+     * A module representing PartBrowserWidget specific functionality for the <%= decorator.name %>.
      * @exports <%= decorator.name %>DecoratorPartBrowserWidget
      * @version 1.0
      */
     var <%= decorator.name %>DecoratorPartBrowserWidget,
-        DECORATOR_ID = "<%= decorator.name %>DecoratorPartBrowserWidget";
+        DECORATOR_ID = '<%= decorator.name %>DecoratorPartBrowserWidget';
 
     /**
      * Initializes a new instance of <%= decorator.name %>DecoratorPartBrowserWidget
@@ -38,9 +40,9 @@ define(['js/Constants',
         PartBrowserWidgetDecoratorBase.apply(this, [opts]);
 
         // Part browser widget does not support creating connections therefore do not render connectors
-        this._initializeDecorator({"connectors": false});
+        this._initializeDecorator({connectors: false});
 
-        this.logger.debug("<%= decorator.name %>DecoratorPartBrowserWidget ctor");
+        this.logger.debug('<%= decorator.name %>DecoratorPartBrowserWidget ctor');
     };
 
 
@@ -75,7 +77,7 @@ define(['js/Constants',
 
 
     /**** Override from ModelDecoratorCore ****/
-    <%= decorator.name %>DecoratorPartBrowserWidget.prototype._registerForNotification = function(portId) {
+    <%= decorator.name %>DecoratorPartBrowserWidget.prototype._registerForNotification = function (portId) {
         var partId = this._metaInfo[CONSTANTS.GME_ID];
 
         this._control.registerComponentIDForPartID(portId, partId);
@@ -83,7 +85,7 @@ define(['js/Constants',
 
 
     /**** Override from ModelDecoratorCore ****/
-    <%= decorator.name %>DecoratorPartBrowserWidget.prototype._unregisterForNotification = function(portId) {
+    <%= decorator.name %>DecoratorPartBrowserWidget.prototype._unregisterForNotification = function (portId) {
         var partId = this._metaInfo[CONSTANTS.GME_ID];
 
         this._control.unregisterComponentIDFromPartID(portId, partId);
