@@ -43,6 +43,8 @@ var Path = require('path'),
 
     ServerWorkerManager = require('./worker/serverworkermanager'),
 
+    webgmeUtils = require('../utils'),
+
     servers = [],
 
     mainLogger;
@@ -381,25 +383,12 @@ function StandAloneServer(gmeConfig) {
         }
     }
 
-    function isGoodExtraAsset(name, path) {
-        try {
-            var file = FS.readFileSync(path + '/' + name + '.js', 'utf-8');
-            if (file === undefined || file === null) {
-                return false;
-            } else {
-                return true;
-            }
-        } catch (e) {
-            return false;
-        }
-    }
-
     function getPluginBasePathByName(pluginName) {
         for (var i = 0; i < gmeConfig.plugin.basePaths.length; i++) {
             var additional = FS.readdirSync(gmeConfig.plugin.basePaths[i]);
             for (var j = 0; j < additional.length; j++) {
                 if (additional[j] === pluginName) {
-                    if (isGoodExtraAsset(additional[j], Path.join(gmeConfig.plugin.basePaths[i], additional[j]))) {
+                    if (webgmeUtils.isGoodExtraAsset(additional[j], Path.join(gmeConfig.plugin.basePaths[i], additional[j]))) {
                         return gmeConfig.plugin.basePaths[i];
                     }
                 }
@@ -407,48 +396,7 @@ function StandAloneServer(gmeConfig) {
         }
     }
 
-    function getVisualizersDescriptor() {
-        //we merge the contents of the CONFIG.visualizerDescriptors by id
-        var indexById = function (objectArray, id) {
-                var i,
-                    index = -1;
-                for (i = 0; i < objectArray.length; i++) {
-                    if (objectArray[i].id === id) {
-                        index = i;
-                        break;
-                    }
-                }
 
-                return index;
-            },
-            getVisualizerDescriptor = function (path) {
-                try {
-                    var descriptor = FS.readFileSync(path, 'utf-8');
-                    descriptor = JSON.parse(descriptor);
-                    return descriptor;
-                } catch (e) {
-                    //we do not care much of the error just give back an empty array
-                    return [];
-                }
-            },
-            allVisualizersDescriptor = [],
-            i, j;
-
-        for (i = 0; i < gmeConfig.visualization.visualizerDescriptors.length; i++) {
-            var descriptor = getVisualizerDescriptor(gmeConfig.visualization.visualizerDescriptors[i]);
-            if (descriptor.length) {
-                for (j = 0; j < descriptor.length; j++) {
-                    var index = indexById(allVisualizersDescriptor, descriptor[j].id);
-                    if (index !== -1) {
-                        allVisualizersDescriptor[index] = descriptor[j];
-                    } else {
-                        allVisualizersDescriptor.push(descriptor[j]);
-                    }
-                }
-            }
-        }
-        return allVisualizersDescriptor;
-    }
 
     function setupExternalRestModules() {
         var restComponent,
@@ -786,144 +734,15 @@ function StandAloneServer(gmeConfig) {
     __app.get('/package.json', ensureAuthenticated, Express.static(Path.join(__baseDir, '..')));
     __app.get(/^\/.*\.(_js|html|gif|png|bmp|svg|json|map)$/, ensureAuthenticated, Express.static(__clientBaseDir));
 
-    //logger.debug('creating token related routing rules');
-    //__app.get('/gettoken', ensureAuthenticated, function (req, res) {
-    //    if (gmeConfig.rest.secure) {
-    //        __gmeAuth.getToken(req.session.id, function (err, token) {
-    //            if (err) {
-    //                res.send(err);
-    //            } else {
-    //                res.send(token);
-    //            }
-    //        });
-    //    } else {
-    //        res.sendStatus(410); //special error for the interpreters to know there is no need for token
-    //    }
-    //});
-    //__app.get('/checktoken/:token', function (req, res) {
-    //    if (gmeConfig.authentication.enable === true) {
-    //        if (__canCheckToken === true) {
-    //            setTimeout(function () {
-    //                __canCheckToken = true;
-    //            }, 10000);
-    //            __canCheckToken = false;
-    //            __gmeAuth.checkToken(req.params.token, function (isValid) {
-    //                if (isValid === true) {
-    //                    res.sendStatus(200);
-    //                } else {
-    //                    res.sendStatus(403);
-    //                }
-    //            });
-    //        } else {
-    //            res.sendStatus(403);
-    //        }
-    //    } else {
-    //        res.sendStatus(410); //special error for the interpreters to know there is no need for token
-    //    }
-    //});
-
     logger.debug('creating API related routing rules');
 
     apiReady = api.createAPI(__app, '/api', middlewareOpts);
 
-
-    //logger.debug('creating server-worker related routing rules');
-    //function sendSimpleResult(res, resultId, filename) {
-    //    logger.debug('worker/simpleResult requested, urlArray', {metadata: {id: resultId, filename: filename}});
-    //
-    //    __workerManager.result(resultId, function (err, result) {
-    //        if (err) {
-    //            logger.error('worker/simpleResult err', err);
-    //            res.sendStatus(500);
-    //        } else {
-    //            res.header('Content-Disposition', contentDisposition(filename));
-    //            res.json(result);
-    //        }
-    //    });
-    //}
-    //
-    //__app.get('/worker/simpleResult/:resultId', function (req, res) {
-    //    var filename = 'simpleResult-' + req.params.resultId + '.json';
-    //    sendSimpleResult(res, req.params.resultId, filename);
-    //});
-    //
-    //// FIXME: filename should be in query string
-    //__app.get('/worker/simpleResult/:resultId/:filename', function (req, res) {
-    //    var filename = req.params.filename;
-    //    if (filename.indexOf('.json') === -1) {
-    //        filename += '.json';
-    //    }
-    //    sendSimpleResult(res, req.params.resultId, filename);
-    //});
-
-
-    logger.debug('creating list asset rules');
-    __app.get('/listAllDecorators', ensureAuthenticated, function (req, res) {
-        var names = []; //TODO we add everything in the directories!!!
-        for (var i = 0; i < gmeConfig.visualization.decoratorPaths.length; i++) {
-            var additional = FS.readdirSync(gmeConfig.visualization.decoratorPaths[i]);
-            for (var j = 0; j < additional.length; j++) {
-                if (names.indexOf(additional[j]) === -1) {
-                    if (isGoodExtraAsset(additional[j],
-                            Path.join(gmeConfig.visualization.decoratorPaths[i],
-                                additional[j]))) {
-                        names.push(additional[j]);
-                    }
-                }
-            }
-        }
-        res.status(200);
-        res.setHeader('Content-type', 'application/json');
-        res.end(JSON.stringify({allDecorators: names}));
+    // everything else is 404
+    logger.debug('creating all other request rule - error 404 -');
+    __app.use('*', function (req, res) {
+        res.sendStatus(404);
     });
-
-    __app.get('/listAllPlugins', ensureAuthenticated, function (req, res) {
-        var names = []; //we add only the '*.js' files from the directories
-        for (var i = 0; i < gmeConfig.plugin.basePaths.length; i++) {
-            var additional = FS.readdirSync(gmeConfig.plugin.basePaths[i]);
-            for (var j = 0; j < additional.length; j++) {
-                if (names.indexOf(additional[j]) === -1) {
-                    if (isGoodExtraAsset(additional[j], Path.join(gmeConfig.plugin.basePaths[i], additional[j]))) {
-                        names.push(additional[j]);
-                    }
-                }
-            }
-        }
-        res.status(200);
-        res.setHeader('Content-type', 'application/json');
-        res.end(JSON.stringify({allPlugins: names}));
-    });
-
-    __app.get('/listAllSeeds', ensureAuthenticated, function (req, res) {
-        var names = [],
-            result = [],
-            seedName,
-            i,
-            j;
-        if (gmeConfig.seedProjects.enable === true) {
-            for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
-                names = FS.readdirSync(gmeConfig.seedProjects.basePaths[i]);
-                for (j = 0; j < names.length; j++) {
-                    seedName = Path.basename(names[j], '.json');
-                    if (result.indexOf(seedName) === -1) {
-                        result.push(seedName);
-                    }
-                }
-            }
-        }
-        logger.debug('/listAllSeeds', {metadata: result});
-        res.status(200);
-        res.setHeader('Content-type', 'application/json');
-        res.end(JSON.stringify({allSeeds: result.sort()}));
-    });
-
-    __app.get('/listAllVisualizerDescriptors', ensureAuthenticated, function (req, res) {
-        var allVisualizerDescriptors = getVisualizersDescriptor();
-        res.status(200);
-        res.setHeader('Content-type', 'application/javascript');
-        res.end('define([],function(){ return ' + JSON.stringify(allVisualizerDescriptors) + ';});');
-    });
-
 
     // catches all next(new Error()) from previous rules, you can set res.status() before you call next(new Error())
     __app.use(function (err, req, res, next) {
@@ -933,13 +752,6 @@ function StandAloneServer(gmeConfig) {
         res.sendStatus(res.statusCode);
         //res.send(err.stack ? err.stack : err); // FIXME: in dev mode
     });
-
-    // everything else is 404
-    logger.debug('creating all other request rule - error 404 -');
-    __app.use('*', function (req, res) {
-        res.sendStatus(404);
-    });
-
 
     logger.debug('gmeConfig of webgme server', {metadata: gmeConfig});
     var networkIfs = OS.networkInterfaces(),

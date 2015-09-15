@@ -9,7 +9,8 @@
 var requirejs = require('requirejs'),
     path = require('path'),
     requireJsBase = path.join(__dirname, 'src'),
-    fs = require('fs');
+    fs = require('fs'),
+    webgmeUtils = require('./src/utils');
 
 global.requireJS = requirejs;
 
@@ -24,82 +25,56 @@ requirejs.config({
 
 function addToRequireJsPaths(gmeConfig) {
 
-    var isGoodExtraAsset = function (name, filePath) {
-            try {
-                fs.readFileSync(path.join(filePath, name + '.js'), 'utf-8');
-                return true;
-            } catch (e) {
-                return false;
-            }
-        },
-        getComponentNames = function (basePaths) {
-            var names = [], //we add only the "*.js" files from the directories
-                additional,
-                i,
-                j;
+    function addFromBasePath(basepaths, componentName) {
+        //type = 'plugin'
+        var componentNames = webgmeUtils.getComponentNames(basepaths),
+            componentPaths,
+            found,
+            items,
+            i,
+            j;
 
-            basePaths = basePaths || [];
-            for (i = 0; i < basePaths.length; i += 1) {
-                additional = fs.readdirSync(basePaths[i]);
-                for (j = 0; j < additional.length; j += 1) {
-                    if (names.indexOf(additional[j]) === -1) {
-                        if (isGoodExtraAsset(additional[j], path.join(basePaths[i], additional[j]))) {
-                            names.push(additional[j]);
-                        }
+        // We go through every plugin and we check where we are able to find the main part of it
+        // so we can set the plugin/pluginName path according that in requirejs.
+        componentPaths = {};
+        for (i in componentNames) {
+            found = false;
+            for (j = 0; j < basepaths.length; j++) {
+                if (found) {
+                    break;
+                }
+                try {
+                    items = fs.readdirSync(basepaths[j]);
+                    if (items.indexOf(componentNames[i]) !== -1) {
+                        componentPaths[componentName + '/' + componentNames[i]] = path.relative(requireJsBase,
+                            path.resolve(basepaths[j]));
+                        found = true;
                     }
+                } catch (e) {
+                    //do nothing as we will go on anyway
+                    //console.error(e);
                 }
             }
-            return names;
-        },
-        addFromBasePath = function (basepaths, componentName) {
-            //type = 'plugin'
-            var componentNames = getComponentNames(basepaths),
-                componentPaths,
-                found,
-                items,
-                i,
-                j;
+        }
 
-            // We go through every plugin and we check where we are able to find the main part of it
-            // so we can set the plugin/pluginName path according that in requirejs.
-            componentPaths = {};
-            for (i in componentNames) {
-                found = false;
-                for (j = 0; j < basepaths.length; j++) {
-                    if (found) {
-                        break;
-                    }
-                    try {
-                        items = fs.readdirSync(basepaths[j]);
-                        if (items.indexOf(componentNames[i]) !== -1) {
-                            componentPaths[componentName + '/' + componentNames[i]] = path.relative(requireJsBase,
-                                path.resolve(basepaths[j]));
-                            found = true;
-                        }
-                    } catch (e) {
-                        //do nothing as we will go on anyway
-                        //console.error(e);
-                    }
-                }
-            }
+        requirejs.config({
+            paths: componentPaths
+        });
+    }
 
-            requirejs.config({
-                paths: componentPaths
-            });
-        },
-        addFromRequireJsPath = function (requireJsPaths) {
-            var configPaths = {},
-                keys = Object.keys(requireJsPaths),
-                i;
+    function addFromRequireJsPath(requireJsPaths) {
+        var configPaths = {},
+            keys = Object.keys(requireJsPaths),
+            i;
 
-            for (i = 0; i < keys.length; i += 1) {
-                configPaths[keys[i]] = path.relative(requireJsBase, path.resolve(requireJsPaths[keys[i]]));
-            }
+        for (i = 0; i < keys.length; i += 1) {
+            configPaths[keys[i]] = path.relative(requireJsBase, path.resolve(requireJsPaths[keys[i]]));
+        }
 
-            requirejs.config({
-                paths: configPaths
-            });
-        };
+        requirejs.config({
+            paths: configPaths
+        });
+    }
 
     addFromBasePath(gmeConfig.plugin.basePaths, 'plugin');
     addFromBasePath(gmeConfig.addOn.basePaths, 'addon');

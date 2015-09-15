@@ -12,7 +12,7 @@ define(['js/logger',
     'js/RegistryKeys',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
-    '/listAllVisualizerDescriptors',
+    'text!/api/visualizers',
     'css!./styles/VisualizerPanel.css'
 ], function (Logger,
              LoaderProgressBar,
@@ -26,6 +26,8 @@ define(['js/logger',
 
     var VisualizerPanel,
         DEFAULT_VISUALIZER = 'ModelEditor';
+
+    VisualizersJSON = JSON.parse(VisualizersJSON);
 
     VisualizerPanel = function (layoutManager, params) {
         var options = {};
