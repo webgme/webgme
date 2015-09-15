@@ -76,14 +76,14 @@ define([
                 regexMessage: 'No spaces and special characters allowed. This value is used as the name of the ' +
                 'generated plugin class.',
                 description: 'Unique name for the decorator ("Decorator" will be appended).',
-                value: 'NewDecorator',
+                value: 'SomeName',
                 valueType: 'string',
                 readOnly: false
             },
             {
                 name: 'meta',
                 displayName: 'Generate META',
-                description: 'Generates a static listing of the meta objects to facilitate coding.',
+                description: 'Generates a static listing of the meta objects to facilitate coding (experimental).',
                 value: false,
                 valueType: 'boolean',
                 readOnly: false
@@ -146,7 +146,7 @@ define([
             }
         }
 
-        artifact = self.blobClient.createArtifact('decoratorFiles');
+        artifact = self.blobClient.createArtifact(config.decoratorName + 'Decorator');
         artifact.addFiles(filesToAdd, function (err /*, hashes*/) {
             if (err) {
                 callback(err, self.result);
