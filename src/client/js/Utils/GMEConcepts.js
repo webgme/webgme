@@ -179,6 +179,18 @@ define(['jquery',
         return isProjectRegistryValue(CONSTANTS.PROJECT_FCO_ID, objID);
     }
 
+    // returns with all the contaners of the node plus the node itself up untill the ROOT
+    function getAllContainerIds(nodeId) {
+        var containers = [],
+            node = client.getNode(nodeId);
+
+        while (node !== null) {
+            containers.push(node.getId());
+            node = client.getNode(node.getParentId());
+        }
+        return containers;
+    }
+
     /*
      * Returns true if a new child with the given baseId (instance of base) can be created in parent
      */
@@ -195,18 +207,23 @@ define(['jquery',
             j,
             node,
             validChildrenTypes,
-            validChildrenTypeMap;
+            validChildrenTypeMap,
+            parentIds = getAllContainerIds(parentId);
 
         //TODO: implement real logic based on META and CONSTRAINTS...
         if (typeof parentId === 'string' && baseIdList && baseIdList.length > 0) {
             result = true;
 
-            //make sure that no basIDList is not derived from parentId
+            //make sure that no baseId is derived from any of the containers
             len = baseIdList.length;
             while (len-- && result === true) {
-                if (client.isTypeOf(baseIdList[len], parentId)) {
-                    result = false;
+                i = parentIds.length;
+                while (i-- && result === true) {
+                    if (client.isTypeOf(baseIdList[len], parentIds[i])) {
+                        result = false;
+                    }
                 }
+
             }
 
 
