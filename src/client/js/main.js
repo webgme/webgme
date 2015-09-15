@@ -101,8 +101,8 @@ require.config({
 
         backbone: ['underscore'],
         codemirror: [
-            'css!' + document.location.pathname + 'css/codemirror/codemirror.css',
-            'css!' + document.location.pathname + 'css/codemirror/codemirror.bootstrap.css'
+            'css!/css/codemirror/codemirror.css',
+            'css!/css/codemirror/codemirror.bootstrap.css'
         ],
         'js/util': ['jquery'],
         'js/jquery.WebGME': ['bootstrap'],
@@ -111,8 +111,8 @@ require.config({
         'js/WebGME': [
             'js/jquery.WebGME',
 
-            'css!' + document.location.pathname + 'css/main.css',
-            'css!' + document.location.pathname + 'css/themes/dawn.css',
+            'css!/css/main.css',
+            'css!/css/themes/dawn.css',
             'css!fonts/font-awesome/css/font-awesome.min.css',
             'css!fonts/webgme-icons/style.css'
         ],
