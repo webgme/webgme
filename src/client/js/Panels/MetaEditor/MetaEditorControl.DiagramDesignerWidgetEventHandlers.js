@@ -52,7 +52,7 @@ define(['js/logger',
 
             if (self._connType === MetaRelations.META_RELATIONS.INHERITANCE) {
                 //check if base will be changed so we should notify user about it
-                node = self._client.getNode(targetId);
+                node = self._client.getNode(sourceId);
                 if (node) {
                     if (sourceId === targetId) {
                         dialog.alert('Invalid base modification',
@@ -63,11 +63,11 @@ define(['js/logger',
                         return;
                     }
 
-                    if (sourceId !== node.getBaseId()) {
+                    if (targetId !== node.getBaseId()) {
                         //TODO probably come up with some detailed list,
                         // what will the target loose and what will it gain
 
-                        baseNode = self._client.getNode(sourceId);
+                        baseNode = self._client.getNode(targetId);
                         oldBaseNode = self._client.getNode(node.getBaseId());
 
                         if (baseNode && oldBaseNode) {
@@ -81,7 +81,7 @@ define(['js/logger',
                                 return;
                             } else {
                                 do {
-                                    if (baseNode.getId() === targetId) {
+                                    if (baseNode.getId() === sourceId) {
                                         dialog.alert('Invalid base modification',
                                             'Change of base node would create circular inheritance!',
                                             function () {

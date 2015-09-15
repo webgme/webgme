@@ -50,8 +50,8 @@ define(['js/Constants',
                 params[DiagramDesignerWidgetConstants.LINE_COLOR] = '#0000FF';
                 break;
             case metaRelations.INHERITANCE:
-                params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = INHERITANCE_TYPE_LINE_END;
-                params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
+                params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = NO_END;
+                params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = INHERITANCE_TYPE_LINE_END;
                 params[DiagramDesignerWidgetConstants.LINE_COLOR] = '#FF0000';
                 break;
             case metaRelations.SET:
@@ -81,22 +81,24 @@ define(['js/Constants',
             pathParams = getLineVisualDescriptor(connType),
             temp;
 
-        if (connType === metaRelations.CONTAINMENT ||
-            connType === metaRelations.INHERITANCE) {
+        if (connType === metaRelations.CONTAINMENT) {
 
-            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW]);
-            pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW]);
+            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] =
+                convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW]);
+            pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] =
+                convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW]);
         } else {
             //for pointer and pointer list we have to flip the line end visual styles
             temp = pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW];
-            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW];
+            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] =
+                pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW];
             pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = temp;
         }
 
         el.attr({style: 'height: ' + btnSize + 'px; margin-top: 2px; margin-bottom: 2px;'});
 
         path = paper.path('M' + (Math.round(btnSize / 2) + 0.5) + ',0, L' + (Math.round(btnSize / 2) + 0.5) + ',' +
-                          btnSize);
+            btnSize);
 
         path.attr({
             'arrow-start': pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW],

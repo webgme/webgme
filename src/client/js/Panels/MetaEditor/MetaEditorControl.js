@@ -1036,14 +1036,14 @@ define(['js/logger',
         //if there was a valid old that's different than the current, delete the connection representing the old
         oldMetaInheritance = this._nodeMetaInheritance[gmeID];
         if (oldMetaInheritance && (oldMetaInheritance !== newMetaInheritance)) {
-            this._removeConnection(oldMetaInheritance, gmeID, MetaRelations.META_RELATIONS.INHERITANCE);
+            this._removeConnection(gmeID, oldMetaInheritance, MetaRelations.META_RELATIONS.INHERITANCE);
 
             delete this._nodeMetaInheritance[gmeID];
         }
 
         if (newMetaInheritance && (oldMetaInheritance !== newMetaInheritance)) {
             this._nodeMetaInheritance[gmeID] = newMetaInheritance;
-            this._createConnection(newMetaInheritance, gmeID, MetaRelations.META_RELATIONS.INHERITANCE, undefined);
+            this._createConnection(gmeID, newMetaInheritance, MetaRelations.META_RELATIONS.INHERITANCE, undefined);
         }
     };
     /**********************************************************************************************/
@@ -1230,7 +1230,7 @@ define(['js/logger',
     };
 
 
-    MetaEditorControl.prototype._createInheritanceRelationship = function (newBaseID, objectID) {
+    MetaEditorControl.prototype._createInheritanceRelationship = function (objectID, newBaseID) {
         var newBaseNode = this._client.getNode(newBaseID),
             objectNode = this._client.getNode(objectID),
             objectBase;
