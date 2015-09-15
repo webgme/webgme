@@ -50,10 +50,11 @@ define([
         //enable SelectionManager specific DOM event listeners
         var self = this;
 
-        this._diagramDesigner.onItemMouseDown = function (itemId, eventDetails) {
+        // note this is called only when the mouse was down and up
+        this._diagramDesigner.onItemMouseDown = function (itemId, eventDetails, mouseMoved) {
             if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.READ_ONLY ||
                 self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
-                self._setSelection([itemId], self._isMultiSelectionModifierKeyPressed(eventDetails));
+                self._setSelection([itemId], self._isMultiSelectionModifierKeyPressed(eventDetails), mouseMoved);
             }
         };
 
@@ -326,7 +327,7 @@ define([
 
 
     /*********************** SET SELECTION *********************************/
-    SelectionManager.prototype._setSelection = function (idList, addToExistingSelection) {
+    SelectionManager.prototype._setSelection = function (idList, addToExistingSelection, mouseMoved) {
         var i,
             len = idList.length,
             item,
@@ -336,7 +337,7 @@ define([
 
         this.logger.debug('setSelection: ' + idList + ', addToExistingSelection: ' + addToExistingSelection);
 
-        if (len > 0) {
+        if (len > 0 && !mouseMoved) {
             // Check if the new selection has to be added to the existing selection.
             if (addToExistingSelection === true) {
                 // If not in the selection yet, add IDs to the selection.

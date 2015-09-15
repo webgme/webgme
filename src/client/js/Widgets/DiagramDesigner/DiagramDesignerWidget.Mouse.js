@@ -29,16 +29,27 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
         this.$el.on('mousedown.' + EVENT_POSTFIX, 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,
             function (event) {
                 var itemId = $(this).attr('id'),
-                    eventDetails = self._processMouseEvent(event, true, true, true, true);
+                    eventDetails = self._processMouseEvent(event, true, true, true, true),
+                    mouseMoved = false;
 
                 logger.debug('mousedown.item, ItemID: ' + itemId + ' eventDetails: ' + JSON.stringify(eventDetails));
 
-                if (self.onItemMouseDown) {
-                    self.onItemMouseDown.call(self, itemId, eventDetails);
-                } else {
-                    logger.warn('onItemMouseDown(itemId, eventDetails) is undefined, ItemID: ' + itemId +
-                    ' eventDetails: ' + JSON.stringify(eventDetails));
-                }
+                // keep track of mouse movement
+                self.$el.on('mousemove.' + EVENT_POSTFIX, function () {
+                    mouseMoved = true;
+                });
+
+                self.$el.on('mouseup.' + EVENT_POSTFIX, function () {
+                    self.$el.off('mousemove.' + EVENT_POSTFIX);
+                    self.$el.off('mouseup.' + EVENT_POSTFIX);
+
+                    if (self.onItemMouseDown) {
+                        self.onItemMouseDown.call(self, itemId, eventDetails, mouseMoved);
+                    } else {
+                        logger.warn('onItemMouseDown(itemId, eventDetails) is undefined, ItemID: ' + itemId +
+                                    ' eventDetails: ' + JSON.stringify(eventDetails) + ' mouseMoved: ' + mouseMoved);
+                    }
+                });
             }
         );
 
@@ -55,7 +66,7 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
                 self.onConnectionMouseDown.call(self, connId, eventDetails);
             } else {
                 logger.warn('onConnectionMouseDown(connId, eventDetails) is undefined, connId: ' + connId +
-                ' eventDetails: ' + JSON.stringify(eventDetails));
+                            ' eventDetails: ' + JSON.stringify(eventDetails));
             }
         });
 
