@@ -48,7 +48,8 @@ define(['js/logger',
         //by default use visual animations to reflect changes in the tree
         this._animation = true;
 
-        this._enableNodeRename = true;
+        //https://github.com/webgme/webgme/issues/347
+        this._enableNodeRename = false;
 
         //generate control dynamically
         this._treeEl = $('<div/>', {});
