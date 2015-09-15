@@ -33,6 +33,7 @@ define([
         'js/Utils/PreferencesHelper',
         'js/Dialogs/Projects/ProjectsDialog',
         'js/Utils/InterpreterManager',
+        'common/storage/util',
         'superagent',
         'q'
     ], function (Logger,
@@ -57,6 +58,7 @@ define([
                  PreferencesHelper,
                  ProjectsDialog,
                  InterpreterManager,
+                 StorageUtil,
                  superagent,
                  Q) {
 
@@ -64,7 +66,8 @@ define([
 
         var npmJSON = JSON.parse(packagejson),
             gmeConfig = JSON.parse(gmeConfigJson),
-            npmJSONFromSplit;
+            npmJSONFromSplit,
+            defaultPageTitle = 'WebGME';
 
         WebGMEGlobal.version = npmJSON.version;
         WebGMEGlobal.NpmVersion = npmJSON.dist ? npmJSON.version : '';
@@ -113,6 +116,7 @@ define([
                 );
 
                 WebGMEGlobal.State.setIsInitPhase(true);
+                document.title = defaultPageTitle;
                 logger.info('init-phase true');
                 WebGMEHistory.initialize();
 
@@ -134,12 +138,14 @@ define([
                     WebGMEGlobal.State.registerActiveBranchName(branchName);
                 });
                 client.addEventListener(CLIENT_CONSTANTS.PROJECT_OPENED, function (__project, projectName) {
+                    document.title = StorageUtil.getProjectFullNameFromProjectId(projectName);
                     layoutManager.setPanelReadOnly(client.isProjectReadOnly());
                     WebGMEGlobal.State.registerActiveProjectName(projectName);
                 });
 
                 //on project close clear the current state
                 client.addEventListener(CLIENT_CONSTANTS.PROJECT_CLOSED, function (/* __project, projectName */) {
+                    document.title = defaultPageTitle;
                     WebGMEGlobal.State.clear();
                 });
 
