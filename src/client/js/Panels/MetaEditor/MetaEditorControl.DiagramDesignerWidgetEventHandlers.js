@@ -586,12 +586,6 @@ define(['js/logger',
         this.diagramDesigner.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionTypeSelected);
         this.diagramDesigner.toolbarItems.ddbtnConnectionLineWidth.enabled(onlyConnectionTypeSelected);
 
-        //nobody is selected on the canvas
-        //set the active selection to the opened guy
-        if (gmeIDs.length === 0 && this.metaAspectContainerNodeID) {
-            gmeIDs.push(this.metaAspectContainerNodeID);
-        }
-
         WebGMEGlobal.State.registerActiveSelection(gmeIDs);
     };
 

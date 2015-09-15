@@ -66,19 +66,10 @@ define(['js/logger',
             self._logger.debug('activeSelection changed', activeSelection);
             var activeNodeId = WebGMEGlobal.State.getActiveObject();
             if (activeSelection && activeSelection.length > 0) {
-                if (activeSelection.length === 1) {
-                    //https://github.com/webgme/webgme/issues/326
-                    if (self.startsWith(activeSelection[0], activeNodeId)) {
-                        self._selectedObjectsChanged(activeSelection);
-                    } else {
-                        self._logger.debug('Selected node is not a child or the activeNode', activeNodeId,
-                            activeSelection[0]);
-                    }
-                } else {
-                    self._selectedObjectsChanged(activeSelection);
-                }
+                self._selectedObjectsChanged(activeSelection);
             } else {
                 self._selectObjectsUsingActiveObject(activeNodeId);
+
             }
         });
 
@@ -753,13 +744,6 @@ define(['js/logger',
             }
         }
         this._client.completeTransaction();
-    };
-
-    PropertyEditorController.prototype.startsWith = function (str, start) {
-        if (start === '') {
-            return true;
-        }
-        return start.length > 0 && str.substring(0, start.length) === start;
     };
 
     return PropertyEditorController;

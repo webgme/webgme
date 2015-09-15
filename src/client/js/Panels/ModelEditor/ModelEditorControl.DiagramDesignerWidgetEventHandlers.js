@@ -781,12 +781,6 @@ define(['js/logger',
 
         this.$btnConnectionRemoveSegmentPoints.enabled(onlyConnectionSelected);
 
-        //nobody is selected on the canvas
-        //set the active selection to the opened guy
-        if (gmeIDs.length === 0 && (this.currentNodeInfo.id || this.currentNodeInfo.id === CONSTANTS.PROJECT_ROOT_ID)) {
-            gmeIDs.push(this.currentNodeInfo.id);
-        }
-
         this._settingActiveSelection = true;
         WebGMEGlobal.State.registerActiveSelection(gmeIDs);
         this._settingActiveSelection = false;
