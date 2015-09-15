@@ -1,6 +1,8 @@
 /*globals define, _, $*/
 /**
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * A module representing core decorator functionality for the <%= decorator.name %>.
+ * @exports <%= decorator.name %>DecoratorCore
+ * @version 1.0
  */
 
 
@@ -21,19 +23,28 @@ define([
     REGISTRY_KEYS,
     <%= decorator.name %>Base,<%if (config.meta) {%>
     <%= decorator.name %>META,<%}%>
-    ADConstants,
+    <%= decorator.name %>DecoratorConstants,
     <%= decorator.name %>DecoratorTemplate,
     DefaultSvgTemplate) {
 
     'use strict';
 
     /**
-    * A module representing core decorator functionality for the <%= decorator.name %>ModelingLanguage.
-    * @exports <%= decorator.name %>DecoratorCore
-    * @version 1.0
+    * Svg element that can be used as a placeholder for the icon if the icon does not exist on the server.
+    * @type {*|jQuery|HTMLElement}
+    * @private
     */
-    var <%= decorator.name %>DecoratorCore,
-        SVG_ICON_PATH = '/decorators/<%= decorator.name %>Decorator/Icons/';
+    var errorSVGBase = $(DefaultSvgTemplate);
+
+    /**
+    * Creates a new instance of <%= decorator.name %>DecoratorCore.
+    * @constructor
+    */
+    function <%= decorator.name %>DecoratorCore() {
+    }
+
+<%if (config.meta) {%>
+    var SVG_ICON_PATH = '/decorators/<%= decorator.name %>Decorator/Icons/';
 
     /**
      * Contains downloaded svg elements from the server.
@@ -41,13 +52,6 @@ define([
      * @private
      */
     var svgCache = {};
-
-    /**
-     * Svg element that can be used as a placeholder for the icon if the icon does not exist on the server.
-     * @type {*|jQuery|HTMLElement}
-     * @private
-     */
-    var errorSVGBase = $(DefaultSvgTemplate);
 
     /**
      * ID list of meta types.
@@ -68,8 +72,7 @@ define([
                 svgCache[metaType] = $(data.childNodes[0]);
             })
             .fail(function () {
-                // download failed for this type
-                // TODO: Deal with error
+                console.error('TODO: Add META-type specific SVG at: ' + svgResourceUrl);
             });
     }
 
@@ -78,13 +81,7 @@ define([
             downloadMetaSvgSync(m);
         }
     }
-
-    /**
-     * Creates a new instance of <%= decorator.name %>DecoratorCore.
-     * @constructor
-     */
-    <%= decorator.name %>DecoratorCore = function () {
-    };
+<%}%>
 
     /**
      * Represents the base element that would be inserted into the DOM.
@@ -120,39 +117,39 @@ define([
             this._displayConnectors = params.connectors;
         }
     };
-
+<%if (config.meta) {%>
     /**
      * Downloads and caches the svg files for a given METAType based on a gmeID
      * @param gmeID {string} An ID of the GME object.
      * @returns {*|jQuery|HTMLElement} SVG element that should be displayed.
      */
     <%= decorator.name %>DecoratorCore.prototype.getSVGByMetaType = function (gmeID) {
-        var <%= decorator.name %>ClassNames,
-            <%= decorator.name %>ClassName,
+        var metaNames,
+            metaName,
             returnSVG,
             len;
 
         // get all META types for the given GME object including inheritance in the meta model
-        <%= decorator.name %>ClassNames = METAAspectHelper.getMETATypesOf(gmeID);
+        metaNames = METAAspectHelper.getMETATypesOf(gmeID);
 
         // reverse the list since the iteration is backwards in the while loop
-        <%= decorator.name %>ClassNames.reverse();
+        metaNames.reverse();
 
         // length of the list on which the iteration is performed
-        len = <%= decorator.name %>ClassNames.length;
+        len = metaNames.length;
 
         // iterate through the list from the last element to the first one
         while (len--) {
             // get current the META type name
-            <%= decorator.name %>ClassName = <%= decorator.name %>ClassNames[len];
+            metaName = metaNames[len];
 
-            if (<%= decorator.name %>ClassName === undefined || <%= decorator.name %>ClassName === null || <%= decorator.name %>ClassName === '') {
+            if (!metaName) {
                 // if the META type name is invalid return with an error SVG
                 returnSVG = errorSVGBase.clone();
-            } else if (<%= decorator.name %>ClassName !== 'Action') {
-                // META type name is valid
-                if (svgCache[<%= decorator.name %>ClassName]) {
-                    returnSVG = svgCache[<%= decorator.name %>ClassName].clone();
+            } else {
+                // META type name is valid, clone its svg..
+                if (svgCache[metaName]) {
+                    returnSVG = svgCache[metaName].clone();
                 }
             }
         }
@@ -164,13 +161,14 @@ define([
 
         return returnSVG;
     };
+<%}%>
 
     /**
      * Gets a clone of an error svg icon.
      * @returns {*|jQuery|HTMLElement} Error svg icon.
      */
     <%= decorator.name %>DecoratorCore.prototype.getErrorSVG = function () {
-        return this._errorSVGBase.clone();
+        return errorSVGBase.clone();
     };
 
     /**
@@ -189,16 +187,16 @@ define([
      */
     <%= decorator.name %>DecoratorCore.prototype._renderContent = function () {
         var self = this,
-            gmeID = self._metaInfo[CONSTANTS.GME_ID],
-            META_TYPES = <%= decorator.name %>META.META_TYPES;
+            gmeID = self._metaInfo[CONSTANTS.GME_ID];
+        //META_TYPES = <%= decorator.name %>META.META_TYPES;
 
         // meta type of the rendered object
         self._metaType = METAAspectHelper.getMETATypesOf(gmeID)[0];
 
-        if (DEBUG) {
-            //render GME-ID in the DOM, for debugging
-            self.$el.attr({'data-id': gmeID});
-        }
+        //if (DEBUG) {
+        //    //render GME-ID in the DOM, for debugging
+        //    self.$el.attr({'data-id': gmeID});
+        //}
 
         // setting the name of component
         self.skinParts.$name = self.$el.find('.name');
@@ -206,6 +204,7 @@ define([
         //empty out SVG container
         self.$el.find('.svg-container').empty();
 
+<%if (config.meta) {%>
         //figure out the necessary SVG based on children type
         self.skinParts.$svg = self.getSVGByMetaType(gmeID);
 
@@ -220,12 +219,18 @@ define([
             // append error svg if the svg does not exist for this element
             this.$el.find('.svg-container').append(this.getErrorSVG());
         }
-
+<%} else {%>
+        self.skinParts.$svg = self.getErrorSVG();
+        self.$el.find('.svg-container').append(self.skinParts.$svg);
+        self.skinParts.$connectorContainer = self.$el.find('.connector-container');
+        self.skinParts.$connectorContainer.empty();
+<%}%>
         _.extend(self, new <%= decorator.name %>Base());
 
+<%if (config.meta) {%>
         // call the type specific renderer
         self._renderMetaTypeSpecificParts();
-
+<%}%>
         // update the rendered object
         self.update();
     };
@@ -300,8 +305,8 @@ define([
         // initialize local variables
         var control = this._control,
             gmeID = this._metaInfo[CONSTANTS.GME_ID],
-            name = (control._client.getNode(gmeID)).getAttribute(nodePropertyNames.Attributes.name), 
-            META_TYPES = <%= decorator.name %>META.META_TYPES;
+            name = (control._client.getNode(gmeID)).getAttribute(nodePropertyNames.Attributes.name);
+        //META_TYPES = <%= decorator.name %>META.META_TYPES;
 
         if (this.skinParts.$name) {
             // if name exists
@@ -326,7 +331,7 @@ define([
     <%= decorator.name %>DecoratorCore.prototype._updatePorts = function () {
 
     };
-
+<%if (config.meta) {%>
     /**
      * Renders the object based on the meta type.
      * @private
@@ -334,6 +339,7 @@ define([
     <%= decorator.name %>DecoratorCore.prototype._renderMetaTypeSpecificParts = function () {
 
     };
+<%}%>
 
     /**
      * Registers a GME ID for notifications.

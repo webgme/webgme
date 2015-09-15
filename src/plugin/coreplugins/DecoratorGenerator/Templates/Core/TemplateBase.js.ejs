@@ -8,15 +8,15 @@
 define([
     'js/NodePropertyNames',
     'js/Utils/METAAspectHelper',
-    './<%= decorator.name %>Decorator.Constants',
-    './<%= decorator.name %>.META',
+    './<%= decorator.name %>Decorator.Constants',<%if (config.meta) {%>
+    './<%= decorator.name %>.META',<%}%>
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'js/Constants'
 ], function (
     nodePropertyNames,
     METAAspectHelper,
-    <%= decorator.name %>DecoratorConstants,
-    <%= decorator.name %>META,
+    <%= decorator.name %>DecoratorConstants,<%if (config.meta) {%>
+    <%= decorator.name %>META,<%}%>
     DiagramDesignerWidgetConstants,
     CONSTANTS) {
 
@@ -46,7 +46,7 @@ define([
             portId,
             len = 4,
             gmeID = self._metaInfo[CONSTANTS.GME_ID],
-            META_TYPES = <%= decorator.name %>META.META_TYPES,
+            //META_TYPES = <%= decorator.name %>META.META_TYPES,
             SVGWidth = parseInt(this.skinParts.$svg.attr('width'), 10),
             SVGHeight = parseInt(this.skinParts.$svg.attr('height'), 10),
             PortWidth = <%= decorator.name %>DecoratorConstants.PORT_WIDTH;
@@ -131,8 +131,8 @@ define([
             i,
             LEN = 10, // length of stem that can stick out of the connector before connections can turn 
             ANGLES = [270, 90, 180, 0], // L, R, T, B
-            gmeID = this._metaInfo[CONSTANTS.GME_ID],
-            META_TYPES = <%= decorator.name %>META.META_TYPES;
+            gmeID = this._metaInfo[CONSTANTS.GME_ID];
+            //META_TYPES = <%= decorator.name %>META.META_TYPES;
 
         //by default return the bounding box edges midpoints
         if (id === undefined || id === this.hostDesignerItem.id) {

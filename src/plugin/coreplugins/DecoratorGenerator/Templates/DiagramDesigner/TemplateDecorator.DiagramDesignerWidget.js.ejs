@@ -8,7 +8,7 @@ define([
     'js/Utils/METAAspectHelper',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
-    '../Core/<%= decorator.name %>Decorator.Core.js',
+    '../Core/<%= decorator.name %>Decorator.Core',
     '../Core/<%= decorator.name %>Decorator.Constants',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'css!./<%= decorator.name %>Decorator.DiagramDesignerWidget'
@@ -58,31 +58,24 @@ define([
      * Called when a new element is added to the widget
      */
     <%= decorator.name %>DecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
-        var self = this,
-            META_TYPES = METAAspectHelper.getMETAAspectTypes();
+        var self = this;
 
         this._hideName = false;
         this._renderContent();
 
-        if ((this._metaType === METAAspectHelper.isMETAType(META_TYPES.<%= decorator.name %>Base)) &&
-            (METAAspectHelper.getMETATypesOf(this._gmeID)[0] !== this._gmeID)) {
-
-            this.$name.remove();
-        } else {
-            // set name editable on double-click
-            if (this.$name) {
-                this.$name.on('dblclick.editOnDblClick', null, function (event) {
-                    if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-                        self.hostDesignerItem.canvas.selectNone();
-                        $(this).editInPlace({class: '',
-                            onChange: function (oldValue, newValue) {
-                                self._onNodeTitleChanged(oldValue, newValue);
-                            }});
-                    }
-                    event.stopPropagation();
-                    event.preventDefault();
-                });
-            }
+        // set name editable on double-click
+        if (this.$name) {
+            this.$name.on('dblclick.editOnDblClick', null, function (event) {
+                if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
+                    self.hostDesignerItem.canvas.selectNone();
+                    $(this).editInPlace({class: '',
+                        onChange: function (oldValue, newValue) {
+                            self._onNodeTitleChanged(oldValue, newValue);
+                        }});
+                }
+                event.stopPropagation();
+                event.preventDefault();
+            });
         }
     };
 
