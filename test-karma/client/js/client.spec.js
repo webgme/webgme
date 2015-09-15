@@ -1791,6 +1791,140 @@ describe('GME client', function () {
             });
         });
 
+        it('should handle updateTerritory+modification requests in order', function (done) {
+            var testId = 'updateTerritoryPlusModify',
+                tOneState = 'init',
+                tOneId = null,
+                basicNodePaths = ['', '/1', '/701504349', '/5185791', '/1400778473', '/1697300825'];
+
+            function tOneEvents(events) {
+                var node,
+                    parent,
+                    i,
+                    eventPaths = [],
+                    newNodePath = null,
+                    getEventPaths = function (events) {
+                        var i,
+                            paths = [];
+                        expect(events).to.have.length.above(1);
+                        for (i = 1; i < events.length; i += 1) {
+                            paths.push(events[i].eid);
+                        }
+                        return paths;
+                    };
+
+                if (tOneState === 'init') {
+                    tOneState = 'tUpdate';
+                    expect(events).to.have.length(2);
+                    node = client.getNode(events[1].eid);
+                    parent = client.getNode(node.getParentId());
+                    client.updateTerritory(tOneId, {'': {children: 1}});
+                    client.copyMoreNodes({parentId: parent.getId(), '/323573539': {}}, 'duplicating node');
+                    
+                } else if (tOneState === 'tUpdate') {
+                    //first our territoryUpdate should be resolved
+                    expect(events).to.have.length(8);
+                    eventPaths = getEventPaths(events);
+
+                    expect(eventPaths).to.include.members(basicNodePaths);
+                    for (i = 1; i < events.length; i += 1) {
+                        expect(events[i].etype).to.equal('load');
+                        if (basicNodePaths.indexOf(events[i].eid) === -1) {
+                            newNodePath = events[i].eid;
+                        }
+                    }
+
+                    tOneState = 'modified';
+                    return;
+
+                } else if (tOneState === 'modified') {
+                    //finally our modification should generate events
+                    //the number of events should remain the same as the newObject will not generate one!
+                    expect(events).to.have.length(8);
+                    eventPaths = getEventPaths(events);
+                    expect(eventPaths).not.to.include.members([newNodePath]);
+                    for (i = 1; i < events.length; i += 1) {
+                        expect(events[i].etype).to.equal('update');
+                    }
+                    client.removeUI(tOneId);
+                    done();
+                }
+            }
+
+            buildUpForTest(testId, function () {
+                tOneId = client.addUI({}, tOneEvents);
+                expect(tOneId).not.to.equal(null);
+
+                client.updateTerritory(tOneId, {'/323573539': {children: 0}});
+            });
+        });
+
+        it('should handle modification+updateTerritory requests order', function (done) {
+            var testId = 'modifyPlusUpdateTerritory',
+                tOneState = 'init',
+                tOneId = null,
+                basicNodePaths = ['', '/1', '/701504349', '/5185791', '/1400778473', '/1697300825'];
+
+            function tOneEvents(events) {
+                var node,
+                    parent,
+                    i,
+                    eventPaths = [],
+                    newnodePath = null,
+                    getEventPaths = function (events) {
+                        var i,
+                            paths = [];
+                        expect(events).to.have.length.above(1);
+                        for (i = 1; i < events.length; i += 1) {
+                            paths.push(events[i].eid);
+                        }
+                        return paths;
+                    };
+
+                if (tOneState === 'init') {
+                    tOneState = 'tUpdate';
+                    expect(events).to.have.length(2);
+                    node = client.getNode(events[1].eid);
+                    parent = client.getNode(node.getParentId());
+                    client.copyMoreNodes({parentId: parent.getId(), '/323573539': {}}, 'duplicating node');
+                    client.updateTerritory(tOneId, {'': {children: 1}});
+                } else if (tOneState === 'tUpdate') {
+                    //first our territoryUpdate should be resolved
+                    expect(events).to.have.length(8);
+                    eventPaths = getEventPaths(events);
+
+                    expect(eventPaths).to.include.members(basicNodePaths);
+                    for (i = 1; i < events.length; i += 1) {
+                        expect(events[i].etype).to.equal('load');
+                        if (basicNodePaths.indexOf(events[i].eid) === -1) {
+                            newnodePath = events[i].eid;
+                        }
+                    }
+
+                    tOneState = 'modified';
+                    return;
+                } else if (tOneState === 'modified') {
+                    //finally our modification should generate events
+                    //the number of events should remain the same as the newObject will not generate one!
+                    expect(events).to.have.length(8);
+                    eventPaths = getEventPaths(events);
+                    expect(eventPaths).not.to.include.members([newnodePath]);
+                    for (i = 1; i < events.length; i += 1) {
+                        expect(events[i].etype).to.equal('update');
+                    }
+                    client.removeUI(tOneId);
+                    done();
+                }
+            }
+
+            buildUpForTest(testId, function () {
+                tOneId = client.addUI({}, tOneEvents);
+                expect(tOneId).not.to.equal(null);
+
+                client.updateTerritory(tOneId, {'/323573539': {children: 0}});
+            });
+        });
+
         //FIXME it is wrongly implemented as it should check if the given node is of a given meta type!!!
         it.skip('should receive the only the given types in the territory', function (done) {
             var testId = 'basicFilteredTerritory',
@@ -3830,10 +3964,10 @@ describe('GME client', function () {
 
         it('modify an empty ruleset to empty', function (done) {
             var branchStatusHandler = function (status/*, commitQueue, updateQueue*/) {
-                    if (status === client.CONSTANTS.BRANCH_STATUS.SYNC) {
-                        done();
-                    }
-                };
+                if (status === client.CONSTANTS.BRANCH_STATUS.SYNC) {
+                    done();
+                }
+            };
             prepareBranchForTest('noChangeSet', branchStatusHandler, function (err) {
                 expect(err).to.equal(null);
 
