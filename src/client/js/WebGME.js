@@ -33,6 +33,7 @@ define([
         'js/Utils/PreferencesHelper',
         'js/Dialogs/Projects/ProjectsDialog',
         'js/Utils/InterpreterManager',
+        'common/storage/util',
         'superagent',
         'q'
     ], function (Logger,
@@ -57,6 +58,7 @@ define([
                  PreferencesHelper,
                  ProjectsDialog,
                  InterpreterManager,
+                 StorageUtil,
                  superagent,
                  Q) {
 
@@ -113,6 +115,16 @@ define([
                 );
 
                 WebGMEGlobal.State.setIsInitPhase(true);
+                WebGMEGlobal.State.on('change', function (model, options) {
+                    console.log(model, options);
+                    var activeProjectName = model.getActiveProjectName();
+                    if (activeProjectName) {
+                        document.title = StorageUtil.getProjectFullNameFromProjectId(activeProjectName);
+                    } else {
+                        document.title = 'WebGME';
+                    }
+
+                });
                 logger.info('init-phase true');
                 WebGMEHistory.initialize();
 
