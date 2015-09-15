@@ -204,6 +204,15 @@ process.on('message', function (parameters) {
                 result: result
             });
         });
+    } else if (parameters.command === CONSTANT.workerCommands.checkConstraints) {
+        wr.checkConstraints(parameters.webGMESessionId, parameters.projectId, parameters, function (err, result) {
+            safeSend({
+                pid: process.pid,
+                type: CONSTANT.msgTypes.result,
+                error: err ? err.message : null,
+                result: result
+            });
+        });
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStart) {
         if (gmeConfig.addOn.enable === true) {
             connectedWorkerStart(parameters.webGMESessionId, parameters.userId, parameters.addOnName,

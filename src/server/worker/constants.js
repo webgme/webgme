@@ -25,15 +25,18 @@ module.exports = {
     },
     workerCommands: {
         initialize: 'initialize',
-        getResult: 'getResult',
-        dumpMoreNodes: 'dumpMoreNodes',
+
+        // Requests
         executePlugin: 'executePlugin',
         exportLibrary: 'exportLibrary',
-        connectedWorkerStart: 'connectedWorkerStart',
-        connectedWorkerQuery: 'connectedWorkerQuery',
-        connectedWorkerStop: 'connectedworkerStop',
         seedProject: 'seedProject',
         autoMerge: 'autoMerge',
-        resolve: 'resolve'
+        resolve: 'resolve',
+        checkConstraints: 'checkConstraints',
+
+        // AddOn related
+        connectedWorkerStart: 'connectedWorkerStart',
+        connectedWorkerQuery: 'connectedWorkerQuery',
+        connectedWorkerStop: 'connectedworkerStop'
     }
 };

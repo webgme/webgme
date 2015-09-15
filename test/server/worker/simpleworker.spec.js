@@ -1,4 +1,4 @@
-/*globals require*/
+/*globals requireJS*/
 /*jshint node:true, mocha:true*/
 
 /**
@@ -19,6 +19,7 @@ describe('Simple worker', function () {
         agent = testFixture.superagent.agent(),
         openSocketIo = testFixture.openSocketIo,
         webGMESessionId,
+        CONSTRAINT_TYPES = requireJS('common/core/users/constraintchecker').TYPES,
         CONSTANTS = require('./../../../src/server/worker/constants'),
         server,
 
@@ -37,6 +38,8 @@ describe('Simple worker', function () {
             rootHash: '',
             branch: 'master'
         },
+        constraintProjectName = 'ConstraintProject',
+        constraintProjectImportResult,
         baseProjectJson = JSON.parse(
             testFixture.fs.readFileSync('seeds/ActivePanels.json')
         ),
@@ -90,6 +93,18 @@ describe('Simple worker', function () {
             })
             .then(function (result) {
                 expect(result.status).to.equal(project.CONSTANTS.SYNCED);
+
+                return testFixture.importProject(storage,
+                    {
+                        projectSeed: './test/common/core/users/meta/metaRules.json',
+                        projectName: constraintProjectName,
+                        branchName: 'master',
+                        logger: logger,
+                        gmeConfig: gmeConfig
+                    });
+            })
+            .then(function (result) {
+                constraintProjectImportResult = result;
                 return Q.ninvoke(server, 'start');
             })
             .then(function () {
@@ -1518,6 +1533,213 @@ describe('Simple worker', function () {
             .catch(function (err) {
                 expect(err.message).to.contain('unknown command');
 
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    // constraint checking
+    it('should succeed to check meta rules on FCO (checkType undefined -> META)', function (done) {
+        var command = {
+                command: CONSTANTS.workerCommands.checkConstraints,
+                projectId: constraintProjectImportResult.project.projectId,
+                commitHash: constraintProjectImportResult.commitHash,
+                nodePaths: ['/1'],
+                includeChildren: false,
+                webGMESessionId: webGMESessionId
+            },
+            worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send(command);
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result instanceof Array).to.equal(true);
+
+                expect(msg.result.length).to.equal(1);
+                expect(msg.result[0].hasViolation).to.equal(false);
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should succeed to check custom constraints if enabled', function (done) {
+        var command = {
+                command: CONSTANTS.workerCommands.checkConstraints,
+                projectId: constraintProjectImportResult.project.projectId,
+                commitHash: constraintProjectImportResult.commitHash,
+                nodePaths: ['/1', '/343492672', '/2046278624'], // No constraint, passes, fails.
+                includeChildren: true,
+                webGMESessionId: webGMESessionId,
+                checkType: CONSTRAINT_TYPES.CUSTOM
+            },
+            modifiedConfig = testFixture.getGmeConfig(),
+            worker = getSimpleWorker();
+
+        modifiedConfig.core.enableCustomConstraints = true;
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: modifiedConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send(command);
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result instanceof Array).to.equal(true);
+
+                expect(msg.result.length).to.equal(3);
+
+                expect(msg.result[0].hasViolation).to.equal(false);
+                expect(msg.result[1].hasViolation).to.equal(false);
+                expect(msg.result[2].hasViolation).to.equal(true);
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should return with results although custom constraint raises exception', function (done) {
+        var command = {
+                command: CONSTANTS.workerCommands.checkConstraints,
+                projectId: constraintProjectImportResult.project.projectId,
+                commitHash: constraintProjectImportResult.commitHash,
+                nodePaths: ['/343492672', '/902005954', '/132634291'], // passes, error, exception
+                includeChildren: true,
+                webGMESessionId: webGMESessionId,
+                checkType: CONSTRAINT_TYPES.CUSTOM
+            },
+            modifiedConfig = testFixture.getGmeConfig(),
+            worker = getSimpleWorker();
+
+        modifiedConfig.core.enableCustomConstraints = true;
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: modifiedConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send(command);
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result instanceof Array).to.equal(true);
+
+                expect(msg.result.length).to.equal(3);
+
+                expect(msg.result[0].hasViolation).to.equal(false);
+                expect(msg.result[1].hasViolation).to.equal(true);
+                expect(msg.result[2].hasViolation).to.equal(true);
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should return error when checking custom constraints on FCO if disabled', function (done) {
+        var command = {
+                command: CONSTANTS.workerCommands.checkConstraints,
+                projectId: constraintProjectImportResult.project.projectId,
+                commitHash: constraintProjectImportResult.commitHash,
+                nodePaths: ['/1'],
+                includeChildren: false,
+                webGMESessionId: webGMESessionId,
+                checkType: CONSTRAINT_TYPES.CUSTOM
+            },
+            worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send(command);
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Custom constraints is not enabled');
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should return error when projectId not given', function (done) {
+        var command = {
+                command: CONSTANTS.workerCommands.checkConstraints,
+                commitHash: constraintProjectImportResult.commitHash,
+                nodePaths: ['/1'],
+                includeChildren: false,
+                webGMESessionId: webGMESessionId
+            },
+            worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send(command);
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('invalid parameters');
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should return error when a nodePath does not exist', function (done) {
+        var command = {
+                command: CONSTANTS.workerCommands.checkConstraints,
+                projectId: constraintProjectImportResult.project.projectId,
+                commitHash: constraintProjectImportResult.commitHash,
+                nodePaths: ['/1', '/11'],
+                includeChildren: false,
+                webGMESessionId: webGMESessionId
+            },
+            worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send(command);
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Given nodePath does not exist');
                 done();
             })
             .finally(restoreProcessFunctions)

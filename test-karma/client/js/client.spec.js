@@ -50,6 +50,8 @@ describe('GME client', function () {
         it('should have public functions', function () {
             var client = new Client(gmeConfig);
 
+            expect(client.hasOwnProperty('gmeConfig')).to.equal(true, 'gmeConfig');
+
             //event related API
             expect(typeof client.addEventListener).to.equal('function');
             expect(typeof client.removeEventListener).to.equal('function');
@@ -184,16 +186,6 @@ describe('GME client', function () {
                 'getAspectTerritoryPattern'
             );
 
-            //addOn related API
-            expect(client).to.include.keys(
-                'validateProjectAsync',
-                'validateModelAsync',
-                'validateNodeAsync',
-                'setValidationCallback',
-                'getRunningAddOnNames',
-                'addOnsAllowed'
-            );
-
             //territory related API
             expect(client).to.include.keys(
                 'addUI',
@@ -202,27 +194,32 @@ describe('GME client', function () {
                 'getNode'
             );
 
-            //export - import API
+            //simple request commands
             expect(client.hasOwnProperty('runServerPlugin')).to.equal(true, 'runServerPlugin');
-            //expect(client.hasOwnProperty('exportItems')).to.equal(true, 'exportItems'); //TODO: Add this back
             expect(client.hasOwnProperty('getExportItemsUrl')).to.equal(true, 'getExportItemsUrl');
             expect(client.hasOwnProperty('createProjectFromFile')).to.equal(true, 'createProjectFromFile');
+            expect(client.hasOwnProperty('seedProject')).to.equal(true, 'seedProject');
             expect(client.hasOwnProperty('getExportProjectBranchUrl')).to.equal(true, 'getExportProjectBranchUrl');
             expect(client.hasOwnProperty('getExportLibraryUrl')).to.equal(true, 'getExportLibraryUrl');
             expect(client.hasOwnProperty('updateLibrary')).to.equal(true, 'updateLibrary');
             expect(client.hasOwnProperty('addLibrary')).to.equal(true, 'addLibrary');
+            expect(client.hasOwnProperty('autoMerge')).to.equal(true, 'autoMerge');
+            expect(client.hasOwnProperty('resolve')).to.equal(true, 'resolve');
+            expect(client.hasOwnProperty('checkMetaRules')).to.equal(true, 'checkMetaRules');
+            expect(client.hasOwnProperty('checkCustomConstraints')).to.equal(true, 'checkCustomConstraints');
+
         });
 
-        it('should not contain merge related functions', function () {
-            var client = new Client(gmeConfig);
-            expect(client).not.to.include.keys('getBaseOfCommits',
-                'getDiffTree',
-                'getConflictOfDiffs',
-                'applyDiff',
-                'merge',
-                'getResolve',
-                'resolve');
-        });
+        //it('should not contain merge related functions', function () {
+        //    var client = new Client(gmeConfig);
+        //    expect(client).not.to.include.keys('getBaseOfCommits',
+        //        'getDiffTree',
+        //        'getConflictOfDiffs',
+        //        'applyDiff',
+        //        'merge',
+        //        'getResolve',
+        //        'resolve');
+        //});
 
     });
 

@@ -1,26 +1,26 @@
 /*globals define, WebGMEGlobal, $*/
 /*jshint browser: true*/
 /**
- * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], function (ConstraintCheckResultsDialog) {
     'use strict';
 
-    var ConstraintToolbar,
+    var MetaRulesToolbar,
         BADGE_BASE = $('<span class="label label-info"></span>');
 
-    ConstraintToolbar = function (client) {
+    MetaRulesToolbar = function (client) {
         this._client = client;
 
         this._initialize();
     };
 
-    ConstraintToolbar.prototype._initialize = function () {
+    MetaRulesToolbar.prototype._initialize = function () {
         var self = this,
             toolbar = WebGMEGlobal.Toolbar,
             fillMenuItems,
-            $btnCheckConstraint,
+            $btnCheckMetaRules,
             unreadResults = 0,
             BADGE_CLASS = 'label',
             showResults,
@@ -29,53 +29,52 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
             badge;
 
         setBadgeText = function (text) {
-            $btnCheckConstraint.el.find('.' + BADGE_CLASS).text(text);
+            $btnCheckMetaRules.el.find('.' + BADGE_CLASS).text(text);
         };
 
         fillMenuItems = function () {
             var activeNode;
-            //clear dropdown
-            $btnCheckConstraint.clear();
+            $btnCheckMetaRules.clear();
 
             if (self._client.getActiveProjectId()) {
                 if (results.length > 0) {
-                    $btnCheckConstraint.addButton({
+                    $btnCheckMetaRules.addButton({
                         title: 'Show results...',
                         text: 'Show results...',
                         clickFn: function () {
                             showResults();
                         }
                     });
-                    $btnCheckConstraint.addDivider();
+                    $btnCheckMetaRules.addDivider();
                 }
 
-                $btnCheckConstraint.addButton({
-                    title: 'Check entire project',
-                    text: 'Check constraints for entire project',
+                $btnCheckMetaRules.addButton({
+                    title: 'Check meta rules for entire project',
+                    text: 'Check meta rules for entire project',
                     clickFn: function () {
-                        self._client.checkCustomConstraints([''], true);
+                        self._client.checkMetaRules([''], true);
                     }
                 });
 
                 activeNode = WebGMEGlobal.State.getActiveObject();
                 if (activeNode) {
-                    $btnCheckConstraint.addButton({
-                        title: 'Check custom constraints node',
-                        text: 'Check constraints for node [' + activeNode + ']',
+                    $btnCheckMetaRules.addButton({
+                        title: 'Check meta rules model',
+                        text: 'Check meta rules for model [' + activeNode + ']',
                         clickFn: function () {
-                            self._client.checkCustomConstraints([activeNode], true);
+                            self._client.checkMetaRules([activeNode], true);
                         }
                     });
-                    $btnCheckConstraint.addButton({
-                        title: 'Check constraints model',
-                        text: 'Check constraints for node [' + activeNode + '] and its children...',
+                    $btnCheckMetaRules.addButton({
+                        title: 'Check meta rules model',
+                        text: 'Check meta rules for node [' + activeNode + '] and its children...',
                         clickFn: function () {
-                            self._client.checkCustomConstraints([activeNode], true);
+                            self._client.checkMetaRules([activeNode], true);
                         }
                     });
                 }
             } else {
-                $btnCheckConstraint.addButton({
+                $btnCheckMetaRules.addButton({
                     title: 'No Project is opened',
                     text: 'No Project is opened...',
                     clickFn: function () {
@@ -98,7 +97,7 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
             }
         }
 
-        self._client.addEventListener(self._client.CONSTANTS.CONSTRAINT_RESULT, onResults);
+        self._client.addEventListener(self._client.CONSTANTS.META_RULES_RESULT, onResults);
 
         showResults = function () {
             var dialog = new ConstraintCheckResultsDialog();
@@ -107,24 +106,24 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
             setBadgeText('');
         };
 
-        /************** EXECUTE PLUG-IN BUTTON ****************/
-        $btnCheckConstraint = toolbar.addDropDownButton(
+        /************** CHECK META RULES BUTTON ****************/
+        $btnCheckMetaRules = toolbar.addDropDownButton(
             {
-                title: 'Custom Constraints',
-                icon: 'glyphicon glyphicon-fire',
+                title: 'Meta Rules',
+                icon: 'glyphicon glyphicon-ok-sign',
                 menuClass: 'no-min-width',
                 clickFn: function () {
                     fillMenuItems();
                 }
             });
 
-        $btnCheckConstraint.el.find('a > i').css({'margin-top': '0px'});
+        $btnCheckMetaRules.el.find('a > i').css({'margin-top': '0px'});
 
         badge = BADGE_BASE.clone();
-        badge.insertAfter($btnCheckConstraint.el.find('a > i'));
+        badge.insertAfter($btnCheckMetaRules.el.find('a > i'));
         badge.css('margin-left', '3px');
     };
 
 
-    return ConstraintToolbar;
+    return MetaRulesToolbar;
 });

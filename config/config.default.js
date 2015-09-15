@@ -63,6 +63,10 @@ var path = require('path'),
             defaultConnectionRouter: 'basic3' //'basic', 'basic2', 'basic3'
         },
 
+        core: {
+            enableCustomConstraints: false,
+        },
+
         debug: false,
 
         executor: {
