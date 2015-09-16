@@ -9,11 +9,13 @@ define([
     'js/logger',
     'module',
     './AutoRouter.ActionApplier',
-    './AutoRouter.Utils'
+    './AutoRouter.Utils',
+    'js/Utils/SaveToDisk'
 ], function (Logger,
              module,
              ActionApplier,
-             Utils) {
+             Utils,
+             Saver) {
 
     'use strict';
 
@@ -36,7 +38,7 @@ define([
 
             currentDir.pop();
             currentDir = currentDir.join('/');
-            workerFile = currentDir+'/AutoRouter.Worker.js';
+            workerFile = currentDir + '/AutoRouter.Worker.js';
 
             this.worker = new Worker(workerFile);
             this.worker.postMessage([WebGMEGlobal.gmeConfig.client]);
@@ -70,7 +72,7 @@ define([
     // they are overridden by ActionApplier
     ConnectionRouteManager3.prototype.init = ActionApplier.prototype._clearRecords;
 
-    ConnectionRouteManager3.prototype._invokeAutoRouterMethod = function() {
+    ConnectionRouteManager3.prototype._invokeAutoRouterMethod = function () {
         var array = Utils.toArray(arguments),  // Remove the extra 'arguments' stuff
             id;
         if (this.workerReady) {
@@ -106,7 +108,7 @@ define([
      * @param {Object} data
      * @return {undefined}
      */
-    ConnectionRouteManager3.prototype._handleWorkerResponse = function(data) {
+    ConnectionRouteManager3.prototype._handleWorkerResponse = function (data) {
         var response = data.data;
 
         if (response === 'READY') {
@@ -144,7 +146,7 @@ define([
                     // Evaluate the event queue for the item in order
                     if (this._onItemCreateQueue[id]) {  // FIXME: Sometimes this is null -> it is 
                         for (i = 0; i < this._onItemCreateQueue[id].length; i++) {
-                            this._onItemCreateQueue[id][i].call(this,response[2]);
+                            this._onItemCreateQueue[id][i].call(this, response[2]);
                         }
                     }
                     this._onItemCreateQueue[id] = null;
@@ -152,7 +154,7 @@ define([
 
                 case 'BugReplayList':
                     if (DEBUG) {
-                        this.download('AR_bug_report'+new Date().getTime()+'.json', response[1]);
+                        this.download('AR_bug_report' + new Date().getTime() + '.json', response[1]);
                     }
                     this.readyToDownload = false;
                     break;
@@ -185,7 +187,7 @@ define([
                     self.insertConnection(ID);
                 }
             } else {  // Already created the item
-                self.logger.warn('Received ON_COMPONENT_CREATE event for already created item! ('+ID+')');
+                self.logger.warn('Received ON_COMPONENT_CREATE event for already created item! (' + ID + ')');
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
@@ -195,7 +197,7 @@ define([
                 var resizeFn = self._resizeItem.bind(self, ID.ID);
                 self._modifyItem(ID.ID, resizeFn);
             } else {
-                self.logger.warn('Received ITEM_SIZE_CHANGED event for nonexistent item! ('+ID.ID+')');
+                self.logger.warn('Received ITEM_SIZE_CHANGED event for nonexistent item! (' + ID.ID + ')');
                 self.insertBox(ID.ID);
             }
         };
@@ -205,7 +207,7 @@ define([
             if (self._onItemCreateQueue[ID] !== undefined) {
                 self.deleteItem(ID);
             } else {
-                self.logger.warn('Received ON_COMPONENT_DELETE event for nonexistent item! ('+ID+')');
+                self.logger.warn('Received ON_COMPONENT_DELETE event for nonexistent item! (' + ID + ')');
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_DELETE, this._onComponentDelete);
@@ -219,7 +221,7 @@ define([
                 self._modifyItem(eventArgs.ID, self._invokeAutoRouterMethod
                     .bind(self, 'move', [eventArgs.ID, {x: x, y: y}]));
             } else {
-                self.logger.warn('Received ITEM_POSITION_CHANGED event for nonexistent item! ('+eventArgs.ID+')');
+                self.logger.warn('Received ITEM_POSITION_CHANGED event for nonexistent item! (' + eventArgs.ID + ')');
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED,
@@ -235,7 +237,7 @@ define([
             if (self._onItemCreateQueue[longid] !== undefined) {
                 self.deleteItem(longid);
             } else {
-                self.logger.warn('Received UNREGISTER event for nonexistent item! ('+longid+')');
+                self.logger.warn('Received UNREGISTER event for nonexistent item! (' + longid + ')');
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_UNREGISTER_SUBCOMPONENT,
@@ -334,7 +336,7 @@ define([
 
     };
 
-    ConnectionRouteManager3.prototype._processQueue = function() {
+    ConnectionRouteManager3.prototype._processQueue = function () {
         for (var i = 0; i < this.workerQueue.length; i++) {
             this.worker.postMessage(this.workerQueue[i]);
         }
@@ -618,6 +620,7 @@ define([
     };
 
     ConnectionRouteManager3.prototype.download = function (filename, data) {
+        var self = this;
         if (!this.readyToDownload) {
             return;
         }
@@ -626,20 +629,12 @@ define([
             filename = 'console.json';
         }
 
-        if (typeof data === 'object') {
-            data = JSON.stringify(data, undefined, 4);
-        }
-
-        var blob = new Blob([data], {type: 'text/json'}),
-        e = document.createEvent('MouseEvents'),
-        a = document.createElement('a');
-
-        a.download = filename;
-        a.href = window.URL.createObjectURL(blob);
-        a.dataset.downloadurl = ['text/json', a.download, a.href].join(':');
-        e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-        a.dispatchEvent(e);
-        this.readyToDownload = false;
+        Saver.saveJsonToDisk(filename, data, function (err) {
+            if (err) {
+                self.logger.error('downloading resource for error handling failed', {metadata: {error: err}});
+            }
+            this.readyToDownload = false;
+        });
     };
 
 

@@ -4,18 +4,33 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-define(function () {
+define(['blob/BlobClient'], function (BlobClient) {
     'use strict';
 
-    var saveToDisk = function (fileURL, fileName) {
+    function saveJsonToDisk(fileName, data, callback) {
+        saveJsonToBlobStorage(fileName, data, function (err, downloadUrl) {
+            if (err) {
+                return callback(err);
+            }
+
+            saveUrlToDisk(downloadUrl, fileName);
+            callback(null);
+        });
+    }
+
+    function saveUrlToDisk(fileURL, fileName) {
         // for non-IE
         if (!window.ActiveXObject) {
-            var save = document.createElement('a');
+            var save = document.createElement('a'),
+                event = document.createEvent('Event');
+
             save.href = fileURL;
             save.target = '_self';
-            //save.download = fileName || 'unknown';
 
-            var event = document.createEvent('Event');
+            if(fileName){
+                save.download = fileName;
+            }
+
             event.initEvent('click', true, true);
             save.dispatchEvent(event);
             (window.URL || window.webkitURL).revokeObjectURL(save.href);
@@ -28,7 +43,21 @@ define(function () {
             _window.document.execCommand('SaveAs', true, fileName || fileURL)
             _window.close();
         }
-    };
+    }
 
-    return saveToDisk;
+    function saveJsonToBlobStorage(fileName, data, callback) {
+        var bc = new BlobClient(),
+            artifact = bc.createArtifact('uploaded');
+
+        artifact.addFile(fileName, JSON.stringify(data, null, 4), function (err, fileHash) {
+            callback(err, bc.getDownloadURL(fileHash));
+        });
+    }
+
+
+    return {
+        saveToBlobStorage: saveJsonToBlobStorage,
+        saveUrlToDisk: saveUrlToDisk,
+        saveJsonToDisk: saveJsonToDisk
+    };
 });
