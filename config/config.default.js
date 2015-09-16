@@ -95,7 +95,8 @@ var path = require('path'),
         plugin: {
             allowServerExecution: false,
             basePaths: [path.join(__dirname, '../src/plugin/coreplugins')],
-            displayAll: false
+            displayAll: false,
+            serverResultTimeout: 10000
         },
 
         requirejsPaths: {},

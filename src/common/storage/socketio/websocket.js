@@ -27,7 +27,7 @@ define([
         function wrapError(callback) {
             return function () {
                 if (typeof arguments[0] === 'string') {
-                    callback(new Error(arguments[0]));
+                    callback(new Error(arguments[0]), arguments[1]); // Add second argument for e.g. pluginResults
                 } else {
                     callback.apply(null, arguments);
                 }

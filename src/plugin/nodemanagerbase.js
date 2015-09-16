@@ -174,7 +174,7 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
     function getPlugin(name) {
         var pluginPath = 'plugin/' + name + '/' + name + '/' + name;
         self.logger.debug('requireJS plugin from path: ' + pluginPath);
-        return requireJS('plugin/' + name + '/' + name + '/' + name);
+        return requireJS(pluginPath);
     }
 
     this.getPluginErrorResult = function (pluginName, message) {

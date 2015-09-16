@@ -155,7 +155,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
-                    logger.error('exportLibrary [' + projectId + '] failed with error', {metadata: err});
+                    logger.error('exportLibrary [' + projectId + '] failed with error', err);
                 } else {
                     logger.info('exportLibrary [' + projectId + '] completed fileUrl:', result.file.url);
                 }
@@ -232,12 +232,12 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {string} webGMESessionId
      * @param {string} userId
      * @param {string} pluginName
-     * @param {object} context - where the plugin should execute.
-     * @param {string} context.project - id of project.
-     * @param {string} context.activeNode - path to activeNode.
-     * @param {string} [context.activeSelection=[]] - paths to selected nodes.
-     * @param {string} context.commit - commit hash to start the plugin from.
-     * @param {string} context.branchName - branch which to save to.
+     * @param {object} context.managerConfig - where the plugin should execute.
+     * @param {string} context.managerConfig.project - id of project.
+     * @param {string} context.managerConfig.activeNode - path to activeNode.
+     * @param {string} [context.managerConfig.activeSelection=[]] - paths to selected nodes.
+     * @param {string} [context.managerConfig.commit] - commit hash to start the plugin from (if falsy will use HEAD of branchName)
+     * @param {string} context.managerConfig.branchName - branch which to save to.
      * @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
      * @param {function} callback
      */
@@ -248,7 +248,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
-                    logger.error('plugin [' + pluginName + '] failed with error', {metadata: err});
+                    logger.error('plugin [' + pluginName + '] failed with error', err);
                     if (!result) {
                         result = pluginManager.getPluginErrorResult(pluginName, err.message);
                     }
@@ -404,7 +404,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
-                    logger.error('seeding [' + parameters.seedName + '] failed with error', {metadata: err});
+                    logger.error('seeding [' + parameters.seedName + '] failed with error', err);
                 } else {
                     logger.info('seeding [' + parameters.seedName + '] to [' + result.projectId + '] completed');
                 }
@@ -465,7 +465,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
-                    logger.error('autoMerge [' + projectId + '] failed with error', {metadata: err});
+                    logger.error('autoMerge [' + projectId + '] failed with error', err);
                 } else {
                     logger.info('autoMerge [' + projectId + '] completed');
                 }
@@ -511,7 +511,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
-                    logger.error('resolve [' + partial.projectId + '] failed with error', {metadata: err});
+                    logger.error('resolve [' + partial.projectId + '] failed with error', err);
                 } else {
                     logger.info('resolve [' + partial.projectId + '] completed');
                 }
@@ -561,7 +561,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
-                    logger.error('checkConstraints [' + projectId + '] failed with error', {metadata: err});
+                    logger.error('checkConstraints [' + projectId + '] failed with error', err);
                 } else {
                     logger.info('checkConstraints [' + projectId + '] completed');
                 }
