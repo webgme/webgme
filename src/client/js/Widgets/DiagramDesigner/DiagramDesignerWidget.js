@@ -1480,7 +1480,7 @@ define([
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
-        //additional code pieces for DiagramDesignerWidget
+    //additional code pieces for DiagramDesignerWidget
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetOperatingModes.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDesignerItems.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetConnections.prototype);
