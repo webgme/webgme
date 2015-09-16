@@ -32,7 +32,7 @@ define([
 
         this.$tabsContainer = $('<div/>', {class: TABS_CONTAINER});
 
-        this.$el.parent().append(this.$tabsContainer);
+        this.$el.parent().prepend(this.$tabsContainer);
         this.$el.parent().addClass(WITH_TABS_CLASS);
 
         this._tabCounter = 0;
