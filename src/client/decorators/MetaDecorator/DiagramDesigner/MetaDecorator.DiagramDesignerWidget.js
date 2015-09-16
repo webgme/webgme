@@ -124,13 +124,14 @@ define([
                 var attrName = $(this).find('.n').text().replace(':', ''),
                     attrNames,
                     dialog = new AttributeDetailsDialog(),
-                    atrMeta = client.getAttributeSchema(self._metaInfo[CONSTANTS.GME_ID], attrName);
-                var desc = _.extend({}, {name: attrName, type: atrMeta.type, defaultValue: atrMeta.default});
-                if (atrMeta.enum && atrMeta.enum.length > 0) {
+                    attrMeta = client.getAttributeSchema(self._metaInfo[CONSTANTS.GME_ID], attrName),
+                    attrValue = client.getNode(self._metaInfo[CONSTANTS.GME_ID]).getAttribute(attrName);
+                var desc = _.extend({}, {name: attrName, type: attrMeta.type, defaultValue: attrValue});
+                if (attrMeta.enum && attrMeta.enum.length > 0) {
                     desc.isEnum = true;
                     desc.enumValues = [];
-                    for (var i = 0; i < atrMeta.enum.length; i++) {
-                        desc.enumValues.push(atrMeta.enum[i]);
+                    for (var i = 0; i < attrMeta.enum.length; i++) {
+                        desc.enumValues.push(attrMeta.enum[i]);
                     }
                 } else {
                     desc.isMeta = false;
@@ -512,7 +513,7 @@ define([
         //TODO: as of now we have to create an alibi attribute instance with the same name
         //TODO: just because of this hack, make sure that the name is not overwritten
         if (attrName !== nodePropertyNames.Attributes.name) {
-            attrSchema = {type: attrDesc.type, default: attrDesc.defaultValue};
+            attrSchema = {type: attrDesc.type/*, default: attrDesc.defaultValue*/};
             if (attrDesc.isEnum) {
                 attrSchema.enum = attrDesc.enumValues;
             }
