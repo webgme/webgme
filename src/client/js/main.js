@@ -18,10 +18,12 @@ var DEBUG = false,
 require.config({
     baseUrl: './',
 
+    //TODO paths should be fixed as the rules collide with each other
     map: {
         '*': {
             css: 'lib/require/require-css/css',
-            text: 'lib/require/require-text/text'
+            text: 'lib/require/require-text/text',
+            'globcss':'anything/../css'
         }
     },
 
@@ -101,8 +103,8 @@ require.config({
 
         backbone: ['underscore'],
         codemirror: [
-            'css!/css/codemirror/codemirror.css',
-            'css!/css/codemirror/codemirror.bootstrap.css'
+            'css!globcss/codemirror/codemirror.css',
+            'css!globcss/codemirror/codemirror.bootstrap.css'
         ],
         'js/util': ['jquery'],
         'js/jquery.WebGME': ['bootstrap'],
@@ -111,8 +113,8 @@ require.config({
         'js/WebGME': [
             'js/jquery.WebGME',
 
-            'css!/css/main.css',
-            'css!/css/themes/dawn.css',
+            'css!globcss/main.css',
+            'css!globcss/themes/dawn.css',
             'css!fonts/font-awesome/css/font-awesome.min.css',
             'css!fonts/webgme-icons/style.css'
         ],
