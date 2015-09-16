@@ -76,7 +76,6 @@ define([
 
         if (dragInfo) {
             this._doAcceptDroppable(this.onBackgroundDroppableAccept(event, dragInfo), true);
-            this._savedAcceptDroppable = this._acceptDroppable;
         } else {
             this._doAcceptDroppable(false, false);
         }
@@ -140,9 +139,11 @@ define([
                 dropTarget.enableDroppable(this.skinParts.$dropRegion, true);
                 if (this._savedAcceptDroppable !== undefined) {
                     this._doAcceptDroppable(this._savedAcceptDroppable, true);
+                    this._savedAcceptDroppable = undefined;
                 }
             } else {
                 dropTarget.enableDroppable(this.skinParts.$dropRegion, false);
+                this._savedAcceptDroppable = this._acceptDroppable;
                 this._doAcceptDroppable(false, false);
             }
         }
