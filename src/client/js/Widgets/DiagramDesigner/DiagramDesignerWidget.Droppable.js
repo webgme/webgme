@@ -50,8 +50,8 @@ define([
     DiagramDesignerWidgetDroppable.prototype._onDroppableActivate = function (/*event, dragInfo*/) {
         if (this.mode === this.OPERATING_MODES.DESIGN) {
             this.skinParts.$dropRegion.css({
-                width: this._actualSize.w - 2 * DROP_REGION_MARGIN,
-                height: this._containerSize.h - 2 * DROP_REGION_MARGIN,
+                width: '100%', //this._containerSize.w - 2 * DROP_REGION_MARGIN,
+                height: '100%', //this._containerSize.h - 2 * DROP_REGION_MARGIN,
                 top: this._scrollPos.top + DROP_REGION_MARGIN,
                 left: this._scrollPos.left + DROP_REGION_MARGIN
             });
