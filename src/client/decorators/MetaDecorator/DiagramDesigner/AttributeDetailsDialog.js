@@ -193,9 +193,11 @@ define([
             if (!isValidAttributeName(val)) {
                 self._pName.addClass('error');
                 self._btnSave.disable(true);
+                self._btnDelete.disable(true);
             } else {
                 self._pName.removeClass('error');
                 self._btnSave.disable(false);
+                self._btnDelete.disable(false);
             }
         });
 
