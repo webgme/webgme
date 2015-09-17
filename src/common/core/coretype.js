@@ -54,6 +54,25 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
 
         core.isValidNode = isValidNode;
 
+        //check of inheritance chain and containment hierarchy collision
+        core.isInheritanceContainmentCollision = function (node, parent) {
+            var parentPath = core.getPath(parent),
+                bases = [];
+
+            while (node) {
+                bases.push(core.getPath(node));
+                node = core.getBase(node);
+            }
+
+            while (parent) {
+                if (bases.indexOf(core.getPath(parent)) !== -1) {
+                    return true;
+                }
+                parent = core.getParent(parent);
+            }
+            return false;
+        };
+
         // ----- navigation
 
         core.getBase = function (node) {
@@ -84,7 +103,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             return node;
         }
 
-        core.loadChild = function (node, relid) {
+        function _loadChild(node, relid) {
             var child = null,
                 base = core.getBase(node),
                 basechild = null;
@@ -114,14 +133,41 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             }
             //normal child
             return TASYNC.call(__loadBase, oldcore.loadChild(node, relid));
+        }
+
+        core.loadChild = function (node, relid) {
+            return TASYNC.call(function (child) {
+                if (child && core.isInheritanceContainmentCollision(child, core.getParent(child))) {
+                    logger.error('node[' + core.getPath(child) + '] was deleted due to inheritance-containment collision');
+                    core.deleteNode(child);
+                    //core.persist(core.getRoot(child));
+                    return null;
+                } else {
+                    return child;
+                }
+            }, _loadChild(node, relid));
         };
 
-        core.loadByPath = function (node, path) {
+        function _loadByPath(node, path) {
             ASSERT(isValidNode(node));
             ASSERT(path === '' || path.charAt(0) === '/');
             path = path.split('/');
             return loadDescendantByPath(node, path, 1);
+        }
+
+        core.loadByPath = function(node,path){
+            return TASYNC.call(function(nodeAtPath){
+                if (nodeAtPath && core.isInheritanceContainmentCollision(nodeAtPath, core.getParent(nodeAtPath))) {
+                    logger.error('node[' + core.getPath(nodeAtPath) + '] was deleted due to inheritance-containment collision');
+                    core.deleteNode(nodeAtPath);
+                    //core.persist(core.getRoot(nodeAtPath));
+                    return null;
+                } else {
+                    return nodeAtPath;
+                }
+            },_loadByPath(node,path));
         };
+
         var loadDescendantByPath = function (node, pathArray, index) {
             if (node === null || index === pathArray.length) {
                 return node;
@@ -154,7 +200,9 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                 } else if (isFalseNode(node)) {
                     var root = core.getRoot(node);
                     oldcore.deleteNode(node);
-                    core.persist(root);
+                    //core.persist(root);
+                    //TODO a notification should be generated towards the user
+                    logger.warn('node removed due to missing base'); //TODO check if some identification can be passed
                     return null;
                 } else {
                     var basepath = oldcore.getPointerPath(node, 'base');
