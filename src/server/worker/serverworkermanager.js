@@ -285,6 +285,19 @@ function ServerWorkerManager(_parameters) {
         }
     }
 
+    // AddOn workers
+    var projectWorkers = {
+        //:projectId
+    };
+
+    function socketRoomChange(projectId, branchName, joined) {
+        if (joined) {
+            logger.info('A client joined ', projectId, branchName);
+        } else {
+            logger.info('A client left ', projectId, branchName);
+        }
+    }
+
     function start() {
         if (_managerId === null) {
             _managerId = setInterval(queueManager, 10);
@@ -306,6 +319,9 @@ function ServerWorkerManager(_parameters) {
         // Manager related
         stop: stop,
         start: start,
+
+        // AddOn related
+        socketRoomChange: socketRoomChange,
 
         CONSTANTS: CONSTANTS
     };

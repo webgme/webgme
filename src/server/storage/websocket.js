@@ -133,6 +133,28 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         webSocket.on('connection', function (socket) {
             logger.debug('New socket connected', socket.id);
 
+            // Inject into socket.onclose in order to see which rooms socket was in.
+            var originalOnClose = socket.onclose;
+            socket.onclose = function () {
+                var i,
+                    projectIdBranchName;
+                logger.info('onclose: socket was in rooms: ', socket.rooms);
+                for (i = 0; i < socket.rooms.length; i += 1) {
+                    if (socket.rooms[i].indexOf(ROOM_DIV) > -1) {
+                        logger.info('Socket was in branchRoom', socket.rooms[i]);
+                        projectIdBranchName = socket.rooms[i].split(ROOM_DIV);
+                        workerManager.socketRoomChange(projectIdBranchName[0], projectIdBranchName[1], false);
+                    }
+                }
+
+                originalOnClose.apply(socket, arguments);
+            };
+
+            socket.on('disconnect', function () {
+                // When this event is triggered, the disconnect socket has already left all rooms.
+                logger.info('disconnect socket is in rooms: ', socket.rooms);
+            });
+
             socket.on('getUserId', function (callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
@@ -187,12 +209,14 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('watchBranch', function (data, callback) {
+                // This is emitted from clients that got disconnected while having branches open.
                 logger.debug('watchBranch', {metadata: data});
                 projectAccess(socket, data.projectId)
                     .then(function (access) {
                         var roomName = data.projectId + ROOM_DIV + data.branchName;
                         if (data.join) {
                             if (access.read) {
+                                workerManager.socketRoomChange(data.projectId, data.branchName, true);
                                 socket.join(roomName);
                                 logger.debug('socket joined room', roomName);
                                 callback(null);
@@ -201,6 +225,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                                 callback('No read access for ' + data.projectId);
                             }
                         } else {
+                            workerManager.socketRoomChange(data.projectId, data.branchName, false);
                             socket.leave(roomName);
                             logger.debug('socket left room', roomName);
                             callback(null);
@@ -242,10 +267,6 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('closeProject', function (data, callback) {
                 logger.debug('closeProject', {metadata: data});
-                //socket.leave(data.projectId);
-                //if (data.branchName) {
-                //    socket.leave(data.projectId + ROOM_DIV + data.branchName);
-                //}
                 callback();
             });
 
@@ -257,7 +278,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         return storage.getLatestCommitData(data);
                     })
                     .then(function (commitData) {
+                        // Here we know the user has rights to the project.
+                        workerManager.socketRoomChange(data.projectId, data.branchName, true);
                         socket.join(data.projectId + ROOM_DIV + data.branchName);
+
                         callback(null, commitData);
                     })
                     .catch(function (err) {

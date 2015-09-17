@@ -15,7 +15,7 @@ function AddOnManager(webGMESessionId, mainLogger, gmeConfig) {
         self = this,
         logger = mainLogger.fork('AddOnManager'),
         storage = Storage.createStorage(host, webGMESessionId, logger, gmeConfig),
-        runningAddOns = {};
+        runningAddOns = {}; //:projectId/:branchName/:addOnId
 
     function getAddOn(name) {
         var addOnPath = 'addon/' + name + '/' + name + '/' + name;
@@ -37,15 +37,18 @@ function AddOnManager(webGMESessionId, mainLogger, gmeConfig) {
         });
     };
 
-    this.startNewAddOn = function (addOnName, projectId, branchName, userId, callback) {
+    this.startAddOn = function (addOnName, projectId, branchName, callback) {
         var deferred = Q.defer(),
             AddOn,
             addOn,
+            project,
+            branch,
             startParams;
+
 
         AddOn = getAddOn(addOnName);
 
-        addOn = new AddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName), userId);
+        addOn = new AddOn(project, branch, logger.fork('addOn_' + addOnName), gmeConfig);
 
         startParams = {
             projectId: projectId,
@@ -65,7 +68,7 @@ function AddOnManager(webGMESessionId, mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     };
 
-    this.queryAddOn = function (addOnName, parameters, callback) {
+    this.queryAddOn = function (addOnName, projectId, branchName, parameters, callback) {
         var deferred = Q.defer(),
             addOn;
 
@@ -92,7 +95,7 @@ function AddOnManager(webGMESessionId, mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     };
 
-    this.stopAddOn = function (addOnName, callback) {
+    this.stopAddOn = function (addOnName, projectId, branchName, callback) {
         var deferred = Q.defer(),
             addOn;
 

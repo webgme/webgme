@@ -7,29 +7,67 @@
 
 define(['common/storage/constants'], function (CONSTANTS) {
     'use strict';
-    var AddOnBase = function (Core, storage, gmeConfig, logger__, userId) {
-        this._Core = Core;
-        this._storage = storage;
-        this.gmeConfig = gmeConfig;
-        this.core = null;
-        this.logger = logger__;
-        this.project = null;
-        this.branchName = '';
-        this.projectId = '';
-        this.branch = null;
-        this.commit = null;
-        this.root = null;
-        this.initializing = false;
-        this.running = false;
-        this.rootHash = '';
-        this.userId = userId;
 
+    var AddOnBase = function (core, project, branchName, gmeConfig) {
+        this.gmeConfig = gmeConfig;
+        this.core = core;
+        this.project = project;
+        this.branchName = branchName;
+
+        this.commitHash = null;
+        this.rootNode = null;
+        this.rootHash = '';
+
+        this.running = false;
     };
+
+    /**
+     * Structure of query parameters with names, descriptions, minimum, maximum values, default values and
+     * type definitions.
+     * @returns {object[]}
+     */
+    AddOnBase.prototype.getQueryParametersStructure = function () {
+        return [];
+    };
+
+    AddOnBase.prototype.query = function (commitHash, queryParams, callback) {
+        callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
+    };
+
+    AddOnBase.prototype.onUpdate = function (rootNode, callback) {
+        callback(new Error('The update function is a main point of an addOn\'s functionality so it must be ' +
+            'overwritten.'));
+    };
+
+    /**
+     * Readable name of this addOn that can contain spaces.
+     *
+     * @returns {string}
+     */
     AddOnBase.prototype.getName = function () {
         throw new Error('implement this function in the derived class - getting type automatically is a bad idea,' +
             'when the js scripts are minified names are useless.');
     };
-    
+
+    /**
+     * Current version of this addOn using semantic versioning.
+     * @returns {string}
+     */
+    AddOnBase.prototype.getVersion = function () {
+        return '0.1.0';
+    };
+
+    /**
+     * A detailed description of this addOn and its purpose. It can be one or more sentences.
+     *
+     * @returns {string}
+     */
+    AddOnBase.prototype.getDescription = function () {
+        return '';
+    };
+
+
+    // Methods used by the addOn manager(s).
     AddOnBase.prototype.init = function (parameters, callback) {
         var self = this,
             hashUpdateHandler = function (data, commitQueue, updateQueue, handlerCallback) {
@@ -203,15 +241,6 @@ define(['common/storage/constants'], function (CONSTANTS) {
                 stoppedOk(callback);
             }
         }
-    };
-
-    AddOnBase.prototype.update = function (root, callback) {
-        callback(new Error('The update function is a main point of an addOn\'s functionality so it must be ' +
-            'overwritten.'));
-    };
-
-    AddOnBase.prototype.query = function (parameters, callback) {
-        callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
     };
 
     return AddOnBase;
