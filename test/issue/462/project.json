@@ -1292,11 +1292,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -1333,11 +1331,9 @@
       "meta": {
         "attributes": {
           "Class": {
-            "default": "",
             "type": "string"
           },
           "Type": {
-            "default": "",
             "enum": [
               "ModelicaConnector",
               "CadPoint",
@@ -1348,15 +1344,12 @@
             "type": "string"
           },
           "ID": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -1384,34 +1377,27 @@
       "meta": {
         "attributes": {
           "IntervalLength": {
-            "default": 0,
             "type": "float"
           },
           "NumberOfIntervals": {
-            "default": 100,
             "type": "integer"
           },
           "StartTime": {
-            "default": 0,
             "type": "float"
           },
           "StopTime": {
-            "default": 1,
             "type": "float"
           },
           "Tolerance": {
-            "default": 0.00001,
             "type": "float"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -1440,7 +1426,6 @@
       "meta": {
         "attributes": {
           "Method": {
-            "default": "Addition",
             "enum": [
               "Addition",
               "Multiplication",
@@ -1455,11 +1440,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -1495,7 +1478,6 @@
       "meta": {
         "attributes": {
           "DataType": {
-            "default": "String",
             "enum": [
               "Real",
               "Integer",
@@ -1505,35 +1487,27 @@
             "type": "string"
           },
           "Default": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Maximum": {
-            "default": "inf",
             "type": "string"
           },
           "Minimum": {
-            "default": "-inf",
             "type": "string"
           },
           "OnDataSheet": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
           },
           "Unit": {
-            "default": "",
             "type": "string"
           },
           "Value": {
-            "default": "",
             "type": "string"
           },
           "ValueType": {
-            "default": "Fixed",
             "enum": [
               "Fixed",
               "Parametric"
@@ -1541,11 +1515,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -1578,31 +1550,24 @@
       "meta": {
         "attributes": {
           "Classifications": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Resource": {
-            "default": "",
             "type": "asset"
           },
           "SchemaVersion": {
-            "default": "",
             "type": "string"
           },
           "Version": {
-            "default": "",
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -1629,11 +1594,9 @@
       "meta": {
         "attributes": {
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -1660,7 +1623,6 @@
       "meta": {
         "attributes": {
           "Type": {
-            "default": "Compound",
             "enum": [
               "Compound",
               "Alternative",
@@ -1669,22 +1631,18 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
             "type": "string"
           },
           "Description": {
-            "default": "",
             "type": "string"
           },
           "Resource": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -1713,11 +1671,9 @@
       "meta": {
         "attributes": {
           "Class": {
-            "default": "",
             "type": "string"
           },
           "Type": {
-            "default": "",
             "enum": [
               "ModelicaConnector",
               "CadPoint",
@@ -1728,15 +1684,12 @@
             "type": "string"
           },
           "ID": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -1768,11 +1721,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -1812,11 +1763,9 @@
       "meta": {
         "attributes": {
           "Notes": {
-            "default": "",
             "type": "string"
           },
           "RelativeLayer": {
-            "default": "No Restriction",
             "enum": [
               "No Restriction",
               "Same",
@@ -1825,22 +1774,18 @@
             "type": "string"
           },
           "XOffsetRange": {
-            "default": "",
             "type": "string"
           },
           "YOffsetRange": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -1882,7 +1827,6 @@
       "meta": {
         "attributes": {
           "DataType": {
-            "default": "String",
             "enum": [
               "Real",
               "Integer",
@@ -1892,35 +1836,27 @@
             "type": "string"
           },
           "Default": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Maximum": {
-            "default": "inf",
             "type": "string"
           },
           "Minimum": {
-            "default": "-inf",
             "type": "string"
           },
           "OnDataSheet": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
           },
           "Unit": {
-            "default": "",
             "type": "string"
           },
           "Value": {
-            "default": "",
             "type": "string"
           },
           "ValueType": {
-            "default": "Fixed",
             "enum": [
               "Fixed",
               "Parametric"
@@ -1928,11 +1864,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -1955,34 +1889,27 @@
       "meta": {
         "attributes": {
           "Priority": {
-            "default": 0,
             "type": "integer"
           },
           "description": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "weight": {
-            "default": 1,
             "type": "float"
           },
           "weightNeg": {
-            "default": 1,
             "type": "float"
           },
           "weightPos": {
-            "default": 1,
             "type": "float"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -2028,11 +1955,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -2072,26 +1997,21 @@
       "meta": {
         "attributes": {
           "ID": {
-            "default": "",
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
             "type": "string"
           },
           "Definition": {
-            "default": "",
             "type": "string"
           },
           "Description": {
-            "default": "",
             "type": "string"
           }
         }
@@ -2120,7 +2040,6 @@
       "meta": {
         "attributes": {
           "DataType": {
-            "default": "String",
             "enum": [
               "Real",
               "Integer",
@@ -2130,35 +2049,27 @@
             "type": "string"
           },
           "Default": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Maximum": {
-            "default": "inf",
             "type": "string"
           },
           "Minimum": {
-            "default": "-inf",
             "type": "string"
           },
           "OnDataSheet": {
-            "default": false,
             "type": "boolean"
           },
           "Unit": {
-            "default": "",
             "type": "string"
           },
           "Value": {
-            "default": "",
             "type": "string"
           },
           "ValueType": {
-            "default": "Fixed",
             "enum": [
               "Fixed",
               "Parametric"
@@ -2169,11 +2080,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -2220,7 +2129,6 @@
       "meta": {
         "attributes": {
           "DataType": {
-            "default": "String",
             "enum": [
               "Real",
               "Integer",
@@ -2230,35 +2138,27 @@
             "type": "string"
           },
           "Default": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Maximum": {
-            "default": "inf",
             "type": "string"
           },
           "Minimum": {
-            "default": "-inf",
             "type": "string"
           },
           "OnDataSheet": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
           },
           "Unit": {
-            "default": "",
             "type": "string"
           },
           "Value": {
-            "default": "",
             "type": "string"
           },
           "ValueType": {
-            "default": "Fixed",
             "enum": [
               "Fixed",
               "Parametric"
@@ -2266,11 +2166,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -2300,26 +2198,21 @@
       "meta": {
         "attributes": {
           "ID": {
-            "default": "",
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
             "type": "string"
           },
           "Definition": {
-            "default": "",
             "type": "string"
           },
           "Description": {
-            "default": "",
             "type": "string"
           }
         }
@@ -2349,15 +2242,12 @@
       "meta": {
         "attributes": {
           "Description": {
-            "default": "",
             "type": "string"
           },
           "Resource": {
-            "default": "",
             "type": "asset"
           },
           "Type": {
-            "default": "Compound",
             "enum": [
               "Compound",
               "Alternative",
@@ -2369,11 +2259,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -2456,15 +2344,12 @@
       "meta": {
         "attributes": {
           "VariableName": {
-            "default": "",
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -2499,7 +2384,6 @@
       "meta": {
         "attributes": {
           "Layer": {
-            "default": "Top",
             "enum": [
               "Top",
               "Bottom"
@@ -2507,11 +2391,9 @@
             "type": "string"
           },
           "Notes": {
-            "default": "",
             "type": "string"
           },
           "Rotation": {
-            "default": "",
             "enum": [
               "0",
               "90",
@@ -2521,22 +2403,18 @@
             "type": "string"
           },
           "X": {
-            "default": null,
             "type": "float"
           },
           "Y": {
-            "default": null,
             "type": "float"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -2570,7 +2448,6 @@
       "meta": {
         "attributes": {
           "DataType": {
-            "default": "String",
             "enum": [
               "Real",
               "Integer",
@@ -2580,35 +2457,27 @@
             "type": "string"
           },
           "Default": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Maximum": {
-            "default": "inf",
             "type": "string"
           },
           "Minimum": {
-            "default": "-inf",
             "type": "string"
           },
           "OnDataSheet": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
           },
           "Unit": {
-            "default": "",
             "type": "string"
           },
           "Value": {
-            "default": "",
             "type": "string"
           },
           "ValueType": {
-            "default": "Fixed",
             "enum": [
               "Fixed",
               "Parametric"
@@ -2616,11 +2485,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -2656,7 +2523,6 @@
       "meta": {
         "attributes": {
           "DataType": {
-            "default": "String",
             "enum": [
               "Real",
               "Integer",
@@ -2666,35 +2532,27 @@
             "type": "string"
           },
           "Default": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Maximum": {
-            "default": "inf",
             "type": "string"
           },
           "Minimum": {
-            "default": "-inf",
             "type": "string"
           },
           "OnDataSheet": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
           },
           "Unit": {
-            "default": "",
             "type": "string"
           },
           "Value": {
-            "default": "",
             "type": "string"
           },
           "ValueType": {
-            "default": "Fixed",
             "enum": [
               "Fixed",
               "Parametric"
@@ -2702,11 +2560,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -2739,26 +2595,21 @@
       "meta": {
         "attributes": {
           "Definition": {
-            "default": "",
             "type": "string"
           },
           "Description": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -2794,7 +2645,6 @@
       "meta": {
         "attributes": {
           "Type": {
-            "default": "Compound",
             "enum": [
               "Compound",
               "Alternative",
@@ -2803,22 +2653,18 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
             "type": "string"
           },
           "Description": {
-            "default": "",
             "type": "string"
           },
           "Resource": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -2846,11 +2692,9 @@
       "meta": {
         "attributes": {
           "Class": {
-            "default": "",
             "type": "string"
           },
           "Type": {
-            "default": "",
             "enum": [
               "Modelica",
               "CAD",
@@ -2860,11 +2704,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -2898,11 +2740,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -2927,11 +2767,9 @@
       "meta": {
         "attributes": {
           "Class": {
-            "default": "",
             "type": "string"
           },
           "Type": {
-            "default": "",
             "enum": [
               "Modelica",
               "CAD",
@@ -2941,11 +2779,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -2967,31 +2803,24 @@
       "meta": {
         "attributes": {
           "Classifications": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Resource": {
-            "default": "",
             "type": "asset"
           },
           "SchemaVersion": {
-            "default": "",
             "type": "string"
           },
           "Version": {
-            "default": "",
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -3021,18 +2850,15 @@
       "meta": {
         "attributes": {
           "AlternativeAssignments": {
-            "default": "[]",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -3073,7 +2899,6 @@
       "meta": {
         "attributes": {
           "LayerRange": {
-            "default": "",
             "enum": [
               "Top",
               "Bottom",
@@ -3082,11 +2907,9 @@
             "type": "string"
           },
           "Notes": {
-            "default": "",
             "type": "string"
           },
           "Type": {
-            "default": "Inclusion",
             "enum": [
               "Inclusion",
               "Exclusion"
@@ -3094,22 +2917,18 @@
             "type": "string"
           },
           "XRange": {
-            "default": "",
             "type": "string"
           },
           "YRange": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -3135,11 +2954,9 @@
       "meta": {
         "attributes": {
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -3171,26 +2988,21 @@
       "meta": {
         "attributes": {
           "Hash": {
-            "default": "",
             "type": "string"
           },
           "Notes": {
-            "default": "",
             "type": "string"
           },
           "Path": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -3214,15 +3026,12 @@
       "meta": {
         "attributes": {
           "Results": {
-            "default": "",
             "type": "asset"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -3252,18 +3061,15 @@
       "meta": {
         "attributes": {
           "Notes": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -3308,11 +3114,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -3352,11 +3156,9 @@
       "meta": {
         "attributes": {
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -3389,11 +3191,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -3429,15 +3229,12 @@
       "meta": {
         "attributes": {
           "VariableName": {
-            "default": "",
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -3471,11 +3268,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -3522,30 +3317,24 @@
       "meta": {
         "attributes": {
           "Priority": {
-            "default": 1,
             "type": "float"
           },
           "description": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "weight": {
-            "default": 1,
             "type": "float"
           },
           "weightNeg": {
-            "default": 1,
             "type": "float"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -3577,26 +3366,21 @@
       "meta": {
         "attributes": {
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Results": {
-            "default": "",
             "type": "asset"
           },
           "TestBenchFiles": {
-            "default": "",
             "type": "asset"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -3686,11 +3470,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -3739,18 +3521,15 @@
       "meta": {
         "attributes": {
           "VariableName": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -3812,7 +3591,6 @@
       "meta": {
         "attributes": {
           "DataType": {
-            "default": "String",
             "enum": [
               "Real",
               "Integer",
@@ -3822,35 +3600,27 @@
             "type": "string"
           },
           "Default": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Maximum": {
-            "default": "inf",
             "type": "string"
           },
           "Minimum": {
-            "default": "-inf",
             "type": "string"
           },
           "OnDataSheet": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
           },
           "Unit": {
-            "default": "",
             "type": "string"
           },
           "Value": {
-            "default": "",
             "type": "string"
           },
           "ValueType": {
-            "default": "Fixed",
             "enum": [
               "Fixed",
               "Parametric"
@@ -3858,11 +3628,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -3889,46 +3657,36 @@
       "meta": {
         "attributes": {
           "KPP": {
-            "default": false,
             "type": "boolean"
           },
           "Priority": {
-            "default": 0,
             "type": "integer"
           },
           "description": {
-            "default": "",
             "type": "string"
           },
           "function": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "objective": {
-            "default": 1,
             "type": "float"
           },
           "threshold": {
-            "default": 0,
             "type": "float"
           },
           "weight": {
-            "default": 1,
             "type": "float"
           },
           "weightNeg": {
-            "default": 1,
             "type": "float"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -3978,7 +3736,6 @@
       "meta": {
         "attributes": {
           "DataType": {
-            "default": "String",
             "enum": [
               "Real",
               "Integer",
@@ -3988,35 +3745,27 @@
             "type": "string"
           },
           "Default": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Maximum": {
-            "default": "inf",
             "type": "string"
           },
           "Minimum": {
-            "default": "-inf",
             "type": "string"
           },
           "OnDataSheet": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
           },
           "Unit": {
-            "default": "",
             "type": "string"
           },
           "Value": {
-            "default": "",
             "type": "string"
           },
           "ValueType": {
-            "default": "Fixed",
             "enum": [
               "Fixed",
               "Parametric"
@@ -4024,11 +3773,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -4059,18 +3806,15 @@
       "meta": {
         "attributes": {
           "Expression": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -4105,34 +3849,27 @@
       "meta": {
         "attributes": {
           "Classifications": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Resource": {
-            "default": "",
             "type": "asset"
           },
           "SchemaVersion": {
-            "default": "",
             "type": "string"
           },
           "Version": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -4192,11 +3929,9 @@
       "meta": {
         "attributes": {
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -4239,7 +3974,6 @@
       "meta": {
         "attributes": {
           "Constraint": {
-            "default": "Board Edge Spacing",
             "enum": [
               "Board Edge Spacing",
               "Inter-Chip Spacing"
@@ -4247,18 +3981,15 @@
             "type": "string"
           },
           "Notes": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -4288,18 +4019,15 @@
       "meta": {
         "attributes": {
           "Value": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -4332,7 +4060,6 @@
       "meta": {
         "attributes": {
           "DataType": {
-            "default": "String",
             "enum": [
               "Real",
               "Integer",
@@ -4342,35 +4069,27 @@
             "type": "string"
           },
           "Default": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Maximum": {
-            "default": "inf",
             "type": "string"
           },
           "Minimum": {
-            "default": "-inf",
             "type": "string"
           },
           "OnDataSheet": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
           },
           "Unit": {
-            "default": "",
             "type": "string"
           },
           "Value": {
-            "default": "",
             "type": "string"
           },
           "ValueType": {
-            "default": "Fixed",
             "enum": [
               "Fixed",
               "Parametric"
@@ -4378,11 +4097,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -4412,23 +4129,18 @@
       "meta": {
         "attributes": {
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Results": {
-            "default": "",
             "type": "asset"
           },
           "TestBenchFiles": {
-            "default": "",
             "type": "asset"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -4460,18 +4172,15 @@
       "meta": {
         "attributes": {
           "Results": {
-            "default": "",
             "type": "asset"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -4530,18 +4239,15 @@
       "meta": {
         "attributes": {
           "Adm": {
-            "default": "",
             "type": "asset"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -4576,11 +4282,9 @@
       "meta": {
         "attributes": {
           "Class": {
-            "default": "",
             "type": "string"
           },
           "Type": {
-            "default": "",
             "enum": [
               "ModelicaConnector",
               "CadPoint",
@@ -4591,15 +4295,12 @@
             "type": "string"
           },
           "ID": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -4625,30 +4326,24 @@
       "meta": {
         "attributes": {
           "Artifacts": {
-            "default": "",
             "type": "asset"
           },
           "Atm": {
-            "default": "",
             "type": "asset"
           },
           "CfgAdm": {
-            "default": "",
             "type": "asset"
           },
           "TestBenchManifest": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -4694,30 +4389,24 @@
       "meta": {
         "attributes": {
           "artifacts": {
-            "default": "",
             "type": "asset"
           },
           "isTest": {
-            "default": false,
             "type": "boolean"
           },
           "name": {
             "type": "string"
           },
           "plugins": {
-            "default": "",
             "type": "string"
           },
           "success": {
-            "default": true,
             "type": "boolean"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -4774,11 +4463,9 @@
       "meta": {
         "attributes": {
           "Class": {
-            "default": "",
             "type": "string"
           },
           "Type": {
-            "default": "",
             "enum": [
               "Modelica",
               "CAD",
@@ -4795,11 +4482,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -4847,15 +4532,12 @@
       "meta": {
         "attributes": {
           "COMName": {
-            "default": "",
             "type": "string"
           },
           "Parameters": {
-            "default": "",
             "type": "string"
           },
           "Type": {
-            "default": "InterpreterTask",
             "enum": [
               "InterpreterTask",
               "ExecutionTask"
@@ -4866,11 +4548,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -4899,11 +4579,9 @@
       "meta": {
         "attributes": {
           "Class": {
-            "default": "",
             "type": "string"
           },
           "Type": {
-            "default": "",
             "enum": [
               "ModelicaConnector",
               "CadPoint",
@@ -4914,15 +4592,12 @@
             "type": "string"
           },
           "ID": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           },
           "name": {
@@ -4950,15 +4625,12 @@
       "meta": {
         "attributes": {
           "Class": {
-            "default": "",
             "type": "string"
           },
           "ID": {
-            "default": "",
             "type": "string"
           },
           "Type": {
-            "default": "",
             "enum": [
               "ModelicaConnector",
               "CadPoint",
@@ -4975,11 +4647,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         }
@@ -5014,11 +4684,9 @@
       "meta": {
         "attributes": {
           "Notes": {
-            "default": "",
             "type": "string"
           },
           "RelativeLayer": {
-            "default": "Either",
             "enum": [
               "Either",
               "Same",
@@ -5027,7 +4695,6 @@
             "type": "string"
           },
           "RelativeRotation": {
-            "default": "r0",
             "enum": [
               "r0",
               "r90",
@@ -5038,22 +4705,18 @@
             "type": "string"
           },
           "XOffset": {
-            "default": null,
             "type": "float"
           },
           "YOffset": {
-            "default": null,
             "type": "float"
           },
           "name": {
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -5101,11 +4764,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },
@@ -5167,11 +4828,9 @@
             "type": "string"
           },
           "INFO": {
-            "default": "",
             "type": "string"
           },
           "ReadMe": {
-            "default": "",
             "type": "asset"
           }
         },

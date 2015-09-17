@@ -280,7 +280,6 @@ describe('core diff', function () {
                             attributes: {
                                 newAttr: {
                                     type: 'string',
-                                    default: '',
                                     enum: ['a', 'b', 'c']
                                 }
                             }
@@ -739,7 +738,6 @@ describe('core diff', function () {
                     attributes: {
                         newAttribute: {
                             type: 'string',
-                            default: 'a',
                             enum: ['a', 'b', 'c', 'd']
                         }
                     }
@@ -817,7 +815,6 @@ describe('core diff', function () {
                             attributes: {
                                 newAttribute: {
                                     type: 'string',
-                                    default: 'a',
                                     enum: ['a', 'b', 'c', 'd']
                                 }
                             }
@@ -873,7 +870,6 @@ describe('core diff', function () {
                             attributes: {
                                 newAttribute: {
                                     type: 'string',
-                                    default: 'a',
                                     enum: ['a', 'b', 'c', 'd']
                                 }
                             }
@@ -1460,7 +1456,7 @@ describe('core diff', function () {
         });
 
         it('should create a new META attribute', function (done) {
-            var newAttributeMetaRule = {type: 'string', default: '', enum: ['a', 'b', 'c']},
+            var newAttributeMetaRule = {type: 'string', enum: ['a', 'b', 'c']},
                 patch = {
                     1: {
                         attr: {newAttr: ''},
@@ -1496,7 +1492,7 @@ describe('core diff', function () {
             var patch = {
                 1: {
                     attr: {newAttr: ''},
-                    meta: {attributes: {newAttr: {type: 'string', default: '', enum: ['a', 'b', 'c']}}},
+                    meta: {attributes: {newAttr: {type: 'string', enum: ['a', 'b', 'c']}}},
                     guid: 'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045',
                     oGuids: {
                         'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
@@ -1587,7 +1583,7 @@ describe('core diff', function () {
                 diff1 = {
                     175547009: {
                         attr: {newAttr: 0},
-                        meta: {attributes: {newAttr: {type: 'integer', default: 0}}},
+                        meta: {attributes: {newAttr: {type: 'integer'}}},
                         guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
                         oGuids: {
                             'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
@@ -1601,7 +1597,7 @@ describe('core diff', function () {
                 diff2 = {
                     175547009: {
                         attr: {newAttr: true},
-                        meta: {attributes: {newAttr: {type: 'boolean', default: true}}},
+                        meta: {attributes: {newAttr: {type: 'boolean'}}},
                         guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
                         oGuids: {
                             'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
@@ -1634,7 +1630,7 @@ describe('core diff', function () {
                     return Q.nfcall(core.loadByPath, rootNode, '/175547009');
                 })
                 .then(function (node) {
-                    expect(core.getAttributeMeta(node, 'newAttr')).to.eql({type: 'integer', default: 0});
+                    expect(core.getAttributeMeta(node, 'newAttr')).to.eql({type: 'integer'});
                 })
                 .nodeify(done);
 
@@ -1659,7 +1655,7 @@ describe('core diff', function () {
                 diff2 = {
                     175547009: {
                         attr: {newAttr: true},
-                        meta: {attributes: {newAttr: {type: 'boolean', default: true}}},
+                        meta: {attributes: {newAttr: {type: 'boolean'}}},
                         guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
                         oGuids: {
                             'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
@@ -1717,7 +1713,7 @@ describe('core diff', function () {
                 diff2 = {
                     175547009: {
                         attr: {newAttr: true},
-                        meta: {attributes: {newAttr: {type: 'boolean', default: true}}},
+                        meta: {attributes: {newAttr: {type: 'boolean'}}},
                         guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
                         oGuids: {
                             'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,

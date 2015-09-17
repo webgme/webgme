@@ -122,8 +122,7 @@
       "meta": {
         "attributes": {
           "value": {
-            "type": "integer",
-            "default": 10
+            "type": "integer"
           }
         },
         "children": {

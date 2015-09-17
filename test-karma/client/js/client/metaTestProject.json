@@ -370,12 +370,10 @@
       "meta": {
         "attributes": {
           "aInt": {
-            "type": "integer",
-            "default": null
+            "type": "integer"
           },
           "aSt": {
-            "type": "string",
-            "default": "empty string"
+            "type": "string"
           }
         }
       },
@@ -528,8 +526,7 @@
       "meta": {
         "attributes": {
           "aFloat": {
-            "type": "float",
-            "default": 0
+            "type": "float"
           }
         }
       },

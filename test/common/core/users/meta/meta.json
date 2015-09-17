@@ -16,20 +16,16 @@
   },
   "attributes": {
     "name": {
-      "type": "string",
-      "default": "FCO"
+      "type": "string"
     },
     "number": {
-      "type": "integer",
-      "default": 0
+      "type": "integer"
     },
     "floatNumber": {
-      "type": "float",
-      "default": 0.0
+      "type": "float"
     },
     "enumText": {
       "type": "string",
-      "default": "one",
       "enum": [
         "one",
         "two",

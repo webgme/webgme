@@ -96,19 +96,16 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "path": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           "source": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         }
       },
@@ -134,15 +131,13 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "argument-expression-list": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         },
         "pointers": {
@@ -198,7 +193,6 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -259,11 +253,9 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "arguments": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -295,11 +287,9 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "head": {
-            "default": false,
             "type": "boolean"
           },
           "name": {
@@ -329,18 +319,15 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "dst_params": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "src_params": {
-            "default": "",
             "type": "string"
           }
         }
@@ -374,15 +361,13 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "linked_projects": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         },
         "children": {
@@ -428,11 +413,9 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "arguments": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -464,19 +447,16 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "path": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           "source": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         }
       },
@@ -502,15 +482,13 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "source": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         }
       },
@@ -538,18 +516,15 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "dst_params": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "src_params": {
-            "default": "",
             "type": "string"
           }
         },
@@ -608,14 +583,12 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "type": {
-            "default": "",
             "type": "string"
           }
         }
@@ -642,31 +615,25 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "attributes": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "parameters": {
-            "default": "",
             "type": "string"
           },
           "path": {
-            "default": "",
             "type": "string"
           },
           "safe": {
-            "default": false,
             "type": "boolean"
           },
           "source": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         }
       },
@@ -691,18 +658,15 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "dst_params": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "src_params": {
-            "default": "",
             "type": "string"
           }
         }
@@ -733,11 +697,9 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "arguments": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -768,23 +730,19 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "path": {
-            "default": "",
             "type": "string"
           },
           "safe": {
-            "default": false,
             "type": "boolean"
           },
           "source": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         },
         "children": {
@@ -828,27 +786,22 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "attributes": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "type_parameters": {
-            "default": "",
             "type": "string"
           },
           "path": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           "source": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         }
       },
@@ -874,11 +827,9 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "arguments": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -908,23 +859,19 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "path": {
-            "default": "",
             "type": "string"
           },
           "safe": {
-            "default": false,
             "type": "boolean"
           },
           "source": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         },
         "children": {
@@ -964,18 +911,15 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "dst_params": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "src_params": {
-            "default": "",
             "type": "string"
           }
         },
@@ -1036,23 +980,19 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "path": {
-            "default": "",
             "type": "string"
           },
           "safe": {
-            "default": false,
             "type": "boolean"
           },
           "source": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         }
       },
@@ -1078,15 +1018,13 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "source": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         }
       },
@@ -1112,18 +1050,15 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "dst_params": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "src_params": {
-            "default": "",
             "type": "string"
           }
         }
@@ -1156,7 +1091,6 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -1188,23 +1122,19 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "path": {
-            "default": "",
             "type": "string"
           },
           "safe": {
-            "default": false,
             "type": "boolean"
           },
           "source": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         },
         "children": {
@@ -2429,7 +2359,6 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -2476,22 +2405,18 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "attributes": {
-            "default": "",
             "type": "string"
           },
           "instance_parameters": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "type_arguments": {
-            "default": "",
             "type": "string"
           }
         },
@@ -2538,7 +2463,6 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -2570,27 +2494,22 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "attributes": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "type_parameters": {
-            "default": "",
             "type": "string"
           },
           "path": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           "source": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         },
         "children": {
@@ -2635,7 +2554,6 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -2676,7 +2594,6 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -2722,11 +2639,9 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "arguments": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -2757,22 +2672,18 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "attributes": {
-            "default": "",
             "type": "string"
           },
           "instance_parameters": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "type_arguments": {
-            "default": "",
             "type": "string"
           }
         }
@@ -2803,7 +2714,6 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -2845,22 +2755,18 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "attributes": {
-            "default": "",
             "type": "string"
           },
           "instance_parameters": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "type_arguments": {
-            "default": "",
             "type": "string"
           }
         }
@@ -2890,7 +2796,6 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -2921,31 +2826,25 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "attributes": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "parameters": {
-            "default": "",
             "type": "string"
           },
           "path": {
-            "default": "",
             "type": "string"
           },
           "safe": {
-            "default": false,
             "type": "boolean"
           },
           "source": {
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         }
       },
@@ -2970,18 +2869,15 @@
       "meta": {
         "attributes": {
           "MetaDoc": {
-            "default": "",
             "type": "string"
           },
           "dst_params": {
-            "default": "",
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "src_params": {
-            "default": "",
             "type": "string"
           }
         },

@@ -84,8 +84,7 @@
             "type": "string"
           },
           "mySpeciality": {
-            "type": "string",
-            "default": "nothing"
+            "type": "string"
           }
         }
       },
@@ -233,8 +232,7 @@
             "type": "string"
           },
           "mySpeciality": {
-            "type": "string",
-            "default": "nothing"
+            "type": "string"
           }
         }
       },
@@ -366,8 +364,7 @@
             "type": "string"
           },
           "mySpeciality": {
-            "type": "string",
-            "default": "nothing"
+            "type": "string"
           }
         }
       },
@@ -531,8 +528,7 @@
             "type": "string"
           },
           "mySpeciality": {
-            "type": "string",
-            "default": "nothing"
+            "type": "string"
           }
         }
       },
@@ -563,8 +559,7 @@
             "type": "string"
           },
           "mySpeciality": {
-            "type": "string",
-            "default": "nothing"
+            "type": "string"
           }
         }
       },
@@ -702,8 +697,7 @@
             "type": "string"
           },
           "mySpeciality": {
-            "type": "string",
-            "default": "nothing"
+            "type": "string"
           }
         }
       },
@@ -726,8 +720,7 @@
             "type": "string"
           },
           "mySpeciality": {
-            "type": "string",
-            "default": "nothing"
+            "type": "string"
           }
         },
         "pointers": {

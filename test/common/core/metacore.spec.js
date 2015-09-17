@@ -60,10 +60,10 @@ describe('meta core', function () {
 
                 attrNode = core.createNode({parent: root, base: base});
                 core.setAttribute(attrNode, 'name', 'attr');
-                core.setAttributeMeta(attrNode, 'boolean', {type: 'boolean', default: true});
-                core.setAttributeMeta(attrNode, 'string', {type: 'string', default: 'text'});
-                core.setAttributeMeta(attrNode, 'integer', {type: 'integer', default: 0});
-                core.setAttributeMeta(attrNode, 'float', {type: 'float', default: 1.2});
+                core.setAttributeMeta(attrNode, 'boolean', {type: 'boolean'});
+                core.setAttributeMeta(attrNode, 'string', {type: 'string'});
+                core.setAttributeMeta(attrNode, 'integer', {type: 'integer'});
+                core.setAttributeMeta(attrNode, 'float', {type: 'float'});
 
                 setNode = core.createNode({parent: root, base: base});
                 core.setAttribute(setNode, 'name', 'set');
@@ -108,7 +108,7 @@ describe('meta core', function () {
     it('check instances', function () {
         core.isInstanceOf(attrNode, 'base').should.be.true;
         core.isInstanceOf(setNode, 'set').should.be.false;
-        core.isInstanceOf(base, 'unkown').should.be.false;
+        core.isInstanceOf(base, 'unknown').should.be.false;
     });
 
     it('checking attribute values', function () {
@@ -141,7 +141,6 @@ describe('meta core', function () {
         core.getValidAttributeNames(attrNode).should.have.length(4);
         (core.getAttributeMeta(attrNode, 'unknown') === undefined).should.be.true;
         core.getAttributeMeta(attrNode, 'string').should.have.property('type');
-        core.getAttributeMeta(attrNode, 'string').should.have.property('default');
 
         core.delAttributeMeta(attrNode, 'string');
         core.getValidAttributeNames(attrNode).should.not.include.members(['string']);
