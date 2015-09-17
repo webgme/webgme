@@ -148,24 +148,11 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             }, _loadChild(node, relid));
         };
 
-        function _loadByPath(node, path) {
+        core.loadByPath = function (node, path) {
             ASSERT(isValidNode(node));
             ASSERT(path === '' || path.charAt(0) === '/');
             path = path.split('/');
             return loadDescendantByPath(node, path, 1);
-        }
-
-        core.loadByPath = function(node,path){
-            return TASYNC.call(function(nodeAtPath){
-                if (nodeAtPath && core.isInheritanceContainmentCollision(nodeAtPath, core.getParent(nodeAtPath))) {
-                    logger.error('node[' + core.getPath(nodeAtPath) + '] was deleted due to inheritance-containment collision');
-                    core.deleteNode(nodeAtPath);
-                    //core.persist(core.getRoot(nodeAtPath));
-                    return null;
-                } else {
-                    return nodeAtPath;
-                }
-            },_loadByPath(node,path));
         };
 
         var loadDescendantByPath = function (node, pathArray, index) {

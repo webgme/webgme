@@ -342,4 +342,36 @@ describe('coretype', function () {
             expect(e).not.to.equal(null);
         }
     });
+
+    it('should remove if node has inheritance-containment collision found during loadChildren', function (done) {
+        var typeA = core.createNode({parent: root}),
+            typeB = core.createNode({parent: root}),
+            instA = core.createNode({parent: root, base: typeA}),
+            instB = core.createNode({parent: root, base: typeB});
+
+        instA = core.moveNode(instA, instB);
+        instB = core.moveNode(instB, typeA);
+
+        TASYNC.call(function (children) {
+            expect(children).to.have.length(0);
+            done();
+        }, core.loadChildren(instB));
+    });
+
+    it('should remove if node has inheritance-containment collision found during loadByPath', function (done) {
+        var typeA = core.createNode({parent: root}),
+            typeB = core.createNode({parent: root}),
+            instA = core.createNode({parent: root, base: typeA}),
+            instB = core.createNode({parent: root, base: typeB}),
+            relid = core.getRelid(instA);
+
+
+        instA = core.moveNode(instA, instB);
+        instB = core.moveNode(instB, typeA);
+
+        TASYNC.call(function (node) {
+            expect(node).to.equal(null);
+            done();
+        }, core.loadByPath(root, core.getPath(instB) + '/' + relid));
+    });
 });
