@@ -305,7 +305,9 @@ function ServerWorkerManager(_parameters) {
 
         // Manager related
         stop: stop,
-        start: start
+        start: start,
+
+        CONSTANTS: CONSTANTS
     };
 }
 

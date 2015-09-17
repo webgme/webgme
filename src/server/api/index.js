@@ -1,3 +1,4 @@
+/*globals requireJS*/
 /*jshint node:true*/
 
 /**
@@ -30,6 +31,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         gmeAuth = middlewareOpts.gmeAuth,
         safeStorage = middlewareOpts.safeStorage,
         ensureAuthenticated = middlewareOpts.ensureAuthenticated,
+        gmeConfig = middlewareOpts.gmeConfig,
         webgme = require('../../../webgme'),
         merge = webgme.requirejs('common/core/users/merge'),
         StorageUtil = webgme.requirejs('common/storage/util'),
@@ -625,7 +627,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                         branchOrCommitA: req.params.branchOrCommitA,
                         branchOrCommitB: req.params.branchOrCommitB,
                         logger: loggerCompare,
-                        gmeConfig: middlewareOpts.gmeConfig
+                        gmeConfig: gmeConfig
 
                     });
 
@@ -735,15 +737,137 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     logger.debug('creating list asset rules');
     router.get('/decorators', ensureAuthenticated, function (req, res) {
-        var result = webgmeUtils.getComponentNames(middlewareOpts.gmeConfig.visualization.decoratorPaths);
+        var result = webgmeUtils.getComponentNames(gmeConfig.visualization.decoratorPaths);
         logger.debug('/decorators', {metadata: result});
         res.send(result);
     });
 
+    // Plugins
+    // TODO: These variables should not be defined here.
+    // TODO: runningPlugins should be stored in a database.
+    var runningPlugins = {};
+    var GUID = requireJS('common/util/guid');
+    var PLUGIN_CONSTANTS = {
+        RUNNING: 'RUNNING',
+        FINISHED: 'FINISHED', // Could still be that result.success=false.
+        ERROR: 'ERROR'
+    };
+
+    function getPlugin(name) {
+        var pluginPath = 'plugin/' + name + '/' + name + '/' + name,
+            Plugin,
+            error,
+            plugin;
+
+        logger.debug('Configuration requested for plugin at', pluginPath);
+        try {
+            Plugin = requireJS(pluginPath);
+        } catch (err) {
+            error = err;
+        }
+
+        // This is weird, the second time requirejs simply returns with undefined.
+        if (Plugin) {
+            plugin = new Plugin();
+            return plugin;
+        } else {
+            return error || new Error('Plugin is not available from: ' + pluginPath);
+        }
+
+    }
+
     router.get('/plugins', ensureAuthenticated, function (req, res) {
-        var result = webgmeUtils.getComponentNames(middlewareOpts.gmeConfig.plugin.basePaths);
+        var result = webgmeUtils.getComponentNames(gmeConfig.plugin.basePaths);
         logger.debug('/plugins', {metadata: result});
         res.send(result);
+    });
+
+    router.get('/plugins/:pluginId/config', ensureAuthenticated, function (req, res) {
+        var plugin = getPlugin(req.params.pluginId);
+
+        if (plugin instanceof Error) {
+            logger.error(plugin);
+            res.sendStatus(404);
+        } else {
+            res.send(plugin.getDefaultConfig());
+        }
+    });
+
+    router.get('/plugins/:pluginId/configStructure', ensureAuthenticated, function (req, res) {
+        var plugin = getPlugin(req.params.pluginId);
+
+        if (plugin instanceof Error) {
+            logger.error(plugin);
+            res.sendStatus(404);
+        } else {
+            res.send(plugin.getConfigStructure());
+        }
+    });
+
+    router.post('/plugins/:pluginId/execute', ensureAuthenticated, function (req, res) {
+        var resultId = GUID(),
+            pluginContext = {
+                managerConfig: {
+                    project: req.body.projectId,
+                    branchName: req.body.branchName,
+                    commit: req.body.commitHash,
+                    activeNode: req.body.activeNode,
+                    activeSelection: req.body.activeSelection,
+                },
+                pluginConfig: req.body.pluginConfig
+            },
+            workerParameters = {
+                command: middlewareOpts.workerManager.CONSTANTS.workerCommands.executePlugin,
+                webGMESessionId: req.session.id,
+                name: req.params.pluginId,
+                context: pluginContext
+            };
+
+        req.session.save();
+
+        middlewareOpts.workerManager.request(workerParameters, function (err, result) {
+            if (err) {
+                runningPlugins[resultId].status = PLUGIN_CONSTANTS.ERROR;
+                runningPlugins[resultId].err = err;
+            } else {
+                runningPlugins[resultId].status = PLUGIN_CONSTANTS.FINISHED;
+            }
+
+            runningPlugins[resultId].result = result;
+            runningPlugins[resultId].timeoutId = setTimeout(function () {
+                logger.warn('Plugin result timed out: ' + gmeConfig.plugin.serverResultTimeout + '[ms]',
+                    resultId);
+                delete runningPlugins[resultId];
+            }, gmeConfig.plugin.serverResultTimeout);
+        });
+
+        runningPlugins[resultId] = {
+            status: PLUGIN_CONSTANTS.RUNNING,
+            //timeoutId: will be added after plugin finished
+            //result: null,
+            //error: null
+        };
+
+        res.send({resultId: resultId});
+    });
+
+    router.get('/plugins/:pluginId/results/:resultId', ensureAuthenticated, function (req, res) {
+        var pluginExecution = runningPlugins[req.params.resultId];
+        logger.debug('Plugin-result request for ', req.params.pluginId, req.params.resultId);
+        if (pluginExecution) {
+            if (pluginExecution.status ===  PLUGIN_CONSTANTS.RUNNING) {
+                res.send(pluginExecution);
+            } else {
+                // Remove the pluginExecution when it has finished or an error occurred.
+                clearTimeout(pluginExecution.timeoutId);
+                pluginExecution.timeoutId = undefined;
+                delete runningPlugins[req.params.resultId];
+
+                res.send(pluginExecution);
+            }
+        } else {
+            res.sendStatus(404);
+        }
     });
 
     router.get('/seeds', ensureAuthenticated, function (req, res) {
@@ -752,9 +876,9 @@ function createAPI(app, mountPath, middlewareOpts) {
             seedName,
             i,
             j;
-        if (middlewareOpts.gmeConfig.seedProjects.enable === true) {
-            for (i = 0; i < middlewareOpts.gmeConfig.seedProjects.basePaths.length; i++) {
-                names = fs.readdirSync(middlewareOpts.gmeConfig.seedProjects.basePaths[i]);
+        if (gmeConfig.seedProjects.enable === true) {
+            for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
+                names = fs.readdirSync(gmeConfig.seedProjects.basePaths[i]);
                 for (j = 0; j < names.length; j++) {
                     seedName = path.basename(names[j], '.json');
                     if (result.indexOf(seedName) === -1) {
@@ -795,8 +919,8 @@ function createAPI(app, mountPath, middlewareOpts) {
             allVisualizersDescriptor = [],
             i, j;
 
-        for (i = 0; i < middlewareOpts.gmeConfig.visualization.visualizerDescriptors.length; i++) {
-            var descriptor = getVisualizerDescriptor(middlewareOpts.gmeConfig.visualization.visualizerDescriptors[i]);
+        for (i = 0; i < gmeConfig.visualization.visualizerDescriptors.length; i++) {
+            var descriptor = getVisualizerDescriptor(gmeConfig.visualization.visualizerDescriptors[i]);
             if (descriptor.length) {
                 for (j = 0; j < descriptor.length; j++) {
                     var index = indexById(allVisualizersDescriptor, descriptor[j].id);
