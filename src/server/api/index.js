@@ -851,9 +851,9 @@ function createAPI(app, mountPath, middlewareOpts) {
         res.send({resultId: resultId});
     });
 
-    router.get('/plugins/results/:resultId', ensureAuthenticated, function (req, res) {
+    router.get('/plugins/:pluginId/results/:resultId', ensureAuthenticated, function (req, res) {
         var pluginExecution = runningPlugins[req.params.resultId];
-
+        logger.debug('Plugin-result request for ', req.params.pluginId, req.params.resultId);
         if (pluginExecution) {
             if (pluginExecution.status ===  PLUGIN_CONSTANTS.RUNNING) {
                 res.send(pluginExecution);

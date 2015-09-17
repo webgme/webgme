@@ -2002,9 +2002,9 @@ describe('API', function () {
                 }
             );
 
-            it('should 404 when for non-existing result /api/plugins/results/BOGUS',
+            it('should 404 when for non-existing result /api/plugins/SOME_PLUGIN/results/BOGUS',
                 function (done) {
-                    agent.get(server.getUrl() + '/api/v1/plugins/results/BOGUS')
+                    agent.get(server.getUrl() + '/api/v1/plugins/SOME_PLUGIN/results/BOGUS')
                         .end(function (err, res) {
                             expect(res.status).equal(404, err);
                             done();
@@ -2026,19 +2026,19 @@ describe('API', function () {
                             expect(res.status).equal(200, err);
                             expect(typeof resultId).to.equal('string');
 
-                            agent.get(server.getUrl() + '/api/v1/plugins/results/' + resultId)
+                            agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
                                 .end(function (err, res) {
                                     expect(res.status).equal(200, err);
                                     expect(res.body).to.deep.equal({status: 'RUNNING'});
                                     setTimeout(function () {
-                                        agent.get(server.getUrl() + '/api/v1/plugins/results/' + resultId)
+                                        agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
                                             .end(function (err, res) {
                                                 expect(res.status).equal(200, err);
                                                 expect(res.body.status).to.equal('FINISHED');
                                                 expect(res.body.result).to.include.keys('commits', 'messages',
                                                     'success'); //etc.
                                                 expect(res.body.result.success).to.equal(true);
-                                                agent.get(server.getUrl() + '/api/v1/plugins/results/' + resultId)
+                                                agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
                                                     .end(function (err, res) {
                                                         expect(res.status).equal(404, err);
                                                         done();
@@ -2062,12 +2062,12 @@ describe('API', function () {
                             expect(res.status).equal(200, err);
                             expect(typeof resultId).to.equal('string');
 
-                            agent.get(server.getUrl() + '/api/v1/plugins/results/' + resultId)
+                            agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
                                 .end(function (err, res) {
                                     expect(res.status).equal(200, err);
                                     expect(res.body).to.deep.equal({status: 'RUNNING'});
                                     setTimeout(function () {
-                                        agent.get(server.getUrl() + '/api/v1/plugins/results/' + resultId)
+                                        agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
                                             .end(function (err, res) {
                                                 expect(res.status).equal(200, err);
                                                 expect(res.body.status).to.equal('ERROR');
@@ -2076,7 +2076,7 @@ describe('API', function () {
                                                 expect(res.body.err).to.equal('Invalid argument, data.projectId is ' +
                                                     'not a string.');
                                                 expect(res.body.result.success).to.equal(false);
-                                                agent.get(server.getUrl() + '/api/v1/plugins/results/' + resultId)
+                                                agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
                                                     .end(function (err, res) {
                                                         expect(res.status).equal(404, err);
                                                         done();
@@ -2111,7 +2111,7 @@ describe('API', function () {
             });
 
             it('should 404 when ExportImport [pluginId, projectId, branchName] /api/plugins/ExportImport/execute ' +
-                'and timeout passed /api/v1/plugins/results/%RESULT_ID%',
+                'and timeout passed /api/v1/plugins/ExportImport/results/%RESULT_ID%',
                 function (done) {
                     var requestBody = {
                         pluginId: 'ExportImport',
@@ -2124,13 +2124,13 @@ describe('API', function () {
                             expect(res.status).equal(200, err);
                             expect(typeof resultId).to.equal('string');
 
-                            agent.get(server.getUrl() + '/api/v1/plugins/results/' + resultId)
+                            agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
                                 .end(function (err, res) {
                                     expect(res.status).equal(200, err);
                                     expect(res.body).to.deep.equal({status: 'RUNNING'});
 
                                     setTimeout(function () {
-                                        agent.get(server.getUrl() + '/api/v1/plugins/results/' + resultId)
+                                        agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
                                             .end(function (err, res) {
                                                 expect(res.status).equal(404, err);
                                                 done();
