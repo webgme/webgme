@@ -28,8 +28,7 @@
       "meta": {
         "attributes": {
           "rule": {
-            "type": "string",
-            "default": "_"
+            "type": "string"
           }
         },
         "pointers": {
@@ -303,8 +302,7 @@
         },
         "attributes": {
           "priority": {
-            "type": "integer",
-            "default": 100
+            "type": "integer"
           }
         },
         "pointers": {

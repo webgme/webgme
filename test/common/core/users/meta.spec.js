@@ -111,7 +111,7 @@ describe('meta', function () {
         expect(meta.getOwnValidChildrenTypes('/1')).to.deep.equal(['/1']);
         expect(meta.getValidChildrenItems('/1')).to.deep.equal([{id: '/1', min: undefined, max: 10}]);
         expect(meta.isValidAttribute('/1', 'any')).to.equal(true);
-        expect(meta.getAttributeSchema('/1', 'number')).to.deep.equal({type: 'integer', default: 0});
+        expect(meta.getAttributeSchema('/1', 'number')).to.deep.equal({type: 'integer'});
         expect(meta.getValidAttributeNames('/1')).to.have.members(['number', 'floatNumber', 'name', 'enumText']);
         expect(meta.getOwnValidAttributeNames('/1')).to.have.members(['number', 'floatNumber', 'name', 'enumText']);
         expect(meta.isValidTarget('/1', 'ptr', '/1')).to.equal(true);
@@ -150,10 +150,10 @@ describe('meta', function () {
         meta.updateValidChildrenItem('/1', {id: '/1', min: undefined, max: 10});
         meta.setChildrenMetaAttribute('/1', 'max', 100);
         meta.setChildrenMetaAttribute('/1', 'min', 1);
-        meta.setAttributeSchema('/1', 'number', {type: 'integer', default: 0});
-        meta.setAttributeSchema('/1', 'floatNumber', {type: 'float', default: 0.0});
-        meta.setAttributeSchema('/1', 'name', {type: 'string', default: 'FCO'});
-        meta.setAttributeSchema('/1', 'enumText', {type: 'string', default: 'one', enum: ['one', 'two', 'three']});
+        meta.setAttributeSchema('/1', 'number', {type: 'integer'});
+        meta.setAttributeSchema('/1', 'floatNumber', {type: 'float'});
+        meta.setAttributeSchema('/1', 'name', {type: 'string'});
+        meta.setAttributeSchema('/1', 'enumText', {type: 'string', enum: ['one', 'two', 'three']});
         meta.setPointerMeta('/1', 'ptr', {items: [{id: '/1', min: undefined, max: 1}], min: 1, max: 1});
         savePhase = 'full';
         meta.setMetaAspect('/1', 'testAspect', {items: ['/1']});

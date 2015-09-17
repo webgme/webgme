@@ -463,7 +463,6 @@
       "meta": {
         "attributes": {
           "function": {
-            "default": "",
             "type": "string"
           },
           "name": {
@@ -507,7 +506,6 @@
       "meta": {
         "attributes": {
           "DataType": {
-            "default": "Integer",
             "enum": [
               "Integer",
               "Double",
@@ -517,11 +515,9 @@
             "type": "string"
           },
           "InitValue": {
-            "default": "0",
             "type": "string"
           },
           "Size": {
-            "default": 1,
             "type": "integer"
           },
           "name": {

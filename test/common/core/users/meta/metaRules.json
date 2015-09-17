@@ -527,24 +527,19 @@
             "meta": {
                 "attributes": {
                     "Prio": {
-                        "type": "integer",
-                        "default": 1
+                        "type": "integer"
                     },
                     "Ratio": {
-                        "type": "float",
-                        "default": 1.1
+                        "type": "float"
                     },
                     "IsActive": {
-                        "type": "boolean",
-                        "default": true
+                        "type": "boolean"
                     },
                     "Desc": {
-                        "type": "string",
-                        "default": "This is a Model"
+                        "type": "string"
                     },
                     "Choice": {
                         "type": "string",
-                        "default": "Second",
                         "enum": [
                             "First",
                             "Second",
@@ -552,8 +547,7 @@
                         ]
                     },
                     "Artie": {
-                        "type": "asset",
-                        "default": ""
+                        "type": "asset"
                     }
                 },
                 "children": {
@@ -905,8 +899,7 @@
             "meta": {
                 "attributes": {
                     "succeed": {
-                        "type": "boolean",
-                        "default": true
+                        "type": "boolean"
                     }
                 }
             },

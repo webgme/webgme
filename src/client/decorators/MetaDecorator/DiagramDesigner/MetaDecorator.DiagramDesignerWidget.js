@@ -124,13 +124,20 @@ define([
                 var attrName = $(this).find('.n').text().replace(':', ''),
                     attrNames,
                     dialog = new AttributeDetailsDialog(),
-                    atrMeta = client.getAttributeSchema(self._metaInfo[CONSTANTS.GME_ID], attrName);
-                var desc = _.extend({}, {name: attrName, type: atrMeta.type, defaultValue: atrMeta.default});
-                if (atrMeta.enum && atrMeta.enum.length > 0) {
+                    attrMeta = client.getAttributeSchema(self._metaInfo[CONSTANTS.GME_ID], attrName),
+                    attrValue = client.getNode(self._metaInfo[CONSTANTS.GME_ID]).getAttribute(attrName);
+                var desc = _.extend({}, {name: attrName, type: attrMeta.type, defaultValue: attrValue});
+
+                //we will not let 'name' attribute to be modified as that is used UI-wise
+                if (attrName === nodePropertyNames.Attributes.name) {
+                    return;
+                }
+
+                if (attrMeta.enum && attrMeta.enum.length > 0) {
                     desc.isEnum = true;
                     desc.enumValues = [];
-                    for (var i = 0; i < atrMeta.enum.length; i++) {
-                        desc.enumValues.push(atrMeta.enum[i]);
+                    for (var i = 0; i < attrMeta.enum.length; i++) {
+                        desc.enumValues.push(attrMeta.enum[i]);
                     }
                 } else {
                     desc.isMeta = false;
@@ -492,33 +499,23 @@ define([
 
         client.startTransaction();
 
-        //this.logger.warn('saveAttributeDescriptor: ' + name + ', attrDesc: ' + JSON.stringify(attrDesc));
-        //if this is an attribute rename
+        this.logger.warn('saveAttributeDescriptor: ' + name + ', attrDesc: ' + JSON.stringify(attrDesc));
+
+
         if (attrName !== attrDesc.name) {
-            //name has changed --> delete the descriptor with the old name
-            //TODO: as of now we have to create an alibi attribute instance with the same name
-            //TODO: just because of this hack, make sure that the name is not overwritten
-            //TODO: just because of this hack, delete the alibi attribute as well
-            if (attrName !== nodePropertyNames.Attributes.name) {
-                client.removeAttributeSchema(objID, attrName);
-                client.delAttributes(objID, attrName);
-            }
+            //rename an attribute
+            client.removeAttributeSchema(objID, attrName);
+            client.delAttributes(objID, attrName);
 
-            //set the new name to attrName
-            attrName = attrDesc.name;
         }
 
-
-        //TODO: as of now we have to create an alibi attribute instance with the same name
-        //TODO: just because of this hack, make sure that the name is not overwritten
-        if (attrName !== nodePropertyNames.Attributes.name) {
-            attrSchema = {type: attrDesc.type, default: attrDesc.defaultValue};
-            if (attrDesc.isEnum) {
-                attrSchema.enum = attrDesc.enumValues;
-            }
-            client.setAttributeSchema(objID, attrName, attrSchema);
-            client.setAttributes(objID, attrName, attrDesc.defaultValue);
+        attrSchema = {type: attrDesc.type};
+        if (attrDesc.isEnum) {
+            attrSchema.enum = attrDesc.enumValues;
         }
+
+        client.setAttributeSchema(objID, attrDesc.name, attrSchema);
+        client.setAttributes(objID, attrDesc.name, attrDesc.defaultValue);
 
         client.completeTransaction();
     };
