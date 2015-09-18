@@ -100,7 +100,7 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
         self._client.addEventListener(self._client.CONSTANTS.META_RULES_RESULT, onResults);
 
         showResults = function () {
-            var dialog = new ConstraintCheckResultsDialog();
+            var dialog = new ConstraintCheckResultsDialog('Meta Rules Validation Results');
             dialog.show(self._client, results);
             unreadResults = 0;
             setBadgeText('');

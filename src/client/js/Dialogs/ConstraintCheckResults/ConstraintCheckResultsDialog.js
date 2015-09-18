@@ -13,7 +13,8 @@ define(['js/util',
 
     'use strict';
 
-    var ContraintCheckResultsDialog = function () {
+    var ContraintCheckResultsDialog = function (title) {
+            this._dialogTitle = title;
         },
         PLUGIN_RESULT_ENTRY_BASE = $('<div/>', {class: 'constraint-check-result'}),
         PLUGIN_RESULT_HEADER_BASE = $('<div class="alert"></div>'),
@@ -39,6 +40,9 @@ define(['js/util',
         var self = this;
 
         this._dialog = $(pluginResultsDialogTemplate);
+        if (this._dialogTitle) {
+            this._dialog.find('h3').first().text(this._dialogTitle);
+        }
         this._client = client;
         this._initDialog(pluginResults);
 
