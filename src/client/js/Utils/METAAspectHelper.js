@@ -149,6 +149,12 @@ define([
                         } else {
                             if (_metaTypes.hasOwnProperty(nodeName)) {
                                 _logger.error('Duplicate name on META level: "' + nodeName + '"');
+                                _client.dispatchEvent(CONSTANTS.CLIENT.NOTIFICATION, {
+                                    type: 'META',
+                                    severity: 'ERROR',
+                                    message: 'Duplicate name on META level: "' + nodeName + '"',
+                                    hint: 'Rename one of the objects'
+                                })
                                 delete _metaTypes[nodeName];
                             } else {
                                 _metaTypes[nodeName] = nodeID;
