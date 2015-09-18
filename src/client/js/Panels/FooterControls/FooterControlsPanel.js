@@ -8,12 +8,14 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/NetworkStatus/NetworkStatusWidget',
     'js/Widgets/BranchStatus/BranchStatusWidget',
     'js/Widgets/BranchSelector/BranchSelectorWidget',
-    'js/Widgets/KeyboardManager/KeyboardManagerWidget'
+    'js/Widgets/KeyboardManager/KeyboardManagerWidget',
+    'js/Widgets/Notification/NotificationWidget'
 ], function (PanelBase,
              NetworkStatusWidget,
              BranchStatusWidget,
              BranchSelectorWidget,
-             KeyboardManagerWidget) {
+             KeyboardManagerWidget,
+             NotificationWidget) {
 
     'use strict';
 
@@ -52,7 +54,8 @@ define(['js/PanelBase/PanelBase',
             networkStatusEl,
             n,
             branchStatusEl,
-            b;
+            b,
+            notificationEl;
 
         navBar.append(navBarInner);
         this.$el.append(navBar);
@@ -99,6 +102,9 @@ define(['js/PanelBase/PanelBase',
         b = new BranchStatusWidget(branchStatusEl, this._client);
         navBarInner.append(branchStatusEl).append(separator.clone());
 
+        notificationEl = widgetPlaceHolder.clone();
+        new NotificationWidget(notificationEl, this._client);
+        navBarInner.append(notificationEl).append(separator.clone());
     };
 
     return FooterControlsPanel;
