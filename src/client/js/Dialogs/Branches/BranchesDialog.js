@@ -81,7 +81,7 @@ define([
 
     BranchesDialog.prototype._initDialog = function () {
         var self = this,
-            selectedId;
+            selectedId = this._selectedBranch;
 
         function openBranch(branchName) {
             self._client.selectBranch(branchName, null, function (err) {
@@ -89,6 +89,7 @@ define([
                     this._logger.error('unable to open branch', {metadata: {error: err}});
                 }
                 self._selectedBranch = branchName;
+                self._dialog.modal('hide');
             });
         }
 
@@ -102,6 +103,9 @@ define([
 
         this._dialog = $(branchesDialogTemplate);
 
+        //set dialog title
+        this._dialog.find('h3').first().text('Branches of project [' +
+            StorageUtil.getProjectDisplayedNameFromProjectId(this._projectId) + ']');
         //get controls
         this._el = this._dialog.find('.modal-body').first();
         this._ul = this._el.find('ul').first();
@@ -149,6 +153,7 @@ define([
         });
 
         this._btnOpen.on('click', function (event) {
+
             event.stopPropagation();
             event.preventDefault();
 
