@@ -1,0 +1,42 @@
+.branches-dialog {
+  .pre-body {
+    padding: 15px 15px 0 15px;
+
+    .tabContainer {
+      ul.nav.nav-tabs {
+        margin-bottom: 0;
+
+        li {
+          width: 86px;
+          text-align: center;
+        }
+      }
+    }
+  }
+
+  .modal-body {
+    min-height: 300px;
+
+    ul.nav-pills {
+      li {
+        a {
+          span.ro {
+            margin-left: 5px;
+            color: #999999;
+            font-size: 9px;
+          }
+        }
+      }
+    }
+  }
+}
+
+.txt-branch-name {
+  width: 50%;
+}
+
+a.btn-env {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
