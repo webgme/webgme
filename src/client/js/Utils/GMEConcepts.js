@@ -754,13 +754,18 @@ define(['jquery',
 
     function canMoveNodeHere(parentId, nodes) {
         var parent = client.getNode(parentId),
-            parentBase = parent.getBaseId();
+            parentBase;
 
-        if (parentBase) {
-            if (nodes.indexOf(parentBase) !== -1) {
-                return false;
+        while (parent) {
+            parentBase = parent.getBaseId();
+            if (parentBase) {
+                if (nodes.indexOf(parentBase) !== -1) {
+                    return false;
+                }
             }
+            parent = client.getNode(parent.getParentId());
         }
+
 
         return true;
     }
