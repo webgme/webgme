@@ -3,6 +3,7 @@
 /**
  * @module Server.SimpleWorker
  * @author kecso / https://github.com/kecso
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 'use strict';
@@ -13,9 +14,7 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     Logger = require('../logger'),
     WorkerRequests = require('./workerrequests'),
     wr,
-    AddOnManager = require('../../addon/addonmanager'),
 
-    addOnManager,
     initialized = false,
     gmeConfig,
     logger;
@@ -52,84 +51,6 @@ function initialize(parameters) {
         safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
     } else {
         safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
-    }
-}
-
-//AddOn Functions
-function connectedWorkerStart(webGMESessionId, userId, addOnName, projectId, branchName, callback) {
-    logger.info('connectedWorkerStart', addOnName, projectId, branchName);
-    function finish(err) {
-        if (err) {
-            err = err instanceof Error ? err : new Error(err);
-            logger.error('connectedWorkerStart failed', {metadata: err});
-            callback(err);
-        } else {
-            logger.info('connectedWorkerStart done');
-            callback(null);
-        }
-    }
-
-    if (!addOnName || !projectId || !branchName) {
-        finish(new Error('Required parameter was not provided'));
-        return;
-    }
-
-    addOnManager = new AddOnManager(webGMESessionId, logger, gmeConfig);
-
-    addOnManager.initialize(function (err) {
-        if (err) {
-            finish(err);
-            return;
-        }
-
-        addOnManager.startNewAddOn(addOnName, projectId, branchName, userId, finish);
-    });
-}
-
-function connectedWorkerQuery(addOnName, parameters, callback) {
-    logger.info('connectedWorkerQuery', addOnName);
-    logger.debug('connectedWorkerQuery', parameters);
-    function finish(err, message) {
-        if (err) {
-            err = err instanceof Error ? err : new Error(err);
-            logger.error('connectedWorkerQuery failed', {metadata: err});
-            callback(err);
-        } else {
-            logger.info('connectedWorkerQuery done');
-            callback(null, message);
-        }
-    }
-
-    if (addOnManager) {
-        addOnManager.queryAddOn(addOnName, parameters)
-            .nodeify(finish);
-    } else {
-        finish(new Error('No AddOn is running'));
-    }
-}
-
-function connectedWorkerStop(callback) {
-    logger.info('connectedWorkerStop');
-    function finish(err) {
-        if (err) {
-            err = err instanceof Error ? err : new Error(err);
-            logger.error('connectedWorkerStop failed', {metadata: err});
-            callback(err);
-        } else {
-            logger.info('connectedWorkerStop done');
-            callback(null);
-        }
-    }
-
-    if (addOnManager) {
-        addOnManager.close()
-            .then(function () {
-                addOnManager = null;
-                finish(null);
-            })
-            .catch(finish);
-    } else {
-        finish(null);
     }
 }
 
@@ -212,80 +133,6 @@ process.on('message', function (parameters) {
                 error: err ? err.message : null,
                 result: result
             });
-        });
-    } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStart) {
-        if (gmeConfig.addOn.enable === true) {
-            connectedWorkerStart(parameters.webGMESessionId, parameters.userId, parameters.addOnName,
-                parameters.projectId, parameters.branch,
-                function (err) {
-                    if (err) {
-                        safeSend({
-                            pid: process.pid,
-                            type: CONSTANT.msgTypes.result,
-                            error: err.message,
-                            resid: null
-                        });
-                    } else {
-                        safeSend({
-                            pid: process.pid,
-                            type: CONSTANT.msgTypes.request,
-                            error: null,
-                            resid: process.pid
-                        });
-                    }
-                }
-            );
-        } else {
-            safeSend({
-                pid: process.pid,
-                type: CONSTANT.msgTypes.result,
-                error: 'addOn functionality not enabled',
-                resid: null
-            });
-        }
-    } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerQuery) {
-        if (gmeConfig.addOn.enable === true) {
-            connectedWorkerQuery(parameters.addOnName, parameters, function (err, result) {
-                safeSend({
-                    pid: process.pid,
-                    type: CONSTANT.msgTypes.query,
-                    error: err ? err.message : null,
-                    result: result
-                });
-            });
-        } else {
-            safeSend({
-                pid: process.pid,
-                type: CONSTANT.msgTypes.result,
-                error: 'addOn functionality not enabled',
-                resid: null
-            });
-        }
-    } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStop) {
-        // TODO: We need a timeout here when clients disconnects, e.g. browser is closed.
-        if (gmeConfig.addOn.enable === true) {
-            connectedWorkerStop(function (err) {
-                safeSend({
-                    pid: process.pid,
-                    type: CONSTANT.msgTypes.result,
-                    error: err ? err.message : null,
-                    result: null
-                });
-            });
-        } else {
-            safeSend({
-                pid: process.pid,
-                type: CONSTANT.msgTypes.result,
-                error: 'addOn functionality not enabled',
-                resid: null
-            });
-        }
-    } else {
-        safeSend({
-            pid: process.pid,
-            type: CONSTANT.msgTypes.result,
-            error: 'unknown command',
-            resid: null
         });
     }
 });
