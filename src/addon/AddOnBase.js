@@ -16,17 +16,15 @@ define(['common/storage/constants'], function (CONSTANTS) {
      * @param gmeConfig
      * @constructor
      */
-    var AddOnBase = function (core, project, branchName, blobClient, logger, gmeConfig) {
+    var AddOnBase = function (logger, gmeConfig) {
         this.gmeConfig = gmeConfig;
-        this.core = core;
-        this.project = project;
-        this.branchName = branchName;
         this.logger = logger;
-        this.blobClient = blobClient;
 
-        this.commitHash = '';
-        this.rootHash = '';
-        this.rootNode = null;
+        // Set at configure
+        this.core = null;
+        this.project = null;
+        this.branchName = null;
+        this.blobClient = null;
 
         this.initialized = false;
 
@@ -54,7 +52,9 @@ define(['common/storage/constants'], function (CONSTANTS) {
     };
 
     /**
-     *
+     * This is invoked each time changes in the project is done. AddOn are allowed to make changes on an updated,
+     * but should not persist by themselves. (The AddOnManager will persist after each addOn has had its way
+     * ordered by the usedAddOn registry in the rootNode).
      * @param {object} rootNode
      * @param {function} callback
      */
@@ -64,7 +64,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
     };
 
     /**
-     *
+     * Called when the addOn is first started.
      * @param {object} rootNode
      * @param {function} callback
      */
@@ -100,180 +100,16 @@ define(['common/storage/constants'], function (CONSTANTS) {
         return '';
     };
 
-    // Methods used by the addOn manager(s).
-    AddOnBase.prototype.init = function (parameters, callback) {
-        var self = this,
-            hashUpdateHandler = function (data, commitQueue, updateQueue, handlerCallback) {
-                function loadNewRoot(rootLoaded) {
-                    self.rootHash = data.commitData.commitObject.root;
-                    self.commit = data.commitData.commitObject[CONSTANTS.MONGO_ID];
-                    self.core.loadRoot(self.rootHash, function (err, root) {
-                        if (err) {
-                            self.logger.error('failed to load new root', err);
-                            rootLoaded(err);
-                            return;
-                        }
-
-                        self.root = root;
-                        rootLoaded(null);
-                    });
-                }
-
-                if (self.running) {
-                    loadNewRoot(function (err) {
-                        if (err) {
-                            handlerCallback(err, false); // proceed: false
-                            return;
-                        }
-                        self.update(self.root, function (err) {
-                            var proceed = !err;
-
-                            handlerCallback(err, proceed);
-                        });
-                    });
-                } else if (self.initializing === true) {
-                    loadNewRoot(function (err) {
-                        if (err) {
-                            handlerCallback(err, false); // proceed: false
-                            return;
-                        }
-                        self.intializing = false;
-                        self.running = true;
-                        handlerCallback(null, true);
-                    });
-                }
-            },
-            branchStatusHandler = function (branchStatus /*, commitQueue, updateQueue*/) {
-                //TODO check how it should work
-                self.logger.debug('New branchStatus', branchStatus);
-            };
-
-        // This is the part of the start process which should always be done,
-        // so this function should be always called from the start.
-        self.logger.debug('Initializing');
-        if (!(parameters.projectId && parameters.branchName)) {
-            callback(new Error('Failed to initialize'));
-            return;
-        }
-
-        self.projectId = parameters.projectId;
-        self.branchName = parameters.branchName;
-        //we should open the project and the branch
-        this._storage.openProject(self.projectId, function (err, project, branches) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            if (branches.hasOwnProperty(self.branchName) === false) {
-                callback(new Error('no such branch [' + self.branchName + ']'));
-                return;
-            }
-
-            self.project = project;
-            self.commit = branches[self.branchName];
-            self.core = new self._Core(project, {globConf: self.gmeConfig, logger: self.logger.fork('core')});
-            self.running = false; // indicates if the start is called and the stop is not called yet.
-            self.stopped = false; // indicates when the addon stop function was called and it returned.
-            self.pendingEvents = 0;
-            // time to wait in ms for this amount after stop is called and before we kill the addon
-            self.waitTimeForPendingEvents = parameters.waitTimeForPendingEvents || 1500;
-
-            self._storage.openBranch(self.projectId, self.branchName, hashUpdateHandler, branchStatusHandler,
-                function (err /*, latestCommit*/) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-                    callback(null);
-                }
-            );
-        });
-
-    };
-
-    AddOnBase.prototype.start = function (parameters, callback) {
-        var self = this;
-        //this is the initialization function it could be overwritten or use as it is
-        //this.logger = parameters.logger;
-        if (self.running || self.initializing) {
-            callback(new Error('AddOn is already running or starting up.'));
-            return;
-        }
-
-        self.initializing = true;
-
-        self.init(parameters, function (err) {
-            if (err) {
-                self.running = false;
-                callback(err);
-                return;
-            }
-            if (self.running) {
-                callback(null);
-            } else {
-                callback(new Error('basic initialization failed, check parameters!'));
-            }
-        });
-
-    };
-
-    AddOnBase.prototype.stop = function (callback) {
-        var timeout = this.waitTimeForPendingEvents,
-            intervalLength = 100,
-            numInterval = Math.floor(timeout / intervalLength),
-            intervalId,
-            self = this;
-        this.running = false;
-
-        function stoppedOk(done) {
-            self.logger.debug('Stopped');
-            self.stopped = true;
-            done(null);
-        }
-
-        function stoppedErrorPendingRequests(err, done) {
-            self.logger.error('Stopped but there were still pending events.');
-            self.stopped = true;
-            done(err || new Error('Did not stop correctly'));
-        }
-
-        if (numInterval > 0) {
-            intervalId = setInterval(function () {
-                numInterval -= 1;
-                if (numInterval < 0) {
-                    clearInterval(intervalId);
-                    if (self.pendingEvents > 0) {
-                        stoppedErrorPendingRequests(null, callback);
-                    } else {
-                        stoppedOk(callback);
-                    }
-                } else {
-                    if (self.pendingEvents > 0) {
-                        // waiting
-                        self.logger.debug('Waiting for pending events', {
-                            metadata: {
-                                pendingEvents: self.pendingEvents,
-                                timeLeft: numInterval * intervalLength
-                            }
-                        });
-                    } else {
-                        // we are ok
-                        clearInterval(intervalId);
-
-                        stoppedOk(callback);
-                    }
-                }
-            }, intervalLength);
-        } else {
-            if (self.pendingEvents > 0) {
-                // waiting
-                stoppedErrorPendingRequests(null, callback);
-            } else {
-                // we are ok
-                stoppedOk(callback);
-            }
-        }
+    /**
+     *
+     * @param {object} configuration
+     * @param {function} callback
+     */
+    AddOnBase.prototype.configure = function (configuration) {
+        this.core = configuration.core;
+        this.project = configuration.project;
+        this.branchName = configuration.branchName;
+        this.blobClient = configuration.blobClient;
     };
 
     return AddOnBase;
