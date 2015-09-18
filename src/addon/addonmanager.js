@@ -10,38 +10,143 @@ var Q = require('q'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
     Storage = requireJS('common/storage/nodestorage');
 
-function AddOnManager(webGMESessionId, mainLogger, gmeConfig) {
+function BranchMonitor(project, branchName, gmeConfig, mainLogger) {
+    var runningAddOns = [],
+        self = this;
+
+    this.core = new Core(project, {globConf: gmeConfig, logger: mainLogger.fork('core')});
+
+    this.rootHash = '';
+    this.commitHash = '';
+    this.rootNode = null;
+
+    function loadNewRoot(commitData, callback) {
+        var deferred = Q.defer();
+        self.rootHash = commitData.commitData.commitObject.root;
+        self.commitHash = commitData.commitData.commitObject._id;
+
+        self.core.loadRoot(self.rootHash, function (err, root) {
+            if (err) {
+                deferred.reject(new Error(err));
+            }
+
+            self.rootNode = root;
+            deferred.resolve(root);
+        });
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function onUpdate(commitData, commitQueue, updateQueue, handlerCallback) {
+        if (commitData.local) {
+
+        } else {
+            loadNewRoot(commitData)
+                .then(function () {
+                    var requiredAddOns = self.core.getRegistry(self.root, 'usedAddOns');
+
+                })
+                .catch(function (err) {
+
+                });
+        }
+    }
+
+    function branchStatusHandler() {
+
+    }
+
+    this.initialize = function (callback) {
+        var deferred = Q.defer();
+
+        project.openBranch(project.projectId, branchName, this.onUpdate, this.branchStatusHandler,
+            function (err/*, latestCommitData*/) {
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
+                deferred.resolve();
+            }
+        );
+
+        return deferred.promise.nodeify(callback);
+    };
+}
+
+function AddOnManager(webGMESessionId, projectId, mainLogger, gmeConfig) {
     var host = '127.0.0.1',
         self = this,
         logger = mainLogger.fork('AddOnManager'),
         storage = Storage.createStorage(host, webGMESessionId, logger, gmeConfig),
-        runningAddOns = {}; //:projectId/:branchName/:addOnId
+        branchMonitors = {}; //:branchName/:addOnId
+
+    this.project = null;
 
     function getAddOn(name) {
         var addOnPath = 'addon/' + name + '/' + name + '/' + name;
-        if (runningAddOns.hasOwnProperty(name)) {
+        if (branchMonitors.hasOwnProperty(name)) {
             throw new Error('AddOn has already started ' + name);
         }
         logger.debug('requireJS addOn from path: ' + addOnPath);
         return requireJS(addOnPath);
     }
 
+    /**
+     * Opens up the storage based on the webGMESessionId and opens and sets the project.
+     *
+     * @param callback
+     */
     this.initialize = function (callback) {
+        var deferred = Q.defer();
         storage.open(function (networkStatus) {
             if (networkStatus === STORAGE_CONSTANTS.CONNECTED) {
+                storage.openProject(projectId, function (err, project, branches, rights) {
+                    if (err) {
+                        deferred.reject(err);
+                        return;
+                    }
+
+                    self.project = project;
+
+                    if (rights.write === false) {
+                        logger.warn('AddOnManager for project [' + projectId + '] initialized without write access.');
+                    }
+
+                    deferred.resolve(null);
+                });
                 callback(null);
             } else {
                 //FIXME: How to handle disconnect/reconnect for addOns???
-                callback(new Error('Problems connecting to the webgme server, network state: ' + networkState));
+                deferred.reject(new Error('Problems connecting to the webgme server, network state: ' + networkStatus));
             }
         });
+
+        return deferred.promise.nodeify(callback);
     };
 
-    this.startAddOn = function (addOnName, projectId, branchName, callback) {
+    function getBranchMonitor(branchName, callback) {
+
+
+        if (mointor[branchName]) {
+            deferred.resolve(monitor[branchName]);
+        } else {
+            self.project.openBranch()
+        }
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    this.monitorAddOnsInBranch = function (branchName, callback) {
+        var monitor = branchMonitors[branchName];
+        if (monitor) {
+
+        }
+    };
+
+    this.startAddOn = function (addOnName, branchName, callback) {
         var deferred = Q.defer(),
             AddOn,
             addOn,
-            project,
             branch,
             startParams;
 
@@ -60,7 +165,7 @@ function AddOnManager(webGMESessionId, mainLogger, gmeConfig) {
             if (err) {
                 deferred.reject(err instanceof Error ? err : new Error(err));
             } else {
-                runningAddOns[addOnName] = addOn;
+                branchMonitors[addOnName] = addOn;
                 deferred.resolve();
             }
         });
@@ -68,17 +173,17 @@ function AddOnManager(webGMESessionId, mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     };
 
-    this.queryAddOn = function (addOnName, projectId, branchName, parameters, callback) {
+    this.queryAddOn = function (addOnName, branchName, parameters, callback) {
         var deferred = Q.defer(),
             addOn;
 
         if (!addOnName) {
             //TODO: This assumes a single running addOn.
-            addOnName = Object.keys(runningAddOns)[0];
+            addOnName = Object.keys(branchMonitors)[0];
             logger.debug('No addOnName given for query picked one randomly', addOnName);
         }
 
-        addOn = runningAddOns[addOnName];
+        addOn = branchMonitors[addOnName];
 
         if (!addOn) {
             deferred.reject(new Error('The addOn is not running'));
@@ -95,17 +200,17 @@ function AddOnManager(webGMESessionId, mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     };
 
-    this.stopAddOn = function (addOnName, projectId, branchName, callback) {
+    this.stopAddOn = function (addOnName, branchName, callback) {
         var deferred = Q.defer(),
             addOn;
 
         if (!addOnName) {
             //TODO: This assumes a single running addOn.
-            addOnName = Object.keys(runningAddOns)[0];
+            addOnName = Object.keys(branchMonitors)[0];
             logger.debug('No addOnName given for query picked one randomly', addOnName);
         }
 
-        addOn = runningAddOns[addOnName];
+        addOn = branchMonitors[addOnName];
 
         if (addOn) {
             logger.debug('stopping addOn', {metadata: addOn.getName()});
@@ -113,7 +218,7 @@ function AddOnManager(webGMESessionId, mainLogger, gmeConfig) {
                 if (err) {
                     deferred.reject(err instanceof Error ? err : new Error(err));
                 } else {
-                    delete runningAddOns[addOnName];
+                    delete branchMonitors[addOnName];
                     deferred.resolve();
                 }
             });
@@ -125,7 +230,7 @@ function AddOnManager(webGMESessionId, mainLogger, gmeConfig) {
     };
 
     this.close = function (callback) {
-        var addOnNames = Object.keys(runningAddOns);
+        var addOnNames = Object.keys(branchMonitors);
 
         logger.debug('closing all running addOns', addOnNames);
 

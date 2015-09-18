@@ -8,6 +8,15 @@
 define(['common/storage/constants'], function (CONSTANTS) {
     'use strict';
 
+    /**
+     *
+     *
+     * @param core
+     * @param project
+     * @param branchName
+     * @param gmeConfig
+     * @constructor
+     */
     var AddOnBase = function (core, project, branchName, gmeConfig) {
         this.gmeConfig = gmeConfig;
         this.core = core;
@@ -30,10 +39,22 @@ define(['common/storage/constants'], function (CONSTANTS) {
         return [];
     };
 
+    /**
+     * Queries are typically invoked by users from a client. The addOn is not suppose to make any changes to
+     * either the model's or the addOns state. (Since users can share a running instance of an addOn).
+     * @param {string} commitHash - State of the invoker.
+     * @param {object} queryParams - Values based on the 'getQueryParametersStructure'.
+     * @param {function} callback - resolves with PluginResult.
+     */
     AddOnBase.prototype.query = function (commitHash, queryParams, callback) {
         callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
     };
 
+    /**
+     *
+     * @param {object} rootNode
+     * @param {function} callback
+     */
     AddOnBase.prototype.onUpdate = function (rootNode, callback) {
         callback(new Error('The update function is a main point of an addOn\'s functionality so it must be ' +
             'overwritten.'));
