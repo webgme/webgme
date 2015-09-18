@@ -11,14 +11,40 @@ var Q = require('q'),
     Storage = requireJS('common/storage/nodestorage');
 
 function BranchMonitor(project, branchName, gmeConfig, mainLogger) {
-    var runningAddOns = [],
-        self = this;
+    var self = this;
 
-    this.core = new Core(project, {globConf: gmeConfig, logger: mainLogger.fork('core')});
+    this.runningAddOns = [
+        //{id: {string}, addOn: {AddOnBase}}
+    ];
+    this.logger = mainLogger.fork('BranchMonitor:' + branchName);
+    this.core = new Core(project, {globConf: gmeConfig, logger: this.logger.fork('core')});
 
-    this.rootHash = '';
     this.commitHash = '';
+    this.rootHash = '';
     this.rootNode = null;
+
+
+    function getAddOn(name) {
+        var addOnPath = 'addon/' + name + '/' + name + '/' + name,
+            AddOn,
+            error,
+            addOn;
+
+        self.logger.debug('requireJS addOn from path: ' + addOnPath);
+        try {
+            AddOn = requireJS(addOnPath);
+        } catch (err) {
+            error = err;
+        }
+
+        // This is weird, the second time requirejs simply returns with undefined.
+        if (AddOn) {
+            addOn = new AddOn(self.core, project, branchName, self.logger.fork(name), gmeConfig);
+            return addOn;
+        } else {
+            return error || new Error('AddOn is not available from: ' + addOnPath);
+        }
+    }
 
     function loadNewRoot(commitData, callback) {
         var deferred = Q.defer();
@@ -37,23 +63,53 @@ function BranchMonitor(project, branchName, gmeConfig, mainLogger) {
         return deferred.promise.nodeify(callback);
     }
 
-    function onUpdate(commitData, commitQueue, updateQueue, handlerCallback) {
-        if (commitData.local) {
+    function updateRunningAddOns(callback) {
+        var deferred = new Q.defer(),
+            counter = self.runningAddOns.length;
 
-        } else {
-            loadNewRoot(commitData)
-                .then(function () {
-                    var requiredAddOns = self.core.getRegistry(self.root, 'usedAddOns');
-
-                })
-                .catch(function (err) {
-
-                });
+        if (counter === 0) {
+            deferred.resolve()
         }
+
+        return deferred.promise.nodeify(callback);
     }
 
-    function branchStatusHandler() {
+    function onUpdate(commitData, commitQueue, updateQueue, handlerCallback) {
+        loadNewRoot(commitData)
+            .then(function () {
+                var i,
+                    j,
+                    wasRunning,
+                    runningAddOnsNew = [],
+                    requiredAddOns = self.core.getRegistry(self.root, 'usedAddOns').split(' ');
 
+                self.logger.debug('requiredAddOns', requiredAddOns);
+
+                for (i = 0; requiredAddOns.length; i += 1) {
+                    wasRunning = false;
+                    for (j = 0; self.runningAddOns.length; j += 1) {
+                        if (self.runningAddOns[j].id === requiredAddOns[i]) {
+                            runningAddOnsNew.push(self.runningAddOns[j]);
+                            wasRunning = true;
+                            break;
+                        }
+                    }
+                    if (wasRunning === false) {
+                        runningAddOnsNew.push(getAddOn(requiredAddOns[i]));
+                    }
+                }
+
+                self.runningAddOns = runningAddOnsNew;
+
+            })
+            .catch(function (err) {
+
+            });
+    }
+
+    function branchStatusHandler(branchStatus /*, commitQueue, updateQueue*/) {
+        //TODO check how it should work
+        self.logger.debug('New branchStatus', branchStatus);
     }
 
     this.initialize = function (callback) {
@@ -81,15 +137,6 @@ function AddOnManager(webGMESessionId, projectId, mainLogger, gmeConfig) {
         branchMonitors = {}; //:branchName/:addOnId
 
     this.project = null;
-
-    function getAddOn(name) {
-        var addOnPath = 'addon/' + name + '/' + name + '/' + name;
-        if (branchMonitors.hasOwnProperty(name)) {
-            throw new Error('AddOn has already started ' + name);
-        }
-        logger.debug('requireJS addOn from path: ' + addOnPath);
-        return requireJS(addOnPath);
-    }
 
     /**
      * Opens up the storage based on the webGMESessionId and opens and sets the project.

@@ -10,24 +10,27 @@ define(['common/storage/constants'], function (CONSTANTS) {
 
     /**
      *
-     *
      * @param core
      * @param project
      * @param branchName
      * @param gmeConfig
      * @constructor
      */
-    var AddOnBase = function (core, project, branchName, gmeConfig) {
+    var AddOnBase = function (core, project, branchName, blobClient, logger, gmeConfig) {
         this.gmeConfig = gmeConfig;
         this.core = core;
         this.project = project;
         this.branchName = branchName;
+        this.logger = logger;
+        this.blobClient = blobClient;
 
-        this.commitHash = null;
-        this.rootNode = null;
+        this.commitHash = '';
         this.rootHash = '';
+        this.rootNode = null;
 
-        this.running = false;
+        this.initialized = false;
+
+        this.logger.debug('ctor');
     };
 
     /**
@@ -55,9 +58,19 @@ define(['common/storage/constants'], function (CONSTANTS) {
      * @param {object} rootNode
      * @param {function} callback
      */
-    AddOnBase.prototype.onUpdate = function (rootNode, callback) {
+    AddOnBase.prototype.onUpdate = function (rootNode, commitObj, callback) {
         callback(new Error('The update function is a main point of an addOn\'s functionality so it must be ' +
             'overwritten.'));
+    };
+
+    /**
+     *
+     * @param {object} rootNode
+     * @param {function} callback
+     */
+    AddOnBase.prototype.initialize = function (rootNode, commitObj, callback) {
+        this.initialized = true;
+        this.onUpdate(rootNode, commitObj, callback);
     };
 
     /**
@@ -86,7 +99,6 @@ define(['common/storage/constants'], function (CONSTANTS) {
     AddOnBase.prototype.getDescription = function () {
         return '';
     };
-
 
     // Methods used by the addOn manager(s).
     AddOnBase.prototype.init = function (parameters, callback) {
