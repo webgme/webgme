@@ -8,6 +8,7 @@ var path = require('path'),
     config = {
         addOn: {
             enable: false,
+            monitorTimeout: 10000,
             basePaths: [path.join(__dirname, '../src/addon/core')]
         },
 

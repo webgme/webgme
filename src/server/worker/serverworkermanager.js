@@ -10,7 +10,8 @@ var Child = require('child_process'),
     process = require('process'),
     path = require('path'),
     CONSTANTS = require('./constants'),
-    SIMPLE_WORKER_JS = path.join(__dirname, 'simpleworker.js');
+    SIMPLE_WORKER_JS = path.join(__dirname, 'simpleworker.js'),
+    CONNECTED_WORKER_JS = path.join(__dirname, 'connectedworker.js');
 
 
 function ServerWorkerManager(_parameters) {
@@ -22,10 +23,11 @@ function ServerWorkerManager(_parameters) {
         gmeConfig = _parameters.globConf,
         logger = _parameters.logger.fork('serverworkermanager');
 
-    //helping functions
     logger.debug('SIMPLE_WORKER_JS:', SIMPLE_WORKER_JS);
+    logger.debug('CONNECTED_WORKER_JS:', CONNECTED_WORKER_JS);
 
-    function reserveWorker() {
+    //helping functions
+    function reserveWorker(workerType) {
         var debug = false,
             execArgv = process.execArgv.filter(function (arg) {
                 if (arg.indexOf('--debug-brk') === 0) {
@@ -51,12 +53,18 @@ function ServerWorkerManager(_parameters) {
         logger.debug('execArgv for new child process', execArgv);
 
         if (Object.keys(_workers || {}).length < gmeConfig.server.maxWorkers) {
-            var worker = Child.fork(SIMPLE_WORKER_JS, [], {execArgv: execArgv});
+            var worker;
+
+            if (workerType === CONSTANTS.workerTypes.connected) {
+                Child.fork(CONNECTED_WORKER_JS, [], {execArgv: execArgv});
+            } else {
+                Child.fork(SIMPLE_WORKER_JS, [], {execArgv: execArgv});
+            }
 
             _workers[worker.pid] = {
                 worker: worker,
                 state: CONSTANTS.workerStates.initializing,
-                type: null,
+                type: workerType,
                 cb: null
             };
 
@@ -68,7 +76,7 @@ function ServerWorkerManager(_parameters) {
                     logger.warn('worker ' + worker.pid + ' has exited abnormally with code ' + code);
                 }
                 delete _workers[worker.pid];
-                reserveWorkerIfNecessary();
+                reserveWorkerIfNecessary(workerType);
             });
         }
     }
@@ -107,20 +115,22 @@ function ServerWorkerManager(_parameters) {
     }
 
     function assignRequest(workerPid) {
+        var worker;
         if (_waitingRequests.length > 0) {
-            if (_workers[workerPid].state === CONSTANTS.workerStates.free) {
+            worker = _workers[workerPid];
+            if (worker.state === CONSTANTS.workerStates.free && worker.type === CONSTANTS.workerTypes.simple) {
                 var request = _waitingRequests.shift();
                 logger.debug('Request will be handled, request left in queue: ', _waitingRequests.length);
                 logger.debug('Worker "' + workerPid + '" will handle request: ', {metadata: request});
-                _workers[workerPid].state = CONSTANTS.workerStates.working;
-                _workers[workerPid].cb = request.cb;
-                _workers[workerPid].resid = null;
-                if (request.request.command === CONSTANTS.workerCommands.connectedWorkerStart) {
-                    _workers[workerPid].type = CONSTANTS.workerTypes.connected;
-                } else {
-                    _workers[workerPid].type = CONSTANTS.workerTypes.simple;
-                }
-                _workers[workerPid].worker.send(request.request);
+                worker.state = CONSTANTS.workerStates.working;
+                worker.cb = request.cb;
+                worker.resid = null;
+                //if (request.request.command === CONSTANTS.workerCommands.connectedWorkerStart) {
+                //    worker.type = CONSTANTS.workerTypes.connected;
+                //} else {
+                //    worker.type = CONSTANTS.workerTypes.simple;
+                //}
+                worker.worker.send(request.request);
             }
         }
     }
@@ -187,7 +197,9 @@ function ServerWorkerManager(_parameters) {
                     break;
                 case CONSTANTS.msgTypes.initialized:
                     //the worker have been initialized so we have to try to assign it right away
-                    worker.state = CONSTANTS.workerStates.free;
+                    if (worker.type === CONSTANTS.workerTypes.simple) {
+                        worker.state = CONSTANTS.workerStates.free;
+                    }
                     //assignRequest(msg.pid);
                     break;
                 case CONSTANTS.msgTypes.query:
@@ -206,10 +218,10 @@ function ServerWorkerManager(_parameters) {
     function request(parameters, callback) {
         logger.debug('Incoming request', {metadata: parameters});
         _waitingRequests.push({request: parameters, cb: callback});
-        reserveWorkerIfNecessary();
+        reserveWorkerIfNecessary(CONSTANTS.workerTypes.simple);
     }
 
-    function reserveWorkerIfNecessary() {
+    function reserveWorkerIfNecessary(workerType) {
         var workerIds = Object.keys(_workers || {}),
             i,
             initializingWorkers = 0,
@@ -225,7 +237,7 @@ function ServerWorkerManager(_parameters) {
 
         if (_waitingRequests.length + 1 /* keep a spare */ > initializingWorkers + freeWorkers &&
             workerIds.length < gmeConfig.server.maxWorkers) {
-            reserveWorker();
+            reserveWorker(workerType);
         }
     }
 
@@ -286,9 +298,8 @@ function ServerWorkerManager(_parameters) {
     }
 
     // AddOn workers
-    var projectWorkers = {
-        //:projectId
-    };
+    // TODO: For now it's just one connected worker.
+    var connectedWorkerId;
 
     function socketRoomChange(projectId, branchName, joined) {
         if (joined) {
@@ -302,7 +313,11 @@ function ServerWorkerManager(_parameters) {
         if (_managerId === null) {
             _managerId = setInterval(queueManager, 10);
         }
-        reserveWorkerIfNecessary();
+        reserveWorkerIfNecessary(CONSTANTS.workerTypes.simple);
+        if (gmeConfig.addOn.enable === true) {
+            logger.info('AddOns enabled will reserve a connectedWorker');
+            reserveWorker(CONSTANTS.workerTypes.connected);
+        }
     }
 
     function stop(callback) {
@@ -314,15 +329,14 @@ function ServerWorkerManager(_parameters) {
     return {
         // Workers related
         request: request,
+
+        // AddOn related
+        socketRoomChange: socketRoomChange,
         query: query,
 
         // Manager related
         stop: stop,
         start: start,
-
-        // AddOn related
-        socketRoomChange: socketRoomChange,
-
         CONSTANTS: CONSTANTS
     };
 }

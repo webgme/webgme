@@ -14,7 +14,9 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     Logger = require('../logger'),
     AddOnManager = require('../../addon/addonmanager'),
 
-    addOnManagers,
+    addOnManagers = {
+        //:projectId
+    },
     initialized = false,
     gmeConfig,
     logger;
@@ -54,8 +56,9 @@ function initialize(parameters) {
 }
 
 //AddOn Functions
-function connectedWorkerStart(webGMESessionId, userId, addOnName, projectId, branchName, callback) {
-    logger.info('connectedWorkerStart', addOnName, projectId, branchName);
+function connectedWorkerStart(webGMESessionId, projectId, branchName, callback) {
+    var addOnManager;
+    logger.info('connectedWorkerStart', projectId, branchName);
     function finish(err) {
         if (err) {
             err = err instanceof Error ? err : new Error(err);
@@ -67,24 +70,38 @@ function connectedWorkerStart(webGMESessionId, userId, addOnName, projectId, bra
         }
     }
 
-    if (!addOnName || !projectId || !branchName) {
+    if (!projectId || !branchName) {
         finish(new Error('Required parameter was not provided'));
         return;
     }
 
-    addOnManager = new AddOnManager(webGMESessionId, logger, gmeConfig);
+    addOnManager = addOnManagers[projectId];
 
-    addOnManager.initialize(function (err) {
-        if (err) {
-            finish(err);
-            return;
-        }
+    if (!addOnManager) {
+        logger.debug('No previous addOns handled for project [' + projectId + ']');
+        addOnManager = new AddOnManager(logger, gmeConfig);
+        addOnManager.addEventListener('NO_MONITORS', function (addOnManager_) {
+            delete addOnManagers[projectId];
+            addOnManager.close()
+                .catch(function (err) {
+                    logger.error('Error closing addOnManger', err);
+                });
+        });
+    } else {
+        logger.debug('AddOns already being handled for project [' + projectId + ']');
+    }
 
-        addOnManager.startNewAddOn(addOnName, projectId, branchName, userId, finish);
-    });
+    addOnManager.initialize(webGMESessionId)
+        .then(function () {
+            return addOnManager.monitorBranch(webGMESessionId, branchName);
+        })
+        .then(function () {
+            finish();
+        })
+        .catch(finish);
 }
 
-function connectedWorkerQuery(addOnName, parameters, callback) {
+function connectedWorkerQuery(webGMESessionId, projectId, branchName, addOnId, commitHash, queryParams, callback) {
     logger.info('connectedWorkerQuery', addOnName);
     logger.debug('connectedWorkerQuery', parameters);
     function finish(err, message) {
@@ -106,8 +123,10 @@ function connectedWorkerQuery(addOnName, parameters, callback) {
     }
 }
 
-function connectedWorkerStop(callback) {
+function connectedWorkerStop(webGMESessionId, projectId, branchName, callback) {
     logger.info('connectedWorkerStop');
+    var addOnManager;
+
     function finish(err) {
         if (err) {
             err = err instanceof Error ? err : new Error(err);
@@ -119,16 +138,23 @@ function connectedWorkerStop(callback) {
         }
     }
 
-    if (addOnManager) {
-        addOnManager.close()
-            .then(function () {
-                addOnManager = null;
-                finish(null);
-            })
-            .catch(finish);
-    } else {
-        finish(null);
+    if (!projectId || !branchName) {
+        finish(new Error('Required parameter was not provided'));
+        return;
     }
+
+    addOnManager = addOnManagers[projectId];
+
+    if (!addOnManager) {
+        finish(new Error('Request stop for non existing addOnManger', projectId, branchName));
+        return;
+    }
+
+    addOnManager.unMonitorBranch(webGMESessionId, branchName)
+        .then(function (/*connectionCount*/) {
+            finish();
+        })
+        .catch(finish);
 }
 
 //main message processing loop
@@ -153,8 +179,7 @@ process.on('message', function (parameters) {
 
     if (parameters.command === CONSTANT.workerCommands.connectedWorkerStart) {
         if (gmeConfig.addOn.enable === true) {
-            connectedWorkerStart(parameters.webGMESessionId, parameters.userId, parameters.addOnName,
-                parameters.projectId, parameters.branch,
+            connectedWorkerStart(parameters.webGMESessionId, parameters.projectId, parameters.branchName,
                 function (err) {
                     if (err) {
                         safeSend({
@@ -200,16 +225,17 @@ process.on('message', function (parameters) {
             });
         }
     } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStop) {
-        // TODO: We need a timeout here when clients disconnects, e.g. browser is closed.
         if (gmeConfig.addOn.enable === true) {
-            connectedWorkerStop(function (err) {
-                safeSend({
-                    pid: process.pid,
-                    type: CONSTANT.msgTypes.result,
-                    error: err ? err.message : null,
-                    result: null
-                });
-            });
+            connectedWorkerStop(parameters.webGMESessionId, parameters.projectId, parameters.branchName,
+                function (err) {
+                    safeSend({
+                        pid: process.pid,
+                        type: CONSTANT.msgTypes.result,
+                        error: err ? err.message : null,
+                        result: null
+                    });
+                }
+            );
         } else {
             safeSend({
                 pid: process.pid,

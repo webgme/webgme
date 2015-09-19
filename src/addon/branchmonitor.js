@@ -6,6 +6,7 @@
 'use strict';
 
 var Q = require('q'),
+    EventDispatcher = requireJS('common/EventDispatcher'),
     BlobClient = requireJS('common/blob/BlobClient'),
     Core = requireJS('common/core/core');
 
@@ -24,7 +25,9 @@ var Q = require('q'),
 function BranchMonitor(webGMESessionId, storage, project, branchName, gmeConfig, mainLogger) {
     var self = this,
         logger = mainLogger.fork('BranchMonitor:' + branchName),
-        core =  new Core(project, {globConf: gmeConfig, logger: logger.fork('core')});
+        core =  new Core(project, {globConf: gmeConfig, logger: logger.fork('core')}),
+        startDeferred,
+        stopDeferred;
 
     this.runningAddOns = [
         //{id: {string}, addOn: {AddOnBase}}
@@ -213,39 +216,41 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, gmeConfig,
 
     // API functions
     this.start = function (callback) {
-        var deferred = Q.defer();
+        if (self.startRequested === false) {
+            startDeferred = Q.defer();
+            self.startRequested = true;
 
-        self.startRequested = true;
-
-        storage.openBranch(project.projectId, branchName, onUpdate, branchStatusHandler,
-            function (err/*, latestCommitData*/) {
-                if (err) {
-                    deferred.reject(err);
-                    return;
+            storage.openBranch(project.projectId, branchName, onUpdate, branchStatusHandler,
+                function (err/*, latestCommitData*/) {
+                    if (err) {
+                        startDeferred.reject(err);
+                        return;
+                    }
+                    self.branchIsOpen = true;
+                    startDeferred.resolve();
                 }
-                self.branchIsOpen = true;
-                deferred.resolve();
-            }
-        );
+            );
+        }
 
-        return deferred.promise.nodeify(callback);
+        return startDeferred.promise.nodeify(callback);
     };
 
     this.stop = function (callback) {
-        var deferred = Q.defer();
+        if (self.stopRequested === false) {
+            stopDeferred = Q.defer();
+            self.stopRequested = true;
 
-        self.stopRequested = true;
+            storage.closeBranch(function (err) {
+                self.branchIsOpen = false;
+                if (err) {
+                    stopDeferred.reject(err);
+                } else {
+                    stopDeferred.resolve();
+                }
+            });
+        }
 
-        storage.closeBranch(function (err) {
-            self.branchIsOpen = false;
-            if (err) {
-                deferred.reject(err);
-            } else {
-                deferred.resolve();
-            }
-        });
-
-        return deferred.promise.nodeify(callback);
+        return stopDeferred.promise.nodeify(callback);
     };
 
     this.queryAddOn = function (addOnId, commitHash, queryParams, callback) {
@@ -254,5 +259,6 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, gmeConfig,
         return deferred.promise.nodeify(callback);
     };
 }
+
 
 module.exports = BranchMonitor;
