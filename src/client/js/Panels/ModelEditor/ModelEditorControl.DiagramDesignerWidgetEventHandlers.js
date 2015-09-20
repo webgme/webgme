@@ -427,8 +427,8 @@ define(['js/logger',
             };
 
         //check if FCO is among the items as it may change the outcome
-        for(i=0;i<items.length;i+=1){
-            if(GMEConcepts.isProjectFCO(items[i])){
+        for (i = 0; i < items.length; i += 1) {
+            if (GMEConcepts.isProjectFCO(items[i])) {
                 FCOamongItems = true;
                 break;
             }
