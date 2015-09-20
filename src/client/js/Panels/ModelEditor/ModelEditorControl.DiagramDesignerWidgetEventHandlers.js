@@ -400,6 +400,7 @@ define(['js/logger',
             parentID = this.currentNodeInfo.id,
             i,
             j,
+            FCOamongItems = false,
             validPointerTypes = [],
             baseTypeID,
             baseTypeNode,
@@ -425,6 +426,14 @@ define(['js/logger',
                 }
             };
 
+        //check if FCO is among the items as it may change the outcome
+        for (i = 0; i < items.length; i += 1) {
+            if (GMEConcepts.isProjectFCO(items[i])) {
+                FCOamongItems = true;
+                break;
+            }
+        }
+
         //check to see what DROP actions are possible
         if (items.length > 0) {
             i = dragEffects.length;
@@ -435,13 +444,13 @@ define(['js/logger',
                         //if so, it's not a real move, it is a reposition
                         if (((dragParams && dragParams.parentID === parentID) ||
                             GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) &&
-                            GMEConcepts.canMoveNodeHere(parentID, items)) {
+                            GMEConcepts.canMoveNodeHere(parentID, items) && !FCOamongItems) {
                             dragAction = {dragEffect: dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_COPY:
-                        if (GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
+                        if (GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect) && !FCOamongItems) {
                             dragAction = {dragEffect: dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }

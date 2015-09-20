@@ -177,6 +177,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
         };
 
         function __loadBase(node) {
+            var path = oldcore.getPath(node);
             ASSERT(node === null || typeof node.base === 'undefined' || typeof node.base === 'object');
 
             if (typeof node.base === 'undefined') {
@@ -185,20 +186,25 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                     node.base = null;
                     return node;
                 } else if (isFalseNode(node)) {
-                    var root = core.getRoot(node);
                     oldcore.deleteNode(node);
-                    //core.persist(root);
+                    //core.persist(core.getRoot(node));
                     //TODO a notification should be generated towards the user
-                    logger.warn('node removed due to missing base'); //TODO check if some identification can be passed
+                    logger.warn('node [' + path + '] removed due to missing base'); //TODO check if some identification can be passed
                     return null;
                 } else {
-                    var basepath = oldcore.getPointerPath(node, 'base');
-                    ASSERT(basepath !== undefined);
-                    if (basepath === null) {
+                    var basePath = oldcore.getPointerPath(node, 'base');
+                    ASSERT(basePath !== undefined);
+                    if (basePath === null) {
                         node.base = null;
                         return node;
+                    } else if (basePath.indexOf(path) === 0) {
+                        //contained base error
+                        logger.error('node [' + path + '] contains its own base!');
+                        oldcore.deleteNode(node);
+                        //core.persist(core.getRoot(node));
+                        return null;
                     } else {
-                        return TASYNC.call(__loadBase2, node, core.loadByPath(core.getRoot(node), basepath));
+                        return TASYNC.call(__loadBase2, node, core.loadByPath(core.getRoot(node), basePath));
                     }
                 }
             } else {
