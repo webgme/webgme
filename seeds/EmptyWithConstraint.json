@@ -50,7 +50,7 @@
         "ProjectRegistry": {
           "FCO_ID": "/1"
         },
-        "usedAddOns": "ConstraintAddOn",
+        "usedAddOns": "",
         "validDecorators": "ModelDecorator CircleDecorator MetaDecorator SVGDecorator UMLStateMachineDecorator DefaultDecorator",
         "validPlugins": "",
         "validVisualizers": "ModelEditor METAAspect"

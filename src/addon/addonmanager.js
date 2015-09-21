@@ -250,7 +250,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
                 .catch(closeDeferred.reject);
         }
 
-        return closeDeferred.promise;
+        return closeDeferred.promise.nodeify(callback);
     };
 }
 

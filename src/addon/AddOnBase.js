@@ -86,11 +86,12 @@ define(['common/storage/constants'], function (CONSTANTS) {
      * @param {function} callback
      */
     AddOnBase.prototype.update = function (rootNode, commitObj, callback) {
-        var updateData = {
-            commitMessage: '',
-            notification: null
-        };
-        callback(null, updateData);
+        //var updateData = {
+        //    commitMessage: '',
+        //    notification: null
+        //};
+        //callback(null, updateData);
+        callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
     };
 
     /**

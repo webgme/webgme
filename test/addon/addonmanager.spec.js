@@ -5,7 +5,7 @@
 
 var testFixture = require('../_globals');
 
-describe.only('AddOnManager', function () {
+describe('AddOnManager', function () {
     'use strict';
     var expect = testFixture.expect,
         AddOnManager = require('../../src/addon/addonmanager'),
