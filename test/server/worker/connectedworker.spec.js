@@ -30,8 +30,7 @@ describe('Connected worker', function () {
         ],
         logger = testFixture.logger.fork('connectedworker.spec'),
         storage,
-        project,
-        constraintProjectName = 'ConstraintProject',
+        ir,
         protocol = gmeConfig.server.https.enable ? 'https' : 'http',
         oldSend = process.send,
         oldOn = process.on,
@@ -39,9 +38,6 @@ describe('Connected worker', function () {
 
 
     before(function (done) {
-        var project;
-        //gmeConfig.authentication.enable = true;
-        gmeConfig.authentication.allowGuests = true;
         gmeConfig.addOn.enable = true;
 
         server = WebGME.standaloneServer(gmeConfig);
@@ -56,42 +52,14 @@ describe('Connected worker', function () {
                 return testFixture.importProject(storage,
                     {
                         projectSeed: 'seeds/EmptyProject.json',
-                        projectName: baseProjectContext.name,
-                        branchName: baseProjectContext.branch,
+                        projectName: 'ConnectedWorkerProject',
+                        branchName: 'master',
                         gmeConfig: gmeConfig,
                         logger: logger
                     });
             })
             .then(function (result) {
-                baseProjectContext.commitHash = result.commitHash;
-                baseProjectContext.id = result.project.projectId;
-                baseProjectContext.rootHash = result.core.getHash(result.rootNode);
-                project = result.project;
-                return project.createBranch('corruptBranch', result.commitHash);
-            })
-            .then(function (result) {
-                var invalidRoot = '#424242424242424242424',
-                    coreObjs = {};
-                coreObjs.invalidRoot = {_id: invalidRoot};
-                expect(result.status).to.equal(project.CONSTANTS.SYNCED);
-
-                return project.makeCommit('corruptBranch', [baseProjectContext.commitHash],
-                    invalidRoot, coreObjs, 'bad commit');
-            })
-            .then(function (result) {
-                expect(result.status).to.equal(project.CONSTANTS.SYNCED);
-
-                return testFixture.importProject(storage,
-                    {
-                        projectSeed: './test/common/core/users/meta/metaRules.json',
-                        projectName: constraintProjectName,
-                        branchName: 'master',
-                        logger: logger,
-                        gmeConfig: gmeConfig
-                    });
-            })
-            .then(function (result) {
-                constraintProjectImportResult = result;
+                ir = result;
                 return Q.ninvoke(server, 'start');
             })
             .then(function () {
@@ -116,7 +84,7 @@ describe('Connected worker', function () {
         });
     });
 
-    function unloadSimpleWorker() {
+    function unloadConnectedWorker() {
         // clear the cached files
         var key,
             i,
@@ -124,7 +92,7 @@ describe('Connected worker', function () {
 
         for (key in require.cache) {
             if (require.cache.hasOwnProperty(key)) {
-                if (key.indexOf('simpleworker.js') > -1) {
+                if (key.indexOf('connectedworker.js') > -1) {
                     modulesToUnload.push(key);
                 }
             }
@@ -135,7 +103,7 @@ describe('Connected worker', function () {
         }
     }
 
-    function getConnected() {
+    function getConnectedWorker() {
         var worker,
             deferredArray = [],
             sendMessage;
@@ -174,9 +142,9 @@ describe('Connected worker', function () {
         process.on = onFunction;
         process.exit = exitFunction;
 
-        unloadSimpleWorker();
+        unloadConnectedWorker();
 
-        require('./../../../src/server/worker/simpleworker');
+        require('./../../../src/server/worker/connectedworker');
 
         worker = {
             send: function () {
@@ -200,7 +168,7 @@ describe('Connected worker', function () {
     }
 
     it('should initialize worker with a valid gmeConfig', function (done) {
-        var worker = getConnected();
+        var worker = getConnectedWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
@@ -212,7 +180,7 @@ describe('Connected worker', function () {
     });
 
     it('should respond with no error to a second initialization request', function (done) {
-        var worker = getConnected();
+        var worker = getConnectedWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
@@ -231,11 +199,10 @@ describe('Connected worker', function () {
     });
 
     it('should fail to execute command without initialization', function (done) {
-        var worker = getConnected();
+        var worker = getConnectedWorker();
 
         worker.send({
-            command: CONSTANTS.workerCommands.getAllProjectsInfo,
-            userId: 'myUser'
+            command: CONSTANTS.workerCommands.connectedWorkerStart
         })
             .then(function () {
                 done(new Error('missing error handling'));
@@ -248,7 +215,7 @@ describe('Connected worker', function () {
     });
 
     it('should be able to start-query-stop addon', function (done) {
-        var worker = getConnected();
+        var worker = getConnectedWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
@@ -258,9 +225,8 @@ describe('Connected worker', function () {
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerStart,
                     webGMESessionId: webGMESessionId,
-                    projectId: baseProjectContext.id,
-                    branch: baseProjectContext.branch,
-                    addOnName: 'TestAddOn'
+                    projectId: ir.project.projectId,
+                    branchName: 'master'
                 });
             })
             .then(function (msg) {
@@ -269,31 +235,23 @@ describe('Connected worker', function () {
                 expect(msg.error).equal(null);
 
                 return worker.send({
-                    command: CONSTANTS.workerCommands.connectedWorkerQuery,
+                    command: CONSTANTS.workerCommands.connectedWorkerStop,
                     webGMESessionId: webGMESessionId,
-                    arbitrary: 'object'
+                    projectId: ir.project.projectId,
+                    branchName: 'master'
                 });
             })
             .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.query);
                 expect(msg.error).equal(null);
-
-                expect(msg.result).not.equal(null);
-                expect(msg.result.arbitrary).equal('object');
-
-                return worker.send({command: CONSTANTS.workerCommands.connectedWorkerStop});
-            })
-            .then(function (msg) {
-                expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.error).equal(null);
+                expect(msg.type).equal(CONSTANTS.msgTypes.request);
+                expect(msg.result.connectionCount).equal(0);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
     });
 
-    it('should fail to query addon without stopping it', function (done) {
-        var worker = getConnected();
+    it.skip('should fail to query addon without stopping it', function (done) {
+        var worker = getConnectedWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
@@ -318,8 +276,8 @@ describe('Connected worker', function () {
             .done();
     });
 
-    it('should fail to start addOn with invalid parameters', function (done) {
-        var worker = getConnected();
+    it.skip('should fail to start addOn with invalid parameters', function (done) {
+        var worker = getConnectedWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
@@ -344,8 +302,8 @@ describe('Connected worker', function () {
             .done();
     });
 
-    it('should respond with error to connectedWorkerStart if addOn is not allowed', function (done) {
-        var worker = getConnected(),
+    it.skip('should respond with error to connectedWorkerStart if addOn is not allowed', function (done) {
+        var worker = getConnectedWorker(),
             altConfig = JSON.parse(JSON.stringify(gmeConfig));
 
         altConfig.addOn.enable = false;
@@ -368,8 +326,8 @@ describe('Connected worker', function () {
             .done(done);
     });
 
-    it('should respond with error to connectedWorkerQuery if addOn is not allowed', function (done) {
-        var worker = getConnected(),
+    it.skip('should respond with error to connectedWorkerQuery if addOn is not allowed', function (done) {
+        var worker = getConnectedWorker(),
             altConfig = JSON.parse(JSON.stringify(gmeConfig));
 
         altConfig.addOn.enable = false;
@@ -392,8 +350,8 @@ describe('Connected worker', function () {
             .done(done);
     });
 
-    it('should respond with error to connectedWorkerStop if addOn is not allowed', function (done) {
-        var worker = getConnected(),
+    it.skip('should respond with error to connectedWorkerStop if addOn is not allowed', function (done) {
+        var worker = getConnectedWorker(),
             altConfig = JSON.parse(JSON.stringify(gmeConfig));
 
         altConfig.addOn.enable = false;
@@ -418,7 +376,7 @@ describe('Connected worker', function () {
 
     // wrong / no command
     it('should fail to execute wrong command', function (done) {
-        var worker = getConnected();
+        var worker = getConnectedWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
@@ -443,7 +401,7 @@ describe('Connected worker', function () {
     });
 
     it('should fail to execute request without command', function (done) {
-        var worker = getConnected();
+        var worker = getConnectedWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {

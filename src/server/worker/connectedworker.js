@@ -128,14 +128,14 @@ function connectedWorkerStop(webGMESessionId, projectId, branchName, callback) {
     logger.info('connectedWorkerStop');
     var addOnManager;
 
-    function finish(err) {
+    function finish(err, result) {
         if (err) {
             err = err instanceof Error ? err : new Error(err);
             logger.error('connectedWorkerStop failed', {metadata: err});
             callback(err);
         } else {
             logger.info('connectedWorkerStop done');
-            callback(null);
+            callback(null, result);
         }
     }
 
@@ -152,8 +152,8 @@ function connectedWorkerStop(webGMESessionId, projectId, branchName, callback) {
     }
 
     addOnManager.unMonitorBranch(webGMESessionId, branchName)
-        .then(function (/*connectionCount*/) {
-            finish();
+        .then(function (connectionCount) {
+            finish(null, {connectionCount: connectionCount});
         })
         .catch(finish);
 }
@@ -209,7 +209,7 @@ process.on('message', function (parameters) {
         });
     } else if (parameters.command === CONSTANTS.workerCommands.connectedWorkerStop) {
         connectedWorkerStop(parameters.webGMESessionId, parameters.projectId, parameters.branchName,
-            function (err) {
+            function (err, result) {
                 if (err) {
                     safeSend({
                         pid: process.pid,
@@ -222,7 +222,8 @@ process.on('message', function (parameters) {
                         pid: process.pid,
                         type: CONSTANTS.msgTypes.request,
                         error: null,
-                        resid: process.pid
+                        resid: process.pid,
+                        result: result
                     });
                 }
             }
