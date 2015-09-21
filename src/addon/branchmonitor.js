@@ -24,12 +24,12 @@ var Q = require('q'),
 function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger, gmeConfig) {
     var self = this,
         logger = mainLogger.fork('BranchMonitor:' + branchName),
-        core =  new Core(project, {globConf: gmeConfig, logger: logger.fork('core')}),
+        core = new Core(project, {globConf: gmeConfig, logger: logger.fork('core')}),
         startDeferred,
         stopDeferred;
 
     this.runningAddOns = [
-        //{id: {string}, addOn: {AddOnBase}}
+        //{id: {string}, instance: {AddOnBase}}
     ];
 
     // State
@@ -86,7 +86,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
         var deferred = Q.defer();
         self.rootHash = commitData.commitObject.root;
         self.commitHash = commitData.commitObject._id;
-        logger.info('loadNewRoot [commit/rootHash]', self.commitHash, self.rootHash);
+        logger.debug('loadNewRoot [commit/rootHash]', self.commitHash, self.rootHash);
 
         core.loadRoot(self.rootHash, function (err, root) {
             if (err) {
@@ -112,9 +112,9 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
                 return;
             }
             counter += 1;
-            if (addOn.addOn.initialized === true) {
+            if (addOn.instance.initialized === true) {
                 logger.debug('updating addOn: ', addOn.id);
-                addOn.addOn.update(self.rootNode, commitObj, function (err, data) {
+                addOn.instance.update(self.rootNode, commitObj, function (err, data) {
                     if (err) {
                         // TODO: How to handle this?
                         logger.error('AddOn [' + addOn.id + '] returned error at update', err);
@@ -123,14 +123,15 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
                         logger.warn('AddOn [' + addOn.id + '] sent not yet supported notification!', data.notification);
                     }
                     if (data.commitMessage) {
-                        self.commitMessage += ' ' + data.commitMessage;
+                        self.commitMessage += ' - [' + addOn.instance.getName() + '] (v' + addOn.instance.getVersion() +
+                             ') ' + data.commitMessage;
                     }
                     updateAddOn(self.runningAddOns[counter]);
                 });
             } else {
-                addOn.addOn.configure(getConfiguration());
+                addOn.instance.configure(getConfiguration());
                 logger.debug('initializing addOn: ', addOn.id);
-                addOn.addOn.initialize(self.rootNode, commitObj, function (err, notification) {
+                addOn.instance.initialize(self.rootNode, commitObj, function (err, notification) {
                     if (err) {
                         // TODO: How to handle this?
                         logger.error('AddOn [' + addOn.id + '] returned error at update', err);
@@ -175,6 +176,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
                     requiredAddOns = core.getRegistry(self.rootNode, 'usedAddOns'),
                     i,
                     j,
+                    newAddOn,
                     wasRunning;
 
                 if (typeof requiredAddOns === 'string') {
@@ -185,7 +187,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
                 }
 
 
-                logger.info('requiredAddOns:', requiredAddOns);
+                logger.debug('requiredAddOns:', requiredAddOns);
 
                 for (i = 0; requiredAddOns.length; i += 1) {
                     wasRunning = false;
@@ -197,12 +199,17 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
                         }
                     }
                     if (wasRunning === false) {
-                        runningAddOnsNew.push(getAddOn(requiredAddOns[i]));
+                        newAddOn = getAddOn(requiredAddOns[i]);
+                        if (newAddOn instanceof Error) {
+                            logger.error('Could not get addOn', newAddOn);
+                        } else {
+                            runningAddOnsNew.push(getAddOn(requiredAddOns[i]));
+                        }
                     }
                 }
 
                 self.runningAddOns = runningAddOnsNew;
-                self.commitMessage = '[AddOn changes] - ';
+                self.commitMessage = 'AddOns';
 
                 return updateRunningAddOns(commitData.commitObject);
             })
@@ -214,13 +221,13 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
                     // This will create an update event with local:true, see top of function.
                     project.makeCommit(branchName, [self.commitHash], persisted.rootHash,
                         persisted.objects, self.commitMessage,
-                    function (err, result) {
-                        if (err) {
-                            logger.error('makeCommit', err);
-                        } else {
-                            logger.info('makeCommit', result);
-                        }
-                    });
+                        function (err, result) {
+                            if (err) {
+                                logger.error('makeCommit', err);
+                            } else {
+                                logger.debug('makeCommit', result);
+                            }
+                        });
                 }
                 handlerCallback(null, self.stopRequested === false);
             })

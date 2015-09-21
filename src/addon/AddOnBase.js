@@ -75,6 +75,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
      * @param {function} callback - resolves with PluginResult.
      */
     AddOnBase.prototype.query = function (commitHash, queryParams, callback) {
+        //TODO: Add support for queries!
         callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
     };
 
@@ -87,8 +88,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
      */
     AddOnBase.prototype.update = function (rootNode, commitObj, callback) {
         //var updateData = {
-        //    commitMessage: '',
-        //    notification: null
+        //    commitMessage: ''
         //};
         //callback(null, updateData);
         callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
@@ -101,7 +101,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
      */
     AddOnBase.prototype.initialize = function (rootNode, commitObj, callback) {
         this.initialized = true;
-        this.onUpdate(rootNode, commitObj, callback);
+        this.update(rootNode, commitObj, callback);
     };
 
     /**
