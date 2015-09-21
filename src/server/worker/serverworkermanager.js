@@ -8,7 +8,6 @@
 
 var Child = require('child_process'),
     process = require('process'),
-    Q = require('q'),
     path = require('path'),
     CONSTANTS = require('./constants'),
     SIMPLE_WORKER_JS = path.join(__dirname, 'simpleworker.js'),
@@ -16,7 +15,8 @@ var Child = require('child_process'),
 
 
 function ServerWorkerManager(_parameters) {
-    var _managerId = null,
+    var self = this,
+        _managerId = null,
         _workers = {},
         _idToPid = {},
         _waitingRequests = [],
@@ -78,7 +78,7 @@ function ServerWorkerManager(_parameters) {
                 }
                 delete _workers[worker.pid];
                 if (worker.type === CONSTANTS.workerTypes.connected) {
-                    connectedWorkerId = null;
+                    self.connectedWorkerId = null;
                 }
                 reserveWorkerIfNecessary(workerType);
             });
@@ -202,7 +202,7 @@ function ServerWorkerManager(_parameters) {
                     } else if (worker.type === CONSTANTS.workerTypes.connected) {
                         // Connected worker is always in working state.
                         worker.state = CONSTANTS.workerStates.working;
-                        connectedWorkerId = msg.pid;
+                        self.connectedWorkerId = msg.pid;
                     }
                     //assignRequest(msg.pid);
                     break;
@@ -219,11 +219,11 @@ function ServerWorkerManager(_parameters) {
         }
     }
 
-    function request(parameters, callback) {
+    this.request = function (parameters, callback) {
         logger.debug('Incoming request', {metadata: parameters});
         _waitingRequests.push({request: parameters, cb: callback});
         reserveWorkerIfNecessary(CONSTANTS.workerTypes.simple);
-    }
+    };
 
     function reserveWorkerIfNecessary(workerType) {
         var workerIds = Object.keys(_workers || {}),
@@ -245,7 +245,7 @@ function ServerWorkerManager(_parameters) {
         }
     }
 
-    function query(id, parameters, callback) {
+    this.query = function (id, parameters, callback) {
         var worker;
         logger.debug('Incoming query', id, {metadata: parameters});
         if (_idToPid[id]) {
@@ -263,7 +263,7 @@ function ServerWorkerManager(_parameters) {
         } else {
             callback('wrong request identification');
         }
-    }
+    };
 
     function queueManager() {
         var i,
@@ -301,17 +301,19 @@ function ServerWorkerManager(_parameters) {
         }
 
         var connectedRequest;
-        if (gmeConfig.addOn.enable === true && connectedWorkerId !== null && connectedWorkerRequests.length > 0) {
-            connectedRequest = connectedWorkerRequests.shift();
-            _workers[connectedWorkerId].worker.send(connectedRequest.request);
+        if (gmeConfig.addOn.enable === true && self.connectedWorkerId !== null &&
+            self.connectedWorkerRequests.length > 0) {
+
+            connectedRequest = self.connectedWorkerRequests.shift();
+            _workers[self.connectedWorkerId].worker.send(connectedRequest.request);
         }
     }
 
 
     // TODO: This should be an object based on projectIds or list of such.
     // TODO: For now we just keep one dedicated worker for the addOns.
-    var connectedWorkerId = null,
-        connectedWorkerRequests = [];
+    this.connectedWorkerId = null;
+    this.connectedWorkerRequests = [];
 
     /**
      *
@@ -322,19 +324,19 @@ function ServerWorkerManager(_parameters) {
      * @param {boolean} parameters.join
      * @param {function} callback
      */
-    function socketRoomChange(parameters, callback) {
+    this.socketRoomChange = function (parameters, callback) {
         if (gmeConfig.addOn.enable === true) {
             if (parameters.join === true) {
                 logger.info('socket joined room');
                 parameters.command = CONSTANTS.workerCommands.connectedWorkerStart;
-                connectedWorkerRequests.push({
+                self.connectedWorkerRequests.push({
                     request: parameters,
                     cb: callback
                 });
             } else {
                 parameters.command = CONSTANTS.workerCommands.connectedWorkerStop;
                 logger.info('socket left room');
-                connectedWorkerRequests.push({
+                self.connectedWorkerRequests.push({
                     request: parameters,
                     cb: callback
                 });
@@ -342,9 +344,9 @@ function ServerWorkerManager(_parameters) {
         } else if (callback) {
             callback(null);
         }
-    }
+    };
 
-    function start() {
+    this.start = function () {
         if (_managerId === null) {
             _managerId = setInterval(queueManager, 10);
         }
@@ -353,26 +355,12 @@ function ServerWorkerManager(_parameters) {
             logger.info('AddOns enabled will reserve a connectedWorker');
             reserveWorker(CONSTANTS.workerTypes.connected);
         }
-    }
+    };
 
-    function stop(callback) {
+    this.stop = function (callback) {
         clearInterval(_managerId);
         _managerId = null;
         freeAllWorkers(callback);
-    }
-
-    return {
-        // Workers related
-        request: request,
-
-        // AddOn related
-        socketRoomChange: socketRoomChange,
-        query: query,
-
-        // Manager related
-        stop: stop,
-        start: start,
-        CONSTANTS: CONSTANTS
     };
 }
 

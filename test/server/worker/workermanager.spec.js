@@ -149,20 +149,17 @@ describe('ServerWorkerManager', function () {
             });
         });
 
-        it('should fail to start addOn as it is disabled', function (done) {
-            var addOnRequest = {
-                command: 'connectedWorkerStart',
-                workerName: 'TestAddOn',
+        it('should not start monitoring addOns on socketRoomChange join since it is disabled', function (done) {
+            var parameters = {
                 projectId: projectId,
                 webGMESessionId: webGMESessionId,
-                branch: 'master'
+                branchName: 'master',
+                join: true
             };
 
-            swm.request(addOnRequest, function (err/*, id*/) {
-                expect(err).not.to.equal(null);
-
-                expect(err).to.include('not enabled');
-
+            swm.socketRoomChange(parameters, function (err) {
+                expect(err).to.equal(null);
+                expect(swm.connectedWorkerRequests.length).to.equal(0);
                 done();
             });
         });
@@ -246,7 +243,7 @@ describe('ServerWorkerManager', function () {
         });
     });
 
-    describe('connected worker handling', function () {
+    describe.skip('connected worker handling', function () {
         var swm,
             getConnectedWorkerStartRequest = function () {
                 return {
