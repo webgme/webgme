@@ -362,6 +362,8 @@ function ServerWorkerManager(_parameters) {
         _managerId = null;
         freeAllWorkers(callback);
     };
+
+    this.CONSTANTS = CONSTANTS;
 }
 
 module.exports = ServerWorkerManager;
