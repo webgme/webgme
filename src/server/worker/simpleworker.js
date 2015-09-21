@@ -10,7 +10,7 @@
 
 var WEBGME = require(__dirname + '/../../../webgme'),
 
-    CONSTANT = require('./constants'),
+    CONSTANTS = require('./constants'),
     Logger = require('../logger'),
     WorkerRequests = require('./workerrequests'),
     wr,
@@ -48,9 +48,9 @@ function initialize(parameters) {
         logger.debug('initializing');
         logger.info('initialized worker');
         wr = new WorkerRequests(logger, gmeConfig);
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
+        safeSend({pid: process.pid, type: CONSTANTS.msgTypes.initialized});
     } else {
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
+        safeSend({pid: process.pid, type: CONSTANTS.msgTypes.initialized});
     }
 }
 
@@ -59,85 +59,92 @@ process.on('message', function (parameters) {
     parameters = parameters || {};
     parameters.command = parameters.command;
 
-    if (!initialized && parameters.command !== CONSTANT.workerCommands.initialize) {
+    if (!initialized && parameters.command !== CONSTANTS.workerCommands.initialize) {
         return safeSend({
             pid: process.pid,
-            type: CONSTANT.msgTypes.request,
+            type: CONSTANTS.msgTypes.request,
             error: 'worker has not been initialized yet',
             resid: null
         });
     }
 
-    if (parameters.command === CONSTANT.workerCommands.initialize) {
+    if (parameters.command === CONSTANTS.workerCommands.initialize) {
         return initialize(parameters);
     }
 
     logger.debug('Incoming message:', {metadata: parameters});
 
-    if (parameters.command === CONSTANT.workerCommands.executePlugin) {
+    if (parameters.command === CONSTANTS.workerCommands.executePlugin) {
         wr.executePlugin(parameters.webGMESessionId, parameters.name, parameters.context, function (err, result) {
                 safeSend({
                     pid: process.pid,
-                    type: CONSTANT.msgTypes.result,
+                    type: CONSTANTS.msgTypes.result,
                     error: err ? err.message : null,
                     result: result
                 });
             }
         );
-    } else if (parameters.command === CONSTANT.workerCommands.exportLibrary) {
+    } else if (parameters.command === CONSTANTS.workerCommands.exportLibrary) {
         wr.exportLibrary(parameters.webGMESessionId, parameters.projectId, parameters.path, parameters,
             function (err, result) {
                 safeSend({
                     pid: process.pid,
-                    type: CONSTANT.msgTypes.result,
+                    type: CONSTANTS.msgTypes.result,
                     error: err ? err.message : null,
                     result: result
                 });
             }
         );
-    } else if (parameters.command === CONSTANT.workerCommands.seedProject) {
+    } else if (parameters.command === CONSTANTS.workerCommands.seedProject) {
         parameters.type = parameters.type || 'db';
         wr.seedProject(parameters.webGMESessionId, parameters.projectName, parameters.ownerId, parameters,
             function (err, result) {
                 safeSend({
                     pid: process.pid,
-                    type: CONSTANT.msgTypes.result,
+                    type: CONSTANTS.msgTypes.result,
                     error: err ? err.message : null,
                     result: result
                 });
             });
-    } else if (parameters.command === CONSTANT.workerCommands.autoMerge) {
+    } else if (parameters.command === CONSTANTS.workerCommands.autoMerge) {
         wr.autoMerge(parameters.webGMESessionId, parameters.projectId, parameters.mine, parameters.theirs,
             function (err, result) {
                 safeSend({
                     pid: process.pid,
-                    type: CONSTANT.msgTypes.result,
+                    type: CONSTANTS.msgTypes.result,
                     error: err ? err.message : null,
                     result: result
                 });
             });
-    } else if (parameters.command === CONSTANT.workerCommands.resolve) {
+    } else if (parameters.command === CONSTANTS.workerCommands.resolve) {
         wr.resolve(parameters.webGMESessionId, parameters.partial, function (err, result) {
             safeSend({
                 pid: process.pid,
-                type: CONSTANT.msgTypes.result,
+                type: CONSTANTS.msgTypes.result,
                 error: err ? err.message : null,
                 result: result
             });
         });
-    } else if (parameters.command === CONSTANT.workerCommands.checkConstraints) {
+    } else if (parameters.command === CONSTANTS.workerCommands.checkConstraints) {
         wr.checkConstraints(parameters.webGMESessionId, parameters.projectId, parameters, function (err, result) {
             safeSend({
                 pid: process.pid,
-                type: CONSTANT.msgTypes.result,
+                type: CONSTANTS.msgTypes.result,
                 error: err ? err.message : null,
                 result: result
             });
+        });
+    } else {
+        safeSend({
+            pid: process.pid,
+            type: CONSTANTS.msgTypes.result,
+            error: 'unknown command',
+            resid: null
         });
     }
 });
 
-safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialize});
+safeSend({pid: process.pid, type: CONSTANTS.msgTypes.initialize});
 
 // graceful ending of the child process
 process.on('SIGINT', function () {
