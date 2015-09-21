@@ -143,7 +143,16 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
             }
         }
 
-        updateAddOn(self.runningAddOns[0]);
+        if (limit === 0) {
+            core.loadByPath(self.rootNode, '/1', function (err, fcoNode) {
+                var newName = core.getAttribute(fcoNode, 'name') + 'c';
+                core.setAttribute(fcoNode, 'name', newName);
+                self.commitMessage += ' ' + newName;
+                deferred.resolve();
+            });
+        } else {
+            updateAddOn(self.runningAddOns[0]);
+        }
 
         return deferred.promise.nodeify(callback);
     }
@@ -153,6 +162,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
 
         if (eventData.local) {
             // This is when an addOn made changes and a commit was made below.
+            logger.info('AddOn made changes (local event data)');
             handlerCallback(null, self.stopRequested === false);
             return;
         }
@@ -191,23 +201,23 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
                 }
 
                 self.runningAddOns = runningAddOnsNew;
-                self.commitMessage = 'AddOns made changes: ';
+                self.commitMessage = '[AddOn changes] - ';
 
                 return updateRunningAddOns(commitData.commitObject);
             })
             .then(function () {
                 var persisted = core.persist(self.rootNode);
-                // FIXME: Looks like changes are made w/o any addOns running..
-                if (Object.keys(persisted.objects) === 0 || true) {
+                if (Object.keys(persisted.objects) === 0) {
                     logger.debug('No changes made by addOns');
                 } else {
                     // This will create an update event with local:true, see top of function.
-                    project.makeCommit(branchName, [self.commitHash], self.rootHash, persisted.objects, self.commitMsg,
+                    project.makeCommit(branchName, [self.commitHash], persisted.rootHash,
+                        persisted.objects, self.commitMessage,
                     function (err, result) {
                         if (err) {
                             logger.error('makeCommit', err);
                         } else {
-                            logger.debug('makeCommit', result);
+                            logger.info('makeCommit', result);
                         }
                     });
                 }

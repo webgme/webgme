@@ -81,7 +81,7 @@ function connectedWorkerStart(webGMESessionId, projectId, branchName, callback) 
         logger.debug('No previous addOns handled for project [' + projectId + ']');
         addOnManager = new AddOnManager(projectId, logger, gmeConfig);
         addOnManagers[projectId] = addOnManager;
-        addOnManager.addEventListener('NO_MONITORS', function (addOnManager_) {
+        addOnManager.addEventListener('NO_MONITORS', function (/*addOnManager_*/) {
             delete addOnManagers[projectId];
             addOnManager.close()
                 .catch(function (err) {
