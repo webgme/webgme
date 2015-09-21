@@ -6,7 +6,6 @@
 'use strict';
 
 var Q = require('q'),
-    EventDispatcher = requireJS('common/EventDispatcher'),
     BlobClient = requireJS('common/blob/BlobClient'),
     Core = requireJS('common/core/core');
 
@@ -22,7 +21,7 @@ var Q = require('q'),
  * @param {object} mainLogger
  * @constructor
  */
-function BranchMonitor(webGMESessionId, storage, project, branchName, gmeConfig, mainLogger) {
+function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger, gmeConfig) {
     var self = this,
         logger = mainLogger.fork('BranchMonitor:' + branchName),
         core =  new Core(project, {globConf: gmeConfig, logger: logger.fork('core')}),
@@ -240,7 +239,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, gmeConfig,
             stopDeferred = Q.defer();
             self.stopRequested = true;
 
-            storage.closeBranch(function (err) {
+            storage.closeBranch(project.projectId, branchName, function (err) {
                 self.branchIsOpen = false;
                 if (err) {
                     stopDeferred.reject(err);
