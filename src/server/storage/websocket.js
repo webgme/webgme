@@ -143,7 +143,12 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     if (socket.rooms[i].indexOf(ROOM_DIV) > -1) {
                         logger.info('Socket was in branchRoom', socket.rooms[i]);
                         projectIdBranchName = socket.rooms[i].split(ROOM_DIV);
-                        workerManager.socketRoomChange(projectIdBranchName[0], projectIdBranchName[1], false);
+                        workerManager.socketRoomChange({
+                            projectId: projectIdBranchName[0],
+                            branchName: projectIdBranchName[1],
+                            webGMESessionId: getSessionIdFromSocket(socket),
+                            join: false
+                        });
                     }
                 }
 
@@ -214,9 +219,16 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 projectAccess(socket, data.projectId)
                     .then(function (access) {
                         var roomName = data.projectId + ROOM_DIV + data.branchName;
+                        // TODO: Make sure socket is not already in room (socket.rooms.indexOf)
+                        // TODO: Pass callback to join/leave
                         if (data.join) {
                             if (access.read) {
-                                workerManager.socketRoomChange(data.projectId, data.branchName, true);
+                                workerManager.socketRoomChange({
+                                    projectId: data.projectId,
+                                    branchName: data.branchName,
+                                    webGMESessionId: getSessionIdFromSocket(socket),
+                                    join: true
+                                });
                                 socket.join(roomName);
                                 logger.debug('socket joined room', roomName);
                                 callback(null);
@@ -225,7 +237,12 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                                 callback('No read access for ' + data.projectId);
                             }
                         } else {
-                            workerManager.socketRoomChange(data.projectId, data.branchName, false);
+                            workerManager.socketRoomChange({
+                                projectId: data.projectId,
+                                branchName: data.branchName,
+                                webGMESessionId: getSessionIdFromSocket(socket),
+                                join: false
+                            });
                             socket.leave(roomName);
                             logger.debug('socket left room', roomName);
                             callback(null);
@@ -278,8 +295,15 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         return storage.getLatestCommitData(data);
                     })
                     .then(function (commitData) {
+                        // TODO: Make sure socket is not already in room (socket.rooms.indexOf)
+                        // TODO: Pass callback to join
                         // Here we know the user has rights to the project.
-                        workerManager.socketRoomChange(data.projectId, data.branchName, true);
+                        workerManager.socketRoomChange({
+                            projectId: data.projectId,
+                            branchName: data.branchName,
+                            webGMESessionId: getSessionIdFromSocket(socket),
+                            join: true
+                        });
                         socket.join(data.projectId + ROOM_DIV + data.branchName);
 
                         callback(null, commitData);
@@ -295,8 +319,16 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('closeBranch', function (data, callback) {
                 logger.debug('closeBranch', {metadata: data});
+                // TODO: Make sure socket is not already in room (socket.rooms.indexOf)
+                // TODO: Pass callback to leave
+                workerManager.socketRoomChange({
+                    projectId: data.projectId,
+                    branchName: data.branchName,
+                    webGMESessionId: getSessionIdFromSocket(socket),
+                    join: false
+                });
                 socket.leave(data.projectId + ROOM_DIV + data.branchName);
-                callback();
+                callback(null);
             });
 
             socket.on('makeCommit', function (data, callback) {
@@ -553,8 +585,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('simpleQuery', function (workerId, parameters, callback) {
-                getUserIdFromSocket(socket).
-                    then(function (userId) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
                         parameters.userId = userId;
                         parameters.webGMESessionId = getSessionIdFromSocket(socket);
                         workerManager.query(workerId, parameters, callback);

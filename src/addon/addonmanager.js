@@ -14,7 +14,7 @@ var Q = require('q'),
 function AddOnManager(projectId, mainLogger, gmeConfig) {
     var self = this,
         host = '127.0.0.1',
-        logger = mainLogger.fork('AddOnManager'),
+        logger = mainLogger.fork('AddOnManager:' + projectId),
         initDeferred,
         closeDeferred;
 
@@ -229,7 +229,14 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
     };
 
     this.close = function (callback) {
-        //TODO: (Stop all monitors) and close the project and storage.
+        function stopMonitor(branchName) {
+            return self.branchMonitors[branchName].instance.stop();
+        }
+        return Q.all(Object.keys(self.branchMonitors).map(stopMonitor))
+            .finally(function () {
+                return Q.ninvoke(self.storage, 'close');
+            })
+            .nodeify(callback);
     };
 }
 

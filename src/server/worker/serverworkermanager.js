@@ -8,6 +8,7 @@
 
 var Child = require('child_process'),
     process = require('process'),
+    Q = require('q'),
     path = require('path'),
     CONSTANTS = require('./constants'),
     SIMPLE_WORKER_JS = path.join(__dirname, 'simpleworker.js'),
@@ -56,9 +57,9 @@ function ServerWorkerManager(_parameters) {
             var worker;
 
             if (workerType === CONSTANTS.workerTypes.connected) {
-                Child.fork(CONNECTED_WORKER_JS, [], {execArgv: execArgv});
+                worker = Child.fork(CONNECTED_WORKER_JS, [], {execArgv: execArgv});
             } else {
-                Child.fork(SIMPLE_WORKER_JS, [], {execArgv: execArgv});
+                worker = Child.fork(SIMPLE_WORKER_JS, [], {execArgv: execArgv});
             }
 
             _workers[worker.pid] = {
@@ -76,6 +77,9 @@ function ServerWorkerManager(_parameters) {
                     logger.warn('worker ' + worker.pid + ' has exited abnormally with code ' + code);
                 }
                 delete _workers[worker.pid];
+                if (worker.type === CONSTANTS.workerTypes.connected) {
+                    connectedWorkerId = null;
+                }
                 reserveWorkerIfNecessary(workerType);
             });
         }
@@ -125,11 +129,6 @@ function ServerWorkerManager(_parameters) {
                 worker.state = CONSTANTS.workerStates.working;
                 worker.cb = request.cb;
                 worker.resid = null;
-                //if (request.request.command === CONSTANTS.workerCommands.connectedWorkerStart) {
-                //    worker.type = CONSTANTS.workerTypes.connected;
-                //} else {
-                //    worker.type = CONSTANTS.workerTypes.simple;
-                //}
                 worker.worker.send(request.request);
             }
         }
@@ -179,6 +178,7 @@ function ServerWorkerManager(_parameters) {
                         worker.resid = null;
                         //assignRequest(msg.pid);
                     } else {
+                        logger.error('ConnectedWorker returned result!');
                         freeWorker(msg.pid);
                     }
 
@@ -199,6 +199,10 @@ function ServerWorkerManager(_parameters) {
                     //the worker have been initialized so we have to try to assign it right away
                     if (worker.type === CONSTANTS.workerTypes.simple) {
                         worker.state = CONSTANTS.workerStates.free;
+                    } else if (worker.type === CONSTANTS.workerTypes.connected) {
+                        // Connected worker is always in working state.
+                        worker.state = CONSTANTS.workerStates.working;
+                        connectedWorkerId = msg.pid;
                     }
                     //assignRequest(msg.pid);
                     break;
@@ -295,17 +299,48 @@ function ServerWorkerManager(_parameters) {
                 }
             });
         }
+
+        var connectedRequest;
+        if (gmeConfig.addOn.enable === true && connectedWorkerId !== null && connectedWorkerRequests.length > 0) {
+            connectedRequest = connectedWorkerRequests.shift();
+            _workers[connectedWorkerId].worker.send(connectedRequest.request);
+        }
     }
 
-    // AddOn workers
-    // TODO: For now it's just one connected worker.
-    var connectedWorkerId;
 
-    function socketRoomChange(projectId, branchName, joined) {
-        if (joined) {
-            logger.info('A client joined ', projectId, branchName);
-        } else {
-            logger.info('A client left ', projectId, branchName);
+    // TODO: This should be an object based on projectIds or list of such.
+    // TODO: For now we just keep one dedicated worker for the addOns.
+    var connectedWorkerId = null,
+        connectedWorkerRequests = [];
+
+    /**
+     *
+     * @param {object} parameters
+     * @param {string} parameters.webGMESessionId
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {boolean} parameters.join
+     * @param {function} callback
+     */
+    function socketRoomChange(parameters, callback) {
+        if (gmeConfig.addOn.enable === true) {
+            if (parameters.join === true) {
+                logger.info('socket joined room');
+                parameters.command = CONSTANTS.workerCommands.connectedWorkerStart;
+                connectedWorkerRequests.push({
+                    request: parameters,
+                    cb: callback
+                });
+            } else {
+                parameters.command = CONSTANTS.workerCommands.connectedWorkerStop;
+                logger.info('socket left room');
+                connectedWorkerRequests.push({
+                    request: parameters,
+                    cb: callback
+                });
+            }
+        } else if (callback) {
+            callback(null);
         }
     }
 

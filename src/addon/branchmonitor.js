@@ -84,12 +84,14 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
 
     function loadNewRoot(commitData, callback) {
         var deferred = Q.defer();
-        self.rootHash = commitData.commitData.commitObject.root;
-        self.commitHash = commitData.commitData.commitObject._id;
+        self.rootHash = commitData.commitObject.root;
+        self.commitHash = commitData.commitObject._id;
+        logger.info('loadNewRoot [commit/rootHash]', self.commitHash, self.rootHash);
 
         core.loadRoot(self.rootHash, function (err, root) {
             if (err) {
                 deferred.reject(new Error(err));
+                return;
             }
 
             self.rootNode = root;
@@ -159,12 +161,20 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
         loadNewRoot(commitData)
             .then(function () {
                 var runningAddOnsNew = [],
-                    requiredAddOns = core.getRegistry(self.root, 'usedAddOns').split(' '),
+                    requiredAddOns = core.getRegistry(self.rootNode, 'usedAddOns'),
                     i,
                     j,
                     wasRunning;
 
-                logger.debug('requiredAddOns', requiredAddOns);
+                if (typeof requiredAddOns === 'string') {
+                    requiredAddOns = requiredAddOns.trim();
+                    requiredAddOns = requiredAddOns ? requiredAddOns.split(' ') : [];
+                } else {
+                    requiredAddOns = [];
+                }
+
+
+                logger.info('requiredAddOns:', requiredAddOns);
 
                 for (i = 0; requiredAddOns.length; i += 1) {
                     wasRunning = false;
@@ -187,7 +197,8 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
             })
             .then(function () {
                 var persisted = core.persist(self.rootNode);
-                if (Object.keys(persisted.objects) === 0) {
+                // FIXME: Looks like changes are made w/o any addOns running..
+                if (Object.keys(persisted.objects) === 0 || true) {
                     logger.debug('No changes made by addOns');
                 } else {
                     // This will create an update event with local:true, see top of function.

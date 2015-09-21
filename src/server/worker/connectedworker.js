@@ -10,7 +10,7 @@
 
 var WEBGME = require(__dirname + '/../../../webgme'),
 
-    CONSTANT = require('./constants'),
+    CONSTANTS = require('./constants'),
     Logger = require('../logger'),
     AddOnManager = require('../../addon/addonmanager'),
 
@@ -49,9 +49,9 @@ function initialize(parameters) {
         logger = Logger.create('gme:server:worker:connectedworker:pid_' + process.pid, gmeConfig.server.log, true);
         logger.debug('initializing');
         logger.info('initialized worker');
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
+        safeSend({pid: process.pid, type: CONSTANTS.msgTypes.initialized});
     } else {
-        safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
+        safeSend({pid: process.pid, type: CONSTANTS.msgTypes.initialized});
     }
 }
 
@@ -79,7 +79,8 @@ function connectedWorkerStart(webGMESessionId, projectId, branchName, callback) 
 
     if (!addOnManager) {
         logger.debug('No previous addOns handled for project [' + projectId + ']');
-        addOnManager = new AddOnManager(logger, gmeConfig);
+        addOnManager = new AddOnManager(projectId, logger, gmeConfig);
+        addOnManagers[projectId] = addOnManager;
         addOnManager.addEventListener('NO_MONITORS', function (addOnManager_) {
             delete addOnManagers[projectId];
             addOnManager.close()
@@ -162,99 +163,81 @@ process.on('message', function (parameters) {
     parameters = parameters || {};
     parameters.command = parameters.command;
 
-    if (!initialized && parameters.command !== CONSTANT.workerCommands.initialize) {
+    if (!initialized && parameters.command !== CONSTANTS.workerCommands.initialize) {
         return safeSend({
             pid: process.pid,
-            type: CONSTANT.msgTypes.request,
+            type: CONSTANTS.msgTypes.request,
             error: 'worker has not been initialized yet',
             resid: null
         });
     }
 
-    if (parameters.command === CONSTANT.workerCommands.initialize) {
+    if (parameters.command === CONSTANTS.workerCommands.initialize) {
         return initialize(parameters);
     }
 
     logger.debug('Incoming message:', {metadata: parameters});
 
-    if (parameters.command === CONSTANT.workerCommands.connectedWorkerStart) {
-        if (gmeConfig.addOn.enable === true) {
-            connectedWorkerStart(parameters.webGMESessionId, parameters.projectId, parameters.branchName,
-                function (err) {
-                    if (err) {
-                        safeSend({
-                            pid: process.pid,
-                            type: CONSTANT.msgTypes.result,
-                            error: err.message,
-                            resid: null
-                        });
-                    } else {
-                        safeSend({
-                            pid: process.pid,
-                            type: CONSTANT.msgTypes.request,
-                            error: null,
-                            resid: process.pid
-                        });
-                    }
-                }
-            );
-        } else {
-            safeSend({
-                pid: process.pid,
-                type: CONSTANT.msgTypes.result,
-                error: 'addOn functionality not enabled',
-                resid: null
-            });
-        }
-    } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerQuery) {
-        if (gmeConfig.addOn.enable === true) {
-            connectedWorkerQuery(parameters.addOnName, parameters, function (err, result) {
-                safeSend({
-                    pid: process.pid,
-                    type: CONSTANT.msgTypes.query,
-                    error: err ? err.message : null,
-                    result: result
-                });
-            });
-        } else {
-            safeSend({
-                pid: process.pid,
-                type: CONSTANT.msgTypes.result,
-                error: 'addOn functionality not enabled',
-                resid: null
-            });
-        }
-    } else if (parameters.command === CONSTANT.workerCommands.connectedWorkerStop) {
-        if (gmeConfig.addOn.enable === true) {
-            connectedWorkerStop(parameters.webGMESessionId, parameters.projectId, parameters.branchName,
-                function (err) {
+    if (parameters.command === CONSTANTS.workerCommands.connectedWorkerStart) {
+        connectedWorkerStart(parameters.webGMESessionId, parameters.projectId, parameters.branchName,
+            function (err) {
+                if (err) {
                     safeSend({
                         pid: process.pid,
-                        type: CONSTANT.msgTypes.result,
-                        error: err ? err.message : null,
-                        result: null
+                        type: CONSTANTS.msgTypes.result,
+                        error: err.message,
+                        resid: null
+                    });
+                } else {
+                    safeSend({
+                        pid: process.pid,
+                        type: CONSTANTS.msgTypes.request,
+                        error: null,
+                        resid: process.pid
                     });
                 }
-            );
-        } else {
+            }
+        );
+    } else if (parameters.command === CONSTANTS.workerCommands.connectedWorkerQuery) {
+        connectedWorkerQuery(parameters.addOnName, parameters, function (err, result) {
             safeSend({
                 pid: process.pid,
-                type: CONSTANT.msgTypes.result,
-                error: 'addOn functionality not enabled',
-                resid: null
+                type: CONSTANTS.msgTypes.query,
+                error: err ? err.message : null,
+                result: result
             });
-        }
+        });
+    } else if (parameters.command === CONSTANTS.workerCommands.connectedWorkerStop) {
+        connectedWorkerStop(parameters.webGMESessionId, parameters.projectId, parameters.branchName,
+            function (err) {
+                if (err) {
+                    safeSend({
+                        pid: process.pid,
+                        type: CONSTANTS.msgTypes.result,
+                        error: err.message,
+                        resid: null
+                    });
+                } else {
+                    safeSend({
+                        pid: process.pid,
+                        type: CONSTANTS.msgTypes.request,
+                        error: null,
+                        resid: process.pid
+                    });
+                }
+            }
+        );
     } else {
         safeSend({
             pid: process.pid,
-            type: CONSTANT.msgTypes.result,
+            type: CONSTANTS.msgTypes.result,
             error: 'unknown command',
             resid: null
         });
     }
 });
 
-safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialize});
+safeSend({pid: process.pid, type: CONSTANTS.msgTypes.initialize});
 
 // graceful ending of the child process
 process.on('SIGINT', function () {

@@ -78,7 +78,7 @@ define([
             },
             monkeyPatchKey,
             nodeSetterFunctions,
-            addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
+            //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
         //loadPatternThrottled = loadPattern; //magic number could be fine-tuned
 
@@ -473,13 +473,8 @@ define([
 
                 cleanUsersTerritories();
                 self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, projectId);
-                addOnFunctions.stopRunningAddOns(function (err) {
-                    if (err) {
-                        logger.error('Errors stopping addOns when closeProject, (ignoring)', err);
-                    }
 
-                    callback(null);
-                });
+                callback(null);
             });
         }
 
@@ -534,18 +529,12 @@ define([
                 );
             }
 
-            addOnFunctions.stopRunningAddOns(function (err) {
-                if (err) {
-                    logger.error('Errors stopping addOns when selectBranch (ignoring)', err);
-                }
-
-                if (prevBranchName !== null) {
-                    logger.debug('Branch was open, closing it first', prevBranchName);
-                    storage.closeBranch(state.project.projectId, prevBranchName, openBranch);
-                } else {
-                    openBranch(null);
-                }
-            });
+            if (prevBranchName !== null) {
+                logger.debug('Branch was open, closing it first', prevBranchName);
+                storage.closeBranch(state.project.projectId, prevBranchName, openBranch);
+            } else {
+                openBranch(null);
+            }
         };
 
         this.selectCommit = function (commitHash, callback) {
@@ -596,20 +585,14 @@ define([
                 });
             }
 
-            addOnFunctions.stopRunningAddOns(function (err) {
-                if (err) {
-                    logger.error('Errors stopping addOns when selectCommit (ignoring)', err);
-                }
-
-                if (state.branchName !== null) {
-                    logger.debug('Branch was open, closing it first', state.branchName);
-                    prevBranchName = state.branchName;
-                    state.branchName = null;
-                    storage.closeBranch(state.project.projectId, prevBranchName, openCommit);
-                } else {
-                    openCommit(null);
-                }
-            });
+            if (state.branchName !== null) {
+                logger.debug('Branch was open, closing it first', state.branchName);
+                prevBranchName = state.branchName;
+                state.branchName = null;
+                storage.closeBranch(state.project.projectId, prevBranchName, openCommit);
+            } else {
+                openCommit(null);
+            }
         };
 
         function getBranchStatusHandler() {
@@ -1450,7 +1433,7 @@ define([
             if (state.loadingStatus) {
                 state.loading.next(state.loadingStatus);
             } else {
-                addOnFunctions.updateRunningAddOns(state.nodes[ROOT_PATH], state.loading.next);
+                state.loading.next(null);
             }
         }
 
@@ -1834,10 +1817,7 @@ define([
             return filteredNames;
         };
 
-        //addOn
-        this.getRunningAddOnNames = addOnFunctions.getRunningAddOnNames;
-        this.addOnsAllowed = gmeConfig.addOn.enable === true;
-
+        // Constraints
         this.setConstraint = function (path, name, constraintObj) {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 state.core.setConstraint(state.nodes[path].node, name, constraintObj);
