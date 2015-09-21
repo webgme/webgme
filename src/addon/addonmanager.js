@@ -111,7 +111,9 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
 
             self.branchMonitors[branchName] = monitor;
             logger.debug('monitorBranch [' + branchName + '] - starting new monitor');
-            deferred.promise = monitor.instance.start();
+            monitor.instance.start()
+                .then(deferred.resolve)
+                .catch(deferred.reject);
         }
 
         if (monitor) {
@@ -132,16 +134,19 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
                     })
                     .catch(deferred.reject);
             } else if (monitor.connectionCnt === 2) {
-                // The monitor is in stopping stage
                 if (monitor.stopTimeout) {
-                    // The timeout had not been triggered yet.
+                    // The monitor is in stopping stage and
+                    // the timeout had not been triggered yet.
                     clearTimeout(monitor.stopTimeout.id);
                     logger.debug('monitorBranch [' + branchName + '] - setTimeout cleared');
                     monitor.stopTimeout.deferred.resolve(monitor.connectionCnt);
                     monitor.stopTimeout = null;
-                    deferred.promise = monitor.instance.start();
+                    monitor.instance.start()
+                        .then(deferred.resolve)
+                        .catch(deferred.reject);
                 } else if (monitor.instance.stopRequested === true) {
                     // [Rare case]
+                    // The monitor is in stopping stage and the timeout has been triggered.
                     // We cannot simply remove the monitor before it has closed the branch,
                     // therefore we need to register on the stop.promise and start a new monitor
                     // once it has resolved.
@@ -164,10 +169,14 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
                         })
                         .catch(deferred.reject);
                 } else {
-                    deferred.promise = monitor.instance.start();
+                    monitor.instance.start()
+                        .then(deferred.resolve)
+                        .catch(deferred.reject);
                 }
             } else if (monitor.connectionCnt > 2) {
-                deferred.promise = monitor.instance.start();
+                monitor.instance.start()
+                    .then(deferred.resolve)
+                    .catch(deferred.reject);
             } else {
                 deferred.reject(new Error('monitorBranch - unexpected connection count ( 2 > ' +
                     monitor.connectionCnt + ' )'));

@@ -5,7 +5,7 @@
 
 var testFixture = require('../../_globals');
 
-describe('TestAddOn', function () {
+describe.skip('TestAddOn', function () {
     'use strict';
 
     var expect = testFixture.expect,

@@ -309,7 +309,7 @@ describe('AddOnManager', function () {
                     emptyCnt += 1;
                     if (emptyCnt === 2) {
                         expect(storage.branchCounter).to.equal(0);
-                        expect(storage.deferredCnt).to.equal(2); // The monitors own won't have triggered.
+                        expect(storage.deferredCnt).to.equal(1); // The monitors own won't have triggered.
                         expect(manager.branchMonitors).to.deep.equal({});
                         done();
                     }

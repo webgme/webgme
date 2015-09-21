@@ -60,7 +60,7 @@ describe('Connected worker', function () {
                     testFixture.importProject(storage,
                         {
                             projectSeed: 'seeds/EmptyProject.json',
-                            projectName: 'ConstraintAddOn',
+                            projectName: 'Constraints',
                             branchName: 'master',
                             gmeConfig: gmeConfig,
                             logger: logger
@@ -241,73 +241,6 @@ describe('Connected worker', function () {
     });
 
     // Common behaviour
-    it.only('should be able to start-start-stop connectedWorker and start constraintAddOn', function (done) {
-        var worker = getConnectedWorker(),
-            params = {
-                command: CONSTANTS.workerCommands.connectedWorkerStart,
-                webGMESessionId: webGMESessionId,
-                projectId: ir1.project.projectId,
-                branchName: 'b1'
-            };
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send(Object.create(params));
-            })
-            .then(function (msg) {
-
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-                return worker.send(Object.create(params));
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                function delayedBranchHash() {
-                    var deferred = Q.defer();
-                    console.log('1');
-                    setTimeout(function () {
-                        console.log('2');
-                        deferred.promise = ir2.project.getBranchHash('b1');
-                    }, 500);
-
-                    return deferred.promise;
-                }
-
-                return ir2.project.getBranchHash('b1');
-            })
-            .then(function (hash) {
-                expect(hash).to.not.equal(ir2.commitHash);
-                expect(hash).to.not.equal(commitHashAfterMod);
-                console.log('3');
-                return testFixture.loadRootNodeFromCommit(ir2.project, ir2.core, hash);
-            })
-            .then(function (newRoot) {
-                expect(ir2.core.getAttribute(newRoot, 'name')).to.equal('No Violations');
-                console.log('4');
-                return worker.send({
-                    command: CONSTANTS.workerCommands.connectedWorkerStop,
-                    webGMESessionId: webGMESessionId,
-                    projectId: ir1.project.projectId,
-                    branchName: 'b1'
-                });
-            })
-            .then(function (msg) {
-                expect(msg.error).equal(null);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.result.connectionCount).equal(-1);
-                console.log('5');
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
     it('should be able to start-start-stop connectedWorker', function (done) {
         var worker = getConnectedWorker(),
             params = {
@@ -342,6 +275,72 @@ describe('Connected worker', function () {
                     projectId: ir1.project.projectId,
                     branchName: 'master'
                 });
+            })
+            .then(function (msg) {
+                expect(msg.error).equal(null);
+                expect(msg.type).equal(CONSTANTS.msgTypes.request);
+                expect(msg.result.connectionCount).equal(-1);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should be able to start-start-stop connectedWorker and start constraintAddOn', function (done) {
+        var worker = getConnectedWorker(),
+            params = {
+                command: CONSTANTS.workerCommands.connectedWorkerStart,
+                webGMESessionId: webGMESessionId,
+                projectId: ir2.project.projectId,
+                branchName: 'b1'
+            };
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send(Object.create(params));
+            })
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.request);
+                expect(msg.error).equal(null);
+                return worker.send(Object.create(params));
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.request);
+                expect(msg.error).equal(null);
+
+                function delayedBranchHash() {
+                    var deferred = Q.defer();
+
+                    setTimeout(function () {
+
+                        deferred.promise = ir2.project.getBranchHash('b1')
+                            .then(deferred.resolve)
+                            .catch(deferred.reject);
+                    }, 1000);
+
+                    return deferred.promise;
+                }
+
+                return delayedBranchHash();
+            })
+            .then(function (hash) {
+                expect(hash).to.not.equal(ir2.commitHash);
+                expect(hash).to.not.equal(commitHashAfterMod);
+
+                return testFixture.loadRootNodeFromCommit(ir2.project, ir2.core, hash);
+            })
+            .then(function (newRoot) {
+                var stopParams = Object.create(params);
+                expect(ir2.core.getAttribute(newRoot, 'name')).to.equal('No Violations');
+
+                stopParams.command = CONSTANTS.workerCommands.connectedWorkerStop;
+
+                return worker.send(stopParams);
             })
             .then(function (msg) {
                 expect(msg.error).equal(null);

@@ -106,6 +106,27 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
             counter = 0,
             limit = self.runningAddOns.length;
 
+        function getUpdateCallback(addOn, counter) {
+            return function (err, data) {
+                if (err) {
+                    // TODO: How to handle this?
+                    logger.error('AddOn [' + addOn.id + '] returned error at init/update', err);
+                }
+
+                if (data.commitMessage) {
+                    self.commitMessage += ' - [' + addOn.instance.getName() + '] (v' + addOn.instance.getVersion() +
+                        ') ' + data.commitMessage;
+                    logger.debug('AddOn [' + addOn.id + '] added to commitMessage', self.commitMessage);
+                }
+
+                if (data.notification) {
+                    logger.warn('AddOn [' + addOn.id + '] sent not yet supported notification!', data.notification);
+                }
+
+                updateAddOn(self.runningAddOns[counter]);
+            };
+        }
+
         function updateAddOn(addOn) {
             if (counter === limit) {
                 deferred.resolve();
@@ -114,44 +135,17 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
             counter += 1;
             if (addOn.instance.initialized === true) {
                 logger.debug('updating addOn: ', addOn.id);
-                addOn.instance.update(self.rootNode, commitObj, function (err, data) {
-                    if (err) {
-                        // TODO: How to handle this?
-                        logger.error('AddOn [' + addOn.id + '] returned error at update', err);
-                    }
-                    if (data.notification) {
-                        logger.warn('AddOn [' + addOn.id + '] sent not yet supported notification!', data.notification);
-                    }
-                    if (data.commitMessage) {
-                        self.commitMessage += ' - [' + addOn.instance.getName() + '] (v' + addOn.instance.getVersion() +
-                             ') ' + data.commitMessage;
-                    }
-                    updateAddOn(self.runningAddOns[counter]);
-                });
+                addOn.instance.update(self.rootNode, commitObj, getUpdateCallback(addOn, counter));
             } else {
                 addOn.instance.configure(getConfiguration());
                 logger.debug('initializing addOn: ', addOn.id);
-                addOn.instance.initialize(self.rootNode, commitObj, function (err, notification) {
-                    if (err) {
-                        // TODO: How to handle this?
-                        logger.error('AddOn [' + addOn.id + '] returned error at update', err);
-                    }
-                    if (notification) {
-                        logger.warn('AddOn [' + addOn.id + '] sent not yet supported notification!', notification);
-                    }
-                    updateAddOn(self.runningAddOns[counter]);
-                });
+                addOn.instance.initialize(self.rootNode, commitObj, getUpdateCallback(addOn, counter));
             }
         }
 
         if (limit === 0) {
-            //core.loadByPath(self.rootNode, '/1', function (err, fcoNode) {
-            //    var newName = core.getAttribute(fcoNode, 'name') + 'c';
-            //    core.setAttribute(fcoNode, 'name', newName);
-            //    self.commitMessage += ' ' + newName;
             logger.debug('There are no running addOns');
             deferred.resolve();
-            //});
         } else {
             updateAddOn(self.runningAddOns[0]);
         }
@@ -164,7 +158,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
 
         if (eventData.local) {
             // This is when an addOn made changes and a commit was made below.
-            logger.info('AddOn made changes (local event data)');
+            logger.debug('AddOn made changes (local event data)');
             handlerCallback(null, self.stopRequested === false);
             return;
         }
@@ -189,7 +183,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
 
                 logger.debug('requiredAddOns:', requiredAddOns);
 
-                for (i = 0; requiredAddOns.length; i += 1) {
+                for (i = 0; i < requiredAddOns.length; i += 1) {
                     wasRunning = false;
                     for (j = 0; self.runningAddOns.length; j += 1) {
                         if (self.runningAddOns[j].id === requiredAddOns[i]) {
@@ -203,7 +197,10 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
                         if (newAddOn instanceof Error) {
                             logger.error('Could not get addOn', newAddOn);
                         } else {
-                            runningAddOnsNew.push(getAddOn(requiredAddOns[i]));
+                            runningAddOnsNew.push({
+                                id: requiredAddOns[i],
+                                instance: newAddOn
+                            });
                         }
                     }
                 }
@@ -214,11 +211,14 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
                 return updateRunningAddOns(commitData.commitObject);
             })
             .then(function () {
-                var persisted = core.persist(self.rootNode);
-                if (Object.keys(persisted.objects) === 0) {
+                var persisted = core.persist(self.rootNode),
+                    persistedObjects = Object.keys(persisted.objects);
+                if (persistedObjects.length === 0) {
                     logger.debug('No changes made by addOns');
                 } else {
                     // This will create an update event with local:true, see top of function.
+                    logger.debug('Changes were made', self.commitMessage);
+                    logger.debug('Number of persisted objects', persistedObjects.length);
                     project.makeCommit(branchName, [self.commitHash], persisted.rootHash,
                         persisted.objects, self.commitMessage,
                         function (err, result) {

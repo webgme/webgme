@@ -58,11 +58,11 @@ function initialize(parameters) {
 //AddOn Functions
 function connectedWorkerStart(webGMESessionId, projectId, branchName, callback) {
     var addOnManager;
-    logger.info('connectedWorkerStart', projectId, branchName);
+
     function finish(err) {
         if (err) {
             err = err instanceof Error ? err : new Error(err);
-            logger.error('connectedWorkerStart failed', {metadata: err});
+            logger.error('connectedWorkerStart failed', err);
             callback(err);
         } else {
             logger.info('connectedWorkerStart done');
@@ -70,6 +70,7 @@ function connectedWorkerStart(webGMESessionId, projectId, branchName, callback) 
         }
     }
 
+    logger.info('connectedWorkerStart', projectId, branchName);
     if (!projectId || !branchName) {
         finish(new Error('Required parameter was not provided'));
         return;
@@ -108,7 +109,7 @@ function connectedWorkerQuery(webGMESessionId, projectId, branchName, addOnId, c
     function finish(err, message) {
         if (err) {
             err = err instanceof Error ? err : new Error(err);
-            logger.error('connectedWorkerQuery failed', {metadata: err});
+            logger.error('connectedWorkerQuery failed', err);
             callback(err);
         } else {
             logger.info('connectedWorkerQuery done');
@@ -125,13 +126,12 @@ function connectedWorkerQuery(webGMESessionId, projectId, branchName, addOnId, c
 }
 
 function connectedWorkerStop(webGMESessionId, projectId, branchName, callback) {
-    logger.info('connectedWorkerStop');
     var addOnManager;
 
     function finish(err, result) {
         if (err) {
             err = err instanceof Error ? err : new Error(err);
-            logger.error('connectedWorkerStop failed', {metadata: err});
+            logger.error('connectedWorkerStop failed', err);
             callback(err);
         } else {
             logger.info('connectedWorkerStop done');
@@ -139,6 +139,7 @@ function connectedWorkerStop(webGMESessionId, projectId, branchName, callback) {
         }
     }
 
+    logger.info('connectedWorkerStop', projectId, branchName);
     if (!projectId || !branchName) {
         finish(new Error('Required parameter was not provided'));
         return;
