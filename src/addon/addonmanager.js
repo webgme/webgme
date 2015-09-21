@@ -33,6 +33,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
     this.project = null;
     this.storage = null;
     this.initRequested = false;
+    this.closeRequested = false;
 
     this.inStoppedAndStarted = {};
 
@@ -229,14 +230,27 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
     };
 
     this.close = function (callback) {
+
         function stopMonitor(branchName) {
             return self.branchMonitors[branchName].instance.stop();
         }
-        return Q.all(Object.keys(self.branchMonitors).map(stopMonitor))
-            .finally(function () {
-                return Q.ninvoke(self.storage, 'close');
-            })
-            .nodeify(callback);
+
+        if (self.closeRequested === false) {
+            closeDeferred = Q.defer();
+            self.closeRequested = true;
+
+            Q.allSettled(Object.keys(self.branchMonitors).map(stopMonitor))
+                .then(function (/*results*/) {
+                    //TODO: Check the results and at least log errors.
+                    return Q.ninvoke(self.storage, 'close');
+                })
+                .then(function () {
+                    closeDeferred.resolve();
+                })
+                .catch(closeDeferred.reject);
+        }
+
+        return closeDeferred.promise;
     };
 }
 

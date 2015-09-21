@@ -32,48 +32,6 @@ define(['common/storage/constants'], function (CONSTANTS) {
     };
 
     /**
-     * Structure of query parameters with names, descriptions, minimum, maximum values, default values and
-     * type definitions.
-     * @returns {object[]}
-     */
-    AddOnBase.prototype.getQueryParametersStructure = function () {
-        return [];
-    };
-
-    /**
-     * Queries are typically invoked by users from a client. The addOn is not suppose to make any changes to
-     * either the model's or the addOns state. (Since users can share a running instance of an addOn).
-     * @param {string} commitHash - State of the invoker.
-     * @param {object} queryParams - Values based on the 'getQueryParametersStructure'.
-     * @param {function} callback - resolves with PluginResult.
-     */
-    AddOnBase.prototype.query = function (commitHash, queryParams, callback) {
-        callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
-    };
-
-    /**
-     * This is invoked each time changes in the project is done. AddOn are allowed to make changes on an updated,
-     * but should not persist by themselves. (The AddOnManager will persist after each addOn has had its way
-     * ordered by the usedAddOn registry in the rootNode).
-     * @param {object} rootNode
-     * @param {function} callback
-     */
-    AddOnBase.prototype.onUpdate = function (rootNode, commitObj, callback) {
-        callback(new Error('The update function is a main point of an addOn\'s functionality so it must be ' +
-            'overwritten.'));
-    };
-
-    /**
-     * Called when the addOn is first started.
-     * @param {object} rootNode
-     * @param {function} callback
-     */
-    AddOnBase.prototype.initialize = function (rootNode, commitObj, callback) {
-        this.initialized = true;
-        this.onUpdate(rootNode, commitObj, callback);
-    };
-
-    /**
      * Readable name of this addOn that can contain spaces.
      *
      * @returns {string}
@@ -98,6 +56,68 @@ define(['common/storage/constants'], function (CONSTANTS) {
      */
     AddOnBase.prototype.getDescription = function () {
         return '';
+    };
+
+    /**
+     * Structure of query parameters with names, descriptions, minimum, maximum values, default values and
+     * type definitions.
+     * @returns {object[]}
+     */
+    AddOnBase.prototype.getQueryParamsStructure = function () {
+        return [];
+    };
+
+    /**
+     * Queries are typically invoked by users from a client. The addOn is not suppose to make any changes to
+     * either the model's or the addOns state. (Since users can share a running instance of an addOn).
+     * @param {string} commitHash - State of the invoker.
+     * @param {object} queryParams - Values based on the 'getQueryParametersStructure'.
+     * @param {function} callback - resolves with PluginResult.
+     */
+    AddOnBase.prototype.query = function (commitHash, queryParams, callback) {
+        callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
+    };
+
+    /**
+     * This is invoked each time changes in the project is done. AddOn are allowed to make changes on an updated,
+     * but should not persist by themselves. (The AddOnManager will persist after each addOn has had its way
+     * ordered by the usedAddOn registry in the rootNode).
+     * @param {object} rootNode
+     * @param {function} callback
+     */
+    AddOnBase.prototype.update = function (rootNode, commitObj, callback) {
+        var updateData = {
+            commitMessage: '',
+            notification: null
+        };
+        callback(null, updateData);
+    };
+
+    /**
+     * Called when the addOn is first started.
+     * @param {object} rootNode
+     * @param {function} callback
+     */
+    AddOnBase.prototype.initialize = function (rootNode, commitObj, callback) {
+        this.initialized = true;
+        this.onUpdate(rootNode, commitObj, callback);
+    };
+
+    /**
+     * A detailed description of this addOn and its purpose. It can be one or more sentences.
+     *
+     * @returns {object}
+     */
+    AddOnBase.prototype.getDefaultQueryParams = function () {
+        var paramStructure = this.getQueryParametersStructure(),
+            defaultParams = {},
+            i;
+
+        for (i = 0; i < paramStructure.length; i += 1) {
+            defaultParams[paramStructure[i].name] = paramStructure[i].value;
+        }
+
+        return defaultParams;
     };
 
     /**
