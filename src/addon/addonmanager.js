@@ -143,6 +143,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
                     //
                     // (For bookkeeping of the addOnManagers it is not the same since they create a new storage.)
                     self.inStoppedAndStarted[branchName] = true;
+                    logger.debug('monitorBranch [' + branchName + '] - inStoppedAndStarted!');
                     monitor.instance.stop()
                         .then(function () {
                             delete self.inStoppedAndStarted[branchName];

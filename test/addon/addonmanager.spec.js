@@ -11,7 +11,7 @@ describe.only('AddOnManager', function () {
         AddOnManager = require('../../src/addon/addonmanager'),
         logger = testFixture.logger.fork('AddOnManager');
 
-    describe('starting and stopping', function () {
+    describe('starting and stopping monitors using a mock storage', function () {
         var gmeConfig = testFixture.getGmeConfig();
 
         gmeConfig.addOn.enable = true;
@@ -95,7 +95,7 @@ describe.only('AddOnManager', function () {
                         storage.closeBranch('mockProjectId', branchName, function (/*err*/) {
                             expect(storage.branchCounter).to.equal(1);
                         });
-                    }, 120);
+                    }, 140);
                 });
             }
         );
@@ -216,9 +216,9 @@ describe.only('AddOnManager', function () {
                                     storage.closeBranch('mockProjectId', branchName, function () {
 
                                     });
-                                }, 100);
+                                }, 120);
                             });
-                        }, 100);
+                        }, 120);
                     });
                 });
             }
@@ -291,11 +291,12 @@ describe.only('AddOnManager', function () {
             }
         );
 
-        it.skip('should enter rare case and succeed gracefully',
+        it('should enter rare case and succeed gracefully',
             function (done) {
                 var manager = new AddOnManager('mockProjectId', logger, gmeConfig),
                     storage = new StorageMock(manager, done),
-                    branchName = 'test7';
+                    branchName = 'test7',
+                    emptyCnt = 0;
 
                 manager.project = {
                     ID_NAME: '_id',
@@ -305,10 +306,13 @@ describe.only('AddOnManager', function () {
                 manager.storage = storage;
 
                 manager.addEventListener('NO_MONITORS', function () {
-                    expect(storage.branchCounter).to.equal(0);
-                    expect(storage.deferredCnt).to.equal(1); // The monitors own won't have triggered.
-                    expect(manager.branchMonitors).to.deep.equal({});
-                    done();
+                    emptyCnt += 1;
+                    if (emptyCnt === 2) {
+                        expect(storage.branchCounter).to.equal(0);
+                        expect(storage.deferredCnt).to.equal(2); // The monitors own won't have triggered.
+                        expect(manager.branchMonitors).to.deep.equal({});
+                        done();
+                    }
                 });
 
                 storage.openBranch('mockProjectId', branchName, null, null, function (/*err*/) {
@@ -329,9 +333,13 @@ describe.only('AddOnManager', function () {
                                 expect(manager.branchMonitors[branchName].instance.stopRequested).to.equal(true);
                                 // At this point we connect a new client.
                                 storage.openBranch('mockProjectId', branchName, null, null, function (/*err*/) {
-
+                                    setTimeout(function () {
+                                        storage.closeBranchTimeout = 40; //Set it back.
+                                        storage.closeBranch('mockProjectId', branchName, function () {});
+                                    }, 300);
                                 });
-                            }, 160);
+
+                            }, 200);
                         });
                     }, 120);
                 });
