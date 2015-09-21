@@ -2115,7 +2115,10 @@ describe('API', function () {
                 function (done) {
                     var requestBody = {
                         pluginId: 'ExportImport',
-                        projectId: importResult.project.projectId
+                        projectId: importResult.project.projectId,
+                        pluginConfig: {
+                            type: 'Import'
+                        }
                     };
                     agent.post(server.getUrl() + '/api/v1/plugins/ExportImport/execute')
                         .send(requestBody)
