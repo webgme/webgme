@@ -144,12 +144,13 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
         }
 
         if (limit === 0) {
-            core.loadByPath(self.rootNode, '/1', function (err, fcoNode) {
-                var newName = core.getAttribute(fcoNode, 'name') + 'c';
-                core.setAttribute(fcoNode, 'name', newName);
-                self.commitMessage += ' ' + newName;
-                deferred.resolve();
-            });
+            //core.loadByPath(self.rootNode, '/1', function (err, fcoNode) {
+            //    var newName = core.getAttribute(fcoNode, 'name') + 'c';
+            //    core.setAttribute(fcoNode, 'name', newName);
+            //    self.commitMessage += ' ' + newName;
+            logger.debug('There are no running addOns');
+            deferred.resolve();
+            //});
         } else {
             updateAddOn(self.runningAddOns[0]);
         }

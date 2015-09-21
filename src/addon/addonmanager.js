@@ -69,7 +69,11 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
                 if (networkStatus === STORAGE_CONSTANTS.CONNECTED) {
                     self.storage.openProject(projectId, function (err, project, branches, rights) {
                         if (err) {
-                            initDeferred.reject(err);
+                            self.close()
+                                .finally(function () {
+                                    initDeferred.reject(err);
+                                });
+
                             return;
                         }
 

@@ -1,4 +1,3 @@
-/*globals requireJS*/
 /*jshint node:true, mocha:true*/
 
 /**
@@ -8,7 +7,7 @@
 var testFixture = require('../../_globals.js');
 
 
-describe('Connected worker', function () {
+describe.only('Connected worker', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,
@@ -24,42 +23,58 @@ describe('Connected worker', function () {
 
         gmeAuth,
 
-        usedProjectNames = [
-            'workerSeedFromDB',
-            'WorkerProject'
-        ],
         logger = testFixture.logger.fork('connectedworker.spec'),
         storage,
-        ir,
-        protocol = gmeConfig.server.https.enable ? 'https' : 'http',
+        ir1,
+        ir2,
         oldSend = process.send,
         oldOn = process.on,
         oldExit = process.exit;
 
 
     before(function (done) {
-        gmeConfig.addOn.enable = true;
+        // We're not going through the server to start the connected-workers.
+        // Disableing should save some resources..
+        gmeConfig.addOn.enable = false;
+        gmeConfig.addOn.monitorTimeout = 10;
 
         server = WebGME.standaloneServer(gmeConfig);
 
-        testFixture.clearDBAndGetGMEAuth(gmeConfig, usedProjectNames)
+        testFixture.clearDBAndGetGMEAuth(gmeConfig)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
                 storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
             })
             .then(function () {
-                return testFixture.importProject(storage,
+                return Q.allDone([
+                    testFixture.importProject(storage,
                     {
                         projectSeed: 'seeds/EmptyProject.json',
-                        projectName: 'ConnectedWorkerProject',
+                        projectName: 'ConnectedWorkerProject1',
                         branchName: 'master',
                         gmeConfig: gmeConfig,
                         logger: logger
-                    });
+                    }),
+                    testFixture.importProject(storage,
+                        {
+                            projectSeed: 'seeds/EmptyProject.json',
+                            projectName: 'ConnectedWorkerProject2',
+                            branchName: 'master',
+                            gmeConfig: gmeConfig,
+                            logger: logger
+                        })
+                    ]);
             })
-            .then(function (result) {
-                ir = result;
+            .then(function (results) {
+                ir1 = results[0];
+                ir2 = results[1];
+                return Q.allDone([
+                    ir1.project.createBranch('b1', ir1.commitHash),
+                    ir2.project.createBranch('b1', ir2.commitHash)
+                ]);
+            })
+            .then(function () {
                 return Q.ninvoke(server, 'start');
             })
             .then(function () {
@@ -167,6 +182,7 @@ describe('Connected worker', function () {
         process.exit = oldExit;
     }
 
+    // Initialize
     it('should initialize worker with a valid gmeConfig', function (done) {
         var worker = getConnectedWorker();
 
@@ -214,20 +230,29 @@ describe('Connected worker', function () {
             .nodeify(done);
     });
 
-    it('should be able to start-query-stop addon', function (done) {
-        var worker = getConnectedWorker();
+    // Common behaviour
+    it('should be able to start-start-stop connectedWorker', function (done) {
+        var worker = getConnectedWorker(),
+            params = {
+                command: CONSTANTS.workerCommands.connectedWorkerStart,
+                webGMESessionId: webGMESessionId,
+                projectId: ir1.project.projectId,
+                branchName: 'master'
+            };
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
                 expect(msg.pid).equal(process.pid);
                 expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
 
-                return worker.send({
-                    command: CONSTANTS.workerCommands.connectedWorkerStart,
-                    webGMESessionId: webGMESessionId,
-                    projectId: ir.project.projectId,
-                    branchName: 'master'
-                });
+                return worker.send(Object.create(params));
+            })
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.request);
+                expect(msg.error).equal(null);
+                return worker.send(Object.create(params));
             })
             .then(function (msg) {
                 expect(msg.pid).equal(process.pid);
@@ -237,14 +262,14 @@ describe('Connected worker', function () {
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerStop,
                     webGMESessionId: webGMESessionId,
-                    projectId: ir.project.projectId,
+                    projectId: ir1.project.projectId,
                     branchName: 'master'
                 });
             })
             .then(function (msg) {
                 expect(msg.error).equal(null);
                 expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.result.connectionCount).equal(0);
+                expect(msg.result.connectionCount).equal(-1);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
@@ -276,7 +301,8 @@ describe('Connected worker', function () {
             .done();
     });
 
-    it.skip('should fail to start addOn with invalid parameters', function (done) {
+    // Invalid parameters
+    it('should fail to startConnectedWorker with invalid parameters', function (done) {
         var worker = getConnectedWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -287,7 +313,7 @@ describe('Connected worker', function () {
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerStart,
                     webGMESessionId: webGMESessionId,
-                    workerName: 'TestAddOn'
+                    projectId: ir1.project.projectId
                 });
             })
             .then(function (/*msg*/) {
@@ -302,76 +328,82 @@ describe('Connected worker', function () {
             .done();
     });
 
-    it.skip('should respond with error to connectedWorkerStart if addOn is not allowed', function (done) {
-        var worker = getConnectedWorker(),
-            altConfig = JSON.parse(JSON.stringify(gmeConfig));
+    it('should fail to startConnectedWorker with invalid parameters 2', function (done) {
+        var worker = getConnectedWorker();
 
-        altConfig.addOn.enable = false;
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: altConfig})
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
                 expect(msg.pid).equal(process.pid);
                 expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
 
                 return worker.send({
-                    command: CONSTANTS.workerCommands.connectedWorkerStart
+                    command: CONSTANTS.workerCommands.connectedWorkerStart,
+                    webGMESessionId: webGMESessionId,
+                    branchName: 'master'
                 });
             })
             .then(function (/*msg*/) {
-                done(new Error('missing error handling in addOn functionality of worker'));
+                done(new Error('Missing error handling'));
             })
             .catch(function (err) {
-                expect(err.message).to.contain('not enabled');
+                expect(err.message).to.contain('parameter');
+
+                done();
             })
             .finally(restoreProcessFunctions)
-            .done(done);
+            .done();
     });
 
-    it.skip('should respond with error to connectedWorkerQuery if addOn is not allowed', function (done) {
-        var worker = getConnectedWorker(),
-            altConfig = JSON.parse(JSON.stringify(gmeConfig));
+    it('should fail to stopConnectedWorker with invalid parameters', function (done) {
+        var worker = getConnectedWorker();
 
-        altConfig.addOn.enable = false;
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: altConfig})
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
                 expect(msg.pid).equal(process.pid);
                 expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
 
                 return worker.send({
-                    command: CONSTANTS.workerCommands.connectedWorkerQuery
+                    command: CONSTANTS.workerCommands.connectedWorkerStop,
+                    webGMESessionId: webGMESessionId,
+                    projectId: ir1.project.projectId
                 });
             })
             .then(function (/*msg*/) {
-                done(new Error('missing error handling in addOn functionality of worker'));
+                done(new Error('Missing error handling'));
             })
             .catch(function (err) {
-                expect(err.message).to.contain('not enabled');
+                expect(err.message).to.contain('parameter');
+
+                done();
             })
             .finally(restoreProcessFunctions)
-            .done(done);
+            .done();
     });
 
-    it.skip('should respond with error to connectedWorkerStop if addOn is not allowed', function (done) {
-        var worker = getConnectedWorker(),
-            altConfig = JSON.parse(JSON.stringify(gmeConfig));
+    it('should fail to stopConnectedWorker with invalid parameters 2', function (done) {
+        var worker = getConnectedWorker();
 
-        altConfig.addOn.enable = false;
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: altConfig})
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
             .then(function (msg) {
                 expect(msg.pid).equal(process.pid);
                 expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
 
                 return worker.send({
-                    command: CONSTANTS.workerCommands.connectedWorkerStop
+                    command: CONSTANTS.workerCommands.connectedWorkerStop,
+                    webGMESessionId: webGMESessionId,
+                    branchName: 'master'
                 });
             })
             .then(function (/*msg*/) {
-                done(new Error('missing error handling in addOn functionality of worker'));
+                done(new Error('Missing error handling'));
             })
             .catch(function (err) {
-                expect(err.message).to.contain('not enabled');
+                expect(err.message).to.contain('parameter');
+
+                done();
             })
             .finally(restoreProcessFunctions)
-            .done(done);
+            .done();
     });
 
     // wrong / no command
@@ -416,6 +448,61 @@ describe('Connected worker', function () {
             })
             .catch(function (err) {
                 expect(err.message).to.contain('unknown command');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    // Failing cases
+    it('should fail with error startConnectedWorker with non-existing project', function (done) {
+        var worker = getConnectedWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.connectedWorkerStart,
+                    webGMESessionId: webGMESessionId,
+                    projectId: 'DoesNotExist',
+                    branchName: 'master'
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('Missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Not authorized to read project: DoesNotExist');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should fail with error startConnectedWorker with non-existing branch', function (done) {
+        var worker = getConnectedWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.connectedWorkerStart,
+                    webGMESessionId: webGMESessionId,
+                    projectId: ir1.project.projectId,
+                    branchName: 'branchDoesNotExist'
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('Missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Branch "branchDoesNotExist" does not exist');
 
                 done();
             })
