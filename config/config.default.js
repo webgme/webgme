@@ -160,7 +160,8 @@ var path = require('path'),
                 enable: false,
                 certificateFile: path.join(__dirname, '../certificates/sample-cert.pem'),
                 keyFile: path.join(__dirname, '../certificates/sample-key.pem')
-            }
+            },
+            extlibExcludes: ['.\.pem$', 'config\/config\..*\.js$']
         },
 
         socketIO: {

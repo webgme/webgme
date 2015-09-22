@@ -98,7 +98,7 @@ process.on('SIGINT', function () {
 function StandAloneServer(gmeConfig) {
     var self = this,
         clientConfig = getClientConfig(gmeConfig),
-
+        excludeRegExs = [],
         sockets = [];
 
     self.id = Math.random().toString(36).slice(2, 11);
@@ -699,9 +699,23 @@ function StandAloneServer(gmeConfig) {
 
 
     logger.debug('creating external library specific routing rules');
-    __app.get(/^\/extlib\/.*/, ensureAuthenticated, function (req, res) {
-        //first we try to give back the common extlib/modules
+    gmeConfig.server.extlibExcludes.forEach(function (regExStr) {
+        logger.debug('Adding exclude rule to "/extlib" path: ', regExStr);
+        excludeRegExs.push(new RegExp(regExStr));
+    });
 
+    __app.get(/^\/extlib\/.*/, ensureAuthenticated, function (req, res) {
+        var i;
+        for (i = 0; i < excludeRegExs.length; i += 1) {
+            if (excludeRegExs[i].test(req.url)) {
+                logger.warn('Request attempted to access excluded path "' + req.url + '", caught by "' +
+                    gmeConfig.server.extlibExcludes[i] + '" from gmeConfig.');
+                res.sendStatus(403);
+                return;
+            }
+        }
+
+        //first we try to give back the common extlib/modules
         var urlArray = req.path.split('/');
         urlArray[1] = '.';
         urlArray.shift();
