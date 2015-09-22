@@ -139,7 +139,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
             } else {
                 addOn.instance.configure(getConfiguration());
                 logger.debug('initializing addOn: ', addOn.id);
-                addOn.instance.initialize(self.rootNode, commitObj, getUpdateCallback(addOn, counter));
+                addOn.instance._initialize(self.rootNode, commitObj, getUpdateCallback(addOn, counter));
             }
         }
 

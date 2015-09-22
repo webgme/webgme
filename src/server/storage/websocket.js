@@ -231,7 +231,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.onclose = function () {
                 var i,
                     projectIdBranchName;
-                logger.info('onclose: socket was in rooms: ', socket.rooms);
+                logger.debug('onclose: socket was in rooms: ', socket.rooms);
 
                 function getErrorHandler() {
                     return function (err) {
@@ -241,7 +241,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
                 for (i = 0; i < socket.rooms.length; i += 1) {
                     if (socket.rooms[i].indexOf(CONSTANTS.ROOM_DIVIDER) > -1) {
-                        logger.info('Socket was in branchRoom', socket.rooms[i]);
+                        logger.debug('Socket was in branchRoom', socket.rooms[i]);
                         projectIdBranchName = socket.rooms[i].split(CONSTANTS.ROOM_DIVIDER);
                         // We cannot wait for this since socket.onclose is synchronous.
                         leaveBranchRoom(socket, projectIdBranchName[0], projectIdBranchName[1], true)
@@ -254,7 +254,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('disconnect', function () {
                 // When this event is triggered, the disconnect socket has already left all rooms.
-                logger.info('disconnect socket is in rooms: ', socket.rooms);
+                logger.debug('disconnect socket is in rooms: ', socket.rooms);
             });
 
             socket.on('getUserId', function (callback) {
@@ -380,10 +380,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
                         data.username = userId;
-                        return storage.getLatestCommitData(data)
-                            .fail(function (err) {
-                                logger.error(err);
-                            });
+                        return storage.getLatestCommitData(data);
                     })
                     .then(function (commitData) {
                         latestCommitData = commitData;

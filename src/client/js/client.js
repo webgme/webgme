@@ -297,6 +297,25 @@ define([
                 if (connectionState === CONSTANTS.STORAGE.CONNECTED) {
                     //N.B. this event will only be triggered once.
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
+                    storage.webSocket.addEventListener(CONSTANTS.STORAGE.BRANCH_ROOM_SOCKETS,
+                        function (emitter, eventData) {
+                            var notification = {
+                                severity: 'INFO',
+                                message: ''
+                            };
+                            if (state.project && state.project.projectId === eventData.projectId &&
+                                state.branchName === eventData.branchName) {
+                                if (eventData.currNbrOfSockets > eventData.prevNbrOfSockets) {
+                                    notification.message = 'Another socket joined your branch [' +
+                                        eventData.currNbrOfSockets + ']';
+                                } else {
+                                    notification.message = 'A socket disconnected from your branch [' +
+                                        eventData.currNbrOfSockets + ']';
+                                }
+                                self.dispatchEvent(CONSTANTS.NOTIFICATION, notification);
+                            }
+                        }
+                    );
                     reLaunchUsers();
                     callback(null);
                 } else if (connectionState === CONSTANTS.STORAGE.DISCONNECTED) {

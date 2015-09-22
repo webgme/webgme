@@ -187,16 +187,16 @@ process.on('message', function (parameters) {
                 if (err) {
                     safeSend({
                         pid: process.pid,
-                        type: CONSTANTS.msgTypes.result,
+                        type: CONSTANTS.msgTypes.request,
                         error: err.message,
-                        resid: null
+                        resid: parameters.resid
                     });
                 } else {
                     safeSend({
                         pid: process.pid,
                         type: CONSTANTS.msgTypes.request,
                         error: null,
-                        resid: process.pid
+                        resid: parameters.resid
                     });
                 }
             }
@@ -216,16 +216,16 @@ process.on('message', function (parameters) {
                 if (err) {
                     safeSend({
                         pid: process.pid,
-                        type: CONSTANTS.msgTypes.result,
+                        type: CONSTANTS.msgTypes.request,
                         error: err.message,
-                        resid: null
+                        resid: parameters.resid
                     });
                 } else {
                     safeSend({
                         pid: process.pid,
                         type: CONSTANTS.msgTypes.request,
                         error: null,
-                        resid: process.pid,
+                        resid: parameters.resid,
                         result: result
                     });
                 }
@@ -236,7 +236,7 @@ process.on('message', function (parameters) {
             pid: process.pid,
             type: CONSTANTS.msgTypes.result,
             error: 'unknown command',
-            resid: null
+            resid: parameters.resid
         });
     }
 });

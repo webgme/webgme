@@ -95,13 +95,26 @@ define(['common/storage/constants'], function (CONSTANTS) {
     };
 
     /**
-     * Called when the addOn is first started.
+     * Called when the addOn is started.
      * @param {object} rootNode
+     * @param {object} commitObj
      * @param {function} callback
      */
     AddOnBase.prototype.initialize = function (rootNode, commitObj, callback) {
-        this.initialized = true;
+        this.logger.debug('AddOnBase.initialize not overridden, calling update.');
         this.update(rootNode, commitObj, callback);
+    };
+
+    // METHODS used by add-on manager
+    /**
+     * Called when the addOn is first started.
+     * @param {object} rootNode
+     * @param {object} commitObj
+     * @param {function} callback
+     */
+    AddOnBase.prototype._initialize = function (rootNode, commitObj, callback) {
+        this.initialized = true;
+        this.initialize(rootNode, commitObj, callback);
     };
 
     /**

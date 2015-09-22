@@ -1,4 +1,4 @@
-/*globals*/
+/*globals requireJS*/
 /*jshint node: true*/
 /**
  * @module Server:ServerWorkerManager
@@ -10,6 +10,7 @@ var Child = require('child_process'),
     process = require('process'),
     path = require('path'),
     CONSTANTS = require('./constants'),
+    GUID = requireJS('common/util/guid'),
     SIMPLE_WORKER_JS = path.join(__dirname, 'simpleworker.js'),
     CONNECTED_WORKER_JS = path.join(__dirname, 'connectedworker.js');
 
@@ -146,27 +147,13 @@ function ServerWorkerManager(_parameters) {
             logger.debug('Worker will handle message', {metadata: worker});
             switch (msg.type) {
                 case CONSTANTS.msgTypes.request:
-                    //this is the first response to the request
-                    //here we can store the id and
-                    cFunction = worker.cb;
-                    worker.cb = null;
-                    worker.state = CONSTANTS.workerStates.waiting;
-                    worker.resid = msg.resid || null;
-                    if (msg.resid) {
-                        _idToPid[msg.resid] = msg.pid;
-                    } else {
-                        //something happened during request handling so we can free the worker
-                        if (worker.type === CONSTANTS.workerTypes.simple) {
-                            worker.state = CONSTANTS.workerStates.free;
-                            //assignRequest(msg.pid);
-                        } else {
-                            freeWorker(msg.pid);
-                        }
-                    }
+                    cFunction = self.connectedWorkerCallbacks[msg.resid];
+                    delete self.connectedWorkerCallbacks[msg.resid];
+
                     if (cFunction) {
-                        cFunction(msg.error, msg.resid);
+                        cFunction(msg.error, msg.result);
                     } else {
-                        logger.warn('No callback associated with', worker.resid);
+                        logger.warn('No callback associated with', msg.resid);
                     }
                     break;
                 case CONSTANTS.msgTypes.result:
@@ -203,7 +190,7 @@ function ServerWorkerManager(_parameters) {
                     if (worker.type === CONSTANTS.workerTypes.simple) {
                         worker.state = CONSTANTS.workerStates.free;
                     } else if (worker.type === CONSTANTS.workerTypes.connected) {
-                        // Connected worker is waiting after start up.
+                        // Connected worker is always waiting for now..
                         worker.state = CONSTANTS.workerStates.waiting;
                         self.connectedWorkerId = msg.pid;
                     }
@@ -303,14 +290,16 @@ function ServerWorkerManager(_parameters) {
             });
         }
 
-        var connectedRequest;
+        var connectedRequest,
+            guid;
         if (self.connectedWorkerRequests.length > 0 && gmeConfig.addOn.enable === true &&
             self.connectedWorkerId !== null &&
             _workers[self.connectedWorkerId].state === CONSTANTS.workerStates.waiting) {
-
+            guid = GUID();
             connectedRequest = self.connectedWorkerRequests.shift();
-            _workers[self.connectedWorkerId].state = CONSTANTS.workerStates.working;
-            _workers[self.connectedWorkerId].cb = connectedRequest.cb;
+            _workers[self.connectedWorkerId].state = CONSTANTS.workerStates.waiting;
+            self.connectedWorkerCallbacks[guid] = connectedRequest.cb;
+            connectedRequest.request.resid = guid;
             _workers[self.connectedWorkerId].worker.send(connectedRequest.request);
         }
     }
@@ -320,6 +309,9 @@ function ServerWorkerManager(_parameters) {
     // TODO: For now we just keep one dedicated worker for the addOns.
     this.connectedWorkerId = null;
     this.connectedWorkerRequests = [];
+    this.connectedWorkerCallbacks = {
+        //resid: callback
+    };
 
     /**
      *

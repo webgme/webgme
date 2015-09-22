@@ -120,8 +120,8 @@ define([
                 });
 
                 self.socket.on(CONSTANTS.BRANCH_ROOM_SOCKETS, function (data) {
-                    logger.info('BRANCH_ROOM_SOCKETS event', {metadata: data});
-                    //TODO: Use notification here.
+                    logger.debug('BRANCH_ROOM_SOCKETS event', {metadata: data});
+                    self.dispatchEvent(CONSTANTS.BRANCH_ROOM_SOCKETS, data);
                 });
             });
         };

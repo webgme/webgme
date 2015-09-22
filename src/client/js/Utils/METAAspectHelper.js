@@ -154,7 +154,7 @@ define([
                                     severity: 'ERROR',
                                     message: 'Duplicate name on META level: "' + nodeName + '"',
                                     hint: 'Rename one of the objects'
-                                })
+                                });
                                 delete _metaTypes[nodeName];
                             } else {
                                 _metaTypes[nodeName] = nodeID;
