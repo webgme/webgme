@@ -16,8 +16,9 @@ define([
     'common/core/coretree',
     'common/core/metacore',
     'common/core/coretreeloader',
-    'common/core/corediff'
-], function (CoreRel, Set, Guid, NullPtr, UnWrap, Type, Constraint, CoreTree, MetaCore, TreeLoader, CoreDiff) {
+    'common/core/corediff',
+    'common/core/cachedmetacore'
+], function (CoreRel, Set, Guid, NullPtr, UnWrap, Type, Constraint, CoreTree, MetaCore, TreeLoader, CoreDiff, Meta) {
     'use strict';
 
     function Core(storage, options) {
@@ -33,6 +34,8 @@ define([
         coreLayers.push(MetaCore);
         coreLayers.push(CoreDiff);
         coreLayers.push(TreeLoader);
+        coreLayers.push(Meta);
+
         if (options.usertype !== 'tasync') {
             coreLayers.push(UnWrap);
         }
