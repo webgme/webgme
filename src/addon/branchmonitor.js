@@ -186,6 +186,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
                 for (i = 0; i < requiredAddOns.length; i += 1) {
                     wasRunning = false;
                     for (j = 0; self.runningAddOns.length; j += 1) {
+                        //FIXME: This can raise an error that
                         if (self.runningAddOns[j].id === requiredAddOns[i]) {
                             runningAddOnsNew.push(self.runningAddOns[j]);
                             wasRunning = true;
