@@ -135,7 +135,10 @@ function connectedWorkerStop(webGMESessionId, projectId, branchName, callback) {
             logger.error('connectedWorkerStop failed', err);
             callback(err);
         } else {
-            logger.info('connectedWorkerStop done');
+            logger.info('connectedWorkerStop done [totalManagerCnt, branchMonitors, connectionCnt]',
+                Object.keys(addOnManagers).length,
+                addOnManager ? Object.keys(addOnManager.branchMonitors).length : 'n/a',
+                result.connectionCount);
             callback(null, result);
         }
     }
@@ -149,7 +152,7 @@ function connectedWorkerStop(webGMESessionId, projectId, branchName, callback) {
     addOnManager = addOnManagers[projectId];
 
     if (!addOnManager) {
-        logger.warn('Request stop for non existing addOnManger', projectId, branchName);
+        logger.debug('Request stop for non existing addOnManger', projectId, branchName);
         finish(null, {connectionCount: -1});
         return;
     }
