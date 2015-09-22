@@ -32,6 +32,21 @@ define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (Add
         return '1.0.0';
     };
 
+    ConstraintAddOn.prototype.getQueryParamsStructure = function () {
+        return [{
+            'name': 'queryType',
+            'displayName': 'Query Type',
+            'description': 'Which type of constraint checking',
+            'value': 'checkProject',
+            'valueType': 'string',
+            'valueItems': [
+                'checkProject',
+                'checkModel',
+                'checkNode'
+            ]
+        }];
+    };
+
     ConstraintAddOn.prototype.update = function (rootNode, commitObj, callback) {
         var self = this,
             updateData = {
@@ -67,21 +82,21 @@ define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (Add
     };
 
     ConstraintAddOn.prototype.query = function (commitHash, queryParams, callback) {
-        var self = this;
-
-        switch (queryParams.querytype) {
-            case 'checkProject':
-                self.constraintChecker.checkModel(self.core.getPath(self.rootNode), callback);
-                break;
-            case 'checkModel':
-                self.constraintChecker.checkModel(queryParams.path, callback);
-                break;
-            case 'checkNode':
-                self.constraintChecker.checkNode(queryParams.path, callback);
-                break;
-            default:
-                callback(new Error('Unknown command'));
-        }
+        //var self = this;
+        //
+        //switch (queryParams.querytype) {
+        //    case 'checkProject':
+        //        self.constraintChecker.checkModel(self.core.getPath(self.rootNode), callback);
+        //        break;
+        //    case 'checkModel':
+        //        self.constraintChecker.checkModel(queryParams.path, callback);
+        //        break;
+        //    case 'checkNode':
+        //        self.constraintChecker.checkNode(queryParams.path, callback);
+        //        break;
+        //    default:
+        //        callback(new Error('Unknown command'));
+        //}
     };
 
     ConstraintAddOn.prototype.initialize = function (rootNode, commitObj, callback) {

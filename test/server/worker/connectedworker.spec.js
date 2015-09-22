@@ -351,7 +351,7 @@ describe('Connected worker', function () {
             .nodeify(done);
     });
 
-    it.skip('should fail to query addon without stopping it', function (done) {
+    it('should connectedWorkerStop with no running AddOnManager for project', function (done) {
         var worker = getConnectedWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -360,21 +360,18 @@ describe('Connected worker', function () {
                 expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
 
                 return worker.send({
-                    command: CONSTANTS.workerCommands.connectedWorkerQuery,
+                    command: CONSTANTS.workerCommands.connectedWorkerStop,
                     webGMESessionId: webGMESessionId,
-                    arbitrary: 'object'
+                    projectId: ir1.project.projectId,
+                    branchName: 'master'
                 });
             })
-            .then(function (/*msg*/) {
-                done(new Error('missing error handling'));
-            })
-            .catch(function (err) {
-                expect(err.message).to.contain('No AddOn is running');
-
-                done();
+            .then(function (msg) {
+                expect(msg.error).to.equal(null);
+                expect(msg.result.connectionCount).to.equal(-1);
             })
             .finally(restoreProcessFunctions)
-            .done();
+            .nodeify(done);
     });
 
     // Invalid parameters

@@ -107,6 +107,11 @@ function ServerWorkerManager(_parameters) {
             _workers[workerPid].worker.removeAllListeners('exit');
             _workers[workerPid].worker.on('close', function (/*code, signal*/) {
                 logger.debug('workerPid closed: ' + workerPid);
+
+                if (_workers[workerPid].type === CONSTANTS.workerTypes.connected) {
+                    self.connectedWorkerId = null;
+                }
+
                 delete _workers[workerPid];
                 len -= 1;
                 if (len === 0) {
@@ -339,7 +344,7 @@ function ServerWorkerManager(_parameters) {
                     cb: callback
                 });
             }
-        } else if (callback) {
+        } else {
             callback(null);
         }
     };

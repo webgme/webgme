@@ -21,14 +21,13 @@ describe('ServerWorkerManager', function () {
         ServerWorkerManager = require('../../../src/server/worker/serverworkermanager'),
         workerManagerParameters = {
             globConf: gmeConfig,
-            logger: logger,
+            logger: logger
         },
         projectName = 'SWMProject',
         projectId = testFixture.projectName2Id(projectName),
         gmeAuth;
 
     gmeConfig.server.maxWorkers = 3;
-    gmeConfig.addOn.enable = true;
 
     before(function (done) {
         //adding some project to the database
@@ -240,97 +239,6 @@ describe('ServerWorkerManager', function () {
             for (i = 0; i < needed; i += 1) {
                 exportLibrary(requestHandled);
             }
-        });
-    });
-
-    describe.skip('connected worker handling', function () {
-        var swm,
-            getConnectedWorkerStartRequest = function () {
-                return {
-                    command: workerConstants.workerCommands.connectedWorkerStart,
-                    addOnName: 'TestAddOn',
-                    projectId: projectId,
-                    webGMESessionId: webGMESessionId,
-                    branch: 'master'
-                };
-            };
-
-        before(function () {
-            swm = new ServerWorkerManager(workerManagerParameters);
-        });
-
-        beforeEach(function (done) {
-            swm.start();
-            setTimeout(done, 100);
-        });
-
-        afterEach(function (done) {
-            swm.stop(done);
-        });
-
-        it('should start and stop connected worker', function (done) {
-            swm.request(getConnectedWorkerStartRequest(), function (err, id) {
-                expect(err).to.equal(null);
-                swm.query(id, {command: workerConstants.workerCommands.connectedWorkerStop}, function (err) {
-                    expect(err).to.equal(null);
-
-                    done();
-                });
-            });
-        });
-
-        it('should proxy the query to the connected worker', function (done) {
-            swm.request(getConnectedWorkerStartRequest(), function (err, id) {
-                expect(err).to.equal(null);
-                swm.query(id, {}, function (err/*, result*/) {
-                    expect(err).to.equal(null);
-
-                    swm.query(id, {command: workerConstants.workerCommands.connectedWorkerStop}, function (err) {
-                        expect(err).to.equal(null);
-
-                        done();
-                    });
-                });
-            });
-        });
-
-        it('should fail to proxy queries after swm stop', function (done) {
-            swm.request(getConnectedWorkerStartRequest(), function (err, id) {
-                expect(err).to.equal(null);
-                swm.query(id, {}, function (err/*, result*/) {
-                    expect(err).to.equal(null);
-
-                    swm.stop(function () {
-                        swm.query(id, {}, function (err/*, result*/) {
-                            expect(err).not.to.equal(null);
-
-                            expect(err).to.contain('handler cannot be found');
-
-                            done();
-                        });
-                    });
-                });
-            });
-        });
-
-        it('should fail to proxy connected worker close after swm stop', function (done) {
-            swm.request(getConnectedWorkerStartRequest(), function (err, id) {
-                expect(err).to.equal(null);
-
-                swm.query(id, {}, function (err/*, result*/) {
-                    expect(err).to.equal(null);
-
-                    swm.stop(function () {
-                        swm.query(id, {command: workerConstants.workerCommands.connectedWorkerStop}, function (err) {
-                            expect(err).not.to.equal(null);
-
-                            expect(err).to.contain('handler cannot be found');
-
-                            done();
-                        });
-                    });
-                });
-            });
         });
     });
 });
