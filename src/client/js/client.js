@@ -1024,6 +1024,18 @@ define([
             return getNode(nodePath, logger, state, self.meta, storeNode);
         };
 
+        this.getAllMetaNodes = function () {
+            var metaNodes = state.core.getAllMetaNodes(state.nodes[ROOT_PATH].node),
+                gmeNodes = [],
+                i;
+
+            for (i = 0; i < metaNodes.length; i += 1) {
+                gmeNodes.push(storeNode(metaNodes[i]), logger, state, self.meta, storeNode);
+            }
+
+            return gmeNodes;
+        };
+
         function getStringHash(/* node */) {
             //TODO there is a memory issue with the huge strings so we have to replace it with something
             state.gHash += 1;
