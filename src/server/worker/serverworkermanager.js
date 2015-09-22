@@ -55,32 +55,34 @@ function ServerWorkerManager(_parameters) {
         logger.debug('execArgv for new child process', execArgv);
 
         if (Object.keys(_workers || {}).length < gmeConfig.server.maxWorkers) {
-            var worker;
+            var childProcess;
 
             if (workerType === CONSTANTS.workerTypes.connected) {
-                worker = Child.fork(CONNECTED_WORKER_JS, [], {execArgv: execArgv});
+                childProcess = Child.fork(CONNECTED_WORKER_JS, [], {execArgv: execArgv});
             } else {
-                worker = Child.fork(SIMPLE_WORKER_JS, [], {execArgv: execArgv});
+                childProcess = Child.fork(SIMPLE_WORKER_JS, [], {execArgv: execArgv});
             }
 
-            _workers[worker.pid] = {
-                worker: worker,
+            _workers[childProcess.pid] = {
+                childProcess: childProcess,
                 state: CONSTANTS.workerStates.initializing,
                 type: workerType,
                 cb: null
             };
 
-            logger.debug('workerPid forked ' + worker.pid);
-            worker.on('message', messageHandling);
-            worker.on('exit', function (code, signal) {
-                logger.debug('worker has exited: ' + worker.pid);
+            logger.debug('workerPid forked ' + childProcess.pid);
+            childProcess.on('message', messageHandling);
+            childProcess.on('exit', function (code, signal) {
+                logger.debug('worker has exited: ' + childProcess.pid);
                 if (code !== null && !signal) {
-                    logger.warn('worker ' + worker.pid + ' has exited abnormally with code ' + code);
+                    logger.warn('worker ' + childProcess.pid + ' has exited abnormally with code ' + code);
                 }
-                delete _workers[worker.pid];
-                if (worker.type === CONSTANTS.workerTypes.connected) {
+
+                if (workerType === CONSTANTS.workerTypes.connected) {
                     self.connectedWorkerId = null;
                 }
+
+                delete _workers[childProcess.pid];
                 reserveWorkerIfNecessary(workerType);
             });
         }
@@ -89,10 +91,7 @@ function ServerWorkerManager(_parameters) {
     function freeWorker(workerPid) {
         logger.debug('freeWorker', workerPid);
         if (_workers[workerPid]) {
-            if (_workers[workerPid].type === CONSTANTS.workerTypes.connected) {
-                self.connectedWorkerId = null;
-            }
-            _workers[workerPid].worker.kill('SIGINT');
+            _workers[workerPid].childProcess.kill('SIGINT');
             delete _workers[workerPid];
         } else {
             logger.warn('freeWorker - worker did not exist', workerPid);
@@ -104,8 +103,8 @@ function ServerWorkerManager(_parameters) {
         var len = Object.keys(_workers).length;
         logger.debug('there are ' + len + ' worker to close');
         Object.keys(_workers).forEach(function (workerPid) {
-            _workers[workerPid].worker.removeAllListeners('exit');
-            _workers[workerPid].worker.on('close', function (/*code, signal*/) {
+            _workers[workerPid].childProcess.removeAllListeners('exit');
+            _workers[workerPid].childProcess.on('close', function (/*code, signal*/) {
                 logger.debug('workerPid closed: ' + workerPid);
 
                 if (_workers[workerPid].type === CONSTANTS.workerTypes.connected) {
@@ -118,7 +117,7 @@ function ServerWorkerManager(_parameters) {
                     callback(null);
                 }
             });
-            _workers[workerPid].worker.kill('SIGINT');
+            _workers[workerPid].childProcess.kill('SIGINT');
             logger.debug('request closing workerPid: ' + workerPid);
         });
 
@@ -138,7 +137,7 @@ function ServerWorkerManager(_parameters) {
                 worker.state = CONSTANTS.workerStates.working;
                 worker.cb = request.cb;
                 worker.resid = null;
-                worker.worker.send(request.request);
+                worker.childProcess.send(request.request);
             }
         }
     }
@@ -185,7 +184,7 @@ function ServerWorkerManager(_parameters) {
                     break;
                 case CONSTANTS.msgTypes.initialize:
                     //this arrives when the worker seems ready for initialization
-                    worker.worker.send({
+                    worker.childProcess.send({
                         command: CONSTANTS.workerCommands.initialize,
                         gmeConfig: gmeConfig
                     });
@@ -250,7 +249,7 @@ function ServerWorkerManager(_parameters) {
                 if (!parameters.command) {
                     parameters.command = CONSTANTS.workerCommands.connectedWorkerQuery;
                 }
-                worker.worker.send(parameters);
+                worker.childProcess.send(parameters);
             } else {
                 delete _idToPid[id];
                 callback('request handler cannot be found');
@@ -305,7 +304,7 @@ function ServerWorkerManager(_parameters) {
             _workers[self.connectedWorkerId].state = CONSTANTS.workerStates.waiting;
             self.connectedWorkerCallbacks[guid] = connectedRequest.cb;
             connectedRequest.request.resid = guid;
-            _workers[self.connectedWorkerId].worker.send(connectedRequest.request);
+            _workers[self.connectedWorkerId].childProcess.send(connectedRequest.request);
         }
     }
 
