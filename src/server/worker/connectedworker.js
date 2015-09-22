@@ -65,7 +65,8 @@ function connectedWorkerStart(webGMESessionId, projectId, branchName, callback) 
             logger.error('connectedWorkerStart failed', err);
             callback(err);
         } else {
-            logger.info('connectedWorkerStart done');
+            logger.info('connectedWorkerStart done [totalManagerCnt, branchMonitors]',
+                Object.keys(addOnManagers).length, Object.keys(addOnManager.branchMonitors).length);
             callback(null);
         }
     }
@@ -85,7 +86,7 @@ function connectedWorkerStart(webGMESessionId, projectId, branchName, callback) 
         addOnManager.addEventListener('NO_MONITORS', function (/*addOnManager_*/) {
             delete addOnManagers[projectId];
             addOnManager.close()
-                .catch(function (err) {
+                .fail(function (err) {
                     logger.error('Error closing addOnManger', err);
                 });
         });
@@ -148,7 +149,8 @@ function connectedWorkerStop(webGMESessionId, projectId, branchName, callback) {
     addOnManager = addOnManagers[projectId];
 
     if (!addOnManager) {
-        finish(new Error('Request stop for non existing addOnManger', projectId, branchName));
+        logger.warn('Request stop for non existing addOnManger', projectId, branchName);
+        finish(null, {connectionCount: -1});
         return;
     }
 

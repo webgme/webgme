@@ -88,6 +88,9 @@ function ServerWorkerManager(_parameters) {
     function freeWorker(workerPid) {
         logger.debug('freeWorker', workerPid);
         if (_workers[workerPid]) {
+            if (_workers[workerPid].type === CONSTANTS.workerTypes.connected) {
+                self.connectedWorkerId = null;
+            }
             _workers[workerPid].worker.kill('SIGINT');
             delete _workers[workerPid];
         } else {
@@ -200,8 +203,8 @@ function ServerWorkerManager(_parameters) {
                     if (worker.type === CONSTANTS.workerTypes.simple) {
                         worker.state = CONSTANTS.workerStates.free;
                     } else if (worker.type === CONSTANTS.workerTypes.connected) {
-                        // Connected worker is always in working state.
-                        worker.state = CONSTANTS.workerStates.working;
+                        // Connected worker is waiting after start up.
+                        worker.state = CONSTANTS.workerStates.waiting;
                         self.connectedWorkerId = msg.pid;
                     }
                     //assignRequest(msg.pid);
@@ -301,10 +304,13 @@ function ServerWorkerManager(_parameters) {
         }
 
         var connectedRequest;
-        if (gmeConfig.addOn.enable === true && self.connectedWorkerId !== null &&
-            self.connectedWorkerRequests.length > 0) {
+        if (self.connectedWorkerRequests.length > 0 && gmeConfig.addOn.enable === true &&
+            self.connectedWorkerId !== null &&
+            _workers[self.connectedWorkerId].state === CONSTANTS.workerStates.waiting) {
 
             connectedRequest = self.connectedWorkerRequests.shift();
+            _workers[self.connectedWorkerId].state = CONSTANTS.workerStates.working;
+            _workers[self.connectedWorkerId].cb = connectedRequest.cb;
             _workers[self.connectedWorkerId].worker.send(connectedRequest.request);
         }
     }
