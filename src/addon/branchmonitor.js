@@ -114,8 +114,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
                 }
 
                 if (data.commitMessage) {
-                    self.commitMessage += ' - [' + addOn.instance.getName() + '] (v' + addOn.instance.getVersion() +
-                        ') ' + data.commitMessage;
+                    self.commitMessage += data.commitMessage;
                     logger.debug('AddOn [' + addOn.id + '] added to commitMessage', self.commitMessage);
                 }
 

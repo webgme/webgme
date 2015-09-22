@@ -2,17 +2,14 @@
 /*jshint node:true*/
 
 /**
- * @author kecso / https://github.com/kecso
+ * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['common/storage/constants'], function (CONSTANTS) {
+define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     'use strict';
 
     /**
-     *
-     * @param core
-     * @param project
-     * @param branchName
+     * @param logger
      * @param gmeConfig
      * @constructor
      */
@@ -27,8 +24,21 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.blobClient = null;
 
         this.initialized = false;
+        this.updateResult = null;
 
         this.logger.debug('ctor');
+    };
+
+    /**
+     *
+     * @param {object} configuration
+     * @param {function} callback
+     */
+    AddOnBase.prototype.configure = function (configuration) {
+        this.core = configuration.core;
+        this.project = configuration.project;
+        this.branchName = configuration.branchName;
+        this.blobClient = configuration.blobClient;
     };
 
     /**
@@ -59,6 +69,59 @@ define(['common/storage/constants'], function (CONSTANTS) {
     };
 
     /**
+     * This is invoked each time changes in the branch of the project is done. AddOns are allowed to make changes on
+     * an update, but should not persist by themselves. (The AddOnManager will persist after each addOn has had its way
+     * ordered by the usedAddOn registry in the rootNode).
+     * @param {object} rootNode
+     * @param {object} commitObj
+     * @param {function(Error, AddOnUpdateResult} callback
+     */
+    AddOnBase.prototype.update = function (rootNode, commitObj, callback) {
+        callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
+    };
+
+    /**
+     * Called once when the addOn is started for the first time.
+     * @param {object} rootNode
+     * @param {object} commitObj
+     * @param {function(Error, AddOnUpdateResult} callback
+     */
+    AddOnBase.prototype.initialize = function (rootNode, commitObj, callback) {
+        callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
+    };
+
+    /**
+     * Called by the AddOnManager each time changes in the branch of the project is done.
+     * @param {object} rootNode
+     * @param {object} commitObj
+     * @param {function(Error, AddOnUpdateResult} callback
+     */
+    AddOnBase.prototype._update = function (rootNode, commitObj, callback) {
+        this.initialized = true;
+        this.updateResult = new AddOnUpdateResult(commitObj);
+
+        this.initialize(rootNode, commitObj, callback);
+    };
+
+    /**
+     * Called by the AddOnManager when the addOn is first started.
+     * @param {object} rootNode
+     * @param {object} commitObj
+     * @param {function(Error, AddOnUpdateResult} callback
+     */
+    AddOnBase.prototype._initialize = function (rootNode, commitObj, callback) {
+        this.initialized = true;
+        this.updateResult = new AddOnUpdateResult(commitObj);
+
+        this.initialize(rootNode, commitObj, callback);
+    };
+
+    AddOnBase.prototype.addCommitMessage = function (msg) {
+        this.updateResult.addCommitMessage(this, msg);
+    };
+
+    // Query related (not yet supported)
+    /**
      * Structure of query parameters with names, descriptions, minimum, maximum values, default values and
      * type definitions.
      * @returns {object[]}
@@ -75,50 +138,11 @@ define(['common/storage/constants'], function (CONSTANTS) {
      * @param {function} callback - resolves with PluginResult.
      */
     AddOnBase.prototype.query = function (commitHash, queryParams, callback) {
-        //TODO: Add support for queries!
         callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
     };
 
     /**
-     * This is invoked each time changes in the project is done. AddOn are allowed to make changes on an updated,
-     * but should not persist by themselves. (The AddOnManager will persist after each addOn has had its way
-     * ordered by the usedAddOn registry in the rootNode).
-     * @param {object} rootNode
-     * @param {function} callback
-     */
-    AddOnBase.prototype.update = function (rootNode, commitObj, callback) {
-        //var updateData = {
-        //    commitMessage: ''
-        //};
-        //callback(null, updateData);
-        callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
-    };
-
-    /**
-     * Called when the addOn is started.
-     * @param {object} rootNode
-     * @param {object} commitObj
-     * @param {function} callback
-     */
-    AddOnBase.prototype.initialize = function (rootNode, commitObj, callback) {
-        this.logger.debug('AddOnBase.initialize not overridden, calling update.');
-        this.update(rootNode, commitObj, callback);
-    };
-
-    // METHODS used by add-on manager
-    /**
-     * Called when the addOn is first started.
-     * @param {object} rootNode
-     * @param {object} commitObj
-     * @param {function} callback
-     */
-    AddOnBase.prototype._initialize = function (rootNode, commitObj, callback) {
-        this.initialized = true;
-        this.initialize(rootNode, commitObj, callback);
-    };
-
-    /**
-     * A detailed description of this addOn and its purpose. It can be one or more sentences.
+     * Returns the default values of the Query Parameters.
      *
      * @returns {object}
      */
@@ -132,18 +156,6 @@ define(['common/storage/constants'], function (CONSTANTS) {
         }
 
         return defaultParams;
-    };
-
-    /**
-     *
-     * @param {object} configuration
-     * @param {function} callback
-     */
-    AddOnBase.prototype.configure = function (configuration) {
-        this.core = configuration.core;
-        this.project = configuration.project;
-        this.branchName = configuration.branchName;
-        this.blobClient = configuration.blobClient;
     };
 
     return AddOnBase;

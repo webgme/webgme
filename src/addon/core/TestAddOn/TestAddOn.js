@@ -28,10 +28,7 @@ define(['addon/AddOnBase'], function (AddOnBase) {
     };
 
     TestAddOn.prototype.update = function (rootNode, commitObj, callback) {
-        var self = this,
-            updateData = {
-                commitMessage: ''
-            };
+        var self = this;
 
         self.core.loadSubTree(rootNode, function (err, nodes) {
             var i,
@@ -50,12 +47,12 @@ define(['addon/AddOnBase'], function (AddOnBase) {
                     newName = self.core.getAttribute(nodes[i], 'name') + '_mod';
                     self.core.setAttribute(nodes[i], 'name', newName);
                     self.nodePaths[nodePath] = self.commitCnt + 1;
-                    updateData.commitMessage += 'Changed name of "' + nodePath + '" to "' + newName + '". ';
+                    self.addCommitMessage('Changed name of "' + nodePath + '" to "' + newName + '". ');
                 }
             }
 
             self.commitCnt += 1;
-            callback(null, updateData);
+            callback(null, self.updateResult);
         });
     };
 
@@ -73,7 +70,7 @@ define(['addon/AddOnBase'], function (AddOnBase) {
                 self.nodePaths[self.core.getPath(nodes[i])] = self.commitCnt;
             }
 
-            callback(null, {});
+            callback(null, self.updateResult);
         });
     };
 

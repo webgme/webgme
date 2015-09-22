@@ -34,12 +34,12 @@ define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (Add
 
     ConstraintAddOn.prototype.getQueryParamsStructure = function () {
         return [{
-            'name': 'queryType',
-            'displayName': 'Query Type',
-            'description': 'Which type of constraint checking',
-            'value': 'checkProject',
-            'valueType': 'string',
-            'valueItems': [
+            name: 'queryType',
+            displayName: 'Query Type',
+            description: 'Which type of constraint checking',
+            value: 'checkProject',
+            valueType: 'string',
+            valueItems: [
                 'checkProject',
                 'checkModel',
                 'checkNode'
@@ -48,12 +48,9 @@ define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (Add
     };
 
     ConstraintAddOn.prototype.update = function (rootNode, commitObj, callback) {
-        var self = this,
-            updateData = {
-                commitMessage: ''
-            };
-        self.rootNode = rootNode;
+        var self = this;
 
+        self.rootNode = rootNode;
         self.constraintChecker.reinitialize(self.rootNode, commitObj._id, constraint.TYPES.META);
         self.logger.debug('update invoked, checking project for meta violations.');
         self.constraintChecker.checkModel(self.core.getPath(self.rootNode))
@@ -65,20 +62,29 @@ define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (Add
 
                     if (previousName !== 'Violations') {
                         self.core.setAttribute(self.rootNode, 'name', 'Violations');
-                        updateData.commitMessage += 'Found meta-rule violations, please check meta rules for details.';
+                        self.addCommitMessage('Found meta-rule violations, please check meta rules for details.');
                     }
                 } else {
                     self.logger.debug('There were no violations, will name rootNode "No Violations", previous name:',
                         previousName);
                     if (previousName !== 'No Violations') {
                         self.core.setAttribute(self.rootNode, 'name', 'No Violations');
-                        updateData.commitMessage += 'No meta-rule violations.';
-                        updateData.commitMessage += 'No meta-rule violations.';
+                        self.addCommitMessage('No meta-rule violations.');
                     }
                 }
-                callback(null, updateData);
+                callback(null, self.updateResult);
             })
             .catch(callback);
+    };
+
+    ConstraintAddOn.prototype.initialize = function (rootNode, commitObj, callback) {
+        var self = this;
+        self.logger.debug('initialized called, will create checker using core');
+
+        self.constraintChecker = new constraint.Checker(self.core, self.logger);
+        self.constraintChecker.initialize(self.rootNode, commitObj._id, constraint.TYPES.META);
+
+        self.update(rootNode, commitObj, callback);
     };
 
     ConstraintAddOn.prototype.query = function (commitHash, queryParams, callback) {
@@ -97,16 +103,6 @@ define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (Add
         //    default:
         //        callback(new Error('Unknown command'));
         //}
-    };
-
-    ConstraintAddOn.prototype.initialize = function (rootNode, commitObj, callback) {
-        var self = this;
-        self.logger.debug('initialized called, will create checker using core');
-
-        self.constraintChecker = new constraint.Checker(self.core, self.logger);
-        self.constraintChecker.initialize(self.rootNode, commitObj._id, constraint.TYPES.META);
-
-        self.update(rootNode, commitObj, callback);
     };
 
     return ConstraintAddOn;
