@@ -426,8 +426,8 @@ define([
 
             for (i = 0; i < paths.length; i += 1) {
                 childrenMeta[paths[i]] = {
-                    min: core.getMemberAttribute(cMetaNode, 'items', paths[i], min),
-                    max: core.getMemberAttribute(cMetaNode, 'items', paths[i], max)
+                    min: core.getMemberAttribute(cMetaNode, 'items', paths[i], 'min'),
+                    max: core.getMemberAttribute(cMetaNode, 'items', paths[i], 'max')
                 };
             }
 
