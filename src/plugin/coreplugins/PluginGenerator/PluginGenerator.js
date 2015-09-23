@@ -175,7 +175,7 @@ define([
                         self.createMessage(null, 'Append "' + './src/plugins/' + self.projectName +
                         '" to "pluginBasePaths" in config.js.');
                         self.createMessage(self.rootNode, 'Select the root-node and add ' +
-                        self.currentConfig.pluginID + ' to the validPlugins attribute (separate with spaces).');
+                        self.currentConfig.pluginID + ' to the validPlugins under the META tab (separate with spaces).');
                         if (self.currentConfig.test) {
                             self.createMessage(null, 'For the necessary test setup and more examples of how ' +
                             'to write tests see https://github.com/webgme/webgme-boilerplate.');

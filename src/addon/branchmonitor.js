@@ -12,7 +12,6 @@ var Q = require('q'),
 /**
  * Monitors given branch and starts, stops and updates registered addOns.
  *
- *
  * @param {string} webGMESessionId
  * @param {EditorStorage} storage
  * @param {Project} project
@@ -243,6 +242,11 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
     }
 
     // API functions
+    /**
+     * Opens up its branch and registers the onUpdate function.
+     * @param [callback]
+     * @returns {Promise}
+     */
     this.start = function (callback) {
         if (self.startRequested === false) {
             startDeferred = Q.defer();
@@ -263,6 +267,11 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
         return startDeferred.promise.nodeify(callback);
     };
 
+    /**
+     * Closes the open branch.
+     * @param [callback]
+     * @returns {Promise}
+     */
     this.stop = function (callback) {
         if (self.stopRequested === false) {
             stopDeferred = Q.defer();

@@ -17,7 +17,7 @@ define([
         // Call base class's constructor
         PluginBase.call(this);
         this.currentConfig = null;
-        this.pluginDir = '';
+        this.addOnDir = '';
         this.testDir = '';
         this.filesToAdd = {};
     };
@@ -96,8 +96,8 @@ define([
         self.addOnDir = 'src' + dirCommon;
         self.testDir = 'test' + dirCommon;
 
-        // Add the plugin file.
-        addOnFileName = self.addOnDir + self.currentConfig.pluginID + '.js';
+        // Add the addOn file.
+        addOnFileName = self.addOnDir + self.currentConfig.addOnId + '.js';
         self.filesToAdd[addOnFileName] = ejs.render(TEMPLATES['addOn.js.ejs'], self.currentConfig);
 
         self.logger.debug(JSON.stringify(self.filesToAdd, null, 4));

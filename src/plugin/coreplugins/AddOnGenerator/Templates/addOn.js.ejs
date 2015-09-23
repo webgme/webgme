@@ -19,7 +19,7 @@ define([
      */
     var <%= addOnId %> = function (mainLogger, gmeConfig) {
         // Call base class' constructor.
-        PluginBase.call(this, mainLogger, gmeConfig);
+        AddOnBase.call(this, mainLogger, gmeConfig);
     };
 
     // Prototypal inheritance from AddOnBase.
@@ -37,7 +37,7 @@ define([
 
     /**
      * Gets the semantic version (semver.org) of the <%= addOnId %>.
-     * @returns {string} The version of the plugin.
+     * @returns {string} The version of the AddOn.
      * @public
      */
     <%= addOnId %>.prototype.getVersion = function () {
@@ -46,7 +46,7 @@ define([
 
     /**
      * Gets the description of the <%= addOnId %>.
-     * @returns {string} The description of the plugin.
+     * @returns {string} The description of the AddOn.
      * @public
      */
     <%= addOnId %>.prototype.getDescription = function () {
@@ -57,6 +57,9 @@ define([
      * This is invoked each time changes in the branch of the project are done. AddOns are allowed to make changes on
      * an update, but should not persist by themselves. (The AddOnManager will persist after each addOn has had its way
      * ordered by the usedAddOn registry in the rootNode).
+     * Before each invocation a new updateResult is created which should be returned in the callback. There is no need
+     * for the AddOn to report if it made changes or not, the monitor/manager will always persist and if there are no
+     * changed objects - it won't commit to the storage.
      * @param {object} rootNode
      * @param {object} commitObj
      * @param {function(Error, AddOnUpdateResult)} callback
@@ -66,7 +69,7 @@ define([
         this.logger.info('<%= addOnId %> in update at commitHash', commitObj._id);
 
         if (this.core.getAttribute(rootNode, 'name') !== newName) {
-            this.logger.info('<%= addOnId %> chaning name of root to comitter(s): ', newName);
+            this.logger.info('<%= addOnId %> changing name of root to committer(s): ', newName);
             this.core.setAttribute(rootNode, 'name', newName);
             this.addCommitMessage('Changed rootNode name to "' + newName + '"');
         }
@@ -82,6 +85,7 @@ define([
      */
     <%= addOnId %>.prototype.initialize = function (rootNode, commitObj, callback) {
         this.logger.info('<%= addOnId %> got initialized at commitHash', commitObj._id);
+
         this.update(rootNode, commitObj, callback);
     };
 

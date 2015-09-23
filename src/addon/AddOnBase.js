@@ -9,11 +9,12 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     'use strict';
 
     /**
+     * Class
      * @param logger
      * @param gmeConfig
      * @constructor
      */
-    var AddOnBase = function (logger, gmeConfig) {
+    function AddOnBase(logger, gmeConfig) {
         this.gmeConfig = gmeConfig;
         this.logger = logger;
 
@@ -27,10 +28,10 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
         this.updateResult = null;
 
         this.logger.debug('ctor');
-    };
+    }
 
     /**
-     *
+     * Add-ons run on the server and act upon changes in a branch.
      * @param {object} configuration
      * @param {function} callback
      */
@@ -42,7 +43,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     };
 
     /**
-     * Readable name of this addOn that can contain spaces.
+     * Readable name of this AddOn that can contain spaces.
      *
      * @returns {string}
      */
@@ -52,7 +53,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     };
 
     /**
-     * Current version of this addOn using semantic versioning.
+     * Current version of this AddOn using semantic versioning.
      * @returns {string}
      */
     AddOnBase.prototype.getVersion = function () {
@@ -60,7 +61,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     };
 
     /**
-     * A detailed description of this addOn and its purpose. It can be one or more sentences.
+     * A detailed description of this AddOn and its purpose. It can be one or more sentences.
      *
      * @returns {string}
      */
@@ -70,8 +71,10 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
 
     /**
      * This is invoked each time changes in the branch of the project is done. AddOns are allowed to make changes on
-     * an update, but should not persist by themselves. (The AddOnManager will persist after each addOn has had its way
-     * ordered by the usedAddOn registry in the rootNode).
+     * an update, but should not persist by themselves. The manager/monitor will persist after each AddOn has had its
+     * way (ordered by the "usedAddOn" registry in the rootNode).
+     *
+     * Changes made by AddOns do not trigger a new update for other addOns.
      * @param {object} rootNode
      * @param {object} commitObj
      * @param {function(Error, AddOnUpdateResult} callback
@@ -81,7 +84,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     };
 
     /**
-     * Called once when the addOn is started for the first time.
+     * Called once when the AddOn is started for the first time.
      * @param {object} rootNode
      * @param {object} commitObj
      * @param {function(Error, AddOnUpdateResult} callback
@@ -104,7 +107,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     };
 
     /**
-     * Called by the AddOnManager when the addOn is first started.
+     * Called by the AddOnManager when the AddOn is first started.
      * @param {object} rootNode
      * @param {object} commitObj
      * @param {function(Error, AddOnUpdateResult} callback
@@ -131,8 +134,8 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     };
 
     /**
-     * Queries are typically invoked by users from a client. The addOn is not suppose to make any changes to
-     * either the model's or the addOns state. (Since users can share a running instance of an addOn).
+     * Queries are typically invoked by users from a client. The AddOn is not suppose to make any changes to
+     * either the model's or the AddOn's state. (Since users can share a running instance of an AddOn).
      * @param {string} commitHash - State of the invoker.
      * @param {object} queryParams - Values based on the 'getQueryParametersStructure'.
      * @param {function} callback - resolves with PluginResult.

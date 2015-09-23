@@ -2,12 +2,20 @@
 /*jshint node:true*/
 
 /**
+ * Add-on that appends to the name of newly created nodes.
  * @author pmeijer / https://github.com/pmeijer
  */
 
 define(['addon/AddOnBase'], function (AddOnBase) {
 
     'use strict';
+
+    /**
+     *
+     * @param logger
+     * @param gmeConfig
+     * @constructor
+     */
     var TestAddOn = function (logger, gmeConfig) {
         AddOnBase.call(this, logger, gmeConfig);
         this.nodePaths = {

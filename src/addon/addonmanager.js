@@ -11,6 +11,16 @@ var Q = require('q'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
     Storage = requireJS('common/storage/nodestorage');
 
+/**
+ * Class for managing branch-monitors within a single project.
+ * Branch-monitors are managing the add-ons within each branch.
+ * @param {string} projectId
+ * @param {object} mainLogger
+ * @param {object} gmeConfig
+ * @param {number} gmeConfig.addOn.monitorTimeout - Time to wait before stopping a monitor after only the monitor itself
+ * is connected to the branch.
+ * @constructor
+ */
 function AddOnManager(projectId, mainLogger, gmeConfig) {
     var self = this,
         host = '127.0.0.1',
@@ -56,8 +66,9 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
     /**
      * Opens up the storage based on the webGMESessionId and opens and sets the project.
      *
-     * @param webGMESessionId
-     * @param callback
+     * @param {string} webGMESessionId
+     * @param {function} [callback]
+     * @returns {Promise}
      */
     this.initialize = function (webGMESessionId, callback) {
         if (self.initRequested === false) {

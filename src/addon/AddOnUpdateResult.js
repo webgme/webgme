@@ -7,6 +7,15 @@
 
 define([], function () {
     'use strict';
+
+    /**
+     * Represents the report format add-ons resolves with after an update.
+     * There is no need for the add-on to report if it made changes or not,
+     * the monitor/manager will always persist and if there are no changed objects
+     * - it won't commit to the storage.
+     * @param {object} - commitObj
+     * @constructor
+     */
     function AddOnUpdateResult(commitObj) {
         this.commitMessage = '';
         // Not yet supported
@@ -15,7 +24,7 @@ define([], function () {
     }
 
     /**
-     *
+     * Create or appends to the commit message.
      * @param {AddOnBase} addOn
      * @param {string} msg
      */
