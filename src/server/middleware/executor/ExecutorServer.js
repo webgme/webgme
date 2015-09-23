@@ -15,7 +15,11 @@
 'use strict';
 
 var express = require('express'),
-    router = express.Router();
+    router = express.Router(),
+
+    intervalId,
+    updateLabelsTimeoutId,
+    watchLabelsTimeout;
 
 //function getUserId(req) {
 //    return req.session.udmId;
@@ -98,10 +102,10 @@ function initialize(middlewareOpts) {
             if (exists) {
                 updateLabelJobs();
                 fs.watch(self.labelJobsFilename, {persistent: false}, function () {
-                    setTimeout(updateLabelJobs, 200);
+                    updateLabelsTimeoutId = setTimeout(updateLabelJobs, 200);
                 });
             } else {
-                setTimeout(watchLabelJobs, 10 * 1000);
+                watchLabelsTimeout = setTimeout(watchLabelJobs, 10 * 1000);
             }
         });
     }
@@ -121,7 +125,7 @@ function initialize(middlewareOpts) {
     self.labelJobs = {}; // map from label to blob hash
     self.labelJobsFilename = self.gmeConfig.executor.labelJobs;
     watchLabelJobs();
-    setInterval(workerTimeout, 10 * 1000);
+    intervalId = setInterval(workerTimeout, 10 * 1000);
     self.jobList.ensureIndex({fieldName: 'hash', unique: true}, function (err) {
         if (err) {
             self.logger.error('Failure in ExecutorRest');
@@ -339,9 +343,15 @@ function initialize(middlewareOpts) {
     self.logger.debug('ready');
 }
 
+function stop() {
+    clearInterval(intervalId);
+    clearTimeout(updateLabelsTimeoutId);
+    clearTimeout(watchLabelsTimeout);
+}
 
 
 module.exports = {
     initialize: initialize,
+    stop: stop,
     router: router
 };
