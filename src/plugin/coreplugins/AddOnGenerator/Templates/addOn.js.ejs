@@ -53,5 +53,37 @@ define([
         return '<%= description %>';
     };<%}%>
 
+    /**
+     * This is invoked each time changes in the branch of the project are done. AddOns are allowed to make changes on
+     * an update, but should not persist by themselves. (The AddOnManager will persist after each addOn has had its way
+     * ordered by the usedAddOn registry in the rootNode).
+     * @param {object} rootNode
+     * @param {object} commitObj
+     * @param {function(Error, AddOnUpdateResult)} callback
+     */
+    <%= addOnId %>.prototype.update = function (rootNode, commitObj, callback) {
+        var newName = commitObj.updater.toString();
+        this.logger.info('<%= addOnId %> in update at commitHash', commitObj._id);
+
+        if (this.core.getAttribute(rootNode, 'name') !== newName) {
+            this.logger.info('<%= addOnId %> chaning name of root to comitter(s): ', newName);
+            this.core.setAttribute(rootNode, 'name', newName);
+            this.addCommitMessage('Changed rootNode name to "' + newName + '"');
+        }
+
+        callback(null, this.updateResult);
+    };
+
+    /**
+     * Called once when the addOn is started for the first time.
+     * @param {object} rootNode
+     * @param {object} commitObj
+     * @param {function(Error, AddOnUpdateResult} callback
+     */
+    <%= addOnId %>.prototype.initialize = function (rootNode, commitObj, callback) {
+        this.logger.info('<%= addOnId %> got initialized at commitHash', commitObj._id);
+        this.update(rootNode, commitObj, callback);
+    };
+
     return <%= addOnId %>;
 });

@@ -28,7 +28,7 @@ define([
     AddOnGenerator.prototype.constructor = AddOnGenerator;
 
     AddOnGenerator.prototype.getName = function () {
-        return 'Plugin Generator';
+        return 'AddOn Generator';
     };
 
     AddOnGenerator.prototype.getVersion = function () {
@@ -46,7 +46,7 @@ define([
                 'arguments|interface|protected|implements|instanceof)$)[a-zA-Z_$][0-9a-zA-Z_$]*',
                 regexMessage: 'No spaces and special characters allowed. This value is used as the name of the ' +
                 'generated add-on class.',
-                description: 'Unique ID for the plugin.',
+                description: 'Unique ID for the add-On.',
                 value: 'NewAddOn',
                 valueType: 'string',
                 readOnly: false
@@ -80,13 +80,8 @@ define([
 
     AddOnGenerator.prototype.main = function (callback) {
         var self = this,
-            pluginFileContent,
-            pluginFileName,
+            addOnFileName,
             dirCommon,
-            i,
-            nbrOfFiles,
-            fileKeys,
-            error = '',
             artifact;
 
         // Get and log the configuration which will be appended to and used in the templates.
@@ -98,68 +93,48 @@ define([
         self.currentConfig.date = new Date();
         self.currentConfig.projectName = self.projectName;
         self.currentConfig.version = self.getVersion();
-        dirCommon = '/plugins/' + self.projectName + '/' + self.currentConfig.pluginID + '/';
-        self.pluginDir = 'src' + dirCommon;
+        dirCommon = '/addOns/' + self.projectName + '/' + self.currentConfig.addOnId + '/';
+        self.addOnDir = 'src' + dirCommon;
         self.testDir = 'test' + dirCommon;
 
-        // Add test file if requested.
-        if (self.currentConfig.test) {
-            self.filesToAdd[self.testDir + self.currentConfig.pluginID + '.spec.js'] =
-                ejs.render(TEMPLATES['unit_test.js.ejs'], self.currentConfig);
-        }
-        self.addTemplateFile();
-        if (self.currentConfig.meta) {
-            self.addMetaFile();
-        }
         // Add the plugin file.
-        pluginFileContent = ejs.render(TEMPLATES['plugin.js.ejs'], self.currentConfig);
-        pluginFileName = self.pluginDir + self.currentConfig.pluginID + '.js';
-        self.filesToAdd[pluginFileName] = pluginFileContent;
+        addOnFileName = self.addOnDir + self.currentConfig.pluginID + '.js';
+        self.filesToAdd[addOnFileName] = ejs.render(TEMPLATES['addOn.js.ejs'], self.currentConfig);
+
+        self.logger.debug(JSON.stringify(self.filesToAdd, null, 4));
+        artifact = self.blobClient.createArtifact('addOnFiles');
 
 
-        // Add the file at the end.
-        self.logger.info(JSON.stringify(self.filesToAdd, null, 4));
-        fileKeys = Object.keys(self.filesToAdd);
-        nbrOfFiles = fileKeys.length;
-        artifact = self.blobClient.createArtifact('pluginFiles');
+        artifact.addFiles(self.filesToAdd, function (err, hashes) {
+            if (err) {
+                callback(new Error(err), self.result);
+                return;
+            }
 
-        function addFileByFile(fileKey, fileToAdd) {
-            artifact.addFile(fileKey, fileToAdd, function (err, hash) {
-                error = err ? error + err : error;
-                nbrOfFiles -= 1;
-                self.logger.debug(fileKey, hash);
-                if (nbrOfFiles === 0) {
-                    if (error) {
-                        callback('Something went wrong when adding files: ' + error, self.result);
-                        return;
-                    }
-                    self.blobClient.saveAllArtifacts(function (err, hashes) {
-                        if (err) {
-                            callback(err, self.result);
-                            return;
-                        }
-                        self.result.addArtifact(hashes[0]);
-                        self.createMessage(null, 'Extract the pluginFiles.zip in your repository.');
-                        self.createMessage(null, 'Append "' + './src/plugins/' + self.projectName +
-                        '" to "pluginBasePaths" in config.js.');
-                        self.createMessage(self.rootNode, 'Select the root-node and add ' +
-                        self.currentConfig.pluginID + ' to the validPlugins attribute (separate with spaces).');
-                        if (self.currentConfig.test) {
-                            self.createMessage(null, 'For the necessary test setup and more examples of how ' +
-                            'to write tests see https://github.com/webgme/webgme-boilerplate.');
-                        }
-                        self.logger.info('Artifacts are saved here: ' + hashes.toString());
-
-                        self.result.setSuccess(true);
-                        callback(null, self.result);
-                    });
+            self.blobClient.saveAllArtifacts(function (err, hashes) {
+                if (err) {
+                    callback(new Error(err), self.result);
+                    return;
                 }
-            });
-        }
+                self.result.addArtifact(hashes[0]);
 
-        for (i = 0; i < fileKeys.length; i += 1) {
-            addFileByFile(fileKeys[i], self.filesToAdd[fileKeys[i]]);
-        }
+                self.createMessage(null, 'Extract the addOnFiles.zip in your repository.');
+                self.createMessage(null, 'Append "' + './src/addOns/' + self.projectName +
+                '" to "addOnBasePaths" in gmeConfig.');
+                self.createMessage(self.rootNode, 'Select the root-node and add ' +
+                self.currentConfig.addOnId + ' to the usedAddOns registry under the META tab (separate with spaces).');
+
+                if (self.currentConfig.test) {
+                    self.createMessage(null, 'For the necessary test setup and more examples of how ' +
+                    'to write tests see https://github.com/webgme/webgme-boilerplate.');
+                }
+
+                self.logger.debug('Artifacts are saved here: ' + hashes.toString());
+
+                self.result.setSuccess(true);
+                callback(null, self.result);
+            });
+        });
     };
 
     return AddOnGenerator;
