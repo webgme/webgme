@@ -9,7 +9,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     'use strict';
 
     /**
-     * Class
+     * BaseClass for AddOns which run on the server and act upon changes in a branch.
      * @param logger
      * @param gmeConfig
      * @constructor
@@ -31,7 +31,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     }
 
     /**
-     * Add-ons run on the server and act upon changes in a branch.
+     * Configures the AddOn
      * @param {object} configuration
      * @param {function} callback
      */
@@ -44,7 +44,6 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
 
     /**
      * Readable name of this AddOn that can contain spaces.
-     *
      * @returns {string}
      */
     AddOnBase.prototype.getName = function () {
@@ -62,7 +61,6 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
 
     /**
      * A detailed description of this AddOn and its purpose. It can be one or more sentences.
-     *
      * @returns {string}
      */
     AddOnBase.prototype.getDescription = function () {
@@ -70,8 +68,8 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     };
 
     /**
-     * This is invoked each time changes in the branch of the project is done. AddOns are allowed to make changes on
-     * an update, but should not persist by themselves. The manager/monitor will persist after each AddOn has had its
+     * This is invoked after each commit to the branch. AddOns are allowed to make changes on updates,
+     * but should not persist by themselves. The manager/monitor will persist after each AddOn has had its
      * way (ordered by the "usedAddOn" registry in the rootNode).
      *
      * Changes made by AddOns do not trigger a new update for other addOns.
@@ -94,7 +92,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     };
 
     /**
-     * Called by the AddOnManager each time changes in the branch of the project is done.
+     * Called by the manager/monitor after each commit to the branch.
      * @param {object} rootNode
      * @param {object} commitObj
      * @param {function(Error, AddOnUpdateResult} callback
@@ -106,7 +104,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     };
 
     /**
-     * Called by the AddOnManager when the AddOn is first started.
+     * Called once by the manager/monitor when the AddOn is first started.
      * @param {object} rootNode
      * @param {object} commitObj
      * @param {function(Error, AddOnUpdateResult} callback
@@ -122,7 +120,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
         this.updateResult.addCommitMessage(this, msg);
     };
 
-    // Query related (not yet supported)
+    // TODO: Query related (not yet supported)
     /**
      * Structure of query parameters with names, descriptions, minimum, maximum values, default values and
      * type definitions.
