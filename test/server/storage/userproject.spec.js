@@ -63,7 +63,7 @@ describe('UserProject', function () {
     });
 
     it('should getCommits', function (done) {
-        project.getCommits((new Date()).getTime(), 1)
+        project.getCommits((new Date()).getTime() + 100, 1)
             .then(function (commits) {
                 expect(commits.length).to.equal(1);
                 expect(commits[0]).to.have.property('message');
