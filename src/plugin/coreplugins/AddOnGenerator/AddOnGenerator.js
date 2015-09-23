@@ -7,11 +7,10 @@
  */
 
 define([
-    'plugin/PluginConfig',
     'plugin/PluginBase',
     'common/util/ejs',
-    'plugin/PluginGenerator/PluginGenerator/Templates/Templates'
-], function (PluginConfig, PluginBase, ejs, TEMPLATES) {
+    'plugin/AddOnGenerator/AddOnGenerator/Templates/Templates'
+], function (PluginBase, ejs, TEMPLATES) {
     'use strict';
 
     var AddOnGenerator = function () {
@@ -110,6 +109,8 @@ define([
                 callback(new Error(err), self.result);
                 return;
             }
+
+            self.logger.debug(hashes);
 
             self.blobClient.saveAllArtifacts(function (err, hashes) {
                 if (err) {
