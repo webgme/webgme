@@ -25,7 +25,7 @@ describe('TestAddOn', function () {
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
-                safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                safeStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
                 return safeStorage.openDatabase();
             })
             .then(function () {
