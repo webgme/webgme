@@ -605,9 +605,9 @@ define([
 
             if (connType && connType === MetaRelations.META_RELATIONS.INHERITANCE) {
                 //if the connection is inheritance
-                //it can be NORTH only if destination
-                //it can be SOUTH only if source
-                if (isEnd) {
+                //it can be NORTH only if source
+                //it can be SOUTH only if destination
+                if (!isEnd) {
                     //north is not disabled, use north only
                     //otherwise use all
                     if (disabledAreas.indexOf(cN.id) === -1) {
