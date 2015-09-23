@@ -2019,6 +2019,7 @@ describe('API', function () {
                         projectId: importResult.project.projectId,
                         branchName: 'master'
                     };
+                    this.timeout(4000);
                     agent.post(server.getUrl() + '/api/v1/plugins/ExportImport/execute')
                         .send(requestBody)
                         .end(function (err, res) {
@@ -2028,23 +2029,39 @@ describe('API', function () {
 
                             agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
                                 .end(function (err, res) {
+                                    var cnt = 0,
+                                        intervalId;
                                     expect(res.status).equal(200, err);
                                     expect(res.body).to.deep.equal({status: 'RUNNING'});
-                                    setTimeout(function () {
+
+                                    intervalId = setInterval(function () {
                                         agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
                                             .end(function (err, res) {
                                                 expect(res.status).equal(200, err);
-                                                expect(res.body.status).to.equal('FINISHED');
-                                                expect(res.body.result).to.include.keys('commits', 'messages',
-                                                    'success'); //etc.
-                                                expect(res.body.result.success).to.equal(true);
-                                                agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
-                                                    .end(function (err, res) {
-                                                        expect(res.status).equal(404, err);
-                                                        done();
-                                                    });
+                                                if (res.body.status === 'FINISHED') {
+                                                    clearInterval(intervalId);
+                                                    expect(res.body.result).to.include.keys('commits', 'messages',
+                                                        'success'); //etc.
+                                                    expect(res.body.result.success).to.equal(true);
+                                                    agent.get(server.getUrl() +
+                                                        '/api/v1/plugins/ExportImport/results/' + resultId)
+                                                        .end(function (err, res) {
+                                                            expect(res.status).equal(404, err);
+                                                            done();
+                                                        });
+                                                } else if (res.body.status === 'RUNNING') {
+                                                    cnt += 1;
+                                                    if (cnt === 30) {
+                                                        clearInterval(intervalId);
+                                                        done(new Error('Plugin did not finish in time, ' +
+                                                            'increase limit'));
+                                                    }
+                                                } else {
+                                                    clearInterval(intervalId);
+                                                    done(new Error('Unexpected status', res.body.status));
+                                                }
                                             });
-                                    }, 1750); // Wait 1.75 seconds.
+                                    }, 200);
                                 });
                         });
                 }
@@ -2089,14 +2106,14 @@ describe('API', function () {
             );
         });
 
-        describe('allowServerExecution=true, serverResultTimeout=100', function () {
+        describe('allowServerExecution=true, serverResultTimeout=200', function () {
             var server,
                 agent;
 
             before(function (done) {
                 var gmeConfig = testFixture.getGmeConfig();
                 gmeConfig.plugin.allowServerExecution = true;
-                gmeConfig.plugin.serverResultTimeout = 50;
+                gmeConfig.plugin.serverResultTimeout = 200;
 
                 server = WebGME.standaloneServer(gmeConfig);
                 server.start(done);
@@ -2120,26 +2137,47 @@ describe('API', function () {
                             type: 'Import'
                         }
                     };
+                    this.timeout(5000);
                     agent.post(server.getUrl() + '/api/v1/plugins/ExportImport/execute')
                         .send(requestBody)
                         .end(function (err, res) {
-                            var resultId = res.body.resultId;
+                            var resultId = res.body.resultId,
+                                cnt = 0,
+                                intervalId;
+
                             expect(res.status).equal(200, err);
                             expect(typeof resultId).to.equal('string');
 
-                            agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
-                                .end(function (err, res) {
-                                    expect(res.status).equal(200, err);
-                                    expect(res.body).to.deep.equal({status: 'RUNNING'});
+                            intervalId = setInterval(function () {
+                                agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
+                                    .end(function (err, res) {
+                                        expect(res.status).equal(200, err);
 
-                                    setTimeout(function () {
-                                        agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
-                                            .end(function (err, res) {
-                                                expect(res.status).equal(404, err);
-                                                done();
-                                            });
-                                    }, 1500);
-                                });
+                                        if (res.status === 200) {
+                                            if (res.body.status === 'RUNNING') {
+                                                cnt += 1;
+                                                if (cnt === 30) {
+                                                    clearInterval(intervalId);
+                                                    done(new Error('Plugin did not finish in time, ' +
+                                                        'increase limit'));
+                                                }
+                                            } else {
+                                                clearInterval(intervalId);
+                                                setTimeout(function () {
+                                                    agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' +
+                                                        resultId)
+                                                        .end(function (err, res) {
+                                                            expect(res.status).equal(404, err);
+                                                            done();
+                                                        });
+                                                }, 1000);
+                                            }
+                                        } else {
+                                            clearInterval(intervalId);
+                                            done(new Error('404 before finished'));
+                                        }
+                                    });
+                            }, 100);
                         });
                 }
             );
