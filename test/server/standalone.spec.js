@@ -172,6 +172,11 @@ describe('standalone server', function () {
             {code: 404, url: '/does_not_exist.js'},
             {code: 404, url: '/asdf'},
 
+            //excluded extlib paths.
+            {code: 200, url: '/extlib/config/index.js'},
+            {code: 403, url: '/extlib/config/config.default.js'},
+            {code: 403, url: '/extlib/someCertificate.pem'},
+
             //{code: 410, url: '/getToken'},
             //{code: 410, url: '/checktoken/does_not_exist'},
 
