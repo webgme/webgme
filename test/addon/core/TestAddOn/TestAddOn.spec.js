@@ -46,7 +46,7 @@ describe('TestAddOn', function () {
 
     after(function (done) {
         Q.allDone([
-            safeStorage.closeDatabase(done),
+            safeStorage.closeDatabase(),
             gmeAuth.unload()
         ])
             .nodeify(done);
