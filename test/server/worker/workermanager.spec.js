@@ -1,11 +1,12 @@
 /*jshint node:true, mocha:true*/
 /**
+ * This file tests the ServerWorkerManager w.r.t. simple-workers.
  * @author kecso / https://github.com/kecso
  */
 
 var testFixture = require('../../_globals.js');
 
-describe('ServerWorkerManager', function () {
+describe('ServerWorkerManager - SimpleWorkers', function () {
     'use strict';
 
     var logger = testFixture.logger.fork('workermanager.spec'),

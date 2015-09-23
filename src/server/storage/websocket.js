@@ -88,34 +88,27 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         if (socket.rooms.indexOf(roomName) !== -1) {
             deferred.resolve();
         } else {
-            socket.join(roomName, function (err) {
-                var workManagerParams;
-                if (err) {
-                    deferred.reject(err);
-                    return;
-                }
+            Q.ninvoke(socket, 'join', roomName)
+                .then(function () {
+                    var workManagerParams = {
+                        projectId: projectId,
+                        branchName: branchName,
+                        webGMESessionId: getSessionIdFromSocket(socket),
+                        join: true
+                    };
 
-                eventData.currNbrOfSockets = Object.keys(webSocket.sockets.adapter.rooms[roomName]).length;
-                eventData.prevNbrOfSockets = eventData.currNbrOfSockets - 1;
+                    eventData.currNbrOfSockets = Object.keys(webSocket.sockets.adapter.rooms[roomName]).length;
+                    eventData.prevNbrOfSockets = eventData.currNbrOfSockets - 1;
 
-                socket.broadcast.to(roomName).emit(CONSTANTS.BRANCH_ROOM_SOCKETS, eventData);
+                    socket.broadcast.to(roomName).emit(CONSTANTS.BRANCH_ROOM_SOCKETS, eventData);
 
-                workManagerParams = {
-                    projectId: projectId,
-                    branchName: branchName,
-                    webGMESessionId: getSessionIdFromSocket(socket),
-                    join: true
-                };
 
-                workerManager.socketRoomChange(workManagerParams, function (err) {
-                    if (err) {
-                        deferred.reject(err instanceof Error ? err : new Error(err));
-                        return;
-                    }
-
-                    deferred.resolve();
+                    return Q.ninvoke(workerManager, 'socketRoomChange', workManagerParams);
+                })
+                .then(deferred.resolve)
+                .catch(function (err) {
+                    deferred.reject(err instanceof Error ? err : new Error(err));
                 });
-            });
         }
 
         return deferred.promise;
@@ -139,29 +132,21 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.broadcast.to(roomName).emit(CONSTANTS.BRANCH_ROOM_SOCKETS, eventData);
 
-            socket.leave(roomName, function (err) {
-                var workManagerParams;
-                if (err) {
-                    deferred.reject(err);
-                    return;
-                }
+            Q.ninvoke(socket, 'leave', roomName)
+                .then(function () {
+                    var workManagerParams = {
+                        projectId: projectId,
+                        branchName: branchName,
+                        webGMESessionId: getSessionIdFromSocket(socket),
+                        join: false
+                    };
 
-                workManagerParams = {
-                    projectId: projectId,
-                    branchName: branchName,
-                    webGMESessionId: getSessionIdFromSocket(socket),
-                    join: false
-                };
-
-                workerManager.socketRoomChange(workManagerParams, function (err) {
-                    if (err) {
-                        deferred.reject(err instanceof Error ? err : new Error(err));
-                        return;
-                    }
-
-                    deferred.resolve();
+                    return Q.ninvoke(workerManager, 'socketRoomChange', workManagerParams);
+                })
+                .then(deferred.resolve)
+                .catch(function (err) {
+                    deferred.reject(err instanceof Error ? err : new Error(err));
                 });
-            });
         }
 
         return deferred.promise;

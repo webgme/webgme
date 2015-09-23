@@ -104,27 +104,27 @@ function connectedWorkerStart(webGMESessionId, projectId, branchName, callback) 
         .catch(finish);
 }
 
-function connectedWorkerQuery(webGMESessionId, projectId, branchName, addOnId, commitHash, queryParams, callback) {
-    logger.info('connectedWorkerQuery', addOnName);
-    logger.debug('connectedWorkerQuery', parameters);
-    function finish(err, message) {
-        if (err) {
-            err = err instanceof Error ? err : new Error(err);
-            logger.error('connectedWorkerQuery failed', err);
-            callback(err);
-        } else {
-            logger.info('connectedWorkerQuery done');
-            callback(null, message);
-        }
-    }
-
-    if (addOnManager) {
-        addOnManager.queryAddOn(addOnName, parameters)
-            .nodeify(finish);
-    } else {
-        finish(new Error('No AddOn is running'));
-    }
-}
+//function connectedWorkerQuery(webGMESessionId, projectId, branchName, addOnId, commitHash, queryParams, callback) {
+//    logger.info('connectedWorkerQuery', addOnName);
+//    logger.debug('connectedWorkerQuery', parameters);
+//    function finish(err, message) {
+//        if (err) {
+//            err = err instanceof Error ? err : new Error(err);
+//            logger.error('connectedWorkerQuery failed', err);
+//            callback(err);
+//        } else {
+//            logger.info('connectedWorkerQuery done');
+//            callback(null, message);
+//        }
+//    }
+//
+//    if (addOnManager) {
+//        addOnManager.queryAddOn(addOnName, parameters)
+//            .nodeify(finish);
+//    } else {
+//        finish(new Error('No AddOn is running'));
+//    }
+//}
 
 function connectedWorkerStop(webGMESessionId, projectId, branchName, callback) {
     var addOnManager;
@@ -204,15 +204,15 @@ process.on('message', function (parameters) {
                 }
             }
         );
-    } else if (parameters.command === CONSTANTS.workerCommands.connectedWorkerQuery) {
-        connectedWorkerQuery(parameters.addOnName, parameters, function (err, result) {
-            safeSend({
-                pid: process.pid,
-                type: CONSTANTS.msgTypes.query,
-                error: err ? err.message : null,
-                result: result
-            });
-        });
+    //} else if (parameters.command === CONSTANTS.workerCommands.connectedWorkerQuery) {
+    //    connectedWorkerQuery(parameters.addOnName, parameters, function (err, result) {
+    //        safeSend({
+    //            pid: process.pid,
+    //            type: CONSTANTS.msgTypes.query,
+    //            error: err ? err.message : null,
+    //            result: result
+    //        });
+    //    });
     } else if (parameters.command === CONSTANTS.workerCommands.connectedWorkerStop) {
         connectedWorkerStop(parameters.webGMESessionId, parameters.projectId, parameters.branchName,
             function (err, result) {

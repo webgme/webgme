@@ -1,11 +1,12 @@
 /*jshint node:true, mocha:true*/
 /**
+ * This file tests the ServerWorkerManager w.r.t. connected-workers.
  * @author pmeijer / https://github.com/pmeijer
  */
 
 var testFixture = require('../../_globals.js');
 
-describe('Connected Worker Handling', function () {
+describe('ServerWorkerManager - ConnectedWorkers', function () {
     'use strict';
 
     var logger = testFixture.logger.fork('ConnectedWorkerHandling.spec'),
@@ -108,7 +109,7 @@ describe('Connected Worker Handling', function () {
                     expect(err).to.equal(null);
                     expect(swm.connectedWorkerId).to.equal(null);
                     done();
-                })
+                });
             });
         });
 
