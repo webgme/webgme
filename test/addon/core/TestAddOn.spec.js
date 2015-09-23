@@ -5,71 +5,16 @@
 
 var testFixture = require('../../_globals');
 
-describe.skip('TestAddOn', function () {
+describe('TestAddOn', function () {
     'use strict';
 
     var expect = testFixture.expect,
-        WebGME = testFixture.WebGME,
-        Core = testFixture.WebGME.core,
         logger = testFixture.logger.fork('TestAddOn.spec'),
-        superagent = testFixture.superagent,
-        agent = superagent.agent(),
-        importResult,
-        serverBaseUrl,
-        server,
-        storage,
-        webgmeSessionId,
-        socket,
+
+        ir,
         projectName = 'TestAddOnProject',
-        projectId = testFixture.projectName2Id(projectName),
         Q = testFixture.Q,
         gmeConfig = testFixture.getGmeConfig(),
-        logIn = function (callback) {
-            agent.post(serverBaseUrl + '/login')
-                .type('form')
-                .send({username: gmeConfig.authentication.guestAccount})
-                .send({password: 'guest'})
-                .end(function (err, res) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    expect(res.status).to.equal(200);
-                    callback(err, res);
-                });
-        },
-        openSocketIo = function () {
-            var io = require('socket.io-client');
-            return Q.nfcall(logIn)
-                .then(function (res) {
-                    var socket,
-                        socketReq = {url: serverBaseUrl},
-                        defer = Q.defer();
-
-                    agent.attachCookies(socketReq);
-                    webgmeSessionId = /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1];
-
-                    logger.debug('session', webgmeSessionId);
-                    //FIXME this socket does not needed as the storage created
-                    // during the test would be sufficient to check the update
-                    socket = io.connect(serverBaseUrl,
-                        {
-                            query: 'webGMESessionId=' + webgmeSessionId,
-                            transports: gmeConfig.socketIO.transports,
-                            multiplex: false
-                        });
-
-                    socket.on('error', function (err) {
-                        logger.error(err);
-                        defer.reject(err || 'could not connect');
-                        socket.disconnect();
-                    });
-                    socket.on('connect', function () {
-                        defer.resolve(socket);
-                    });
-
-                    return defer.promise;
-                });
-        },
         addOnName = 'TestAddOn',
         TestAddOn = testFixture.requirejs('addon/' + addOnName + '/' + addOnName + '/' + addOnName),
 
@@ -86,7 +31,7 @@ describe.skip('TestAddOn', function () {
             .then(function () {
                 return testFixture.importProject(safeStorage, {
                     projectName: projectName,
-                    logger: logger.fork('import'),
+                    logger: logger,
                     gmeConfig: gmeConfig,
                     branchName: 'master',
                     userName: gmeConfig.authentication.guestAccount,
@@ -94,232 +39,113 @@ describe.skip('TestAddOn', function () {
                 });
             })
             .then(function (result) {
-                importResult = result;
-                return safeStorage.closeDatabase();
-            })
-            .then(function () {
-                server = WebGME.standaloneServer(gmeConfig);
-                serverBaseUrl = server.getUrl();
-                return Q.ninvoke(server, 'start');
-            })
-            .then(function () {
-                return openSocketIo();
-            })
-            .then(function (socket_) {
-                socket = socket_;
+                ir = result;
             })
             .nodeify(done);
     });
 
     after(function (done) {
-        socket.disconnect();
-        server.stop(done);
+        safeStorage.closeDatabase(done);
     });
 
-    it('should start, query, update, query, and stop', function (done) {
-        var _addOn,
-            startParam = {
-                projectId: projectId,
-                branchName: 'master',
-                logger: logger.fork(TestAddOn)
-            };
+    it('should getName, description, version etc', function () {
+        var addOn = new TestAddOn(logger, gmeConfig);
 
-        storage = testFixture.NodeStorage.createStorage('127.0.0.1', webgmeSessionId, logger, gmeConfig);
-        _addOn = new TestAddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName),
-            gmeConfig.authentication.guestAccount);
-
-        expect(_addOn.getName()).to.equal('TestAddOn');
-
-        storage.open(function (networkStatus) {
-            if (networkStatus === testFixture.STORAGE_CONSTANTS.CONNECTED) {
-                logger.debug('starting addon', {metadata: addOnName});
-
-                //start
-                Q.ninvoke(_addOn, 'start', startParam)
-                    .then(function () {
-                        return Q.ninvoke(_addOn, 'query', 'test');
-                    })
-                    .then(function (result) {
-                        expect(result[0]).to.equal('test');
-                        expect(result[1]).to.equal(0);
-                        // update model
-                        return _addOn.project.makeCommit('master', [importResult.commitHash], importResult.rootHash, {},
-                            'new commit');
-                    })
-                    .then(function (result) {
-                        expect(result.status).to.equal(_addOn.project.CONSTANTS.SYNCED);
-                        return Q.ninvoke(_addOn, 'query', 'test2');
-                    })
-                    .then(function (result) {
-                        expect(result[0]).to.equal('test2');
-                        expect(result[1]).to.equal(1); // update was called once
-
-                        return Q.ninvoke(_addOn, 'stop');
-                    })
-                    .then(function () {
-                        storage.close(function () {
-                            done();
-                        });
-                    })
-                    .catch(function (err) {
-                        storage.close(function () {
-                            done(new Error(err));
-                        });
-                    })
-                    .done();
-            } else {
-                storage.close(function () {
-                    done(new Error('unable to connect storage'));
-                });
-            }
-        });
+        expect(addOn.getName()).to.equal('TestAddOn');
+        expect(addOn.getDescription()).to.equal('');
+        expect(addOn.getVersion()).to.equal('1.0.0');
     });
 
-    it('should fail to start if project id is not given', function (done) {
-        var _addOn,
-            startParam = {
-                branchName: 'master',
-                logger: logger.fork(TestAddOn)
-            };
+    it('should configure and initialize and update the addOn', function (done) {
+        var addOn = new TestAddOn(logger, gmeConfig),
+            commitObj,
+            rootNode;
 
-        storage = testFixture.NodeStorage.createStorage('127.0.0.1', webgmeSessionId, logger, gmeConfig);
-        _addOn = new TestAddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName),
-            gmeConfig.authentication.guestAccount);
-
-
-        storage.open(function (networkStatus) {
-            if (networkStatus === testFixture.STORAGE_CONSTANTS.CONNECTED) {
-                logger.debug('starting addon', {metadata: addOnName});
-
-                //start
-                Q.ninvoke(_addOn, 'start', startParam)
-                    .then(function () {
-                        done(new Error('should have failed to initialize'));
-                    })
-                    .catch(function (err) {
-                        storage.close(function () {
-                            expect(err).to.match(/Failed to initialize/);
-                            done();
-                        });
-                    });
-            } else {
-                storage.close(function () {
-                    done(new Error('unable to connect storage'));
-                });
-            }
+        addOn.configure({
+            core: ir.core,
+            project: ir.project,
+            branchName: 'master',
         });
+
+        Q.allDone([
+            testFixture.loadRootNodeFromCommit(ir.project, ir.core, ir.commitHash),
+            ir.project.getCommits(ir.commitHash, 1)
+        ])
+            .then(function (results) {
+                rootNode = results[0];
+                commitObj = results[1];
+
+                expect(addOn.initialized).to.equal(false);
+
+                return Q.ninvoke(addOn, '_initialize', rootNode, commitObj);
+            })
+            .then(function (updateResult) {
+                expect(updateResult.commitMessage).to.equal('');
+                expect(addOn.initialized).to.equal(true);
+                expect(addOn.nodePaths).to.deep.equal({'/1': 0, '': 0});
+
+                return Q.ninvoke(addOn, '_update', rootNode, commitObj);
+            })
+            .then(function (updateResult) {
+                expect(updateResult.commitMessage).to.equal('');
+                expect(addOn.nodePaths).to.deep.equal({'/1': 1, '': 1});
+
+                done();
+            })
+            .catch(done);
     });
 
+    it('should change the name of the new node on update', function (done) {
+        var addOn = new TestAddOn(logger, gmeConfig),
+            commitObj,
+            newNode,
+            rootNode;
 
-    it('should fail to start if branch name is not given', function (done) {
-        var _addOn,
-            startParam = {
-                projectId: projectId,
-                logger: logger.fork(TestAddOn)
-            };
-
-        storage = testFixture.NodeStorage.createStorage('127.0.0.1', webgmeSessionId, logger, gmeConfig);
-        _addOn = new TestAddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName),
-            gmeConfig.authentication.guestAccount);
-
-
-        storage.open(function (networkStatus) {
-            if (networkStatus === testFixture.STORAGE_CONSTANTS.CONNECTED) {
-                logger.debug('starting addon', {metadata: addOnName});
-
-                //start
-                Q.ninvoke(_addOn, 'start', startParam)
-                    .then(function () {
-                        done(new Error('should have failed to initialize'));
-                    })
-                    .catch(function (err) {
-                        storage.close(function () {
-                            expect(err).to.match(/Failed to initialize/);
-                            done();
-                        });
-                    });
-            } else {
-                storage.close(function () {
-                    done(new Error('unable to connect storage'));
-                });
-            }
+        addOn.configure({
+            core: ir.core,
+            project: ir.project,
+            branchName: 'master',
         });
-    });
 
+        Q.allDone([
+            testFixture.loadRootNodeFromCommit(ir.project, ir.core, ir.commitHash),
+            ir.project.getCommits(ir.commitHash, 1)
+        ])
+            .then(function (results) {
+                rootNode = results[0];
+                commitObj = results[1];
 
-    it('should fail to start if branch does not exist', function (done) {
-        var _addOn,
-            startParam = {
-                projectId: projectId,
-                branchName: 'does_not_exist',
-                logger: logger.fork(TestAddOn)
-            };
+                expect(addOn.initialized).to.equal(false);
 
-        storage = testFixture.NodeStorage.createStorage('127.0.0.1', webgmeSessionId, logger, gmeConfig);
-        _addOn = new TestAddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName),
-            gmeConfig.authentication.guestAccount);
+                return Q.ninvoke(addOn, '_initialize', rootNode, commitObj);
+            })
+            .then(function (updateResult) {
+                expect(updateResult.commitMessage).to.equal('');
+                expect(addOn.initialized).to.equal(true);
+                expect(addOn.nodePaths).to.deep.equal({'/1': 0, '': 0});
 
+                return testFixture.loadNode(ir.core, rootNode, '/1');
+            })
+            .then(function (fcoNode) {
+                newNode = ir.core.createNode({parent: rootNode, base: fcoNode});
 
-        storage.open(function (networkStatus) {
-            if (networkStatus === testFixture.STORAGE_CONSTANTS.CONNECTED) {
-                logger.debug('starting addon', {metadata: addOnName});
+                ir.core.setAttribute(newNode, 'name', 'newNode');
 
-                //start
-                Q.ninvoke(_addOn, 'start', startParam)
-                    .then(function () {
-                        done(new Error('should have failed to initialize'));
-                    })
-                    .catch(function (err) {
-                        storage.close(function () {
-                            expect(err).to.match(/no such branch/);
-                            done();
-                        });
-                    });
-            } else {
-                storage.close(function () {
-                    done(new Error('unable to connect storage'));
-                });
-            }
-        });
-    });
+                return Q.ninvoke(addOn, '_update', rootNode, commitObj);
+            })
+            .then(function (updateResult) {
+                var newPath = ir.core.getPath(newNode),
+                    nodes = {'/1': 1, '': 1};
 
-    it('should fail if start is called multiple times', function (done) {
-        var _addOn,
-            startParam = {
-                projectId: projectId,
-                branchName: 'master',
-                logger: logger.fork(TestAddOn)
-            };
+                nodes[newPath] = 1;
 
-        storage = testFixture.NodeStorage.createStorage('127.0.0.1', webgmeSessionId, logger, gmeConfig);
-        _addOn = new TestAddOn(Core, storage, gmeConfig, logger.fork('addOn_' + addOnName),
-            gmeConfig.authentication.guestAccount);
+                expect(updateResult.commitMessage).to.contain(addOn.getName(), addOn.getVersion());
+                expect(ir.core.getAttribute(newNode, 'name')).to.equal('newNode_mod');
 
+                expect(addOn.nodePaths).to.deep.equal(nodes);
 
-        storage.open(function (networkStatus) {
-            if (networkStatus === testFixture.STORAGE_CONSTANTS.CONNECTED) {
-                logger.debug('starting addon', {metadata: addOnName});
-
-                //start
-                Q.ninvoke(_addOn, 'start', startParam)
-                    .then(function () {
-                        return Q.ninvoke(_addOn, 'start', startParam);
-                    })
-                    .then(function () {
-                        done(new Error('should have failed to initialize'));
-                    })
-                    .catch(function (err) {
-                        storage.close(function () {
-                            expect(err.message).to.match(/AddOn is already running/);
-                            done();
-                        });
-                    })
-                    .done();
-            } else {
-                storage.close(function () {
-                    done(new Error('unable to connect storage'));
-                });
-            }
-        });
+                done();
+            })
+            .catch(done);
     });
 });

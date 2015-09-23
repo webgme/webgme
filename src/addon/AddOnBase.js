@@ -100,10 +100,9 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
      * @param {function(Error, AddOnUpdateResult} callback
      */
     AddOnBase.prototype._update = function (rootNode, commitObj, callback) {
-        this.initialized = true;
         this.updateResult = new AddOnUpdateResult(commitObj);
 
-        this.initialize(rootNode, commitObj, callback);
+        this.update(rootNode, commitObj, callback);
     };
 
     /**

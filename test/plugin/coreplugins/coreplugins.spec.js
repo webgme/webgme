@@ -20,6 +20,7 @@ describe('CorePlugins', function () {
         logger = testFixture.logger.fork('coreplugins.spec'),
 
         pluginNames = [
+            'AddOnGenerator',
             'ConfigurationArtifact',
             'ExecutorPlugin',
             'ExportImport',
