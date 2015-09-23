@@ -15,7 +15,6 @@ describe('corediff apply', function () {
         core,
         rootNode,
         commit,
-        Mongo = require('../../../src/server/storage/mongo'),
         Q = testFixture.Q,
         expect = testFixture.expect,
         logger = testFixture.logger.fork('corediff.spec.apply'),
@@ -27,8 +26,7 @@ describe('corediff apply', function () {
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
-                //because we push data objects directly into the database we needed it to be mongo
-                storage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
                 return storage.openDatabase();
             })
             .nodeify(done);
@@ -115,25 +113,7 @@ describe('corediff apply', function () {
         });
 
         it('should create a new object', function (done) {
-            var pushNodeDataIntoStorage = function (data, callback) {
-                    var deferred = Q.defer(),
-                        mongo = new Mongo(logger.fork('directMongoAccess'), gmeConfig);
-
-                    Q.nfcall(mongo.openDatabase)
-                        .then(function () {
-                            return Q.nfcall(mongo.openProject, projectId);
-                        })
-                        .then(function (project) {
-                            return project.insertObject(data);
-                        })
-                        .then(function () {
-                            deferred.resolve();
-                        })
-                        .catch(deferred.reject);
-
-                    return deferred.promise.nodeify(callback);
-                },
-                newNodeData = {
+            var newNodeData = {
                     "_id": "#84970fc5e23cb4d48f4d11ecf084fa762a3c236c",
                     "atr": {
                         "_relguid": "ba62fc78ab8c04e73b715680b838acce"
@@ -255,7 +235,7 @@ describe('corediff apply', function () {
                     "oGuids": {"86236510-f1c7-694f-1c76-9bad3a2aa4e0": true}
                 };
 
-            pushNodeDataIntoStorage(newNodeData)
+            project._dbProject.insertObject(newNodeData)
                 .then(function () {
                     return Q.nfcall(core.applyTreeDiff, rootNode, diff);
                 })
