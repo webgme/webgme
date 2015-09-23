@@ -870,6 +870,17 @@ function createAPI(app, mountPath, middlewareOpts) {
         }
     });
 
+    // AddOns
+    router.get('/addOns', ensureAuthenticated, function (req, res) {
+        var result = webgmeUtils.getComponentNames(gmeConfig.addOn.basePaths);
+        logger.debug('/addOns', {metadata: result});
+        res.send(result);
+    });
+
+    // TODO: router.get('/addOns/:addOnId/queryParams', ensureAuthenticated, function (req, res) {});
+    // TODO:router.get('/addOns/:addOnId/queryParamsStructure', ensureAuthenticated, function (req, res) {});
+    // TODO:router.post('/addOns/:addOnId/query', ensureAuthenticated, function (req, res) {});
+
     router.get('/seeds', ensureAuthenticated, function (req, res) {
         var names = [],
             result = [],

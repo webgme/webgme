@@ -3,7 +3,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-var testFixture = require('../../_globals');
+var testFixture = require('../../../_globals');
 
 describe('TestAddOn', function () {
     'use strict';
@@ -15,8 +15,8 @@ describe('TestAddOn', function () {
         projectName = 'TestAddOnProject',
         Q = testFixture.Q,
         gmeConfig = testFixture.getGmeConfig(),
-        addOnName = 'TestAddOn',
-        TestAddOn = testFixture.requirejs('addon/' + addOnName + '/' + addOnName + '/' + addOnName),
+        addOnId = 'TestAddOn',
+        TestAddOn = testFixture.requirejs('addon/' + addOnId + '/' + addOnId + '/' + addOnId),
 
         safeStorage,
         gmeAuth;
@@ -45,7 +45,11 @@ describe('TestAddOn', function () {
     });
 
     after(function (done) {
-        safeStorage.closeDatabase(done);
+        Q.allDone([
+            safeStorage.closeDatabase(done),
+            gmeAuth.unload()
+        ])
+            .nodeify(done);
     });
 
     it('should getName, description, version etc', function () {
