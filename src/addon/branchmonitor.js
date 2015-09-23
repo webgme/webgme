@@ -133,7 +133,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
             counter += 1;
             if (addOn.instance.initialized === true) {
                 logger.debug('updating addOn: ', addOn.id);
-                addOn.instance.update(self.rootNode, commitObj, getUpdateCallback(addOn, counter));
+                addOn.instance._update(self.rootNode, commitObj, getUpdateCallback(addOn, counter));
             } else {
                 addOn.instance.configure(getConfiguration());
                 logger.debug('initializing addOn: ', addOn.id);
