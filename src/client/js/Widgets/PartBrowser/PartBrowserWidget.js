@@ -228,16 +228,19 @@ define([
                 //let the decorator instance know about the update
                 partDecoratorInstance.update();
 
-                return undefined;
+                //return undefined;
+
+                return partDecoratorInstance;
+
             }
         } else {
             //not present in the list yet
             if (partContainerDiv.length === 0) {
-                this.addPart(partId, partDesc);
+               return this.addPart(partId, partDesc);
             }
         }
 
-        return undefined;
+        //return undefined;
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */

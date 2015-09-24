@@ -10,14 +10,14 @@ define(['js/logger',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
     'js/RegistryKeys',
-    'js/Utils/METAAspectHelper',
+    //'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper'
 ], function (Logger,
              CONSTANTS,
              GMEConcepts,
              nodePropertyNames,
              REGISTRY_KEYS,
-             METAAspectHelper,
+             //METAAspectHelper,
              PreferencesHelper) {
     'use strict';
 
@@ -32,7 +32,7 @@ define(['js/logger',
         this._partBrowserView = myPartBrowserView;
 
         //the ID of the node whose valid children types should be displayed
-        this._containerNodeId = null;
+        this._containerNodeId = WebGMEGlobal.State.getActiveObject() || null;
 
         //the ID of the valid children types of the container node
         this._validChildrenTypeIDs = [];
@@ -41,7 +41,7 @@ define(['js/logger',
         this._componentIDPartIDMap = {};
 
         //by default handle the 'All' aspect
-        this._aspect = CONSTANTS.ASPECT_ALL;
+        this._aspect /*= CONSTANTS.ASPECT_ALL*/;
 
         this._initDragDropFeatures();
 
@@ -49,20 +49,170 @@ define(['js/logger',
             WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug('Created');
 
-        METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
-            self._processContainerNode(self._containerNodeId);
-        });
+        //METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
+        //    self._processContainerNode(self._containerNodeId);
+        //});
+
+        this._descriptorCollection = this._getPartDescriptorCollection();
+        this._partInstances = {};
+        this._territoryRules = {'': {children: 0}};
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObject) {
-            self.selectedObjectChanged(activeObject);
+            //self.selectedObjectChanged(activeObject);
+            console.time('SAO');
+            self._containerNodeId = activeObject;
+            var newDescriptor = self._getPartDescriptorCollection();
+
+            self._logger.error('new descriptor calculated', self._descriptorCollection, newDescriptor);
+            self._updateDescriptor(newDescriptor);
+            console.timeEnd('SAO');
         });
 
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, function (model, activeAspect) {
-            //TODO we may need constants for the different visualizers, or have some feature table...
-            if (activeAspect !== undefined && WebGMEGlobal.State.getActiveVisualizer() === 'ModelEditor') {
-                self.selectedAspectChanged(WebGMEGlobal.State.getActiveAspect());
+        this._newEventHandling = function (events) {
+            console.time('EV');
+
+            var newDescriptor = self._getPartDescriptorCollection();
+
+            self._logger.error('new descriptor calculated2', self._descriptorCollection, newDescriptor);
+            self._updateDescriptor(newDescriptor);
+            console.timeEnd('EV');
+        };
+
+        this._client.addUI(self, self._newEventHandling, '007');
+        this._client.updateTerritory('007', this._territoryRules);
+        //WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, function (model, activeAspect) {
+        //    //TODO we may need constants for the different visualizers, or have some feature table...
+        //    if (activeAspect !== undefined && WebGMEGlobal.State.getActiveVisualizer() === 'ModelEditor') {
+        //        self.selectedAspectChanged(WebGMEGlobal.State.getActiveAspect());
+        //    }
+        //});
+    };
+
+    PartBrowserControl.prototype._updateDescriptor = function (newDescriptor) {
+        var keys = Object.keys(newDescriptor || {}),
+            i,
+            self = this,
+            div,
+            decriptorChanged = function (oldDesc, newDesc) {
+                if (oldDesc.name !== newDesc.name) {
+                    return true;
+                }
+                if (oldDesc.decorator !== newDesc.decorator) {
+                    return true;
+                }
+                if (oldDesc.id !== newDesc.id) {
+                    return true;
+                }
+                if (oldDesc.visibility !== newDesc.visibility) {
+                    return true;
+                }
+                return false;
+            },
+            newTerritoryRules;
+
+        //add and update
+        for (i = 0; i < keys.length; i += 1) {
+            if (!this._descriptorCollection[keys[i]]) {
+                //new item
+                this._partInstances[keys[i]] = this._partBrowserView.addPart(keys[i], newDescriptor[keys[i]]);
+            } else if (this._descriptorCollection[keys[i]].decorator !== newDescriptor[keys[i]].decorator) {
+                this._partInstances[keys[i]] = this._partBrowserView.updatePart(keys[i], newDescriptor[keys[i]]);
             }
-        });
+
+            if (!this._descriptorCollection[keys[i]] ||
+                (this._descriptorCollection[keys[i]].visibility !== newDescriptor[keys[i]].visibility)) {
+                div = this._partBrowserView._getPartDiv(keys[i]);
+                if (newDescriptor[keys[i]].visibility === 'hidden') {
+                    div.hide();
+                } else if (newDescriptor[keys[i]].visibility === 'visible') {
+                    div.show();
+                    this._partBrowserView.setEnabled(keys[i], true);
+                } else {
+                    div.show();
+                    this._partBrowserView.setEnabled(keys[i], true);
+                }
+            }
+        }
+
+        //remove
+        keys = Object.keys(this._descriptorCollection);
+
+        for (i = 0; i < keys.length; i += 1) {
+            if (!newDescriptor[keys[i]]) {
+                this._partBrowserView.removePart(keys[i]);
+                delete this._partInstances[keys[i]];
+            }
+        }
+
+        this._descriptorCollection = newDescriptor;
+        newTerritoryRules = this._getTerritoryPatterns();
+        if (JSON.stringify(this._territoryRules) !== JSON.stringify(newTerritoryRules)) {
+            this._territoryRules = newTerritoryRules;
+            setTimeout(function () {
+                self._client.updateTerritory('007', this._territoryRules);
+            }, 0);
+        } else {
+            //we can update our decorators as they probably have their whole territory loaded
+            keys = Object.keys(this._partInstances || {});
+            for (i = 0; i < keys.length; i += 1) {
+                if (this._descriptorCollection[keys[i]].visibility !== 'hidden') {
+                    this._partInstances[keys[i]].update();
+                }
+            }
+        }
+    };
+
+    PartBrowserControl.prototype._getPartDescriptorCollection = function () {
+        var containerNode = this._client.getNode(this._containerNodeId),
+            metaNodes = this._client.getAllMetaNodes(),
+            descriptor = {},
+            validInfo,
+            keys,
+            i;
+
+        for (i = 0; i < metaNodes.length; i += 1) {
+            descriptor[metaNodes[i].getId()] = this._getPartDescriptor(metaNodes[i].getId());
+            descriptor[metaNodes[i].getId()].visibility = 'hidden';
+        }
+
+        if (containerNode) {
+            validInfo = containerNode.getValidChildrenTypesDetailed(this._aspect);
+
+            keys = Object.keys(validInfo);
+
+            for (i = 0; i < keys.length; i += 1) {
+                if (validInfo[keys[i]]) {
+                    descriptor[keys[i]].visibility = 'visible';
+                } else {
+                    descriptor[keys[i]].visibility = 'grayed';
+                }
+            }
+        }
+
+        return descriptor;
+    };
+
+    PartBrowserControl.prototype._getTerritoryPatterns = function () {
+        var patterns = {'': {children: 0}},
+            keys,
+            query,
+            i;
+
+        patterns[this._containerNodeId] = {children: 0};
+
+        keys = Object.keys(this._partInstances || {}).sort();
+        for (i = 0; i < keys.length; i += 1) {
+            if (this._partInstances[keys[i]]) {
+                //console.log(this._partInstances[keys[i]].getTerritoryQuery());
+                query = this._partInstances[keys[i]].getTerritoryQuery() || {};
+
+                if (query[keys[i]]) {
+                    patterns[keys[i]] = query[keys[i]];
+                }
+            }
+        }
+
+        return patterns;
     };
 
     PartBrowserControl.prototype.selectedObjectChanged = function (nodeId) {
@@ -93,8 +243,8 @@ define(['js/logger',
                 aspectNames = self._client.getMetaAspectNames(nodeId) || [];
                 if (aspectNames.indexOf(this._aspect) === -1) {
                     self._logger.warn('The currently selected aspect "' +
-                    self._aspect + '" does not exist in the object "' +
-                    nodeId + '", falling back to "All"');
+                        self._aspect + '" does not exist in the object "' +
+                        nodeId + '", falling back to "All"');
                     self._aspect = CONSTANTS.ASPECT_ALL;
                 }
             }

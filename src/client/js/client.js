@@ -1025,15 +1025,20 @@ define([
         };
 
         this.getAllMetaNodes = function () {
-            var metaNodes = state.core.getAllMetaNodes(state.nodes[ROOT_PATH].node),
-                gmeNodes = [],
-                i;
+            if (state && state.core && state.nodes && state.nodes[ROOT_PATH]) {
+                var metaNodes = state.core.getAllMetaNodes(state.nodes[ROOT_PATH].node),
+                    gmeNodes = [],
+                    keys = Object.keys(metaNodes || {}),
+                    i;
 
-            for (i = 0; i < metaNodes.length; i += 1) {
-                gmeNodes.push(storeNode(metaNodes[i]), logger, state, self.meta, storeNode);
+                for (i = 0; i < keys.length; i += 1) {
+                    gmeNodes.push(this.getNode(storeNode(metaNodes[keys[i]]), logger, state, self.meta, storeNode));
+                }
+
+                return gmeNodes;
             }
 
-            return gmeNodes;
+            return [];
         };
 
         function getStringHash(/* node */) {
