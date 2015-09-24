@@ -2,6 +2,7 @@
 title: WebGME API
 version: 1.0
 
+
 securitySchemes:
   - basic:
       description: Basic authentication scheme
@@ -99,7 +100,7 @@ resourceTypes:
       200:
         body:
           application/json:
-            example: !include webgme-api-user-retrieve.sample
+            example: !include webgme-api-user-retrieve.json
   delete:
     responses:
       204:
@@ -107,24 +108,24 @@ resourceTypes:
 /users:
   type:
     collection:
-      exampleCollection: !include webgme-api-users.sample
-      exampleItem: !include webgme-api-user-new.sample
+      exampleCollection: !include webgme-api-users.json
+      exampleItem: !include webgme-api-user-new.json
   
   /{username}:
     type:
       collection-item:
-        exampleItem: !include webgme-api-user-retrieve.sample   
+        exampleItem: !include webgme-api-user-retrieve.json   
 
 /orgs:
   type:
     collection:
-      exampleCollection: !include webgme-api-orgs.sample
-      exampleItem: !include webgme-api-org-new.sample
+      exampleCollection: !include webgme-api-orgs.json
+      exampleItem: !include webgme-api-org-new.json
     
   /{orgId}:
     type:
       collection-item:
-        exampleItem: !include webgme-api-org-retrieve.sample
+        exampleItem: !include webgme-api-org-retrieve.json
     
     /users/{username}:
       put:
@@ -152,8 +153,8 @@ resourceTypes:
 /projects:
   type:
     collection:
-      exampleCollection: !include webgme-api-projects.sample
-      exampleItem: !include webgme-api-project-new.sample
+      exampleCollection: !include webgme-api-projects.json
+      exampleItem: !include webgme-api-project-new.json
   
   /{ownerId}/{projectName}:
     uriParameters:
@@ -163,7 +164,7 @@ resourceTypes:
         example: ActivePanels
     type:
       collection-item:
-        exampleItem: !include webgme-api-project-retrieve.sample
+        exampleItem: !include webgme-api-project-retrieve.json
     
     /commits:
       get:
@@ -175,8 +176,8 @@ resourceTypes:
     /branches:
       type:
         collection:
-          exampleCollection: !include webgme-api-branches.sample
-          exampleItem: !include webgme-api-branch-new.sample
+          exampleCollection: !include webgme-api-branches.json
+          exampleItem: !include webgme-api-branch-new.json
         
       /{branchId}:
         uriParameters:
@@ -184,8 +185,87 @@ resourceTypes:
             example: master
         type:
           collection-item:
-            exampleItem: !include webgme-api-branch-retrieve.sample
+            exampleItem: !include webgme-api-branch-retrieve.json
         
-      
-      
-      
+
+/decorators:
+  get:
+    description: Returns with all available decorators
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-decorators.json
+
+/seeds:
+  get:
+    description: Returns with all available seeds
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-seeds.json
+
+/visualizers:
+  get:
+    description: Returns with all available visualizers
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-visualizers.json
+
+/plugins:
+  get:
+    description: Lists all available plugins
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-plugins.json
+  
+  /{pluginName}:
+    /config:
+      get:
+        description: Gets the default configuration for the plugin.
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include webgme-api-plugin-config.json
+                
+    /configStructure:
+      get:
+        description: Gets the conficuration structure for a plugin.
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include webgme-api-plugin-configStructure.json                
+    /execute:
+      post:
+        description: Executes a plugin on server side. Returns with a result id.
+        body:
+          application/json:
+            example: !include webgme-api-plugin-execute-post.json   
+        
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include webgme-api-plugin-execute.json   
+    
+    /results/{resultId}:
+      get:
+        description: Gets a result for this plugin by resultId.
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include webgme-api-plugin-result.json   
+
+/blob:
+  description: TO BE MOVED here from /rest/blob
+
+/executor:
+  description: TO BE MOVED here from /rest/executor

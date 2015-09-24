@@ -1,0 +1,66 @@
+[
+    {
+        "name":"pluginID",
+        "displayName":"Unique plugin identifier",
+        "regex":"^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|arguments|interface|protected|implements|instanceof)$)[a-zA-Z_$][0-9a-zA-Z_$]*",
+        "regexMessage":"No spaces and special characters allowed. This value is used as the name of the generated plugin class.",
+        "description":"Unique ID for the plugin.",
+        "value":"NewPlugin",
+        "valueType":"string",
+        "readOnly":false
+    },
+    {
+        "name":"pluginName",
+        "displayName":"Name",
+        "description":"Short readable plugin name; spaces are allowed",
+        "value":"New Plugin",
+        "valueType":"string",
+        "readOnly":false
+    },
+    {
+        "name":"description",
+        "displayName":"Description",
+        "description":"Optional description of the plugin.",
+        "value":"",
+        "valueType":"string",
+        "readOnly":false
+    },
+    {
+        "name":"test",
+        "displayName":"Include testing script",
+        "description":"Generate template for unit-tests.",
+        "value":true,
+        "valueType":"boolean",
+        "readOnly":false
+    },
+    {
+        "name":"templateType",
+        "displayName":"Example template",
+        "description":"Ejs template for code generation, also illustrates how to save artifacts using the blobClient.",
+        "value":"None",
+        "valueType":"string",
+        "valueItems":[
+            "None",
+            "JavaScript",
+            "Python",
+            "CSharp"
+        ],
+        "readOnly":false
+    },
+    {
+        "name":"configStructure",
+        "displayName":"Include Configuration Structure.",
+        "description":"Configuration structure will populate this GUI with controls.",
+        "value":false,
+        "valueType":"boolean",
+        "readOnly":false
+    },
+    {
+        "name":"meta",
+        "displayName":"Generate META",
+        "description":"Generates a static listing of the meta objects to facilitate coding.",
+        "value":true,
+        "valueType":"boolean",
+        "readOnly":false
+    }
+]

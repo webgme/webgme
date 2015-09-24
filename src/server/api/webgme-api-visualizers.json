@@ -1,0 +1,56 @@
+[
+   {
+      "id":"ModelEditor",
+      "title":"Composition",
+      "panel":"js/Panels/ModelEditor/ModelEditorPanel",
+      "DEBUG_ONLY":false
+   },
+   {
+      "id":"Block Editor",
+      "title":"Block Editor",
+      "panel":"js/Panels/BlockEditor/BlockEditorPanel",
+      "DEBUG_ONLY":true
+   },
+   {
+      "id":"METAAspect",
+      "title":"Meta",
+      "panel":"js/Panels/MetaEditor/MetaEditorPanel",
+      "DEBUG_ONLY":false
+   },
+   {
+      "id":"SetEditor",
+      "title":"Set membership",
+      "panel":"js/Panels/SetEditor/SetEditorPanel",
+      "DEBUG_ONLY":false
+   },
+   {
+      "id":"Crosscut",
+      "title":"Crosscut",
+      "panel":"js/Panels/Crosscut/CrosscutPanel",
+      "DEBUG_ONLY":false
+   },
+   {
+      "id":"ContainmentGrid",
+      "title":"Containment Grid - All",
+      "panel":"js/Panels/Grid/GridPanel",
+      "DEBUG_ONLY":true
+   },
+   {
+      "id":"ContainmentGridPointers",
+      "title":"Containment Grid - Pointers",
+      "panel":"js/Panels/Grid/GridPanelPointers",
+      "DEBUG_ONLY":true
+   },
+   {
+      "id":"GridSets",
+      "title":"Set explorer (DEBUG)",
+      "panel":"js/Panels/Grid/GridPanelSets",
+      "DEBUG_ONLY":true
+   },
+   {
+      "id":"GraphViz",
+      "title":"Graph view",
+      "panel":"js/Panels/GraphViz/GraphVizPanel",
+      "DEBUG_ONLY":false
+   }
+]
