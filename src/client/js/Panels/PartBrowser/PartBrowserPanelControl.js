@@ -61,20 +61,14 @@ define(['js/logger',
             //self.selectedObjectChanged(activeObject);
             console.time('SAO');
             self._containerNodeId = activeObject;
-            var newDescriptor = self._getPartDescriptorCollection();
+            self._updateDescriptor(self._getPartDescriptorCollection());
 
-            self._logger.error('new descriptor calculated', self._descriptorCollection, newDescriptor);
-            self._updateDescriptor(newDescriptor);
             console.timeEnd('SAO');
         });
 
         this._newEventHandling = function (events) {
             console.time('EV');
-
-            var newDescriptor = self._getPartDescriptorCollection();
-
-            self._logger.error('new descriptor calculated2', self._descriptorCollection, newDescriptor);
-            self._updateDescriptor(newDescriptor);
+            self._updateDescriptor(self._getPartDescriptorCollection());
             console.timeEnd('EV');
         };
 
@@ -89,25 +83,10 @@ define(['js/logger',
     };
 
     PartBrowserControl.prototype._updateDescriptor = function (newDescriptor) {
-        var keys = Object.keys(newDescriptor || {}),
+        var keys = Object.keys(newDescriptor || {}).sort(),
             i,
             self = this,
             div,
-            decriptorChanged = function (oldDesc, newDesc) {
-                if (oldDesc.name !== newDesc.name) {
-                    return true;
-                }
-                if (oldDesc.decorator !== newDesc.decorator) {
-                    return true;
-                }
-                if (oldDesc.id !== newDesc.id) {
-                    return true;
-                }
-                if (oldDesc.visibility !== newDesc.visibility) {
-                    return true;
-                }
-                return false;
-            },
             newTerritoryRules;
 
         //add and update
@@ -216,6 +195,7 @@ define(['js/logger',
     };
 
     PartBrowserControl.prototype.selectedObjectChanged = function (nodeId) {
+        console.log('called1');
         var self = this,
             aspectNames;
 
@@ -278,6 +258,7 @@ define(['js/logger',
     };
 
     PartBrowserControl.prototype._eventCallback = function (events) {
+        console.log('called3');
         //TODO eventing should be refactored
         this._logger.debug('_eventCallback ' + events[0].etype);
         events.shift();
@@ -325,18 +306,21 @@ define(['js/logger',
 
     // PUBLIC METHODS
     PartBrowserControl.prototype._onLoad = function (gmeID) {
+        console.log('called4');
         if (this._containerNodeId === gmeID) {
             this._processContainerNode(gmeID);
         }
     };
 
     PartBrowserControl.prototype._onUpdate = function (gmeID) {
+        console.log('called5');
         if (this._containerNodeId === gmeID) {
             this._processContainerNode(gmeID);
         }
     };
 
     PartBrowserControl.prototype._onUnload = function (gmeID) {
+        console.log('called6');
         if (this._containerNodeId === gmeID) {
             this._logger.warn('Container node got unloaded...');
             this._validChildrenTypeIDs = [];
@@ -345,6 +329,7 @@ define(['js/logger',
     };
 
     PartBrowserControl.prototype._processContainerNode = function (gmeID) {
+        console.log('called7');
         var node = this._client.getNode(gmeID),
             validChildrenTypes = [],
             oValidChildrenTypes = this._validChildrenTypeIDs.slice(0),
@@ -404,6 +389,7 @@ define(['js/logger',
     };
 
     PartBrowserControl.prototype._doUpdateTerritory = function (async) {
+        console.log('called8');
         var territoryId = this._territoryId,
             patterns = this._selfPatterns,
             client = this._client,
@@ -483,6 +469,7 @@ define(['js/logger',
 
 
     PartBrowserControl.prototype._removePart = function (id) {
+        console.log('called14');
         var idx;
 
         //remove from the UI
@@ -495,6 +482,7 @@ define(['js/logger',
 
 
     PartBrowserControl.prototype._updateValidChildrenTypeDecorators = function () {
+        console.log('called15');
         var len = this._validChildrenTypeIDs.length,
             decorators = [DEFAULT_DECORATOR],
             self = this,
@@ -517,6 +505,7 @@ define(['js/logger',
 
 
     PartBrowserControl.prototype._refreshPartList = function () {
+        console.log('called16');
         var childrenTypeToDisplay = [],
             i,
             id,
@@ -637,6 +626,7 @@ define(['js/logger',
 
 
     PartBrowserControl.prototype.selectedAspectChanged = function (aspect) {
+        console.log('called17');
         if (this._aspect !== aspect) {
             this._aspect = aspect;
 
