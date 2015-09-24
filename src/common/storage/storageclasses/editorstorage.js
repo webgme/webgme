@@ -423,6 +423,7 @@ define([
             var project = projects[projectId],
                 newCommitHash = commitData.commitObject._id,
                 branch = project.branches[branchName],
+                wasFirstInQueue,
                 eventData = {
                     commitData: commitData,
                     local: true
@@ -440,10 +441,9 @@ define([
                     branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
                 }
 
-                if (branch.getCommitQueue().length === 1) { // i.e. this commit is the only one queued.
-                    logger.debug('_commitToBranch, commit was first in queue. Will start pushing commit');
-                    self._pushNextQueuedCommit(projectId, branchName);
-                }
+                // Get the queue length before dispatching because within the asynchrony,
+                // the queue may get longer and we end up never pushing any commit.
+                wasFirstInQueue = branch.getCommitQueue().length === 1;
 
                 branch.dispatchHashUpdate(eventData, function (err, proceed) {
                     logger.debug('_commitToBranch, dispatchHashUpdate done. [err, proceed]', err, proceed);
@@ -451,7 +451,12 @@ define([
                     if (err) {
                         callback(new Error('Commit failed being loaded in users: ' + err));
                     } else if (proceed === true) {
-                        logger.debug('_commitToBranch, proceed only applicable when loading external updates');
+                        if (wasFirstInQueue) {
+                            logger.debug('_commitToBranch, commit was first in queue - will start pushing commit');
+                            self._pushNextQueuedCommit(projectId, branchName);
+                        } else {
+                            logger.debug('_commitToBranch, commit was NOT first in queue');
+                        }
                     } else {
                         callback(new Error('Commit halted when loaded in users: ' + err));
                     }

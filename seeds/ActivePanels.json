@@ -229,7 +229,7 @@
         "ProjectRegistry": {
           "FCO_ID": "/1"
         },
-        "usedAddOns": "ConstraintAddOn",
+        "usedAddOns": "",
         "validDecorators": "ModelDecorator",
         "validPlugins": "",
         "validVisualizers": "ModelEditor METAAspect"

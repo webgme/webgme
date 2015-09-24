@@ -2,15 +2,23 @@
 /*jshint node:true*/
 
 /**
+ * Continuously validates the meta rules for the entire project.
+ * If there are violations the Root node will be renamed Meta Rules Violation else No Violations.
+ *
+ * TODO: This is just to illustrate a not a very nice way to show changes.
+ * TODO: Until AddOns support notifications - this will have to do.
+ *
  * @author kecso / https://github.com/kecso
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (AddOnBase, constraint) {
 
     'use strict';
-    var ConstraintAddOn = function (Core, storage, gmeConfig, logger, userId) {
-        AddOnBase.call(this, Core, storage, gmeConfig, logger, userId);
+    var ConstraintAddOn = function (logger, gmeConfig) {
+        AddOnBase.call(this, logger, gmeConfig);
         this.constraintChecker = null;
+        this.rootNode = null;
     };
 
     ConstraintAddOn.prototype = Object.create(AddOnBase.prototype);
@@ -20,42 +28,81 @@ define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (Add
         return 'ConstraintAddOn';
     };
 
-    ConstraintAddOn.prototype.update = function (root, callback) {
-        //TODO if we would like a continuous constraint checking we should use this function as well
-        this.root = root;
-        this.constraintChecker.reinitialize(this.root, this.commit, constraint.TYPES.CUSTOM);
-        callback(null);
+    ConstraintAddOn.prototype.getVersion = function () {
+        return '1.0.0';
     };
 
-    ConstraintAddOn.prototype.query = function (parameters, callback) {
-        var self = this;
-        //several query will be available but the first is the simple run constraint
-        switch (parameters.querytype) {
-            case 'checkProject':
-                self.constraintChecker.checkModel(self.core.getPath(self.root), callback);
-                break;
-            case 'checkModel':
-                self.constraintChecker.checkModel(parameters.path, callback);
-                break;
-            case 'checkNode':
-                self.constraintChecker.checkNode(parameters.path, callback);
-                break;
-            default:
-                callback(new Error('Unknown command'));
-        }
+    ConstraintAddOn.prototype.getQueryParamsStructure = function () {
+        return [{
+            name: 'queryType',
+            displayName: 'Query Type',
+            description: 'Which type of constraint checking',
+            value: 'checkProject',
+            valueType: 'string',
+            valueItems: [
+                'checkProject',
+                'checkModel',
+                'checkNode'
+            ]
+        }];
     };
 
-    ConstraintAddOn.prototype.start = function (parameters, callback) {
+    ConstraintAddOn.prototype.update = function (rootNode, commitObj, callback) {
         var self = this;
-        AddOnBase.prototype.start.call(self, parameters, function (err) {
-            if (err) {
-                callback(err);
-            } else {
-                self.constraintChecker = new constraint.Checker(self.core, self.logger);
-                self.constraintChecker.initialize(self.root, self.commit, constraint.TYPES.CUSTOM);
-                callback(null);
-            }
-        });
+
+        self.rootNode = rootNode;
+        self.constraintChecker.reinitialize(self.rootNode, commitObj._id, constraint.TYPES.META);
+        self.logger.debug('update invoked, checking project for meta violations.');
+        self.constraintChecker.checkModel(self.core.getPath(self.rootNode))
+            .then(function (result) {
+                var previousName = self.core.getAttribute(self.rootNode, 'name');
+                if (result.hasViolation === true) {
+                    self.logger.debug('There were violations, will name rootNode "Violations", previous name:',
+                        previousName);
+
+                    if (previousName !== 'Violations') {
+                        self.core.setAttribute(self.rootNode, 'name', 'Violations');
+                        self.addCommitMessage('Found meta-rule violations, please check meta rules for details.');
+                    }
+                } else {
+                    self.logger.debug('There were no violations, will name rootNode "No Violations", previous name:',
+                        previousName);
+                    if (previousName !== 'No Violations') {
+                        self.core.setAttribute(self.rootNode, 'name', 'No Violations');
+                        self.addCommitMessage('No meta-rule violations.');
+                    }
+                }
+                callback(null, self.updateResult);
+            })
+            .catch(callback);
+    };
+
+    ConstraintAddOn.prototype.initialize = function (rootNode, commitObj, callback) {
+        var self = this;
+        self.logger.debug('initialized called, will create checker using core');
+
+        self.constraintChecker = new constraint.Checker(self.core, self.logger);
+        self.constraintChecker.initialize(self.rootNode, commitObj._id, constraint.TYPES.META);
+
+        self.update(rootNode, commitObj, callback);
+    };
+
+    ConstraintAddOn.prototype.query = function (commitHash, queryParams, callback) {
+        //var self = this;
+        //
+        //switch (queryParams.querytype) {
+        //    case 'checkProject':
+        //        self.constraintChecker.checkModel(self.core.getPath(self.rootNode), callback);
+        //        break;
+        //    case 'checkModel':
+        //        self.constraintChecker.checkModel(queryParams.path, callback);
+        //        break;
+        //    case 'checkNode':
+        //        self.constraintChecker.checkNode(queryParams.path, callback);
+        //        break;
+        //    default:
+        //        callback(new Error('Unknown command'));
+        //}
     };
 
     return ConstraintAddOn;

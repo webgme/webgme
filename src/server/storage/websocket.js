@@ -10,9 +10,7 @@ var io = require('socket.io'),
     Q = require('q'),
     COOKIE = require('cookie-parser'),
     URL = requireJS('common/util/url'),
-    CONSTANTS = requireJS('common/storage/constants'),
-    ROOM_DIV = CONSTANTS.ROOM_DIVIDER, // TODO: Add prefixes
-    DATABASE_ROOM = CONSTANTS.DATABASE_ROOM;
+    CONSTANTS = requireJS('common/storage/constants');
 
 function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
     var logger = mainLogger.fork('WebSocket'),
@@ -76,12 +74,89 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         return emitter;
     }
 
+    function joinBranchRoom(socket, projectId, branchName) {
+        var deferred = Q.defer(),
+            roomName = projectId + CONSTANTS.ROOM_DIVIDER + branchName,
+            eventData = {
+                projectId: projectId,
+                branchName: branchName,
+                currNbrOfSockets: 0,
+                prevNbrOfSockets: 0
+            };
+
+        if (socket.rooms.indexOf(roomName) !== -1) {
+            deferred.resolve();
+        } else {
+            Q.ninvoke(socket, 'join', roomName)
+                .then(function () {
+                    var workManagerParams = {
+                        projectId: projectId,
+                        branchName: branchName,
+                        webGMESessionId: getSessionIdFromSocket(socket),
+                        join: true
+                    };
+
+                    eventData.currNbrOfSockets = Object.keys(webSocket.sockets.adapter.rooms[roomName]).length;
+                    eventData.prevNbrOfSockets = eventData.currNbrOfSockets - 1;
+
+                    socket.broadcast.to(roomName).emit(CONSTANTS.BRANCH_ROOM_SOCKETS, eventData);
+
+
+                    return Q.ninvoke(workerManager, 'socketRoomChange', workManagerParams);
+                })
+                .then(deferred.resolve)
+                .catch(function (err) {
+                    deferred.reject(err instanceof Error ? err : new Error(err));
+                });
+        }
+
+        return deferred.promise;
+    }
+
+    function leaveBranchRoom(socket, projectId, branchName, disconnected) {
+        var deferred = Q.defer(),
+            roomName = projectId + CONSTANTS.ROOM_DIVIDER + branchName,
+            eventData = {
+                projectId: projectId,
+                branchName: branchName,
+                currNbrOfSockets: 0,
+                prevNbrOfSockets: 0
+            };
+
+        if (socket.rooms.indexOf(roomName) === -1) {
+            deferred.resolve();
+        } else {
+            eventData.prevNbrOfSockets = Object.keys(webSocket.sockets.adapter.rooms[roomName]).length;
+            eventData.currNbrOfSockets = eventData.prevNbrOfSockets - 1;
+
+            socket.broadcast.to(roomName).emit(CONSTANTS.BRANCH_ROOM_SOCKETS, eventData);
+
+            Q.ninvoke(socket, 'leave', roomName)
+                .then(function () {
+                    var workManagerParams = {
+                        projectId: projectId,
+                        branchName: branchName,
+                        webGMESessionId: getSessionIdFromSocket(socket),
+                        join: false
+                    };
+
+                    return Q.ninvoke(workerManager, 'socketRoomChange', workManagerParams);
+                })
+                .then(deferred.resolve)
+                .catch(function (err) {
+                    deferred.reject(err instanceof Error ? err : new Error(err));
+                });
+        }
+
+        return deferred.promise;
+    }
+
     storage.addEventListener(CONSTANTS.PROJECT_DELETED, function (_s, data) {
-        getEmitter(data).to(DATABASE_ROOM).emit(CONSTANTS.PROJECT_DELETED, data);
+        getEmitter(data).to(CONSTANTS.DATABASE_ROOM).emit(CONSTANTS.PROJECT_DELETED, data);
     });
 
     storage.addEventListener(CONSTANTS.PROJECT_CREATED, function (_s, data) {
-        getEmitter(data).to(DATABASE_ROOM).emit(CONSTANTS.PROJECT_CREATED, data);
+        getEmitter(data).to(CONSTANTS.DATABASE_ROOM).emit(CONSTANTS.PROJECT_CREATED, data);
     });
 
     storage.addEventListener(CONSTANTS.BRANCH_DELETED, function (_s, data) {
@@ -97,7 +172,9 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
     });
 
     storage.addEventListener(CONSTANTS.BRANCH_UPDATED, function (_s, data) {
-        getEmitter(data).to(data.projectId + ROOM_DIV + data.branchName).emit(CONSTANTS.BRANCH_UPDATED, data);
+        getEmitter(data)
+            .to(data.projectId + CONSTANTS.ROOM_DIVIDER + data.branchName)
+            .emit(CONSTANTS.BRANCH_UPDATED, data);
     });
 
     this.start = function (server) {
@@ -133,6 +210,37 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         webSocket.on('connection', function (socket) {
             logger.debug('New socket connected', socket.id);
 
+            // Inject into socket.onclose in order to see which rooms socket was in.
+            var originalOnClose = socket.onclose;
+            socket.onclose = function () {
+                var i,
+                    projectIdBranchName;
+                logger.debug('onclose: socket was in rooms: ', socket.rooms);
+
+                function getErrorHandler() {
+                    return function (err) {
+                        logger.error(err);
+                    };
+                }
+
+                for (i = 0; i < socket.rooms.length; i += 1) {
+                    if (socket.rooms[i].indexOf(CONSTANTS.ROOM_DIVIDER) > -1) {
+                        logger.debug('Socket was in branchRoom', socket.rooms[i]);
+                        projectIdBranchName = socket.rooms[i].split(CONSTANTS.ROOM_DIVIDER);
+                        // We cannot wait for this since socket.onclose is synchronous.
+                        leaveBranchRoom(socket, projectIdBranchName[0], projectIdBranchName[1], true)
+                            .fail(getErrorHandler());
+                    }
+                }
+
+                originalOnClose.apply(socket, arguments);
+            };
+
+            socket.on('disconnect', function () {
+                // When this event is triggered, the disconnect socket has already left all rooms.
+                logger.debug('disconnect socket is in rooms: ', socket.rooms);
+            });
+
             socket.on('getUserId', function (callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
@@ -150,9 +258,9 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('watchDatabase', function (data, callback) {
                 logger.debug('watchDatabase', {metadata: data});
                 if (data.join) {
-                    socket.join(DATABASE_ROOM);
+                    socket.join(CONSTANTS.DATABASE_ROOM);
                 } else {
-                    socket.leave(DATABASE_ROOM);
+                    socket.leave(CONSTANTS.DATABASE_ROOM);
                 }
                 callback(null);
             });
@@ -187,24 +295,29 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('watchBranch', function (data, callback) {
+                // This is emitted from clients that got disconnected while having branches open.
                 logger.debug('watchBranch', {metadata: data});
                 projectAccess(socket, data.projectId)
                     .then(function (access) {
-                        var roomName = data.projectId + ROOM_DIV + data.branchName;
                         if (data.join) {
                             if (access.read) {
-                                socket.join(roomName);
-                                logger.debug('socket joined room', roomName);
-                                callback(null);
+                                joinBranchRoom(socket, data.projectId, data.branchName)
+                                    .fail(function (err) {
+                                        logger.error(err);
+                                    });
                             } else {
-                                logger.warn('socket not authorized to join room', roomName);
-                                callback('No read access for ' + data.projectId);
+                                logger.warn('socket not authorized to join room', data.projectId);
+                                throw new Error('No read access for ' + data.projectId);
                             }
                         } else {
-                            socket.leave(roomName);
-                            logger.debug('socket left room', roomName);
-                            callback(null);
+                            leaveBranchRoom(socket, data.projectId, data.branchName)
+                                .fail(function (err) {
+                                    logger.error(err);
+                                });
                         }
+                    })
+                    .then(function () {
+                        callback(null);
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {
@@ -242,14 +355,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('closeProject', function (data, callback) {
                 logger.debug('closeProject', {metadata: data});
-                //socket.leave(data.projectId);
-                //if (data.branchName) {
-                //    socket.leave(data.projectId + ROOM_DIV + data.branchName);
-                //}
                 callback();
             });
 
             socket.on('openBranch', function (data, callback) {
+                var latestCommitData;
                 logger.debug('openBranch', {metadata: data});
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
@@ -257,8 +367,14 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         return storage.getLatestCommitData(data);
                     })
                     .then(function (commitData) {
-                        socket.join(data.projectId + ROOM_DIV + data.branchName);
-                        callback(null, commitData);
+                        latestCommitData = commitData;
+                        joinBranchRoom(socket, data.projectId, data.branchName)
+                            .fail(function (err) {
+                                logger.error(err);
+                            });
+                    })
+                    .then(function () {
+                        callback(null, latestCommitData);
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {
@@ -271,14 +387,17 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('closeBranch', function (data, callback) {
                 logger.debug('closeBranch', {metadata: data});
-                socket.leave(data.projectId + ROOM_DIV + data.branchName);
-                callback();
+                leaveBranchRoom(socket, data.projectId, data.branchName)
+                    .fail(function (err) {
+                        logger.error(err);
+                    });
+                callback(null);
             });
 
             socket.on('makeCommit', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(data.projectId + ROOM_DIV + data.branchName) > -1) {
+                        if (socket.rooms.indexOf(data.projectId + CONSTANTS.ROOM_DIVIDER + data.branchName) > -1) {
                             data.socket = socket;
                         }
                         data.username = userId;
@@ -374,7 +493,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('deleteProject', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
+                        if (socket.rooms.indexOf(CONSTANTS.DATABASE_ROOM) > -1) {
                             data.socket = socket;
                         }
                         data.username = userId;
@@ -395,7 +514,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('createProject', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
+                        if (socket.rooms.indexOf(CONSTANTS.DATABASE_ROOM) > -1) {
                             data.socket = socket;
                         }
                         data.username = userId;
@@ -416,7 +535,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('transferProject', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
+                        if (socket.rooms.indexOf(CONSTANTS.DATABASE_ROOM) > -1) {
                             data.socket = socket;
                         }
                         data.username = userId;
@@ -529,8 +648,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('simpleQuery', function (workerId, parameters, callback) {
-                getUserIdFromSocket(socket).
-                    then(function (userId) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
                         parameters.userId = userId;
                         parameters.webGMESessionId = getSessionIdFromSocket(socket);
                         workerManager.query(workerId, parameters, callback);

@@ -26,6 +26,7 @@ describe('ProjectCache', function () {
         server,
         gmeAuth,
         storage,
+        socket,
 
         projectName = 'StorageProject',
         importResult,
@@ -85,6 +86,7 @@ describe('ProjectCache', function () {
         agent = superagent.agent();
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
+                socket = result.socket;
                 storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
                     result.webGMESessionId,
                     logger,
@@ -101,7 +103,10 @@ describe('ProjectCache', function () {
     });
 
     afterEach(function (done) {
-        storage.close(done);
+        storage.close(function (err) {
+            socket.disconnect();
+            done(err);
+        });
     });
 
     function openProjectAndBranch(branchName, hashUpdateHandler, branchStatusHandler) {

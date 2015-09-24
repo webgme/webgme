@@ -240,6 +240,9 @@ function StandAloneServer(gmeConfig) {
         self.isRunning = false;
 
         try {
+            if (gmeConfig.executor.enable) {
+                ExecutorServer.stop();
+            }
             // FIXME: is this call synchronous?
             __webSocket.stop();
             //kill all remaining workers

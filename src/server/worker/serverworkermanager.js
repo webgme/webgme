@@ -1,4 +1,4 @@
-/*globals*/
+/*globals requireJS*/
 /*jshint node: true*/
 /**
  * @module Server:ServerWorkerManager
@@ -10,11 +10,14 @@ var Child = require('child_process'),
     process = require('process'),
     path = require('path'),
     CONSTANTS = require('./constants'),
-    SIMPLE_WORKER_JS = path.join(__dirname, 'simpleworker.js');
+    GUID = requireJS('common/util/guid'),
+    SIMPLE_WORKER_JS = path.join(__dirname, 'simpleworker.js'),
+    CONNECTED_WORKER_JS = path.join(__dirname, 'connectedworker.js');
 
 
 function ServerWorkerManager(_parameters) {
-    var _managerId = null,
+    var self = this,
+        _managerId = null,
         _workers = {},
         _idToPid = {},
         _waitingRequests = [],
@@ -22,10 +25,11 @@ function ServerWorkerManager(_parameters) {
         gmeConfig = _parameters.globConf,
         logger = _parameters.logger.fork('serverworkermanager');
 
-    //helping functions
     logger.debug('SIMPLE_WORKER_JS:', SIMPLE_WORKER_JS);
+    logger.debug('CONNECTED_WORKER_JS:', CONNECTED_WORKER_JS);
 
-    function reserveWorker() {
+    //helping functions
+    function reserveWorker(workerType) {
         var debug = false,
             execArgv = process.execArgv.filter(function (arg) {
                 if (arg.indexOf('--debug-brk') === 0) {
@@ -51,24 +55,35 @@ function ServerWorkerManager(_parameters) {
         logger.debug('execArgv for new child process', execArgv);
 
         if (Object.keys(_workers || {}).length < gmeConfig.server.maxWorkers) {
-            var worker = Child.fork(SIMPLE_WORKER_JS, [], {execArgv: execArgv});
+            var childProcess;
 
-            _workers[worker.pid] = {
-                worker: worker,
+            if (workerType === CONSTANTS.workerTypes.connected) {
+                childProcess = Child.fork(CONNECTED_WORKER_JS, [], {execArgv: execArgv});
+            } else {
+                childProcess = Child.fork(SIMPLE_WORKER_JS, [], {execArgv: execArgv});
+            }
+
+            _workers[childProcess.pid] = {
+                childProcess: childProcess,
                 state: CONSTANTS.workerStates.initializing,
-                type: null,
+                type: workerType,
                 cb: null
             };
 
-            logger.debug('workerPid forked ' + worker.pid);
-            worker.on('message', messageHandling);
-            worker.on('exit', function (code, signal) {
-                logger.debug('worker has exited: ' + worker.pid);
+            logger.debug('workerPid forked ' + childProcess.pid);
+            childProcess.on('message', messageHandling);
+            childProcess.on('exit', function (code, signal) {
+                logger.debug('worker has exited: ' + childProcess.pid);
                 if (code !== null && !signal) {
-                    logger.warn('worker ' + worker.pid + ' has exited abnormally with code ' + code);
+                    logger.warn('worker ' + childProcess.pid + ' has exited abnormally with code ' + code);
                 }
-                delete _workers[worker.pid];
-                reserveWorkerIfNecessary();
+
+                if (workerType === CONSTANTS.workerTypes.connected) {
+                    self.connectedWorkerId = null;
+                }
+
+                delete _workers[childProcess.pid];
+                reserveWorkerIfNecessary(workerType);
             });
         }
     }
@@ -76,7 +91,7 @@ function ServerWorkerManager(_parameters) {
     function freeWorker(workerPid) {
         logger.debug('freeWorker', workerPid);
         if (_workers[workerPid]) {
-            _workers[workerPid].worker.kill('SIGINT');
+            _workers[workerPid].childProcess.kill('SIGINT');
             delete _workers[workerPid];
         } else {
             logger.warn('freeWorker - worker did not exist', workerPid);
@@ -88,16 +103,21 @@ function ServerWorkerManager(_parameters) {
         var len = Object.keys(_workers).length;
         logger.debug('there are ' + len + ' worker to close');
         Object.keys(_workers).forEach(function (workerPid) {
-            _workers[workerPid].worker.removeAllListeners('exit');
-            _workers[workerPid].worker.on('close', function (/*code, signal*/) {
+            _workers[workerPid].childProcess.removeAllListeners('exit');
+            _workers[workerPid].childProcess.on('close', function (/*code, signal*/) {
                 logger.debug('workerPid closed: ' + workerPid);
+
+                if (_workers[workerPid].type === CONSTANTS.workerTypes.connected) {
+                    self.connectedWorkerId = null;
+                }
+
                 delete _workers[workerPid];
                 len -= 1;
                 if (len === 0) {
                     callback(null);
                 }
             });
-            _workers[workerPid].worker.kill('SIGINT');
+            _workers[workerPid].childProcess.kill('SIGINT');
             logger.debug('request closing workerPid: ' + workerPid);
         });
 
@@ -107,20 +127,17 @@ function ServerWorkerManager(_parameters) {
     }
 
     function assignRequest(workerPid) {
+        var worker;
         if (_waitingRequests.length > 0) {
-            if (_workers[workerPid].state === CONSTANTS.workerStates.free) {
+            worker = _workers[workerPid];
+            if (worker.state === CONSTANTS.workerStates.free && worker.type === CONSTANTS.workerTypes.simple) {
                 var request = _waitingRequests.shift();
                 logger.debug('Request will be handled, request left in queue: ', _waitingRequests.length);
                 logger.debug('Worker "' + workerPid + '" will handle request: ', {metadata: request});
-                _workers[workerPid].state = CONSTANTS.workerStates.working;
-                _workers[workerPid].cb = request.cb;
-                _workers[workerPid].resid = null;
-                if (request.request.command === CONSTANTS.workerCommands.connectedWorkerStart) {
-                    _workers[workerPid].type = CONSTANTS.workerTypes.connected;
-                } else {
-                    _workers[workerPid].type = CONSTANTS.workerTypes.simple;
-                }
-                _workers[workerPid].worker.send(request.request);
+                worker.state = CONSTANTS.workerStates.working;
+                worker.cb = request.cb;
+                worker.resid = null;
+                worker.childProcess.send(request.request);
             }
         }
     }
@@ -134,27 +151,13 @@ function ServerWorkerManager(_parameters) {
             logger.debug('Worker will handle message', {metadata: worker});
             switch (msg.type) {
                 case CONSTANTS.msgTypes.request:
-                    //this is the first response to the request
-                    //here we can store the id and
-                    cFunction = worker.cb;
-                    worker.cb = null;
-                    worker.state = CONSTANTS.workerStates.waiting;
-                    worker.resid = msg.resid || null;
-                    if (msg.resid) {
-                        _idToPid[msg.resid] = msg.pid;
-                    } else {
-                        //something happened during request handling so we can free the worker
-                        if (worker.type === CONSTANTS.workerTypes.simple) {
-                            worker.state = CONSTANTS.workerStates.free;
-                            //assignRequest(msg.pid);
-                        } else {
-                            freeWorker(msg.pid);
-                        }
-                    }
+                    cFunction = self.connectedWorkerCallbacks[msg.resid];
+                    delete self.connectedWorkerCallbacks[msg.resid];
+
                     if (cFunction) {
-                        cFunction(msg.error, msg.resid);
+                        cFunction(msg.error, msg.result);
                     } else {
-                        logger.warn('No callback associated with', worker.resid);
+                        logger.warn('No callback associated with', msg.resid);
                     }
                     break;
                 case CONSTANTS.msgTypes.result:
@@ -169,6 +172,7 @@ function ServerWorkerManager(_parameters) {
                         worker.resid = null;
                         //assignRequest(msg.pid);
                     } else {
+                        logger.error('ConnectedWorker returned result!');
                         freeWorker(msg.pid);
                     }
 
@@ -180,14 +184,20 @@ function ServerWorkerManager(_parameters) {
                     break;
                 case CONSTANTS.msgTypes.initialize:
                     //this arrives when the worker seems ready for initialization
-                    worker.worker.send({
+                    worker.childProcess.send({
                         command: CONSTANTS.workerCommands.initialize,
                         gmeConfig: gmeConfig
                     });
                     break;
                 case CONSTANTS.msgTypes.initialized:
                     //the worker have been initialized so we have to try to assign it right away
-                    worker.state = CONSTANTS.workerStates.free;
+                    if (worker.type === CONSTANTS.workerTypes.simple) {
+                        worker.state = CONSTANTS.workerStates.free;
+                    } else if (worker.type === CONSTANTS.workerTypes.connected) {
+                        // Connected worker is always waiting for now..
+                        worker.state = CONSTANTS.workerStates.waiting;
+                        self.connectedWorkerId = msg.pid;
+                    }
                     //assignRequest(msg.pid);
                     break;
                 case CONSTANTS.msgTypes.query:
@@ -203,13 +213,13 @@ function ServerWorkerManager(_parameters) {
         }
     }
 
-    function request(parameters, callback) {
+    this.request = function (parameters, callback) {
         logger.debug('Incoming request', {metadata: parameters});
         _waitingRequests.push({request: parameters, cb: callback});
-        reserveWorkerIfNecessary();
-    }
+        reserveWorkerIfNecessary(CONSTANTS.workerTypes.simple);
+    };
 
-    function reserveWorkerIfNecessary() {
+    function reserveWorkerIfNecessary(workerType) {
         var workerIds = Object.keys(_workers || {}),
             i,
             initializingWorkers = 0,
@@ -225,11 +235,11 @@ function ServerWorkerManager(_parameters) {
 
         if (_waitingRequests.length + 1 /* keep a spare */ > initializingWorkers + freeWorkers &&
             workerIds.length < gmeConfig.server.maxWorkers) {
-            reserveWorker();
+            reserveWorker(workerType);
         }
     }
 
-    function query(id, parameters, callback) {
+    this.query = function (id, parameters, callback) {
         var worker;
         logger.debug('Incoming query', id, {metadata: parameters});
         if (_idToPid[id]) {
@@ -239,7 +249,7 @@ function ServerWorkerManager(_parameters) {
                 if (!parameters.command) {
                     parameters.command = CONSTANTS.workerCommands.connectedWorkerQuery;
                 }
-                worker.worker.send(parameters);
+                worker.childProcess.send(parameters);
             } else {
                 delete _idToPid[id];
                 callback('request handler cannot be found');
@@ -247,7 +257,7 @@ function ServerWorkerManager(_parameters) {
         } else {
             callback('wrong request identification');
         }
-    }
+    };
 
     function queueManager() {
         var i,
@@ -283,32 +293,79 @@ function ServerWorkerManager(_parameters) {
                 }
             });
         }
+
+        var connectedRequest,
+            guid;
+        if (self.connectedWorkerRequests.length > 0 && gmeConfig.addOn.enable === true &&
+            self.connectedWorkerId !== null &&
+            _workers[self.connectedWorkerId].state === CONSTANTS.workerStates.waiting) {
+            guid = GUID();
+            connectedRequest = self.connectedWorkerRequests.shift();
+            _workers[self.connectedWorkerId].state = CONSTANTS.workerStates.waiting;
+            self.connectedWorkerCallbacks[guid] = connectedRequest.cb;
+            connectedRequest.request.resid = guid;
+            _workers[self.connectedWorkerId].childProcess.send(connectedRequest.request);
+        }
     }
 
-    function start() {
+
+    // TODO: This should be an object based on projectIds or list of such.
+    // TODO: For now we just keep one dedicated worker for the addOns.
+    this.connectedWorkerId = null;
+    this.connectedWorkerRequests = [];
+    this.connectedWorkerCallbacks = {
+        //resid: callback
+    };
+
+    /**
+     *
+     * @param {object} parameters
+     * @param {string} parameters.webGMESessionId
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {boolean} parameters.join
+     * @param {function} callback
+     */
+    this.socketRoomChange = function (parameters, callback) {
+        if (gmeConfig.addOn.enable === true) {
+            if (parameters.join === true) {
+                logger.info('socket joined room');
+                parameters.command = CONSTANTS.workerCommands.connectedWorkerStart;
+                self.connectedWorkerRequests.push({
+                    request: parameters,
+                    cb: callback
+                });
+            } else {
+                parameters.command = CONSTANTS.workerCommands.connectedWorkerStop;
+                logger.info('socket left room');
+                self.connectedWorkerRequests.push({
+                    request: parameters,
+                    cb: callback
+                });
+            }
+        } else {
+            callback(null);
+        }
+    };
+
+    this.start = function () {
         if (_managerId === null) {
             _managerId = setInterval(queueManager, 10);
         }
-        reserveWorkerIfNecessary();
-    }
+        reserveWorkerIfNecessary(CONSTANTS.workerTypes.simple);
+        if (gmeConfig.addOn.enable === true) {
+            logger.info('AddOns enabled will reserve a connectedWorker');
+            reserveWorker(CONSTANTS.workerTypes.connected);
+        }
+    };
 
-    function stop(callback) {
+    this.stop = function (callback) {
         clearInterval(_managerId);
         _managerId = null;
         freeAllWorkers(callback);
-    }
-
-    return {
-        // Workers related
-        request: request,
-        query: query,
-
-        // Manager related
-        stop: stop,
-        start: start,
-
-        CONSTANTS: CONSTANTS
     };
+
+    this.CONSTANTS = CONSTANTS;
 }
 
 module.exports = ServerWorkerManager;

@@ -32,6 +32,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
 
     ProjectInterface.call(this, dbProject.projectId, objectLoader, mainLogger, gmeConfig);
     this.userName = gmeConfig.authentication.guestAccount;
+    this._dbProject = dbProject;
 
     /**
      * Sets the user that accesses the database. If not altered it defaults to authentication.guestAccount

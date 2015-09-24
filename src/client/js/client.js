@@ -78,7 +78,7 @@ define([
             },
             monkeyPatchKey,
             nodeSetterFunctions,
-            addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
+            //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
         //loadPatternThrottled = loadPattern; //magic number could be fine-tuned
 
@@ -297,6 +297,25 @@ define([
                 if (connectionState === CONSTANTS.STORAGE.CONNECTED) {
                     //N.B. this event will only be triggered once.
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
+                    storage.webSocket.addEventListener(CONSTANTS.STORAGE.BRANCH_ROOM_SOCKETS,
+                        function (emitter, eventData) {
+                            var notification = {
+                                severity: 'INFO',
+                                message: ''
+                            };
+                            if (state.project && state.project.projectId === eventData.projectId &&
+                                state.branchName === eventData.branchName) {
+                                if (eventData.currNbrOfSockets > eventData.prevNbrOfSockets) {
+                                    notification.message = 'Another socket joined your branch [' +
+                                        eventData.currNbrOfSockets + ']';
+                                } else {
+                                    notification.message = 'A socket disconnected from your branch [' +
+                                        eventData.currNbrOfSockets + ']';
+                                }
+                                self.dispatchEvent(CONSTANTS.NOTIFICATION, notification);
+                            }
+                        }
+                    );
                     reLaunchUsers();
                     callback(null);
                 } else if (connectionState === CONSTANTS.STORAGE.DISCONNECTED) {
@@ -473,13 +492,8 @@ define([
 
                 cleanUsersTerritories();
                 self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, projectId);
-                addOnFunctions.stopRunningAddOns(function (err) {
-                    if (err) {
-                        logger.error('Errors stopping addOns when closeProject, (ignoring)', err);
-                    }
 
-                    callback(null);
-                });
+                callback(null);
             });
         }
 
@@ -534,18 +548,12 @@ define([
                 );
             }
 
-            addOnFunctions.stopRunningAddOns(function (err) {
-                if (err) {
-                    logger.error('Errors stopping addOns when selectBranch (ignoring)', err);
-                }
-
-                if (prevBranchName !== null) {
-                    logger.debug('Branch was open, closing it first', prevBranchName);
-                    storage.closeBranch(state.project.projectId, prevBranchName, openBranch);
-                } else {
-                    openBranch(null);
-                }
-            });
+            if (prevBranchName !== null) {
+                logger.debug('Branch was open, closing it first', prevBranchName);
+                storage.closeBranch(state.project.projectId, prevBranchName, openBranch);
+            } else {
+                openBranch(null);
+            }
         };
 
         this.selectCommit = function (commitHash, callback) {
@@ -596,20 +604,14 @@ define([
                 });
             }
 
-            addOnFunctions.stopRunningAddOns(function (err) {
-                if (err) {
-                    logger.error('Errors stopping addOns when selectCommit (ignoring)', err);
-                }
-
-                if (state.branchName !== null) {
-                    logger.debug('Branch was open, closing it first', state.branchName);
-                    prevBranchName = state.branchName;
-                    state.branchName = null;
-                    storage.closeBranch(state.project.projectId, prevBranchName, openCommit);
-                } else {
-                    openCommit(null);
-                }
-            });
+            if (state.branchName !== null) {
+                logger.debug('Branch was open, closing it first', state.branchName);
+                prevBranchName = state.branchName;
+                state.branchName = null;
+                storage.closeBranch(state.project.projectId, prevBranchName, openCommit);
+            } else {
+                openCommit(null);
+            }
         };
 
         function getBranchStatusHandler() {
@@ -1450,7 +1452,7 @@ define([
             if (state.loadingStatus) {
                 state.loading.next(state.loadingStatus);
             } else {
-                addOnFunctions.updateRunningAddOns(state.nodes[ROOT_PATH], state.loading.next);
+                state.loading.next(null);
             }
         }
 
@@ -1834,10 +1836,7 @@ define([
             return filteredNames;
         };
 
-        //addOn
-        this.getRunningAddOnNames = addOnFunctions.getRunningAddOnNames;
-        this.addOnsAllowed = gmeConfig.addOn.enable === true;
-
+        // Constraints
         this.setConstraint = function (path, name, constraintObj) {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 state.core.setConstraint(state.nodes[path].node, name, constraintObj);

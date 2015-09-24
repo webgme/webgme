@@ -36,7 +36,7 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
     ConstraintChecker.prototype.reinitialize =
     ConstraintChecker.prototype.initialize = function (rootNode, commitHash, constraintType) {
         this.rootNode = rootNode;
-        this.logger.debug('ConstraintChecker constraintType', constraintType);
+        this.logger.debug('ConstraintChecker constraintType, commitHash', constraintType, commitHash);
         this.type = constraintType || CONSTRAINT_TYPES.META;
         this.commitHash = commitHash;
         this.initialized = true;

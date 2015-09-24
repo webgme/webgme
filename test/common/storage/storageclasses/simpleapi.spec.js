@@ -20,6 +20,7 @@ describe('storage storageclasses simpleapi', function () {
         expect = testFixture.expect,
 
         agent,
+        socket,
         logger = testFixture.logger.fork('simpleapi.spec'),
 
         guestAccount = gmeConfig.authentication.guestAccount,
@@ -132,6 +133,7 @@ describe('storage storageclasses simpleapi', function () {
         agent = superagent.agent();
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
+                socket = result.socket;
                 webGMESessionId = result.webGMESessionId;
                 storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
                     result.webGMESessionId,
@@ -149,7 +151,10 @@ describe('storage storageclasses simpleapi', function () {
     });
 
     afterEach(function (done) {
-        storage.close(done);
+        storage.close(function (err) {
+            socket.disconnect();
+            done(err);
+        });
     });
 
 

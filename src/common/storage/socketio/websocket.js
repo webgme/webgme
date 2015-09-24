@@ -118,6 +118,11 @@ define([
                     logger.debug('BRANCH_UPDATED event', {metadata: data});
                     self.dispatchEvent(self.getBranchUpdateEventName(data.projectId, data.branchName), data);
                 });
+
+                self.socket.on(CONSTANTS.BRANCH_ROOM_SOCKETS, function (data) {
+                    logger.debug('BRANCH_ROOM_SOCKETS event', {metadata: data});
+                    self.dispatchEvent(CONSTANTS.BRANCH_ROOM_SOCKETS, data);
+                });
             });
         };
 

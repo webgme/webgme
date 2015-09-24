@@ -344,6 +344,34 @@ function loadNode(core, rootNode, nodePath, callback) {
 }
 
 /**
+ *
+ * @param project
+ * @param core
+ * @param commitHash
+ * @param [callback]
+ * @returns {Q.Promise}
+ */
+function loadRootNodeFromCommit(project, core, commitHash, callback) {
+    var deferred = new Q.defer();
+
+    project.loadObject(commitHash, function (err, commitObj) {
+        if (err) {
+            deferred.reject(new Error(err));
+        } else {
+            core.loadRoot(commitObj.root, function (err, rootNode) {
+                if (err) {
+                    deferred.reject(new Error(err));
+                } else {
+                    deferred.resolve(rootNode);
+                }
+            });
+        }
+    });
+
+    return deferred.promise.nodeify(callback);
+}
+
+/**
  * This uses the guest account by default
  * @param {string} projectName
  * @param {string} [userId=gmeConfig.authentication.guestAccount]
@@ -467,6 +495,7 @@ module.exports = {
     projectName2Id: projectName2Id,
     logIn: logIn,
     openSocketIo: openSocketIo,
+    loadRootNodeFromCommit: loadRootNodeFromCommit,
     loadNode: loadNode,
 
     storageUtil: storageUtil,

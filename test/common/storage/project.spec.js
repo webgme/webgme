@@ -21,6 +21,7 @@ describe('storage project', function () {
         expect = testFixture.expect,
 
         agent,
+        socket,
         logger = testFixture.logger.fork('nodestorage'),
 
         guestAccount = gmeConfig.authentication.guestAccount,
@@ -95,6 +96,7 @@ describe('storage project', function () {
         agent = superagent.agent();
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
+                socket = result.socket;
                 storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
                     result.webGMESessionId,
                     logger,
@@ -111,7 +113,10 @@ describe('storage project', function () {
     });
 
     afterEach(function (done) {
-        storage.close(done);
+        storage.close(function (err) {
+                socket.disconnect();
+                done(err);
+            });
     });
 
     it('should openProject', function (done) {
