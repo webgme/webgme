@@ -54,11 +54,11 @@ var path = require('path'),
                              'SVGDecorator',
                              'UMLStateMachineDecorator',
                              'DefaultDecorator'],
-            // Used in client/WebGME.js to load initial project.
+            // Used in client/WebGME.js to load initial project (if url is specified that has higher priority)
             defaultProject: {
-                name: null,
-                branch: null,
-                node: null
+                name: null,   // This is the projectId, e.g. 'guest+TestProject'
+                branch: null, // Defaults to master
+                node: null    // Defaults to the root-node.
             },
             defaultConnectionRouter: 'basic3' //'basic', 'basic2', 'basic3'
         },
