@@ -10,8 +10,7 @@ var io = require('socket.io'),
     Q = require('q'),
     COOKIE = require('cookie-parser'),
     URL = requireJS('common/util/url'),
-    CONSTANTS = requireJS('common/storage/constants'),
-    DATABASE_ROOM = CONSTANTS.DATABASE_ROOM;
+    CONSTANTS = requireJS('common/storage/constants');
 
 function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
     var logger = mainLogger.fork('WebSocket'),
@@ -153,11 +152,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
     }
 
     storage.addEventListener(CONSTANTS.PROJECT_DELETED, function (_s, data) {
-        getEmitter(data).to(DATABASE_ROOM).emit(CONSTANTS.PROJECT_DELETED, data);
+        getEmitter(data).to(CONSTANTS.DATABASE_ROOM).emit(CONSTANTS.PROJECT_DELETED, data);
     });
 
     storage.addEventListener(CONSTANTS.PROJECT_CREATED, function (_s, data) {
-        getEmitter(data).to(DATABASE_ROOM).emit(CONSTANTS.PROJECT_CREATED, data);
+        getEmitter(data).to(CONSTANTS.DATABASE_ROOM).emit(CONSTANTS.PROJECT_CREATED, data);
     });
 
     storage.addEventListener(CONSTANTS.BRANCH_DELETED, function (_s, data) {
@@ -259,9 +258,9 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('watchDatabase', function (data, callback) {
                 logger.debug('watchDatabase', {metadata: data});
                 if (data.join) {
-                    socket.join(DATABASE_ROOM);
+                    socket.join(CONSTANTS.DATABASE_ROOM);
                 } else {
-                    socket.leave(DATABASE_ROOM);
+                    socket.leave(CONSTANTS.DATABASE_ROOM);
                 }
                 callback(null);
             });
@@ -494,7 +493,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('deleteProject', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
+                        if (socket.rooms.indexOf(CONSTANTS.DATABASE_ROOM) > -1) {
                             data.socket = socket;
                         }
                         data.username = userId;
@@ -515,7 +514,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('createProject', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
+                        if (socket.rooms.indexOf(CONSTANTS.DATABASE_ROOM) > -1) {
                             data.socket = socket;
                         }
                         data.username = userId;
@@ -536,7 +535,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('transferProject', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(DATABASE_ROOM) > -1) {
+                        if (socket.rooms.indexOf(CONSTANTS.DATABASE_ROOM) > -1) {
                             data.socket = socket;
                         }
                         data.username = userId;

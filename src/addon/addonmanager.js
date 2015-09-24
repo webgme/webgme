@@ -129,8 +129,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
 
         if (monitor) {
             monitor.connectionCnt += 1;
-            logger.debug('monitorBranch [' + branchName + '] - connection counter [prev, now]',
-                monitor.connectionCnt - 1, monitor.connectionCnt);
+            logger.debug('monitorBranch [' + branchName + '] - connection counter: ', monitor.connectionCnt);
             if (monitor.connectionCnt === 1) {
                 // The client disconnected before the monitor itself connected.
                 // Register on start deferred and stop the monitor.
@@ -185,9 +184,20 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
                         .catch(deferred.reject);
                 }
             } else if (monitor.connectionCnt > 2) {
-                monitor.instance.start()
-                    .then(deferred.resolve)
-                    .catch(deferred.reject);
+                if (self.inStoppedAndStarted[branchName]) {
+                    monitor.instance.stop()
+                        .then(function () {
+                            var newMonitor = self.branchMonitors[branchName];
+                            newMonitor.connectionCnt += 1;
+                            return newMonitor.instance.start();
+                        })
+                        .then(deferred.resolve)
+                        .catch(deferred.reject);
+                } else {
+                    monitor.instance.start()
+                        .then(deferred.resolve)
+                        .catch(deferred.reject);
+                }
             } else {
                 deferred.reject(new Error('monitorBranch - unexpected connection count ( 2 > ' +
                     monitor.connectionCnt + ' )'));
@@ -208,8 +218,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
             deferred.resolve(-1);
         } else {
             monitor.connectionCnt -= 1;
-            logger.debug('unMonitorBranch [' + branchName + '] - connection counter [prev, now]',
-                monitor.connectionCnt + 1, monitor.connectionCnt);
+            logger.debug('unMonitorBranch [' + branchName + '] - connection counter: ', monitor.connectionCnt);
             if (monitor.connectionCnt === 1) {
                 // One connection is the monitor itself.
                 if (monitor.stopTimeout === null) {

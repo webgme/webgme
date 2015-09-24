@@ -291,7 +291,7 @@ describe('AddOnManager', function () {
             }
         );
 
-        it('should enter rare case and succeed gracefully',
+        it('should enter StopAndStarted and succeed gracefully with one new monitor',
             function (done) {
                 var manager = new AddOnManager('mockProjectId', logger, gmeConfig),
                     storage = new StorageMock(manager, done),
@@ -335,6 +335,63 @@ describe('AddOnManager', function () {
                                 storage.openBranch('mockProjectId', branchName, null, null, function (/*err*/) {
                                     setTimeout(function () {
                                         storage.closeBranchTimeout = 40; //Set it back.
+                                        storage.closeBranch('mockProjectId', branchName, function () {});
+                                    }, 300);
+                                });
+
+                            }, 200);
+                        });
+                    }, 120);
+                });
+            }
+        );
+
+        it('should enter StopAndStarted and succeed gracefully with two new monitors',
+            function (done) {
+                var manager = new AddOnManager('mockProjectId', logger, gmeConfig),
+                    storage = new StorageMock(manager, done),
+                    branchName = 'test7',
+                    emptyCnt = 0;
+
+                manager.project = {
+                    ID_NAME: '_id',
+                    loadObject: function () {},
+                    insertObject: function () {}
+                };
+                manager.storage = storage;
+
+                manager.addEventListener('NO_MONITORS', function () {
+                    emptyCnt += 1;
+                    if (emptyCnt === 2) {
+                        expect(storage.branchCounter).to.equal(0);
+                        expect(storage.deferredCnt).to.equal(1); // The monitors own won't have triggered.
+                        expect(manager.branchMonitors).to.deep.equal({});
+                        done();
+                    }
+                });
+
+                storage.openBranch('mockProjectId', branchName, null, null, function (/*err*/) {
+                    expect(storage.branchCounter).to.equal(1);
+                    expect(manager.branchMonitors.hasOwnProperty(branchName)).to.equal(false);
+
+                    setTimeout(function () {
+                        expect(manager.branchMonitors[branchName].connectionCnt).to.equal(2);
+                        // Monitor has connected..
+
+                        storage.closeBranch('mockProjectId', branchName, function (/*err*/) {
+                            storage.closeBranchTimeout = 400; //Slow down the branch closing for the monitor.
+                            expect(storage.branchCounter).to.equal(1);
+                            setTimeout(function () {
+                                // Here the timeout should have started and triggered.
+                                // But branch still open for monitor..
+                                expect(manager.branchMonitors[branchName].connectionCnt).to.equal(1);
+                                expect(manager.branchMonitors[branchName].instance.stopRequested).to.equal(true);
+                                // At this point we connect a new client.
+                                storage.openBranch('mockProjectId', branchName, null, null, function (/*err*/) {});
+                                storage.openBranch('mockProjectId', branchName, null, null, function (/*err*/) {
+                                    setTimeout(function () {
+                                        storage.closeBranchTimeout = 40; //Set it back.
+                                        storage.closeBranch('mockProjectId', branchName, function () {});
                                         storage.closeBranch('mockProjectId', branchName, function () {});
                                     }, 300);
                                 });
