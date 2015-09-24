@@ -472,7 +472,8 @@ define([
             }
 
             // TODO: infinite cycle if MAX_MUTATE is smaller than depth!
-            if (gmeConfig.storage.autoPersist && ++mutateCount > MAX_MUTATE) {
+            // gmeConfig.storage.autoPersist is removed and always false
+            if (false && ++mutateCount > MAX_MUTATE) {
                 mutateCount = 0;
 
                 for (var i = 0; i < roots.length; ++i) {
