@@ -257,6 +257,42 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
             return validTypes;
         }
 
+        function getValidSetMemberTypesDetailed(setName) {
+            var parameters = {
+                    node: state.nodes[_id].node,
+                    children: [],
+                    sensitive: true,
+                    multiplicity: false,
+                    name: setName
+                },
+                fullList,
+                filteredList,
+                validTypes = {},
+                keys = getChildrenIds(),
+                i;
+
+            for (i = 0; i < keys.length; i++) {
+                if (state.nodes[keys[i]]) {
+                    parameters.children.push(state.nodes[keys[i]].node);
+                }
+            }
+
+            fullList = state.core.getValidSetElementsMetaNodes(parameters);
+
+            parameters.multiplicity = true;
+            filteredList = state.core.getValidSetElementsMetaNodes(parameters);
+
+            for (i = 0; i < fullList.length; i += 1) {
+                validTypes[state.core.getPath(fullList[i])] = false;
+            }
+
+            for (i = 0; i < filteredList.length; i += 1) {
+                validTypes[state.core.getPath(filteredList[i])] = true;
+            }
+
+            return validTypes;
+        }
+
         if (state.nodes[_id]) {
             return {
                 getParentId: getParentId,
@@ -298,6 +334,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
                 getValidPointerNames: getValidPointerNames,
                 getValidSetNames: getValidSetNames,
                 getValidChildrenTypesDetailed: getValidChildrenTypesDetailed,
+                getValidSetMemberTypesDetailed: getValidSetMemberTypesDetailed,
                 isConnection: isConnection,
                 isAbstract: isAbstract,
                 getCrosscutsInfo: getCrosscutsInfo,

@@ -35,7 +35,7 @@ define(['js/logger',
         this._containerNodeId = WebGMEGlobal.State.getActiveObject() || null;
 
         //the ID of the valid children types of the container node
-        this._validChildrenTypeIDs = [];
+        //this._validChildrenTypeIDs = [];
 
         //decorators can use it to ask for notifications about their registered sub IDs
         this._componentIDPartIDMap = {};
@@ -56,6 +56,7 @@ define(['js/logger',
         this._descriptorCollection = this._getPartDescriptorCollection();
         this._partInstances = {};
         this._territoryRules = {'': {children: 0}};
+        this._visualizer;
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObject) {
             //self.selectedObjectChanged(activeObject);
@@ -64,6 +65,30 @@ define(['js/logger',
             self._updateDescriptor(self._getPartDescriptorCollection());
 
             console.timeEnd('SAO');
+        });
+
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, function (model/*, activeTabId*/) {
+            console.time('SAA');
+            var activeAspect = WebGMEGlobal.State.getActiveAspect();
+            activeAspect = activeAspect === CONSTANTS.ASPECT_ALL ? undefined : activeAspect;
+            if (self._aspect !== activeAspect) {
+                self._aspect = activeAspect;
+                self._updateDescriptor(self._getPartDescriptorCollection());
+            } /*else {
+                if (self._visualizer === 'SetEditor') {
+                    //we have to react to all tab change...
+                    self._updateDescriptor(self._getPartDescriptorCollection());
+                }
+            }*/ //TODO right now we cannot create objects in setEditor so we do not need this functionality
+
+            console.timeEnd('SAA');
+        });
+
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
+            if (self._visualizer !== activeVisualizer) {
+                self._visualizer = activeVisualizer;
+                self._updateDescriptor(self._getPartDescriptorCollection());
+            }
         });
 
         this._newEventHandling = function (events) {
@@ -108,7 +133,7 @@ define(['js/logger',
                     this._partBrowserView.setEnabled(keys[i], true);
                 } else {
                     div.show();
-                    this._partBrowserView.setEnabled(keys[i], true);
+                    this._partBrowserView.setEnabled(keys[i], false);
                 }
             }
         }
@@ -147,7 +172,17 @@ define(['js/logger',
             descriptor = {},
             validInfo,
             keys,
-            i;
+            i,
+            getSetName = function () {
+                var setNamesOrdered = (containerNode.getSetNames() || []).sort(),
+                    tabId = WebGMEGlobal.State.getActiveTab();
+
+                if (tabId < setNamesOrdered.length) {
+                    return setNamesOrdered[tabId];
+                }
+
+                return null;
+            };
 
         for (i = 0; i < metaNodes.length; i += 1) {
             descriptor[metaNodes[i].getId()] = this._getPartDescriptor(metaNodes[i].getId());
@@ -155,7 +190,25 @@ define(['js/logger',
         }
 
         if (containerNode) {
-            validInfo = containerNode.getValidChildrenTypesDetailed(this._aspect);
+            if (this._visualizer === 'GraphViz') {
+                //do nothing as partBrowser should not have any element in GraphViz
+                validInfo = {};
+            } else if (this._visualizer === 'SetEditor') {
+                /*i = getSetName();
+                if (i) {
+                    validInfo = containerNode.getValidSetMemberTypesDetailed(i);
+                } else {
+                    validInfo = {};
+                }*/ //TODO now we cannot create elements in set editor
+                validInfo = {};
+            } else if (this._visualizer === 'METAAspect') {
+                //here we should override the container node to the META container node - ROOT as of now
+                containerNode = this._client.getNode(CONSTANTS.PROJECT_ROOT_ID);
+                validInfo = containerNode.getValidChildrenTypesDetailed();
+            } else {
+                //default is the containment based elements
+                validInfo = containerNode.getValidChildrenTypesDetailed(this._aspect);
+            }
 
             keys = Object.keys(validInfo);
 
