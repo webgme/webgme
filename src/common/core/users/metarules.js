@@ -209,11 +209,17 @@ define(['q'], function (Q) {
             var metaSet = metaSets[setName],
                 memberPaths;
             if (!metaSet) {
-                // TODO: Is this possible? Or core.getSetNames already filters?
-                return Q({
-                    hasViolation: true,
-                    message: 'Invalid set "' + setName + '"\n'
-                });
+                if (core.getValidAspectNames(node).indexOf(setName) === -1) {
+                    return Q({
+                        hasViolation: true,
+                        message: 'Invalid set "' + setName + '"\n'
+                    });
+                } else {
+                    // TODO: Should the Aspects be checked too?
+                    return Q({
+                        hasViolation: false
+                    });
+                }
             } else {
                 memberPaths = core.getMemberPaths(node, setName);
                 return loadNodes(core, node, memberPaths)
