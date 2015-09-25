@@ -29,6 +29,7 @@ $side-panel-header-height: 18px;
 $panel-border-bottom-width: 3px;
 
 $title-font-size: 21px;
+$panel-header-title-font-size: 0.85em;
 
 @mixin panel_header_title {
   font-size: $title-font-size;
@@ -201,7 +202,8 @@ $title-font-size: 21px;
     background-color: $sidepane-panel-background-color;
 
     .panel-header {
-      padding: 3px;
+      padding: 0 3px;
+      font-size: $panel-header-title-font-size;
       background-color: $sidepane-panel-header-background-color;
       border-bottom: $panel-border-bottom-width solid rgba(0, 0, 0, 0);
 
@@ -212,8 +214,8 @@ $title-font-size: 21px;
       }
 
       .panel-header-title {
-        font-size: 11px;
-        line-height: 18px;
+        font-size: $panel-header-title-font-size;
+        line-height: $panel-header-title-font-size;
         color: #999;
         text-transform: uppercase;
         margin-right: 0;

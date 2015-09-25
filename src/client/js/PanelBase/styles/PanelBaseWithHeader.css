@@ -11,7 +11,7 @@
     left: 2px; }
   .panel-base-wh .panel-header {
     background-color: #efefef;
-    border-bottom: 3px solid transparent;
+    border-bottom: 3px solid rgba(0, 0, 0, 0);
     white-space: nowrap; }
     .panel-base-wh .panel-header .panel-header-title {
       font-size: 21px;
@@ -103,16 +103,17 @@
   border-radius: 0;
   background-color: whitesmoke; }
   .side-panel .panel-base-wh .panel-header {
-    padding: 3px;
+    padding: 0 3px;
+    font-size: 0.85em;
     background-color: whitesmoke;
-    border-bottom: 3px solid transparent; }
+    border-bottom: 3px solid rgba(0, 0, 0, 0); }
     .side-panel .panel-base-wh .panel-header .ro-icon {
       position: relative;
       top: 0;
       left: 0; }
     .side-panel .panel-base-wh .panel-header .panel-header-title {
-      font-size: 11px;
-      line-height: 18px;
+      font-size: 0.85em;
+      line-height: 0.85em;
       color: #999;
       text-transform: uppercase;
       margin-right: 0;
