@@ -52,7 +52,7 @@ define(['js/Constants',
 
     /**** Override from PartBrowserWidgetDecoratorBase ****/
     UMLStateMachineDecoratorPartBrowserWidget.prototype.afterAppend = function () {
-        var META_TYPES = UMLStateMachineMETA.META_TYPES;
+        var META_TYPES = UMLStateMachineMETA.getMetaTypes();
 
         if (META_TYPES.End &&
             META_TYPES.Initial &&

@@ -29,7 +29,6 @@ define([
         'js/KeyboardManager/KeyboardManager',
         'js/PanelManager/PanelManager',
         './WebGME.History',
-        'js/Utils/METAAspectHelper',
         'js/Utils/PreferencesHelper',
         'js/Dialogs/Projects/ProjectsDialog',
         'js/Utils/InterpreterManager',
@@ -54,7 +53,6 @@ define([
                  KeyboardManager,
                  PanelManager,
                  WebGMEHistory,
-                 METAAspectHelper,
                  PreferencesHelper,
                  ProjectsDialog,
                  InterpreterManager,
@@ -125,7 +123,6 @@ define([
                 GMEConcepts.initialize(client);
                 GMEVisualConcepts.initialize(client);
 
-                METAAspectHelper.initialize(client);
                 PreferencesHelper.initialize(client);
 
                 ExportManager.initialize(client);

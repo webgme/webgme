@@ -44,7 +44,7 @@ define(['js/Constants',
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.on_addTo = function () { //jshint ignore: line
         var self = this,
-            META_TYPES = UMLStateMachineMETA.META_TYPES;
+            META_TYPES = UMLStateMachineMETA.getMetaTypes();
 
         this._renderContent();
 
@@ -89,7 +89,7 @@ define(['js/Constants',
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.onRenderGetLayoutInfo = function () {
-        var META_TYPES = UMLStateMachineMETA.META_TYPES;
+        var META_TYPES = UMLStateMachineMETA.getMetaTypes();
 
         //let the parent decorator class do its job first
         DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.apply(this, arguments);
@@ -105,7 +105,7 @@ define(['js/Constants',
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.onRenderSetLayoutInfo = function () {
-        var META_TYPES = UMLStateMachineMETA.META_TYPES;
+        var META_TYPES = UMLStateMachineMETA.getMetaTypes();
 
         if (this.renderLayoutInfo) {
             var shift = this.renderLayoutInfo.nameWidth / -2;
