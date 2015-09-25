@@ -102,7 +102,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             //additional inquiry functions
             core.isMetaNode = function (node) {
                 var root = core.getRoot(node);
-                if (root.metaElements && root.metaElemens[core.getPath(node)]) {
+                if (root.metaElements && root.metaElements[core.getPath(node)]) {
                     return true;
                 }
 
@@ -147,8 +147,6 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             // multiplicity - if true the function filters out possibilities that fail multiplicity check
             // aspect - if given the function also filters out valid children type meta nodes based on aspect rule
             core.getValidChildrenMetaNodes = function (parameters) {
-                console.time('GVCMN');
-                console.time('GVCMN-0');
                 var validNodes = [],
                     node = parameters.node,
                     metaNodes = core.getRoot(node).metaElements,
@@ -160,13 +158,8 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                     inAspect,
                     temp;
 
-                console.timeEnd('GVCMN-0');
-
-
-                console.time('GVCMN-R');
                 rules = oldcore.getChildrenMeta(node) || {};
-                console.timeEnd('GVCMN-R');
-                console.time('GVCMN-1');
+
                 for (i = 0; i < keys.length; i += 1) {
                     temp = metaNodes[keys[i]];
                     while (temp) {
@@ -180,24 +173,21 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                     //    validNodes.push(metaNodes[keys[i]]);
                     //}
                 }
-                console.timeEnd('GVCMN-1');
 
                 //before every next step we check if we still have potential nodes
                 if (validNodes.length === 0) {
                     return validNodes;
                 }
 
-                console.time('GVCMN-2');
                 if (parameters.sensitive === true) {
                     sensitiveFilter(validNodes);
                 }
-                console.timeEnd('GVCMN-2');
+
                 //before every next step we check if we still have potential nodes
                 if (validNodes.length === 0) {
                     return validNodes;
                 }
 
-                console.time('GVCMN-3');
                 if (parameters.multiplicity === true) {
                     if (rules.max && rules.max > -1 && oldcore.getChildrenRelids(node).length >= rules.max) {
                         validNodes = [];
@@ -244,13 +234,13 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                         }
                     }
                 }
-                console.timeEnd('GVCMN-3');
+
                 //before every next step we check if we still have potential nodes
                 if (validNodes.length === 0) {
                     return validNodes;
                 }
 
-                console.time('GVCMN-4');
+
                 if (parameters.aspect) {
                     keys = oldcore.getAspectMeta(node, parameters.aspect);
                     i = validNodes.length;
@@ -268,9 +258,6 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                         }
                     }
                 }
-                console.timeEnd('GVCMN-4');
-
-                console.timeEnd('GVCMN');
                 return validNodes;
             };
 

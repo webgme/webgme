@@ -78,7 +78,7 @@ define([
             },
             monkeyPatchKey,
             nodeSetterFunctions,
-            //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
+        //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
         //loadPatternThrottled = loadPattern; //magic number could be fine-tuned
 
@@ -276,6 +276,29 @@ define([
                 self[monkeyPatchKey] = this.meta[monkeyPatchKey];
             }
         }
+
+        function checkMetaNameCollision(core, rootNode) {
+            var names = [],
+                nodes = core.getAllMetaNodes(rootNode),
+                i,
+                keys = Object.keys(nodes || {}),
+                name;
+            for (i = 0; i < keys.length; i += 1) {
+                name = core.getAttribute(nodes[keys[i]], 'name');
+                if (names.indexOf(name) === -1) {
+                    names.push(name);
+                } else {
+                    self.dispatchEvent(CONSTANTS.NOTIFICATION, {
+                        type: 'META',
+                        severity: 'error',
+                        message: 'Duplicate name on META level: \'' + name + '\'',
+                        hint: 'Rename one of the objects'
+                    });
+                }
+            }
+
+        }
+
 
         nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode);
 
@@ -1460,6 +1483,8 @@ define([
             state.commitHash = state.loading.commitHash;
             state.loading.commitHash = null;
 
+            checkMetaNameCollision(state.core, state.nodes[ROOT_PATH].node);
+
             for (i in state.users) {
                 if (state.users.hasOwnProperty(i)) {
                     userEvents(i, modifiedPaths);
@@ -1502,6 +1527,7 @@ define([
                     basic: true,
                     hash: getStringHash(root)
                 };
+
 
                 //we first only set the counter of patterns but we also generate a completely separate pattern queue
                 //as we cannot be sure if all the users will remain at the point of giving the actual load command!!!
