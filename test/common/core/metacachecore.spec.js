@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe.only('meta cache core', function () {
+describe('meta cache core', function () {
     'user strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
