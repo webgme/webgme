@@ -1,6 +1,8 @@
 /*globals define*/
 /*jshint browser: true*/
 /**
+ * THIS FILE IS CURRENTLY DEPRECATED, IN THE FUTURE IT WILL CONTAIN METHODS TO QUERY ADDONS
+ * AND HANDLED NOTIFICATIONS FROM THEM.
  * @author kecso / https://github.com/kecso
  */
 define(['q'], function (Q) {

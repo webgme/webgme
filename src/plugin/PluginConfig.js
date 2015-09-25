@@ -12,7 +12,8 @@ define([], function () {
      *
      * Note: this object is JSON serializable see serialize method.
      *
-     * @param config - deserializes an existing configuration to this object.
+     * @param {object} config - deserializes an existing configuration to this object.
+     * @alias PluginConfig
      * @constructor
      */
     var PluginConfig = function (config) {
@@ -28,7 +29,7 @@ define([], function () {
     /**
      * Serializes this object to a JSON representation.
      *
-     * @returns {{}}
+     * @returns {object}
      */
     PluginConfig.prototype.serialize = function () {
         var keys = Object.keys(this);

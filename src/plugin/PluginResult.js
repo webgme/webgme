@@ -73,7 +73,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
     /**
      * Returns with the plugin messages.
      *
-     * @returns {plugin.PluginMessage[]}
+     * @returns {PluginMessage[]}
      */
     PluginResult.prototype.getMessages = function () {
         return this.messages;
@@ -82,7 +82,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
     /**
      * Adds a new plugin message to the messages list.
      *
-     * @param {plugin.PluginMessage} pluginMessage
+     * @param {PluginMessage} pluginMessage
      */
     PluginResult.prototype.addMessage = function (pluginMessage) {
         this.messages.push(pluginMessage);
@@ -122,7 +122,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
     /**
      * Sets the name of the plugin to which the result object belongs to.
      *
-     * @param pluginName - name of the plugin
+     * @param {string} pluginName - name of the plugin
      */
     PluginResult.prototype.setPluginName = function (pluginName) {
         this.pluginName = pluginName;

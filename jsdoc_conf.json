@@ -1,7 +1,7 @@
 {
   "source": {
     "include": [ "src/addon", "src/bin", "src/client/js/client.js", "src/client/js/client", "src/common", "src/server",
-    "jsdocdefs.js"],
+    "jsdocdefs.js", "src/plugin"],
     "exclude": [ "src/server/middleware/executor/worker/node_worker.classes.build.js" ,
       "src/server/middleware/executor/worker/node_modules"],
     "includePattern": ".+\\.js(doc)?$",

@@ -5,6 +5,28 @@
  * This class defines the public API of the WebGME-Core
  *
  * @author kecso / https://github.com/kecso
+ * @module Core
+ */
+
+/**
+ * @typedef {object} Node - the object that represents the atomic element of the containment hierarchy.
+ */
+
+/**
+ * @typedef {object} DataObject - Inner data of {@link module:Core~Node} that can be serialized and saved in the storage.
+ */
+
+/**
+ * @typedef {object} GmePersisted - the result object of a persist which contains information about the newly
+ * created data objects.
+ * @prop {module:Core~ObjectHash} rootHash - Hash of the root node.
+ * @prop {Object.<module:Core~ObjectHash, module:Core~DataObject>} objects - Hash of the root node.
+ */
+
+/**
+ * @typedef {string} ObjectHash - Unique SHA-1 hash for the node object.
+ * @example
+ * '#5496cf226542fcceccf89056f0d27564abc88c99'
  */
 
 define([
@@ -33,15 +55,6 @@ define([
              CoreDiff,
              MetaCacheCore) {
     'use strict';
-
-    /**
-     * @typedef {object} Core~GmeCoreNode - the object that represents the atomic element of the containment hierarchy.
-     */
-    /**
-     * @typedef {object} Core~GmePersisted - the result object of a persist which contains information about the newly
-     * created data objects.
-     */
-
 
     /**
      * @param {object} storageObject

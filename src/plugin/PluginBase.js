@@ -21,6 +21,7 @@ define([
      * Initializes a new instance of a plugin object, which should be a derived class.
      *
      * @constructor
+     * @alias PluginBase
      */
     var PluginBase = function () {
         // set by initialize
@@ -57,7 +58,7 @@ define([
      * - do NOT put any user interaction logic UI, etc. inside this function
      * - callback always have to be called even if error happened
      *
-     * @param {function(string, plugin.PluginResult)} callback - the result callback
+     * @param {function(string|Error, PluginResult)} callback - the result callback
      */
     PluginBase.prototype.main = function (/*callback*/) {
         throw new Error('implement this function in the derived class');
@@ -180,8 +181,8 @@ define([
     /**
      * Checks if the given node is of the given meta-type.
      * Usage: <tt>self.isMetaTypeOf(aNode, self.META['FCO']);</tt>
-     * @param node - Node to be checked for type.
-     * @param metaNode - Node object defining the meta type.
+     * @param {module:Core~Node} node - Node to be checked for type.
+     * @param {module:Core~Node} metaNode - Node object defining the meta type.
      * @returns {boolean} - True if the given object was of the META type.
      */
     PluginBase.prototype.isMetaTypeOf = function (node, metaNode) {
@@ -197,8 +198,8 @@ define([
 
     /**
      * Finds and returns the node object defining the meta type for the given node.
-     * @param node - Node to be checked for type.
-     * @returns {Object} - Node object defining the meta type of node.
+     * @param {module:Core~Node} node - Node to be checked for type.
+     * @returns {module:Core~Node} - Node object defining the meta type of node.
      */
     PluginBase.prototype.getMetaType = function (node) {
         var self = this,
@@ -215,7 +216,7 @@ define([
 
     /**
      * Returns true if node is a direct instance of a meta-type node (or a meta-type node itself).
-     * @param node - Node to be checked.
+     * @param {module:Core~Node} node - Node to be checked.
      * @returns {boolean}
      */
     PluginBase.prototype.baseIsMeta = function (node) {
@@ -234,7 +235,7 @@ define([
     /**
      * Gets the current configuration of the plugin that was set by the user and plugin manager.
      *
-     * @returns {object}
+     * @returns {PluginConfig}
      */
     PluginBase.prototype.getCurrentConfig = function () {
         return this._currentConfig;
@@ -243,7 +244,7 @@ define([
     /**
      * Creates a new message for the user and adds it to the result.
      *
-     * @param {object} node - webgme object which is related to the message
+     * @param {module:Core~Node} node - webgme object which is related to the message
      * @param {string} message - feedback to the user
      * @param {string} severity - severity level of the message: 'debug', 'info' (default), 'warning', 'error'.
      */
@@ -267,11 +268,10 @@ define([
 
     /**
      * Saves all current changes if there is any to a new commit.
-     * If the changes were started from a branch, then tries to fast forward the branch to the new commit.
-     * Note: Does NOT handle any merges at this point.
+     * If the commit result is either 'FORKED' or 'CANCELED', it creates a new branch.
      *
      * @param {string|null} message - commit message
-     * @param callback
+     * @param {function(Error|string, module:Storage~commitResult)} callback
      */
     PluginBase.prototype.save = function (message, callback) {
         var self = this,
@@ -302,7 +302,7 @@ define([
                 if (commitResult.status === STORAGE_CONSTANTS.SYNCED) {
                     self.logger.info('"' + self.branchName + '" was updated to the new commit.');
                     self.addCommitToResult(STORAGE_CONSTANTS.SYNCED);
-                    callback(null, {status: STORAGE_CONSTANTS.SYNCED});
+                    callback(null, {status: STORAGE_CONSTANTS.SYNCED, hash: self.currentHash});
                 } else if (commitResult.status === STORAGE_CONSTANTS.FORKED) {
                     self._createFork(callback);
                 } else if (commitResult.status === STORAGE_CONSTANTS.CANCELED) {
@@ -348,7 +348,7 @@ define([
                     '(Successive saves will try to save to this new branch.)');
                 self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
 
-                callback(null, {status: STORAGE_CONSTANTS.FORKED, forkName: forkName});
+                callback(null, {status: STORAGE_CONSTANTS.FORKED, forkName: forkName, hash: forkResult.hash});
 
             } else if (forkResult.status === STORAGE_CONSTANTS.FORKED) {
                 self.branchName = null;
@@ -378,9 +378,9 @@ define([
     /**
      * Initializes the plugin with objects that can be reused within the same plugin instance.
      *
-     * @param {logManager} logger - logging capability to console (or file) based on PluginManager configuration
-     * @param {blob.BlobClient} blobClient - virtual file system where files can be generated then saved as a zip file.
-     * @param {object} gmeConfig - global configuration for webGME.
+     * @param {GmeLogger} logger - logging capability to console (or file) based on PluginManager configuration
+     * @param {BlobClient} blobClient - virtual file system where files can be generated then saved as a zip file.
+     * @param {GmeConfig} gmeConfig - global configuration for webGME.
      */
     PluginBase.prototype.initialize = function (logger, blobClient, gmeConfig) {
         if (logger) {
@@ -436,7 +436,7 @@ define([
     /**
      * Gets the default configuration based on the configuration structure for this plugin.
      *
-     * @returns {plugin.PluginConfig}
+     * @returns {PluginConfig}
      */
     PluginBase.prototype.getDefaultConfig = function () {
         var configStructure = this.getConfigStructure();
@@ -453,7 +453,7 @@ define([
     /**
      * Sets the current configuration of the plugin.
      *
-     * @param {object} newConfig - this is the actual configuration and NOT the configuration structure.
+     * @param {PluginConfig} newConfig - this is the actual configuration and NOT the configuration structure.
      */
     PluginBase.prototype.setCurrentConfig = function (newConfig) {
         this._currentConfig = newConfig;
