@@ -18,7 +18,7 @@ define([
     'js/client/gmeNodeGetter',
     'js/client/gmeNodeSetter',
     'common/core/users/serialization',
-    'js/client/addon'
+    'blob/BlobClient'
 ], function (Logger,
              Storage,
              EventDispatcher,
@@ -32,7 +32,7 @@ define([
              getNode,
              getNodeSetters,
              Serialization,
-             AddOn) {
+             BlobClient) {
     'use strict';
 
     function Client(gmeConfig) {
@@ -76,12 +76,14 @@ define([
                 }
 
             },
+            blobClient,
             monkeyPatchKey,
             nodeSetterFunctions,
         //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
         //loadPatternThrottled = loadPattern; //magic number could be fine-tuned
 
+        blobClient = new BlobClient();
         EventDispatcher.call(this);
 
         this.CONSTANTS = CONSTANTS;
@@ -1759,7 +1761,7 @@ define([
                         logger.error('getExportProjectBranchUrl failed with error', err);
                         callback(err);
                     } else {
-                        callback(null, result.file.url);
+                        callback(null, blobClient.getDownloadURL(result.file.hash));
                     }
                 });
             } else {
@@ -1784,7 +1786,7 @@ define([
                         logger.error('getExportLibraryUrl failed with error', err);
                         callback(err);
                     } else {
-                        callback(null, result.file.url);
+                        callback(null, blobClient.getDownloadURL(result.file.hash));
                     }
                 });
             } else {
