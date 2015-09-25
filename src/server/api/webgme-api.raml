@@ -18,6 +18,13 @@ securitySchemes:
             description: Authentication required
           403:
             description: Forbidden
+  - orgOrSiteAdmin:
+      description: Admin for the entire site or the organization.
+      type: Basic Authentication
+      describedBy:
+        responses:
+          403:
+            description: Not authorized.
 
 
 resourceTypes:
@@ -109,43 +116,75 @@ resourceTypes:
   type:
     collection:
       exampleCollection: !include webgme-api-users.json
-      exampleItem: !include webgme-api-user-new.json
-  
+      exampleItem: !include webgme-api-user-new.json  
   /{username}:
     type:
       collection-item:
         exampleItem: !include webgme-api-user-retrieve.json   
 
 /orgs:
-  type:
-    collection:
-      exampleCollection: !include webgme-api-orgs.json
-      exampleItem: !include webgme-api-org-new.json
-    
+  get:
+    description: Collection of available organizations in WebGME
+    securedBy: []
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-orgs.json
   /{orgId}:
-    type:
-      collection-item:
-        exampleItem: !include webgme-api-org-retrieve.json
+    get:
+      description: Entity representing an organization
+      securedBy: [ basic ]
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-org-retrieve.json
+        404:
+    put:
+      description: Create a new organization (requires canCreate).
+      securedBy: [ basic ]
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-org-retrieve.json
+        403:
+        404:
+    delete:
+      description: Delete an organization.
+      securedBy: [ basic, orgOrSiteAdmin ]
+      responses:
+        200:
+        403:
+        404:
     
     /users/{username}:
       put:
-        securedBy: [ basic ]
+        description: Adds user to the organization.
+        securedBy: [ basic, orgOrSiteAdmin ]
         responses:
           200:
+          403:
+          404:
         
       delete:
-        securedBy: [ basic ]
+        description: Delete user from the organization.
+        securedBy: [ basic, orgOrSiteAdmin ]
         responses:
           204:
+          404:
           
     /admins/{username}:
       put:
-        securedBy: [ basic ]
+        description: Make user admin for the organization.
+        securedBy: [ basic, orgOrSiteAdmin ]
         responses:
           200:
         
       delete:
-        securedBy: [ basic ]
+        description: Remove user from admins of the organization.
+        securedBy: [ basic, orgOrSiteAdmin ]
         responses:
           204:
 
@@ -155,7 +194,6 @@ resourceTypes:
     collection:
       exampleCollection: !include webgme-api-projects.json
       exampleItem: !include webgme-api-project-new.json
-  
   /{ownerId}/{projectName}:
     uriParameters:
       ownerId:

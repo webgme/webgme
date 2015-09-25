@@ -1,3 +1,9 @@
 {
-  "message": "TODO ..."
+  "_id": "webgme",
+  "projects": {},
+  "type": "Organization",
+  "admins": [
+    "pmeijer"
+  ],
+  "info": {}
 }
