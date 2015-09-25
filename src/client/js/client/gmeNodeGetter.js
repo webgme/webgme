@@ -3,7 +3,7 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-define(['common/core/users/tojson'], function (toJson) {
+define(['js/RegistryKeys'], function (REG_KEYS) {
     'use strict';
 
     //getNode
@@ -92,8 +92,10 @@ define(['common/core/users/tojson'], function (toJson) {
             //return _core.getPointerPath(_nodes[_id].node,name);
             if (name === 'base') {
                 //base is a special case as it complicates with inherited children
-                return {to: state.core.getPath(state.core.getBase(state.nodes[_id].node)),
-                    from: []};
+                return {
+                    to: state.core.getPath(state.core.getBase(state.nodes[_id].node)),
+                    from: []
+                };
             }
             return {to: state.core.getPointerPath(state.nodes[_id].node, name), from: []};
         }
@@ -181,6 +183,10 @@ define(['common/core/users/tojson'], function (toJson) {
             return state.core.getValidPointerNames(state.nodes[_id].node);
         }
 
+        function getValidSetNames() {
+            return state.core.getValidSetNames(state.nodes[_id].node);
+        }
+
         //constraint functions
         function getConstraintNames() {
             return state.core.getConstraintNames(state.nodes[_id].node);
@@ -200,6 +206,91 @@ define(['common/core/users/tojson'], function (toJson) {
 
         function getCollectionPaths(name) {
             return state.core.getCollectionPaths(state.nodes[_id].node, name);
+        }
+
+        //adding functionality to get rid of GMEConcepts
+        function isConnection() {
+            return state.core.isConnection(state.nodes[_id].node);
+        }
+
+        function isAbstract() {
+            return state.core.isAbstract(state.nodes[_id].node);
+        }
+
+        function getCrosscutsInfo() {
+            return state.core.getRegistry(state.nodes[_id].node, REG_KEYS.CROSSCUTS) || [];
+        }
+
+        function getValidChildrenTypesDetailed(aspect) {
+            var parameters = {
+                    node: state.nodes[_id].node,
+                    children: [],
+                    sensitive: true,
+                    multiplicity: false,
+                    aspect: aspect
+                },
+                fullList,
+                filteredList,
+                validTypes = {},
+                keys = getChildrenIds(),
+                i;
+
+            for (i = 0; i < keys.length; i++) {
+                if (state.nodes[keys[i]]) {
+                    parameters.children.push(state.nodes[keys[i]].node);
+                }
+            }
+
+            fullList = state.core.getValidChildrenMetaNodes(parameters);
+
+            parameters.multiplicity = true;
+            filteredList = state.core.getValidChildrenMetaNodes(parameters);
+
+            for (i = 0; i < fullList.length; i += 1) {
+                validTypes[state.core.getPath(fullList[i])] = false;
+            }
+
+            for (i = 0; i < filteredList.length; i += 1) {
+                validTypes[state.core.getPath(filteredList[i])] = true;
+            }
+
+            return validTypes;
+        }
+
+        function getValidSetMemberTypesDetailed(setName) {
+            var parameters = {
+                    node: state.nodes[_id].node,
+                    children: [],
+                    sensitive: true,
+                    multiplicity: false,
+                    name: setName
+                },
+                fullList,
+                filteredList,
+                validTypes = {},
+                keys = getChildrenIds(),
+                i;
+
+            for (i = 0; i < keys.length; i++) {
+                if (state.nodes[keys[i]]) {
+                    parameters.children.push(state.nodes[keys[i]].node);
+                }
+            }
+
+            fullList = state.core.getValidSetElementsMetaNodes(parameters);
+
+            parameters.multiplicity = true;
+            filteredList = state.core.getValidSetElementsMetaNodes(parameters);
+
+            for (i = 0; i < fullList.length; i += 1) {
+                validTypes[state.core.getPath(fullList[i])] = false;
+            }
+
+            for (i = 0; i < filteredList.length; i += 1) {
+                validTypes[state.core.getPath(filteredList[i])] = true;
+            }
+
+            return validTypes;
         }
 
         if (state.nodes[_id]) {
@@ -241,6 +332,12 @@ define(['common/core/users/tojson'], function (toJson) {
                 getValidChildrenTypes: getValidChildrenTypes,
                 getValidAttributeNames: getValidAttributeNames,
                 getValidPointerNames: getValidPointerNames,
+                getValidSetNames: getValidSetNames,
+                getValidChildrenTypesDetailed: getValidChildrenTypesDetailed,
+                getValidSetMemberTypesDetailed: getValidSetMemberTypesDetailed,
+                isConnection: isConnection,
+                isAbstract: isAbstract,
+                getCrosscutsInfo: getCrosscutsInfo,
 
                 //constraint functions
                 getConstraintNames: getConstraintNames,

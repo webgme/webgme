@@ -1,4 +1,4 @@
-/*globals define, _, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
 /*jshint browser: true*/
 
 /**
@@ -10,14 +10,12 @@ define(['js/logger',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
     'js/RegistryKeys',
-    'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper'
 ], function (Logger,
              CONSTANTS,
              GMEConcepts,
              nodePropertyNames,
              REGISTRY_KEYS,
-             METAAspectHelper,
              PreferencesHelper) {
     'use strict';
 
@@ -32,16 +30,28 @@ define(['js/logger',
         this._partBrowserView = myPartBrowserView;
 
         //the ID of the node whose valid children types should be displayed
-        this._containerNodeId = null;
-
-        //the ID of the valid children types of the container node
-        this._validChildrenTypeIDs = [];
+        this._containerNodeId = WebGMEGlobal.State.getActiveObject() || null;
 
         //decorators can use it to ask for notifications about their registered sub IDs
         this._componentIDPartIDMap = {};
 
-        //by default handle the 'All' aspect
-        this._aspect = CONSTANTS.ASPECT_ALL;
+        //stores the last known active aspect so that we can decide if it is reall
+        this._aspect = null;
+
+        //stores the GUID of the UI piece which is the identification of the client communications
+        this._guid = '_part_browser_';
+
+        //collects information for all the part descriptors
+        this._descriptorCollection = {};
+
+        //the decorator instances of the parts
+        this._partInstances = {};
+
+        //the territory rules
+        this._territoryRules = {'': {children: 0}};
+
+        //the current visualizer
+        this._visualizer = null;
 
         this._initDragDropFeatures();
 
@@ -49,65 +59,195 @@ define(['js/logger',
             WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug('Created');
 
-        METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
-            self._processContainerNode(self._containerNodeId);
-        });
-
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObject) {
-            self.selectedObjectChanged(activeObject);
+            self._containerNodeId = activeObject;
+            self._updateDescriptor(self._getPartDescriptorCollection());
         });
 
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, function (model, activeAspect) {
-            //TODO we may need constants for the different visualizers, or have some feature table...
-            if (activeAspect !== undefined && WebGMEGlobal.State.getActiveVisualizer() === 'ModelEditor') {
-                self.selectedAspectChanged(WebGMEGlobal.State.getActiveAspect());
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, function (/*model, activeTabId*/) {
+            var activeAspect = WebGMEGlobal.State.getActiveAspect();
+            activeAspect = activeAspect === CONSTANTS.ASPECT_ALL ? null : activeAspect;
+            if (self._aspect !== activeAspect) {
+                self._aspect = activeAspect;
+                self._updateDescriptor(self._getPartDescriptorCollection());
+            }
+            //else {
+            //    if (self._visualizer === 'SetEditor') {
+            //        //we have to react to all tab change...
+            //        self._updateDescriptor(self._getPartDescriptorCollection());
+            //    }
+            //} //TODO right now we cannot create objects in setEditor so we do not need this functionality
+        });
+
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
+            if (self._visualizer !== activeVisualizer) {
+                self._visualizer = activeVisualizer;
+                self._updateDescriptor(self._getPartDescriptorCollection());
             }
         });
+
+        this._nodeEventHandling = function (events) {
+            var metaChange = false,
+                metaPaths = Object.keys(self._client.getAllMetaNodes() || {}),
+                i;
+
+            metaPaths.push(CONSTANTS.PROJECT_ROOT_ID);
+
+            for (i = 0; i < events.length; i += 1) {
+                if (metaPaths.indexOf(events[i].eid) !== -1) {
+                    metaChange = true;
+                    break;
+                }
+            }
+
+            if (metaChange) {
+                self._updateDescriptor(self._getPartDescriptorCollection());
+            } else {
+                self._updateDecorators();
+            }
+
+        };
+
+        this._client.addUI(self, self._nodeEventHandling, this._guid);
+        this._client.updateTerritory(this._guid, this._territoryRules);
     };
 
-    PartBrowserControl.prototype.selectedObjectChanged = function (nodeId) {
-        var self = this,
-            aspectNames;
+    PartBrowserControl.prototype._updateDescriptor = function (newDescriptor) {
+        var keys = Object.keys(newDescriptor || {}).sort(),
+            i,
+            self = this,
+            div,
+            newTerritoryRules;
 
-        self._logger.debug('activeObject: \'' + nodeId + '\'');
-        self._suppressDecoratorUpdate = true;
-
-        //remove current territory patterns
-        if (self._territoryId) {
-            self._client.removeUI(this._territoryId);
-            self._partBrowserView.clear();
-        }
-
-        self._containerNodeId = nodeId;
-        self._validChildrenTypeIDs = [];
-
-        self._aspect = WebGMEGlobal.State.getActiveAspect();
-
-        if (self._containerNodeId || this._containerNodeId === CONSTANTS.PROJECT_ROOT_ID) {
-            //put new node's info into territory rules
-            self._selfPatterns = {};
-            self._selfPatterns[nodeId] = {children: 0};
-
-            if (self._aspect !== CONSTANTS.ASPECT_ALL) {
-                //make sure that the _aspect exist in the node, otherwise fallback to All
-                aspectNames = self._client.getMetaAspectNames(nodeId) || [];
-                if (aspectNames.indexOf(this._aspect) === -1) {
-                    self._logger.warn('The currently selected aspect "' +
-                    self._aspect + '" does not exist in the object "' +
-                    nodeId + '", falling back to "All"');
-                    self._aspect = CONSTANTS.ASPECT_ALL;
-                }
+        //add and update
+        for (i = 0; i < keys.length; i += 1) {
+            if (!this._descriptorCollection[keys[i]]) {
+                //new item
+                this._partInstances[keys[i]] = this._partBrowserView.addPart(keys[i], newDescriptor[keys[i]]);
+            } else if (this._descriptorCollection[keys[i]].decorator !== newDescriptor[keys[i]].decorator) {
+                this._partInstances[keys[i]] = this._partBrowserView.updatePart(keys[i], newDescriptor[keys[i]]);
             }
 
-            self._territoryId = this._client.addUI(this, function (events) {
-                if (events[0].etype === 'complete') {
-                    self._eventCallback(events);
+            if (!this._descriptorCollection[keys[i]] ||
+                (this._descriptorCollection[keys[i]].visibility !== newDescriptor[keys[i]].visibility)) {
+                div = this._partBrowserView._getPartDiv(keys[i]);
+                if (newDescriptor[keys[i]].visibility === 'hidden') {
+                    div.hide();
+                } else if (newDescriptor[keys[i]].visibility === 'visible') {
+                    div.show();
+                    this._partBrowserView.setEnabled(keys[i], true);
+                } else {
+                    div.show();
+                    this._partBrowserView.setEnabled(keys[i], false);
                 }
-            });
-            //update the territory
-            self._logger.debug('UPDATING TERRITORY: selectedObjectChanged' + JSON.stringify(this._selfPatterns));
-            self._client.updateTerritory(this._territoryId, this._selfPatterns);
+            }
         }
+
+        //remove
+        keys = Object.keys(this._descriptorCollection);
+
+        for (i = 0; i < keys.length; i += 1) {
+            if (!newDescriptor[keys[i]]) {
+                this._partBrowserView.removePart(keys[i]);
+                delete this._partInstances[keys[i]];
+            }
+        }
+
+        this._descriptorCollection = newDescriptor;
+        newTerritoryRules = this._getTerritoryPatterns();
+        if (JSON.stringify(this._territoryRules) !== JSON.stringify(newTerritoryRules)) {
+            this._territoryRules = newTerritoryRules;
+            setTimeout(function () {
+                self._client.updateTerritory(this._guid, this._territoryRules);
+            }, 0);
+        } else {
+            this._updateDecorators();
+        }
+    };
+
+    PartBrowserControl.prototype._getPartDescriptorCollection = function () {
+        var containerNode = this._client.getNode(this._containerNodeId),
+            metaNodes = this._client.getAllMetaNodes(),
+            descriptorCollection = {},
+            descriptor,
+            validInfo,
+            keys,
+            i;
+        //getSetName = function () {
+        //    var setNamesOrdered = (containerNode.getSetNames() || []).sort(),
+        //        tabId = WebGMEGlobal.State.getActiveTab();
+        //
+        //    if (tabId < setNamesOrdered.length) {
+        //        return setNamesOrdered[tabId];
+        //    }
+        //
+        //    return null;
+        //}; not used yet
+
+        for (i = 0; i < metaNodes.length; i += 1) {
+            descriptor = this._getPartDescriptor(metaNodes[i].getId());
+            if (descriptor) {
+                descriptorCollection[metaNodes[i].getId()] = this._getPartDescriptor(metaNodes[i].getId());
+                descriptorCollection[metaNodes[i].getId()].visibility = 'hidden';
+            }
+        }
+
+        if (containerNode) {
+            if (this._visualizer === 'GraphViz') {
+                //do nothing as partBrowser should not have any element in GraphViz
+                validInfo = {};
+            } else if (this._visualizer === 'SetEditor') {
+                //i = getSetName();
+                //if (i) {
+                //    validInfo = containerNode.getValidSetMemberTypesDetailed(i);
+                //} else {
+                //    validInfo = {};
+                //} //TODO now we cannot create elements in set editor
+                validInfo = {};
+            } else if (this._visualizer === 'METAAspect') {
+                //here we should override the container node to the META container node - ROOT as of now
+                containerNode = this._client.getNode(CONSTANTS.PROJECT_ROOT_ID);
+                validInfo = containerNode.getValidChildrenTypesDetailed();
+            } else {
+                //default is the containment based elements
+                validInfo = containerNode.getValidChildrenTypesDetailed(this._aspect);
+            }
+
+            keys = Object.keys(validInfo);
+
+            for (i = 0; i < keys.length; i += 1) {
+                if (validInfo[keys[i]]) {
+                    descriptorCollection[keys[i]].visibility = 'visible';
+                } else {
+                    descriptorCollection[keys[i]].visibility = 'grayed';
+                }
+            }
+        }
+
+        return descriptorCollection;
+    };
+
+    PartBrowserControl.prototype._getTerritoryPatterns = function () {
+        var patterns = {'': {children: 0}},
+            keys,
+            query,
+            i;
+
+        patterns[this._containerNodeId] = {children: 0};
+
+        keys = Object.keys(this._partInstances || {}).sort();
+        for (i = 0; i < keys.length; i += 1) {
+            if (this._partInstances[keys[i]]) {
+                //console.log(this._partInstances[keys[i]].getTerritoryQuery());
+                query = this._partInstances[keys[i]].getTerritoryQuery() || {};
+
+                if (query[keys[i]]) {
+                    patterns[keys[i]] = query[keys[i]];
+                }
+            }
+        }
+
+        return patterns;
     };
 
     PartBrowserControl.prototype._getObjectDescriptor = function (nodeId) {
@@ -127,150 +267,6 @@ define(['js/logger',
         return objDescriptor;
     };
 
-    PartBrowserControl.prototype._eventCallback = function (events) {
-        //TODO eventing should be refactored
-        this._logger.debug('_eventCallback ' + events[0].etype);
-        events.shift();
-
-        var i = events ? events.length : 0,
-            e,
-            needsDecoratorUpdate = false;
-
-
-        this._logger.debug('_eventCallback \'' + i + '\' items, events: ' + JSON.stringify(events));
-
-        while (i--) {
-            e = events[i];
-            switch (e.etype) {
-                case CONSTANTS.TERRITORY_EVENT_LOAD:
-                    needsDecoratorUpdate = true;
-                    this._onLoad(e.eid);
-                    break;
-                case CONSTANTS.TERRITORY_EVENT_UPDATE:
-                    needsDecoratorUpdate = true;
-                    this._onUpdate(e.eid);
-                    break;
-                case CONSTANTS.TERRITORY_EVENT_UNLOAD:
-                    this._onUnload(e.eid);
-                    break;
-            }
-        }
-
-        if (needsDecoratorUpdate) {
-            if (this._suppressDecoratorUpdate === true) {
-                this._logger.debug('_eventCallback: only containerNode in events - will not update decorators',
-                    events);
-            } else {
-                this._logger.debug('_eventCallback: will do _updateValidChildrenTypeDecorators');
-                this._updateValidChildrenTypeDecorators();
-            }
-        }
-
-        if (this._suppressDecoratorUpdate) {
-            this._logger.debug('_suppressDecoratorUpdate will switch from false to true');
-        }
-        this._suppressDecoratorUpdate = false;
-        this._logger.debug('_eventCallback \'' + events.length + '\' items - DONE');
-    };
-
-    // PUBLIC METHODS
-    PartBrowserControl.prototype._onLoad = function (gmeID) {
-        if (this._containerNodeId === gmeID) {
-            this._processContainerNode(gmeID);
-        }
-    };
-
-    PartBrowserControl.prototype._onUpdate = function (gmeID) {
-        if (this._containerNodeId === gmeID) {
-            this._processContainerNode(gmeID);
-        }
-    };
-
-    PartBrowserControl.prototype._onUnload = function (gmeID) {
-        if (this._containerNodeId === gmeID) {
-            this._logger.warn('Container node got unloaded...');
-            this._validChildrenTypeIDs = [];
-            this._partBrowserView.clear();
-        }
-    };
-
-    PartBrowserControl.prototype._processContainerNode = function (gmeID) {
-        var node = this._client.getNode(gmeID),
-            validChildrenTypes = [],
-            oValidChildrenTypes = this._validChildrenTypeIDs.slice(0),
-            len,
-            diff,
-            id,
-            territoryChanged = false;
-
-        this._logger.debug('_processContainerNode processing container node', gmeID);
-
-        if (node) {
-            //get possible targets from MetaDescriptor
-            validChildrenTypes = GMEConcepts.getMETAAspectMergedValidChildrenTypes(gmeID);
-
-            //the deleted ones
-            diff = _.difference(oValidChildrenTypes, validChildrenTypes);
-            len = diff.length;
-            while (len--) {
-                id = diff[len];
-                this._removePart(id);
-
-                //remove it from the territory
-                //only if not itself, then we need to keep it in the territory
-                if (id !== gmeID) {
-                    delete this._selfPatterns[id];
-                    territoryChanged = true;
-                }
-            }
-
-            //check the added ones
-            diff = _.difference(validChildrenTypes, oValidChildrenTypes);
-            len = diff.length;
-            while (len--) {
-                id = diff[len];
-                if (this._validChildrenTypeIDs.indexOf(id) === -1) {
-                    this._validChildrenTypeIDs.push(id);
-
-                    //add to the territory
-                    //only if not self, because it's already in the territory
-                    if (id !== gmeID) {
-                        this._selfPatterns[id] = {children: 0};
-                        territoryChanged = true;
-                    }
-                }
-            }
-
-            //update the territory
-            if (territoryChanged) {
-                this._logger.debug('_processContainerNode territory did change');
-                this._doUpdateTerritory(true);
-            } else {
-                this._logger.debug('_processContainerNode territory did not change _suppressDecoratorUpdate=false');
-                this._suppressDecoratorUpdate = true;
-                this._logger.debug('WARN - Forcing _suppressDecoratorUpdate=true see issue #492');
-            }
-        }
-    };
-
-    PartBrowserControl.prototype._doUpdateTerritory = function (async) {
-        var territoryId = this._territoryId,
-            patterns = this._selfPatterns,
-            client = this._client,
-            logger = this._logger;
-
-        if (async === true) {
-            setTimeout(function () {
-                logger.debug('Updating territory with rules: ' + JSON.stringify(patterns));
-                client.updateTerritory(territoryId, patterns);
-            }, 0);
-        } else {
-            logger.debug('Updating territory with rules: ' + JSON.stringify(patterns));
-            client.updateTerritory(territoryId, patterns);
-        }
-    };
-
-
     PartBrowserControl.prototype._getItemDecorator = function (decorator) {
         var result;
 
@@ -286,12 +282,15 @@ define(['js/logger',
     PartBrowserControl.prototype._getPartDescriptor = function (id) {
         var desc = this._getObjectDescriptor(id);
 
-        desc.decoratorClass = this._getItemDecorator(desc.decorator);
-        desc.control = this;
-        desc.metaInfo = {};
-        desc.metaInfo[CONSTANTS.GME_ID] = id;
-        desc.preferencesHelper = PreferencesHelper.getPreferences();
-        desc.aspect = this._aspect;
+        if (desc) {
+            desc.decoratorClass = this._getItemDecorator(desc.decorator);
+            desc.control = this;
+            desc.metaInfo = {};
+            desc.metaInfo[CONSTANTS.GME_ID] = id;
+            desc.preferencesHelper = PreferencesHelper.getPreferences();
+            desc.aspect = this._aspect;
+        }
+
 
         return desc;
     };
@@ -331,171 +330,16 @@ define(['js/logger',
         };
     };
 
+    PartBrowserControl.prototype._updateDecorators = function () {
+        var i,
+            keys = Object.keys(this._partInstances || {});
 
-    PartBrowserControl.prototype._removePart = function (id) {
-        var idx;
-
-        //remove from the UI
-        this._partBrowserView.removePart(id);
-
-        //fix accounting
-        idx = this._validChildrenTypeIDs.indexOf(id);
-        this._validChildrenTypeIDs.splice(idx, 1);
-    };
-
-
-    PartBrowserControl.prototype._updateValidChildrenTypeDecorators = function () {
-        var len = this._validChildrenTypeIDs.length,
-            decorators = [DEFAULT_DECORATOR],
-            self = this,
-            dec;
-
-        while (len--) {
-            dec = this._getObjectDescriptor(this._validChildrenTypeIDs[len]).decorator;
-            if (decorators.indexOf(dec) === -1) {
-                decorators.push(dec);
+        for (i = 0; i < keys.length; i += 1) {
+            if (this._descriptorCollection[keys[i]] && this._descriptorCollection[keys[i]].visibility !== 'hidden') {
+                this._partInstances[keys[i]].update();
             }
-        }
-
-        if (decorators.length > 0) {
-            this._logger.debug('decorators for children of', this._containerNodeId, decorators);
-            this._client.decoratorManager.download(decorators, WIDGET_NAME, function () {
-                self._refreshPartList();
-            });
         }
     };
-
-
-    PartBrowserControl.prototype._refreshPartList = function () {
-        var childrenTypeToDisplay = [],
-            i,
-            id,
-            names = [],
-            mapNameID = {},
-            objDesc,
-            childrenWithName,
-            decoratorInstance,
-            j,
-            getDecoratorTerritoryQueries,
-            territoryChanged = false,
-            _selfPatterns = this._selfPatterns,
-            partEnabled,
-            _aspectTypes;
-
-        getDecoratorTerritoryQueries = function (decorator) {
-            var query,
-                entry;
-
-            if (decorator) {
-                query = decorator.getTerritoryQuery();
-
-                if (query) {
-                    for (entry in query) {
-                        if (query.hasOwnProperty(entry)) {
-                            _selfPatterns[entry] = query[entry];
-                            territoryChanged = true;
-                        }
-                    }
-                }
-            }
-        };
-
-        this._logger.debug('_refreshPartList this._validChildrenTypeIDs: ' + this._validChildrenTypeIDs);
-
-        //clear view
-        this._partBrowserView.clear();
-
-        //set aspect types
-        if (this._aspect !== CONSTANTS.ASPECT_ALL) {
-            var metaAspectDesc = this._client.getMetaAspect(this._containerNodeId, this._aspect);
-            if (metaAspectDesc) {
-                //metaAspectDesc.items contains the children types the user specified to participate in this aspect
-                _aspectTypes = metaAspectDesc.items || [];
-            }
-        }
-
-        //filter out the types that doesn't need to be displayed for whatever reason:
-        // - don't display validConnectionTypes
-        // - don't display abstract items
-        // - bcos they are not in the current aspects META rules
-        i = this._validChildrenTypeIDs.length;
-        while (i--) {
-            id = this._validChildrenTypeIDs[i];
-            if (GMEConcepts.isConnectionType(id) === false &&
-                GMEConcepts.isAbstract(id) === false) {
-
-                if (_aspectTypes) {
-                    //user defined aspect
-                    //check if 'id' is descendant of any user defined aspect type
-                    j = _aspectTypes.length;
-                    while (j--) {
-                        if (this._client.isTypeOf(id, _aspectTypes[j])) {
-                            childrenTypeToDisplay.push(id);
-                            break;
-                        }
-                    }
-                } else {
-                    childrenTypeToDisplay.push(id);
-                }
-
-                if (childrenTypeToDisplay.indexOf(id) !== -1) {
-                    objDesc = this._getObjectDescriptor(id);
-                    if (names.indexOf(objDesc.name) === -1) {
-                        names.push(objDesc.name);
-                        mapNameID[objDesc.name] = [id];
-                    } else {
-                        mapNameID[objDesc.name].push(id);
-                    }
-                }
-            }
-        }
-
-        this._logger.debug('_refreshPartList childrenTypeToDisplay: ' + childrenTypeToDisplay);
-
-        //sort the parts by name
-        names.sort();
-        names.reverse();
-
-        //display the parts in the order of their names
-        i = names.length;
-        while (i--) {
-            childrenWithName = mapNameID[names[i]];
-            childrenWithName.sort();
-            childrenWithName.reverse();
-            this._logger.debug(names[i] + ':  ' + childrenWithName);
-
-            j = childrenWithName.length;
-            while (j--) {
-                id = childrenWithName[j];
-                decoratorInstance = this._partBrowserView.addPart(id, this._getPartDescriptor(id));
-                getDecoratorTerritoryQueries(decoratorInstance);
-            }
-        }
-
-        //update child creation possibility
-        i = this._validChildrenTypeIDs.length;
-        while (i--) {
-            id = this._validChildrenTypeIDs[i];
-            partEnabled = GMEConcepts.canCreateChild(this._containerNodeId, id);
-            this._partBrowserView.setEnabled(id, partEnabled);
-        }
-
-        if (territoryChanged) {
-            this._doUpdateTerritory(true);
-        }
-    };
-
-
-    PartBrowserControl.prototype.selectedAspectChanged = function (aspect) {
-        if (this._aspect !== aspect) {
-            this._aspect = aspect;
-
-            this._logger.debug('activeAspect: \'' + aspect + '\'');
-
-            this._refreshPartList();
-        }
-    };
-
 
     return PartBrowserControl;
 });

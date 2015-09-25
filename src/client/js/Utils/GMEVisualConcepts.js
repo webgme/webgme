@@ -10,14 +10,12 @@ define([
     'js/Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',
-    'js/Utils/METAAspectHelper',
     'js/Panels/MetaEditor/MetaEditorConstants',
     'js/Utils/DisplayFormat'
 ], function (_jquery,
              CONSTANTS,
              nodePropertyNames,
              REGISTRY_KEYS,
-             METAAspectHelper,
              MetaEditorConstants,
              displayFormat) {
 

@@ -150,7 +150,7 @@ define([
 
 
     UMLStateMachineDecoratorCore.prototype._instantiateMetaType = function () {
-        var META_TYPES = UMLStateMachineMETA.META_TYPES;
+        var META_TYPES = UMLStateMachineMETA.getMetaTypes();
 
         if (META_TYPES) {
             if (UMLStateMachineMETA.TYPE_INFO.isInitial(this._gmeID)) {

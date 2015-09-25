@@ -6,7 +6,6 @@
  */
 
 define(['js/logger',
-    'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
     'js/Utils/ExportManager',
     'js/Utils/ImportManager',
@@ -14,7 +13,6 @@ define(['js/logger',
     'js/RegistryKeys',
     'css!./styles/TreeBrowserControl.css'
 ], function (Logger,
-             GMEConcepts,
              nodePropertyNames,
              ExportManager,
              ImportManager,
@@ -117,11 +115,11 @@ define(['js/logger',
                 if (objID === CONSTANTS.PROJECT_ROOT_ID) {
                     //if root object
                     c = GME_ROOT_ICON;
-                } else if (GMEConcepts.getCrosscuts(objID).length > 0) {
+                } else if (nodeObj.getCrosscutsInfo().length > 0) {
                     c = GME_ASPECT_ICON;
-                } else if (GMEConcepts.getSets(objID).length > 0) {
+                } else if (nodeObj.getValidSetNames().length > 0) {
                     c = GME_ASPECT_ICON;
-                } else if (GMEConcepts.isConnectionType(nodeObj.getId())) {
+                } else if (nodeObj.isConnection()) {
                     //if it's a connection, let it have the connection icon
                     c = GME_CONNECTION_CLASS;
                 } else if (nodeObj.getChildrenIds().length > 0) {
@@ -257,12 +255,14 @@ define(['js/logger',
 
             //called from the TreeBrowserWidget when a node has been marked to "delete this"
             treeBrowser.onNodeDelete = function (selectedIds) {
-                var i = selectedIds.length;
+                var i = selectedIds.length,
+                    node;
                 //temporary fix to not allow deleting ROOT AND FCO
                 while (i--) {
-                    if (!GMEConcepts.canDeleteNode(selectedIds[i])) {
+                    node = client.getNode(selectedIds[i]);
+                    if (node && node.getBaseId() === null) {
                         logger.warn('Can not delete item with ID: ' +
-                        selectedIds[i] + '. Possibly it is the ROOT or FCO');
+                            selectedIds[i] + '. Possibly it is the ROOT or FCO');
                         selectedIds.splice(i, 1);
                     }
                 }
@@ -293,6 +293,7 @@ define(['js/logger',
                 //'create...' menu
                 var validChildren = self._getValidChildrenTypes(nodeId),
                     cChild,
+                    nodeObj = self._client.getNode(nodeId),
                     menuItemsCallback = function (key/*, options*/) {
                         self._createChild(nodeId, key);
                     };
@@ -346,7 +347,7 @@ define(['js/logger',
                 //    "icon": false
                 //};
 
-                if (GMEConcepts.getCrosscuts(nodeId).length > 0) {
+                if (nodeObj && nodeObj.getCrosscutsInfo().length > 0) {
                     menuItems.openInCrossCut = { //Open in crosscuts
                         name: 'Open in \'Crosscuts\'',
                         callback: function (/*key, options*/) {
@@ -359,7 +360,7 @@ define(['js/logger',
                     };
                 }
 
-                if (GMEConcepts.getSets(nodeId).length > 0) {
+                if (nodeObj && nodeObj.getValidSetNames().length > 0) {
                     menuItems.openInSetEditor = { //Open in crosscuts
                         name: 'Open in \'Set membership\'',
                         callback: function (/*key, options*/) {
@@ -628,66 +629,38 @@ define(['js/logger',
         };
 
     TreeBrowserControl.prototype._getValidChildrenTypes = function (nodeId) {
-        var result = [],
-        //get possible targets from MetaDescriptor
-            validChildrenTypes = GMEConcepts.getMETAAspectMergedValidChildrenTypes(nodeId),
-            children = [],
-            len,
-            childObj,
-            childName,
-            childId,
-            id,
-            client = this._client;
+        var types = [],
+            node = this._client.getNode(nodeId),
+            validChildrenInfo = {},
+            keys,
+            validNode,
+            i;
 
-        len = validChildrenTypes.length;
-        while (len--) {
-            //do not list connection types in Create...
-            id = validChildrenTypes[len];
-            if (GMEConcepts.isConnectionType(id) !== true &&
-                GMEConcepts.canCreateChild(nodeId, id)) {
-                childObj = client.getNode(id);
+        if (node) {
+            validChildrenInfo = node.getValidChildrenTypesDetailed();
+        }
 
-                childId = id + '';
-                childName = childId;
+        keys = Object.keys(validChildrenInfo || {});
 
-                if (childObj) {
-                    childName = childObj.getAttribute(nodePropertyNames.Attributes.name);
+        for (i = 0; i < keys.length; i += 1) {
+            if (validChildrenInfo[keys[i]] === true) {
+                validNode = this._client.getNode(keys[i]);
+                if(validNode){
+                    types.push({id: validNode.getId(), title: validNode.getAttribute('name')});
                 }
-
-                children.push({'ID': childId, 'Title': childName});
             }
         }
 
-        children.sort(function (a, b) {
-            if (a.Title.toLowerCase() < b.Title.toLowerCase()) {
-                return -1;
-            } else {
-                return 1;
-            }
-        });
-
-        for (len = 0; len < children.length; len += 1) {
-            result.push({
-                id: children[len].ID,
-                title: children[len].Title
-            });
-        }
-
-        return result;
+        return types;
     };
 
     TreeBrowserControl.prototype._createChild = function (nodeId, childId) {
-        var client = this._client,
-            logger = this._logger;
+        var client = this._client;
 
-        if (GMEConcepts.canCreateChild(nodeId, childId)) {
-            var params = {parentId: nodeId};
-            params[childId] = {registry: {}};
-            params[childId].registry[REGISTRY_KEYS.POSITION] = {x: 100, y: 100};
-            client.createChildren(params);
-        } else {
-            logger.warn('Can not create child instance of \'' + childId + '\', in parent object: \'' + nodeId + '\'');
-        }
+        var params = {parentId: nodeId};
+        params[childId] = {registry: {}};
+        params[childId].registry[REGISTRY_KEYS.POSITION] = {x: 100, y: 100};
+        client.createChildren(params);
     };
 
     return TreeBrowserControl;

@@ -319,7 +319,7 @@ define([
                     if (smaller.attributes[names[i]]) {
                         //they both have the attribute - if it differs we keep the whole of the bigger
                         if (CANON.stringify(smaller.attributes[names[i]]) !==
-                                CANON.stringify(bigger.attributes[names[i]])) {
+                            CANON.stringify(bigger.attributes[names[i]])) {
 
                             diff.attributes = diff.attributes || {};
                             diff.attributes[names[i]] = bigger.attributes[names[i]];
@@ -414,6 +414,30 @@ define([
         core.getValidChildrenPaths = function (node) {
             return core.getMemberPaths(getMetaChildrenNode(node), 'items');
         };
+
+        core.getChildrenMeta = function (node) {
+            var cMetaNode = getMetaChildrenNode(node),
+                childrenMeta = {
+                    min: core.getAttribute(cMetaNode, 'min'),
+                    max: core.getAttribute(cMetaNode, 'max')
+                },
+                paths = core.getMemberPaths(cMetaNode, 'items'),
+                i;
+
+            for (i = 0; i < paths.length; i += 1) {
+                childrenMeta[paths[i]] = {
+                    min: core.getMemberAttribute(cMetaNode, 'items', paths[i], 'min'),
+                    max: core.getMemberAttribute(cMetaNode, 'items', paths[i], 'max')
+                };
+            }
+
+            if(paths.length > 0){
+                return childrenMeta;
+            }
+
+            return null;
+        };
+
         core.setChildMeta = function (node, child, min, max) {
             core.addMember(getMetaChildrenNode(node), 'items', child);
             min = min || -1;

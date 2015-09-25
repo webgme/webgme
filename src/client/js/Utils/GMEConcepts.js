@@ -11,7 +11,6 @@ define(['jquery',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     './GMEConcepts.FCO',
-    './METAAspectHelper',
     'js/Panels/MetaEditor/MetaEditorConstants',
     'js/util'
 ], function (_jquery,
@@ -20,7 +19,6 @@ define(['jquery',
              nodePropertyNames,
              REGISTRY_KEYS,
              GMEConceptsFCO,
-             METAAspectHelper,
              MetaEditorConstants,
              clientUtil) {
 
@@ -331,7 +329,7 @@ define(['jquery',
     }
 
     function getMETAAspectMergedValidChildrenTypes(objID) {
-        var metaAspectMembers = METAAspectHelper.getMetaAspectMembers(),
+        var metaAspectMembers = Object.keys(client.getAllMetaNodes() || {}),
             validChildrenTypes = client.getValidChildrenTypes(objID),
             len = metaAspectMembers.length,
             id;

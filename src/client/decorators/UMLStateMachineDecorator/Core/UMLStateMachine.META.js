@@ -1,4 +1,4 @@
-/*globals define, _*/
+/*globals define, _, WebGMEGlobal*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -6,9 +6,37 @@
 
 
 //TODO does it really work with the fixed paths
-define(['underscore', 'js/Utils/METAAspectHelper'], function (_underscore, METAAspectHelper) {
+define(['underscore'], function (_underscore) {
     'use strict';
 
+    var META_TYPES = {
+        End: 'End',
+        FCO: 'FCO',
+        Initial: 'Initial',
+        Language: 'Language',
+        Models: 'Models',
+        State: 'State',
+        StateBase: 'StateBase',
+        Transition: 'Transition',
+        UMLStateDiagram: 'UMLStateDiagram'
+    },
+        client = WebGMEGlobal.Client;
+
+    function _getMetaTypes() {
+        var metaNodes = client.getAllMetaNodes(),
+            dictionary = {},
+            i,
+            name;
+
+        for (i = 0; i < metaNodes.length; i += 1) {
+            name = metaNodes[i].getAttribute('name');
+            if (META_TYPES[name]) {
+                dictionary[name] = metaNodes[i].getId();
+            }
+        }
+
+        return dictionary;
+    }
 
     //META ASPECT TYPES
     var _metaTypes = {
@@ -25,72 +53,38 @@ define(['underscore', 'js/Utils/METAAspectHelper'], function (_underscore, METAA
 
     //META ASPECT TYPE CHECKING
     var _isEnd = function (objID) {
-        return METAAspectHelper.isMETAType(objID, _metaTypes.End);
+        return client.isTypeOf(objID, _getMetaTypes()[META_TYPES.End]);
     };
     var _isFCO = function (objID) {
-        return METAAspectHelper.isMETAType(objID, _metaTypes.FCO);
+        return client.isTypeOf(objID, _getMetaTypes()[META_TYPES.FCO]);
     };
     var _isInitial = function (objID) {
-        return METAAspectHelper.isMETAType(objID, _metaTypes.Initial);
+        return client.isTypeOf(objID, _getMetaTypes()[META_TYPES.Initial]);
     };
     var _isLanguage = function (objID) {
-        return METAAspectHelper.isMETAType(objID, _metaTypes.Language);
+        return client.isTypeOf(objID, _getMetaTypes()[META_TYPES.Language]);
     };
     var _isModels = function (objID) {
-        return METAAspectHelper.isMETAType(objID, _metaTypes.Models);
+        return client.isTypeOf(objID, _getMetaTypes()[META_TYPES.Models]);
     };
     var _isState = function (objID) {
-        return METAAspectHelper.isMETAType(objID, _metaTypes.State);
+        return client.isTypeOf(objID, _getMetaTypes()[META_TYPES.State]);
     };
     var _isStateBase = function (objID) {
-        return METAAspectHelper.isMETAType(objID, _metaTypes.StateBase);
+        return client.isTypeOf(objID, _getMetaTypes()[META_TYPES.StateBase]);
     };
     var _isTransition = function (objID) {
-        return METAAspectHelper.isMETAType(objID, _metaTypes.Transition);
+        return client.isTypeOf(objID, _getMetaTypes()[META_TYPES.Transition]);
     };
     var _isUMLStateDiagram = function (objID) {
-        return METAAspectHelper.isMETAType(objID, _metaTypes.UMLStateDiagram);
+        return client.isTypeOf(objID, _getMetaTypes()[META_TYPES.UMLStateDiagram]);
     };
 
 
-    var _queryMetaTypes = function () {
-        var nMetaTypes = METAAspectHelper.getMETAAspectTypes(),
-            m;
-
-        if (!_.isEqual(_metaTypes, nMetaTypes)) {
-            /*var metaOutOfDateMsg = _metaID +
-             " is not up to date with the latest META aspect. Please update your local copy!";
-             if (console.error) {
-             console.error(metaOutOfDateMsg);
-             } else {
-             console.log(metaOutOfDateMsg);
-             }*/
-
-            for (m in _metaTypes) {
-                if (_metaTypes.hasOwnProperty(m)) {
-                    delete _metaTypes[m];
-                }
-            }
-
-            for (m in nMetaTypes) {
-                if (nMetaTypes.hasOwnProperty(m)) {
-                    _metaTypes[m] = nMetaTypes[m];
-                }
-            }
-        }
-    };
-
-    //hook up to META ASPECT CHANGES
-    METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
-        _queryMetaTypes();
-    });
-
-    //generate the META types on the first run
-    _queryMetaTypes();
 
     //return utility functions
     return {
-        META_TYPES: _metaTypes,
+        getMetaTypes: _getMetaTypes,
         TYPE_INFO: {
             isEnd: _isEnd,
             isFCO: _isFCO,
