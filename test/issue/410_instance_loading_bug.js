@@ -50,23 +50,23 @@ describe('issue410 testing', function () {
                         expect(metaContainer).not.to.equal(null);
                         return Q.nfcall(context.core.loadChildren, metaContainer);
                     })
-                    .then(function (metaElements) {
-                        expect(metaElements).not.to.equal(null);
-                        expect(metaElements).to.have.length(36);
+                    .then(function (metaNodes) {
+                        expect(metaNodes).not.to.equal(null);
+                        expect(metaNodes).to.have.length(36);
 
                         var name, folder, configuration, command, event, i,
                             base, c1, c2;
 
-                        for (i = 0; i < metaElements.length; i += 1) {
-                            name = context.core.getAttribute(metaElements[i], 'name');
+                        for (i = 0; i < metaNodes.length; i += 1) {
+                            name = context.core.getAttribute(metaNodes[i], 'name');
                             if (name === 'Folder') {
-                                folder = metaElements[i];
+                                folder = metaNodes[i];
                             } else if (name === 'Configuration') {
-                                configuration = metaElements[i];
+                                configuration = metaNodes[i];
                             } else if (name === 'Event') {
-                                event = metaElements[i];
+                                event = metaNodes[i];
                             } else if (name === 'Command') {
-                                command = metaElements[i];
+                                command = metaNodes[i];
                             }
                         }
 

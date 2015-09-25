@@ -15,7 +15,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             // copy all operations
             var core = {},
                 META_SET_NAME = 'MetaAspectSet',
-                logger = options.logger.fork('meta');
+                logger = options.logger.fork('MetaCacheCore');
             for (var key in oldcore) {
                 core[key] = oldcore[key];
             }
@@ -24,22 +24,22 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             function loadMetaSet(root) {
                 var paths = oldcore.getMemberPaths(root, META_SET_NAME),
                     i,
-                    metaElements = [];
+                    metaNodes = [];
 
                 for (i = 0; i < paths.length; i += 1) {
-                    metaElements.push(oldcore.loadByPath(root, paths[i]));
+                    metaNodes.push(oldcore.loadByPath(root, paths[i]));
                 }
 
-                return TASYNC.lift(metaElements);
+                return TASYNC.lift(metaNodes);
             }
 
             core.loadRoot = function (hash) {
                 return TASYNC.call(function (root) {
                     return TASYNC.call(function (elements) {
                         var i = 0;
-                        root.metaElements = {};
+                        root.metaNodes = {};
                         for (i = 0; i < elements.length; i += 1) {
-                            root.metaElements[oldcore.getPath(elements[i])] = elements[i];
+                            root.metaNodes[oldcore.getPath(elements[i])] = elements[i];
                         }
                         return root;
                     }, loadMetaSet(root));
@@ -52,7 +52,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
 
                 if (!parameters || !parameters.parent) {
                     //a root just have been created
-                    node.metaElements = {};
+                    node.metaNodes = {};
                 }
 
                 return node;
@@ -64,7 +64,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
 
                 //check if our cache needs to be updated
                 if (setName === META_SET_NAME && core.getPath(node) === core.getPath(root)) {
-                    root.metaElements[core.getPath(member)] = member;
+                    root.metaNodes[core.getPath(member)] = member;
                 }
             };
 
@@ -74,14 +74,14 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
 
                 //check if our cache needs to be updated
                 if (setName === META_SET_NAME && core.getPath(node) === core.getPath(root)) {
-                    delete root.metaElements[memberPath];
+                    delete root.metaNodes[memberPath];
                 }
             };
 
             core.deleteNode = function (node, technical) {
                 var root = core.getRoot(node);
-                if (root.metaElements[core.getPath(node)]) {
-                    delete root.metaElements[core.getPath(node)];
+                if (root.metaNodes[core.getPath(node)]) {
+                    delete root.metaNodes[core.getPath(node)];
                 }
                 oldcore.deleteNode(node, technical);
             };
@@ -91,9 +91,9 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                     oldpath = core.getPath(node),
                     moved = oldcore.moveNode(node, parent);
 
-                if (root.metaElements[oldpath]) {
-                    delete root.metaElements[oldpath];
-                    root.metaElements[core.getPath(moved)] = moved;
+                if (root.metaNodes[oldpath]) {
+                    delete root.metaNodes[oldpath];
+                    root.metaNodes[core.getPath(moved)] = moved;
                 }
 
                 return moved;
@@ -102,7 +102,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             //additional inquiry functions
             core.isMetaNode = function (node) {
                 var root = core.getRoot(node);
-                if (root.metaElements && root.metaElements[core.getPath(node)]) {
+                if (root.metaNodes && root.metaNodes[core.getPath(node)]) {
                     return true;
                 }
 
@@ -112,8 +112,8 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             core.getAllMetaNodes = function (node) {
                 var root = core.getRoot(node);
 
-                if (root.metaElements) {
-                    return root.metaElements;
+                if (root.metaNodes) {
+                    return root.metaNodes;
                 }
 
                 return [];
@@ -149,7 +149,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             core.getValidChildrenMetaNodes = function (parameters) {
                 var validNodes = [],
                     node = parameters.node,
-                    metaNodes = core.getRoot(node).metaElements,
+                    metaNodes = core.getRoot(node).metaNodes,
                     keys = Object.keys(metaNodes || {}),
                     i, j,
                     typeCounters = {},
@@ -270,13 +270,12 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             core.getValidSetElementsMetaNodes = function (parameters) {
                 var validNodes = [],
                     node = parameters.node,
-                    metaNodes = core.getRoot(node).metaElements,
+                    metaNodes = core.getRoot(node).metaNodes,
                     keys = Object.keys(metaNodes || {}),
                     i, j,
                     typeCounters = {},
                     members = parameters.members || [],
                     rules = core.getPointerMeta(node, parameters.name) || {},
-                    inAspect,
                     temp;
 
                 for (i = 0; i < keys.length; i += 1) {

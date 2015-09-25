@@ -255,10 +255,12 @@ define(['js/logger',
 
             //called from the TreeBrowserWidget when a node has been marked to "delete this"
             treeBrowser.onNodeDelete = function (selectedIds) {
-                var i = selectedIds.length;
+                var i = selectedIds.length,
+                    node;
                 //temporary fix to not allow deleting ROOT AND FCO
                 while (i--) {
-                    if (client.getNode(selectedIds[i]).getBaseId() === null) {
+                    node = client.getNode(selectedIds[i]);
+                    if (node && node.getBaseId() === null) {
                         logger.warn('Can not delete item with ID: ' +
                             selectedIds[i] + '. Possibly it is the ROOT or FCO');
                         selectedIds.splice(i, 1);
@@ -345,7 +347,7 @@ define(['js/logger',
                 //    "icon": false
                 //};
 
-                if (nodeObj.getCrosscutsInfo().length > 0) {
+                if (nodeObj && nodeObj.getCrosscutsInfo().length > 0) {
                     menuItems.openInCrossCut = { //Open in crosscuts
                         name: 'Open in \'Crosscuts\'',
                         callback: function (/*key, options*/) {
@@ -358,7 +360,7 @@ define(['js/logger',
                     };
                 }
 
-                if (nodeObj.getValidSetNames().length > 0) {
+                if (nodeObj && nodeObj.getValidSetNames().length > 0) {
                     menuItems.openInSetEditor = { //Open in crosscuts
                         name: 'Open in \'Set membership\'',
                         callback: function (/*key, options*/) {
@@ -629,15 +631,23 @@ define(['js/logger',
     TreeBrowserControl.prototype._getValidChildrenTypes = function (nodeId) {
         var types = [],
             node = this._client.getNode(nodeId),
-            validChildrenInfo = node.getValidChildrenTypesDetailed(),
-            keys = Object.keys(validChildrenInfo || {}),
+            validChildrenInfo = {},
+            keys,
             validNode,
             i;
+
+        if (node) {
+            validChildrenInfo = node.getValidChildrenTypesDetailed();
+        }
+
+        keys = Object.keys(validChildrenInfo || {});
 
         for (i = 0; i < keys.length; i += 1) {
             if (validChildrenInfo[keys[i]] === true) {
                 validNode = this._client.getNode(keys[i]);
-                types.push({id: validNode.getId(), title: validNode.getAttribute('name')});
+                if(validNode){
+                    types.push({id: validNode.getId(), title: validNode.getAttribute('name')});
+                }
             }
         }
 

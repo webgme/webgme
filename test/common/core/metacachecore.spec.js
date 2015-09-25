@@ -6,13 +6,13 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('cached meta', function () {
+describe.only('meta cache core', function () {
     'user strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
         expect = testFixture.expect,
-        logger = testFixture.logger.fork('cachedmetacore.spec'),
+        logger = testFixture.logger.fork('metacachecore.spec'),
         storage,
         projectName = 'cachedMetaTesting',
         project,
@@ -39,7 +39,7 @@ describe('cached meta', function () {
             })
             .then(function () {
                 return testFixture.importProject(storage, {
-                    projectSeed: 'test/common/core/cachedmetacore/project.json',
+                    projectSeed: 'test/common/core/metacachecore/project.json',
                     projectName: projectName,
                     branchName: 'base',
                     gmeConfig: gmeConfig,
@@ -77,19 +77,18 @@ describe('cached meta', function () {
             .then(function (root) {
                 rootNode = root;
                 baseNodes[''] = root;
-                return Q.allSettled([
-                    Q.nfcall(core.loadByPath, root, '/1924875415'),
-                    Q.nfcall(core.loadByPath, root, '/1924875415/1059131120'),
-                    Q.nfcall(core.loadByPath, root, '/1924875415/1359805212'),
-                    Q.nfcall(core.loadByPath, root, '/1924875415/1544821790')
+                return Q.allDone([
+                    testFixture.loadNode(core, rootNode, '/1924875415'),
+                    testFixture.loadNode(core, rootNode, '/1924875415/1059131120'),
+                    testFixture.loadNode(core, rootNode, '/1924875415/1359805212'),
+                    testFixture.loadNode(core, rootNode, '/1924875415/1544821790')
                 ]);
             })
             .then(function (results) {
                 var i;
                 for (i = 0; i < results.length; i += 1) {
-                    expect(results[i].state).to.equal('fulfilled');
-                    if (baseNodes[core.getPath(results[i].value)] === null) {
-                        baseNodes[core.getPath(results[i].value)] = results[i].value;
+                    if (baseNodes[core.getPath(results[i])] === null) {
+                        baseNodes[core.getPath(results[i])] = results[i];
                     }
                 }
             })

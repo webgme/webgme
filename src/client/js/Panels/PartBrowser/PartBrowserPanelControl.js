@@ -66,7 +66,7 @@ define(['js/logger',
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, function (/*model, activeTabId*/) {
             var activeAspect = WebGMEGlobal.State.getActiveAspect();
-            activeAspect = activeAspect === CONSTANTS.ASPECT_ALL ? undefined : activeAspect;
+            activeAspect = activeAspect === CONSTANTS.ASPECT_ALL ? null : activeAspect;
             if (self._aspect !== activeAspect) {
                 self._aspect = activeAspect;
                 self._updateDescriptor(self._getPartDescriptorCollection());
@@ -168,7 +168,8 @@ define(['js/logger',
     PartBrowserControl.prototype._getPartDescriptorCollection = function () {
         var containerNode = this._client.getNode(this._containerNodeId),
             metaNodes = this._client.getAllMetaNodes(),
-            descriptor = {},
+            descriptorCollection = {},
+            descriptor,
             validInfo,
             keys,
             i;
@@ -184,8 +185,11 @@ define(['js/logger',
         //}; not used yet
 
         for (i = 0; i < metaNodes.length; i += 1) {
-            descriptor[metaNodes[i].getId()] = this._getPartDescriptor(metaNodes[i].getId());
-            descriptor[metaNodes[i].getId()].visibility = 'hidden';
+            descriptor = this._getPartDescriptor(metaNodes[i].getId());
+            if (descriptor) {
+                descriptorCollection[metaNodes[i].getId()] = this._getPartDescriptor(metaNodes[i].getId());
+                descriptorCollection[metaNodes[i].getId()].visibility = 'hidden';
+            }
         }
 
         if (containerNode) {
@@ -213,14 +217,14 @@ define(['js/logger',
 
             for (i = 0; i < keys.length; i += 1) {
                 if (validInfo[keys[i]]) {
-                    descriptor[keys[i]].visibility = 'visible';
+                    descriptorCollection[keys[i]].visibility = 'visible';
                 } else {
-                    descriptor[keys[i]].visibility = 'grayed';
+                    descriptorCollection[keys[i]].visibility = 'grayed';
                 }
             }
         }
 
-        return descriptor;
+        return descriptorCollection;
     };
 
     PartBrowserControl.prototype._getTerritoryPatterns = function () {
@@ -278,12 +282,15 @@ define(['js/logger',
     PartBrowserControl.prototype._getPartDescriptor = function (id) {
         var desc = this._getObjectDescriptor(id);
 
-        desc.decoratorClass = this._getItemDecorator(desc.decorator);
-        desc.control = this;
-        desc.metaInfo = {};
-        desc.metaInfo[CONSTANTS.GME_ID] = id;
-        desc.preferencesHelper = PreferencesHelper.getPreferences();
-        desc.aspect = this._aspect;
+        if (desc) {
+            desc.decoratorClass = this._getItemDecorator(desc.decorator);
+            desc.control = this;
+            desc.metaInfo = {};
+            desc.metaInfo[CONSTANTS.GME_ID] = id;
+            desc.preferencesHelper = PreferencesHelper.getPreferences();
+            desc.aspect = this._aspect;
+        }
+
 
         return desc;
     };
