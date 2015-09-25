@@ -209,16 +209,36 @@ define(['q'], function (Q) {
             var metaSet = metaSets[setName],
                 memberPaths;
             if (!metaSet) {
-                if (core.getValidAspectNames(node).indexOf(setName) === -1) {
-                    return Q({
-                        hasViolation: true,
-                        message: 'Invalid set "' + setName + '"\n'
-                    });
-                } else {
+                if (core.getValidAspectNames(node).indexOf(setName) > -1) {
+
                     // TODO: Should the Aspects be checked too?
                     return Q({
                         hasViolation: false
                     });
+                } else {
+                    var crossCuts = core.getRegistry(node, 'CrossCuts') || [],
+                        i;
+
+                    // The 'CrossCuts' is a constant from client/js/RegistryKeys.js
+
+                    for (i = 0; i < crossCuts.length; i += 1) {
+                        if (crossCuts[i].SetID === setName) {
+                            i = -1;
+                            break;
+                        }
+                    }
+
+                    if (i === -1) {
+                        // TODO: Should the CrossCuts be checked too?
+                        return Q({
+                            hasViolation: false
+                        });
+                    } else {
+                        return Q({
+                            hasViolation: true,
+                            message: 'Invalid set "' + setName + '"\n'
+                        });
+                    }
                 }
             } else {
                 memberPaths = core.getMemberPaths(node, setName);

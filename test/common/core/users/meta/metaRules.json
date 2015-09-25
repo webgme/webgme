@@ -743,6 +743,13 @@
                 "base": "c81fa28e-e412-1874-7897-219c3a358a05"
             },
             "registry": {
+                "CrossCuts": [
+                    {
+                        "SetID": "Crosscut_aebdc39a-583e-1474-9a1f-b8f2ce62acfd",
+                        "order": 0,
+                        "title": "Crosscut 0"
+                    }
+                ],
                 "position": {
                     "x": 92,
                     "y": 355
@@ -761,6 +768,7 @@
                         }
                     }
                 ],
+                "Crosscut_aebdc39a-583e-1474-9a1f-b8f2ce62acfd": [],
                 "ModelRefs": []
             },
             "constraints": {}
