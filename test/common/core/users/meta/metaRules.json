@@ -421,7 +421,9 @@
                     "y": 480
                 }
             },
-            "sets": {},
+            "sets": {
+                "AnAspect": []
+            },
             "constraints": {}
         },
         "173e00a1-5193-3f56-d165-a8d22fd786d4": {
@@ -441,7 +443,9 @@
                     "y": 158
                 }
             },
-            "sets": {},
+            "sets": {
+                "AnAspect": []
+            },
             "constraints": {}
         },
         "191f6e2f-391b-09ea-4e42-af1654fb5605": {
@@ -563,6 +567,12 @@
                         1,
                         -1
                     ]
+                },
+                "aspects": {
+                    "AnAspect": [
+                        "208f3d41-20e3-4464-c404-6488985d019e",
+                        "2bff7f8a-a58e-405d-5c66-5e98195bf2db"
+                    ]
                 }
             },
             "parent": "cab37512-9256-6d3a-a1c7-9bdbf81645ca",
@@ -576,7 +586,9 @@
                     "y": 105
                 }
             },
-            "sets": {},
+            "sets": {
+                "AnAspect": []
+            },
             "constraints": {}
         },
         "2bff7f8a-a58e-405d-5c66-5e98195bf2db": {
@@ -731,6 +743,13 @@
                 "base": "c81fa28e-e412-1874-7897-219c3a358a05"
             },
             "registry": {
+                "CrossCuts": [
+                    {
+                        "SetID": "Crosscut_aebdc39a-583e-1474-9a1f-b8f2ce62acfd",
+                        "order": 0,
+                        "title": "Crosscut 0"
+                    }
+                ],
                 "position": {
                     "x": 92,
                     "y": 355
@@ -749,6 +768,7 @@
                         }
                     }
                 ],
+                "Crosscut_aebdc39a-583e-1474-9a1f-b8f2ce62acfd": [],
                 "ModelRefs": []
             },
             "constraints": {}
@@ -887,7 +907,9 @@
                     "y": 157
                 }
             },
-            "sets": {},
+            "sets": {
+                "AnAspect": []
+            },
             "constraints": {}
         },
         "8790acf4-2e23-949f-6303-862d10937614": {
@@ -1125,7 +1147,9 @@
                     "y": 157
                 }
             },
-            "sets": {},
+            "sets": {
+                "AnAspect": []
+            },
             "constraints": {}
         },
         "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": {
