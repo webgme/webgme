@@ -1549,6 +1549,28 @@ describe('GME client', function () {
             expect(clientNode.toString()).to.contain('/323573539');
         });
 
+        it('should return detailed information about the valid children types', function () {
+            expect(clientNode.getValidChildrenTypesDetailed()).to.deep.equal({'/701504349': true});
+        });
+
+        it('should return detailed information about the valid set types', function () {
+            expect(clientNode.getValidSetMemberTypesDetailed('set')).to.deep.equal({'/701504349': true});
+        });
+
+        it('should return all meta gme nodes synchronously',function(){
+            var metaNodes = client.getAllMetaNodes();
+            expect(metaNodes).to.have.length(2);
+            expect(!!metaNodes[0].getId).to.equal(true);
+            expect(!!metaNodes[1].getId).to.equal(true);
+        });
+
+        it('should check if the node is [connection]-like',function(){
+            expect(clientNode.isConnection()).to.equal(false);
+        });
+
+        it('should check if the node is abstract',function(){
+            expect(clientNode.isAbstract()).to.equal(false);
+        });
         //it('should log the textual representation of the node', function () {
         //
         //})
@@ -1820,7 +1842,7 @@ describe('GME client', function () {
                     parent = client.getNode(node.getParentId());
                     client.updateTerritory(tOneId, {'': {children: 1}});
                     client.copyMoreNodes({parentId: parent.getId(), '/323573539': {}}, 'duplicating node');
-                    
+
                 } else if (tOneState === 'tUpdate') {
                     //first our territoryUpdate should be resolved
                     expect(events).to.have.length(8);
