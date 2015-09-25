@@ -304,15 +304,15 @@ div.diagram-designer-drag-outline {
 /* TABS CONTAINER */
 
 .active-panel .diagram-designer-tabs-container {
-  background-color: rgba(235, 235, 235, 0.2);
+  background-color: #F7FAFF;
 }
 
 .diagram-designer-tabs-container {
-  position: relative;
+  position: absolute;
   top: 3px;
   width: 100%;
   height: $tabs-container-height;
-  background-color: rgba(248, 248, 248, 0.4);
+  background-color: #FDFDFD;
 
   padding-top: 1px;
 
