@@ -4148,13 +4148,13 @@ describe('GME client', function () {
 
                 client.getExportProjectBranchUrl(projectId, 'master', 'seedTestOutPut',
                     function (err, url) {
-                        var karmaUrl;
+                        //var karmaUrl;
                         expect(err).to.equal(null);
-                        expect(url).to.contain('http://127.0.0.1:9001/rest/blob/download/');
+                        expect(url).to.contain('/rest/blob/download/');
 
-                        karmaUrl = url.replace('http://127.0.0.1:9001', window.location.origin);
+                        //karmaUrl = url.replace('http://127.0.0.1:9001', window.location.origin);
 
-                        superagent.get(karmaUrl, function (err, result) {
+                        superagent.get(url, function (err, result) {
                             expect(err).to.equal(null);
 
                             expect(result.body).to.deep.equal(refNodeProj);
@@ -4185,13 +4185,13 @@ describe('GME client', function () {
 
                 client.getExportProjectBranchUrl(projectId, 'master', 'seedTestOutPut',
                     function (err, url) {
-                        var karmaUrl;
+                        //var karmaUrl;
                         expect(err).to.equal(null);
-                        expect(url).to.contain('http://127.0.0.1:9001/rest/blob/download/');
+                        expect(url).to.contain('rest/blob/download/');
 
-                        karmaUrl = url.replace('http://127.0.0.1:9001', window.location.origin);
+                        //karmaUrl = url.replace('http://127.0.0.1:9001', window.location.origin);
 
-                        superagent.get(karmaUrl, function (err, result) {
+                        superagent.get(url, function (err, result) {
                             expect(err).to.equal(null);
 
                             expect(result.body).to.deep.equal(refSFSProj);
