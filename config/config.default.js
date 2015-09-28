@@ -56,8 +56,8 @@ var path = require('path'),
                              'UMLStateMachineDecorator',
                              'DefaultDecorator'],
             // Used in client/WebGME.js to load initial project (if url is specified that has higher priority)
-            defaultProject: {
-                name: null,   // This is the projectId, e.g. 'guest+TestProject'
+            defaultContext: {
+                project: null,   // This is the projectId, e.g. 'guest+TestProject'
                 branch: null, // Defaults to master
                 node: null    // Defaults to the root-node.
             },
@@ -181,7 +181,7 @@ var path = require('path'),
             // If true events such as PROJECT_CREATED and BRANCH_CREATED will only be broadcasted
             // and not emitted back to the web-socket that triggered the event.
             broadcastProjectEvents: false,
-            emitCommittedCoreObjects: false,
+            emitCommittedCoreObjects: true,
             loadBucketSize: 100,
             loadBucketTimer: 10,
             clientCacheSize: 2000, // overwrites cache on client

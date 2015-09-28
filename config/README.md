@@ -55,7 +55,7 @@ To start the server using the configuration above:
 **blob**
 
 - `config.blob.type = 'FS'`
- - Currently only `FS` (file system) is supported.
+ - Currently only `FS` (File System) is supported.
 - `config.blob.fsDir = './blob-local-storage'`
  - Directory where to store the blob files.
 - `config.blob.s3 = {}`
@@ -69,11 +69,11 @@ To start the server using the configuration above:
  - When debug is activated in the browser (`localStorage.debug = gme*`) messages below this level will not be printed.
 - `config.client.usedDecorators = ['ModelDecorator', 'MetaDecorator', ... see config]`
  - Decorators to load from the server before the editor starts.
-- `config.client.defaultProject.name = null`
- - ID of Project to open when visiting the webapp (e.g. `guest+TestProject`). If the URL query is specified (`?project=SomeProject`) - the URL has higher priority.
-- `config.client.defaultProject.branch = null`
+- `config.client.defaultContext.project = null`
+ - ID of project to open when visiting the webapp (e.g. `guest+TestProject`). If the URL query is specified (`?project=SomeProject`) - the URL has higher priority.
+- `config.client.defaultContext.branch = null`
  - Name of the default branch to open, (URL equivalent `?branch=master`).
-- `config.client.defaultProject.node = null`
+- `config.client.defaultContext.node = null`
  - Path to the default node to open, URL equivalent (`?node=/1` or for the root-node `?node=root`).
 - `config.client.defaultConnectionRouter = 'basic3'`
  - Default connection router to use when opening up a new model, available options (ordered by level of complexity and sophistication) are: 'basic', 'basic2' and 'basic3'.
@@ -125,11 +125,11 @@ To start the server using the configuration above:
 
 **rest**
 - `config.rest.components = {}`
- -  Routing path (key) and file-path (value) to custom REST components.
+ -  Routing path (keys) from `/rest/external/` and file-path (values) to custom REST components.
 
 **seedProject**
 - `config.seedProject.enable = true`
- - Enables creation of new projects on the server side.
+ - Enables creation of new projects using seeds.
 - `config.seedProject.defaultProject = 'EmptyProject'`
  - Used by the GUI when highlighting/selecting the default project to seed from.
 - `config.seedProject.basePaths = ['./seeds']`
@@ -137,24 +137,24 @@ To start the server using the configuration above:
 
 **server**
 - `config.server.port = 8888`
- - Enables creation of new projects on the server side.
+ - Port the server is hosted from.
 - `config.server.maxWorkers = 10`
- - Used by the GUI when highlighting/selecting the default project to seed from.
+ - Maximum number of child process spawned for workers.
 - `config.server.sessionStore.type = 'Memory'`
- - Determines which type of storage will be used for the sessions, available options are `'Memeory'`, `'Redis'` and `'Mongo'`.
+ - Determines which type of storage will be used for the sessions, available options are `'Memory'`, `'Redis'` and `'Mongo'`.
 - `config.server.sessionStore.options = {}`
  - Storage dependent options passed to the session store.
 - `config.server.sessionStore.cookieSecret = 'meWebGMEez'`
- - Value used when encoding the sessionId
+ - Value used when encoding/decoding the session cookie.
 - `config.server.sessionCookieKey = 'webgmeSid'`
- - Key used when decoding the sessionId.
+ - Name of session cookie.
 - `config.server.log = see config`
  - Transports and options for the server (winston) logger.
 - `config.server.https.enable = false`
  - If true the server will be hosted over the HTTPS protocol.
 - `config.server.https.certificateFile = './certificates/sample-cert.pem'`
  - Path to certificate file for HTTPS (only applicable if https is enabled).
-- `config.server.https.certificateFile = './certificates/sample-cert.pem'`
+- `config.server.https.keyFile = './certificates/sample-key.pem'`
  - Path to key file for HTTPS (only applicable if https is enabled).
 - `config.server.extlibExcludes = ['.\.pem$', 'config\/config\..*\.js$']`
  - Array of regular expressions that will hinder access to files via the '/extlib/' route. Requests to files matching any of the provided pattern will result in 403.
@@ -172,8 +172,8 @@ To start the server using the configuration above:
  - Number of core-objects stored before emptying cache (client side).
 - `config.storage.broadcastProjectEvents = false`
  - If true, events regarding project/branch creation/deletion are only broadcasted and not emitted back to the socket who made the change. Only modify this if you are writing a custom GUI.
-- `config.storage.emitCommittedCoreObjects = false`
- - If true, all the committed core objects (in a `makeCommit`) will be broadcasted to all sockets. If this is enabled the number of round-trips to the server can be reduced after a `BRANCH_HASH_UPDATED` event. However it also means that the server might send unused data to clients. If false, only the core obecjt for the root node will be sent.
+- `config.storage.emitCommittedCoreObjects = true`
+ - If true, all the committed core objects (in a `makeCommit`) will be broadcasted to all sockets. If this is enabled the number of round-trips to the server can be reduced after a `BRANCH_HASH_UPDATED` event. However it also means that the server might send unused data to clients. If false, only the core object for the root node will be sent.
 - `config.storage.loadBucketSize = 100`
  - Size of bucket before triggering a load of objects from the server.
 - `config.storage.loadBucketTimer = 10`

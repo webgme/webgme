@@ -121,10 +121,10 @@ function validateConfig(configOrFileName) {
     assertString('config.client.appDir', config.client.appDir);
     assertObject('config.client.log', config.client.log);
     assertString('config.client.log.level', config.client.log.level);
-    assertObject('config.client.defaultProject', config.client.defaultProject);
-    assertString('config.client.defaultProject.name', config.client.defaultProject.name, true);
-    assertString('config.client.defaultProject.branch', config.client.defaultProject.name, true);
-    assertString('config.client.defaultProject.node', config.client.defaultProject.name, true);
+    assertObject('config.client.defaultContext', config.client.defaultContext);
+    assertString('config.client.defaultContext.project', config.client.defaultContext.project, true);
+    assertString('config.client.defaultContext.branch', config.client.defaultContext.branch, true);
+    assertString('config.client.defaultContext.node', config.client.defaultContext.node, true);
     assertEnum('config.client.defaultConnectionRouter', config.client.defaultConnectionRouter,
         'basic', 'basic2', 'basic3');
 
