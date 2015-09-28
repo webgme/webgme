@@ -444,7 +444,6 @@ describe('standalone server', function () {
                             {
                                 query: 'webGMESessionId=' + /webgmeSid=s:([^;]+)\./.exec(
                                     decodeURIComponent(socketReq.cookies))[1],
-                                transports: gmeConfig.socketIO.transports,
                                 multiplex: false
                             });
 

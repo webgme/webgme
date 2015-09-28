@@ -114,7 +114,7 @@ To start the server using the configuration above:
  - Same as for `config.addOns.basePath' [TODO: link to AddOns] but for plugins instead.
 - `config.plugin.displayAll = false`
  - If true there is no need to register plugins on the root-node of project - all will be available from the drop-down.
-- `config.plugin.serverResultTimeout = 10000`
+- `config.plugin.serverResultTimeout = 60000`
  - Time, in milliseconds, results will be stored on the server after they have finished (when invoked via the REST api).
 
 
@@ -124,7 +124,65 @@ To start the server using the configuration above:
 
 
 **rest**
-- `config.rest.secure = true`
- -  **TODO**
 - `config.rest.components = {}`
  -  Routing path (key) and file-path (value) to custom REST components.
+
+**seedProject**
+- `config.seedProject.enable = true`
+ - Enables creation of new projects on the server side.
+- `config.seedProject.defaultProject = 'EmptyProject'`
+ - Used by the GUI when highlighting/selecting the default project to seed from.
+- `config.seedProject.basePaths = ['./seeds']`
+ - List of directories where project seeds are stored.
+
+**server**
+- `config.server.port = 8888`
+ - Enables creation of new projects on the server side.
+- `config.server.maxWorkers = 10`
+ - Used by the GUI when highlighting/selecting the default project to seed from.
+- `config.server.sessionStore.type = 'Memory'`
+ - Determines which type of storage will be used for the sessions, available options are `'Memeory'`, `'Redis'` and `'Mongo'`.
+- `config.server.sessionStore.options = {}`
+ - Storage dependent options passed to the session store.
+- `config.server.sessionStore.cookieSecret = 'meWebGMEez'`
+ - Value used when encoding the sessionId
+- `config.server.sessionCookieKey = 'webgmeSid'`
+ - Key used when decoding the sessionId.
+- `config.server.log = see config`
+ - Transports and options for the server (winston) logger.
+- `config.server.https.enable = false`
+ - If true the server will be hosted over the HTTPS protocol.
+- `config.server.https.certificateFile = './certificates/sample-cert.pem'`
+ - Path to certificate file for HTTPS (only applicable if https is enabled).
+- `config.server.https.certificateFile = './certificates/sample-cert.pem'`
+ - Path to key file for HTTPS (only applicable if https is enabled).
+- `config.server.extlibExcludes = ['.\.pem$', 'config\/config\..*\.js$']`
+ - Array of regular expressions that will hinder access to files via the '/extlib/' route. Requests to files matching any of the provided pattern will result in 403.
+
+**socketIO**
+- `config.socketIO.clientOptions = see config`
+ - Options passed to the [socketIO client](https://github.com/socketio/socket.io-client#managerurlstring-optsobject) when connecting to the sever.
+- `config.socketIO.serverOptions = see config`
+ - Options passed to the [socketIO server](https://github.com/socketio/engine.io#methods-1) when attaching to the server.
+
+**storage**
+- `config.storage.cache = 2000`
+ - Number of core-objects stored before emptying cache (server side).
+- `config.storage.clientCache = 2000`
+ - Number of core-objects stored before emptying cache (client side).
+- `config.storage.broadcastProjectEvents = false`
+ - If true, events regarding project/branch creation/deletion are only broadcasted and not emitted back to the socket who made the change. Only modify this if you are writing a custom GUI.
+- `config.storage.emitCommittedCoreObjects = false`
+ - If true, all the committed core objects (in a `makeCommit`) will be broadcasted to all sockets. If this is enabled the number of round-trips to the server can be reduced after a `BRANCH_HASH_UPDATED` event. However it also means that the server might send unused data to clients. If false, only the core obecjt for the root node will be sent.
+- `config.storage.loadBucketSize = 100`
+ - Size of bucket before triggering a load of objects from the server.
+- `config.storage.loadBucketTimer = 10`
+ - Time in milliseconds (after a new bucket has been created) before triggering a load of objects from the server.
+- `config.storage.keyType = 'plainSha'`
+ - Algorithm used when hashing the objects in the data-base, can be `'plainSHA1'`, `'rand160Bits'` or `'ZSSHA'`.
+
+**visualization**
+- `config.visualization.decoratorPaths = ['./src/client/decorators']`
+ - Array of paths to decorators that should be available.
+- `config.visualization.visualizerDescriptors = ['../src/client/js/Visualizers.json']`
+ - Array of paths to json-files containing meta-data about the used visualizers.

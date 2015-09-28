@@ -97,13 +97,12 @@ var path = require('path'),
             allowServerExecution: false,
             basePaths: [path.join(__dirname, '../src/plugin/coreplugins')],
             displayAll: false,
-            serverResultTimeout: 10000
+            serverResultTimeout: 60000
         },
 
         requirejsPaths: {},
 
         rest: {
-            secure: false,
             components: {}
         },
 
@@ -121,10 +120,10 @@ var path = require('path'),
                 // see specific session store documentations for options connect-mongo and connect-redis
                 options: {
                     //url: 'mongodb://127.0.0.1:27017/multi'
-                }
+                },
+                cookieSecret: 'meWebGMEez',
+                cookieKey: 'webgmeSid',
             },
-            sessionCookieId: 'webgmeSid',
-            sessionCookieSecret: 'meWebGMEez',
             log: {
                 //patterns: ['gme:server:*', '-gme:server:standalone*'],
                 transports: [{
@@ -166,11 +165,15 @@ var path = require('path'),
         },
 
         socketIO: {
-            reconnection: true,
-            'connect timeout': 10,
-            'reconnection delay': 1,
-            'force new connection': true
-            //transports: ['websocket', 'polling']
+            clientOptions: {
+                reconnection: true,
+                'connect timeout': 10,
+                'reconnection delay': 1,
+                'force new connection': true
+            },
+            serverOptions: {
+                //transports: ['websocket', 'polling']
+            }
         },
 
         storage: {

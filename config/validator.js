@@ -165,7 +165,6 @@ function validateConfig(configOrFileName) {
     // rest
     expectedKeys.push('rest');
     assertObject('config.rest', config.rest);
-    assertBoolean('config.rest.secure', config.rest.secure);
     assertObject('config.rest.components', config.rest.components);
 
     //seedProjects
@@ -183,9 +182,8 @@ function validateConfig(configOrFileName) {
     assertObject('config.server.sessionStore', config.server.sessionStore);
     assertString('config.server.sessionStore.type', config.server.sessionStore.type);
     assertObject('config.server.sessionStore.options', config.server.sessionStore.options);
-
-    assertString('config.server.sessionCookieId', config.server.sessionCookieId);
-    assertString('config.server.sessionCookieSecret', config.server.sessionCookieSecret);
+    assertString('config.server.sessionStore.cookieSecret', config.server.sessionStore.cookieSecret);
+    assertString('config.server.sessionStore.cookieKey', config.server.sessionStore.cookieKey);
     // server log
     assertObject('config.server.log', config.server.log);
     assertArray('config.server.log.transports', config.server.log.transports);
@@ -200,6 +198,8 @@ function validateConfig(configOrFileName) {
     // socketIO
     expectedKeys.push('socketIO');
     assertObject('config.socketIO', config.socketIO);
+    assertObject('config.socketIO.clientOptions', config.socketIO.clientOptions);
+    assertObject('config.socketIO.serverOptions', config.socketIO.serverOptions);
 
     // storage
     expectedKeys.push('storage');

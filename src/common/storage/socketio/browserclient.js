@@ -26,8 +26,8 @@ define([], function () {
                 var io = io_ || window.io,
                     socket;
 
-                logger.debug('Connecting to "' + hostAddress + '" with options', gmeConfig.socketIO);
-                socket = io.connect(hostAddress, gmeConfig.socketIO);
+                logger.debug('Connecting to "' + hostAddress + '" with options', gmeConfig.socketIO.clientOptions);
+                socket = io.connect(hostAddress, gmeConfig.socketIO.clientOptions);
                 callback(null, socket);
             });
         };

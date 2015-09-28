@@ -419,7 +419,6 @@ function openSocketIo(server, agent, userName, password) {
             socket = io.connect(serverBaseUrl,
                 {
                     query: 'webGMESessionId=' + webGMESessionId,
-                    transports: gmeConfig.socketIO.transports,
                     multiplex: false
                 });
 
