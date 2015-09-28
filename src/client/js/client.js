@@ -1774,6 +1774,17 @@ define([
         };
 
         //library functions
+        /**
+         * Request an export of the given library.
+         * A library can be any sub-tree of the project (the whole project as well).
+         * The export will only keep the internal relation, and it just notices the targets of any
+         * outgoing relation. If those outgoing relations will not present in the source, the result
+         * could be faulty.
+         * @param {string} libraryRootPath - the absolute path of the root node of the library.
+         * @param {string} filename - the requested output name of the library.
+         * @param {funciton} callback - if successful, the result is a URL where the exported format of the library
+         * can be found.
+         */
         this.getExportLibraryUrl = function (libraryRootPath, filename, callback) {
             var command = {};
             command.command = 'exportLibrary';
@@ -1794,6 +1805,16 @@ define([
             }
         };
 
+        /**
+         * Updates a library.
+         * 1, it removes the nodes that are not exists in the new library
+         * 2, adds the nodes that only exists in the new library
+         * 3, updates all properties and relations of the nodes in the library
+         * (it keeps all incoming relations, so the instance models will updates their state automatically)
+         * @param {string} libraryRootPath - the absolute path of the root node of the library.
+         * @param {object} newLibrary - JSON export format of the updated library.
+         * @param callback
+         */
         this.updateLibrary = function (libraryRootPath, newLibrary, callback) {
             Serialization.import(state.core, state.nodes[libraryRootPath].node, newLibrary, function (err, log) {
                 if (err) {
@@ -1804,6 +1825,12 @@ define([
             });
         };
 
+        /**
+         * Imports a library into the project under the given parent.
+         * @param {string} libraryParentPath - absolute path of the parent node of the library.
+         * @param {object} newLibrary - JSON export format of the library.
+         * @param {function} callback
+         */
         this.addLibrary = function (libraryParentPath, newLibrary, callback) {
             self.startTransaction('creating library as a child of ' + libraryParentPath);
             var libraryRoot = self.createChild({

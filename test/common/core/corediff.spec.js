@@ -222,7 +222,8 @@ describe('core diff', function () {
             });
         });
 
-        it('should generate light tree diff', function (done) {
+        //TODO check if the light function can be removed as currently it has no real users
+        it.skip('should generate light tree diff', function (done) {
             core.generateLightTreeDiff(originalRootNode, originalRootNode, function (err, diff) {
                 if (err) {
                     return done(err);
