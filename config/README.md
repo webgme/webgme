@@ -146,7 +146,7 @@ To start the server using the configuration above:
  - Storage dependent options passed to the session store.
 - `config.server.sessionStore.cookieSecret = 'meWebGMEez'`
  - Value used when encoding/decoding the session cookie.
-- `config.server.sessionCookieKey = 'webgmeSid'`
+- `config.server.sessionStore.cookieKey = 'webgmeSid'`
  - Name of session cookie.
 - `config.server.log = see config`
  - Transports and options for the server (winston) logger.
