@@ -29,7 +29,7 @@ To start the server using the configuration above:
 
 - `config.addOn.enable = false`
  - If true enables add-ons.
-- `config.monitorTimeout = 5000`
+- `config.addOn.monitorTimeout = 5000`
  - In milliseconds, the waiting time before add-ons (or the monitoring of such) is stopped after the last client leaves a branch.
 - `config.addOn.basePaths = ['./src/addon/core']`
  - Array of paths to custom add-ons. If you have an add-on at `C:/SomeAddOns/MyAddOn/MyAddOn.js` the path to append would be `C:/SomeAddOns` or a relative path (from the current working directory). N.B. this will also expose any other add-on in that directory, e.g. `C:/SomeAddOns/MyOtherAddOn/MyOtherAddOn.js`.
@@ -37,7 +37,7 @@ To start the server using the configuration above:
 **authentication**
 
 - `config.authentication.enable = false`
- - If true
+ - If true certain parts will require that users are authenticated.
 - `config.authentication.allowGuests = true`
  - Generate a guest account for non-authenticated connections.
 - `config.authentication.guestAccount = 'guest'`
@@ -45,7 +45,7 @@ To start the server using the configuration above:
 - `config.authentication.logOutUrl = '/'`
  - Where clients are redirected after logout.
 - `config.authentication.salts = 10`
- - Strength of the salting of the users'' passwords [bcrypt](https://github.com/dcodeIO/bcrypt.js).
+ - Strength of the salting of the users' passwords [bcrypt](https://github.com/dcodeIO/bcrypt.js).
 
 **bin**
 
@@ -63,9 +63,9 @@ To start the server using the configuration above:
 
 **client**
 
-- `config.appDir = './src/client'`
+- `config.client.appDir = './src/client'`
  - Directory from where to serve the static files for the webapp. This should only be modified if you are using a custom UI.
-- `config.log.level = 'debug'`
+- `config.client.log.level = 'debug'`
  - When debug is activated in the browser (`localStorage.debug = gme*`) messages below this level will not be printed.
 - `config.client.usedDecorators = ['ModelDecorator', 'MetaDecorator', ... see config]`
  - Decorators to load from the server before the editor starts.
@@ -80,7 +80,7 @@ To start the server using the configuration above:
 
 **core**
 
-- `config.enableCustomConstraints = false`
+- `config.core.enableCustomConstraints = false`
  - If true will enable validation (which takes place on the server) of custom constraints defined in the meta nodes.
 
 **debug**
