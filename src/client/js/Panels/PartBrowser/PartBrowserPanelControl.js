@@ -237,19 +237,22 @@ define(['js/logger',
             query,
             i;
 
-        patterns[this._containerNodeId] = {children: 0};
+        if (this._containerNodeId) {
+            patterns[this._containerNodeId] = {children: 0};
 
-        keys = Object.keys(this._partInstances || {}).sort();
-        for (i = 0; i < keys.length; i += 1) {
-            if (this._partInstances[keys[i]]) {
-                //console.log(this._partInstances[keys[i]].getTerritoryQuery());
-                query = this._partInstances[keys[i]].getTerritoryQuery() || {};
+            keys = Object.keys(this._partInstances || {}).sort();
+            for (i = 0; i < keys.length; i += 1) {
+                if (this._partInstances[keys[i]]) {
+                    //console.log(this._partInstances[keys[i]].getTerritoryQuery());
+                    query = this._partInstances[keys[i]].getTerritoryQuery() || {};
 
-                if (query[keys[i]]) {
-                    patterns[keys[i]] = query[keys[i]];
+                    if (query[keys[i]]) {
+                        patterns[keys[i]] = query[keys[i]];
+                    }
                 }
             }
         }
+
 
         return patterns;
     };
