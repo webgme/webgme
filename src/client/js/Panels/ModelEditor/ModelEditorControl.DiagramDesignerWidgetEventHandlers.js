@@ -442,9 +442,9 @@ define(['js/logger',
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         //check to see if dragParams.parentID and this.parentID are the same
                         //if so, it's not a real move, it is a reposition
-                        if (((dragParams && dragParams.parentID === parentID) ||
-                            GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) &&
-                            GMEConcepts.canMoveNodeHere(parentID, items) && !FCOamongItems) {
+                        if ((dragParams && dragParams.parentID === parentID) ||
+                            (GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect) &&
+                            GMEConcepts.canMoveNodeHere(parentID, items) && !FCOamongItems)) {
                             dragAction = {dragEffect: dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }

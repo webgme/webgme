@@ -26,7 +26,7 @@ define(['js/Constants', 'js/Utils/GMEConcepts'], function (CONSTANTS, GMEConcept
             gmeID = this._metaInfo[CONSTANTS.GME_ID],
             client = this._control._client,
             hasAspect = this._aspect && this._aspect !== CONSTANTS.ASPECT_ALL &&
-                        client.getMetaAspectNames(gmeID).indexOf(this._aspect) !== -1;
+                client.getMetaAspectNames(gmeID).indexOf(this._aspect) !== -1;
 
         if (hasAspect) {
             territoryRule[gmeID] = client.getAspectTerritoryPattern(gmeID, this._aspect);
@@ -97,10 +97,18 @@ define(['js/Constants', 'js/Utils/GMEConcepts'], function (CONSTANTS, GMEConcept
             len,
             gmeID = this._metaInfo[CONSTANTS.GME_ID],
             hasAspect = this._aspect && this._aspect !== CONSTANTS.ASPECT_ALL &&
-                        client.getMetaAspectNames(gmeID).indexOf(this._aspect) !== -1;
+                client.getMetaAspectNames(gmeID).indexOf(this._aspect) !== -1;
 
         if (nodeObj) {
             childrenIDs = nodeObj.getChildrenIds().slice(0);
+
+            //filter out the ones that are not ports
+            len = childrenIDs.length;
+            while (len--) {
+                if (!GMEConcepts.isPort(childrenIDs[len])) {
+                    childrenIDs.splice(len, 1);
+                }
+            }
 
             //filter out the ones that are not part of the specified aspect
             if (hasAspect) {

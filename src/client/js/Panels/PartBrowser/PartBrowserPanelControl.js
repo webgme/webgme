@@ -162,7 +162,7 @@ define(['js/logger',
         if (JSON.stringify(this._territoryRules) !== JSON.stringify(newTerritoryRules)) {
             this._territoryRules = newTerritoryRules;
             setTimeout(function () {
-                self._client.updateTerritory(this._guid, this._territoryRules);
+                self._client.updateTerritory(self._guid, self._territoryRules);
             }, 0);
         } else {
             this._updateDecorators();
