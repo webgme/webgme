@@ -304,6 +304,78 @@ resourceTypes:
 
 /blob:
   description: TO BE MOVED here from /rest/blob
+  /metadata:    
+    get:
+      description: lists all metadata
+      
+    /{metadataHash}:
+      get:
+        description: gets a specific metadata descriptor based on the given hash
+      
+  /view/{metadataHash}:
+    get:
+      description: views the content that is associated with the METADATA_HASH in the browser, in case the browser cannot display it then the content gets downloaded.
+    
+    /path/to/element.json:
+      get:
+        description: returns with the specified file content from a complex object.
 
+  /download/{metadataHash}:
+    get:
+      description: downloads the stored file with a name and correct extension, if the content is a complex object then a zip package is returned containing all contents
+    
+    /path/to/element.json:
+      get:
+        description: downloads only a specific file from a complex content
+  
+  
+  /createFile/{filename}:
+    post:
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-blob-createFile-response.json
+      
+  /createMetadata:
+    post:
+      
+      
 /executor:
   description: TO BE MOVED here from /rest/executor
+  
+  get:
+    description: List all jobs
+    
+  /info/{hash}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-executor-info.json
+  
+  
+  /create/{hash}:
+    post:
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-executor-create-response.json
+  
+  /update/{hash}:
+    post:
+    
+  /cancel/{hash}:
+    post:
+  
+  /worker:
+    get:
+    
+    post:
+    
+  
+  
+  
+  
