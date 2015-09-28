@@ -329,13 +329,13 @@ define(['jquery',
     }
 
     function getMETAAspectMergedValidChildrenTypes(objID) {
-        var metaAspectMembers = Object.keys(client.getAllMetaNodes() || {}),
+        var metaNodes = client.getAllMetaNodes() || [],
             validChildrenTypes = client.getValidChildrenTypes(objID),
-            len = metaAspectMembers.length,
+            len = metaNodes.length,
             id;
 
         while (len--) {
-            id = metaAspectMembers[len];
+            id = metaNodes[len].getId();
             if (validChildrenTypes.indexOf(id) === -1) {
                 if (client.isValidChild(objID, id)) {
                     validChildrenTypes.push(id);

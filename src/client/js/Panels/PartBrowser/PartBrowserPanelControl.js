@@ -88,9 +88,13 @@ define(['js/logger',
 
         this._nodeEventHandling = function (events) {
             var metaChange = false,
-                metaPaths = Object.keys(self._client.getAllMetaNodes() || {}),
+                metaNodes = self._client.getAllMetaNodes() || [],
+                metaPaths = [],
                 i;
 
+            for (i = 0; i < metaNodes.length; i += 1) {
+                metaPaths.push(metaNodes[i].getId());
+            }
             metaPaths.push(CONSTANTS.PROJECT_ROOT_ID);
 
             for (i = 0; i < events.length; i += 1) {
