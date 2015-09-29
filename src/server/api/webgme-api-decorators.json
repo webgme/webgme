@@ -1,0 +1,8 @@
+[
+   "CircleDecorator",
+   "DefaultDecorator",
+   "MetaDecorator",
+   "ModelDecorator",
+   "SVGDecorator",
+   "UMLStateMachineDecorator"
+]

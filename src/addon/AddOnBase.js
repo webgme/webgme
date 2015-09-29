@@ -10,6 +10,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
 
     /**
      * BaseClass for AddOns which run on the server and act upon changes in a branch.
+     * Use the AddOnGenerator to generate a new AddOn that implements this class.
      * @param logger
      * @param gmeConfig
      * @constructor
@@ -75,7 +76,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
      * Changes made by AddOns do not trigger a new update for other addOns.
      * @param {object} rootNode
      * @param {object} commitObj
-     * @param {function(Error, AddOnUpdateResult} callback
+     * @param {function(Error, AddOnUpdateResult)} callback
      */
     AddOnBase.prototype.update = function (rootNode, commitObj, callback) {
         callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
@@ -85,7 +86,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
      * Called once when the AddOn is started for the first time.
      * @param {object} rootNode
      * @param {object} commitObj
-     * @param {function(Error, AddOnUpdateResult} callback
+     * @param {function(Error, AddOnUpdateResult)} callback
      */
     AddOnBase.prototype.initialize = function (rootNode, commitObj, callback) {
         callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
@@ -95,7 +96,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
      * Called by the manager/monitor after each commit to the branch.
      * @param {object} rootNode
      * @param {object} commitObj
-     * @param {function(Error, AddOnUpdateResult} callback
+     * @param {function(Error, AddOnUpdateResult)} callback
      */
     AddOnBase.prototype._update = function (rootNode, commitObj, callback) {
         this.updateResult = new AddOnUpdateResult(commitObj);
@@ -107,7 +108,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
      * Called once by the manager/monitor when the AddOn is first started.
      * @param {object} rootNode
      * @param {object} commitObj
-     * @param {function(Error, AddOnUpdateResult} callback
+     * @param {function(Error, AddOnUpdateResult)} callback
      */
     AddOnBase.prototype._initialize = function (rootNode, commitObj, callback) {
         this.initialized = true;
@@ -120,7 +121,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
         this.updateResult.addCommitMessage(this, msg);
     };
 
-    // TODO: Query related (not yet supported)
+    // TODO: Query related
     /**
      * Structure of query parameters with names, descriptions, minimum, maximum values, default values and
      * type definitions.

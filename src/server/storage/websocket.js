@@ -28,17 +28,17 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 // TODO: Isn't this branch deprecated?
                 sessionId = handshakeData.query.webGMESessionId;
             } else if (handshakeData.query &&
-                handshakeData.query[gmeConfig.server.sessionCookieId] &&
-                handshakeData.query[gmeConfig.server.sessionCookieId] !== 'undefined') {
-                sessionId = COOKIE.signedCookie(handshakeData.query[gmeConfig.server.sessionCookieId],
-                    gmeConfig.server.sessionCookieSecret);
-            } else if (gmeConfig.server.sessionCookieId &&
-                gmeConfig.server.sessionCookieSecret &&
+                handshakeData.query[gmeConfig.server.sessionStore.cookieKey] &&
+                handshakeData.query[gmeConfig.server.sessionStore.cookieKey] !== 'undefined') {
+                sessionId = COOKIE.signedCookie(handshakeData.query[gmeConfig.server.sessionStore.cookieKey],
+                    gmeConfig.server.sessionStore.cookieSecret);
+            } else if (gmeConfig.server.sessionStore.cookieKey &&
+                gmeConfig.server.sessionStore.cookieSecret &&
                 handshakeData.headers && handshakeData.headers.cookie) {
                 //we try to dig it from the signed cookie
                 sessionId = COOKIE.signedCookie(
-                    URL.parseCookie(handshakeData.headers.cookie)[gmeConfig.server.sessionCookieId],
-                    gmeConfig.server.sessionCookieSecret);
+                    URL.parseCookie(handshakeData.headers.cookie)[gmeConfig.server.sessionStore.cookieKey],
+                    gmeConfig.server.sessionStore.cookieSecret);
             }
         }
         return sessionId;
@@ -180,9 +180,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
     this.start = function (server) {
         logger.debug('start');
 
-        webSocket = io.listen(server || gmeConfig.server.port, {
-            transports: gmeConfig.socketIO.transports
-        });
+        webSocket = io.listen(server || gmeConfig.server.port, gmeConfig.socketIO.serverOptions);
 
         logger.debug('listening');
 

@@ -4,7 +4,6 @@
 /**
  * A module representing a PluginMessage.
  *
- * @module PluginMessage
  * @author lattmann / https://github.com/lattmann
  */
 
@@ -17,7 +16,7 @@ define(['plugin/PluginNodeDescription'], function (PluginNodeDescription) {
      *
      * Note: this object is JSON serializable see serialize method.
      *
-     * @param config - deserializes an existing configuration to this object.
+     * @param {object} config - deserializes an existing configuration to this object.
      * @constructor
      * @alias PluginMessage
      */
@@ -47,7 +46,7 @@ define(['plugin/PluginNodeDescription'], function (PluginNodeDescription) {
     /**
      * Serializes this object to a JSON representation.
      *
-     * @returns {{}}
+     * @returns {object}
      */
     PluginMessage.prototype.serialize = function () {
         var result = {

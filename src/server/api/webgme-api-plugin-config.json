@@ -1,0 +1,9 @@
+{
+   "pluginID": "NewPlugin",
+   "pluginName": "New Plugin",
+   "description": "",
+   "test": true,
+   "templateType": "None",
+   "configStructure": false,
+   "meta": true
+}

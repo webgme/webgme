@@ -1,0 +1,21 @@
+{
+  "status": "FINISHED",
+  "result": {
+    "success": true,
+    "messages": [],
+    "commits": [
+      {
+        "commitHash": "#f8af7999fd95efbddb7f7b4fc9446f0dac2e33c6",
+        "branchName": "master",
+        "status": "SYNCED"
+      }
+    ],
+    "artifacts": [
+      "da47ded7c3391fc46cd84752c829fc383649bc94"
+    ],
+    "pluginName": "Export, Import and Update Library",
+    "startTime": "2015-09-24T21:44:16.456Z",
+    "finishTime": "2015-09-24T21:45:02.047Z",
+    "error": null
+  }
+}

@@ -1,0 +1,47 @@
+[
+  {
+    "_id": "webgme",
+    "projects": {
+      "guest+aaaaaa": {
+        "read":true,
+        "write":true,
+        "delete":false
+      },
+      "webgme+ASDF": {
+        "read":true,
+        "write":true,
+        "delete":true
+      }
+    },
+    "type": "Organization",
+    "admins": [
+      "user1",
+      "user2"
+    ],
+    "info": {}
+  },
+  {
+    "_id": "org2",
+    "projects": {
+      "webgme+ASDF": {
+        "read":true,
+        "write":false,
+        "delete":false
+      }
+    },
+    "type": "Organization",
+    "admins": [
+      "pelleBlom"
+    ],
+    "info": {}
+  },
+  {
+    "_id": "org",
+    "projects": {},
+    "type": "Organization",
+    "admins": [
+      "guest"
+    ],
+    "info": {}
+  }
+]

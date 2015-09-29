@@ -76,7 +76,6 @@ describe('WebSocket', function () {
                     socket = io.connect(serverBaseUrl,
                         {
                             query: query,
-                            transports: gmeConfig.socketIO.transports,
                             multiplex: false
                         });
 

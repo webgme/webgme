@@ -543,8 +543,8 @@ function StandAloneServer(gmeConfig) {
     __app.use(multipart({defer: true})); // required to upload files. (body parser should not be used!)
     __app.use(session({
         store: __sessionStore,
-        secret: gmeConfig.server.sessionCookieSecret,
-        key: gmeConfig.server.sessionCookieId,
+        secret: gmeConfig.server.sessionStore.cookieSecret,
+        key: gmeConfig.server.sessionStore.cookieKey,
         saveUninitialized: true,
         resave: true
     }));

@@ -1,0 +1,14 @@
+{
+  "_id": "webgme",
+  "projects": {},
+  "type": "Organization",
+  "admins": [
+    "pmeijer"
+  ],
+    "info": {},
+    "users": [
+      "pmeijer",
+      "guest",
+      "pelleBlom"
+    ]
+}

@@ -2,6 +2,7 @@
 title: WebGME API
 version: 1.0
 
+
 securitySchemes:
   - basic:
       description: Basic authentication scheme
@@ -17,6 +18,13 @@ securitySchemes:
             description: Authentication required
           403:
             description: Forbidden
+  - orgOrSiteAdmin:
+      description: Admin for the entire site or the organization.
+      type: Basic Authentication
+      describedBy:
+        responses:
+          403:
+            description: Not authorized.
 
 
 resourceTypes:
@@ -99,7 +107,7 @@ resourceTypes:
       200:
         body:
           application/json:
-            example: !include webgme-api-user-retrieve.sample
+            example: !include webgme-api-user-retrieve.json
   delete:
     responses:
       204:
@@ -107,44 +115,76 @@ resourceTypes:
 /users:
   type:
     collection:
-      exampleCollection: !include webgme-api-users.sample
-      exampleItem: !include webgme-api-user-new.sample
-  
+      exampleCollection: !include webgme-api-users.json
+      exampleItem: !include webgme-api-user-new.json  
   /{username}:
     type:
       collection-item:
-        exampleItem: !include webgme-api-user-retrieve.sample   
+        exampleItem: !include webgme-api-user-retrieve.json   
 
 /orgs:
-  type:
-    collection:
-      exampleCollection: !include webgme-api-orgs.sample
-      exampleItem: !include webgme-api-org-new.sample
-    
+  get:
+    description: Collection of available organizations in WebGME
+    securedBy: []
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-orgs.json
   /{orgId}:
-    type:
-      collection-item:
-        exampleItem: !include webgme-api-org-retrieve.sample
+    get:
+      description: Entity representing an organization
+      securedBy: [ basic ]
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-org-retrieve.json
+        404:
+    put:
+      description: Create a new organization (requires canCreate).
+      securedBy: [ basic ]
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-org-retrieve.json
+        403:
+        404:
+    delete:
+      description: Delete an organization.
+      securedBy: [ basic, orgOrSiteAdmin ]
+      responses:
+        200:
+        403:
+        404:
     
     /users/{username}:
       put:
-        securedBy: [ basic ]
+        description: Adds user to the organization.
+        securedBy: [ basic, orgOrSiteAdmin ]
         responses:
           200:
+          403:
+          404:
         
       delete:
-        securedBy: [ basic ]
+        description: Delete user from the organization.
+        securedBy: [ basic, orgOrSiteAdmin ]
         responses:
           204:
+          404:
           
     /admins/{username}:
       put:
-        securedBy: [ basic ]
+        description: Make user admin for the organization.
+        securedBy: [ basic, orgOrSiteAdmin ]
         responses:
           200:
         
       delete:
-        securedBy: [ basic ]
+        description: Remove user from admins of the organization.
+        securedBy: [ basic, orgOrSiteAdmin ]
         responses:
           204:
 
@@ -152,9 +192,8 @@ resourceTypes:
 /projects:
   type:
     collection:
-      exampleCollection: !include webgme-api-projects.sample
-      exampleItem: !include webgme-api-project-new.sample
-  
+      exampleCollection: !include webgme-api-projects.json
+      exampleItem: !include webgme-api-project-new.json
   /{ownerId}/{projectName}:
     uriParameters:
       ownerId:
@@ -163,7 +202,7 @@ resourceTypes:
         example: ActivePanels
     type:
       collection-item:
-        exampleItem: !include webgme-api-project-retrieve.sample
+        exampleItem: !include webgme-api-project-retrieve.json
     
     /commits:
       get:
@@ -175,8 +214,8 @@ resourceTypes:
     /branches:
       type:
         collection:
-          exampleCollection: !include webgme-api-branches.sample
-          exampleItem: !include webgme-api-branch-new.sample
+          exampleCollection: !include webgme-api-branches.json
+          exampleItem: !include webgme-api-branch-new.json
         
       /{branchId}:
         uriParameters:
@@ -184,8 +223,159 @@ resourceTypes:
             example: master
         type:
           collection-item:
-            exampleItem: !include webgme-api-branch-retrieve.sample
+            exampleItem: !include webgme-api-branch-retrieve.json
         
+
+/decorators:
+  get:
+    description: Returns with all available decorators
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-decorators.json
+
+/seeds:
+  get:
+    description: Returns with all available seeds
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-seeds.json
+
+/visualizers:
+  get:
+    description: Returns with all available visualizers
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-visualizers.json
+
+/plugins:
+  get:
+    description: Lists all available plugins
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-plugins.json
+  
+  /{pluginName}:
+    /config:
+      get:
+        description: Gets the default configuration for the plugin.
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include webgme-api-plugin-config.json
+                
+    /configStructure:
+      get:
+        description: Gets the conficuration structure for a plugin.
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include webgme-api-plugin-configStructure.json                
+    /execute:
+      post:
+        description: Executes a plugin on server side. Returns with a result id.
+        body:
+          application/json:
+            example: !include webgme-api-plugin-execute-post.json   
+        
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include webgme-api-plugin-execute.json   
+    
+    /results/{resultId}:
+      get:
+        description: Gets a result for this plugin by resultId.
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include webgme-api-plugin-result.json   
+
+/blob:
+  description: TO BE MOVED here from /rest/blob
+  /metadata:    
+    get:
+      description: lists all metadata
+      
+    /{metadataHash}:
+      get:
+        description: gets a specific metadata descriptor based on the given hash
+      
+  /view/{metadataHash}:
+    get:
+      description: views the content that is associated with the METADATA_HASH in the browser, in case the browser cannot display it then the content gets downloaded.
+    
+    /path/to/element.json:
+      get:
+        description: returns with the specified file content from a complex object.
+
+  /download/{metadataHash}:
+    get:
+      description: downloads the stored file with a name and correct extension, if the content is a complex object then a zip package is returned containing all contents
+    
+    /path/to/element.json:
+      get:
+        description: downloads only a specific file from a complex content
+  
+  
+  /createFile/{filename}:
+    post:
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-blob-createFile-response.json
+      
+  /createMetadata:
+    post:
       
       
-      
+/executor:
+  description: TO BE MOVED here from /rest/executor
+  
+  get:
+    description: List all jobs
+    
+  /info/{hash}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-executor-info.json
+  
+  
+  /create/{hash}:
+    post:
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-executor-create-response.json
+  
+  /update/{hash}:
+    post:
+    
+  /cancel/{hash}:
+    post:
+  
+  /worker:
+    get:
+    
+    post:
+    
+  
+  
+  
+  

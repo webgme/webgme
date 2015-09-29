@@ -162,7 +162,7 @@ define(['js/logger',
         if (JSON.stringify(this._territoryRules) !== JSON.stringify(newTerritoryRules)) {
             this._territoryRules = newTerritoryRules;
             setTimeout(function () {
-                self._client.updateTerritory(this._guid, this._territoryRules);
+                self._client.updateTerritory(self._guid, self._territoryRules);
             }, 0);
         } else {
             this._updateDecorators();
@@ -237,19 +237,22 @@ define(['js/logger',
             query,
             i;
 
-        patterns[this._containerNodeId] = {children: 0};
+        if (this._containerNodeId) {
+            patterns[this._containerNodeId] = {children: 0};
 
-        keys = Object.keys(this._partInstances || {}).sort();
-        for (i = 0; i < keys.length; i += 1) {
-            if (this._partInstances[keys[i]]) {
-                //console.log(this._partInstances[keys[i]].getTerritoryQuery());
-                query = this._partInstances[keys[i]].getTerritoryQuery() || {};
+            keys = Object.keys(this._partInstances || {}).sort();
+            for (i = 0; i < keys.length; i += 1) {
+                if (this._partInstances[keys[i]]) {
+                    //console.log(this._partInstances[keys[i]].getTerritoryQuery());
+                    query = this._partInstances[keys[i]].getTerritoryQuery() || {};
 
-                if (query[keys[i]]) {
-                    patterns[keys[i]] = query[keys[i]];
+                    if (query[keys[i]]) {
+                        patterns[keys[i]] = query[keys[i]];
+                    }
                 }
             }
         }
+
 
         return patterns;
     };

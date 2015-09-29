@@ -86,11 +86,11 @@ define([
 
             // URL query has higher priority than the config.
             if ((initialThingsToDo.projectToLoad || initialThingsToDo.createNewProject) === false) {
-                initialThingsToDo.projectToLoad = gmeConfig.client.defaultProject.name;
+                initialThingsToDo.projectToLoad = gmeConfig.client.defaultContext.project;
                 initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad ||
-                    gmeConfig.client.defaultProject.branch;
+                    gmeConfig.client.defaultContext.branch;
                 initialThingsToDo.objectToLoad = initialThingsToDo.objectToLoad ||
-                    gmeConfig.client.defaultProject.node || initialThingsToDo.objectToLoad; // i.e. the root-node.
+                    gmeConfig.client.defaultContext.node || initialThingsToDo.objectToLoad; // i.e. the root-node.
                 // TODO: add commit to load
             }
 

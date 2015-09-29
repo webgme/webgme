@@ -13,7 +13,7 @@ define(['socket.io-client'], function (io) {
         var logger = mainLogger.fork('socketio-nodeclient');
 
         this.connect = function (callback) {
-            var socketIoOptions = JSON.parse(JSON.stringify(gmeConfig.socketIO)),
+            var socketIoOptions = JSON.parse(JSON.stringify(gmeConfig.socketIO.clientOptions)),
                 protocol = gmeConfig.server.https.enable ? 'https' : 'http',
                 hostUrl = protocol + '://' + host + ':' + gmeConfig.server.port;
 
