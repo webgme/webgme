@@ -197,7 +197,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                     if (basePath === null) {
                         node.base = null;
                         return node;
-                    } else if (basePath.indexOf(path) === 0) {
+                    } else if (core.isContainerPath(basePath, path)) {
                         //contained base error
                         logger.error('node [' + path + '] contains its own base!');
                         oldcore.deleteNode(node);

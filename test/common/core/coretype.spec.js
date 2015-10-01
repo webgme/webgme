@@ -397,4 +397,21 @@ describe('coretype', function () {
             }, core.loadByPath(newroot, path));
         }, core.loadRoot(core.getHash(root)));
     });
+
+    it('should not trigger base containment error if paths are only partially identical', function (done) {
+        var typeA = core.createNode({parent: root, relid: '123'}),
+            instA = core.createNode({parent: root, base: typeA, relid: '12'}),
+            path = core.getPath(instA);
+
+        //we have to save and reload otherwise the base is still in the cache so it can be loaded without a problem
+        core.persist(root);
+
+        TASYNC.call(function (newroot) {
+            expect(newroot).not.to.equal(null);
+            TASYNC.call(function (node) {
+                expect(node).not.to.equal(null);
+                done();
+            }, core.loadByPath(newroot, path));
+        }, core.loadRoot(core.getHash(root)));
+    });
 });
