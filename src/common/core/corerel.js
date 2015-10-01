@@ -850,6 +850,20 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
 
         corerel.overlayInsert = overlayInsert;
 
+        corerel.isContainerPath = function (path, parentPath) {
+            var pathArray = (path || '').split('/'),
+                parentArray = (parentPath || '').split('/'),
+                i;
+
+            for (i = 0; i < parentArray.length; i += 1) {
+                if (parentArray[i] !== pathArray[i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
         return corerel;
     }
 
