@@ -1,1 +1,0 @@
-node ./node_modules/requirejs/bin/r.js -o ./utils/build/webgme.classes/cbuild.js
