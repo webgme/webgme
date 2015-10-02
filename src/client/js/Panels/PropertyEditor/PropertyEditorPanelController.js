@@ -143,13 +143,8 @@ define(['js/logger',
             commonMeta = {},
             commonPointers = {},
             noCommonValueColor = '#f89406',
-            _getNodeAttributeValues, //fn
-            _getNodeRegistryValues, //fn
-            _filterCommon, //fn
             _addItemsToResultList, //fn
-            _getPointerInfo,
             commonAttrMeta = {},
-            buildCommonAttrMeta, //fn
             _client = this._client,
             _isResetableAttribute, //fn
             _isResetableRegistry, //fn
@@ -158,6 +153,7 @@ define(['js/logger',
             _isInvalidPointer, //fn
             rootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID),
             validDecorators = null,
+            onlyRootSelected = selectionLength === 1 && selectedObjIDs[0] === CONSTANTS.PROJECT_ROOT_ID,
             decoratorNames = WebGMEGlobal.allDecorators;
 
         if (rootNode && rootNode.getRegistry(REGISTRY_KEYS.VALID_DECORATORS)) {
@@ -180,7 +176,7 @@ define(['js/logger',
             }
         });
 
-        _getNodeAttributeValues = function (node) {
+        function _getNodeAttributeValues(node) {
             var result = {},
                 attrNames = node.getAttributeNames(),
                 len = attrNames.length;
@@ -190,9 +186,9 @@ define(['js/logger',
             }
 
             return util.flattenObject(result);
-        };
+        }
 
-        _getNodeRegistryValues = function (node, registryNames) {
+        function _getNodeRegistryValues(node, registryNames) {
             var result = {},
                 len = registryNames.length;
 
@@ -201,9 +197,9 @@ define(['js/logger',
             }
 
             return util.flattenObject(result);
-        };
+        }
 
-        _filterCommon = function (resultList, otherList, initPhase) {
+        function _filterCommon(resultList, otherList, initPhase) {
             var it;
 
             if (initPhase === true) {
@@ -237,9 +233,9 @@ define(['js/logger',
                     }
                 }
             }
-        };
+        }
 
-        _getPointerInfo = function (node) {
+        function _getPointerInfo(node) {
             var result = {},
                 availablePointers = node.getPointerNames(),
                 len = availablePointers.length,
@@ -251,9 +247,9 @@ define(['js/logger',
             }
 
             return util.flattenObject(result);
-        };
+        }
 
-        buildCommonAttrMeta = function (node, initPhase) {
+        function buildCommonAttrMeta(node, initPhase) {
             var nodeId = node.getId(),
                 nodeAttributeNames = node.getAttributeNames(nodeId) || [],
                 len = nodeAttributeNames.length,
@@ -337,7 +333,39 @@ define(['js/logger',
                     }
                 }
             }
-        };
+        }
+
+        function getHintMessage(name) {
+            var msg = '',
+                available = WebGMEGlobal['all' + name],
+                debugList = [],
+                i;
+
+            if (!available) {
+                self._logger.error('Could not get all' + name + ' from WebGMEGlobal');
+            } else if (available.length > 0) {
+                msg = 'Available ' + name + ':';
+                if (name === 'Visualizers') {
+                    for (i = 0; i < available.length; i += 1) {
+                        if (available[i].DEBUG_ONLY) {
+                            debugList.push(available[i].id);
+                        } else {
+                            msg += '\n - ' + available[i].id;
+                        }
+                    }
+                    if (debugList.length > 0) {
+                        msg += '\nIn debug mode only:\n - ' + debugList.join('\n - ');
+
+                    }
+                } else {
+                    msg += '\n - ' + available.join('\n - ');
+                }
+            } else {
+                msg = 'No ' + name + ' available.';
+            }
+
+            return msg;
+        }
 
         if (selectionLength > 0) {
             //get all attributes
@@ -525,58 +553,89 @@ define(['js/logger',
                                 dstList[extKey].options = {textColor: noCommonValueColor};
                             }
 
-                            //is it inherited??? if so, it can be reseted to the inherited value
-                            if (isAttribute && _isResetableAttribute(keyParts[0]) ||
-                                isRegistry && _isResetableRegistry(keyParts[0])) {
-                                dstList[extKey].options = dstList[extKey].options || {};
-                                dstList[extKey].options.resetable = true;
-                            }
+                            if (isAttribute === true) {
+                                //is it inherited??? if so, it can be reseted to the inherited value
+                                if (_isResetableAttribute(keyParts[0])) {
+                                    dstList[extKey].options = dstList[extKey].options || {};
+                                    dstList[extKey].options.resetable = true;
+                                }
 
-                            //if it is an attribute it might be invalid according the current meta rules
-                            if (isAttribute && _isInvalidAttribute(keyParts[0])) {
-                                dstList[extKey].options = dstList[extKey].options || {};
-                                dstList[extKey].options.invalid = true;
-                            }
+                                //if it is an attribute it might be invalid according the current meta rules
+                                if (_isInvalidAttribute(keyParts[0])) {
+                                    dstList[extKey].options = dstList[extKey].options || {};
+                                    dstList[extKey].options.invalid = true;
+                                }
 
-                            if (isPointer &&
-                                NON_INVALID_PTRS.indexOf(keyParts[0]) === -1 && //what is non_invalid, cannot be reset
-                                _isResetablePointer(keyParts[0])) {
-                                dstList[extKey].options = dstList[extKey].options || {};
-                                dstList[extKey].options.resetable = true;
-                            }
+                                //if the attribute value is an enum, display the enum values
+                                if (commonAttrMeta[i].enum && commonAttrMeta[i].enum.length > 0) {
+                                    dstList[extKey].valueItems = commonAttrMeta[i].enum.slice(0);
+                                    dstList[extKey].valueItems.sort();
+                                }
+                            } else if (isRegistry === true) {
+                                //is it inherited??? if so, it can be reseted to the inherited value
+                                if (_isResetableRegistry(keyParts[0])) {
+                                    dstList[extKey].options = dstList[extKey].options || {};
+                                    dstList[extKey].options.resetable = true;
+                                }
 
-                            //if it is a pointer it might be invalid according the current meta rules
-                            if (isPointer && _isInvalidPointer(keyParts[0])) {
-                                dstList[extKey].options = dstList[extKey].options || {};
-                                dstList[extKey].options.invalid = true;
-                            }
+                                if (prefix === CONSTANTS.PROPERTY_GROUP_PREFERENCES + '.') {
+                                    if (onlyRootSelected === false) {
+                                        //decorator value should be rendered as an option list
+                                        if (i === REGISTRY_KEYS.DECORATOR) {
+                                            //dstList[extKey].valueType = "option";
+                                            //FIXME: only the decorators for DiagramDesigner are listed so far
+                                            dstList[extKey].valueItems = decoratorNames;
+                                        } else if (i === REGISTRY_KEYS.SVG_ICON || i === REGISTRY_KEYS.PORT_SVG_ICON) {
+                                            dstList[extKey].widget = PropertyGridWidgets.DIALOG_WIDGET;
+                                            dstList[extKey].dialog = DecoratorSVGExplorerDialog;
+                                        }
+                                    }
+                                } else if (prefix === CONSTANTS.PROPERTY_GROUP_META + '.') {
+                                    if (i === REGISTRY_KEYS.VALID_VISUALIZERS) {
+                                        if (onlyRootSelected) {
+                                            dstList[extKey].value = dstList[extKey].value === undefined ?
+                                                '' : dstList[extKey].value;
+                                        }
+                                        dstList[extKey].regex = '/[^\w\W]/';
+                                        dstList[extKey].regexMessage = getHintMessage('Visualizers');
+                                    } else if (onlyRootSelected) {
+                                        if (i === REGISTRY_KEYS.VALID_PLUGINS) {
+                                            dstList[extKey].value = dstList[extKey].value === undefined ?
+                                                '' : dstList[extKey].value;
+                                            dstList[extKey].regex = '/[^\w\W]/';
+                                            dstList[extKey].regexMessage = getHintMessage('Plugins');
+                                        } else if (i === REGISTRY_KEYS.VALID_DECORATORS) {
+                                            dstList[extKey].value = dstList[extKey].value === undefined ?
+                                                '' : dstList[extKey].value;
+                                            dstList[extKey].regex = '/[^\w\W]/';
+                                            dstList[extKey].regexMessage = getHintMessage('Decorators');
+                                        } else if (i === REGISTRY_KEYS.USED_ADDONS) {
+                                            dstList[extKey].value = dstList[extKey].value === undefined ?
+                                                '' : dstList[extKey].value;
+                                            dstList[extKey].regex = '/[^\w\W]/';
+                                            dstList[extKey].regexMessage = getHintMessage('AddOns');
+                                        }
+                                    }
+                                }
+                            } else if (isPointer === true) {
+                                if (NON_INVALID_PTRS.indexOf(keyParts[0]) === -1 && _isResetablePointer(keyParts[0])) {
+                                    //what is non_invalid, cannot be reset
+                                    dstList[extKey].options = dstList[extKey].options || {};
+                                    dstList[extKey].options.resetable = true;
+                                }
 
-                            //decorator value should be rendered as an option list
-                            if (i === REGISTRY_KEYS.DECORATOR) {
-                                //dstList[extKey].valueType = "option";
-                                //TODO: only the decorators for DiagramDesigner are listed so far, needs to be fixed...
-                                dstList[extKey].valueItems = decoratorNames;
-                            }
+                                if (_isInvalidPointer(keyParts[0])) {
+                                    dstList[extKey].options = dstList[extKey].options || {};
+                                    dstList[extKey].options.invalid = true;
+                                }
 
-                            //if the attribute value is an enum, display the enum values
-                            if (isAttribute && commonAttrMeta[i].enum && commonAttrMeta[i].enum.length > 0) {
-                                dstList[extKey].valueItems = commonAttrMeta[i].enum.slice(0);
-                                dstList[extKey].valueItems.sort();
-                            }
-
-                            //if it is the SVG decorator's SVG Icon name
-                            //list the
-                            if (i === REGISTRY_KEYS.SVG_ICON ||
-                                i === REGISTRY_KEYS.PORT_SVG_ICON) {
-                                dstList[extKey].widget = PropertyGridWidgets.DIALOG_WIDGET;
-                                dstList[extKey].dialog = DecoratorSVGExplorerDialog;
-                            }
-
-                            //pointers have a custom widget that allows following the pointer
-                            if (isPointer === true) {
+                                //pointers have a custom widget that allows following the pointer
                                 dstList[extKey].widget = PointerWidget;
                                 //add custom widget specific values
                                 dstList[extKey].client = _client;
+                            }
+                            if (dstList[extKey].value === undefined) {
+                                delete dstList[extKey];
                             }
                         }
                     }
@@ -624,9 +683,7 @@ define(['js/logger',
                 _addItemsToResultList(commonPreferences,
                     CONSTANTS.PROPERTY_GROUP_PREFERENCES,
                     propList,
-                    false,
-                    true,
-                    false);
+                    false, true, false);
             }
 
             if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_META) {
