@@ -310,16 +310,15 @@ describe('Meta Rules', function () {
             .nodeify(done);
     });
 
-    // This is a bug somewhere in the core.
-    it.skip('InvalidSetName should fail', function (done) {
-        var nodePath = '/1315106673';
+    it('InvalidSetName should fail', function (done) {
+        var nodePath = '/3351391';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
                 return checkMetaRules(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
-                expect(result.message).to.contain('more');
+                expect(result.message).to.contain('Invalid set');
             })
             .nodeify(done);
     });
