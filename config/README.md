@@ -66,7 +66,7 @@ To start the server using the configuration above:
 - `config.client.appDir = './src/client'`
  - Directory from where to serve the static files for the webapp. This should only be modified if you are using a custom UI.
 - `config.client.log.level = 'debug'`
- - When debug is activated in the browser (`localStorage.debug = gme*`) messages below this level will not be printed.
+ - When [debug](https://github.com/visionmedia/debug) is activated in the browser (type `localStorage.debug = gme*` in the console and refresh the page) messages below this level will not be printed.
 - `config.client.usedDecorators = ['ModelDecorator', 'MetaDecorator', ... see config]`
  - Decorators to load from the server before the editor starts.
 - `config.client.defaultContext.project = null`

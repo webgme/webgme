@@ -46,8 +46,7 @@ var path = require('path'),
         client: {
             appDir: path.join(__dirname, '../src/client'),
             log: {
-                level: 'debug' // To see log messages in the browser inspector set:
-                               // localStorage.debug = '*' (or 'gme*', 'gme:core*')
+                level: 'debug'
             },
             usedDecorators: ['ModelDecorator',
                              'CircleDecorator',
