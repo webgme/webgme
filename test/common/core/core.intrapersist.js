@@ -103,24 +103,6 @@ describe('core.intrapersist', function () {
             });
         });
 
-        it.skip('sets the root and commit back to base', function (done) {
-            core.loadRoot(rootHash, function (err, r) {
-                if (err) {
-                    return done(err);
-                }
-                root = r;
-                done();
-            });
-        });
-        it.skip('loads all the nodes for the test', function (done) {
-            loadNodes([e1NodePath, e1NodePrimePath, s1NodePath, s1NodePrimePath], function (err, n) {
-                if (err) {
-                    return done(err);
-                }
-                nodes = n;
-                done();
-            });
-        });
         it('modified attributes should be visible in already loaded nodes', function () {
             if (core.getAttribute(nodes[e1NodePath], 'name') !== 'e1' ||
                 core.getAttribute(nodes[e1NodePrimePath], 'name') !== 'e1') {

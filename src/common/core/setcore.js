@@ -16,12 +16,19 @@ define(['common/util/assert'], function (ASSERT) {
         ASSERT(typeof options.globConf === 'object');
         ASSERT(typeof options.logger !== 'undefined');
 
-        var logger = options.logger.fork('setcore');
+        var logger = options.logger.fork('setcore'),
+            setCore = {};
+        for (var i in innerCore) {
+            setCore[i] = innerCore[i];
+        }
+        logger.debug('initialized');
+
         //help functions
-        var setModified = function (node) {
+        function setModified(node) {
             innerCore.setRegistry(node, '_sets_', (innerCore.getRegistry(node, '_sets_') || 0) + 1);
-        };
-        var getMemberPath = function (node, setElementNode) {
+        }
+
+        function getMemberPath(node, setElementNode) {
             var ownPath = innerCore.getPath(node),
                 memberPath = innerCore.getPointerPath(setElementNode, REL_ID);
 
@@ -48,8 +55,9 @@ define(['common/util/assert'], function (ASSERT) {
 
             return memberPath;
 
-        };
-        var getMemberRelId = function (node, setName, memberPath) {
+        }
+
+        function getMemberRelId(node, setName, memberPath) {
             ASSERT(typeof setName === 'string');
             var setNode = innerCore.getChild(innerCore.getChild(node, SETS_ID), setName);
             var elements = innerCore.getChildrenRelids(setNode);
@@ -60,8 +68,9 @@ define(['common/util/assert'], function (ASSERT) {
                 }
             }
             return null;
-        };
-        var createNewMemberRelid = function (setNode) {
+        }
+
+        function createNewMemberRelid(setNode) {
             var MAX_RELID = Math.pow(2, 31);
             var existingRelIds = innerCore.getChildrenRelids(setNode);
             var relid;
@@ -69,9 +78,9 @@ define(['common/util/assert'], function (ASSERT) {
                 relid = Math.floor(Math.random() * MAX_RELID);
             } while (existingRelIds.indexOf(relid) !== -1);
             return '' + relid;
-        };
+        }
 
-        var harmonizeMemberData = function (node, setName) {
+        function harmonizeMemberData(node, setName) {
             var setNode = innerCore.getChild(innerCore.getChild(node, SETS_ID), setName),
                 base = innerCore.getBase(setNode),
                 allMembers = innerCore.getChildrenRelids(setNode),
@@ -89,51 +98,50 @@ define(['common/util/assert'], function (ASSERT) {
                 for (i = 0; i < ownMembers.length; i++) {
                     ownMember = innerCore.getChild(setNode, ownMembers[i]);
                     path = innerCore.getPointerPath(ownMember, 'member');
-                    for (j = 0; j < inheritedMembers.length; j++) {
-                        inheritedMember = innerCore.getChild(setNode, inheritedMembers[j]);
-                        if (getMemberPath(node, inheritedMember) === path) {
-                            //redundancy...
-                            names = innerCore.getAttributeNames(ownMember);
-                            for (k = 0; k < names.length; k++) {
-                                if (innerCore.getAttribute(ownMember, names[k]) !==
-                                    innerCore.getAttribute(inheritedMember, names[k])) {
+                    if (path === undefined) {
+                        innerCore.deleteNode(innerCore.getChild(setNode, ownMembers[i]), true);
+                    } else {
+                        for (j = 0; j < inheritedMembers.length; j++) {
+                            inheritedMember = innerCore.getChild(setNode, inheritedMembers[j]);
+                            if (getMemberPath(node, inheritedMember) === path) {
+                                //redundancy...
+                                names = innerCore.getAttributeNames(ownMember);
+                                for (k = 0; k < names.length; k++) {
+                                    if (innerCore.getAttribute(ownMember, names[k]) !==
+                                        innerCore.getAttribute(inheritedMember, names[k])) {
 
-                                    innerCore.setAttribute(inheritedMember, names[k],
-                                        innerCore.getAttribute(ownMember, names[k]));
+                                        innerCore.setAttribute(inheritedMember, names[k],
+                                            innerCore.getAttribute(ownMember, names[k]));
+                                    }
                                 }
-                            }
-                            names = innerCore.getRegistryNames(ownMember);
-                            for (k = 0; k < names.length; k++) {
-                                if (innerCore.getRegistry(ownMember, names[k]) !==
-                                    innerCore.getRegistry(inheritedMember, names[k])) {
+                                names = innerCore.getRegistryNames(ownMember);
+                                for (k = 0; k < names.length; k++) {
+                                    if (innerCore.getRegistry(ownMember, names[k]) !==
+                                        innerCore.getRegistry(inheritedMember, names[k])) {
 
-                                    innerCore.setRegistry(inheritedMember, names[k],
-                                        innerCore.getRegistry(ownMember, names[k]));
+                                        innerCore.setRegistry(inheritedMember, names[k],
+                                            innerCore.getRegistry(ownMember, names[k]));
+                                    }
                                 }
+                                innerCore.deleteNode(innerCore.getChild(setNode, ownMembers[i]), true);
                             }
-                            innerCore.deleteNode(innerCore.getChild(setNode, ownMembers[i]), true);
                         }
                     }
                 }
             }
-        };
-
-        //copy lower layer
-        var setcore = {};
-        for (var i in innerCore) {
-            setcore[i] = innerCore[i];
         }
-        logger.debug('initialized');
+
+
         //adding new functions
-        setcore.getSetNumbers = function (node) {
+        setCore.getSetNumbers = function (node) {
             return this.getSetNames(node).length;
         };
 
-        setcore.getSetNames = function (node) {
+        setCore.getSetNames = function (node) {
             return innerCore.getPointerNames(innerCore.getChild(node, SETS_ID)) || [];
         };
 
-        setcore.getPointerNames = function (node) {
+        setCore.getPointerNames = function (node) {
             var sorted = [],
                 raw = innerCore.getPointerNames(node);
             for (var i = 0; i < raw.length; i++) {
@@ -144,7 +152,7 @@ define(['common/util/assert'], function (ASSERT) {
             return sorted;
         };
 
-        setcore.getCollectionNames = function (node) {
+        setCore.getCollectionNames = function (node) {
             var sorted = [],
                 raw = innerCore.getCollectionNames(node);
             for (var i = 0; i < raw.length; i++) {
@@ -155,9 +163,9 @@ define(['common/util/assert'], function (ASSERT) {
             return sorted;
         };
 
-        setcore.getMemberPaths = function (node, setName) {
-            ASSERT(typeof setName === 'string');
+        setCore.getMemberPaths = function (node, setName) {
             harmonizeMemberData(node, setName);
+            ASSERT(typeof setName === 'string');
             var setNode = innerCore.getChild(innerCore.getChild(node, SETS_ID), setName);
             var members = [];
             var elements = innerCore.getChildrenRelids(setNode);
@@ -171,9 +179,8 @@ define(['common/util/assert'], function (ASSERT) {
             return members;
         };
 
-        setcore.delMember = function (node, setName, memberPath) {
+        setCore.delMember = function (node, setName, memberPath) {
             ASSERT(typeof setName === 'string');
-            harmonizeMemberData(node, setName);
             //we only need the path of the member so we allow to enter only it
             if (typeof memberPath !== 'string') {
                 memberPath = innerCore.getPath(memberPath);
@@ -189,17 +196,13 @@ define(['common/util/assert'], function (ASSERT) {
             }
         };
 
-        setcore.addMember = function (node, setName, member) {
+        setCore.addMember = function (node, setName, member) {
             ASSERT(typeof setName === 'string');
-            var setsNode = innerCore.getChild(node, SETS_ID);
-            //TODO decide if the member addition should really create the set or it should fail...
-            if (innerCore.getPointerPath(setsNode, setName) === undefined) {
-                setcore.createSet(node, setName);
-            }
-            harmonizeMemberData(node, setName);
-            var setNode = innerCore.getChild(setsNode, setName);
-            var setMemberRelId = getMemberRelId(node, setName, setcore.getPath(member));
+            var setsNode = innerCore.getChild(node, SETS_ID),
+                setNode = innerCore.getChild(setsNode, setName),
+                setMemberRelId = getMemberRelId(node, setName, setCore.getPath(member));
             if (setMemberRelId === null) {
+                createSetOnDemand(node, setName);
                 var setMember = innerCore.getChild(setNode, createNewMemberRelid(setNode));
                 innerCore.setPointer(setMember, 'member', member);
 
@@ -213,7 +216,7 @@ define(['common/util/assert'], function (ASSERT) {
         //TODO: var memberNode = innerCore.getChild(
         //TODO: innerCore.getChild(innerCore.getChild(node, SETS_ID), setName), memberRelId);
 
-        setcore.getMemberAttributeNames = function (node, setName, memberPath) {
+        setCore.getMemberAttributeNames = function (node, setName, memberPath) {
             ASSERT(typeof setName === 'string');
             harmonizeMemberData(node, setName);
             var memberRelId = getMemberRelId(node, setName, memberPath);
@@ -226,7 +229,7 @@ define(['common/util/assert'], function (ASSERT) {
             return [];
         };
 
-        setcore.getMemberOwnAttributeNames = function (node, setName, memberPath) {
+        setCore.getMemberOwnAttributeNames = function (node, setName, memberPath) {
             ASSERT(typeof setName === 'string');
             var memberRelId = getMemberRelId(node, setName, memberPath);
             if (memberRelId) {
@@ -238,9 +241,9 @@ define(['common/util/assert'], function (ASSERT) {
             return [];
         };
 
-        setcore.getMemberAttribute = function (node, setName, memberPath, attrName) {
-            ASSERT(typeof setName === 'string' && typeof attrName === 'string');
+        setCore.getMemberAttribute = function (node, setName, memberPath, attrName) {
             harmonizeMemberData(node, setName);
+            ASSERT(typeof setName === 'string' && typeof attrName === 'string');
             var memberRelId = getMemberRelId(node, setName, memberPath);
             if (memberRelId) {
                 var memberNode = innerCore.getChild(
@@ -250,7 +253,7 @@ define(['common/util/assert'], function (ASSERT) {
             }
         };
 
-        setcore.setMemberAttribute = function (node, setName, memberPath, attrName, attrValue) {
+        setCore.setMemberAttribute = function (node, setName, memberPath, attrName, attrValue) {
             ASSERT(typeof setName === 'string' && typeof attrName === 'string' && attrValue !== undefined);
             harmonizeMemberData(node, setName);
             var memberRelId = getMemberRelId(node, setName, memberPath);
@@ -263,9 +266,8 @@ define(['common/util/assert'], function (ASSERT) {
             }
         };
 
-        setcore.delMemberAttribute = function (node, setName, memberPath, attrName) {
+        setCore.delMemberAttribute = function (node, setName, memberPath, attrName) {
             ASSERT(typeof setName === 'string' && typeof attrName === 'string');
-            harmonizeMemberData(node, setName);
             var memberRelId = getMemberRelId(node, setName, memberPath);
             if (memberRelId) {
                 var memberNode = innerCore.getChild(
@@ -276,7 +278,7 @@ define(['common/util/assert'], function (ASSERT) {
             }
         };
 
-        setcore.getMemberRegistryNames = function (node, setName, memberPath) {
+        setCore.getMemberRegistryNames = function (node, setName, memberPath) {
             ASSERT(typeof setName === 'string');
             harmonizeMemberData(node, setName);
             var memberRelId = getMemberRelId(node, setName, memberPath);
@@ -288,7 +290,7 @@ define(['common/util/assert'], function (ASSERT) {
             }
             return [];
         };
-        setcore.getMemberOwnRegistryNames = function (node, setName, memberPath) {
+        setCore.getMemberOwnRegistryNames = function (node, setName, memberPath) {
             ASSERT(typeof setName === 'string');
             var memberRelId = getMemberRelId(node, setName, memberPath);
             if (memberRelId) {
@@ -299,7 +301,7 @@ define(['common/util/assert'], function (ASSERT) {
             }
             return [];
         };
-        setcore.getMemberRegistry = function (node, setName, memberPath, regName) {
+        setCore.getMemberRegistry = function (node, setName, memberPath, regName) {
             ASSERT(typeof setName === 'string' && typeof regName === 'string');
             harmonizeMemberData(node, setName);
             var memberRelId = getMemberRelId(node, setName, memberPath);
@@ -310,7 +312,7 @@ define(['common/util/assert'], function (ASSERT) {
                 return innerCore.getRegistry(memberNode, regName);
             }
         };
-        setcore.setMemberRegistry = function (node, setName, memberPath, regName, regValue) {
+        setCore.setMemberRegistry = function (node, setName, memberPath, regName, regValue) {
             ASSERT(typeof setName === 'string' && typeof regName === 'string' && regValue !== undefined);
             harmonizeMemberData(node, setName);
             var memberRelId = getMemberRelId(node, setName, memberPath);
@@ -322,9 +324,8 @@ define(['common/util/assert'], function (ASSERT) {
                 setModified(node);
             }
         };
-        setcore.delMemberRegistry = function (node, setName, memberPath, regName) {
+        setCore.delMemberRegistry = function (node, setName, memberPath, regName) {
             ASSERT(typeof setName === 'string' && typeof regName === 'string');
-            harmonizeMemberData(node, setName);
             var memberRelId = getMemberRelId(node, setName, memberPath);
             if (memberRelId) {
                 var memberNode = innerCore.getChild(
@@ -334,7 +335,17 @@ define(['common/util/assert'], function (ASSERT) {
                 setModified(node);
             }
         };
-        setcore.createSet = function (node, setName) {
+
+        function createSetOnDemand(node, setName) {
+            //the function checks if there is no set defined on the node's level and create it
+            var setsNode = innerCore.getChild(node, SETS_ID);
+            if (innerCore.getOwnPointerPath(setsNode, setName) === undefined) {
+                setCore.createSet(node, setName);
+            }
+        }
+
+
+        setCore.createSet = function (node, setName) {
             ASSERT(typeof setName === 'string');
             var setsNode = innerCore.getChild(node, SETS_ID),
                 setNode = innerCore.getChild(setsNode, setName);
@@ -345,7 +356,7 @@ define(['common/util/assert'], function (ASSERT) {
             innerCore.setPointer(innerCore.getChild(node, SETS_ID), setName, null);
             setModified(node);
         };
-        setcore.deleteSet = function (node, setName) {
+        setCore.deleteSet = function (node, setName) {
             ASSERT(typeof setName === 'string');
             var setsNode = innerCore.getChild(node, SETS_ID),
                 setNode = innerCore.getChild(setsNode, setName);
@@ -354,9 +365,9 @@ define(['common/util/assert'], function (ASSERT) {
             setModified(node);
         };
 
-        setcore.isMemberOf = function (node) {
+        setCore.isMemberOf = function (node) {
             //TODO we should find a proper way to do this - or at least some support from lower layers would be fine
-            var coll = setcore.getCollectionPaths(node, REL_ID);
+            var coll = setCore.getCollectionPaths(node, REL_ID);
             var sets = {};
             for (var i = 0; i < coll.length; i++) {
                 var pathArray = coll[i].split('/');
@@ -393,7 +404,7 @@ define(['common/util/assert'], function (ASSERT) {
          return datas;
          };*/
 
-        return setcore;
+        return setCore;
 
     }
 
