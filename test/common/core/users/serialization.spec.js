@@ -196,4 +196,25 @@ describe('serialization', function () {
             })
             .nodeify(done);
     });
+
+    it('should export set contents with own flag', function (done) {
+        var core = contextFrom.core,
+            setNodeGuid = '880bcd49-2d97-6074-c4aa-c54e9b638c86',
+            memberGuid = '990bcd49-2d97-6074-c4aa-c54e9b638c86',
+            root = core.createNode({}),
+            setBase = core.createNode({parent: root}),
+            setNode = core.createNode({parent: root, base: setBase, guid: setNodeGuid}),
+            member = core.createNode({parent: root,guid: memberGuid});
+
+        core.addMember(setBase, 'set', member);
+        core.addMember(setNode, 'set', member);
+        Q.nfcall(Serialization.export, core, root)
+            .then(function (result) {
+                expect(result.nodes[setNodeGuid].sets.set[0].overridden).to.equal(true);
+                expect(result.nodes[setNodeGuid].sets.set[0].guid).to.equal(memberGuid);
+                done();
+            })
+            .catch(done);
+
+    });
 });

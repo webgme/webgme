@@ -440,20 +440,6 @@ define(['common/util/assert'], function (ASSERT) {
         return result;
     }
 
-    function getOwnMemberPaths(node, setName) {
-        var base = _core.getBase(node),
-            baseMembers = base === null ? [] : _core.getMemberPaths(base, setName),
-            members = _core.getMemberPaths(node, setName),
-            ownMembers = [],
-            i;
-        for (i = 0; i < members.length; i++) {
-            if (baseMembers.indexOf(members[i]) === -1) {
-                ownMembers.push(members[i]);
-            }
-        }
-        return ownMembers;
-    }
-
     function getSetsOfNode(node) {
         var names = _core.getSetNames(node).sort(),
             i, j, k,
@@ -464,7 +450,7 @@ define(['common/util/assert'], function (ASSERT) {
             memberInfo,
             path;
         for (i = 0; i < names.length; i++) {
-            targetGuids = pathsToSortedGuidList(getOwnMemberPaths(node, names[i]));
+            targetGuids = pathsToSortedGuidList(_core.getOwnMemberPaths(node, names[i]));
             result[names[i]] = [];
             for (j = 0; j < targetGuids.length; j++) {
                 path = _core.getPath(_nodes[targetGuids[j]]);
@@ -488,6 +474,11 @@ define(['common/util/assert'], function (ASSERT) {
                         _core.getMemberRegistry(node, names[i], path, registryNames[k]);
                 }
 
+                //overridden flag
+                if (_core.isFullyOverriddenMember(node, names[i], path)) {
+                    memberInfo.overridden = true;
+                }
+                
                 result[names[i]].push(memberInfo);
             }
         }
@@ -765,7 +756,8 @@ define(['common/util/assert'], function (ASSERT) {
         // we should go through inheritance just to be sure.
         var node = _nodes[guid],
             jsonNode = _import.nodes[guid],
-            keys, i, j, k, target, memberGuid;
+            keys, i, j, k, target, memberGuid,
+            baseMemberPaths, base;
 
         //pointers
         keys = _core.getOwnPointerNames(node);
@@ -792,11 +784,16 @@ define(['common/util/assert'], function (ASSERT) {
         keys = Object.keys(jsonNode.sets);
         for (i = 0; i < keys.length; i++) {
             //for every set we create it, go through its members...
+            base = _core.getBase(node);
+            baseMemberPaths = base !== null ? _core.getMemberPaths(base, keys[i]) : [];
             _core.createSet(node, keys[i]);
             for (j = 0; j < jsonNode.sets[keys[i]].length; j++) {
                 memberGuid = jsonNode.sets[keys[i]][j].guid;
                 if (_nodes[memberGuid]) {
-                    _core.addMember(node, keys[i], _nodes[memberGuid]);
+                    if (baseMemberPaths.indexOf(_core.getPath(_nodes[memberGuid])) === -1 ||
+                        jsonNode.sets[keys[i]][j].overridden === true) {
+                        _core.addMember(node, keys[i], _nodes[memberGuid]);
+                    }
                     for (k in jsonNode.sets[keys[i]][j].attributes) {
                         _core.setMemberAttribute(node, keys[i], _core.getPath(_nodes[memberGuid]), k,
                             jsonNode.sets[keys[i]][j].attributes[k]);
