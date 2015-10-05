@@ -127,12 +127,12 @@ To start the server using the configuration above:
 - `config.rest.components = {}`
  -  Routing path (keys) from `/rest/external/` and file-path (values) to custom REST components.
 
-**seedProject**
-- `config.seedProject.enable = true`
+**seedProjects**
+- `config.seedProjects.enable = true`
  - Enables creation of new projects using seeds.
-- `config.seedProject.defaultProject = 'EmptyProject'`
+- `config.seedProjects.defaultProject = 'EmptyProject'`
  - Used by the GUI when highlighting/selecting the default project to seed from.
-- `config.seedProject.basePaths = ['./seeds']`
+- `config.seedProjects.basePaths = ['./seeds']`
  - List of directories where project seeds are stored.
 
 **server**
