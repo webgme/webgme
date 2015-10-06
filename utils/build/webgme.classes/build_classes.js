@@ -3,6 +3,9 @@
  */
 
 var requirejs = require('requirejs'),
+    FS = require('fs'),
+    path = FS.readdirSync('./node_modules').indexOf('requirejs') === -1 ?
+        '../../requirejs/require' : '../node_modules/requirejs/require',
     config = {
         name: 'webgme.classes',
         out: './dist/webgme.classes.build.js',
@@ -25,7 +28,8 @@ var requirejs = require('requirejs'),
         wrap: {
             startFile: './utils/build/webgme.classes/start.frag',
             endFile: './utils/build/webgme.classes/end.frag'
-        }
+        },
+        include:[path]
     };
 
 requirejs.optimize(config, function (data) {
