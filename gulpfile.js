@@ -36,7 +36,7 @@ function build() {
 }
 
 gulp.task('rjs-build', function () {
-    var stream = shell(['node ./node_modules/requirejs/bin/r.js -o ./utils/build/webgme.classes/cbuild.js'])
+    var stream = shell(['node ./utils/build/webgme.classes/build_classes.js'])
     .on('error', function (error) {
         // Currently this isn't entered.
         //
