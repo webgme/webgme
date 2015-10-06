@@ -386,13 +386,45 @@ function StandAloneServer(gmeConfig) {
         }
     }
 
-    function getPluginBasePathByName(pluginName) {
-        for (var i = 0; i < gmeConfig.plugin.basePaths.length; i++) {
-            var additional = FS.readdirSync(gmeConfig.plugin.basePaths[i]);
+    function getRouteFor(component, basePaths) {
+        //first we try to give back the common plugin/modules
+        return function(req, res) {
+            res.sendFile(Path.join(__baseDir, req.path), function (err) {
+                if (err && err.code !== 'ECONNRESET') {
+                    //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format
+                    // so we try to look for those in our config
+                    //first we check if we have the plugin registered in our config
+                    var urlArray = req.url.split('/'),
+                        pluginName = urlArray[2] || null,
+                        basePath,
+                        relPath = '';
+
+                    urlArray.shift();
+                    urlArray.shift();
+                    urlArray.shift();
+                    relPath = urlArray.join('/');
+                    if (!Path.extname(relPath)) {  // js file by default
+                        relPath += '.js';
+                    }
+                    basePath = getBasePathByName(pluginName, basePaths);
+
+                    if (typeof basePath === 'string' && typeof relPath === 'string') {
+                        expressFileSending(res, Path.resolve(Path.join(basePath, relPath)));
+                    } else {
+                        res.sendStatus(404);
+                    }
+                }
+            });
+        };
+    }
+
+    function getBasePathByName(pluginName, basePaths) {
+        for (var i = 0; i < basePaths.length; i++) {
+            var additional = FS.readdirSync(basePaths[i]);
             for (var j = 0; j < additional.length; j++) {
                 if (additional[j] === pluginName) {
-                    if (webgmeUtils.isGoodExtraAsset(additional[j], Path.join(gmeConfig.plugin.basePaths[i], additional[j]))) {
-                        return gmeConfig.plugin.basePaths[i];
+                    if (webgmeUtils.isGoodExtraAsset(additional[j], Path.join(basePaths[i], additional[j]))) {
+                        return basePaths[i];
                     }
                 }
             }
@@ -671,35 +703,13 @@ function StandAloneServer(gmeConfig) {
         }
     });
 
-    logger.debug('creating plug-in specific routing rules');
-    __app.get(/^\/plugin\/.*/, function (req, res) {
-        //first we try to give back the common plugin/modules
-        res.sendFile(Path.join(__baseDir, req.path), function (err) {
-            if (err && err.code !== 'ECONNRESET') {
-                //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format
-                // so we try to look for those in our config
-                //first we check if we have the plugin registered in our config
-                var urlArray = req.url.split('/'),
-                    pluginName = urlArray[2] || null,
-                    basePath = getPluginBasePathByName(pluginName),
-                    relPath = '';
-                urlArray.shift();
-                urlArray.shift();
-                urlArray.shift();
-                relPath = urlArray.join('/');
-                if (relPath.indexOf('.js') === -1) {
-                    relPath += '.js';
-                }
+    // Plugin paths
+    logger.debug('creating plugin specific routing rules');
+    __app.get(/^\/plugin\/.*/, getRouteFor('plugin', gmeConfig.plugin.basePaths));
 
-                if (typeof basePath === 'string' && typeof relPath === 'string') {
-                    expressFileSending(res, Path.resolve(Path.join(basePath, relPath)));
-                } else {
-                    res.sendStatus(404);
-                }
-            }
-        });
-    });
-
+    // Layout paths
+    logger.debug('creating layout specific routing rules');
+    __app.get(/^\/layout\/.*/, getRouteFor('layout', gmeConfig.visualization.layout.basePaths));
 
     logger.debug('creating external library specific routing rules');
     gmeConfig.server.extlibExcludes.forEach(function (regExStr) {
