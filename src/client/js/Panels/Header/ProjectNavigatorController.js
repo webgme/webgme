@@ -1047,7 +1047,7 @@ define([
                             callback(err);
                             return;
                         }
-
+                        WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
                         if (branchId && branchId !== self.gmeClient.getActiveBranchName()) {
                             self.gmeClient.selectBranch(branchId, null, function (err) {
                                 if (err) {

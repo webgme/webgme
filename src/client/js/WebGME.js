@@ -115,7 +115,6 @@ define([
                     }
                 );
 
-                WebGMEGlobal.State.setIsInitPhase(true);
                 document.title = defaultPageTitle;
                 logger.info('init-phase true');
                 WebGMEHistory.initialize();
@@ -198,47 +197,47 @@ define([
 
                             if (initialThingsToDo.createNewProject) {
                                 createNewProject();
+                            } else if (initialThingsToDo.projectToLoad) {
+                                loadProject();
                             } else {
-                                if (initialThingsToDo.projectToLoad) {
-
-                                    Q.nfcall(client.selectProject, initialThingsToDo.projectToLoad, undefined)
-                                        .then(function () {
-                                            if (!initialThingsToDo.branchToLoad) {
-                                                return Q({});
-                                            }
-
-                                            return Q.nfcall(client.getBranches, initialThingsToDo.projectToLoad);
-                                        })
-                                        .then(function (branches) {
-                                            if (initialThingsToDo.commitToLoad) {
-                                                return Q.nfcall(client.selectCommit, initialThingsToDo.commitToLoad);
-                                            }
-
-                                            if (initialThingsToDo.branchToLoad &&
-                                                branches[initialThingsToDo.branchToLoad]) {
-                                                return Q.nfcall(client.selectBranch, initialThingsToDo.branchToLoad, null);
-                                            }
-                                        })
-                                        .then(function () {
-                                            selectObject();
-                                        })
-                                        .catch(function (err) {
-                                            logger.error('error during startup', err);
-                                            openProjectLoadDialog(false);
-                                            return;
-                                        });
-                                } else {
-                                    openProjectLoadDialog(true);
-                                }
+                                openProjectLoadDialog(false);
                             }
                         });
                     }
                 });
             };
 
+            function loadProject() {
+                Q.nfcall(client.selectProject, initialThingsToDo.projectToLoad, undefined)
+                    .then(function () {
+                        if (!initialThingsToDo.branchToLoad) {
+                            return Q({});
+                        }
+
+                        return Q.nfcall(client.getBranches, initialThingsToDo.projectToLoad);
+                    })
+                    .then(function (branches) {
+                        if (initialThingsToDo.commitToLoad) {
+                            return Q.nfcall(client.selectCommit, initialThingsToDo.commitToLoad);
+                        }
+
+                        if (initialThingsToDo.branchToLoad &&
+                            branches[initialThingsToDo.branchToLoad]) {
+                            return Q.nfcall(client.selectBranch, initialThingsToDo.branchToLoad, null);
+                        }
+                    })
+                    .then(function () {
+                        selectObject();
+                    })
+                    .catch(function (err) {
+                        logger.error('error during startup', err);
+                        openProjectLoadDialog(false);
+                        return;
+                    });
+            }
+
             function openProjectLoadDialog(connect) {
                 //if initial project openings failed we show the project opening dialog
-                WebGMEGlobal.State.setIsInitPhase(false);
                 logger.info('init-phase false');
                 logger.info('about to open projectOpenDialog, connect:', connect);
                 if (connect) {
