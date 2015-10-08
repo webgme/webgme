@@ -7,7 +7,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe.only('CorePlugins', function () {
+describe('CorePlugins', function () {
 
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
