@@ -22,6 +22,7 @@ describe('CorePlugins', function () {
         pluginNames = [
             'AddOnGenerator',
             'ConfigurationArtifact',
+            'DecoratorGenerator',
             'ExecutorPlugin',
             'ExportImport',
             'MergeExample',

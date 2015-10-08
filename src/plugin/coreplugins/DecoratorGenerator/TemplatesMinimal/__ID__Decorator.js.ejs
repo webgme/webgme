@@ -1,0 +1,42 @@
+/*globals define, _*/
+/*jshint browser: true, camelcase: false*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define([
+    'js/Decorators/DecoratorBase',
+    './DiagramDesigner/<%=id%>Decorator.DiagramDesignerWidget',
+    './PartBrowser/<%=id%>Decorator.PartBrowserWidget'
+], function (DecoratorBase, <%=id%>DecoratorDiagramDesignerWidget, <%=id%>DecoratorPartBrowserWidget) {
+
+    'use strict';
+
+    var <%=id%>Decorator,
+        __parent__ = DecoratorBase,
+        __parent_proto__ = DecoratorBase.prototype,
+        DECORATOR_ID = '<%=id%>Decorator';
+
+    <%=id%>Decorator = function (params) {
+        var opts = _.extend({loggerName: this.DECORATORID}, params);
+
+        __parent__.apply(this, [opts]);
+
+        this.logger.debug('<%=id%>Decorator ctor');
+    };
+
+    _.extend(<%=id%>Decorator.prototype, __parent_proto__);
+    <%=id%>Decorator.prototype.DECORATORID = DECORATOR_ID;
+
+    /*********************** OVERRIDE DecoratorBase MEMBERS **************************/
+
+    <%=id%>Decorator.prototype.initializeSupportedWidgetMap = function () {
+        this.supportedWidgetMap = {
+            DiagramDesigner: <%=id%>DecoratorDiagramDesignerWidget,
+            PartBrowser: <%=id%>DecoratorPartBrowserWidget
+        };
+    };
+
+    return <%=id%>Decorator;
+});
