@@ -30,6 +30,7 @@ define(['js/logger',
         DEFAULT_VISUALIZER = 'ModelEditor',
         CROSSCUT_VISUALIZER = 'Crosscut',
         SET_VISUALIZER = 'SetEditor',
+        TREE_ROOT = CONSTANTS.PROJECT_ROOT_ID,
 
         TreeBrowserControl = function (client, treeBrowser) {
 
@@ -43,6 +44,7 @@ define(['js/logger',
                 nodes = {},
                 refresh,
                 initialize,
+                initialized = false,
                 self = this,
                 getNodeClass;
 
@@ -53,27 +55,33 @@ define(['js/logger',
             this._client = client;
 
             initialize = function () {
-                var rootNode = client.getNode(CONSTANTS.PROJECT_ROOT_ID); //TODO make this loaded from constants
+                var rootNode = client.getNode(CONSTANTS.PROJECT_ROOT_ID);
                 logger.debug('entered initialize');
                 if (rootNode) {
                     var loadingRootTreeNode;
                     logger.debug('rootNode avaliable now');
                     selfId = client.addUI(self, function (events) {
-                        logger.debug('loaded territory from rootNode at initialize');
                         self._eventCallback(events);
+                        if (initialized === false) {
+                            logger.debug('loaded territory from rootNode at initialize');
+                            initialized = true;
+
+                            logger.debug('expanding tree-root', TREE_ROOT);
+                            loadingRootTreeNode.expand(true);
+                        }
                     });
 
                     //add "root" with its children to territory
                     //create a new loading node for it in the tree
                     loadingRootTreeNode = treeBrowser.createNode(null, {
-                        id: CONSTANTS.PROJECT_ROOT_ID,
+                        id: TREE_ROOT,
                         name: 'Initializing tree...',
                         hasChildren: false,
                         class: NODE_PROGRESS_CLASS
                     });
 
                     //store the node's info in the local hashmap
-                    nodes[CONSTANTS.PROJECT_ROOT_ID] = {
+                    nodes[TREE_ROOT] = {
                         treeNode: loadingRootTreeNode,
                         children: [],
                         state: stateLoading
@@ -81,27 +89,8 @@ define(['js/logger',
 
                     //add the root to the query
                     selfPatterns = {};
-                    selfPatterns[CONSTANTS.PROJECT_ROOT_ID] = {children: 2};
+                    selfPatterns[TREE_ROOT] = {children: 2};
                     client.updateTerritory(selfId, selfPatterns);
-
-                    // expand root
-                    // FIXME: how to detect, when the root is loaded for the first time
-                    setTimeout(function () {
-                        var settings = {},
-                            activeObj = WebGMEGlobal.State.getActiveObject();
-                        logger.debug('expanding root-tree');
-                        loadingRootTreeNode.expand(true);
-                        if (activeObj || activeObj === CONSTANTS.PROJECT_ROOT_ID) {
-                            logger.debug('Active object already set. In init phase:',
-                                WebGMEGlobal.State.getIsInitPhase());
-                        } else if (!WebGMEGlobal.State.getIsInitPhase()) {
-                            logger.debug('Not in init-phase will set root node to active object.');
-                            settings[CONSTANTS.STATE_ACTIVE_OBJECT] = CONSTANTS.PROJECT_ROOT_ID;
-                            WebGMEGlobal.State.set(settings);
-                        } else {
-                            logger.debug('In init-phase will not select an active object.');
-                        }
-                    }, 100);
                 } else {
                     logger.debug('rootNode not avaliable at initialize');
                     setTimeout(initialize, 500);
@@ -613,11 +602,11 @@ define(['js/logger',
                 //forget the old territory
                 client.removeUI(selfId);
 
-                treeBrowser.deleteNode(nodes[CONSTANTS.PROJECT_ROOT_ID].treeNode);
+                treeBrowser.deleteNode(nodes[TREE_ROOT].treeNode);
 
                 selfPatterns = {};
                 nodes = {};
-
+                initialized = false;
                 initialize();
             };
 
@@ -645,7 +634,7 @@ define(['js/logger',
         for (i = 0; i < keys.length; i += 1) {
             if (validChildrenInfo[keys[i]] === true) {
                 validNode = this._client.getNode(keys[i]);
-                if(validNode){
+                if (validNode) {
                     types.push({id: validNode.getId(), title: validNode.getAttribute('name')});
                 }
             }

@@ -101,7 +101,12 @@ define([
 
         function openProject(projectId) {
             if (self._projectList[projectId].rights.read === true) {
-                self._client.selectProject(projectId, null, function () {
+                self._client.selectProject(projectId, null, function (err) {
+                    if (err) {
+                        self._logger.error(err);
+                    } else {
+                        WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+                    }
                     self._dialog.modal('hide');
                 });
             }
@@ -547,6 +552,8 @@ define([
                     self._client.selectProject(projectId, branchName, function (err) {
                         if (err) {
                             self._logger.error('CANNOT SELECT NEWLY CREATED PROJECT FROM FILE: ', err.message);
+                        } else {
+                            WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
                         }
                         loader.stop();
                     });
@@ -584,6 +591,7 @@ define([
                         self._logger.error('Cannot select project', err);
                     } else {
                         self._logger.debug('Selected project');
+                        WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
                     }
                     loader.stop();
                 });

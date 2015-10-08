@@ -82,7 +82,6 @@ define([
         STATE_ACTIVE_COMMIT: 'activeCommit',
         STATE_ACTIVE_BRANCH_NAME: 'activeBranchName',
         STATE_ACTIVE_CROSSCUT: 'activeCrosscut',
-        STATE_IS_INIT_PHASE: 'isInitPhase',
         STATE_ACTIVE_TAB: 'activeTab',
 
         /* ASPECTS */
