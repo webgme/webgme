@@ -216,11 +216,11 @@ define([
     //        return a.name.localeCompare(b.name);
     //    });
     //};
-
-    DecoratorGenerator.prototype.endsWith = function (str, ending) {
-        var lastIndex = str.lastIndexOf(ending);
-        return (lastIndex !== -1) && (lastIndex + ending.length === str.length);
-    };
+    //
+    //DecoratorGenerator.prototype.endsWith = function (str, ending) {
+    //    var lastIndex = str.lastIndexOf(ending);
+    //    return (lastIndex !== -1) && (lastIndex + ending.length === str.length);
+    //};
 
     return DecoratorGenerator;
 });
