@@ -8,8 +8,9 @@ define([
     'plugin/PluginConfig',
     'plugin/PluginBase',
     'plugin/DecoratorGenerator/DecoratorGenerator/Templates/Templates',
+    'plugin/DecoratorGenerator/DecoratorGenerator/TemplatesMinimal/Templates',
     'common/util/ejs'
-], function (PluginConfig, PluginBase, TEMPLATES, ejs) {
+], function (PluginConfig, PluginBase, TEMPLATES, TEMPLATES_MINIMAL, ejs) {
     'use strict';
 
     /**
@@ -82,11 +83,11 @@ define([
             },
             {
                 name: 'meta',
-                displayName: 'Generate META',
-                description: 'Generates a static listing of the meta objects to facilitate coding (experimental).',
+                displayName: 'Generate a DSML Decorator',
+                description: 'Generates domain specific decorator.',
                 value: false,
                 valueType: 'boolean',
-                readOnly: false
+                readOnly: true
             }
         ];
     };
@@ -105,48 +106,19 @@ define([
         // These are all instantiated at this point.
         var self = this,
             config = self.getCurrentConfig(),
-            baseDir = 'src/decorators/' + config.decoratorName + 'Decorator/',
             filesToAdd = {},
-            metaNodes,
-            templateName,
-            filePath,
+            success,
             artifact;
 
         if (config.meta) {
-            metaNodes = this.getMetaNodesInfo();
-            if (metaNodes === false) {
-                self.result.setSuccess(false);
-                callback(null, self.result);
-                return;
-            }
-        }
-
-        for (templateName in TEMPLATES) {
-            if (TEMPLATES.hasOwnProperty(templateName)) {
-                filePath = templateName.substring(0, templateName.length - 4);
-                filePath = baseDir + filePath.replace('Template', config.decoratorName);
-                if (self.endsWith(filePath, 'META.js')) {
-                    if (config.meta) {
-                        filesToAdd[filePath] = ejs.render(TEMPLATES[templateName], {
-                            decorator: {
-                                name: config.decoratorName
-                            },
-                            config: config,
-                            metaNodes: metaNodes
-                        });
-                    }
-                } else {
-                    filesToAdd[filePath] = ejs.render(TEMPLATES[templateName], {
-                        decorator: {
-                            name: config.decoratorName
-                        },
-                        config: config
-                    });
-                }
-            }
+            //success = self.renderMetaTemplates(filesToAdd, config);
+            success = false;
+        } else {
+            success = self.renderMinimalTemplates(filesToAdd, config);
         }
 
         artifact = self.blobClient.createArtifact(config.decoratorName + 'Decorator');
+
         artifact.addFiles(filesToAdd, function (err /*, hashes*/) {
             if (err) {
                 callback(err, self.result);
@@ -160,41 +132,90 @@ define([
                 }
 
                 self.result.addArtifact(hash);
-                self.result.setSuccess(true);
+                self.result.setSuccess(success);
                 callback(null, self.result);
             });
         });
     };
 
-    DecoratorGenerator.prototype.getMetaNodesInfo = function () {
-        var metaNodes = [],
-            success = true,
-            regExp = new RegExp(this.jsRegExpStr),
-            metaNodeName;
+    DecoratorGenerator.prototype.renderMinimalTemplates = function (filesToAdd, config) {
+        var baseDir = config.decoratorName + 'Decorator/',
+            path,
+            dataModel = {
+                id: config.decoratorName
+            },
+            templateName;
 
-        for (metaNodeName in this.META) {
-            if (this.META.hasOwnProperty(metaNodeName)) {
-                if (regExp.test(metaNodeName)) {
-                    metaNodes.push({
-                        name: metaNodeName,
-                        path: this.core.getPath(this.META[metaNodeName])
-                    });
-                } else {
-                    success = false,
-                    this.createMessage(this.META[metaNodeName], 'Cannot generate META helper class. Name of meta-' +
-                        'node is invalid JavaScript "' + metaNodeName + '".');
-                }
+        for (templateName in TEMPLATES_MINIMAL) {
+            if (TEMPLATES_MINIMAL.hasOwnProperty(templateName)) {
+                path = templateName.substring(0, templateName.length - '.ejs'.length);
+                path = baseDir + path.replace('__ID__', config.decoratorName);
+                filesToAdd[path] = ejs.render(TEMPLATES_MINIMAL[templateName], dataModel);
             }
         }
 
-        if (success === false) {
-            return false;
-        } else {
-            return metaNodes.sort(function (a, b) {
-                return a.name.localeCompare(b.name);
-            });
-        }
+        return true;
     };
+
+    //DecoratorGenerator.prototype.renderMetaTemplates = function (filesToAdd, config) {
+    //    var self = this,
+    //        templateName,
+    //        baseDir = 'src/decorators/' + config.decoratorName + 'Decorator/',
+    //        filePath,
+    //        metaNodes = this.getMetaNodesInfo();
+    //
+    //    if (!metaNodes) {
+    //        return false;
+    //    }
+    //
+    //    for (templateName in TEMPLATES) {
+    //        if (TEMPLATES.hasOwnProperty(templateName)) {
+    //            filePath = templateName.substring(0, templateName.length - 4);
+    //            filePath = baseDir + filePath.replace('Template', config.decoratorName);
+    //            if (self.endsWith(filePath, 'META.js')) {
+    //                filesToAdd[filePath] = ejs.render(TEMPLATES[templateName], {
+    //                    decorator: {
+    //                        name: config.decoratorName
+    //                    },
+    //                    config: config,
+    //                    metaNodes: metaNodes
+    //                });
+    //            } else {
+    //                filesToAdd[filePath] = ejs.render(TEMPLATES[templateName], {
+    //                    decorator: {
+    //                        name: config.decoratorName
+    //                    },
+    //                    config: config
+    //                });
+    //            }
+    //        }
+    //    }
+    //};
+
+    //DecoratorGenerator.prototype.getMetaNodesInfo = function () {
+    //    var metaNodes = [],
+    //        regExp = new RegExp(this.jsRegExpStr),
+    //        metaNodeName;
+    //
+    //    for (metaNodeName in this.META) {
+    //        if (this.META.hasOwnProperty(metaNodeName)) {
+    //            if (regExp.test(metaNodeName)) {
+    //                metaNodes.push({
+    //                    name: metaNodeName,
+    //                    path: this.core.getPath(this.META[metaNodeName])
+    //                });
+    //            } else {
+    //                this.createMessage(this.META[metaNodeName], 'Cannot generate META helper class. Name of meta-' +
+    //                    'node is invalid JavaScript "' + metaNodeName + '".');
+    //                return;
+    //            }
+    //        }
+    //    }
+    //
+    //    return metaNodes.sort(function (a, b) {
+    //        return a.name.localeCompare(b.name);
+    //    });
+    //};
 
     DecoratorGenerator.prototype.endsWith = function (str, ending) {
         var lastIndex = str.lastIndexOf(ending);
