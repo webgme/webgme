@@ -148,7 +148,7 @@ define([
         //this.getLevel = core.getLevel;
 
         /**
-         * Returns the root node of the containment tree.
+         * Returns the root node of the containment tree that node is part of.
          * @param {module:Core~Node} node - the node in question.
          *
          * @return {module:Core~Node} Returns the root of the containment hierarchy (it can be the node itself).
@@ -158,7 +158,7 @@ define([
         this.getRoot = core.getRoot;
 
         /**
-         * Retuns the complete path of the node in the containment hierarchy.
+         * Returns the complete path of the node in the containment hierarchy.
          * @param {module:Core~Node} node - the node in question.
          *
          * @return {string} Returns a path string where each portion is a relative id and they are separated by '/'.
@@ -199,7 +199,7 @@ define([
         //this.isObject = core.isObject;
 
         /**
-         * Checks if the node in question is exists or not.
+         * Checks if the node in question exists or not.
          * @param {module:Core~Node} node - the node in question.
          *
          * @return {bool} Returns true if the node is 'empty' meaning that it is not reserved by real data.
@@ -238,10 +238,9 @@ define([
          * Persists the changes made in memory and computed the data blobs that needs to be saved into the database
          * to make the change and allow other users to see the new state of the project.
          * @param {module:Core~Node} node - some node element of the modified containment hierarchy (usually the root).
-         * @param {function(module:Core~Node)} callback
          *
          * @return {module:Core~GmePersisted} The function returns an object which collects all the changes
-         * on data level and necessary to update the databse on server side
+         * on data level and necessary to update the database on server side
          *
          * @func
          */
@@ -250,7 +249,7 @@ define([
         /**
          * Loads the data object with the given hash and makes it a root of a containment hierarchy.
          * @param {module:Core~ObjectHash} hash - the hash of the data object we like to load as root.
-         * @param {function(module:Core~Node)} callback
+         * @param {function(string, module:Core~Node)} callback
          *
          * @func
          */
@@ -263,7 +262,7 @@ define([
          * hierarchy.
          * @param {module:Core~Node} parent - the container node in question.
          * @param {string} relativeId - the relative id of the child in question.
-         * @param {function(module:Core~Node)} callback
+         * @param {function(string, module:Core~Node)} callback
          *
          * @func
          */
@@ -275,7 +274,7 @@ define([
          * empty nodes on demand and return a new empty node back.
          * @param {module:Core~Node} startNode - the starting node of our search.
          * @param {string} relativePath - the relative path - built by relative ids - of the node in question.
-         * @param {function(module:Core~Node)} callback
+         * @param {function(string, module:Core~Node)} callback
          *
          * @func
          */
@@ -285,7 +284,7 @@ define([
          * Loads the all children of the given parent. As it first checks the already reserved relative ids of
          * the parent, it only loads the already existing children (so no on-demand empty node creation).
          * @param {module:Core~Node} parent - the container node in question.
-         * @param {function(module:Core~Node[])} callback
+         * @param {function(string, module:Core~Node[])} callback
          *
          * @func
          */
@@ -298,7 +297,7 @@ define([
          * finally if the returned value is undefined than there is no such pointer defined for the given node.
          * @param {module:Core~Node} source - the container node in question.
          * @param {string} pointerName - the relative id of the child in question.
-         * @param {function(module:Core~Node)} callback
+         * @param {function(string, module:Core~Node)} callback
          *
          * @func
          */
@@ -308,7 +307,7 @@ define([
          * Loads all the source nodes that has such a pointer and its target is the given node.
          * @param {module:Core~Node} target - the container node in question.
          * @param {string} pointerName - the relative id of the child in question.
-         * @param {function(module:Core~Node[])} callback
+         * @param {function(string, module:Core~Node[])} callback
          *
          * @func
          */
@@ -317,17 +316,17 @@ define([
         /**
          * Loads a complete sub-tree of the containment hierarchy starting from the given node.
          * @param {module:Core~Node} node - the container node in question.
-         * @param {function(module:Core~Node[])} callback
+         * @param {function(string, module:Core~Node[])} callback
          *
          * @func
          */
         this.loadSubTree = core.loadSubTree;
 
         /**
-         * Loads a complete complete containment hierarchy using the data object - pointed by the given hash -
+         * Loads a complete containment hierarchy using the data object - pointed by the given hash -
          * as the root.
          * @param {module:Core~ObjectHash} rootHash - hash of the root node.
-         * @param {function(module:Core~Node[])} callback
+         * @param {function(string, module:Core~Node[])} callback
          *
          * @func
          */
@@ -341,7 +340,7 @@ define([
          * Collects the relative ids of all the children of the given node.
          * @param {module:Core~Node} parent - the container node in question.
          *
-         *@return {string[]} The function returns an array of the relative ids.
+         * @return {string[]} The function returns an array of the relative ids.
          *
          * @func
          */
@@ -367,7 +366,7 @@ define([
          * @param {module:Core~GUID} [parameters.guid] - the GUID of the node to be created
          *
          *
-         *@return {module:Core~Node} The function returns the created node or null if no node was created.
+         * @return {module:Core~Node} The function returns the created node or null if no node was created.
          *
          * @func
          */
@@ -382,22 +381,22 @@ define([
         this.deleteNode = core.deleteNode;
 
         /**
-         * Copies the given to be a child of the given parent.
+         * Copies the given node into parent.
          * @param {module:Core~Node} node - the node to be copied.
          * @param {module:Core~Node} parent - the parent node of the copy.
          *
-         * @return {module:Core~Node} The function returns the copy of the original node.
+         * @return {module:Core~Node} The function returns the copied node.
          *
          * @func
          */
         this.copyNode = core.copyNode;
 
         /**
-         * Create copy of the given nodes under the given parent. The copy will
+         * Copies the given nodes into parent.
          * @param {module:Core~Node[]} nodes - the nodes to be copied.
          * @param {module:Core~Node} parent - the parent node of the copy.
          *
-         * @return {module:Core~Node} The function returns the copy of the original node.
+         * @return {module:Core~Node[]} The function returns an array of the copied nodes.
          *
          * @func
          */
@@ -565,7 +564,7 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the pointer.
          *
-         * @return {string[]} The function returns an array of absolute paths of nodes thath
+         * @return {string[]} The function returns an array of absolute paths of nodes that
          * has the pointer pointing to the node.
          *
          * @func
@@ -578,7 +577,7 @@ define([
          * Collects the data hash values of the children of the node.
          * @param {module:Core~Node} node - the node in question.
          *
-         * @return {object} The function returns a dictionary of {@link module:Core~ObjectHash} that stored in pair
+         * @return {Object<string, module:Core~ObjectHash>} The function returns a dictionary of {@link module:Core~ObjectHash} that stored in pair
          * with the relative id of the corresponding child of the node.
          *
          * @func
@@ -1263,7 +1262,7 @@ define([
         this.delAspectMeta = core.delAspectMeta;
 
         /**
-         * Searches for the closes META node of the node in question.
+         * Searches for the closest META node of the node in question.
          * @param {module:Core~Node} node - the node in question
          *
          * @return {module:Core~Node | null} Returns the first node (including itself) among the inheritance chain
@@ -1403,7 +1402,7 @@ define([
          * Returns all META nodes.
          * @param {module:Core~Node} node - any node of the containment hierarchy.
          *
-         * @return {object} The function returns a dictionary. The keys of the dictionary are the absolute paths of
+         * @return {Object<string, module:Core~Node>} The function returns a dictionary. The keys of the dictionary are the absolute paths of
          * the META nodes of the project. Every value of the dictionary is a {@link module:Core~Node}.
          *
          * @func
