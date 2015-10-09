@@ -4,7 +4,6 @@
 /**
  * A module representing a PluginResult.
  *
- * @module PluginResult
  * @author lattmann / https://github.com/lattmann
  */
 
@@ -92,6 +91,11 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
         return this.artifacts;
     };
 
+    /**
+     * Adds a saved artifact to the result - linked via its hash.
+     *
+     * @param {string} hash - Hash of saved artifact.
+     */
     PluginResult.prototype.addArtifact = function (hash) {
         this.artifacts.push(hash);
     };

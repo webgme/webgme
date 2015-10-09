@@ -25,27 +25,70 @@ define([
      */
     var PluginBase = function () {
         // set by initialize
+        /**
+         * @type {GmeConfig}
+         */
+        this.gmeConfig = null;
+
+        /**
+         * @type {GmeLogger}
+         */
         this.logger = null;
+
+        /**
+         * @type {null}
+         */
         this.blobClient = null;
+
         this._currentConfig = null;
 
         // set by configure
+
+        /**
+         * @type {Core}
+         */
         this.core = null;
+
+        /**
+         * @type {ProjectInterface}
+         */
         this.project = null;
+
         this.projectName = null;
         this.projectId = null;
         this.branchName = null;
+
         this.branchHash = null;
         this.commitHash = null;
         this.currentHash = null;
+
+        /**
+         * @type {module:Core~Node}
+         */
         this.rootNode = null;
+
+        /**
+         * @type {module:Core~Node}
+         */
         this.activeNode = null;
+
+        /**
+         * @type {module:Core~Node[]}
+         */
         this.activeSelection = [];
+
+        /**
+         * @type {Object<string,module:Core~Node>}
+         */
         this.META = null;
 
+        /**
+         * @type {PluginResult}
+         */
         this.result = null;
+
         this.isConfigured = false;
-        this.gmeConfig = null;
+
     };
 
     //--------------------------------------------------------------------------------------------------------------

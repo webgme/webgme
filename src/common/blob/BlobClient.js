@@ -11,6 +11,12 @@
 define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, BlobMetadata, superagent) {
     'use strict';
 
+    /**
+     * 
+     * @param {object} parameters
+     * @constructor
+     * @alias BlobClient
+     */
     var BlobClient = function (parameters) {
         this.artifacts = [];
 
@@ -301,6 +307,11 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
         });
     };
 
+    /**
+     *
+     * @param {string} name
+     * @returns {Artifact}
+     */
     BlobClient.prototype.createArtifact = function (name) {
         var artifact = new Artifact(name, this);
         this.artifacts.push(artifact);

@@ -4,7 +4,6 @@
 /**
  * A module representing a PluginNodeDescription.
  *
- * @module PluginNodeDescription
  * @author lattmann / https://github.com/lattmann
  */
 

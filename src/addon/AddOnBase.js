@@ -11,21 +11,41 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
     /**
      * BaseClass for AddOns which run on the server and act upon changes in a branch.
      * Use the AddOnGenerator to generate a new AddOn that implements this class.
-     * @param logger
-     * @param gmeConfig
+     * @param {GmeLogger} logger
+     * @param {GmeConfig} gmeConfig
      * @constructor
+     * @alias AddOnBase
      */
     function AddOnBase(logger, gmeConfig) {
+        /**
+         * @type {GmeConfig}
+         */
         this.gmeConfig = gmeConfig;
+
+        /**
+         * @type {GmeLogger}
+         */
         this.logger = logger;
 
         // Set at configure
+        /**
+         * @type {Core}
+         */
         this.core = null;
+
+        /**
+         * @type {Project}
+         */
         this.project = null;
+
         this.branchName = null;
         this.blobClient = null;
 
         this.initialized = false;
+
+        /**
+         * @type {AddOnUpdateResult}
+         */
         this.updateResult = null;
 
         this.logger.debug('ctor');
@@ -74,8 +94,8 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
      * way (ordered by the "usedAddOn" registry in the rootNode).
      *
      * Changes made by AddOns do not trigger a new update for other addOns.
-     * @param {object} rootNode
-     * @param {object} commitObj
+     * @param {module:Core~Node} rootNode
+     * @param {module:Storage~CommitObject} commitObj
      * @param {function(Error, AddOnUpdateResult)} callback
      */
     AddOnBase.prototype.update = function (rootNode, commitObj, callback) {
@@ -97,6 +117,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
      * @param {object} rootNode
      * @param {object} commitObj
      * @param {function(Error, AddOnUpdateResult)} callback
+     * @private
      */
     AddOnBase.prototype._update = function (rootNode, commitObj, callback) {
         this.updateResult = new AddOnUpdateResult(commitObj);
@@ -109,6 +130,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
      * @param {object} rootNode
      * @param {object} commitObj
      * @param {function(Error, AddOnUpdateResult)} callback
+     * @private
      */
     AddOnBase.prototype._initialize = function (rootNode, commitObj, callback) {
         this.initialized = true;
