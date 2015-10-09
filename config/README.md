@@ -25,7 +25,7 @@ To start the server using the configuration above:
 
 ### Configuration groups
 
-**addOn**
+##### addOn
 
 - `config.addOn.enable = false`
  - If true enables add-ons.
@@ -34,7 +34,7 @@ To start the server using the configuration above:
 - `config.addOn.basePaths = ['./src/addon/core']`
  - Array of paths to custom add-ons. If you have an add-on at `C:/SomeAddOns/MyAddOn/MyAddOn.js` the path to append would be `C:/SomeAddOns` or a relative path (from the current working directory). N.B. this will also expose any other add-on in that directory, e.g. `C:/SomeAddOns/MyOtherAddOn/MyOtherAddOn.js`.
 
-**authentication**
+##### authentication
 
 - `config.authentication.enable = false`
  - If true certain parts will require that users are authenticated.
@@ -47,12 +47,12 @@ To start the server using the configuration above:
 - `config.authentication.salts = 10`
  - Strength of the salting of the users' passwords [bcrypt](https://github.com/dcodeIO/bcrypt.js).
 
-**bin**
+##### bin
 
 - `config.bin.log = see config`
  - Logger settings when running bin scripts.
 
-**blob**
+##### blob
 
 - `config.blob.type = 'FS'`
  - Currently only `FS` (File System) is supported.
@@ -61,7 +61,7 @@ To start the server using the configuration above:
 - `config.blob.s3 = {}`
  - **Not supported yet**
 
-**client**
+##### client
 
 - `config.client.appDir = './src/client'`
  - Directory from where to serve the static files for the webapp. This should only be modified if you are using a custom UI.
@@ -78,17 +78,17 @@ To start the server using the configuration above:
 - `config.client.defaultConnectionRouter = 'basic3'`
  - Default connection router to use when opening up a new model, available options (ordered by level of complexity and sophistication) are: 'basic', 'basic2' and 'basic3'.
 
-**core**
+##### core
 
 - `config.core.enableCustomConstraints = false`
  - If true will enable validation (which takes place on the server) of custom constraints defined in the meta nodes.
 
-**debug**
+##### debug
 
 - `config.debug = false`
  - If true will add extra debug messages and also enable experimental Visualizers, (URL equivalent (only on client side) `?debug=true`).
 
-**executor**
+##### executor
 
 - `config.executor.enable = false`
  - If true will enable the executor.
@@ -101,13 +101,13 @@ To start the server using the configuration above:
 - `config.executor.labelJobs = './labelJobs.json'`
  - Path to configuration file for label jobs for the workers.
 
-**mongo**
+##### mongo
 - `config.mongo.uri = 'mongodb://127.0.0.1:27017/multi'`
  - MongoDB connection [uri](http://docs.mongodb.org/manual/reference/connection-string/)
 - `config.mongo.options = see config`
  - Options for [MongoClient.connect](https://mongodb.github.io/node-mongodb-native/api-generated/mongoclient.html#connect)
 
-**plugin**
+##### plugin
 - `config.plugin.allowServerExecution = false`
  - If true will enable execution of plugins on the server.
 - `config.plugin.basePaths = ['./src/plugin/coreplugins']`
@@ -118,16 +118,16 @@ To start the server using the configuration above:
  - Time, in milliseconds, results will be stored on the server after they have finished (when invoked via the REST api).
 
 
-**requirejsPaths**
+##### requirejsPaths
 - `config.requirejsPaths = {}`
  - Custom paths that will be added to the `paths` of [requirejs configuration](http://requirejs.org/docs/api.html#config).
 
 
-**rest**
+##### rest
 - `config.rest.components = {}`
  -  Routing path (keys) from `/rest/external/` and file-path (values) to custom REST components.
 
-**seedProjects**
+##### seedProjects
 - `config.seedProjects.enable = true`
  - Enables creation of new projects using seeds.
 - `config.seedProjects.defaultProject = 'EmptyProject'`
@@ -135,7 +135,7 @@ To start the server using the configuration above:
 - `config.seedProjects.basePaths = ['./seeds']`
  - List of directories where project seeds are stored.
 
-**server**
+##### server
 - `config.server.port = 8888`
  - Port the server is hosted from.
 - `config.server.maxWorkers = 10`
@@ -159,13 +159,13 @@ To start the server using the configuration above:
 - `config.server.extlibExcludes = ['.\.pem$', 'config\/config\..*\.js$']`
  - Array of regular expressions that will hinder access to files via the '/extlib/' route. Requests to files matching any of the provided pattern will result in 403.
 
-**socketIO**
+##### socketIO
 - `config.socketIO.clientOptions = see config`
  - Options passed to the [socketIO client](https://github.com/socketio/socket.io-client#managerurlstring-optsobject) when connecting to the sever.
 - `config.socketIO.serverOptions = see config`
  - Options passed to the [socketIO server](https://github.com/socketio/engine.io#methods-1) when attaching to the server.
 
-**storage**
+##### storage
 - `config.storage.cache = 2000`
  - Number of core-objects stored before emptying cache (server side).
 - `config.storage.clientCache = 2000`
@@ -181,7 +181,7 @@ To start the server using the configuration above:
 - `config.storage.keyType = 'plainSha'`
  - Algorithm used when hashing the objects in the data-base, can be `'plainSHA1'`, `'rand160Bits'` or `'ZSSHA'`.
 
-**visualization**
+##### visualization
 - `config.visualization.decoratorPaths = ['./src/client/decorators']`
  - Array of paths to decorators that should be available.
 - `config.visualization.visualizerDescriptors = ['../src/client/js/Visualizers.json']`
