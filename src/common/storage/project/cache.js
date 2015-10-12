@@ -95,6 +95,99 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
             callback(null, obj);
         };
 
+        this.loadPaths = function (rootKey, paths, callback) {
+            ASSERT(typeof rootKey === 'string' && paths instanceof Array && typeof callback === 'function');
+            logger.debug('loadPaths', {metadata: {rootKey: rootKey, paths: paths}});
+
+            function getFromCache(hash) {
+                var obj = cache[hash],
+                    commitId;
+
+                if (typeof obj === undefined) {
+                    obj = backup[hash];
+
+                    if (typeof obj === undefined) {
+                        for (commitId in self.queuedPersists) {
+                            if (self.queuedPersists.hasOwnProperty(commitId) && self.queuedPersists[commitId][key]) {
+                                obj = self.queuedPersists[commitId][key];
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                return obj;
+            }
+
+            var objects = {},
+                excludes = [],
+                pathArray,
+                fullyCovered,
+                obj,
+                rootObj = getFromCache(rootKey),
+                key, i = paths.length,
+                j;
+
+            if (typeof rootObj !== undefined) {
+                excludes.push(rootKey);
+                objects[rootKey] = rootObj;
+
+                while (i--) {
+                    fullyCovered = true;
+                    pathArray = paths[i].split('/');
+                    obj = rootObj;
+                    for (j = 0; j < pathArray.length; j += 1) {
+                        key = obj[pathArray[j]];
+                        if (key) {
+                            obj = getFromCache(key);
+                            if (typeof obj !== undefined) {
+                                excludes.push(key);
+                                objects[key] = obj;
+                            } else {
+                                fullyCovered = false;
+                                break;
+                            }
+                        } else {
+                            fullyCovered = false;
+                            break;
+                        }
+                    }
+
+                    if (fullyCovered) {
+                        paths.splice(i, 1);
+                    }
+                }
+
+                //now we checked the cache, so if something remains we ask it from the server
+                if (paths.length === 0) {
+                    return callback(null);
+                }
+
+                storage.loadPaths(projectId, rootKey, paths, excludes, function (err, serverObjects) {
+                    var keys, i;
+                    if (!err && serverObjects) {
+                        //we insert every object into the cache
+                        keys = Object.keys(serverObjects);
+                        for (i = 0; i < keys.length; i += 1) {
+                            if (!cache[keys[i]]) {
+                                cacheInsert(keys[i], serverObjects[keys[i]]);
+                            }
+                        }
+                        keys = Object.keys(objects);
+                        for (i = 0; i < keys.length; i += 1) {
+                            if (!cache[keys[i]]) {
+                                cacheInsert(keys[i], objects[keys[i]]);
+                            }
+                        }
+                    } else {
+                        logger.warn('loadingPaths failed', err || new Error('no bject arrived from server'));
+                    }
+                    callback(err);
+                });
+            }
+
+        };
+
         this.insertObject = function (obj, stackedObjects) {
             ASSERT(typeof obj === 'object' && obj !== null);
 

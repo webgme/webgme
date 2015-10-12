@@ -32,6 +32,8 @@ function Mongo(mainLogger, gmeConfig) {
      * @private
      */
     function Project(projectId, collection) {
+        var self = this;
+
         this.projectId = projectId;
 
         this.closeProject = function (callback) {
@@ -63,6 +65,66 @@ function Mongo(mainLogger, gmeConfig) {
                 });
             }
 
+            return deferred.promise.nodeify(callback);
+        };
+
+        this.loadPaths = function (rootHash, paths, excludes, callback) {
+
+            function loadPath(path) {
+                var pathDeferred = Q.defer(),
+                    hashes = {},
+                    pathArray = path.split('/'),
+                    hash = rootHash,
+                    key,
+                    loadNext = function () {
+                        self.loadObject(hash)
+                            .then(function (object) {
+                                hashes[hash] = object;
+                                if (key) {
+                                    hash = object[key];
+                                    key = pathArray.shift();
+                                    loadNext();
+                                } else {
+                                    //if there is no key, than there is no more to do
+                                    pathDeferred.resolve(hashes);
+                                }
+                            })
+                            .catch(function (err) {
+                                //we ignore the errors at this point as we will fall back
+                                pathDeferred.resolve(hashes);
+                            });
+                    };
+
+                if(pathArray.length > 1){
+                    pathArray.shift();
+                }
+                key = pathArray.shift();
+                loadNext();
+                return pathDeferred.promise;
+            }
+
+            var deferred = Q.defer(),
+                objects = {},
+                keys, i, j;
+
+            Q.allSettled(paths.map(loadPath))
+                .then(function (results) {
+                    for (i = 0; i < results.length; i += 1) {
+                        if (results[i].state === 'fulfilled') {
+                            keys = Object.keys(results[i].value);
+                            for (j = 0; j < keys.length; j += 1) {
+                                if (excludes.indexOf(keys[j]) === -1 && !objects[keys[j]]) {
+                                    objects[keys[j]] = results[i].value[keys[j]];
+                                }
+                            }
+                        }
+                    }
+                    return deferred.resolve(objects);
+                })
+                .catch(function (err) {
+                    logger.warn('loading paths failed:', err);
+                    return deferred.resolve(objects);
+                });
             return deferred.promise.nodeify(callback);
         };
 

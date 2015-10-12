@@ -27,6 +27,9 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
         objectLoader = {
             loadObject: function (projectId, key, callback) {
                 dbProject.loadObject(key, callback);
+            },
+            loadPaths: function (projectId, rootKey, paths, excludes, callback) {
+                dbProject.loadPaths(rootKey, paths, excludes, callback);
             }
         };
 

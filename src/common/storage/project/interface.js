@@ -70,6 +70,18 @@ define([
         this.loadObject = this.projectCache.loadObject;
 
         /**
+         * Collects the objects from the server and pre-loads them into the cache
+         * making the load of multiple objects faster.
+         *
+         * @param {string} rootKey - Hash of the object at the entry point of the paths.
+         * @param {string[]} paths - List of paths that needs to be pre-loaded.
+         * @param {string[]} excludes - List of hashes that the user already have.
+         * @param {function} callback - Invoked when objects have been collected.
+         * @func
+         */
+        this.loadPaths = this.projectCache.loadPaths;
+
+        /**
          * Makes a commit to data base. Based on the root hash and commit message a new
          * {@link module:Storage.CommitObject} (with returned hash)
          * is generated and insert together with the core objects to the database on the server.

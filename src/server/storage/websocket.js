@@ -431,6 +431,25 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     });
             });
 
+            socket.on('loadPaths', function (data, callback) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.loadPaths(data);
+                    })
+                    .then(function (hashDictionary) {
+                        callback(null, hashDictionary);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
+
             socket.on('setBranchHash', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {

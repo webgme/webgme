@@ -26,11 +26,13 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                     i,
                     metaNodes = [];
 
-                for (i = 0; i < paths.length; i += 1) {
-                    metaNodes.push(oldcore.loadByPath(root, paths[i]));
-                }
+                return TASYNC.call(function () {
+                    for (i = 0; i < paths.length; i += 1) {
+                        metaNodes.push(oldcore.loadByPath(root, paths[i]));
+                    }
 
-                return TASYNC.lift(metaNodes);
+                    return TASYNC.lift(metaNodes);
+                }, core.loadPaths(core.getHash(root), paths));
             }
 
             core.loadRoot = function (hash) {

@@ -998,7 +998,9 @@ define([
 
             isValidNode: isValidNode,
 
-            getChildHash: getChildHash
+            getChildHash: getChildHash,
+
+            loadPaths: TASYNC.wrap(storage.loadPaths)
         };
     };
 });
