@@ -64,6 +64,7 @@ describe('AddOnManager', function () {
 
                 }, self.closeBranchTimeout);
             };
+
         }
 
         it('should dispatch NO_MONITORS after open branch and closing AFTER the monitor opened the branch',
@@ -74,7 +75,8 @@ describe('AddOnManager', function () {
                 manager.project = {
                     ID_NAME: '_id',
                     loadObject: function () {},
-                    insertObject: function () {}
+                    insertObject: function () {},
+                    loadPaths: function () {}
                 };
                 manager.storage = storage;
 
@@ -108,7 +110,8 @@ describe('AddOnManager', function () {
                 manager.project = {
                     ID_NAME: '_id',
                     loadObject: function () {},
-                    insertObject: function () {}
+                    insertObject: function () {},
+                    loadPaths: function () {}
                 };
                 manager.storage = storage;
 
@@ -138,7 +141,8 @@ describe('AddOnManager', function () {
                 manager.project = {
                     ID_NAME: '_id',
                     loadObject: function () {},
-                    insertObject: function () {}
+                    insertObject: function () {},
+                    loadPaths: function () {}
                 };
                 manager.storage = storage;
 
@@ -184,7 +188,8 @@ describe('AddOnManager', function () {
                 manager.project = {
                     ID_NAME: '_id',
                     loadObject: function () {},
-                    insertObject: function () {}
+                    insertObject: function () {},
+                    loadPaths: function () {}
                 };
                 manager.storage = storage;
 
@@ -233,7 +238,8 @@ describe('AddOnManager', function () {
                 manager.project = {
                     ID_NAME: '_id',
                     loadObject: function () {},
-                    insertObject: function () {}
+                    insertObject: function () {},
+                    loadPaths: function () {}
                 };
                 manager.storage = storage;
 
@@ -267,7 +273,8 @@ describe('AddOnManager', function () {
                 manager.project = {
                     ID_NAME: '_id',
                     loadObject: function () {},
-                    insertObject: function () {}
+                    insertObject: function () {},
+                    loadPaths: function () {}
                 };
                 manager.storage = storage;
 
@@ -301,7 +308,8 @@ describe('AddOnManager', function () {
                 manager.project = {
                     ID_NAME: '_id',
                     loadObject: function () {},
-                    insertObject: function () {}
+                    insertObject: function () {},
+                    loadPaths: function () {}
                 };
                 manager.storage = storage;
 
@@ -356,7 +364,8 @@ describe('AddOnManager', function () {
                 manager.project = {
                     ID_NAME: '_id',
                     loadObject: function () {},
-                    insertObject: function () {}
+                    insertObject: function () {},
+                    loadPaths: function () {}
                 };
                 manager.storage = storage;
 

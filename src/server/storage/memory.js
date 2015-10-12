@@ -132,8 +132,8 @@ function Memory(mainLogger, gmeConfig) {
 
                 if(pathArray.length > 1){
                     pathArray.shift();
-                    key = pathArray.shift();
                 }
+                key = pathArray.shift();
 
                 loadNext();
                 return pathDeferred.promise;

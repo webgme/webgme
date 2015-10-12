@@ -103,10 +103,10 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
                 var obj = cache[hash],
                     commitId;
 
-                if (typeof obj === undefined) {
+                if (typeof obj === 'undefined') {
                     obj = backup[hash];
 
-                    if (typeof obj === undefined) {
+                    if (typeof obj === 'undefined') {
                         for (commitId in self.queuedPersists) {
                             if (self.queuedPersists.hasOwnProperty(commitId) && self.queuedPersists[commitId][key]) {
                                 obj = self.queuedPersists[commitId][key];
@@ -128,19 +128,22 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
                 key, i = paths.length,
                 j;
 
-            if (typeof rootObj !== undefined) {
+            if (typeof rootObj !== 'undefined') {
                 excludes.push(rootKey);
                 objects[rootKey] = rootObj;
 
                 while (i--) {
                     fullyCovered = true;
                     pathArray = paths[i].split('/');
+                    if(pathArray.length > 1){
+                        pathArray.shift();
+                    }
                     obj = rootObj;
                     for (j = 0; j < pathArray.length; j += 1) {
                         key = obj[pathArray[j]];
                         if (key) {
                             obj = getFromCache(key);
-                            if (typeof obj !== undefined) {
+                            if (typeof obj !== 'undefined') {
                                 excludes.push(key);
                                 objects[key] = obj;
                             } else {
@@ -184,6 +187,8 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
                     }
                     callback(err);
                 });
+            } else {
+                callback(null);
             }
 
         };

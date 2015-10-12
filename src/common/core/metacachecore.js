@@ -32,7 +32,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                     }
 
                     return TASYNC.lift(metaNodes);
-                }, core.loadPaths(core.getHash(root), paths));
+                }, core.loadPaths(core.getHash(root), JSON.parse(JSON.stringify(paths))));
             }
 
             core.loadRoot = function (hash) {
@@ -46,6 +46,12 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                         return root;
                     }, loadMetaSet(root));
                 }, oldcore.loadRoot(hash));
+            };
+
+            core.loadByPath = function (node, path) {
+                return TASYNC.call(function () {
+                    return oldcore.loadByPath(node, path);
+                }, core.loadPaths(core.getHash(node), [path]));
             };
 
             //functions where the cache may needs to be updated
