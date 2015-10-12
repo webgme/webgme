@@ -302,6 +302,19 @@ Storage.prototype.loadObjects = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+Storage.prototype.loadPaths = function (data, callback) {
+    var deferred = Q.defer();
+
+    this.mongo.openProject(data.projectId)
+        .then(function (project) {
+            deferred.resolve(project.loadPaths(data.rootHash,data.paths,data.excludes));
+        })
+        .catch(function(err){
+            deferred.reject(err);
+        });
+    return deferred.promise.nodeify(callback);
+};
+
 Storage.prototype.getCommits = function (data, callback) {
     var self = this,
         deferred = Q.defer(),

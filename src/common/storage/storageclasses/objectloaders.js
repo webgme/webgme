@@ -55,7 +55,7 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
                 resetBucketAndLoadObjects();
             }, self.gmeConfig.storage.loadBucketTimer);
         }
-        
+
         if (self.loadBucketSize === self.gmeConfig.storage.loadBucketSize) {
             self.logger.debug('loadBuckSize reached will loadObjects, bucketSize:', self.loadBucketSize);
             clearTimeout(self.loadBucketTimer);
@@ -93,6 +93,17 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
                 }
             }
         });
+    };
+
+    StorageObjectLoaders.prototype.loadPaths = function (projectId, rootKey, paths, excludes, callback) {
+        var data = {
+            projectId: projectId,
+            paths: paths,
+            excludes: excludes,
+            rootHash: rootKey
+        };
+
+        this.webSocket.loadPaths(data, callback);
     };
 
     return StorageObjectLoaders;

@@ -169,6 +169,10 @@ define([
             self.socket.emit('loadObjects', data, wrapError(callback));
         };
 
+        this.loadPaths = function (data, callback) {
+            self.socket.emit('loadPaths', data, wrapError(callback));
+        };
+
         this.setBranchHash = function (data, callback) {
             self.socket.emit('setBranchHash', data, wrapError(callback));
         };

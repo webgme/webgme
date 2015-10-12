@@ -166,14 +166,18 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
 
         //TODO the pointer loading is totally based upon the loadByPath...
         core.loadPointer = function (node, name) {
-            var pointerPath = core.getPointerPath(node, name);
+            var pointerPath = core.getPointerPath(node, name),
+                root = core.getRoot(node);
+
             if (pointerPath === undefined) {
                 return undefined;
             }
             if (pointerPath === null) {
                 return null;
             }
-            return TASYNC.call(core.loadByPath, core.getRoot(node), pointerPath);
+            return TASYNC.call(function () {
+                return core.loadByPath(root, pointerPath);
+            }, core.loadPaths(core.getHash(root), [pointerPath]));
         };
 
         function __loadBase(node) {
@@ -441,15 +445,18 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
         };
 
         core.loadCollection = function (node, name) {
-            var root = core.getRoot(node);
-            var paths = core.getCollectionPaths(node, name);
+            var root = core.getRoot(node),
+                paths = core.getCollectionPaths(node, name),
+                nodes = [],
+                i,
+                rootHash = core.getHash(root);
 
-            var nodes = [];
-            for (var i = 0; i < paths.length; i++) {
-                nodes[i] = core.loadByPath(root, paths[i]);
-            }
-
-            return TASYNC.lift(nodes);
+            return TASYNC.call(function () {
+                for (i = 0; i < paths.length; i += 1) {
+                    nodes[i] = core.loadByPath(root, paths[i]);
+                }
+                return TASYNC.lift(nodes);
+            }, core.loadPaths(rootHash, paths));
         };
 
         // ----- creation

@@ -26,6 +26,7 @@ var Q = require('q'),
 function Memory(mainLogger, gmeConfig) {
     var logger = mainLogger.fork('memory'),
         database = 'memory', // is this constant or coming from the GME config?
+        self = this,
         storage = {
             length: 0,
             keys: [],
@@ -97,6 +98,69 @@ function Memory(mainLogger, gmeConfig) {
                 deferred.reject(new Error('object does not exist ' + hash));
             }
 
+            return deferred.promise.nodeify(callback);
+        };
+
+        this.loadPaths = function (rootHash, paths, excludes, callback) {
+            ASSERT(typeof rootHash === 'string' && REGEXP.HASH.test(rootHash));
+            ASSERT(paths instanceof Array && excludes instanceof Array);
+
+            function loadPath(path) {
+                var pathDeferred = Q.defer(),
+                    hashes = {},
+                    pathArray = path.split('/'),
+                    hash = rootHash,
+                    key,
+                    loadNext = function () {
+                        self.loadObject(hash)
+                            .then(function (object) {
+                                hashes[hash] = object;
+                                if (key) {
+                                    hash = object[key];
+                                    key = pathArray.shift();
+                                    loadNext();
+                                } else {
+                                    //if there is no key, than there is no more to do
+                                    pathDeferred.resolve(hashes);
+                                }
+                            })
+                            .catch(function (err) {
+                                //we ignore the errors at this point as we will fall back
+                                pathDeferred.resolve(hashes);
+                            });
+                    };
+
+                if(pathArray.length > 1){
+                    pathArray.shift();
+                }
+                key = pathArray.shift();
+
+                loadNext();
+                return pathDeferred.promise;
+            }
+
+            var deferred = Q.defer(),
+                objects = {},
+                keys, i, j;
+
+            Q.allSettled(paths.map(loadPath))
+                .then(function (results) {
+                    for (i = 0; i < results.length; i += 1) {
+                        if (results[i].state === 'fulfilled') {
+                            keys = Object.keys(results[i].value);
+                            for (j = 0; j < keys.length; j += 1) {
+                                if (excludes.indexOf(keys[j]) === -1 && !objects[keys[j]]) {
+                                    objects[keys[j]] = results[i].value[keys[j]];
+                                }
+                            }
+                        }
+                    }
+                    return deferred.resolve(objects);
+                })
+                .catch(function (err) {
+                    logger.warn('loading paths failed:', err);
+                    return deferred.resolve(objects);
+                });
             return deferred.promise.nodeify(callback);
         };
 

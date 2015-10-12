@@ -451,6 +451,7 @@ describe('Memory storage', function () {
 
                     expect(project).to.have.property('closeProject');
                     expect(project).to.have.property('loadObject');
+                    expect(project).to.have.property('loadPaths');
                     expect(project).to.have.property('insertObject');
                     expect(project).to.have.property('getBranches');
                     expect(project).to.have.property('getBranchHash');
@@ -533,6 +534,7 @@ describe('Memory storage', function () {
                 .then(done)
                 .catch(done);
         });
+
     });
 
     describe('project specific functions', function () {
@@ -895,5 +897,82 @@ describe('Memory storage', function () {
                 done();
             });
         });
+    });
+
+    describe('loadPaths tests', function () {
+        var MemoryStorage = require('../../../src/server/storage/memory'),
+            memoryStorage = new MemoryStorage(logger, gmeConfig),
+            project;
+
+        before(function (done) {
+            memoryStorage.openDatabase()
+                .then(function () {
+                    return memoryStorage.createProject('loadPathsTests');
+                })
+                .then(function (dbProj) {
+                    project = dbProj;
+                    return Q.allDone([
+                        project.insertObject({_id: '#r1000000000000000000', a: '#r2000000000000000000'}),
+                        project.insertObject({_id: '#r2000000000000000000', b: '#r3000000000000000000'}),
+                        project.insertObject({_id: '#r3000000000000000000', c: '#r4000000000000000000'})
+                    ]);
+                })
+                .then(function (results) {
+                    expect(results).have.length(3);
+                    done();
+                })
+                .catch(done);
+        });
+
+        after(function (done) {
+            memoryStorage.deleteProject('loadPathsTests', done);
+        });
+
+        it('should loadMultiple objects', function (done) {
+
+            Q.nfcall(project.loadPaths, '#r1000000000000000000', [
+                    '/a/b',
+                    '/a/b/c',
+                    '/a/b/c/d'
+                ], []
+            )
+                .then(function (objects) {
+                    expect(Object.keys(objects)).to.have.members([
+                            '#r1000000000000000000',
+                            '#r2000000000000000000',
+                            '#r3000000000000000000']
+                    );
+                    done();
+                })
+                .catch(done);
+
+        });
+
+        it('should filter out excludes', function (done) {
+
+            Q.nfcall(project.loadPaths, '#r1000000000000000000', [
+                    '/a/b',
+                    '/a/b/c',
+                    '/a/b/c/d'
+                ], ['#r1000000000000000000', '#r2000000000000000000']
+            )
+                .then(function (objects) {
+                    expect(Object.keys(objects)).to.have.members(['#r3000000000000000000']);
+                    done();
+                })
+                .catch(done);
+
+        });
+
+        it('should load root path', function (done) {
+
+            Q.nfcall(project.loadPaths, '#r1000000000000000000', [''], [])
+                .then(function (objects) {
+                    expect(Object.keys(objects)).to.have.members(['#r1000000000000000000']);
+                    done();
+                })
+                .catch(done);
+        });
+
     });
 });

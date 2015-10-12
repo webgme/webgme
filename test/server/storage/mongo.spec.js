@@ -1248,4 +1248,81 @@ describe('Mongo storage', function () {
             });
         });
     });
+
+    describe('loadPaths tests', function () {
+        var MongoStorage = require('../../../src/server/storage/mongo'),
+            mongoStorage = new MongoStorage(logger, gmeConfig),
+            project;
+
+        before(function (done) {
+            mongoStorage.openDatabase()
+                .then(function () {
+                    return mongoStorage.createProject('loadPathsTests');
+                })
+                .then(function (dbProj) {
+                    project = dbProj;
+                    return Q.allDone([
+                        project.insertObject({_id: '#r1000000000000000000', a: '#r2000000000000000000'}),
+                        project.insertObject({_id: '#r2000000000000000000', b: '#r3000000000000000000'}),
+                        project.insertObject({_id: '#r3000000000000000000', c: '#r4000000000000000000'})
+                    ]);
+                })
+                .then(function (results) {
+                    expect(results).have.length(3);
+                    done();
+                })
+                .catch(done);
+        });
+
+        after(function (done) {
+            mongoStorage.deleteProject('loadPathsTests', done);
+        });
+
+        it('should loadMultiple objects', function (done) {
+
+            Q.nfcall(project.loadPaths, '#r1000000000000000000', [
+                    '/a/b',
+                    '/a/b/c',
+                    '/a/b/c/d'
+                ], []
+            )
+                .then(function (objects) {
+                    expect(Object.keys(objects)).to.have.members([
+                            '#r1000000000000000000',
+                            '#r2000000000000000000',
+                            '#r3000000000000000000']
+                    );
+                    done();
+                })
+                .catch(done);
+
+        });
+
+        it('should filter out excludes', function (done) {
+
+            Q.nfcall(project.loadPaths, '#r1000000000000000000', [
+                    '/a/b',
+                    '/a/b/c',
+                    '/a/b/c/d'
+                ], ['#r1000000000000000000', '#r2000000000000000000']
+            )
+                .then(function (objects) {
+                    expect(Object.keys(objects)).to.have.members(['#r3000000000000000000']);
+                    done();
+                })
+                .catch(done);
+
+        });
+
+        it('should load root path', function (done) {
+
+            Q.nfcall(project.loadPaths, '#r1000000000000000000', [''], [])
+                .then(function (objects) {
+                    expect(Object.keys(objects)).to.have.members(['#r1000000000000000000']);
+                    done();
+                })
+                .catch(done);
+        });
+
+    });
 });
