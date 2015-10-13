@@ -29,7 +29,14 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
                 dbProject.loadObject(key, callback);
             },
             loadPaths: function (projectId, rootKey, paths, excludes, callback) {
-                dbProject.loadPaths(rootKey, paths, excludes, callback);
+                var data = {
+                    username: self.userName,
+                    projectId: projectId,
+                    rootHash: rootKey,
+                    paths: paths,
+                    excludes: excludes
+                };
+                storage.loadPaths(data, callback);
             }
         };
 

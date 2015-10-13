@@ -26,7 +26,6 @@ var Q = require('q'),
 function Memory(mainLogger, gmeConfig) {
     var logger = mainLogger.fork('memory'),
         database = 'memory', // is this constant or coming from the GME config?
-        self = this,
         storage = {
             length: 0,
             keys: [],
@@ -98,69 +97,6 @@ function Memory(mainLogger, gmeConfig) {
                 deferred.reject(new Error('object does not exist ' + hash));
             }
 
-            return deferred.promise.nodeify(callback);
-        };
-
-        this.loadPaths = function (rootHash, paths, excludes, callback) {
-            ASSERT(typeof rootHash === 'string' && REGEXP.HASH.test(rootHash));
-            ASSERT(paths instanceof Array && excludes instanceof Array);
-
-            function loadPath(path) {
-                var pathDeferred = Q.defer(),
-                    hashes = {},
-                    pathArray = path.split('/'),
-                    hash = rootHash,
-                    key,
-                    loadNext = function () {
-                        self.loadObject(hash)
-                            .then(function (object) {
-                                hashes[hash] = object;
-                                if (key) {
-                                    hash = object[key];
-                                    key = pathArray.shift();
-                                    loadNext();
-                                } else {
-                                    //if there is no key, than there is no more to do
-                                    pathDeferred.resolve(hashes);
-                                }
-                            })
-                            .catch(function (err) {
-                                //we ignore the errors at this point as we will fall back
-                                pathDeferred.resolve(hashes);
-                            });
-                    };
-
-                if(pathArray.length > 1){
-                    pathArray.shift();
-                }
-                key = pathArray.shift();
-
-                loadNext();
-                return pathDeferred.promise;
-            }
-
-            var deferred = Q.defer(),
-                objects = {},
-                keys, i, j;
-
-            Q.allSettled(paths.map(loadPath))
-                .then(function (results) {
-                    for (i = 0; i < results.length; i += 1) {
-                        if (results[i].state === 'fulfilled') {
-                            keys = Object.keys(results[i].value);
-                            for (j = 0; j < keys.length; j += 1) {
-                                if (excludes.indexOf(keys[j]) === -1 && !objects[keys[j]]) {
-                                    objects[keys[j]] = results[i].value[keys[j]];
-                                }
-                            }
-                        }
-                    }
-                    return deferred.resolve(objects);
-                })
-                .catch(function (err) {
-                    logger.warn('loading paths failed:', err);
-                    return deferred.resolve(objects);
-                });
             return deferred.promise.nodeify(callback);
         };
 
@@ -305,91 +241,6 @@ function Memory(mainLogger, gmeConfig) {
             }
 
             deferred.resolve(finds);
-
-            return deferred.promise.nodeify(callback);
-        };
-
-        this.getCommonAncestorCommit = function (commitA, commitB, callback) {
-            var deferred = Q.defer(),
-                ancestorsA = {},
-                ancestorsB = {},
-                newAncestorsA = [],
-                newAncestorsB = [],
-                getAncestors = function (commits, ancestorsSoFar, next) {
-                    var i, j,
-                        newCommits = [],
-                        commit;
-                    for (i = 0; i < commits.length; i++) {
-                        commit = storage.getItem(database + SEPARATOR + projectId + SEPARATOR + commits[i]);
-                        if (commit && typeof commit === 'string') {
-                            commit = JSON.parse(commit);
-                            for (j = 0; j < commit.parents.length; j++) {
-                                if (newCommits.indexOf(commit.parents[j]) === -1) {
-                                    newCommits.push(commit.parents[j]);
-                                }
-                                ancestorsSoFar[commit.parents[j]] = true;
-                            }
-                        }
-                    }
-                    next(newCommits);
-                },
-                checkForCommon = function () {
-                    var i;
-                    for (i = 0; i < newAncestorsA.length; i++) {
-                        if (ancestorsB[newAncestorsA[i]]) {
-                            //we got a common parent so let's go with it
-                            return newAncestorsA[i];
-                        }
-                    }
-                    for (i = 0; i < newAncestorsB.length; i++) {
-                        if (ancestorsA[newAncestorsB[i]]) {
-                            //we got a common parent so let's go with it
-                            return newAncestorsB[i];
-                        }
-                    }
-                    return null;
-                },
-                loadStep = function () {
-                    var candidate = checkForCommon(),
-                        needed = 2,
-                        bothLoaded = function () {
-                            if (newAncestorsA.length > 0 || newAncestorsB.length > 0) {
-                                loadStep();
-                            } else {
-                                deferred.reject(new Error('unable to find common ancestor commit'));
-                            }
-                        };
-                    if (candidate) {
-                        deferred.resolve(candidate);
-                    }
-                    getAncestors(newAncestorsA, ancestorsA, function (nCommits) {
-                        newAncestorsA = nCommits || [];
-                        if (--needed === 0) {
-                            bothLoaded();
-                        }
-                    });
-                    getAncestors(newAncestorsB, ancestorsB, function (nCommits) {
-                        newAncestorsB = nCommits || [];
-                        if (--needed === 0) {
-                            bothLoaded();
-                        }
-                    });
-                };
-
-            //initializing
-            ancestorsA[commitA] = true;
-            newAncestorsA = [commitA];
-            ancestorsB[commitB] = true;
-            newAncestorsB = [commitB];
-
-            if (!storage.getItem(database + SEPARATOR + projectId + SEPARATOR + commitA)) {
-                deferred.reject(new Error('Commit object does not exist [' + commitA + ']'));
-            } else if (!storage.getItem(database + SEPARATOR + projectId + SEPARATOR + commitB)) {
-                deferred.reject(new Error('Commit object does not exist [' + commitB + ']'));
-            } else {
-                loadStep();
-            }
-
 
             return deferred.promise.nodeify(callback);
         };

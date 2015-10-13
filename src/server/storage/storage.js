@@ -302,16 +302,91 @@ Storage.prototype.loadObjects = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+/**
+ * Loads the entire composition chain up till the rootNode for the provided path. And stores the nodes
+ * in the loadedObjects. If the any of the objects already exists in loadedObjects - it does not load it
+ * from the database.
+ *
+ * @param {object} dbProject
+ * @param {string} rootHash
+ * @param {Object<string, object>} loadedObjects
+ * @param {string} path
+ * @returns {function|promise}
+ */
+function loadPath(dbProject, rootHash, loadedObjects, path) {
+    var deferred = Q.defer(),
+        pathArray = path.split('/');
+
+    function loadParent(parentHash, relPath) {
+        var hash;
+        if (loadedObjects[parentHash]) {
+            // Object was already loaded.
+            if (relPath) {
+                hash = loadedObjects[parentHash][relPath];
+                loadParent(hash, pathArray.shift());
+            } else {
+                deferred.resolve();
+            }
+        } else {
+            dbProject.loadObject(parentHash)
+                .then(function (object) {
+                    loadedObjects[parentHash] = object;
+                    if (relPath) {
+                        hash = object[relPath];
+                        loadParent(hash, pathArray.shift());
+                    } else {
+                        deferred.resolve();
+                    }
+                })
+                .catch(function (err) {
+                    deferred.reject(err);
+                });
+        }
+    }
+
+    // Remove the root-path
+    pathArray.shift();
+
+    loadParent(rootHash, pathArray.shift());
+    return deferred.promise;
+}
+
 Storage.prototype.loadPaths = function (data, callback) {
-    var deferred = Q.defer();
+    var self = this,
+        deferred = Q.defer();
 
     this.mongo.openProject(data.projectId)
-        .then(function (project) {
-            deferred.resolve(project.loadPaths(data.rootHash,data.paths,data.excludes));
+        .then(function (dbProject) {
+            var loadedObjects = {};
+
+            Q.allSettled(data.paths.map(function (path) {
+                return loadPath(dbProject, data.rootHash, loadedObjects, path);
+            }))
+                .then(function (results) {
+                    var keys = Object.keys(loadedObjects),
+                        i;
+
+                    for (i = 0; i < results.length; i += 1) {
+                        if (results[i].state === 'rejected') {
+                            self.logger.error('loadPaths failed, ignoring', results[i].reason);
+                        }
+                    }
+
+                    for (i = 0; i < keys.length; i += 1) {
+                        if (data.excludes.indexOf(keys[i]) > -1) {
+                            // https://jsperf.com/delete-vs-setting-undefined-vs-new-object
+                            // When sending the data these keys will be removed after JSON.stringify.
+                            loadedObjects[keys[i]] = undefined;
+                        }
+                    }
+
+                    deferred.resolve(loadedObjects);
+                });
         })
-        .catch(function(err){
+        .catch(function (err) {
             deferred.reject(err);
         });
+
     return deferred.promise.nodeify(callback);
 };
 
@@ -448,10 +523,108 @@ Storage.prototype.setBranchHash = function (data, callback) {
 };
 
 Storage.prototype.getCommonAncestorCommit = function (data, callback) {
-    return this.mongo.openProject(data.projectId)
-        .then(function (project) {
-            return project.getCommonAncestorCommit(data.commitA, data.commitB);
-        }).nodeify(callback);
+    var deferred = Q.defer(),
+        ancestorsA = {},
+        ancestorsB = {},
+        dbProject,
+        newAncestorsA = [],
+        newAncestorsB = [];
+
+    function checkForCommonAncestor() {
+        var i;
+        for (i = 0; i < newAncestorsA.length; i += 1) {
+            if (ancestorsB[newAncestorsA[i]]) {
+                //we got a common parent so let's go with it
+                return newAncestorsA[i];
+            }
+        }
+
+        for (i = 0; i < newAncestorsB.length; i += 1) {
+            if (ancestorsA[newAncestorsB[i]]) {
+                //we got a common parent so let's go with it
+                return newAncestorsB[i];
+            }
+        }
+
+        return null;
+    }
+
+    function loadParentsRec(project) {
+        var candidate = checkForCommonAncestor();
+
+        if (candidate) {
+            deferred.resolve(candidate);
+        } else {
+            Q.all([
+                loadAncestorsAndGetParents(project, newAncestorsA, ancestorsA),
+                loadAncestorsAndGetParents(project, newAncestorsB, ancestorsB)
+            ])
+                .then(function (results) {
+                    newAncestorsA = results[0] || [];
+                    newAncestorsB = results[1] || [];
+                    if (newAncestorsA.length > 0 || newAncestorsB.length > 0) {
+                        loadParentsRec(project);
+                    } else {
+                        deferred.reject(new Error('unable to find common ancestor commit'));
+                    }
+                })
+                .catch(function (err) {
+                    deferred.reject(err);
+                });
+        }
+    }
+
+    function loadAncestorsAndGetParents(project, commits, ancestorsSoFar) {
+        return Q.all(commits.map(function (commitHash) {
+            return project.loadObject(commitHash);
+        }))
+            .then(function (loadedCommits) {
+                var newCommits = [],
+                    i,
+                    j;
+                for (i = 0; i < loadedCommits.length; i += 1) {
+                    for (j = 0; j < loadedCommits[i].parents.length; j += 1) {
+                        if (loadedCommits[i].parents[j] !== '') {
+                            if (newCommits.indexOf(loadedCommits[i].parents[j]) === -1) {
+                                newCommits.push(loadedCommits[i].parents[j]);
+                            }
+                            ancestorsSoFar[loadedCommits[i].parents[j]] = true;
+                        }
+                    }
+                }
+                return newCommits;
+            });
+    }
+
+    this.mongo.openProject(data.projectId)
+        .then(function (dbProject_) {
+            dbProject = dbProject_;
+            return Q.allSettled([
+                dbProject.loadObject(data.commitA),
+                dbProject.loadObject(data.commitB)
+            ]);
+        })
+        .then(function (result) {
+            // Make sure the supplied hashes were truly commit-hashes.
+            if (result[0].state === 'rejected' || result[0].value.type !== 'commit') {
+                throw new Error('Commit object does not exist [' + data.commitA + ']');
+            } else if (result[1].state === 'rejected' || result[1].value.type !== 'commit') {
+                throw new Error('Commit object does not exist [' + data.commitB + ']');
+            }
+
+            // Initializing
+            ancestorsA[data.commitA] = true;
+            newAncestorsA = [data.commitA];
+            ancestorsB[data.commitB] = true;
+            newAncestorsB = [data.commitB];
+
+            loadParentsRec(dbProject);
+        })
+        .catch(function (err) {
+            deferred.reject(err);
+        });
+
+    return deferred.promise.nodeify(callback);
 };
 
 Storage.prototype.openProject = function (data, callback) {
