@@ -15,6 +15,7 @@ define([], function () {
      * - it won't commit to the storage.
      * @param {object} - commitObj
      * @constructor
+     * @alias AddOnUpdateResult
      */
     function AddOnUpdateResult(commitObj) {
         this.commitMessage = '';

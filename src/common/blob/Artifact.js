@@ -13,6 +13,7 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
      * @param {blob.BlobClient} blobClient
      * @param {blob.BlobMetadata} descriptor
      * @constructor
+     * @alias Artifact
      */
     var Artifact = function (name, blobClient, descriptor) {
         this.name = name;
@@ -33,7 +34,7 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
      * Adds content to the artifact as a file.
      * @param {string} name filename
      * @param {Blob} content File object or Blob
-     * @param callback
+     * @param {function(err, hash)} callback
      */
     Artifact.prototype.addFile = function (name, content, callback) {
         var self = this;
