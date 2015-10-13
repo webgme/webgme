@@ -126,7 +126,14 @@ define([
                     dialog = new AttributeDetailsDialog(),
                     attrMeta = client.getAttributeSchema(self._metaInfo[CONSTANTS.GME_ID], attrName),
                     attrValue = client.getNode(self._metaInfo[CONSTANTS.GME_ID]).getAttribute(attrName);
-                var desc = _.extend({}, {name: attrName, type: attrMeta.type, defaultValue: attrValue});
+                var desc = _.extend({}, {
+                    name: attrName,
+                    type: attrMeta.type,
+                    defaultValue: attrValue,
+                    min: attrMeta.min,
+                    max: attrMeta.max,
+                    regexp: attrMeta.regexp
+                });
 
                 //we will not let 'name' attribute to be modified as that is used UI-wise
                 if (attrName === nodePropertyNames.Attributes.name) {
@@ -509,7 +516,7 @@ define([
 
         }
 
-        attrSchema = {type: attrDesc.type};
+        attrSchema = {type: attrDesc.type, min: attrDesc.min, max: attrDesc.max, regexp: attrDesc.regexp};
         if (attrDesc.isEnum) {
             attrSchema.enum = attrDesc.enumValues;
         }
