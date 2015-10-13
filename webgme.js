@@ -29,6 +29,7 @@ function addToRequireJsPaths(gmeConfig) {
         //type = 'plugin'
         var componentNames = webgmeUtils.getComponentNames(basepaths),
             componentPaths,
+            componentPath,
             found,
             items,
             i,
@@ -46,8 +47,8 @@ function addToRequireJsPaths(gmeConfig) {
                 try {
                     items = fs.readdirSync(basepaths[j]);
                     if (items.indexOf(componentNames[i]) !== -1) {
-                        componentPaths[componentName + '/' + componentNames[i]] = path.relative(requireJsBase,
-                            path.resolve(basepaths[j]));
+                        componentPath = path.relative(requireJsBase, path.resolve(basepaths[j]));
+                        componentPaths[componentName + '/' + componentNames[i]] = componentPath;
                         found = true;
                     }
                 } catch (e) {
@@ -78,6 +79,7 @@ function addToRequireJsPaths(gmeConfig) {
 
     addFromBasePath(gmeConfig.plugin.basePaths, 'plugin');
     addFromBasePath(gmeConfig.addOn.basePaths, 'addon');
+    addFromBasePath(gmeConfig.visualization.layout.basePaths, 'layout');
     addFromRequireJsPath(gmeConfig.requirejsPaths);
 }
 

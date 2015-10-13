@@ -9,7 +9,6 @@ define(['js/logger', 'js/Loader/LoaderCircles'], function (Logger, LoaderCircles
     'use strict';
 
     var LayoutManager,
-        LAYOUT_PATH = 'js/Layouts/',
         PANEL_PATH = 'js/Panels/';
 
     LayoutManager = function () {
@@ -22,7 +21,8 @@ define(['js/logger', 'js/Loader/LoaderCircles'], function (Logger, LoaderCircles
     };
 
     LayoutManager.prototype.loadLayout = function (layout, fnCallback) {
-        var self = this;
+        var self = this,
+            layoutPath = ['layout', layout, layout, layout].join('/');
 
         this._logger.debug('LayoutManager loadLayout...');
 
@@ -42,7 +42,7 @@ define(['js/logger', 'js/Loader/LoaderCircles'], function (Logger, LoaderCircles
         //load new one
         this._logger.debug('Downloading layout "' + layout + '"...');
 
-        require([LAYOUT_PATH + layout],
+        require([layoutPath],
             function (Layout) {
                 if (Layout) {
                     self._logger.debug('Layout "' + layout + '" has been downloaded...');
@@ -67,7 +67,7 @@ define(['js/logger', 'js/Loader/LoaderCircles'], function (Logger, LoaderCircles
         var self = this,
             panel = params.panel,
             container = params.container,
-            rPath = PANEL_PATH + panel,
+            rPath = PANEL_PATH + panel,  // FIXME: This will be a problem...
             containerSizeUpdateFn,
             fn;
 

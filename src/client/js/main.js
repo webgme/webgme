@@ -61,6 +61,7 @@ require.config({
         blob: '/common/blob',
         executor: '/common/executor',
         plugin: '/plugin',
+        layout: '/layout',
         panels: '/panels',
 
         //node_modules
