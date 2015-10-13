@@ -30,6 +30,7 @@ describe('CorePlugins', function () {
             'MinimalWorkingExample',
             'PluginGenerator',
             'VisualizerGenerator',
+            'LayoutGenerator',
             'MultipleMainCallbackCalls',
             'PluginForked'
         ],
