@@ -168,7 +168,6 @@ define([
         };
 
         core.isValidAttributeValueOf = function (node, name, value) {
-            //currently it only checks the name and the type
             if (!realNode(node)) {
                 return true;
             }
@@ -183,6 +182,12 @@ define([
                     }
                     break;
                 case 'string':
+                    if (typeof value === 'string') {
+                        if (meta.regexp) {
+                            return (new RegExp(meta.regexp).test(value));
+                        }
+                        return true;
+                    }
                 case 'asset':
                     if (typeof value === 'string') {
                         return true;
@@ -190,12 +195,20 @@ define([
                     break;
                 case 'integer':
                     if (!isNaN(parseInt(value)) && parseFloat(value) === parseInt(value)) {
-                        return true;
+                        if ((!meta.min || (meta.min && value >= meta.min)) &&
+                            (!meta.max || (meta.max && value <= meta.max))) {
+                            return true;
+                        }
+                        return false;
                     }
                     break;
                 case 'float':
                     if (!isNaN(parseFloat(value))) {
-                        return true;
+                        if ((!meta.min || (meta.min && value >= meta.min)) &&
+                            (!meta.max || (meta.max && value <= meta.max))) {
+                            return true;
+                        }
+                        return false;
                     }
                     break;
                 default:
@@ -431,7 +444,7 @@ define([
                 };
             }
 
-            if(paths.length > 0){
+            if (paths.length > 0) {
                 return childrenMeta;
             }
 
