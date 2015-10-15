@@ -165,14 +165,24 @@ describe('meta core', function () {
     });
 
     it('checking attributes', function () {
-        core.getValidAttributeNames(attrNode).should.include.members(['boolean', 'float', 'integer', 'string']);
-        core.getValidAttributeNames(attrNode).should.have.length(4);
+        core.getValidAttributeNames(attrNode).should.have.members([
+            'boolean',
+            'float',
+            'integer',
+            'string',
+            'floatMin',
+            'intMax',
+            'intRange',
+            'stringReg',
+            'stringEnum'
+        ]);
+        core.getValidAttributeNames(attrNode).should.have.length(9);
         (core.getAttributeMeta(attrNode, 'unknown') === undefined).should.be.true;
         core.getAttributeMeta(attrNode, 'string').should.have.property('type');
 
         core.delAttributeMeta(attrNode, 'string');
         core.getValidAttributeNames(attrNode).should.not.include.members(['string']);
-        core.getValidAttributeNames(attrNode).should.have.length(3);
+        core.getValidAttributeNames(attrNode).should.have.length(8);
     });
 
     it('checking pointers and sets', function () {
