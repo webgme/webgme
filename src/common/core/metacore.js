@@ -175,6 +175,11 @@ define([
                 return false;
             }
             var meta = core.getAttribute(getMetaNode(node), name);
+
+            if (meta.enum && meta.enum instanceof Array) {
+                return meta.enum.indexOf(value) !== -1; //TODO should we check type beforehand?
+            }
+
             switch (meta.type) {
                 case 'boolean':
                     if (value === true || value === false) {
