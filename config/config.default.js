@@ -191,6 +191,8 @@ var path = require('path'),
             decoratorPaths: [path.join(__dirname, '../src/client/decorators')],
             visualizerDescriptors: [path.join(__dirname, '../src/client/js/Visualizers.json')],
 
+            panelPaths: [path.join(__dirname, '../src/client/js/Panels')],
+
             layout: {
                 default: 'DefaultLayout',
                 basePaths: [path.join(__dirname, '../src/client/js/Layouts')]

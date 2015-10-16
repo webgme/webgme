@@ -386,6 +386,51 @@ function StandAloneServer(gmeConfig) {
         }
     }
 
+    function getGoodExtraAssetRouteFor(component, basePaths) {
+        // Check for good extra asset
+        return function(req, res) {
+            res.sendFile(Path.join(__baseDir, req.path), function (err) {
+                if (err && err.code !== 'ECONNRESET') {
+                    //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format
+                    // so we try to look for those in our config
+                    //first we check if we have the plugin registered in our config
+                    var urlArray = req.url.split('/'),
+                        pluginName = urlArray[2] || null,
+                        basePath,
+                        baseAndPathExist,
+                        relPath;
+
+                    relPath = getRelPathFromUrlArray(urlArray);
+                    basePath = getBasePathByName(pluginName, basePaths);
+                    baseAndPathExist = typeof basePath === 'string' && typeof relPath === 'string';
+                    if (baseAndPathExist &&
+                        webgmeUtils.isGoodExtraAsset(pluginName, Path.join(basePath, pluginName))) {
+                            expressFileSending(res, Path.resolve(Path.join(basePath, relPath)));
+                    } else {
+                        res.sendStatus(404);
+                    }
+                }
+            });
+        };
+    }
+
+    function getRelPathFromUrlArray(urlArray) {
+        urlArray.shift();
+        urlArray.shift();
+        urlArray.shift();
+        var relPath = urlArray.join('/');
+        if (!Path.extname(relPath)) {  // js file by default
+            relPath += '.js';
+        }
+        return relPath;
+    }
+
+    /**
+     * Unlike `getGoodExtraAssetRouteFor`, `getRouteFor` does not assume that the 
+     * resource hosts a main file which has the same structure as the parent directory.
+     * That is, there are examples of panels (such as SplitPanel) in which the
+     * main file does not adhere to the format "NAME/NAME+'Panel'"
+     */
     function getRouteFor(component, basePaths) {
         //first we try to give back the common plugin/modules
         return function(req, res) {
@@ -397,9 +442,8 @@ function StandAloneServer(gmeConfig) {
                     var urlArray = req.url.split('/'),
                         pluginName = urlArray[2] || null,
                         basePath,
-                        relPath = '';
+                        relPath;
 
-                    urlArray.shift();
                     urlArray.shift();
                     urlArray.shift();
                     relPath = urlArray.join('/');
@@ -423,9 +467,7 @@ function StandAloneServer(gmeConfig) {
             var additional = FS.readdirSync(basePaths[i]);
             for (var j = 0; j < additional.length; j++) {
                 if (additional[j] === pluginName) {
-                    if (webgmeUtils.isGoodExtraAsset(additional[j], Path.join(basePaths[i], additional[j]))) {
-                        return basePaths[i];
-                    }
+                    return basePaths[i];
                 }
             }
         }
@@ -705,11 +747,15 @@ function StandAloneServer(gmeConfig) {
 
     // Plugin paths
     logger.debug('creating plugin specific routing rules');
-    __app.get(/^\/plugin\/.*/, getRouteFor('plugin', gmeConfig.plugin.basePaths));
+    __app.get(/^\/plugin\/.*/, getGoodExtraAssetRouteFor('plugin', gmeConfig.plugin.basePaths));
 
     // Layout paths
     logger.debug('creating layout specific routing rules');
-    __app.get(/^\/layout\/.*/, getRouteFor('layout', gmeConfig.visualization.layout.basePaths));
+    __app.get(/^\/layout\/.*/, getGoodExtraAssetRouteFor('layout', gmeConfig.visualization.layout.basePaths));
+
+    // Panel paths
+    logger.debug('creating path specific routing rules');
+    __app.get(/^\/panel\/.*/, getRouteFor('panel', gmeConfig.visualization.panelPaths));
 
     logger.debug('creating external library specific routing rules');
     gmeConfig.server.extlibExcludes.forEach(function (regExStr) {
