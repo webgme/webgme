@@ -181,13 +181,17 @@ define([
                                     errorCallback('Could not read ' + self.executorConfigFilename + ' err:' + err);
                                     return;
                                 }
-                                var executorConfig = JSON.parse(data);
-                                if (typeof executorConfig.cmd !== 'string' ||
+                                var executorConfig;
+                                try {
+                                    executorConfig = JSON.parse(data);
+                                } catch (e) {
+                                }
+                                if (typeof executorConfig !== 'object' ||
+                                    typeof executorConfig.cmd !== 'string' ||
                                     typeof executorConfig.resultArtifacts !== 'object') {
 
                                     jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
-                                    errorCallback(self.executorConfigFilename +
-                                    ' is missing or wrong type for cmd and/or resultArtifacts.');
+                                    errorCallback(self.executorConfigFilename + ' is missing or wrong type for cmd and/or resultArtifacts.');
                                     return;
                                 }
                                 var cmd = executorConfig.cmd;
