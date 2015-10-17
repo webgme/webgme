@@ -64,7 +64,7 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
                                     ASSERT(missing[key] === obj);
 
                                     delete missing[key];
-                                    if (!err && obj2) {
+                                    if (!err && obj2 && !cache[key]) {
                                         cacheInsert(key, obj2);
                                     }
 
@@ -135,7 +135,7 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
                 while (i--) {
                     fullyCovered = true;
                     pathArray = paths[i].split('/');
-                    if(pathArray.length > 1){
+                    if (pathArray.length > 1) {
                         pathArray.shift();
                     }
                     obj = rootObj;
