@@ -23,16 +23,21 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
         this.queuedPersists = {};
 
         function cacheInsert(key, obj) {
-            ASSERT(typeof cache[key] === 'undefined' && obj[CONSTANTS.MONGO_ID] === key);
+            ASSERT(obj[CONSTANTS.MONGO_ID] === key);
             logger.debug('cacheInsert', key);
 
             //deepFreeze(obj);
-            cache[key] = obj;
+            if (!cache[key]) {
+                cache[key] = obj;
 
-            if (++cacheSize >= gmeConfig.storage.cache) {
-                backup = cache;
-                cache = {};
-                cacheSize = 0;
+                if (++cacheSize >= gmeConfig.storage.cache) {
+                    backup = cache;
+                    cache = {};
+                    cacheSize = 0;
+                }
+                return true;
+            } else {
+                return false;
             }
         }
 
@@ -125,7 +130,7 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
         this.loadPaths = function (rootKey, paths, callback) {
             logger.debug('loadPaths', {metadata: {rootKey: rootKey, paths: paths}});
 
-            var objects = {},
+            var cachedObjects = {},
                 excludes = [],
                 rootObj = getFromCache(rootKey),
                 i = paths.length,
@@ -147,7 +152,7 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
             // already in the cache to 'excludes'.
 
             excludes.push(rootKey);
-            objects[rootKey] = rootObj;
+            cachedObjects[rootKey] = rootObj;
             while (i--) {
                 fullyCovered = true;
                 pathArray = paths[i].split('/');
@@ -160,7 +165,7 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
                         obj = getFromCache(key);
                         if (typeof obj !== 'undefined') {
                             excludes.push(key);
-                            objects[key] = obj;
+                            cachedObjects[key] = obj;
                         } else {
                             fullyCovered = false;
                             break;
@@ -186,20 +191,20 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
             storage.loadPaths(projectId, rootKey, paths, excludes, function (err, serverObjects) {
                 var keys, i;
                 if (!err && serverObjects) {
-                    //we insert every object into the cache
+                    // Insert every obtained object into the cache (that was not there before).
                     keys = Object.keys(serverObjects);
                     for (i = 0; i < keys.length; i += 1) {
-                        if (!cache[keys[i]] && serverObjects[keys[i]]) {
+                        if (serverObjects[keys[i]] !== undefined) {
                             // When not going through a web-socket loadPaths returns keys with
                             // undefined values, therefore the extra check.
                             cacheInsert(keys[i], serverObjects[keys[i]]);
                         }
                     }
-                    keys = Object.keys(objects);
+
+                    // Reinsert the cachedObjects.
+                    keys = Object.keys(cachedObjects);
                     for (i = 0; i < keys.length; i += 1) {
-                        if (!cache[keys[i]]) {
-                            cacheInsert(keys[i], objects[keys[i]]);
-                        }
+                        cacheInsert(keys[i], cachedObjects[keys[i]]);
                     }
                     callback(null);
                 } else {
@@ -216,11 +221,10 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
             logger.debug('insertObject', {metadata: key});
             ASSERT(typeof key === 'string');
 
-            if (typeof cache[key] !== 'undefined') {
+            if (cacheInsert(key, obj) === false) {
                 logger.warn('object inserted was already in cache');
             } else {
                 var item = backup[key];
-                cacheInsert(key, obj);
 
                 if (typeof item !== 'undefined') {
                     logger.warn('object inserted was already in back-up');
