@@ -9,6 +9,9 @@ environment:
   - nodejs_version: "4.2"
     platform: x86
 
+services:
+  - mongodb
+
 install:
   - where npm
   - where node
@@ -16,7 +19,6 @@ install:
   - for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install npm@latest
   - for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install node-pre-gyp@latest
   - npm install
-  - ps: choco install mongodb
 
 build: off
 
