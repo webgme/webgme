@@ -16,17 +16,7 @@ install:
   - for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install npm@latest
   - for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install node-pre-gyp@latest
   - npm install
-  - ps: choco install 7zip.commandline
-  - ps: md $env:temp\mongo\data
-  - ps: Push-Location $env:temp\mongo
-  - ps: Invoke-WebRequest https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-2.6.5.zip -OutFile mongodb.zip
-  - ps: cmd /c 7za e mongodb.zip
-  - ps: cmd /c $env:temp\mongo\mongod.exe --logpath=$env:temp\mongo\log --dbpath=$env:temp\mongo\data\ --smallfiles --install
-  - ps: Start-Sleep -Seconds 5
-  - ps: net start mongodb
-  - ps: Pop-Location
-  - ps: Write-Host
-  - ps: Write-Host "monogdb installation complete"
+  - ps: choco install mongodb
 
 build: off
 
