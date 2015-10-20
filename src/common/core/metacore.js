@@ -147,6 +147,7 @@ define([
                 return true;
             }
             var pointerMetaNode = getMetaPointerNode(source, name);
+            
             if (pointerMetaNode) {
                 var validTargetTypePaths = core.getMemberPaths(pointerMetaNode, 'items') || [];
                 while (node) {
@@ -161,6 +162,7 @@ define([
 
         core.getValidAttributeNames = function (node) {
             var names = [];
+
             if (realNode(node)) {
                 names = core.getAttributeNames(getMetaNode(node)) || [];
             }
@@ -168,6 +170,8 @@ define([
         };
 
         core.isValidAttributeValueOf = function (node, name, value) {
+            var typedValue;
+
             if (!realNode(node)) {
                 return true;
             }
@@ -193,24 +197,27 @@ define([
                         }
                         return true;
                     }
+                    break;
                 case 'asset':
                     if (typeof value === 'string') {
                         return true;
                     }
                     break;
                 case 'integer':
-                    if (!isNaN(parseInt(value)) && parseFloat(value) === parseInt(value)) {
-                        if ((!meta.min || (meta.min && value >= meta.min)) &&
-                            (!meta.max || (meta.max && value <= meta.max))) {
+                    typedValue = parseInt(value);
+                    if (!isNaN(typedValue) && parseFloat(value) === typedValue) {
+                        if ((meta.min === undefined || meta.min === null || (meta.min && typedValue >= meta.min)) &&
+                            (meta.max === undefined || meta.max === null || (meta.max && typedValue <= meta.max))) {
                             return true;
                         }
                         return false;
                     }
                     break;
                 case 'float':
-                    if (!isNaN(parseFloat(value))) {
-                        if ((!meta.min || (meta.min && value >= meta.min)) &&
-                            (!meta.max || (meta.max && value <= meta.max))) {
+                    typedValue = parseFloat(value);
+                    if (!isNaN(typedValue)) {
+                        if ((meta.min === undefined || meta.min === null || (meta.min && typedValue >= meta.min)) &&
+                            (meta.max === undefined || meta.max === null || (meta.max && typedValue <= meta.max))) {
                             return true;
                         }
                         return false;
