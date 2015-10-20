@@ -12,5 +12,5 @@ before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
 script:
-  - "npm run test_travis"
+  - "npm run test_ci"
   - "npm run test_browser"

@@ -96,7 +96,7 @@
     "docs": "./node_modules/.bin/jsdoc -c jsdoc_conf.json",
     "start": "node ./src/bin/start_server.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test",
-    "test_travis": "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test",
+    "test_ci": "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test && node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/addon && node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/bin && node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common && node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/config && node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/issue && node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin && node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/seeds && node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server",
     "test_cover": "node ./node_modules/istanbul/lib/cli.js --hook-run-in-context cover node_modules/mocha/bin/_mocha -- -R spec --timeout 10000 --recursive test",
     "test_browser": "node ./node_modules/karma/bin/karma start karma.conf.js --browsers Firefox --single-run",
     "postinstall": "node ./utils/build/webgme.classes/build_classes.js",

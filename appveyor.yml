@@ -25,4 +25,4 @@ build: off
 test_script:
   - node --version
   - npm --version
-  - npm run test_travis
+  - npm run test_ci
