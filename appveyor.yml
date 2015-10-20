@@ -25,4 +25,16 @@ build: off
 test_script:
   - node --version
   - npm --version
-  - npm run test_ci
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/addon
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/bin
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test/common
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/blob
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/core
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/storage
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/util
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/config
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/issue
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/seeds
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server
