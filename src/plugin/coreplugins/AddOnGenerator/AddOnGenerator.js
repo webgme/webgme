@@ -42,7 +42,7 @@ define([
                 regex: '^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void' +
                 '|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|' +
                 'static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|' +
-                'arguments|interface|protected|implements|instanceof)$)[a-zA-Z_$][0-9a-zA-Z_$]*',
+                'arguments|interface|protected|implements|instanceof)$)[a-zA-Z_$][0-9a-zA-Z_$]+',
                 regexMessage: 'No spaces and special characters allowed. This value is used as the name of the ' +
                 'generated add-on class.',
                 description: 'Unique ID for the add-On.',
