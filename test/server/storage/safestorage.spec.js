@@ -1101,4 +1101,485 @@ describe('SafeStorage', function () {
                 .done();
         });
     });
+
+    describe('CommonAncestorCommit', function () {
+        describe('straight line', function () {
+            var projectName = 'straightLineTest',
+                projectId,
+                storage,
+                commitChain = [],
+                chainLength = 50;
+
+            before(function (done) {
+
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                storage.openDatabase()
+                    .then(function () {
+                        return testFixture.importProject(storage, {
+                            projectSeed: 'seeds/EmptyProject.json',
+                            projectName: projectName,
+                            gmeConfig: gmeConfig,
+                            logger: logger
+                        });
+                    })
+                    .then(function (importResult) {
+                        //finally we create the commit chain
+                        var project,
+                            needed = chainLength,
+                            nextCommit = function (err, commitResult) {
+                                if (err) {
+                                    done(err);
+                                    return;
+                                }
+                                needed -= 1;
+                                commitChain.push(commitResult.hash);
+                                if (needed === 0) {
+                                    done();
+                                } else {
+                                    project.makeCommit(null,
+                                        [commitResult.hash],
+                                        importResult.rootHash,
+                                        [], // no core-objects
+                                        '_' + (chainLength - needed).toString() + '_',
+                                        nextCommit);
+                                }
+                            };
+
+                        project = importResult.project;
+                        projectId = project.projectId;
+                        project.makeCommit(null,
+                            [importResult.commitHash],
+                            importResult.rootHash,
+                            [],
+                            '_' + 0 + '_',
+                            nextCommit);
+                    })
+                    .catch(done);
+            });
+
+            after(function (done) {
+                Q.allDone([
+                    storage.closeDatabase()
+                ])
+                    .nodeify(done);
+            });
+
+            it('single chain 0 vs 1', function (done) {
+                var data = {
+                    projectId: projectId,
+                    commitA: commitChain[0],
+                    commitB: commitChain[1],
+                };
+
+                storage.getCommonAncestorCommit(data)
+                    .then(function (commonHash) {
+                        expect(commonHash).to.equal(commitChain[0]);
+                        done();
+                    })
+                    .catch(done);
+            });
+
+            it('single chain 1 vs 0', function (done) {
+                var data = {
+                    projectId: projectId,
+                    commitA: commitChain[1],
+                    commitB: commitChain[0],
+                };
+
+                storage.getCommonAncestorCommit(data)
+                    .then(function (commonHash) {
+                        expect(commonHash).to.equal(commitChain[0]);
+                        done();
+                    })
+                    .catch(done);
+            });
+
+            it('single chain 1 vs 1', function (done) {
+                var data = {
+                    projectId: projectId,
+                    commitA: commitChain[1],
+                    commitB: commitChain[1]
+                };
+
+                storage.getCommonAncestorCommit(data)
+                    .then(function (commonHash) {
+                        expect(commonHash).to.equal(commitChain[1]);
+                        done();
+                    })
+                    .catch(done);
+            });
+
+            it('single chain 0 vs 49', function (done) {
+                var data = {
+                    projectId: projectId,
+                    commitA: commitChain[0],
+                    commitB: commitChain[49],
+                };
+
+                storage.getCommonAncestorCommit(data)
+                    .then(function (commonHash) {
+                        expect(commonHash).to.equal(commitChain[0]);
+                        done();
+                    })
+                    .catch(done);
+            });
+        });
+
+        describe('complex chain', function () {
+            var projectId,
+                storage,
+                projectName = 'complexChainTest',
+                commitChain = [];
+
+            before(function (done) {
+                storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                storage.openDatabase()
+                    .then(function () {
+                        return testFixture.importProject(storage, {
+                            projectSeed: 'seeds/EmptyProject.json',
+                            projectName: projectName,
+                            gmeConfig: gmeConfig,
+                            logger: logger
+                        });
+                    })
+                    .then(function (importResult) {
+                        var commitDatas = [],
+                            id = 0,
+                            project;
+                        //finally we create the commit chain
+                        //           o -- o           8,9
+                        //          /      \
+                        //         o        o         7,12
+                        //        / \      /
+                        //       /   o -- o           10,11
+                        // o -- o -- o -- o -- o -- o 1,2,3,4,5,6
+                        project = importResult.project;
+                        projectId = project.projectId;
+
+                        function addCommitObject(parents) {
+                            var commitObject = project.createCommitObject(parents,
+                                importResult.rootHash,
+                                'tester',
+                                id.toString());
+
+                            commitDatas.push({
+                                projectId: projectId,
+                                commitObject: commitObject,
+                                coreObjects: []
+                            });
+
+                            id += 1;
+                            commitChain.push(commitObject._id);
+                        }
+
+                        addCommitObject([importResult.commitHash]);
+                        addCommitObject([commitChain[0]]);
+                        addCommitObject([commitChain[1]]);
+                        addCommitObject([commitChain[2]]);
+                        addCommitObject([commitChain[3]]);
+                        addCommitObject([commitChain[4]]);
+                        addCommitObject([commitChain[5]]);
+                        addCommitObject([commitChain[2]]);
+                        addCommitObject([commitChain[7]]);
+                        addCommitObject([commitChain[8]]);
+                        addCommitObject([commitChain[7]]);
+                        addCommitObject([commitChain[10]]);
+                        addCommitObject([commitChain[9], commitChain[11]]);
+
+                        function makeCommit(commitData) {
+                            return storage.makeCommit(commitData);
+                        }
+
+                        return Q.allDone(commitDatas.map(makeCommit));
+                    })
+                    .then(function (/*commitResults*/) {
+                        done();
+                    })
+                    .catch(done);
+            });
+
+            after(function (done) {
+                storage.closeDatabase(done);
+            });
+
+            it('12 vs 6 -> 2', function (done) {
+                var data = {
+                    projectId: projectId,
+                    commitA: commitChain[12],
+                    commitB: commitChain[6],
+                };
+
+                storage.getCommonAncestorCommit(data, function (err, c) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    c.should.be.equal(commitChain[2]);
+                    done();
+                });
+            });
+
+            it('9 vs 11 -> 7', function (done) {
+                var data = {
+                    projectId: projectId,
+                    commitA: commitChain[9],
+                    commitB: commitChain[11],
+                };
+
+                storage.getCommonAncestorCommit(data, function (err, c) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    c.should.be.equal(commitChain[7]);
+                    done();
+                });
+            });
+
+            it('10 vs 4 -> 2', function (done) {
+                var data = {
+                    projectId: projectId,
+                    commitA: commitChain[10],
+                    commitB: commitChain[4],
+                };
+
+                storage.getCommonAncestorCommit(data, function (err, c) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    c.should.be.equal(commitChain[2]);
+                    done();
+                });
+            });
+
+            it('12 vs 8 -> 8', function (done) {
+                var data = {
+                    projectId: projectId,
+                    commitA: commitChain[12],
+                    commitB: commitChain[8],
+                };
+
+                storage.getCommonAncestorCommit(data, function (err, c) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    c.should.be.equal(commitChain[8]);
+                    done();
+                });
+            });
+
+            it('9 vs 5 -> 2', function (done) {
+                var data = {
+                    projectId: projectId,
+                    commitA: commitChain[9],
+                    commitB: commitChain[5],
+                };
+
+                storage.getCommonAncestorCommit(data, function (err, c) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    c.should.be.equal(commitChain[2]);
+                    done();
+                });
+            });
+
+            it('first commit does not exist', function (done) {
+                var data = {
+                    projectId: projectId,
+                    commitA: '#doesNotExist',
+                    commitB: commitChain[5],
+                };
+
+                storage.getCommonAncestorCommit(data, function (err) {
+                    expect(err.message).to.include('Commit object does not exist [#doesNotExist]');
+                    done();
+                });
+            });
+
+            it('second commit does not exist', function (done) {
+                var data = {
+                    projectId: projectId,
+                    commitA: commitChain[5],
+                    commitB: '#doesNotExist',
+                };
+
+                storage.getCommonAncestorCommit(data, function (err) {
+                    expect(err.message).to.include('Commit object does not exist [#doesNotExist]');
+                    done();
+                });
+            });
+
+            it('both commits does not exist', function (done) {
+                var data = {
+                    projectId: projectId,
+                    commitA: '#doesNotExist1',
+                    commitB: '#doesNotExist2',
+                };
+
+                storage.getCommonAncestorCommit(data, function (err) {
+                    expect(err.message).to.include('Commit object does not exist [#doesNotExist1]');
+                    done();
+                });
+            });
+        });
+    });
+
+    describe('loadPaths', function () {
+        var projectName = 'loadPathsTest',
+            projectId,
+            rootHash,
+            storage;
+
+        before(function (done) {
+
+            storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+            storage.openDatabase()
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: 'test/server/storage/safestorage/loadPaths.json',
+                        projectName: projectName,
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (importResult) {
+                    var project = importResult.project;
+                    projectId = project.projectId;
+                    rootHash = importResult.rootHash;
+                })
+                .then(function () {
+                    done();
+                })
+                .catch(done);
+        });
+
+        after(function (done) {
+            Q.allDone([
+                storage.closeDatabase()
+            ])
+                .nodeify(done);
+        });
+
+        it('should load multiple objects', function (done) {
+            var data = {
+                projectId: projectId,
+                pathsInfo: [
+                    {
+                        parentHash: rootHash,
+                        path: '/1946012150/584624888'
+                    },
+                    {
+                        parentHash: rootHash,
+                        path: '/1946012150/584624888/1603996771'
+                    },
+                    {
+                        parentHash: rootHash,
+                        path: '/1946012150/584624888/1603996771/1704227179'
+                    }
+                ],
+                excludes: []
+            };
+
+            storage.loadPaths(data)
+                .then(function (objects) {
+                    expect(Object.keys(objects).length).to.equal(5);
+                    done();
+                })
+                .catch(done);
+
+        });
+
+        it('should load all parent-objects', function (done) {
+            var data = {
+                projectId: projectId,
+                pathsInfo: [
+                    {
+                        parentHash: rootHash,
+                        path: '/1946012150/584624888/1603996771/1704227179'
+                    }
+                ],
+                excludes: []
+            };
+
+            storage.loadPaths(data)
+                .then(function (objects) {
+                    expect(Object.keys(objects).length).to.equal(5);
+                    done();
+                })
+                .catch(done);
+
+        });
+
+        it('should filter out excludes', function (done) {
+            var data = {
+                    projectId: projectId,
+                    pathsInfo: [
+                        {
+                            parentHash: rootHash,
+                            path: '/1946012150/584624888'
+                        },
+                        {
+                            parentHash: rootHash,
+                            path: '/1946012150/584624888/1603996771'
+                        },
+                        {
+                            parentHash: rootHash,
+                            path: '/1946012150/584624888/1603996771/1704227179'
+                        }
+                    ],
+                    excludes: []
+                },
+                loadedHashes;
+
+            storage.loadPaths(data)
+                .then(function (objects) {
+                    loadedHashes = Object.keys(objects);
+                    expect(loadedHashes.length).to.equal(5);
+
+                    data.excludes.push(loadedHashes.pop());
+                    data.excludes.push(loadedHashes.pop());
+                    return storage.loadPaths(data);
+                })
+                .then(function (objects) {
+                    var objHash;
+                    for (objHash in objects) {
+                        if (data.excludes.indexOf(objHash) > -1) {
+                            expect(objects[objHash]).to.equal(undefined);
+                        } else if (loadedHashes.indexOf(objHash) > -1) {
+                            expect(typeof objects[objHash]).to.equal('object');
+                            expect(objects[objHash]).to.not.equal(null);
+                        } else {
+                            throw new Error('Hash not in excludes nor loadedHashes!');
+                        }
+                    }
+                    done();
+                })
+                .catch(done);
+
+        });
+
+        it('should load root path', function (done) {
+            var data = {
+                projectId: projectId,
+                pathsInfo: [
+                    {
+                        parentHash: rootHash,
+                        path: ''
+                    }
+                ],
+                excludes: []
+            };
+
+            storage.loadPaths(data)
+                .then(function (objects) {
+                    expect(Object.keys(objects)).to.have.members([rootHash]);
+                    done();
+                })
+                .catch(done);
+        });
+    });
 });

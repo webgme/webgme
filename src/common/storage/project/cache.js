@@ -23,17 +23,42 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
         this.queuedPersists = {};
 
         function cacheInsert(key, obj) {
-            ASSERT(typeof cache[key] === 'undefined' && obj[CONSTANTS.MONGO_ID] === key);
+            ASSERT(obj[CONSTANTS.MONGO_ID] === key);
             logger.debug('cacheInsert', key);
 
             //deepFreeze(obj);
-            cache[key] = obj;
+            if (!cache[key]) {
+                cache[key] = obj;
 
-            if (++cacheSize >= gmeConfig.storage.cache) {
-                backup = cache;
-                cache = {};
-                cacheSize = 0;
+                if (++cacheSize >= gmeConfig.storage.cache) {
+                    backup = cache;
+                    cache = {};
+                    cacheSize = 0;
+                }
+                return true;
+            } else {
+                return false;
             }
+        }
+
+        function getFromCache(hash) {
+            var obj = cache[hash],
+                commitId;
+
+            if (typeof obj === 'undefined') {
+                obj = backup[hash];
+
+                if (typeof obj === 'undefined') {
+                    for (commitId in self.queuedPersists) {
+                        if (self.queuedPersists.hasOwnProperty(commitId) && self.queuedPersists[commitId][hash]) {
+                            obj = self.queuedPersists[commitId][hash];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return obj;
         }
 
         this.loadObject = function (key, callback) {
@@ -95,49 +120,43 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
             callback(null, obj);
         };
 
+        /**
+         * Loads the necessary objects for the nodes corresponding to paths and inserts them in the cache.
+         * If the rootKey is empty or does not exist - it won't attempt to load any nodes.
+         * @param {string} rootKey
+         * @param {string[]} paths
+         * @param {function(err)} callback
+         */
         this.loadPaths = function (rootKey, paths, callback) {
-            ASSERT(typeof rootKey === 'string' && paths instanceof Array && typeof callback === 'function');
             logger.debug('loadPaths', {metadata: {rootKey: rootKey, paths: paths}});
 
-            function getFromCache(hash) {
-                var obj = cache[hash],
-                    commitId;
+            var cachedObjects = {},
+                excludes = [],
+                rootObj = getFromCache(rootKey),
+                i = paths.length,
+                j,
+                pathArray,
+                obj,
+                pathsInfo = [],
+                key;
 
-                if (typeof obj === 'undefined') {
-                    obj = backup[hash];
-
-                    if (typeof obj === 'undefined') {
-                        for (commitId in self.queuedPersists) {
-                            if (self.queuedPersists.hasOwnProperty(commitId) && self.queuedPersists[commitId][key]) {
-                                obj = self.queuedPersists[commitId][key];
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                return obj;
+            if (!rootKey) {
+                logger.debug('rootKey empty:', rootKey);
+                callback(null);
+                return;
             }
 
-            var objects = {},
-                excludes = [],
-                pathArray,
-                fullyCovered,
-                obj,
-                rootObj = getFromCache(rootKey),
-                key, i = paths.length,
-                j;
+            if (rootObj) {
+                // The root was loaded, so for each requested path we start from the root
+                // and work our way down to the containment chain and add each object that is
+                // already in the cache to 'excludes'.
 
-            if (typeof rootObj !== 'undefined') {
                 excludes.push(rootKey);
-                objects[rootKey] = rootObj;
-
+                cachedObjects[rootKey] = rootObj;
                 while (i--) {
-                    fullyCovered = true;
                     pathArray = paths[i].split('/');
-                    if(pathArray.length > 1){
-                        pathArray.shift();
-                    }
+                    pathArray.shift();
+
                     obj = rootObj;
                     for (j = 0; j < pathArray.length; j += 1) {
                         key = obj[pathArray[j]];
@@ -145,52 +164,60 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
                             obj = getFromCache(key);
                             if (typeof obj !== 'undefined') {
                                 excludes.push(key);
-                                objects[key] = obj;
+                                cachedObjects[key] = obj;
                             } else {
-                                fullyCovered = false;
+                                pathsInfo.push({
+                                    parentHash: key,
+                                    path: '/' + pathArray.slice(j + 1).join('/')
+                                });
                                 break;
                             }
                         } else {
-                            fullyCovered = false;
+                            // The given path does not exist anymore - break.
                             break;
                         }
                     }
-
-                    if (fullyCovered) {
-                        paths.splice(i, 1);
-                    }
                 }
-
-                //now we checked the cache, so if something remains we ask it from the server
-                if (paths.length === 0) {
-                    return callback(null);
-                }
-
-                storage.loadPaths(projectId, rootKey, paths, excludes, function (err, serverObjects) {
-                    var keys, i;
-                    if (!err && serverObjects) {
-                        //we insert every object into the cache
-                        keys = Object.keys(serverObjects);
-                        for (i = 0; i < keys.length; i += 1) {
-                            if (!cache[keys[i]]) {
-                                cacheInsert(keys[i], serverObjects[keys[i]]);
-                            }
-                        }
-                        keys = Object.keys(objects);
-                        for (i = 0; i < keys.length; i += 1) {
-                            if (!cache[keys[i]]) {
-                                cacheInsert(keys[i], objects[keys[i]]);
-                            }
-                        }
-                    } else {
-                        logger.warn('loadingPaths failed', err || new Error('no bject arrived from server'));
-                    }
-                    callback(err);
-                });
             } else {
-                callback(null);
+                pathsInfo = paths.map(function (path) {
+                    return {
+                        parentHash: rootKey,
+                        path: path
+                    };
+                });
             }
 
+            if (pathsInfo.length === 0) {
+                logger.debug('All given paths already loaded');
+                callback(null);
+                return;
+            }
+
+            logger.debug('loadPaths will request from server, pathsInfo:', pathsInfo);
+            storage.loadPaths(projectId, pathsInfo, excludes, function (err, serverObjects) {
+                var keys, i;
+                if (!err && serverObjects) {
+                    // Insert every obtained object into the cache (that was not there before).
+                    keys = Object.keys(serverObjects);
+                    for (i = 0; i < keys.length; i += 1) {
+                        if (serverObjects[keys[i]] !== undefined) {
+                            // When not going through a web-socket loadPaths returns keys with
+                            // undefined values, therefore the extra check.
+                            cacheInsert(keys[i], serverObjects[keys[i]]);
+                        }
+                    }
+
+                    // Reinsert the cachedObjects.
+                    keys = Object.keys(cachedObjects);
+                    for (i = 0; i < keys.length; i += 1) {
+                        cacheInsert(keys[i], cachedObjects[keys[i]]);
+                    }
+                    callback(null);
+                } else {
+                    logger.error('loadingPaths failed', err || new Error('no object arrived from server'));
+                    callback(err);
+                }
+            });
         };
 
         this.insertObject = function (obj, stackedObjects) {
@@ -200,11 +227,10 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
             logger.debug('insertObject', {metadata: key});
             ASSERT(typeof key === 'string');
 
-            if (typeof cache[key] !== 'undefined') {
+            if (cacheInsert(key, obj) === false) {
                 logger.warn('object inserted was already in cache');
             } else {
                 var item = backup[key];
-                cacheInsert(key, obj);
 
                 if (typeof item !== 'undefined') {
                     logger.warn('object inserted was already in back-up');

@@ -75,7 +75,6 @@ define([
          *
          * @param {string} rootKey - Hash of the object at the entry point of the paths.
          * @param {string[]} paths - List of paths that needs to be pre-loaded.
-         * @param {string[]} excludes - List of hashes that the user already have.
          * @param {function} callback - Invoked when objects have been collected.
          * @func
          */
