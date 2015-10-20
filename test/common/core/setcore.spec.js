@@ -156,4 +156,94 @@ describe('set core', function () {
 
         expect(core.getMemberPaths(setInstance, 'set')).to.have.members([core.getPath(instanceMember)]);
     });
+
+    it('fully overriden members should remain even after base member is removed', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+
+        expect(core.getMemberPaths(setType, 'set')).to.have.members([core.getPath(member)]);
+        expect(core.getMemberPaths(setInstance, 'set')).to.have.members([core.getPath(member)]);
+
+        //override the member
+        core.addMember(setInstance, 'set', member);
+
+        expect(core.getMemberPaths(setType, 'set')).to.have.members([core.getPath(member)]);
+        expect(core.getMemberPaths(setInstance, 'set')).to.have.members([core.getPath(member)]);
+
+        //remove from base
+        core.delMember(setType, 'set', core.getPath(member));
+        expect(core.getMemberPaths(setType, 'set')).to.empty;
+        expect(core.getMemberPaths(setInstance, 'set')).to.have.members([core.getPath(member)]);
+    });
+
+    it('overriding a member should get the already overridden properties', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+
+        expect(core.getMemberPaths(setType, 'set')).to.have.members([core.getPath(member)]);
+        expect(core.getMemberPaths(setInstance, 'set')).to.have.members([core.getPath(member)]);
+
+        //override the member's properties
+        core.setMemberAttribute(setInstance, 'set', core.getPath(member), 'attribute', 'value');
+        core.setMemberRegistry(setInstance, 'set', core.getPath(member), 'registry', 'regValue');
+
+        expect(core.getMemberAttribute(setType, 'set', core.getPath(member), 'attribute')).to.equal(undefined);
+        expect(core.getMemberAttribute(setInstance, 'set', core.getPath(member), 'attribute')).to.equal('value');
+        expect(core.getMemberRegistry(setType, 'set', core.getPath(member), 'registry')).to.equal(undefined);
+        expect(core.getMemberRegistry(setInstance, 'set', core.getPath(member), 'registry')).to.equal('regValue');
+
+        //now override the member
+        core.addMember(setInstance, 'set', member);
+
+        expect(core.getMemberAttribute(setInstance, 'set', core.getPath(member), 'attribute')).to.equal('value');
+        expect(core.getMemberRegistry(setInstance, 'set', core.getPath(member), 'registry')).to.equal('regValue');
+
+
+    });
+
+    it('should return all member as own, that has new information', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            fullyOverriddenMember = core.createNode({parent: root}),
+            propertyOverriddenMember = core.createNode({parent: root}),
+            newMember = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', fullyOverriddenMember);
+        core.addMember(setType, 'set', propertyOverriddenMember);
+        core.addMember(setInstance, 'set', newMember);
+
+        expect(core.getOwnMemberPaths(setType, 'set')).to.have.members([
+            core.getPath(fullyOverriddenMember),
+            core.getPath(propertyOverriddenMember)
+        ]);
+        expect(core.getOwnMemberPaths(setInstance, 'set')).to.have.members([
+            core.getPath(newMember)
+        ]);
+
+        //now override the property
+        core.setMemberAttribute(setInstance,'set',core.getPath(propertyOverriddenMember),'myAttr','myValue');
+
+        expect(core.getOwnMemberPaths(setInstance, 'set')).to.have.members([
+            core.getPath(propertyOverriddenMember),
+            core.getPath(newMember)
+        ]);
+
+        //now override the member
+        core.addMember(setInstance, 'set', fullyOverriddenMember);
+
+        expect(core.getOwnMemberPaths(setInstance, 'set')).to.have.members([
+            core.getPath(fullyOverriddenMember),
+            core.getPath(propertyOverriddenMember),
+            core.getPath(newMember)
+        ]);
+    });
 });

@@ -545,7 +545,30 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
         function getPointerNames(node) {
             ASSERT(isValidNode(node));
 
-            var source = '';
+            //var source = '';
+            //var names = [];
+            //
+            //do {
+            //    var child = (coretree.getProperty(node, OVERLAYS) || {})[source];
+            //    if (child) {
+            //        for (var name in child) {
+            //            ASSERT(names.indexOf(name) === -1);
+            //            if (isPointerName(name)) {
+            //                names.push(name);
+            //            }
+            //        }
+            //    }
+            //
+            //    source = '/' + coretree.getRelid(node) + source;
+            //    node = coretree.getParent(node);
+            //} while (node);
+            //
+            //return names;
+
+            return getPointerNamesFrom(node, '');
+        }
+
+        function getPointerNamesFrom(node, source) {
             var names = [];
 
             do {
@@ -569,13 +592,40 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
         function getPointerPath(node, name) {
             ASSERT(isValidNode(node) && typeof name === 'string');
 
-            var source = '';
-            var target;
+            //var source = '';
+            //var target;
+            //
+            //do {
+            //    var child = (coretree.getProperty(node, OVERLAYS) || {})[source];
+            //    if (child) {
+            //        target = child[name];
+            //        if (target !== undefined) {
+            //            break;
+            //        }
+            //    }
+            //
+            //    source = '/' + coretree.getRelid(node) + source;
+            //    node = coretree.getParent(node);
+            //} while (node);
+            //
+            //if (target !== undefined) {
+            //    ASSERT(node);
+            //    target = coretree.joinPaths(coretree.getPath(node), target);
+            //}
+            //
+            //return target;
+            return getPointerPathFrom(node, '', name);
+        }
+
+        function getPointerPathFrom(node, source, name) {
+            ASSERT(isValidNode(node) && typeof source === 'string' && typeof name === 'string');
+            var target,
+                ovrInfo;
 
             do {
-                var child = (coretree.getProperty(node, OVERLAYS) || {})[source];
-                if (child) {
-                    target = child[name];
+                ovrInfo = (coretree.getProperty(node, OVERLAYS) || {})[source];
+                if (ovrInfo) {
+                    target = ovrInfo[name];
                     if (target !== undefined) {
                         break;
                     }
@@ -583,6 +633,7 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
 
                 source = '/' + coretree.getRelid(node) + source;
                 node = coretree.getParent(node);
+
             } while (node);
 
             if (target !== undefined) {
@@ -591,6 +642,33 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
             }
 
             return target;
+        }
+
+        function getPointersFrom(node, source) {
+            ASSERT(isValidNode(node) && typeof source === 'string');
+            var ovrInfo,
+                targets = {},
+                keys, i;
+
+            do {
+                ovrInfo = (coretree.getProperty(node, OVERLAYS) || {})[soource];
+                if (ovrInfo) {
+                    keys = Object.keys(ovrInfo);
+                    for (i = 0; i < keys.length; i += 1) {
+                        if (isPointerName(keys[i])) {
+                            targets[keys[i]] = ovrInfo[keys[i]];
+                            if (targets[keys[i]] === undefined) {
+                                delete targets[keys[i]];
+                            }
+                        }
+                    }
+                }
+
+                source = '/' + coretree.getRelid(node) + source;
+                node = coretree.getParent(node);
+            } while (node);
+
+            return targets;
         }
 
         function hasPointer(node, name) {
@@ -832,7 +910,10 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
         corerel.delRegistry = delRegistry;
 
         corerel.getPointerNames = getPointerNames;
+        corerel.getPointerNamesFrom = getPointerNamesFrom;
         corerel.getPointerPath = getPointerPath;
+        corerel.getPointerPathFrom = getPointerPathFrom;
+        corerel.getPointersFrom = getPointersFrom;
         corerel.hasPointer = hasPointer;
         corerel.getOutsidePointerPath = getOutsidePointerPath;
         corerel.loadPointer = loadPointer;

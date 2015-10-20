@@ -9,6 +9,7 @@ describe('core.intrapersist', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('core.intrapersist'),
         Q = testFixture.Q,
+        expect = testFixture.expect,
         storage,
         CANON = testFixture.requirejs('../src/common/util/canon');
 
@@ -87,7 +88,7 @@ describe('core.intrapersist', function () {
             s1NodePrimePath = '/1710723537/274170516',
             nodes = null;
 
-        before(function(done){
+        before(function (done) {
             core.loadRoot(rootHash, function (err, r) {
                 if (err) {
                     return done(err);
@@ -224,61 +225,40 @@ describe('core.intrapersist', function () {
             }
         });
         it('checks the set harmonization for member registry', function () {
-            var elements, elementsPrime, position;
-            elements = core.getMemberPaths(nodes[e1NodePath], 'mySpecials');
-            elements.sort();
-            elementsPrime = core.getMemberPaths(nodes[e1NodePrimePath], 'mySpecials');
-            elementsPrime.sort();
-            if (CANON.stringify(elements) !== CANON.stringify(['/1736622193/1579656591', '/1736622193/274170516']) ||
-                CANON.stringify(elementsPrime) !== CANON.stringify(['/1710723537/1579656591',
-                    '/1710723537/274170516'])) {
 
-                throw new Error('initial set members are wrong');
-            }
+            expect(core.getMemberPaths(nodes[e1NodePath], 'mySpecials'))
+                .to.have.members(['/1736622193/1579656591', '/1736622193/274170516']);
+            expect(core.getMemberPaths(nodes[e1NodePrimePath], 'mySpecials'))
+                .to.have.members(['/1710723537/1579656591', '/1710723537/274170516']);
 
             core.delMember(nodes[e1NodePath], 'mySpecials', s1NodePath);
-            elements = core.getMemberPaths(nodes[e1NodePath], 'mySpecials');
-            elements.sort();
-            elementsPrime = core.getMemberPaths(nodes[e1NodePrimePath], 'mySpecials');
-            elementsPrime.sort();
-            if (CANON.stringify(elements) !== CANON.stringify(['/1736622193/1579656591']) ||
-                CANON.stringify(elementsPrime) !== CANON.stringify(['/1710723537/1579656591'])) {
-                throw new Error('removed set members are wrong');
-            }
+
+            expect(core.getMemberPaths(nodes[e1NodePath], 'mySpecials'))
+                .to.have.members(['/1736622193/1579656591']);
+            expect(core.getMemberPaths(nodes[e1NodePrimePath], 'mySpecials'))
+                .to.have.members(['/1710723537/1579656591','/1710723537/274170516']);
 
             core.addMember(nodes[e1NodePrimePath], 'mySpecials', nodes[s1NodePrimePath]);
             core.setMemberRegistry(nodes[e1NodePrimePath], 'mySpecials', s1NodePrimePath, 'position', {x: 100, y: 200});
-            elements = core.getMemberPaths(nodes[e1NodePath], 'mySpecials');
-            elements.sort();
-            elementsPrime = core.getMemberPaths(nodes[e1NodePrimePath], 'mySpecials');
-            elementsPrime.sort();
-            position = core.getMemberRegistry(nodes[e1NodePrimePath], 'mySpecials', s1NodePrimePath, 'position');
-            if (CANON.stringify(elements) !== CANON.stringify(['/1736622193/1579656591']) ||
-                CANON.stringify(elementsPrime) !== CANON.stringify(['/1710723537/1579656591',
-                    '/1710723537/274170516']) ||
-                position.x !== 100 || position.y !== 200) {
 
-                throw new Error('prime set members are wrong');
-            }
+            expect(core.getMemberPaths(nodes[e1NodePath], 'mySpecials'))
+                .to.have.members(['/1736622193/1579656591']);
+            expect(core.getMemberPaths(nodes[e1NodePrimePath], 'mySpecials'))
+                .to.have.members(['/1710723537/1579656591', '/1710723537/274170516']);
+            expect(core.getMemberRegistry(nodes[e1NodePrimePath], 'mySpecials', s1NodePrimePath, 'position'))
+                .to.deep.equal({x: 100, y: 200});
 
             core.addMember(nodes[e1NodePath], 'mySpecials', nodes[s1NodePath]);
             core.setMemberRegistry(nodes[e1NodePath], 'mySpecials', s1NodePath, 'position', {x: 200, y: 300});
-            elements = core.getMemberPaths(nodes[e1NodePath], 'mySpecials');
-            elements.sort();
-            elementsPrime = core.getMemberPaths(nodes[e1NodePrimePath], 'mySpecials');
-            elementsPrime.sort();
-            position = core.getMemberRegistry(nodes[e1NodePrimePath], 'mySpecials', s1NodePrimePath, 'position');
-            if (CANON.stringify(elements) !== CANON.stringify(['/1736622193/1579656591', '/1736622193/274170516']) ||
-                CANON.stringify(elementsPrime) !== CANON.stringify(['/1710723537/1579656591',
-                    '/1710723537/274170516']) ||
-                position.x !== 100 || position.y !== 200) {
 
-                throw new Error('prime set member registry value are wrong');
-            }
-            position = core.getMemberRegistry(nodes[e1NodePath], 'mySpecials', s1NodePath, 'position');
-            if (position.x !== 200 || position.y !== 300) {
-                throw new Error('member registry value is wrong');
-            }
+            expect(core.getMemberPaths(nodes[e1NodePath], 'mySpecials'))
+                .to.have.members(['/1736622193/1579656591', '/1736622193/274170516']);
+            expect(core.getMemberPaths(nodes[e1NodePrimePath], 'mySpecials'))
+                .to.have.members(['/1710723537/1579656591', '/1710723537/274170516']);
+            expect(core.getMemberRegistry(nodes[e1NodePrimePath], 'mySpecials', s1NodePrimePath, 'position'))
+                .to.deep.equal({x: 100, y: 200});
+            expect(core.getMemberRegistry(nodes[e1NodePath], 'mySpecials', s1NodePath, 'position'))
+                .to.deep.equal({x: 200, y: 300});
 
         });
         it('modified set elements should be visible in already loaded nodes', function () {

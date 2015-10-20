@@ -556,9 +556,27 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
         core.getPointerNames = function (node) {
             ASSERT(isValidNode(node));
 
+            return core.getPointerNamesFrom(node, '');
+            //var merged = {};
+            //do {
+            //    var names = oldcore.getPointerNames(node);
+            //    for (var i = 0; i < names.length; ++i) {
+            //        if (!(names[i] in merged)) {
+            //            merged[names[i]] = true;
+            //        }
+            //    }
+            //
+            //    node = node.base;
+            //} while (node);
+            //
+            //return Object.keys(merged);
+        };
+        core.getPointerNamesFrom = function (node, source) {
+            ASSERT(isValidNode(node));
+
             var merged = {};
             do {
-                var names = oldcore.getPointerNames(node);
+                var names = oldcore.getPointerNamesFrom(node, source);
                 for (var i = 0; i < names.length; ++i) {
                     if (!(names[i] in merged)) {
                         merged[names[i]] = true;
@@ -570,20 +588,24 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
 
             return Object.keys(merged);
         };
+
         core.getOwnPointerNames = function (node) {
             ASSERT(isValidNode(node));
             return oldcore.getPointerNames(node);
         };
 
-        core.getPointerPath = function (node, name) {
+        core.getOwnPointerNamesFrom = function (node, source) {
+            return oldcore.getPointerNamesFrom(node, source);
+        };
+
+        core.getPointerPathFrom = function (node, source, name) {
             ASSERT(isValidNode(node) && typeof name === 'string');
 
-            var ownPointerPath = oldcore.getPointerPath(node, name);
+            var ownPointerPath = oldcore.getPointerPathFrom(node, source, name);
             if (ownPointerPath !== undefined) {
                 return ownPointerPath;
             }
-            var source = '',
-                target,
+            var target,
                 coretree = core.getCoreTree(),
                 basePath,
                 hasNullTarget = false,
@@ -596,7 +618,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                     return property;
                 },
                 getSimpleBasePath = function (node) {
-                    var path = oldcore.getPointerPath(node, name);
+                    var path = oldcore.getPointerPathFrom(node, source, name);
                     if (path === undefined) {
                         if (node.base !== null && node.base !== undefined) {
                             return getSimpleBasePath(node.base);
@@ -676,9 +698,115 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             return undefined;
 
         };
+        core.getPointerPath = function (node, name) {
+
+            return core.getPointerPathFrom(node, '', name);
+            //ASSERT(isValidNode(node) && typeof name === 'string');
+            //
+            //var ownPointerPath = oldcore.getPointerPath(node, name);
+            //if (ownPointerPath !== undefined) {
+            //    return ownPointerPath;
+            //}
+            //var source = '',
+            //    target,
+            //    coretree = core.getCoreTree(),
+            //    basePath,
+            //    hasNullTarget = false,
+            //    getProperty = function (node, name) {
+            //        var property;
+            //        while (property === undefined && node !== null) {
+            //            property = coretree.getProperty(node, name);
+            //            node = core.getBase(node);
+            //        }
+            //        return property;
+            //    },
+            //    getSimpleBasePath = function (node) {
+            //        var path = oldcore.getPointerPath(node, name);
+            //        if (path === undefined) {
+            //            if (node.base !== null && node.base !== undefined) {
+            //                return getSimpleBasePath(node.base);
+            //            } else {
+            //                return undefined;
+            //            }
+            //        } else {
+            //            return path;
+            //        }
+            //    },
+            //    getParentOfBasePath = function (node) {
+            //        if (node.base) {
+            //            var parent = core.getParent(node.base);
+            //            if (parent) {
+            //                return core.getPath(parent);
+            //            } else {
+            //                return undefined;
+            //            }
+            //        } else {
+            //            return undefined;
+            //        }
+            //    },
+            //    getBaseOfParentPath = function (node) {
+            //        var parent = core.getParent(node);
+            //        if (parent) {
+            //            if (parent.base) {
+            //                return core.getPath(parent.base);
+            //            } else {
+            //                return undefined;
+            //            }
+            //        } else {
+            //            return undefined;
+            //        }
+            //    },
+            //    getTargetRelPath = function (node, relSource, name) {
+            //        var ovr = core.getChild(node, 'ovr');
+            //        var source = core.getChild(ovr, relSource);
+            //        return getProperty(source, name);
+            //    };
+            //
+            //basePath = node.base ? getSimpleBasePath(node.base) : undefined;
+            //
+            //while (node) {
+            //    target = getTargetRelPath(node, source, name);
+            //    if (target !== undefined) {
+            //        if (target.indexOf('_nullptr') !== -1) {
+            //            hasNullTarget = true;
+            //            target = undefined;
+            //        } else {
+            //            break;
+            //        }
+            //    }
+            //
+            //    source = '/' + core.getRelid(node) + source;
+            //    if (getParentOfBasePath(node) === getBaseOfParentPath(node)) {
+            //        node = core.getParent(node);
+            //    } else {
+            //        node = null;
+            //    }
+            //}
+            //
+            //
+            //if (target !== undefined) {
+            //    ASSERT(node);
+            //    target = coretree.joinPaths(oldcore.getPath(node), target);
+            //}
+            //
+            //if (typeof target === 'string') {
+            //    return target;
+            //}
+            //if (typeof basePath === 'string') {
+            //    return basePath;
+            //}
+            //if (hasNullTarget === true) {
+            //    return null;
+            //}
+            //return undefined;
+
+        };
         core.getOwnPointerPath = function (node, name) {
             oldcore.getPointerPath(node, name);
         };
+        core.getOwnPointerPathFrom = function (node, source, name) {
+            oldcore.getPointerPathFrom(node, source, name);
+        }
 
         core.setBase = function (node, base) {
             ASSERT(isValidNode(node) && (base === undefined || base === null || isValidNode(base)));

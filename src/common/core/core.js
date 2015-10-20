@@ -720,6 +720,18 @@ define([
         this.getMemberPaths = core.getMemberPaths;
 
         /**
+         * Returns the list of absolute paths of the members of the given set of the given node that not simply
+         * inherited.
+         * @param {module:Core~Node} node - the set owner.
+         * @param {string} name - the name of the set.
+         *
+         * @return {string[]} Returns an array of absolute path strings of the member nodes of the set that has
+         * information on the node's inharitance level.
+         * @func
+         */
+        this.getOwnMemberPaths = core.getOwnMemberPaths;
+
+        /**
          * Removes a member from the set. The functions doesn't remove the node itself.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} name - the name of the set.
@@ -1419,6 +1431,21 @@ define([
          * @func
          */
         this.isMetaNode = core.isMetaNode;
+
+        /**
+         * Checks if the member is completely overridden in the set of the node.
+         * @param {module:Core~Node} node - the node to test.
+         * @param {string} setName - the name of the set of the node.
+         * @param {string} memberPath - the path of the member in question.
+         *
+         * @return {bool} Returns true if the member exists in the base of the set, but was
+         * added to the given set as well, which means a complete override. If the set do not exist
+         * or the member do not have a 'base' member or just some property was overridden, the function returns
+         * false.
+         *
+         * @func
+         */
+        this.isFullyOverriddenMember = core.isFullyOverriddenMember;
     }
 
     return Core;
