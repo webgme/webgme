@@ -62,8 +62,15 @@ describe('meta core', function () {
                 core.setAttribute(attrNode, 'name', 'attr');
                 core.setAttributeMeta(attrNode, 'boolean', {type: 'boolean'});
                 core.setAttributeMeta(attrNode, 'string', {type: 'string'});
+                core.setAttributeMeta(attrNode, 'stringReg', {type: 'string', regexp: '^win'});
+                core.setAttributeMeta(attrNode, 'stringEnum', {type: 'string', regexp: '^win', enum: ['one', 'two']});
                 core.setAttributeMeta(attrNode, 'integer', {type: 'integer'});
                 core.setAttributeMeta(attrNode, 'float', {type: 'float'});
+                core.setAttributeMeta(attrNode, 'floatMin', {type: 'float', min: 0.1});
+                core.setAttributeMeta(attrNode, 'intMax', {type: 'integer', max: 200});
+                core.setAttributeMeta(attrNode, 'intRange', {type: 'integer', min: 188, max: 200});
+                core.setAttributeMeta(attrNode, 'zeroFloat', {type: 'float', min: 0, max: 0});
+                core.setAttributeMeta(attrNode, 'zeroInteger', {type: 'integer', min: 0, max: 0});
 
                 setNode = core.createNode({parent: root, base: base});
                 core.setAttribute(setNode, 'name', 'set');
@@ -134,17 +141,60 @@ describe('meta core', function () {
         core.isValidAttributeValueOf(attrNode, 'float', 1.1).should.be.true;
         core.isValidAttributeValueOf(attrNode, 'float', true).should.be.false;
         core.isValidAttributeValueOf(attrNode, 'float', '1').should.be.true;
+
+        core.isValidAttributeValueOf(attrNode, 'stringReg', 'linux').should.be.false;
+        core.isValidAttributeValueOf(attrNode, 'stringReg', 'windows').should.be.true;
+
+        core.isValidAttributeValueOf(attrNode, 'stringEnum', 'windows').should.be.false;
+        core.isValidAttributeValueOf(attrNode, 'stringEnum', 'two').should.be.true;
+
+        core.isValidAttributeValueOf(attrNode, 'floatMin', 0.09999).should.be.false;
+        core.isValidAttributeValueOf(attrNode, 'floatMin', 0.1).should.be.true;
+        core.isValidAttributeValueOf(attrNode, 'floatMin', 1000).should.be.true;
+        core.isValidAttributeValueOf(attrNode, 'floatMin', -1000).should.be.false;
+
+        core.isValidAttributeValueOf(attrNode, 'intMax', 201).should.be.false;
+        core.isValidAttributeValueOf(attrNode, 'intMax', 200).should.be.true;
+        core.isValidAttributeValueOf(attrNode, 'intMax', 100).should.be.true;
+        core.isValidAttributeValueOf(attrNode, 'intMax', -1000).should.be.true;
+
+        core.isValidAttributeValueOf(attrNode, 'intRange', -1000).should.be.false;
+        core.isValidAttributeValueOf(attrNode, 'intRange', 188).should.be.true;
+        core.isValidAttributeValueOf(attrNode, 'intRange', 198).should.be.true;
+        core.isValidAttributeValueOf(attrNode, 'intRange', 200).should.be.true;
+        core.isValidAttributeValueOf(attrNode, 'intRange', 201).should.be.false;
+        core.isValidAttributeValueOf(attrNode, 'intRange', 20100).should.be.false;
+
+        core.isValidAttributeValueOf(attrNode, 'zeroFloat', 0.09999).should.be.false;
+        core.isValidAttributeValueOf(attrNode, 'zeroFloat', -0.1).should.be.false;
+        core.isValidAttributeValueOf(attrNode, 'zeroFloat', 0.0).should.be.true;
+
+        core.isValidAttributeValueOf(attrNode, 'zeroInteger', 10).should.be.false;
+        core.isValidAttributeValueOf(attrNode, 'zeroInteger', -100).should.be.false;
+        core.isValidAttributeValueOf(attrNode, 'zeroInteger', 0).should.be.true;
     });
 
     it('checking attributes', function () {
-        core.getValidAttributeNames(attrNode).should.include.members(['boolean', 'float', 'integer', 'string']);
-        core.getValidAttributeNames(attrNode).should.have.length(4);
+        core.getValidAttributeNames(attrNode).should.have.members([
+            'boolean',
+            'float',
+            'integer',
+            'string',
+            'floatMin',
+            'intMax',
+            'intRange',
+            'stringReg',
+            'stringEnum',
+            'zeroFloat',
+            'zeroInteger'
+        ]);
+        core.getValidAttributeNames(attrNode).should.have.length(11);
         (core.getAttributeMeta(attrNode, 'unknown') === undefined).should.be.true;
         core.getAttributeMeta(attrNode, 'string').should.have.property('type');
 
         core.delAttributeMeta(attrNode, 'string');
         core.getValidAttributeNames(attrNode).should.not.include.members(['string']);
-        core.getValidAttributeNames(attrNode).should.have.length(3);
+        core.getValidAttributeNames(attrNode).should.have.length(10);
     });
 
     it('checking pointers and sets', function () {

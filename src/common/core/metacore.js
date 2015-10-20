@@ -147,6 +147,7 @@ define([
                 return true;
             }
             var pointerMetaNode = getMetaPointerNode(source, name);
+            
             if (pointerMetaNode) {
                 var validTargetTypePaths = core.getMemberPaths(pointerMetaNode, 'items') || [];
                 while (node) {
@@ -161,6 +162,7 @@ define([
 
         core.getValidAttributeNames = function (node) {
             var names = [];
+
             if (realNode(node)) {
                 names = core.getAttributeNames(getMetaNode(node)) || [];
             }
@@ -168,7 +170,8 @@ define([
         };
 
         core.isValidAttributeValueOf = function (node, name, value) {
-            //currently it only checks the name and the type
+            var typedValue;
+
             if (!realNode(node)) {
                 return true;
             }
@@ -176,6 +179,11 @@ define([
                 return false;
             }
             var meta = core.getAttribute(getMetaNode(node), name);
+
+            if (meta.enum && meta.enum instanceof Array) {
+                return meta.enum.indexOf(value) !== -1; //TODO should we check type beforehand?
+            }
+
             switch (meta.type) {
                 case 'boolean':
                     if (value === true || value === false) {
@@ -183,19 +191,36 @@ define([
                     }
                     break;
                 case 'string':
+                    if (typeof value === 'string') {
+                        if (meta.regexp) {
+                            return (new RegExp(meta.regexp).test(value));
+                        }
+                        return true;
+                    }
+                    break;
                 case 'asset':
                     if (typeof value === 'string') {
                         return true;
                     }
                     break;
                 case 'integer':
-                    if (!isNaN(parseInt(value)) && parseFloat(value) === parseInt(value)) {
-                        return true;
+                    typedValue = parseInt(value);
+                    if (!isNaN(typedValue) && parseFloat(value) === typedValue) {
+                        if ((typeof meta.min !== 'number' || typedValue >= meta.min) &&
+                            (typeof meta.max !== 'number' || typedValue <= meta.max)) {
+                            return true;
+                        }
+                        return false;
                     }
                     break;
                 case 'float':
-                    if (!isNaN(parseFloat(value))) {
-                        return true;
+                    typedValue = parseFloat(value);
+                    if (!isNaN(typedValue)) {
+                        if ((typeof meta.min !== 'number' || typedValue >= meta.min) &&
+                            (typeof meta.max !== 'number' || typedValue <= meta.max)) {
+                            return true;
+                        }
+                        return false;
                     }
                     break;
                 default:
@@ -431,7 +456,7 @@ define([
                 };
             }
 
-            if(paths.length > 0){
+            if (paths.length > 0) {
                 return childrenMeta;
             }
 
