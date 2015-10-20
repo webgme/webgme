@@ -206,8 +206,8 @@ define([
                 case 'integer':
                     typedValue = parseInt(value);
                     if (!isNaN(typedValue) && parseFloat(value) === typedValue) {
-                        if ((meta.min === undefined || meta.min === null || (meta.min && typedValue >= meta.min)) &&
-                            (meta.max === undefined || meta.max === null || (meta.max && typedValue <= meta.max))) {
+                        if ((typeof meta.min !== 'number' || typedValue >= meta.min) &&
+                            (typeof meta.max !== 'number' || typedValue <= meta.max)) {
                             return true;
                         }
                         return false;
@@ -216,8 +216,8 @@ define([
                 case 'float':
                     typedValue = parseFloat(value);
                     if (!isNaN(typedValue)) {
-                        if ((meta.min === undefined || meta.min === null || (meta.min && typedValue >= meta.min)) &&
-                            (meta.max === undefined || meta.max === null || (meta.max && typedValue <= meta.max))) {
+                        if ((typeof meta.min !== 'number' || typedValue >= meta.min) &&
+                            (typeof meta.max !== 'number' || typedValue <= meta.max)) {
                             return true;
                         }
                         return false;
