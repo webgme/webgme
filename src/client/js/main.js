@@ -62,7 +62,7 @@ require.config({
         executor: '/common/executor',
         plugin: '/plugin',
         layout: '/layout',
-        panels: '/panels',
+        panel: '/panel',
 
         //node_modules
         jszip: 'lib/jszip/jszip',

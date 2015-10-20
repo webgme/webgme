@@ -8,8 +8,7 @@ define(['js/logger', 'js/Loader/LoaderCircles'], function (Logger, LoaderCircles
 
     'use strict';
 
-    var LayoutManager,
-        PANEL_PATH = 'js/Panels/';
+    var LayoutManager;
 
     LayoutManager = function () {
         this._currentLayout = undefined;
@@ -67,7 +66,7 @@ define(['js/logger', 'js/Loader/LoaderCircles'], function (Logger, LoaderCircles
         var self = this,
             panel = params.panel,
             container = params.container,
-            rPath = PANEL_PATH + panel,  // FIXME: This will be a problem...
+            rPath = ['panel', panel].join('/'),
             containerSizeUpdateFn,
             fn;
 

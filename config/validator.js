@@ -215,6 +215,7 @@ function validateConfig(configOrFileName) {
     expectedKeys.push('visualization');
     assertObject('config.visualization', config.visualization);
     assertArray('config.visualization.decoratorPaths', config.visualization.decoratorPaths);
+    assertArray('config.visualization.panelPaths', config.visualization.panelPaths);
     assertArray('config.visualization.visualizerDescriptors', config.visualization.visualizerDescriptors);
     assertObject('config.visualization.layout', config.visualization.layout);
     assertString('config.visualization.layout.default', config.visualization.layout.default);

@@ -25,10 +25,31 @@ requirejs.config({
 
 function addToRequireJsPaths(gmeConfig) {
 
-    function addFromBasePath(basepaths, componentName) {
+    function addAssetFromBasePath(basepaths, componentName) {
+        var componentNames = webgmeUtils.getComponentNames(basepaths);
+        return addFromBasePath(basepaths, componentName, componentNames);
+    }
+
+    function addDirsFromBasePath(basepaths, componentName) {
+        var componentNames = [],
+            files,
+            filePath;
+
+        for (var i = basepaths.length; i--;) {
+            files = fs.readdirSync(basepaths[i]);
+            for (var j = files.length; j--;) {
+                filePath = path.join(basepaths[i], files[j]);
+                if (fs.statSync(filePath).isDirectory()) {
+                    componentNames.push(files[j]);
+                }
+            }
+        }
+        return addFromBasePath(basepaths, componentName, componentNames);
+    }
+
+    function addFromBasePath(basepaths, componentName, componentNames) {
         //type = 'plugin'
-        var componentNames = webgmeUtils.getComponentNames(basepaths),
-            componentPaths,
+        var componentPaths,
             componentPath,
             found,
             items,
@@ -77,9 +98,13 @@ function addToRequireJsPaths(gmeConfig) {
         });
     }
 
-    addFromBasePath(gmeConfig.plugin.basePaths, 'plugin');
-    addFromBasePath(gmeConfig.addOn.basePaths, 'addon');
-    addFromBasePath(gmeConfig.visualization.layout.basePaths, 'layout');
+    addAssetFromBasePath(gmeConfig.plugin.basePaths, 'plugin');
+    addAssetFromBasePath(gmeConfig.addOn.basePaths, 'addon');
+    addAssetFromBasePath(gmeConfig.visualization.layout.basePaths, 'layout');
+    // Panels are structured a little differently and may not have
+    // PANEL_NAME/PANEL_NAME.js like plugins, addons or layouts
+    addDirsFromBasePath(gmeConfig.visualization.panelPaths, 'panel');
+
     addFromRequireJsPath(gmeConfig.requirejsPaths);
 }
 
