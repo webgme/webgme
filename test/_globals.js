@@ -35,7 +35,7 @@ var WebGME = require('../webgme'),
         transports: [{
             transportType: 'Console',
             options: {
-                level: 'error',
+                level: 'debug',
                 colorize: true,
                 timestamp: true,
                 prettyPrint: true,

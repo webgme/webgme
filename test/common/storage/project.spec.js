@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('storage project', function () {
+describe.only('storage project', function () {
     'use strict';
     var NodeStorage = testFixture.requirejs('common/storage/nodestorage'),
         STORAGE_CONSTANTS = testFixture.requirejs('common/storage/constants'),
