@@ -354,11 +354,11 @@ describe('AddOnManager', function () {
             }
         );
 
-        it.only('should enter StopAndStarted and succeed gracefully with two new monitors',
+        it('should enter StopAndStarted and succeed gracefully with two new monitors',
             function (done) {
                 var manager = new AddOnManager('mockProjectId', logger, gmeConfig),
                     storage = new StorageMock(manager, done),
-                    branchName = 'test7',
+                    branchName = 'test8',
                     emptyCnt = 0;
 
                 manager.project = {
