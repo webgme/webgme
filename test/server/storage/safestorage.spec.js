@@ -1440,7 +1440,7 @@ describe('SafeStorage', function () {
             storage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(storage, {
-                        projectSeed: 'test/server/storage/loadPaths.json',
+                        projectSeed: 'test/server/storage/safestorage/loadPaths.json',
                         projectName: projectName,
                         gmeConfig: gmeConfig,
                         logger: logger
@@ -1467,11 +1467,19 @@ describe('SafeStorage', function () {
         it('should load multiple objects', function (done) {
             var data = {
                 projectId: projectId,
-                rootHash: rootHash,
-                paths: [
-                    '/1946012150/584624888',
-                    '/1946012150/584624888/1603996771',
-                    '/1946012150/584624888/1603996771/1704227179'
+                pathsInfo: [
+                    {
+                        parentHash: rootHash,
+                        path: '/1946012150/584624888'
+                    },
+                    {
+                        parentHash: rootHash,
+                        path: '/1946012150/584624888/1603996771'
+                    },
+                    {
+                        parentHash: rootHash,
+                        path: '/1946012150/584624888/1603996771/1704227179'
+                    }
                 ],
                 excludes: []
             };
@@ -1488,9 +1496,11 @@ describe('SafeStorage', function () {
         it('should load all parent-objects', function (done) {
             var data = {
                 projectId: projectId,
-                rootHash: rootHash,
-                paths: [
-                    '/1946012150/584624888/1603996771/1704227179'
+                pathsInfo: [
+                    {
+                        parentHash: rootHash,
+                        path: '/1946012150/584624888/1603996771/1704227179'
+                    }
                 ],
                 excludes: []
             };
@@ -1507,11 +1517,19 @@ describe('SafeStorage', function () {
         it('should filter out excludes', function (done) {
             var data = {
                     projectId: projectId,
-                    rootHash: rootHash,
-                    paths: [
-                        '/1946012150/584624888',
-                        '/1946012150/584624888/1603996771',
-                        '/1946012150/584624888/1603996771/1704227179'
+                    pathsInfo: [
+                        {
+                            parentHash: rootHash,
+                            path: '/1946012150/584624888'
+                        },
+                        {
+                            parentHash: rootHash,
+                            path: '/1946012150/584624888/1603996771'
+                        },
+                        {
+                            parentHash: rootHash,
+                            path: '/1946012150/584624888/1603996771/1704227179'
+                        }
                     ],
                     excludes: []
                 },
@@ -1547,8 +1565,12 @@ describe('SafeStorage', function () {
         it('should load root path', function (done) {
             var data = {
                 projectId: projectId,
-                rootHash: rootHash,
-                paths: [''],
+                pathsInfo: [
+                    {
+                        parentHash: rootHash,
+                        path: ''
+                    }
+                ],
                 excludes: []
             };
 

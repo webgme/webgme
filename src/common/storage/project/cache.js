@@ -136,59 +136,65 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
                 i = paths.length,
                 j,
                 pathArray,
-                fullyCovered,
                 obj,
-
+                pathsInfo = [],
                 key;
 
-            if (!rootKey || !rootObj) {
-                logger.debug('rootKey empty or rootObject was not loaded in cache, rootKey:', rootKey);
+            if (!rootKey) {
+                logger.debug('rootKey empty:', rootKey);
                 callback(null);
                 return;
             }
 
-            // The root was loaded, so for each requested path we start from the root
-            // and work our way down to the containment chain and add each object that is
-            // already in the cache to 'excludes'.
+            if (rootObj) {
+                // The root was loaded, so for each requested path we start from the root
+                // and work our way down to the containment chain and add each object that is
+                // already in the cache to 'excludes'.
 
-            excludes.push(rootKey);
-            cachedObjects[rootKey] = rootObj;
-            while (i--) {
-                fullyCovered = true;
-                pathArray = paths[i].split('/');
-                pathArray.shift();
+                excludes.push(rootKey);
+                cachedObjects[rootKey] = rootObj;
+                while (i--) {
+                    pathArray = paths[i].split('/');
+                    pathArray.shift();
 
-                obj = rootObj;
-                for (j = 0; j < pathArray.length; j += 1) {
-                    key = obj[pathArray[j]];
-                    if (key) {
-                        obj = getFromCache(key);
-                        if (typeof obj !== 'undefined') {
-                            excludes.push(key);
-                            cachedObjects[key] = obj;
+                    obj = rootObj;
+                    for (j = 0; j < pathArray.length; j += 1) {
+                        key = obj[pathArray[j]];
+                        if (key) {
+                            obj = getFromCache(key);
+                            if (typeof obj !== 'undefined') {
+                                excludes.push(key);
+                                cachedObjects[key] = obj;
+                            } else {
+                                pathsInfo.push({
+                                    parentHash: key,
+                                    path: '/' + pathArray.slice(j + 1).join('/')
+                                });
+                                break;
+                            }
                         } else {
-                            fullyCovered = false;
+                            // The given path does not exist anymore - break.
                             break;
                         }
-                    } else {
-                        fullyCovered = false;
-                        break;
                     }
                 }
-
-                if (fullyCovered) {
-                    paths.splice(i, 1);
-                }
+            } else {
+                pathsInfo = paths.map(function (path) {
+                    return {
+                        parentHash: rootKey,
+                        path: path
+                    };
+                });
             }
 
-            if (paths.length === 0) {
+            if (pathsInfo.length === 0) {
                 logger.debug('All given paths already loaded');
                 callback(null);
                 return;
             }
 
-            logger.debug('loadPaths will request from server, paths:', paths);
-            storage.loadPaths(projectId, rootKey, paths, excludes, function (err, serverObjects) {
+            logger.debug('loadPaths will request from server, pathsInfo:', pathsInfo);
+            storage.loadPaths(projectId, pathsInfo, excludes, function (err, serverObjects) {
                 var keys, i;
                 if (!err && serverObjects) {
                     // Insert every obtained object into the cache (that was not there before).

@@ -174,7 +174,7 @@ describe('ProjectCache', function () {
                         if (err) {
                             nodesLoaded = false;
                         } else {
-                            console.log(core.getAttribute(node, 'name'));
+                            //console.log(core.getAttribute(node, 'name'));
                         }
                         cnt -= 1;
                         if (cnt === 0) {

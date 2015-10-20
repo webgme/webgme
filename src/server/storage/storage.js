@@ -359,8 +359,10 @@ Storage.prototype.loadPaths = function (data, callback) {
         .then(function (dbProject) {
             var loadedObjects = {};
 
-            Q.allSettled(data.paths.map(function (path) {
-                return loadPath(dbProject, data.rootHash, loadedObjects, path);
+            //self.logger.error('paths:', data.paths);
+
+            Q.allSettled(data.pathsInfo.map(function (pathInfo) {
+                return loadPath(dbProject, pathInfo.parentHash, loadedObjects, pathInfo.path);
             }))
                 .then(function (results) {
                     var keys = Object.keys(loadedObjects),
@@ -368,7 +370,9 @@ Storage.prototype.loadPaths = function (data, callback) {
 
                     for (i = 0; i < results.length; i += 1) {
                         if (results[i].state === 'rejected') {
-                            self.logger.error('loadPaths failed, ignoring', results[i].reason);
+                            self.logger.error('loadPaths failed, ignoring', data.pathsInfo[i].path, {
+                                metadata: results[i].reason,
+                            });
                         }
                     }
 

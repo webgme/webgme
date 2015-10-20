@@ -95,12 +95,11 @@ define(['common/storage/storageclasses/simpleapi'], function (SimpleAPI) {
         });
     };
 
-    StorageObjectLoaders.prototype.loadPaths = function (projectId, rootKey, paths, excludes, callback) {
+    StorageObjectLoaders.prototype.loadPaths = function (projectId, pathsInfo, excludes, callback) {
         var data = {
             projectId: projectId,
-            paths: paths,
-            excludes: excludes,
-            rootHash: rootKey
+            pathsInfo: pathsInfo,
+            excludes: excludes
         };
 
         this.webSocket.loadPaths(data, callback);
