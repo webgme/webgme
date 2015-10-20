@@ -165,31 +165,37 @@ function StandAloneServer(gmeConfig) {
             __httpServer = Https.createServer({
                 key: __secureSiteInfo.key,
                 cert: __secureSiteInfo.certificate
-            }, __app).listen(gmeConfig.server.port, function () {
-                // Note: the listening function does not return with an error, errors are handled by the error event
-                logger.debug('Https server is listening on ', {metadata: {port: gmeConfig.server.port}});
-                serverDeferred.resolve();
-            });
+            }, __app);
         } else {
-            __httpServer = Http.createServer(__app).listen(gmeConfig.server.port, function () {
-                // Note: the listening function does not return with an error, errors are handled by the error event
-                logger.debug('Http server is listening on ', {metadata: {port: gmeConfig.server.port}});
-                serverDeferred.resolve();
-            });
+            __httpServer = Http.createServer(__app);
         }
-        __httpServer.on('connection', function (socket) {
-            var socketId = socket.remoteAddress + ':' + socket.remotePort;
 
-            sockets[socketId] = socket;
-            logger.debug('socket connected (added to list) ' + socketId);
+        function handleNewConnection(socket) {
+          var socketId = socket.remoteAddress + ':' + socket.remotePort;
 
-            socket.on('close', function () {
-                if (sockets.hasOwnProperty(socketId)) {
-                    logger.debug('socket closed (removed from list) ' + socketId);
-                    delete sockets[socketId];
-                }
-            });
+
+          if (socket.encrypted) { // https://nodejs.org/api/tls.html#tls_tlssocket_encrypted
+              socketId += ':encrypted';
+          }
+
+          sockets[socketId] = socket;
+          logger.debug('socket connected (added to list) ' + socketId);
+
+          socket.on('close', function () {
+              if (sockets.hasOwnProperty(socketId)) {
+                  logger.debug('socket closed (removed from list) ' + socketId);
+                  delete sockets[socketId];
+              }
+          });
+        }
+
+        __httpServer.on('connection', handleNewConnection);
+        __httpServer.on('secureConnection', handleNewConnection);
+
+        __httpServer.on('clientError', function (err, socket) {
+            logger.debug('clientError', err);
         });
+
 
         __httpServer.on('error', function (err) {
             if (err.code === 'EADDRINUSE') {
@@ -198,6 +204,12 @@ function StandAloneServer(gmeConfig) {
             } else {
                 logger.error('Server raised an error', {metadata: {port: gmeConfig.server.port, error: err}});
             }
+        });
+
+        __httpServer.listen(gmeConfig.server.port, function () {
+            // Note: the listening function does not return with an error, errors are handled by the error event
+            logger.debug('Http server is listening on ', {metadata: {port: gmeConfig.server.port}});
+            serverDeferred.resolve();
         });
 
         __storage.openDatabase(function (err) {
@@ -240,6 +252,7 @@ function StandAloneServer(gmeConfig) {
         self.isRunning = false;
 
         try {
+
             if (gmeConfig.executor.enable) {
                 ExecutorServer.stop();
             }

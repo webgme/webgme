@@ -37,8 +37,12 @@ describe('User manager command line interface (CLI)', function () {
             });
 
             nodeUserManager.stderr.on('data', function (data) {
-                err = err || '';
-                err += data.toString();
+                if (data.indexOf('js-bson: Failed to load c++ bson extension, using pure JS version') > -1) {
+                  // ignore this error
+                } else {
+                  err = err || '';
+                  err += data.toString();
+                }
                 //console.log(data.toString());
             });
 
