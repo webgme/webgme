@@ -171,22 +171,21 @@ function StandAloneServer(gmeConfig) {
         }
 
         function handleNewConnection(socket) {
-          var socketId = socket.remoteAddress + ':' + socket.remotePort;
-
-
-          if (socket.encrypted) { // https://nodejs.org/api/tls.html#tls_tlssocket_encrypted
-              socketId += ':encrypted';
-          }
-
-          sockets[socketId] = socket;
-          logger.debug('socket connected (added to list) ' + socketId);
-
-          socket.on('close', function () {
-              if (sockets.hasOwnProperty(socketId)) {
-                  logger.debug('socket closed (removed from list) ' + socketId);
-                  delete sockets[socketId];
-              }
-          });
+            var socketId = socket.remoteAddress + ':' + socket.remotePort;
+            
+            if (socket.encrypted) { // https://nodejs.org/api/tls.html#tls_tlssocket_encrypted
+                socketId += ':encrypted';
+            }
+            
+            sockets[socketId] = socket;
+            logger.debug('socket connected (added to list) ' + socketId);
+            
+            socket.on('close', function () {
+                if (sockets.hasOwnProperty(socketId)) {
+                    logger.debug('socket closed (removed from list) ' + socketId);
+                    delete sockets[socketId];
+                }
+            });
         }
 
         __httpServer.on('connection', handleNewConnection);
