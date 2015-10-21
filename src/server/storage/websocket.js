@@ -214,20 +214,15 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 var i,
                     projectIdBranchName;
                 logger.debug('onclose: socket was in rooms: ', socket.rooms);
-
-                function getErrorHandler() {
-                    return function (err) {
-                        logger.error(err);
-                    };
-                }
-
-                for (i = 0; i < socket.rooms.length; i += 1) {
-                    if (socket.rooms[i].indexOf(CONSTANTS.ROOM_DIVIDER) > -1) {
-                        logger.debug('Socket was in branchRoom', socket.rooms[i]);
-                        projectIdBranchName = socket.rooms[i].split(CONSTANTS.ROOM_DIVIDER);
-                        // We cannot wait for this since socket.onclose is synchronous.
-                        leaveBranchRoom(socket, projectIdBranchName[0], projectIdBranchName[1], true)
-                            .fail(getErrorHandler());
+                if (webSocket) {
+                    for (i = 0; i < socket.rooms.length; i += 1) {
+                        if (socket.rooms[i].indexOf(CONSTANTS.ROOM_DIVIDER) > -1) {
+                            logger.debug('Socket was in branchRoom', socket.rooms[i]);
+                            projectIdBranchName = socket.rooms[i].split(CONSTANTS.ROOM_DIVIDER);
+                            // We cannot wait for this since socket.onclose is synchronous.
+                            leaveBranchRoom(socket, projectIdBranchName[0], projectIdBranchName[1], true)
+                                .fail(logger.error);
+                        }
                     }
                 }
 
@@ -300,18 +295,14 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         if (data.join) {
                             if (access.read) {
                                 joinBranchRoom(socket, data.projectId, data.branchName)
-                                    .fail(function (err) {
-                                        logger.error(err);
-                                    });
+                                    .fail(logger.error);
                             } else {
                                 logger.warn('socket not authorized to join room', data.projectId);
                                 throw new Error('No read access for ' + data.projectId);
                             }
                         } else {
                             leaveBranchRoom(socket, data.projectId, data.branchName)
-                                .fail(function (err) {
-                                    logger.error(err);
-                                });
+                                .fail(logger.error);
                         }
                     })
                     .then(function () {
@@ -367,9 +358,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     .then(function (commitData) {
                         latestCommitData = commitData;
                         joinBranchRoom(socket, data.projectId, data.branchName)
-                            .fail(function (err) {
-                                logger.error(err);
-                            });
+                            .fail(logger.error);
                     })
                     .then(function () {
                         callback(null, latestCommitData);
@@ -386,9 +375,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('closeBranch', function (data, callback) {
                 logger.debug('closeBranch', {metadata: data});
                 leaveBranchRoom(socket, data.projectId, data.branchName)
-                    .fail(function (err) {
-                        logger.error(err);
-                    });
+                    .fail(logger.error);
                 callback(null);
             });
 
