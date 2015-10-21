@@ -398,6 +398,7 @@ describe('SafeStorage', function () {
     describe('getCommits', function () {
         var safeStorage,
             projectId,
+            rootHash,
             commitHash;
 
         before(function (done) {
@@ -415,6 +416,7 @@ describe('SafeStorage', function () {
                 .then(function (result) {
                     projectId = result.project.projectId;
                     commitHash = result.commitHash;
+                    rootHash = result.rootHash;
                     return Q();
                 })
                 .nodeify(done);
@@ -444,6 +446,22 @@ describe('SafeStorage', function () {
             var data = {
                 projectId: projectId,
                 number: 10,
+                before: commitHash
+            };
+
+            safeStorage.getCommits(data)
+                .then(function (commits) {
+                    expect(commits.length).equal(1);
+                    expect(commits[0]._id === commitHash);
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should getCommits and get the one specified', function (done) {
+            var data = {
+                projectId: projectId,
+                number: 1,
                 before: commitHash
             };
 
@@ -492,6 +510,26 @@ describe('SafeStorage', function () {
                     expect(err).to.not.equal(null);
                     expect(typeof err).to.equal('object');
                     expect(err.message).to.include('object does not exist ' + dummyHash);
+                    done();
+                })
+                .done();
+        });
+
+        it('should fail getCommits using commitHash if hash points to non commit object', function (done) {
+            var data = {
+                    projectId: projectId,
+                    number: 1,
+                    before: rootHash
+                };
+
+            safeStorage.getCommits(data)
+                .then(function () {
+                    done(new Error('should have failed with error'));
+                })
+                .catch(function (err) {
+                    expect(err).to.not.equal(null);
+                    expect(typeof err).to.equal('object');
+                    expect(err.message).to.include('Commit object does not exist ' + rootHash);
                     done();
                 })
                 .done();
@@ -1480,8 +1518,7 @@ describe('SafeStorage', function () {
                         parentHash: rootHash,
                         path: '/1946012150/584624888/1603996771/1704227179'
                     }
-                ],
-                excludes: []
+                ]
             };
 
             storage.loadPaths(data)
@@ -1501,13 +1538,33 @@ describe('SafeStorage', function () {
                         parentHash: rootHash,
                         path: '/1946012150/584624888/1603996771/1704227179'
                     }
-                ],
-                excludes: []
+                ]
             };
 
             storage.loadPaths(data)
                 .then(function (objects) {
                     expect(Object.keys(objects).length).to.equal(5);
+                    done();
+                })
+                .catch(done);
+
+        });
+
+        it('should load only one object when parents excluded', function (done) {
+            var data = {
+                projectId: projectId,
+                pathsInfo: [
+                    {
+                        parentHash: rootHash,
+                        path: '/1946012150/584624888/1603996771/1704227179'
+                    }
+                ],
+                excludeParents: true
+            };
+
+            storage.loadPaths(data)
+                .then(function (objects) {
+                    expect(Object.keys(objects).length).to.equal(1);
                     done();
                 })
                 .catch(done);
@@ -1570,13 +1627,91 @@ describe('SafeStorage', function () {
                         parentHash: rootHash,
                         path: ''
                     }
-                ],
-                excludes: []
+                ]
             };
 
             storage.loadPaths(data)
                 .then(function (objects) {
                     expect(Object.keys(objects)).to.have.members([rootHash]);
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should load root path with additional /', function (done) {
+            var data = {
+                projectId: projectId,
+                pathsInfo: [
+                    {
+                        parentHash: rootHash,
+                        path: '/'
+                    }
+                ]
+            };
+
+            storage.loadPaths(data)
+                .then(function (objects) {
+                    expect(Object.keys(objects)).to.have.members([rootHash]);
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should not return any nodes if path does not exist (with excludeParents)', function (done) {
+            var data = {
+                projectId: projectId,
+                pathsInfo: [
+                    {
+                        parentHash: rootHash,
+                        path: '/doesNotExist'
+                    }
+                ],
+                excludeParents: true
+            };
+
+            storage.loadPaths(data)
+                .then(function (objects) {
+                    expect(objects).to.deep.equal({});
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should not return any nodes if pathsInfo is empty array', function (done) {
+            var data = {
+                projectId: projectId,
+                pathsInfo: []
+            };
+
+            storage.loadPaths(data)
+                .then(function (objects) {
+                    expect(objects).to.deep.equal({});
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should only return (and as shown by coverage not load) the objects once', function (done) {
+            var data = {
+                projectId: projectId,
+                pathsInfo: [
+                    {
+                        parentHash: rootHash,
+                        path: '/1946012150/584624888'
+                    },
+                    {
+                        parentHash: rootHash,
+                        path: '/1946012150/584624888'
+                    }
+                ],
+                excludeParents: false
+            };
+
+            storage.loadPaths(data)
+                .then(function (objects) {
+                    var hashes = Object.keys(objects);
+                    expect(hashes.length).to.equal(3);
+                    expect(hashes).to.contain(rootHash);
                     done();
                 })
                 .catch(done);

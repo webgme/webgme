@@ -1514,7 +1514,6 @@ describe('REST API', function () {
                         })
                         .then(function (results) {
                             importResult = results[0]; // projectName
-
                             return Q.allDone([
                                 gmeAuth.authorizeByUserId(guestAccount, projectName2Id(unauthorizedProjectName),
                                     'create', {
@@ -1676,6 +1675,237 @@ describe('REST API', function () {
                     });
             });
 
+            it('should return commit for project /projects/:ownerId/:projectId/commits/:commitHash', function (done) {
+                var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/' +
+                    importResult.commitHash.substring(1);
+                agent.get(url)
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.have.property('message');
+                        expect(res.body).to.have.property('parents');
+                        expect(res.body).to.have.property('root');
+                        expect(res.body).to.have.property('time');
+                        expect(res.body).to.have.property('type');
+                        expect(res.body).to.have.property('updater');
+                        expect(res.body).to.have.property('_id');
+                        done();
+                    });
+            });
+
+            it('should return commit for project /projects/:ownerId/:projectId/commits/:%23commitHash', function (done) {
+                var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/%23' +
+                    importResult.commitHash.substring(1);
+                agent.get(url)
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.have.property('message');
+                        expect(res.body).to.have.property('parents');
+                        expect(res.body).to.have.property('root');
+                        expect(res.body).to.have.property('time');
+                        expect(res.body).to.have.property('type');
+                        expect(res.body).to.have.property('updater');
+                        expect(res.body).to.have.property('_id');
+                        done();
+                    });
+            });
+
+            it('should 404 commit for project /projects/:ownerId/:projectId/commits/:doesNotExist', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/' +
+                    'doesNotExist')
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
+
+            it('should 404 commit for project /projects/:ownerId/:doesNotExist/commits/:doesNotExist', function (done) {
+                agent.get(server.getUrl() + '/api/projects/guest/doesNotExist/commits/' +
+                    importResult.commitHash.substring(1))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
+
+            it('should 404 commit for project /projects/:ownerId/:projectId/commits/:rootHash', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/' +
+                    importResult.rootHash.substring(1))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
+
+            // Getting raw data nodes via commit
+            it('should return rootNode for project /projects/:ownerId/:projectId/commits/:commitHash/tree/',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/' +
+                        importResult.commitHash.substring(1) + '/tree/';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body).to.have.property('1');
+                            expect(res.body).to.have.property('_id');
+                            expect(res.body).to.have.property('_meta');
+                            expect(res.body).to.have.property('atr');
+                            expect(res.body).to.have.property('ovr');
+
+                            done();
+                        });
+                }
+            );
+
+            it('should return fcoNode for project /projects/:ownerId/:projectId/commits/:commitHash/tree/1',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/' +
+                        importResult.commitHash.substring(1) + '/tree/1';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body).to.not.have.property('1');
+                            expect(res.body).to.have.property('_id');
+                            expect(res.body).to.have.property('_meta');
+                            expect(res.body).to.have.property('atr');
+                            expect(res.body).to.have.property('ovr');
+
+                            done();
+                        });
+                }
+            );
+
+            it('should return fcoNode for project /projects/:ownerId/:projectId/commits/:%23commitHash/tree/1',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/%23' +
+                        importResult.commitHash.substring(1) + '/tree/1';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body).to.not.have.property('1');
+                            expect(res.body).to.have.property('_id');
+                            expect(res.body).to.have.property('_meta');
+                            expect(res.body).to.have.property('atr');
+                            expect(res.body).to.have.property('ovr');
+
+                            done();
+                        });
+                }
+            );
+
+            it('should 404 /projects/:ownerId/:projectId/commits/:doesNotExist/tree/',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/' +
+                        'doesNotExist' + '/tree/';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(404, err);
+
+                            done();
+                        });
+                }
+            );
+
+            it('should 404 /projects/:ownerId/:projectId/commits/:commitHash/tree/doesNotExist',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/' +
+                        importResult.commitHash.substring(1) + '/tree/doesNotExist';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(404, err);
+
+                            done();
+                        });
+                }
+            );
+
+            it('should 404 /projects/:ownerId/:doesNotExist/commits/:commitHash/tree/',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/guest/doesNotExist/commits/' +
+                        importResult.commitHash.substring(1) + '/tree/';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(404, err);
+
+                            done();
+                        });
+                }
+            );
+
+            // Getting raw data nodes via branch
+            it('should return rootNode for project /projects/:ownerId/:projectId/branches/:branchId/tree/',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches/' +
+                        'master/tree/';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body).to.have.property('1');
+                            expect(res.body).to.have.property('_id');
+                            expect(res.body).to.have.property('_meta');
+                            expect(res.body).to.have.property('atr');
+                            expect(res.body).to.have.property('ovr');
+
+                            done();
+                        });
+                }
+            );
+
+            it('should return fcoNode for project /projects/:ownerId/:projectId/branches/:branchId/tree/1',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches/' +
+                        'master/tree/1';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body).to.not.have.property('1');
+                            expect(res.body).to.have.property('_id');
+                            expect(res.body).to.have.property('_meta');
+                            expect(res.body).to.have.property('atr');
+                            expect(res.body).to.have.property('ovr');
+
+                            done();
+                        });
+                }
+            );
+
+            it('should 404 /projects/:ownerId/:projectId/branches/:doesNotExist/tree/',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches/' +
+                        'doesNotExist/tree/';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(404, err);
+
+                            done();
+                        });
+                }
+            );
+
+            it('should 404 /projects/:ownerId/:projectId/branches/:branchId/tree/doesNotExist',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches/' +
+                        'master/tree/doesNotExist';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(404, err);
+
+                            done();
+                        });
+                }
+            );
+
+            it('should 404 /projects/:ownerId/:doesNotExist/branches/:branchId/tree/',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/guest/doesNotExist/branches/master/tree/';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(404, err);
+
+                            done();
+                        });
+                }
+            );
+
+            // Branch manipulation
             it('should create branch for project /projects/:ownerId/:projectId/branches/newBranch', function (done) {
                 agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches/master')
                     .end(function (err, res) {
@@ -1697,7 +1927,6 @@ describe('REST API', function () {
                             });
                     });
             });
-
 
             it('should delete a branch for project /projects/:ownerId/:projectId/branches/newBranchToDelete',
                 function (done) {
@@ -1741,7 +1970,6 @@ describe('REST API', function () {
                                 });
                         });
                 });
-
 
             it('should patch a branch for project /projects/:ownerId/:projectId/branches/newBranchToPatch',
                 function (done) {
@@ -1858,7 +2086,6 @@ describe('REST API', function () {
                         done();
                     });
             });
-
 
             it('should fail to delete a branch if project does not exist', function (done) {
                 agent.del(server.getUrl() + '/api/projects/' + projectName2APIPath('does_not_exist') + '/branches/master')

@@ -311,9 +311,10 @@ Storage.prototype.loadObjects = function (data, callback) {
  * @param {string} rootHash
  * @param {Object<string, object>} loadedObjects
  * @param {string} path
+ * @param {boolean} excludeParents - if true will only include the node at the path
  * @returns {function|promise}
  */
-function loadPath(dbProject, rootHash, loadedObjects, path) {
+function loadPath(dbProject, rootHash, loadedObjects, path, excludeParents) {
     var deferred = Q.defer(),
         pathArray = path.split('/');
 
@@ -330,11 +331,14 @@ function loadPath(dbProject, rootHash, loadedObjects, path) {
         } else {
             dbProject.loadObject(parentHash)
                 .then(function (object) {
-                    loadedObjects[parentHash] = object;
                     if (relPath) {
                         hash = object[relPath];
+                        if (!excludeParents) {
+                            loadedObjects[parentHash] = object;
+                        }
                         loadParent(hash, pathArray.shift());
                     } else {
+                        loadedObjects[parentHash] = object;
                         deferred.resolve();
                     }
                 })
@@ -357,35 +361,53 @@ Storage.prototype.loadPaths = function (data, callback) {
 
     this.mongo.openProject(data.projectId)
         .then(function (dbProject) {
-            var loadedObjects = {};
+            var loadedObjects = {},
+                throttleDeferred = Q.defer(),
+                counter = data.pathsInfo.length;
 
-            //self.logger.error('paths:', data.paths);
+            function throttleLoad() {
+                var pathInfo;
 
-            Q.allSettled(data.pathsInfo.map(function (pathInfo) {
-                return loadPath(dbProject, pathInfo.parentHash, loadedObjects, pathInfo.path);
-            }))
-                .then(function (results) {
+                if (counter === 0) {
+                    throttleDeferred.resolve();
+                } else {
+                    counter -= 1;
+                    pathInfo = data.pathsInfo[counter];
+                    loadPath(dbProject, pathInfo.parentHash, loadedObjects, pathInfo.path, data.excludeParents)
+                        .then(function () {
+                            throttleLoad();
+                        })
+                        .catch(function (err) {
+                            self.logger.error('loadPaths failed, ignoring', pathInfo.path, {
+                                metadata: err,
+                            });
+                            throttleLoad();
+                        });
+                }
+
+                return throttleDeferred.promise;
+            }
+
+            //Q.allSettled(data.pathsInfo.map(function (pathInfo) {
+            //    return loadPath(dbProject, pathInfo.parentHash, loadedObjects, pathInfo.path, data.excludeParents);
+            //}))
+            throttleLoad()
+                .then(function () {
                     var keys = Object.keys(loadedObjects),
                         i;
-
-                    for (i = 0; i < results.length; i += 1) {
-                        if (results[i].state === 'rejected') {
-                            self.logger.error('loadPaths failed, ignoring', data.pathsInfo[i].path, {
-                                metadata: results[i].reason,
-                            });
-                        }
-                    }
-
-                    for (i = 0; i < keys.length; i += 1) {
-                        if (data.excludes.indexOf(keys[i]) > -1) {
-                            // https://jsperf.com/delete-vs-setting-undefined-vs-new-object
-                            // When sending the data these keys will be removed after JSON.stringify.
-                            loadedObjects[keys[i]] = undefined;
+                    if (data.excludes) {
+                        for (i = 0; i < keys.length; i += 1) {
+                            if (data.excludes.indexOf(keys[i]) > -1) {
+                                // https://jsperf.com/delete-vs-setting-undefined-vs-new-object
+                                // When sending the data these keys will be removed after JSON.stringify.
+                                loadedObjects[keys[i]] = undefined;
+                            }
                         }
                     }
 
                     deferred.resolve(loadedObjects);
-                });
+                })
+                .catch(deferred.reject);
         })
         .catch(function (err) {
             deferred.reject(err);
@@ -407,7 +429,14 @@ Storage.prototype.getCommits = function (data, callback) {
                 self.logger.debug('commitHash was given will load commit', data.before);
                 project.loadObject(data.before)
                     .then(function (commitObject) {
-                        return project.getCommits(commitObject.time + 1, data.number);
+                        if (commitObject.type !== 'commit') {
+                            throw new Error('Commit object does not exist ' + data.before);
+                        }
+                        if (data.number === 1) {
+                            return [commitObject];
+                        } else {
+                            return project.getCommits(commitObject.time + 1, data.number);
+                        }
                     })
                     .then(function (commits) {
                         deferred.resolve(commits);

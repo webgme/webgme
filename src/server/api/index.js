@@ -529,6 +529,43 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     // PROJECTS
 
+    function loadNodePathByCommitHash(userId, projectId, commitHash, path) {
+        var getCommitParams = {
+            username: userId,
+            projectId: projectId,
+            number: 1,
+            before: commitHash
+        };
+
+        return safeStorage.getCommits(getCommitParams)
+            .then(function (commits) {
+                var loadPathsParams = {
+                    projectId: projectId,
+                    username: userId,
+                    pathsInfo: [
+                        {
+                            parentHash: commits[0].root,
+                            path: path
+                        }
+                    ],
+                    excludeParents: true
+                };
+
+                return safeStorage.loadPaths(loadPathsParams);
+            })
+            .then(function (dataObjects) {
+                var hashes = Object.keys(dataObjects);
+                if (hashes.length === 1) {
+                    return dataObjects[hashes[0]];
+                } else if (hashes.length === 0) {
+                    throw new Error('Path does not exist ' + path);
+                } else {
+                    // This should never happen..
+                    throw new Error('safeStorage.loadPaths returned with more than one object');
+                }
+            });
+    }
+
     router.get('/projects', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req);
         safeStorage.getProjects({username: userId})
@@ -539,7 +576,6 @@ function createAPI(app, mountPath, middlewareOpts) {
                 next(err);
             });
     });
-
 
     /**
      * Creating project by seed
@@ -606,6 +642,48 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
+    router.get('/projects/:ownerId/:projectName/commits/:commitHash', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req),
+            commitHash = StorageUtil.getHashTaggedHash(req.params.commitHash),
+            data = {
+                username: userId,
+                projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                    req.params.projectName),
+                before: commitHash,
+                number: 1
+            };
+
+        safeStorage.getCommits(data)
+            .then(function (result) {
+                res.json(result[0]);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1 ) {
+                    err.status = 404;
+                }
+                next(err);
+            });
+    });
+
+    router.get('/projects/:ownerId/:projectName/commits/:commitHash/tree/*', ensureAuthenticated,
+        function (req, res, next) {
+            var userId = getUserId(req),
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                    req.params.projectName),
+                commitHash = StorageUtil.getHashTaggedHash(req.params.commitHash);
+
+            loadNodePathByCommitHash(userId, projectId, commitHash, '/' + req.params[0])
+                .then(function (nodeObj) {
+                    res.json(nodeObj);
+                })
+                .catch(function (err) {
+                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1 ) {
+                        err.status = 404;
+                    }
+                    next(err);
+                });
+        }
+    );
 
     router.get('/projects/:ownerId/:projectName/compare/:branchOrCommitA...:branchOrCommitB',
         ensureAuthenticated,
@@ -677,6 +755,36 @@ function createAPI(app, mountPath, middlewareOpts) {
                 next(err);
             });
     });
+
+    router.get('/projects/:ownerId/:projectName/branches/:branchId/tree/*', ensureAuthenticated,
+        function (req, res, next) {
+            var userId = getUserId(req),
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                    req.params.projectName),
+                data = {
+                    username: userId,
+                    projectId: projectId,
+                    branchName: req.params.branchId
+                };
+
+            safeStorage.getBranchHash(data)
+                .then(function (branchHash) {
+                    if (!branchHash) {
+                        throw new Error('Branch does not exist ' + req.params.branchId);
+                    }
+                    return loadNodePathByCommitHash(userId, projectId, branchHash, '/' + req.params[0]);
+                })
+                .then(function (dataObj) {
+                    res.json(dataObj);
+                })
+                .catch(function (err) {
+                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1 ) {
+                        err.status = 404;
+                    }
+                    next(err);
+                });
+        }
+    );
 
     router.patch('/projects/:ownerId/:projectName/branches/:branchId', function (req, res, next) {
         var userId = getUserId(req),
@@ -855,7 +963,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         var pluginExecution = runningPlugins[req.params.resultId];
         logger.debug('Plugin-result request for ', req.params.pluginId, req.params.resultId);
         if (pluginExecution) {
-            if (pluginExecution.status ===  PLUGIN_CONSTANTS.RUNNING) {
+            if (pluginExecution.status === PLUGIN_CONSTANTS.RUNNING) {
                 res.send(pluginExecution);
             } else {
                 // Remove the pluginExecution when it has finished or an error occurred.
