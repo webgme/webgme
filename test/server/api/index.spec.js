@@ -8,7 +8,7 @@
 var testFixture = require('../../_globals.js');
 
 
-describe('API', function () {
+describe('REST API', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -27,6 +27,7 @@ describe('API', function () {
         var gmeAuth;
 
         before(function (done) {
+            this.timeout(4000);
             testFixture.clearDBAndGetGMEAuth(gmeConfig)
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
@@ -921,6 +922,7 @@ describe('API', function () {
         var gmeAuth;
 
         before(function (done) {
+            this.timeout(4000);
             testFixture.clearDBAndGetGMEAuth(gmeConfig)
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
