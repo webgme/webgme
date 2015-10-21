@@ -54,7 +54,7 @@ describe('webgme', function () {
             webGME.addToRequireJsPaths(gmeConfig);
         }
 
-        expect(fn).to.throw(Error, /ENOENT, no such file or directory/);
+        expect(fn).to.throw(Error, /ENOENT[,:] no such file or directory/);
     });
 
     it('should getGmeAuth', function (done) {

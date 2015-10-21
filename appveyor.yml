@@ -1,0 +1,40 @@
+environment:
+  matrix:
+  - nodejs_version: "0.12"
+    platform: x64
+  # - nodejs_version: "0.12"
+  #   platform: x86
+  - nodejs_version: "4.2"
+    platform: x64
+  # - nodejs_version: "4.2"
+  #   platform: x86
+
+services:
+  - mongodb
+
+install:
+  - where npm
+  - where node
+  - ps: Install-Product node $env:nodejs_version $env:platform
+  - for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install npm@latest
+  - for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install node-pre-gyp@latest
+  - npm install
+
+build: off
+
+test_script:
+  - node --version
+  - npm --version
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/addon
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/bin
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test/common
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/blob
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/core
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/storage
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/util
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/config
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/issue
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/seeds
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server

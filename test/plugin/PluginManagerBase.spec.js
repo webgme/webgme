@@ -93,39 +93,35 @@ describe('Plugin Manager Base', function () {
             bcParam.server = '127.0.0.1';
             bcParam.httpsecure = gmeConfig.server.https.enable;
             server = testFixture.WebGME.standaloneServer(gmeConfig);
-            server.start(function () {
 
-                blobClient = new BlobClient(bcParam);
-
-                testFixture.clearDBAndGetGMEAuth(gmeConfig, 'PluginManagerBase')
-                    .then(function (gmeAuth_) {
-                        gmeAuth = gmeAuth_;
-                        storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
-                        return storage.openDatabase();
-                    })
-                    .then(function () {
-
-                        testFixture.importProject(storage, {
-                            projectSeed: './test/plugin/PluginManagerBase/project.json',
-                            projectName: 'PluginManagerBase',
-                            gmeConfig: gmeConfig,
-                            logger: logger
-                        }, function (err, result) {
-                            if (err) {
-                                done(err);
-                                return;
-                            }
-                            project = result.project;
-                            core = result.core;
-                            root = result.rootNode;
-                            commit = result.commitHash;
-                            baseCommit = result.commitHash;
-                            rootHash = core.getHash(root);
-                            done();
-                        });
+            testFixture.clearDBAndGetGMEAuth(gmeConfig, 'PluginManagerBase')
+                .then(function (gmeAuth_) {
+                    gmeAuth = gmeAuth_;
+                    storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                    return storage.openDatabase();
+                })
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: './test/plugin/PluginManagerBase/project.json',
+                        projectName: 'PluginManagerBase',
+                        gmeConfig: gmeConfig,
+                        logger: logger
                     });
+                })
+                .then(function (result) {
+                    project = result.project;
+                    core = result.core;
+                    root = result.rootNode;
+                    commit = result.commitHash;
+                    baseCommit = result.commitHash;
+                    rootHash = core.getHash(root);
 
-            });
+                    return testFixture.Q.ninvoke(server, 'start');
+                })
+                .then(function () {
+                    blobClient = new BlobClient(bcParam);
+                })
+                .nodeify(done);
         });
 
         beforeEach(function (done) {
