@@ -977,7 +977,8 @@ SafeStorage.prototype.loadObjects = function (data, callback) {
  * @param {string} data.projectId - identifier for project.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
  * @param {object[]} data.pathsInfo - list of objects with parentHash and path.
- * @param {string[]} data.excludes - list of known object hashes that should not be returned.
+ * @param {string[]} [data.excludes] - list of known object hashes that should not be returned.
+ * @param {boolean} [data.excludeParents] - if true will only return the data for the node at the path.
  * @param {function} [callback]
  * @returns {promise} //TODO: jsdocify this
  */
@@ -989,9 +990,8 @@ SafeStorage.prototype.loadPaths = function (data, callback) {
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
         check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
-        check(data.excludes instanceof Array,
-            deferred, 'data.excludes is not an array: ' + JSON.stringify(data.excludes)) ||
-        check(data.pathsInfo instanceof Array, deferred, 'data.pathsInfo is not an array: ' + JSON.stringify(data.hashes));
+        check(data.pathsInfo instanceof Array, deferred,
+            'data.pathsInfo is not an array: ' + JSON.stringify(data.hashes));
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');

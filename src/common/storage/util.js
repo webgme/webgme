@@ -30,6 +30,12 @@ define(['common/storage/constants'], function (CONSTANTS) {
             if (projectId) {
                 return projectId.substring(projectId.indexOf(CONSTANTS.PROJECT_ID_SEP) + 1);
             }
+        },
+        getHashTaggedHash: function (hash) {
+            if (typeof hash === 'string') {
+                return hash[0] === '#' ? hash : '#' + hash;
+            }
+            return hash;
         }
     };
 });
