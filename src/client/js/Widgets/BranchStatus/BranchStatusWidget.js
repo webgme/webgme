@@ -176,15 +176,15 @@ define([
         this._ddBranchStatus.clear();
         this._outOfSync = true;
         this._ddBranchStatus.addItem({
-            text: 'Create fork',
+            text: 'Create a branch with local changes.',
             value: ITEM_VALUE_FORK
         });
         this._ddBranchStatus.addItem({
-            text: 'Drop local changes',
+            text: 'Drop local changes and follow branch.',
             value: ITEM_VALUE_FOLLOW
         });
         this._ddBranchStatus.addItem({
-            text: 'Try to merge',
+            text: 'Attempt to merge in local changes.',
             value: ITEM_VALUE_MERGE
         });
         this._ddBranchStatus.setTitle('AHEAD[' + eventData.commitQueue.length + ']');

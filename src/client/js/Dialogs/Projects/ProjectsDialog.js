@@ -486,7 +486,8 @@ define([
             i,
             li,
             displayProject,
-            projectDiplayedName,
+            projectDisplayedName,
+            projectName,
             count = 0,
             emptyLi = $('<li class="center"><i>No projects in this group...</i></li>');
 
@@ -495,17 +496,18 @@ define([
         if (len > 0) {
             for (i = 0; i < len; i += 1) {
                 displayProject = false;
+                projectName = StorageUtil.getProjectNameFromProjectId(this._projectNames[i]);
                 if (this._filter === undefined) {
                     displayProject = true;
                 } else {
-                    displayProject = (this._projectNames[i].toUpperCase()[0] >= this._filter[0] &&
-                    this._projectNames[i].toUpperCase()[0] <= this._filter[1]);
+                    displayProject = (projectName.toUpperCase()[0] >= this._filter[0] &&
+                    projectName.toUpperCase()[0] <= this._filter[1]);
                 }
 
                 if (displayProject) {
                     li = LI_BASE.clone();
-                    projectDiplayedName = StorageUtil.getProjectDisplayedNameFromProjectId(this._projectNames[i]);
-                    li.find('a').text(projectDiplayedName);
+                    projectDisplayedName = StorageUtil.getProjectDisplayedNameFromProjectId(this._projectNames[i]);
+                    li.find('a').text(projectDisplayedName);
                     li.data(DATA_PROJECT_ID, this._projectNames[i]);
 
                     if (this._projectNames[i] === this._activeProject) {
