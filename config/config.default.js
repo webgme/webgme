@@ -184,7 +184,13 @@ var path = require('path'),
             loadBucketSize: 100,
             loadBucketTimer: 10,
             clientCacheSize: 2000, // overwrites cache on client
-            keyType: 'plainSHA1' // 'rand160Bits', 'ZSSHA', 'plainSHA1',
+            keyType: 'plainSHA1', // 'rand160Bits', 'ZSSHA', 'plainSHA1',
+            database: {
+                type: 'mongo', // mongo, redis, memory
+                options: { // if mongo - settings will be used from config.mongo
+                    //port: 6666
+                }
+            }
         },
 
         visualization: {

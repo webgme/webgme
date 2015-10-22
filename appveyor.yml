@@ -13,6 +13,11 @@ services:
   - mongodb
 
 install:
+  # Install the Redis
+  - nuget install redis-64 -excludeversion
+  - redis-64\redis-server.exe --service-install
+  - redis-64\redis-server.exe --service-start
+  - '@ECHO Redis Started'
   - where npm
   - where node
   - ps: Install-Product node $env:nodejs_version $env:platform

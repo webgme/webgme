@@ -27,6 +27,7 @@ var WebGME = require('../webgme'),
     storageUtil = requireJS('common/storage/util'),
     Mongo = require('../src/server/storage/mongo'),
     Memory = require('../src/server/storage/memory'),
+    RedisAdapter = require('../src/server/storage/redisadapter'),
     SafeStorage = require('../src/server/storage/safestorage'),
     Logger = require('../src/server/logger'),
 
@@ -53,6 +54,10 @@ var WebGME = require('../webgme'),
     getMemoryStorage = function (logger, gmeConfig, gmeAuth) {
         var memory = new Memory(logger, gmeConfig);
         return new SafeStorage(memory, logger, gmeConfig, gmeAuth);
+    },
+    getRedisStorage = function (logger, gmeConfig, gmeAuth) {
+        var redisAdapter = new RedisAdapter(logger, gmeConfig);
+        return new SafeStorage(redisAdapter, logger, gmeConfig, gmeAuth);
     },
     generateKey = requireJS('common/util/key'),
 
@@ -459,6 +464,7 @@ module.exports = {
     NodeStorage: NodeStorage,
     getMongoStorage: getMongoStorage,
     getMemoryStorage: getMemoryStorage,
+    getRedisStorage: getRedisStorage,
     Project: Project,
     Logger: Logger,
     Core: Core,
