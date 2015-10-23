@@ -68,6 +68,10 @@ define([
                     value: self.name,
                     onChange: function (oldValue, newValue) {
                         self.__onNodeTitleChanged(oldValue, newValue);
+                    },
+                    onFinish: function () {
+                        self.$name.text(self.formattedName);
+                        self.$name.attr('title', self.formattedName);
                     }
                 });
             }
