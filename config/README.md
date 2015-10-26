@@ -186,3 +186,9 @@ To start the server using the configuration above:
  - Array of paths to decorators that should be available.
 - `config.visualization.visualizerDescriptors = ['../src/client/js/Visualizers.json']`
  - Array of paths to json-files containing meta-data about the used visualizers.
+- `config.visualization.panelPaths = ['../src/client/js/Panels']`
+ - Array of base paths that will be mapped from `'panels'` in requirejs.
+- `config.visualization.layout.default = ['DefaultLayout']`
+ - Specifies which layout to use (directory name must be present in any of the provided base-paths).
+- `config.visualization.layout.basePaths = ['../src/client/js/Layouts']`
+ - Array of base paths for the layouts.
