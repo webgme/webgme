@@ -151,7 +151,11 @@ define(['common/util/assert'], function (ASSERT) {
                 //if some element is extra in the place of import, then it stays untouched
                 var oldMemberGuids = Object.keys(oldSheets[name]),
                     i;
-                oldMemberGuids.splice(oldMemberGuids.indexOf('global'), 1);
+
+                if (oldMemberGuids.indexOf('global') !== -1) {
+                    oldMemberGuids.splice(oldMemberGuids.indexOf('global'), 1);
+                }
+                
                 for (i = 0; i < oldMemberGuids.length; i++) {
                     _core.addMember(root, name, _nodes[oldMemberGuids[i]]);
                     setMemberAttributesAndRegistry(name, oldMemberGuids[i]);
@@ -163,7 +167,9 @@ define(['common/util/assert'], function (ASSERT) {
                     memberpath,
                     memberguids = Object.keys(oldSheets[name]);
 
-                memberguids.splice(memberguids.indexOf('global'), 1);
+                if (memberguids.indexOf('global') !== -1) {
+                    memberguids.splice(memberguids.indexOf('global'), 1);
+                }
 
                 if (name !== 'MetaAspectSet') {
                     registry.push(oldSheets[name].global);
@@ -478,7 +484,7 @@ define(['common/util/assert'], function (ASSERT) {
                 if (_core.isFullyOverriddenMember(node, names[i], path)) {
                     memberInfo.overridden = true;
                 }
-                
+
                 result[names[i]].push(memberInfo);
             }
         }
