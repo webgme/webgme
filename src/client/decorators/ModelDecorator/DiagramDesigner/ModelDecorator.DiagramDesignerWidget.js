@@ -480,8 +480,8 @@ define([
             this.__onBackgroundDrop($.ui.ddmanager.current.helper);
             this.__onDragOver = false;
 
-            //in rare cases this can cause drop ignoring
-            this.hostDesignerItem.canvas._enableDroppable(false);
+            //FIXME This brings up the dropdown menu for the canvas-drop or allow execution of a single drop-command
+            this.hostDesignerItem.canvas._enableDroppable(true);
         }
     };
 

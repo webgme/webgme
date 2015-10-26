@@ -51,10 +51,10 @@ define([
                 len,
                 eValues,
                 attrDesc = {
-                    'name': self._inputName.val(),
-                    'type': self._inputType.val(),
-                    'defaultValue': self._inputDefaultValue.val(),
-                    'isEnum': self._cbEnum.is(':checked')
+                    name: self._inputName.val(),
+                    type: self._inputType.val(),
+                    defaultValue: self._inputDefaultValue.val(),
+                    isEnum: self._cbEnum.is(':checked')
                 },
                 cValue;
 
@@ -80,11 +80,11 @@ define([
                 }
 
                 //adding range
-                if (self._pRangeMax.val()) {
-                    attrDesc.max = self._pRangeMax.val();
+                if (getTypeConvertedValue(self._pRangeMax.val(), attrDesc.type)) {
+                    attrDesc.max = getTypeConvertedValue(self._pRangeMax.val(), attrDesc.type);
                 }
-                if (self._pRangeMin.val()) {
-                    attrDesc.min = self._pRangeMin.val();
+                if (getTypeConvertedValue(self._pRangeMin.val(), attrDesc.type)) {
+                    attrDesc.min = getTypeConvertedValue(self._pRangeMin.val(), attrDesc.type);
                 }
             } else if (attrDesc.type === 'boolean') {
                 //BOOL - get the default value from the radio button's selection
