@@ -51,7 +51,7 @@ describe('import CLI tests', function () {
                 return storage.openDatabase();
             })
             .then(function () {
-                testFixture.importProject(storage, {
+                return testFixture.importProject(storage, {
                     projectName: existingProjectName,
                     logger: logger.fork('import'),
                     gmeConfig: gmeConfig,
