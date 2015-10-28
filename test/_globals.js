@@ -25,10 +25,7 @@ var WebGME = require('../webgme'),
     Core = requireJS('common/core/coreQ'),
     NodeStorage = requireJS('../src/common/storage/nodestorage'),
     storageUtil = requireJS('common/storage/util'),
-    Mongo = require('../src/server/storage/mongo'),
-    Memory = require('../src/server/storage/memory'),
-    RedisAdapter = require('../src/server/storage/redisadapter'),
-    SafeStorage = require('../src/server/storage/safestorage'),
+
     Logger = require('../src/server/logger'),
 
     logger = Logger.create('gme:test', {
@@ -48,15 +45,22 @@ var WebGME = require('../webgme'),
         }]
     }, false),
     getMongoStorage = function (logger, gmeConfig, gmeAuth) {
-        var mongo = new Mongo(logger, gmeConfig);
+        var SafeStorage = require('../src/server/storage/safestorage'),
+            Mongo = require('../src/server/storage/mongo'),
+            mongo = new Mongo(logger, gmeConfig);
         return new SafeStorage(mongo, logger, gmeConfig, gmeAuth);
     },
     getMemoryStorage = function (logger, gmeConfig, gmeAuth) {
-        var memory = new Memory(logger, gmeConfig);
+        var SafeStorage = require('../src/server/storage/safestorage'),
+            Memory = require('../src/server/storage/memory'),
+            memory = new Memory(logger, gmeConfig);
         return new SafeStorage(memory, logger, gmeConfig, gmeAuth);
     },
     getRedisStorage = function (logger, gmeConfig, gmeAuth) {
-        var redisAdapter = new RedisAdapter(logger, gmeConfig);
+        var SafeStorage = require('../src/server/storage/safestorage'),
+            RedisAdapter = require('../src/server/storage/datastores/redisadapter'),
+            redisAdapter = new RedisAdapter(logger, gmeConfig);
+
         return new SafeStorage(redisAdapter, logger, gmeConfig, gmeAuth);
     },
     generateKey = requireJS('common/util/key'),

@@ -7,15 +7,9 @@
 'use strict';
 
 var Q = require('q'),
-
-    ASSERT = requireJS('common/util/assert'),
-//CANON = requireJS('common/util/canon'),
     REGEXP = requireJS('common/regexp'),
-
-    SEPARATOR = '$'; // MAGIC CONSTANT
-//STATUS_UNREACHABLE = 'storage unreachable', // MAGIC CONSTANT
-//STATUS_CONNECTED = 'connected', // MAGIC CONSTANT
-//PROJECT_INFO_ID = '*info*'; // MAGIC CONSTANT
+    CANON = requireJS('common/util/canon'),
+    SEPARATOR = '$';
 
 /**
  * An in-memory implementation of backing the data for webgme.
@@ -38,11 +32,9 @@ function Memory(mainLogger, gmeConfig) {
                 this.connected = false;
             },
             getItem: function (key) {
-                ASSERT(typeof key === 'string');
                 return this.data[key];
             },
             setItem: function (key, object) {
-                ASSERT(typeof key === 'string');
                 this.data[key] = object;
                 if (this.keys.indexOf(key) === -1) {
                     this.keys.push(key);
@@ -50,7 +42,6 @@ function Memory(mainLogger, gmeConfig) {
                 }
             },
             removeItem: function (key) {
-                ASSERT(typeof key === 'string');
                 delete this.data[key];
                 var index = this.keys.indexOf(key);
                 if (index > -1) {
@@ -65,7 +56,7 @@ function Memory(mainLogger, gmeConfig) {
 
     this.gmeConfig = gmeConfig;
 
-    function Project(projectId) {
+    function MemoryProject(projectId) {
         var self = this;
 
         this.projectId = projectId;
@@ -85,32 +76,59 @@ function Memory(mainLogger, gmeConfig) {
         };
 
         this.loadObject = function (hash, callback) {
-            ASSERT(typeof hash === 'string' && REGEXP.HASH.test(hash));
-
             var deferred = Q.defer(),
+                object;
+            if (typeof hash !== 'string') {
+                deferred.reject(new Error('loadObject - given hash is not a string : ' + typeof hash));
+            } else if (!REGEXP.HASH.test(hash)) {
+                deferred.reject(new Error('loadObject - invalid hash :' + hash));
+            } else {
                 object = storage.getItem(database + SEPARATOR + projectId + SEPARATOR + hash);
 
-            if (object) {
-                object = JSON.parse(object);
-                deferred.resolve(object);
-            } else {
-                deferred.reject(new Error('object does not exist ' + hash));
+                if (object) {
+                    object = JSON.parse(object);
+                    deferred.resolve(object);
+                } else {
+                    deferred.reject(new Error('object does not exist ' + hash));
+                }
             }
-
             return deferred.promise.nodeify(callback);
         };
 
         this.insertObject = function (object, callback) {
-            ASSERT(object !== null && typeof object === 'object');
-            ASSERT(typeof object._id === 'string' && REGEXP.HASH.test(object._id));
-
-            var deferred = Q.defer();
-
-            try {
-                storage.setItem(database + SEPARATOR + projectId + SEPARATOR + object._id, JSON.stringify(object));
-                deferred.resolve();
-            } catch (e) {
-                deferred.reject(e);
+            var deferred = Q.defer(),
+                errMsg,
+                objectStr;
+            if (object === null || typeof object !== 'object') {
+                deferred.reject(new Error('object is not an object'));
+            } else if (typeof object._id !== 'string' || !REGEXP.HASH.test(object._id)) {
+                deferred.reject(new Error('object._id is not a valid hash.'));
+            } else {
+                objectStr = storage.getItem(database + SEPARATOR + projectId + SEPARATOR + object._id);
+                if (objectStr) {
+                    if (CANON.stringify(object) === CANON.stringify(JSON.parse(objectStr))) {
+                        logger.info('tried to insert existing hash - the two objects were equal',
+                            object._id);
+                        deferred.resolve();
+                    } else {
+                        errMsg = 'tried to insert existing hash - the two objects were NOT equal ';
+                        logger.error(errMsg, {
+                            metadata: {
+                                newObject: CANON.stringify(object),
+                                oldObject: CANON.stringify(JSON.parse(objectStr))
+                            }
+                        });
+                        deferred.reject(new Error(errMsg + object._id));
+                    }
+                } else {
+                    try {
+                        storage.setItem(database + SEPARATOR + projectId + SEPARATOR + object._id,
+                            JSON.stringify(object));
+                        deferred.resolve();
+                    } catch (e) {
+                        deferred.reject(e);
+                    }
+                }
             }
 
             return deferred.promise.nodeify(callback);
@@ -135,7 +153,6 @@ function Memory(mainLogger, gmeConfig) {
 
             for (var i = 0; i < storage.length; i += 1) {
                 var keyArray = storage.key(i).split(SEPARATOR);
-                ASSERT(keyArray.length === 3);
                 if (REGEXP.RAW_BRANCH.test(keyArray[2])) {
                     if (keyArray[0] === database && keyArray[1] === projectId) {
                         // TODO:  double check this line, *master => master, and return with an object of branches
@@ -152,9 +169,6 @@ function Memory(mainLogger, gmeConfig) {
         };
 
         this.getBranchHash = function (branch, callback) {
-            ASSERT(typeof branch === 'string' && REGEXP.RAW_BRANCH.test('*' + branch));
-            //ASSERT(typeof oldhash === 'string' && (oldhash === '' || REGEXP.HASH.test(oldhash)));
-
             var deferred = Q.defer(),
                 hash = storage.getItem(database + SEPARATOR + projectId + SEPARATOR + '*' + branch);
 
@@ -180,9 +194,6 @@ function Memory(mainLogger, gmeConfig) {
         };
 
         this.setBranchHash = function (branch, oldhash, newhash, callback) {
-            ASSERT(typeof branch === 'string' && REGEXP.RAW_BRANCH.test('*' + branch));
-            ASSERT(typeof oldhash === 'string' && (oldhash === '' || REGEXP.HASH.test(oldhash)));
-            ASSERT(typeof newhash === 'string' && (newhash === '' || REGEXP.HASH.test(newhash)));
 
             var deferred = Q.defer(),
                 hash = storage.getItem(database + SEPARATOR + projectId + SEPARATOR + '*' + branch);
@@ -240,6 +251,10 @@ function Memory(mainLogger, gmeConfig) {
                 }
             }
 
+            finds.sort(function (a, b) {
+                return b.time - a.time;
+            });
+
             deferred.resolve(finds);
 
             return deferred.promise.nodeify(callback);
@@ -295,11 +310,12 @@ function Memory(mainLogger, gmeConfig) {
             if (project) {
                 deferred.reject(new Error('Project already exists ' + projectId));
             } else {
-                deferred.resolve(new Project(projectId));
+                storage.setItem(database + SEPARATOR + projectId + SEPARATOR, '{}');
+                deferred.resolve(new MemoryProject(projectId));
             }
 
         } else {
-            deferred.reject(new Error('In-memory database has to be initialized. Call openDatabase first.'));
+            deferred.reject(new Error('Database is not open.'));
         }
 
 
@@ -318,7 +334,6 @@ function Memory(mainLogger, gmeConfig) {
             for (i = 0; i < storage.length; i += 1) {
                 key = storage.key(i);
                 keyArray = key.split(SEPARATOR);
-                ASSERT(keyArray.length === 3);
                 if (keyArray[0] === database) {
                     if (keyArray[1] === projectId) {
                         namesToRemove.push(key);
@@ -334,7 +349,7 @@ function Memory(mainLogger, gmeConfig) {
 
             deferred.resolve(existed);
         } else {
-            deferred.reject(new Error('In-memory database has to be initialized. Call openDatabase first.'));
+            deferred.reject(new Error('Database is not open.'));
         }
 
         return deferred.promise.nodeify(callback);
@@ -351,13 +366,13 @@ function Memory(mainLogger, gmeConfig) {
 
             project = storage.getItem(database + SEPARATOR + projectId + SEPARATOR);
             if (project) {
-                deferred.resolve(project);
+                deferred.resolve(new MemoryProject(projectId));
             } else {
                 deferred.reject(new Error('Project does not exist ' + projectId));
             }
 
         } else {
-            deferred.reject(new Error('In-memory database has to be initialized. Call openDatabase first.'));
+            deferred.reject(new Error('Database is not open.'));
         }
 
 
@@ -372,19 +387,22 @@ function Memory(mainLogger, gmeConfig) {
             namesToRemove = [],
             oldProjectKey,
             newProject,
+            oldProject,
             namesToAdd = [];
 
         if (storage.connected) {
             newProject = storage.getItem(database + SEPARATOR + newProjectId + SEPARATOR);
+            oldProject = storage.getItem(database + SEPARATOR + projectId + SEPARATOR);
             if (newProject) {
                 deferred.reject(new Error('Project already exists ' + newProjectId));
+            } else if (!oldProject) {
+                deferred.reject(new Error('Project does not exist ' + projectId));
             } else {
-                newProject = new Project(newProjectId);
+                storage.setItem(database + SEPARATOR + newProjectId + SEPARATOR, '{}');
 
                 for (i = 0; i < storage.length; i += 1) {
                     key = storage.key(i);
                     keyArray = key.split(SEPARATOR);
-                    ASSERT(keyArray.length === 3);
                     if (keyArray[0] === database) {
                         if (keyArray[1] === projectId) {
                             if (keyArray[2]) {
@@ -407,7 +425,7 @@ function Memory(mainLogger, gmeConfig) {
                 deferred.resolve();
             }
         } else {
-            deferred.reject(new Error('In-memory database has to be initialized. Call openDatabase first.'));
+            deferred.reject(new Error('Database is not open.'));
         }
 
         return deferred.promise.nodeify(callback);
