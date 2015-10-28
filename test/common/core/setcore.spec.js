@@ -50,19 +50,15 @@ describe('set core', function () {
                 });
                 root = core.createNode();
             })
-            .then(done)
-            .catch(done);
+            .nodeify(done);
     });
 
     afterEach(function (done) {
         storage.deleteProject({projectId: projectId})
             .then(function () {
-                storage.closeDatabase(done);
+                return storage.closeDatabase();
             })
-            .catch(function (err) {
-                logger.error(err);
-                storage.closeDatabase(done);
-            });
+            .nodeify(done);
     });
 
     it('set members should be inherited as well', function () {
