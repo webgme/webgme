@@ -599,6 +599,9 @@ function StandAloneServer(gmeConfig) {
         __database = new RedisAdapter(logger, gmeConfig);
     } else if (gmeConfig.storage.database.type === 'memory') {
         __database = new MemoryAdapter(logger, gmeConfig);
+    } else {
+        logger.error(new Error('Unknown storage.database.type in config (config validator not used?)',
+            gmeConfig.storage.database.type));
     }
 
     __storage = new Storage(__database, logger, gmeConfig, __gmeAuth);
