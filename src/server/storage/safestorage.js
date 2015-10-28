@@ -41,15 +41,15 @@ function filterArray(arr) {
 
 /**
  *
- * @param mongo
+ * @param database
  * @param logger
  * @param gmeConfig
  * @param gmeAuth
  * @constructor
  */
-function SafeStorage(mongo, logger, gmeConfig, gmeAuth) {
+function SafeStorage(database, logger, gmeConfig, gmeAuth) {
     ASSERT(gmeAuth !== null && typeof gmeAuth === 'object', 'gmeAuth is a mandatory parameter');
-    Storage.call(this, mongo, logger, gmeConfig);
+    Storage.call(this, database, logger, gmeConfig);
     this.gmeAuth = gmeAuth;
 }
 

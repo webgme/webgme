@@ -12,9 +12,9 @@ var Q = require('q'),
     EventDispatcher = requireJS('common/EventDispatcher'),
     CONSTANTS = requireJS('common/storage/constants');
 
-function Storage(mongo, logger, gmeConfig) {
+function Storage(database, logger, gmeConfig) {
     EventDispatcher.call(this);
-    this.mongo = mongo;
+    this.database = database;
     this.logger = logger.fork('storage');
     this.gmeConfig = gmeConfig;
 }
@@ -24,19 +24,19 @@ Storage.prototype = Object.create(EventDispatcher.prototype);
 Storage.prototype.constructor = Storage;
 
 Storage.prototype.openDatabase = function (callback) {
-    return this.mongo.openDatabase()
+    return this.database.openDatabase()
         .nodeify(callback);
 };
 
 Storage.prototype.closeDatabase = function (callback) {
     this.clearAllEvents();
-    return this.mongo.closeDatabase()
+    return this.database.closeDatabase()
         .nodeify(callback);
 };
 
 Storage.prototype.deleteProject = function (data, callback) {
     var self = this;
-    return this.mongo.deleteProject(data.projectId)
+    return this.database.deleteProject(data.projectId)
         .then(function (didExist) {
             var eventData = {
                 projectId: data.projectId
@@ -56,7 +56,7 @@ Storage.prototype.deleteProject = function (data, callback) {
 
 Storage.prototype.createProject = function (data, callback) {
     var self = this;
-    return this.mongo.createProject(data.projectId)
+    return this.database.createProject(data.projectId)
         .then(function (project) {
             var eventData = {
                 projectId: data.projectId
@@ -75,7 +75,7 @@ Storage.prototype.createProject = function (data, callback) {
 
 Storage.prototype.renameProject = function (data, callback) {
     var self = this;
-    return this.mongo.renameProject(data.projectId, data.newProjectId)
+    return this.database.renameProject(data.projectId, data.newProjectId)
         .then(function () {
             var eventDataDeleted = {
                     projectId: data.projectId
@@ -99,7 +99,7 @@ Storage.prototype.renameProject = function (data, callback) {
 };
 
 Storage.prototype.getBranches = function (data, callback) {
-    return this.mongo.openProject(data.projectId)
+    return this.database.openProject(data.projectId)
         .then(function (project) {
             return project.getBranches();
         })
@@ -115,7 +115,7 @@ Storage.prototype.getLatestCommitData = function (data, callback) {
             coreObjects: []
         };
 
-    return this.mongo.openProject(data.projectId)
+    return this.database.openProject(data.projectId)
         .then(function (project_) {
             project = project_;
             return project.getBranchHash(data.branchName);
@@ -141,7 +141,7 @@ Storage.prototype.getLatestCommitData = function (data, callback) {
 Storage.prototype.makeCommit = function (data, callback) {
     var self = this,
         deferred = Q.defer();
-    this.mongo.openProject(data.projectId)
+    this.database.openProject(data.projectId)
         .then(function (project) {
             var objectHashes = Object.keys(data.coreObjects),
                 rootProvided;
@@ -272,7 +272,7 @@ Storage.prototype.loadObjects = function (data, callback) {
     var self = this,
         deferred = Q.defer();
 
-    this.mongo.openProject(data.projectId)
+    this.database.openProject(data.projectId)
         .then(function (project) {
 
             function loadObject(hash) {
@@ -359,7 +359,7 @@ Storage.prototype.loadPaths = function (data, callback) {
     var self = this,
         deferred = Q.defer();
 
-    this.mongo.openProject(data.projectId)
+    this.database.openProject(data.projectId)
         .then(function (dbProject) {
             var loadedObjects = {},
                 throttleDeferred = Q.defer(),
@@ -423,7 +423,7 @@ Storage.prototype.getCommits = function (data, callback) {
 
     self.logger.debug('getCommits input:', {metadata: data});
 
-    this.mongo.openProject(data.projectId)
+    this.database.openProject(data.projectId)
         .then(function (project) {
             if (loadCommit) {
                 self.logger.debug('commitHash was given will load commit', data.before);
@@ -463,7 +463,7 @@ Storage.prototype.getCommits = function (data, callback) {
 };
 
 Storage.prototype.getBranchHash = function (data, callback) {
-    return this.mongo.openProject(data.projectId)
+    return this.database.openProject(data.projectId)
         .then(function (project) {
             return project.getBranchHash(data.branchName);
         })
@@ -512,7 +512,7 @@ Storage.prototype.setBranchHash = function (data, callback) {
         return deferred.promise;
     }
 
-    this.mongo.openProject(data.projectId)
+    this.database.openProject(data.projectId)
         .then(function (project) {
             return loadRootAndCommitObject(project);
         })
@@ -629,7 +629,7 @@ Storage.prototype.getCommonAncestorCommit = function (data, callback) {
             });
     }
 
-    this.mongo.openProject(data.projectId)
+    this.database.openProject(data.projectId)
         .then(function (dbProject_) {
             dbProject = dbProject_;
             return Q.allSettled([
@@ -661,7 +661,7 @@ Storage.prototype.getCommonAncestorCommit = function (data, callback) {
 };
 
 Storage.prototype.openProject = function (data, callback) {
-    return this.mongo.openProject(data.projectId).nodeify(callback);
+    return this.database.openProject(data.projectId).nodeify(callback);
 };
 
 module.exports = Storage;

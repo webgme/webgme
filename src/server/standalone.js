@@ -26,7 +26,9 @@ var Path = require('path'),
     URL = require('url'),
     contentDisposition = require('content-disposition'),
 
-    Mongo = require('./storage/mongo'),
+    MongoAdapter = require('./storage/mongo'),
+    RedisAdapter = require('./storage/redisadapter'),
+    MemoryAdapter = require('./storage/memory'),
     Storage = require('./storage/safestorage'),
     WebSocket = require('./storage/websocket'),
 
@@ -591,7 +593,17 @@ function StandAloneServer(gmeConfig) {
     logger.debug('initializing static server');
     __app = new Express();
 
-    __database = new Mongo(logger, gmeConfig);
+    if (gmeConfig.storage.database.type === 'mongo') {
+        __database = new MongoAdapter(logger, gmeConfig);
+    } else if (gmeConfig.storage.database.type === 'redis') {
+        __database = new RedisAdapter(logger, gmeConfig);
+    } else if (gmeConfig.storage.database.type === 'memory') {
+        __database = new MemoryAdapter(logger, gmeConfig);
+    } else {
+        logger.error(new Error('Unknown storage.database.type in config (config validator not used?)',
+            gmeConfig.storage.database.type));
+    }
+
     __storage = new Storage(__database, logger, gmeConfig, __gmeAuth);
     __webSocket = new WebSocket(__storage, logger, gmeConfig, __gmeAuth, __workerManager);
 

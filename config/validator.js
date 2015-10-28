@@ -210,6 +210,9 @@ function validateConfig(configOrFileName) {
     assertNumber('config.storage.loadBucketSize', config.storage.loadBucketSize);
     assertNumber('config.storage.loadBucketTimer', config.storage.loadBucketTimer);
     assertEnum('config.storage.keyType', config.storage.keyType, 'rand160Bits', 'ZSSHA', 'plainSHA1');
+    assertObject('config.storage.database', config.storage.database);
+    assertEnum('config.storage.database.type', config.storage.database.type, 'mongo', 'redis', 'memory');
+    assertObject('config.storage.database.options', config.storage.database.options);
 
     //visualization
     expectedKeys.push('visualization');

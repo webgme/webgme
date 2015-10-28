@@ -19,9 +19,15 @@ module.exports = config;
 ### Which configuration file is being used?
 To use any other configuration than the default you need to set the environment variable `NODE_ENV`. When the server starts the configuration file at `config/config.%NODE_ENV%.js` will be loaded. If `NODE_ENV` is not set it falls back to loading `config/config.default.js`.
 
-To start the server using the configuration above:
+To start the server using the configuration above,
 
-`set NODE_ENV=mine; node ./src/bin/start_sever.js`
+windows
+
+`set NODE_ENV=mine && npm start`
+
+ubuntu
+
+`NODE_ENV=mine npm start`
 
 ### Configuration groups
 
@@ -179,7 +185,11 @@ To start the server using the configuration above:
 - `config.storage.loadBucketTimer = 10`
  - Time in milliseconds (after a new bucket has been created) before triggering a load of objects from the server.
 - `config.storage.keyType = 'plainSha'`
- - Algorithm used when hashing the objects in the data-base, can be `'plainSHA1'`, `'rand160Bits'` or `'ZSSHA'`.
+ - Algorithm used when hashing the objects in the database, can be `'plainSHA1'`, `'rand160Bits'` or `'ZSSHA'`.
+- `config.storage.database.type = 'mongo'`
+ - Type of database to store the data (metadata e.g. _users is always stored in mongo), can be `'mongo'`, `'redis'` or `'memory'`.
+- `config.storage.database.options = '{}'`
+ - Options passed to database client (unless mongo is specified, in that case `config.mongo.options` are used).
 
 ##### visualization
 - `config.visualization.decoratorPaths = ['./src/client/decorators']`
