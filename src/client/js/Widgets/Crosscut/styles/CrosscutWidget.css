@@ -1,0 +1,39 @@
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+div.filterPanel {
+  position: absolute;
+  top: 34px;
+  right: 11px;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px;
+  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  -webkit-background-clip: padding-box;
+  -moz-background-clip: padding;
+  background-clip: padding-box; }
+  div.filterPanel .header {
+    min-width: 100px;
+    text-align: center;
+    margin: 0 5px; }
+  div.filterPanel .body {
+    display: none;
+    list-style: none;
+    padding: 5px;
+    margin: 0; }
+    div.filterPanel .body li.filterItem {
+      margin: 3px 0; }
+      div.filterPanel .body li.filterItem .iCheckBox {
+        float: right;
+        margin-top: 6px;
+        margin-left: 3px; }
+      div.filterPanel .body li.filterItem div > svg {
+        margin-top: 4px; }
+  div.filterPanel:hover .header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2); }
+  div.filterPanel:hover .body {
+    display: block; }

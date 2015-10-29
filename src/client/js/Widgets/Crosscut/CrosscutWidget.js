@@ -8,8 +8,9 @@
 
 define([
     'js/DragDrop/DragHelper',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget'
-], function (DragHelper, DiagramDesignerWidget) {
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
+    'js/Controls/iCheckBox',
+], function (DragHelper, DiagramDesignerWidget, ICheckBox) {
 
     'use strict';
 
@@ -25,9 +26,10 @@ define([
         params.deleteTabs = true;
         params.reorderTabs = true;
         params.lineStyleControls = false;
+        params.defaultConnectionRouteManagerType = 'basic2';
 
         DiagramDesignerWidget.call(this, container, params);
-
+        this._onConnectionRouteManagerChanged('basic2');
         this.logger.debug('CrosscutWidget ctor');
     };
 
@@ -41,6 +43,8 @@ define([
 
         //disable connection to a connection
         this._connectToConnection = false;
+
+        this._initializeFilterPanel();
     };
 
     CrosscutWidget.prototype.getDragEffects = function (/*selectedElements, event*/) {
@@ -63,6 +67,73 @@ define([
         params = params || {};
         params.color = params.color || BACKGROUND_TEXT_COLOR;
         DiagramDesignerWidget.prototype.setBackgroundText.apply(this, [text, params]);
+    };
+
+    //FILTER PANEL
+    CrosscutWidget.prototype._initializeFilterPanel = function () {
+        /**** create FILTER PANEL ****/
+        this.$filterPanel = $('<div/>', {
+            'class': 'filterPanel'
+        });
+
+        this.$filterPanel.html('<div class="header">FILTER</div><ul class="body"></ul>');
+
+        this.$filterHeader = this.$filterPanel.find('.header');
+        this.$filterUl = this.$filterPanel.find('ul.body');
+
+        this.$el.parent().append(this.$filterPanel);
+
+        this._filterCheckboxes = {};
+    };
+
+    CrosscutWidget.prototype.addFilterItem = function (text, value, iconEl) {
+        var item = $('<li/>', {
+                class: 'filterItem'
+            }),
+            checkBox,
+            self = this;
+
+        checkBox = new ICheckBox({
+            checkChangedFn: function (data, isChecked) {
+                self._checkChanged(value, isChecked);
+            }
+        });
+
+        item.append(iconEl.addClass('inline'));
+        item.append(text);
+        item.append(checkBox.el);
+
+
+        this.$filterUl.append(item);
+
+        this._refreshHeaderText();
+
+        this._filterCheckboxes[value] = checkBox;
+
+        return item;
+    };
+
+    CrosscutWidget.prototype._refreshHeaderText = function () {
+        var all = this.$filterUl.find('.iCheckBox').length,
+            on = this.$filterUl.find('.iCheckBox.checked').length;
+
+        this.$filterHeader.html('FILTER' + (all === on ? '' : ' *'));
+    };
+
+    CrosscutWidget.prototype._checkChanged = function (value, isChecked) {
+        this._refreshHeaderText();
+        this.logger.debug('CheckBox checkChanged: ' + value + ', checked: ' + isChecked);
+        this.onCheckChanged(value, isChecked);
+    };
+
+    CrosscutWidget.prototype.setChecked = function (value, isChecked) {
+        if (this._filterCheckboxes[value]) {
+            this._filterCheckboxes[value].setChecked(isChecked);
+        }
+    };
+
+    CrosscutWidget.prototype.onCheckChanged = function (/*value, isChecked*/) {
+        this.logger.warn('CrosscutWidget.onCheckChanged(value, isChecked) is not overridden!');
     };
 
     return CrosscutWidget;

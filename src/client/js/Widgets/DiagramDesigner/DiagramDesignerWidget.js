@@ -81,7 +81,8 @@ define([
         gridSize: 10,
         droppable: true,
         zoomValues: [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10],
-        zoomUIControls: true
+        zoomUIControls: true,
+        defaultConnectionRouteManagerType: WebGMEGlobal.gmeConfig.client.defaultConnectionRouter
     };
 
     DiagramDesignerWidget = function (container, par) {
@@ -204,14 +205,15 @@ define([
         //this.dragManager.initialize(this.skinParts.$itemsContainer);
 
         /*********** CONNECTION DRAWING COMPONENT *************/
+        this._defaultConnectionRouteManagerType = params.defaultConnectionRouteManagerType;
         //initiate Connection Router (if needed)
         if (params.connectionRouteManager) {
             this.connectionRouteManager = params.connectionRouteManager;
-        } else if (this.gmeConfig.client.defaultConnectionRouter === 'basic') {
+        } else if (params.defaultConnectionRouteManagerType === 'basic') {
             this.connectionRouteManager = new ConnectionRouteManagerBasic({diagramDesigner: this});
-        } else if (this.gmeConfig.client.defaultConnectionRouter === 'basic2') {
+        } else if (params.defaultConnectionRouteManagerType === 'basic2') {
             this.connectionRouteManager = new ConnectionRouteManager2({diagramDesigner: this});
-        } else if (this.gmeConfig.client.defaultConnectionRouter === 'basic3') {
+        } else if (params.defaultConnectionRouteManagerType === 'basic3') {
             this.connectionRouteManager = new ConnectionRouteManager3({diagramDesigner: this});
         }
 
@@ -1480,7 +1482,7 @@ define([
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
-    //additional code pieces for DiagramDesignerWidget
+        //additional code pieces for DiagramDesignerWidget
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetOperatingModes.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDesignerItems.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetConnections.prototype);
