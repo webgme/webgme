@@ -197,24 +197,18 @@ define([
                                 var cmd = executorConfig.cmd;
                                 var args = executorConfig.args || [];
                                 console.log('working directory: ' + jobDir + ' executing: ' + cmd + ' with args: ' +
-                                args.toString());
+                                    args.toString());
 
                                 var child = childProcess.spawn(cmd, args, {
                                     cwd: jobDir,
                                     stdio: ['ignore', 'pipe', 'pipe']
-                                });
-                                var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
-                                child.stdout.pipe(outlog);
-                                child.stdout.pipe(fs.createWriteStream(path.join(self.workingDirectory,
-                                    jobInfo.hash.substr(0, 6) + '_stdout.txt')));
-                                // TODO: maybe put in the same file as stdout
-                                child.stderr.pipe(fs.createWriteStream(path.join(jobDir, 'job_stderr.txt')));
-                                child.on('close', function (code/*, signal*/) {
+                                }), childExit = function (err) {
 
+                                    childExit = function () {}; // "Note that the exit-event may or may not fire after an error has occurred"
                                     jobInfo.finishTime = new Date().toISOString();
 
-                                    if (code !== 0) {
-                                        console.error(jobInfo.hash + ' exec error: ' + code);
+                                    if (err) {
+                                        console.error(jobInfo.hash + ' exec error: ' + util.inspect(err));
                                         jobInfo.status = 'FAILED_TO_EXECUTE';
                                     }
 
@@ -222,7 +216,15 @@ define([
 
                                     successCallback(jobInfo, jobDir, executorConfig);
                                     // normally self.saveJobResults(jobInfo, jobDir, executorConfig);
-                                });
+                                };
+                                var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
+                                child.stdout.pipe(outlog);
+                                child.stdout.pipe(fs.createWriteStream(path.join(self.workingDirectory,
+                                    jobInfo.hash.substr(0, 6) + '_stdout.txt')));
+                                // TODO: maybe put in the same file as stdout
+                                child.stderr.pipe(fs.createWriteStream(path.join(jobDir, 'job_stderr.txt')));
+                                child.on('error', childExit); // FIXME can it happen that the close event arrives before error?
+                                child.on('close', childExit);
                             });
                         });
 
