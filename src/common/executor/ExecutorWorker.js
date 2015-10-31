@@ -164,6 +164,7 @@ define([
                         function (err, stdout, stderr) {
                             if (err) {
                                 jobInfo.status = 'FAILED_UNZIP';
+                                jobInfo.finishTime = new Date().toISOString();
                                 console.error(stderr);
                                 errorCallback(err);
                                 return;
@@ -178,6 +179,7 @@ define([
                             fs.readFile(path.join(jobDir, self.executorConfigFilename), 'utf8', function (err, data) {
                                 if (err) {
                                     jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
+                                    jobInfo.finishTime = new Date().toISOString();
                                     errorCallback('Could not read ' + self.executorConfigFilename + ' err:' + err);
                                     return;
                                 }
@@ -191,6 +193,7 @@ define([
                                     typeof executorConfig.resultArtifacts !== 'object') {
 
                                     jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
+                                    jobInfo.finishTime = new Date().toISOString();
                                     errorCallback(self.executorConfigFilename + ' is missing or wrong type for cmd and/or resultArtifacts.');
                                     return;
                                 }
