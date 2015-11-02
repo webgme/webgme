@@ -77,8 +77,7 @@ function initialize(middlewareOpts) {
                 // reset unfinished jobs assigned to worker to CREATED, so they'll be executed by someone else
                 self.logger.debug('worker "' + docs[i].clientId + '" is gone');
                 self.workerList.remove({_id: docs[i]._id});
-                // FIXME: race after assigning finishTime between this and uploading to blob
-                self.jobList.update({worker: docs[i].clientId, finishTime: null}, {
+                self.jobList.update({worker: docs[i].clientId, status: {$nin: JobInfo.finishedStatuses}}, {
                     $set: {
                         worker: null,
                         status: 'CREATED',
