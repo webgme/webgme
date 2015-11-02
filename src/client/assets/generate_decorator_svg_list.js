@@ -7,12 +7,11 @@
  */
 
 'use strict';
-var requirejs = require('requirejs'),
+var fs = require('fs'),
+    Q = require('q'),
     path = require('path'),
-    fs = require('fs'),
-    CONSTANTS,
-    SVG_DIR,
     _outFileName = 'decoratorSVG.js',
+    svgFolder = 'DecoratorSVG',
     FILECONTENT = '/*\n' +
         '* GENERATED DECORATOR SVG ICON FILES *      \n' +
         '* DO NOT EDIT MANUALLY *    \n' +
@@ -27,18 +26,6 @@ var requirejs = require('requirejs'),
         '    };                      \n' +
         '});';
 
-requirejs.config({
-    nodeRequire: require,
-    baseUrl: path.join(__dirname, '..', '..'),
-    paths: {
-        underscore: 'client/lib/underscore/underscore-min',
-        js: 'client/js'
-    }
-});
-
-CONSTANTS = requirejs('client/js/Constants');
-SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER.replace('assets/', '');
-
 //Recursively search through directories
 function walk (dir, done) {
     var results = [];
@@ -51,7 +38,7 @@ function walk (dir, done) {
             return done(null, results);
         }
         list.forEach(function (file) {
-            file = dir + '/' + file;
+            file = path.join(dir, file);
             fs.stat(file, function (err, stat) {
                 if (stat && stat.isDirectory()) {
                     walk(file, function (err, res) {
@@ -71,14 +58,39 @@ function walk (dir, done) {
     });
 }
 
-walk(SVG_DIR.replace('/', ''), function (err, list) {
-    if (!err) {
-        var fileList = JSON.stringify(list).split(SVG_DIR).join('');
-        fs.writeFileSync(_outFileName, FILECONTENT.replace('___FILELIST___', fileList));
-        console.log(_outFileName + ' has been generated\n');
-    } else {
-        console.log('Failed with error: ' + err);
-    }
-});
+function generateSvgList(callback) {
+    var deferred = Q.defer(),
+        svgDir = path.join(__dirname, svgFolder),
+        outFilename = path.join(__dirname, _outFileName);
+    walk(svgDir, function (err, list) {
+        if (!err) {
+            var fileList = list.map(function (svgFilePath) {
+                return path.relative(svgDir, svgFilePath);
+            });
+            fileList = JSON.stringify(fileList).replace(/\\\\/g, '/');
+            fs.writeFile(outFilename, FILECONTENT.replace('___FILELIST___', fileList), function (err) {
+                if (err) {
+                    deferred.reject(err);
+                } else {
+                    deferred.resolve(outFilename);
+                }
+            });
+        } else {
+            deferred.reject(err);
+        }
+    });
 
+    return deferred.promise.nodeify(callback);
+}
 
+module.exports = generateSvgList;
+
+if (require.main === module) {
+    generateSvgList()
+        .then(function (outFilename) {
+            console.log(outFilename + ' has been generated\n');
+        })
+        .catch(function (err) {
+            console.log('Failed with error: ', err);
+        });
+}

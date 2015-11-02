@@ -195,6 +195,7 @@ var path = require('path'),
 
         visualization: {
             decoratorPaths: [path.join(__dirname, '../src/client/decorators')],
+            svgDirs: [],
             visualizerDescriptors: [path.join(__dirname, '../src/client/js/Visualizers.json')],
 
             panelPaths: [path.join(__dirname, '../src/client/js/Panels')],
