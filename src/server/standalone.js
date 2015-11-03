@@ -147,6 +147,7 @@ function StandAloneServer(gmeConfig) {
     function start(callback) {
         var serverDeferred = Q.defer(),
             storageDeferred = Q.defer(),
+            svgDeferred = Q.defer(),
             gmeAuthDeferred = Q.defer();
 
         if (typeof callback !== 'function') {
@@ -158,6 +159,12 @@ function StandAloneServer(gmeConfig) {
             // FIXME: should this be an error?
             callback();
             return;
+        }
+
+        if (gmeConfig.visualization.svgDirs.length > 0) {
+            svgDeferred = webgmeUtils.copySvgDirsAndRegenerateSVGList(gmeConfig, logger);
+        } else {
+            svgDeferred.resolve();
         }
 
         sockets = {};
@@ -234,7 +241,7 @@ function StandAloneServer(gmeConfig) {
 
         __workerManager.start();
 
-        Q.all([serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise, apiReady])
+        Q.all([svgDeferred.promise, serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise, apiReady])
             .nodeify(function (err) {
                 self.isRunning = true;
                 callback(err);

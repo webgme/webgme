@@ -47,6 +47,7 @@
     "mongo-uri": "=0.1.2",
     "mongodb": "=1.4.36",
     "multiparty": "=4.1.2",
+    "ncp": "=2.0.0",
     "nedb": "=1.1.4",
     "passport": "=0.2.2",
     "passport-google": "=0.3.0",

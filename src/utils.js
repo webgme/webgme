@@ -8,9 +8,16 @@
 'use strict';
 
 var fs = require('fs'),
+    Q = require('q'),
+    genDecoratorSvgList = require('./client/assets/generate_decorator_svg_list'),
+    ncp = require('ncp'), // Module for copying entire directory
     path = require('path');
 
-
+/**
+ * @param name
+ * @param filePath
+ * @returns {boolean}
+ */
 function isGoodExtraAsset(name, filePath) {
     try {
         fs.readFileSync(path.join(filePath, name + '.js'), 'utf-8');
@@ -20,6 +27,10 @@ function isGoodExtraAsset(name, filePath) {
     }
 }
 
+/**
+ * @param basePaths
+ * @returns {Array.<T>}
+ */
 function getComponentNames(basePaths) {
     var names = [], //we add only the "*.js" files from the directories
         additional,
@@ -40,7 +51,43 @@ function getComponentNames(basePaths) {
     return names.sort();
 }
 
+/**
+ * @param gmeConfig
+ * @param logger
+ * @param callback
+ * @returns {*}
+ */
+function copySvgDirsAndRegenerateSVGList(gmeConfig, logger, callback) {
+    var deferred = Q.defer(),
+        svgAssetDir = path.join(__dirname, 'client', 'assets', 'DecoratorSVG');
+
+    ncp.stopOnErr = true;
+
+    Q.all(gmeConfig.visualization.svgDirs.map(function (svgDir) {
+        var dirName = path.parse(svgDir).name,
+            destination = path.join(svgAssetDir, dirName);
+
+        logger.info('Custom SVGs will be copied', svgDir, destination);
+
+        return Q.nfcall(ncp, svgDir, destination);
+    }))
+        .then(function () {
+            return genDecoratorSvgList();
+        })
+        .then(function (svgList) {
+            logger.info('New SVG list generated at ', svgList);
+            deferred.resolve();
+        })
+        .catch(function (err) {
+            logger.error('Failed copying over custom svg directories', err);
+            deferred.reject(err);
+        });
+
+    return deferred.promise.nodeify(callback);
+}
+
 module.exports = {
     isGoodExtraAsset: isGoodExtraAsset,
-    getComponentNames: getComponentNames
+    getComponentNames: getComponentNames,
+    copySvgDirsAndRegenerateSVGList: copySvgDirsAndRegenerateSVGList
 };

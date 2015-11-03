@@ -194,6 +194,8 @@ ubuntu
 ##### visualization
 - `config.visualization.decoratorPaths = ['./src/client/decorators']`
  - Array of paths to decorators that should be available.
+- `config.visualization.svgDirs = []`
+ - Array of paths to directories containing SVG-files that will be copied and made available as SVGs for decorators (`ConstraintIcons` is currently reserved).
 - `config.visualization.visualizerDescriptors = ['../src/client/js/Visualizers.json']`
  - Array of paths to json-files containing meta-data about the used visualizers.
 - `config.visualization.panelPaths = ['../src/client/js/Panels']`
