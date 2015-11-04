@@ -1446,6 +1446,11 @@ define([
          * @func
          */
         this.isFullyOverriddenMember = core.isFullyOverriddenMember;
+
+        this.getOwnChildrenRelids = core.getOwnChildrenRelids;
+        this.getOwnChildrenPaths = core.getOwnChildrenPaths;
+        this.loadOwnChildren = core.loadOwnChildren;
+        this.loadOwnSubTree = core.loadOwnSubTree;
     }
 
     return Core;

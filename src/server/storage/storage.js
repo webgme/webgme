@@ -378,7 +378,7 @@ Storage.prototype.loadPaths = function (data, callback) {
                             throttleLoad();
                         })
                         .catch(function (err) {
-                            self.logger.error('loadPaths failed, ignoring', pathInfo.path, {
+                            self.logger.warn('loadPaths failed, ignoring', pathInfo.path, {
                                 metadata: err,
                             });
                             throttleLoad();
