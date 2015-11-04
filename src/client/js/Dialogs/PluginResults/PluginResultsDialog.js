@@ -87,13 +87,13 @@ define(['js/util',
                     console.error(err);
                     return;
                 }
-
+                var size = bc.getHumanSize(artifact.descriptor.size);
                 artifactEntry = ARTIFACT_ENTRY_BASE.clone();
                 artifactEntryA = artifactEntry.find('a');
                 //TODO: set the correct URL here
-                artifactEntryA.attr('href', (new BlobClient()).getDownloadURL(hash));
+                artifactEntryA.attr('href', bc.getDownloadURL(hash));
                 //TODO: set the correct link text here
-                artifactEntryA.text(artifact.name);
+                artifactEntryA.text(artifact.name + ' (' + size + ')');
                 ulE.append(artifactEntry);
             });
         };

@@ -94,10 +94,12 @@ Q.allDone = function (promises) {
     Q.allSettled(promises)
         .then(function (results) {
             var i,
+                err,
                 values = [];
             for (i = 0; i < results.length; i += 1) {
                 if (results[i].state === 'rejected') {
-                    deferred.reject(new Error(results[i].reason));
+                    err = results[i].reason instanceof Error ? results[i].reason : new Error(results[i].reason);
+                    deferred.reject(err);
                     break;
                 } else if (results[i].state === 'fulfilled') {
                     values.push(results[i].value);

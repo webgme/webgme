@@ -5,11 +5,12 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/assert'], function (ASSERT) {
+define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) {
 
     'use strict';
     var _nodes = {},
         _core = null,
+        _assetLike = [],
         _pathToGuidMap = {},
         _guidKeys = [], //ordered list of GUIDs
         _extraBasePaths = {},
@@ -28,12 +29,24 @@ define(['common/util/assert'], function (ASSERT) {
         }
     }
 
+    function exportLibraryWithAssets(core, libraryRoot, callback) {
+        exportLibrary(core, libraryRoot, function (err, projectJson) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            callback(null, {projectJson: projectJson, assets: _assetLike});
+        });
+    }
+
     function exportLibrary(core, libraryRoot, callback) {
         //initialization
         _core = core;
         _nodes = {};
         _pathToGuidMap = {};
         _guidKeys = [];
+        _assetLike = [];
         _extraBasePaths = {};
         _export = {};
 
@@ -155,7 +168,7 @@ define(['common/util/assert'], function (ASSERT) {
                 if (oldMemberGuids.indexOf('global') !== -1) {
                     oldMemberGuids.splice(oldMemberGuids.indexOf('global'), 1);
                 }
-                
+
                 for (i = 0; i < oldMemberGuids.length; i++) {
                     _core.addMember(root, name, _nodes[oldMemberGuids[i]]);
                     setMemberAttributesAndRegistry(name, oldMemberGuids[i]);
@@ -405,9 +418,19 @@ define(['common/util/assert'], function (ASSERT) {
     function getAttributesOfNode(node) {
         var names = _core.getOwnAttributeNames(node).sort(),
             i,
+            value,
             result = {};
         for (i = 0; i < names.length; i++) {
-            result[names[i]] = _core.getAttribute(node, names[i]);
+            value = _core.getAttribute(node, names[i]);
+            result[names[i]] = value;
+            // Just make a simple regex test here
+            if (BlobConfig.hashRegex.test(value)) {
+                _assetLike.push({
+                    hash: value,
+                    attrName: names[i],
+                    nodePath: _core.getPath(node)
+                });
+            }
         }
         return result;
     }
@@ -917,6 +940,7 @@ define(['common/util/assert'], function (ASSERT) {
 
     return {
         export: exportLibrary,
-        import: importLibrary
+        import: importLibrary,
+        exportLibraryWithAssets: exportLibraryWithAssets
     };
 });
