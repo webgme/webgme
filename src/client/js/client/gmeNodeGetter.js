@@ -221,11 +221,11 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
             return state.core.getRegistry(state.nodes[_id].node, REG_KEYS.CROSSCUTS) || [];
         }
 
-        function getValidChildrenTypesDetailed(aspect) {
+        function getValidChildrenTypesDetailed(aspect, noFilter) {
             var parameters = {
                     node: state.nodes[_id].node,
                     children: [],
-                    sensitive: true,
+                    sensitive: !noFilter,
                     multiplicity: false,
                     aspect: aspect
                 },
