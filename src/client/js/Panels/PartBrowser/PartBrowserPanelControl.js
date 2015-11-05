@@ -211,7 +211,7 @@ define(['js/logger',
             } else if (this._visualizer === 'METAAspect') {
                 //here we should override the container node to the META container node - ROOT as of now
                 containerNode = this._client.getNode(CONSTANTS.PROJECT_ROOT_ID);
-                validInfo = containerNode.getValidChildrenTypesDetailed();
+                validInfo = containerNode.getValidChildrenTypesDetailed(null, true);
             } else {
                 //default is the containment based elements
                 validInfo = containerNode.getValidChildrenTypesDetailed(this._aspect);
