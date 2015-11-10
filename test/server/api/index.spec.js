@@ -2195,7 +2195,8 @@ describe('REST API', function () {
                         expect(res.status).equal(200, err);
                         expect(res.body).to.deep.equal({
                             type: 'Export',
-                            file: ''
+                            file: '',
+                            assets: false
                         });
                         done();
                     });
@@ -2206,9 +2207,10 @@ describe('REST API', function () {
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body instanceof Array).to.equal(true);
-                        expect(res.body.length).to.equal(2);
+                        expect(res.body.length).to.equal(3);
                         expect(res.body[0]).to.include.keys('name', 'value', 'description', 'valueType', 'displayName');
                         expect(res.body[1]).to.include.keys('name', 'value', 'description', 'valueType', 'displayName');
+                        expect(res.body[2]).to.include.keys('name', 'value', 'description', 'valueType', 'displayName');
                         done();
                     });
             });

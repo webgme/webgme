@@ -61,7 +61,7 @@ describe('Plugin ExportImport', function () {
                 var blobBackend = new BlobFSBackend(gmeConfig),
                     filePath1 = testFixture.SEED_DIR + 'EmptyProject.json',
                     filePath2 = testFixture.SEED_DIR + 'ActivePanels.json',
-                    filePath3 = './test/plugin/coreplugins/ExportImport/ActivePanelModel_lib.json';
+                    filePath3 = './test/plugin/coreplugins/ExportImport/assets/ActivePanelModel_lib.json';
                 blobClient = new BlobRunPluginClient(blobBackend);
 
                 return Q.allDone([
@@ -92,7 +92,7 @@ describe('Plugin ExportImport', function () {
         expect(plugin.getName()).to.equal('Export, Import and Update Library');
         expect(typeof plugin.getDescription ()).to.equal('string');
         expect(plugin.getConfigStructure() instanceof Array).to.equal(true);
-        expect(plugin.getConfigStructure().length).to.equal(2);
+        expect(plugin.getConfigStructure().length).to.equal(3);
     });
 
     it('should fail with no file provided during ImportProject', function (done) {
@@ -138,7 +138,7 @@ describe('Plugin ExportImport', function () {
             };
 
         pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
-            expect(err).to.equal('Blob hash is invalid');
+            expect(err.message).to.equal('Requested object does not exist: 8888');
             expect(result.success).to.equal(false);
             done();
         });
@@ -159,8 +159,8 @@ describe('Plugin ExportImport', function () {
                 expect(result.success).to.equal(true);
                 return Q.ninvoke(blobClient, 'getMetadata', result.artifacts[0]);
             })
-            .then(function (metaData) {
-                contentHash = metaData.content['lib.json'].content;
+            .then(function (metadata) {
+                contentHash = metadata.content['project.json'].content;
                 expect(typeof contentHash).to.equal('string');
             })
             .nodeify(done);

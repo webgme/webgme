@@ -8,10 +8,14 @@
 define([
     'plugin/PluginConfig',
     'plugin/PluginBase',
-    'common/core/users/serialization'
+    'common/core/users/serialization',
+    'blob/BlobMetadata',
+    'q'
 ], function (PluginConfig,
              PluginBase,
-             serialization) {
+             serialization,
+             BlobMetadata,
+             Q) {
     'use strict';
 
     /**
@@ -83,15 +87,22 @@ define([
             },
             {
                 name: 'file',
-                displayName: 'Webgme library file.',
-                description: 'Provide an export json file when importing or updating.',
+                displayName: 'Import file(s)',
+                description: 'WebGME library file and optionally exported assets.',
                 value: '',
                 valueType: 'asset',
                 readOnly: false
-            }
+            },
+            {
+                name: 'assets',
+                displayName: 'Export assets',
+                description: 'Export all encountered assets and return a zip package.',
+                value: false,
+                valueType: 'boolean',
+                readOnly: false
+            },
         ];
     };
-
 
     /**
      * Main function for the plugin to execute. This will perform the execution.
@@ -121,119 +132,421 @@ define([
         }
     };
 
+    // Exporting
     ExportImport.prototype.exportLibrary = function (currentConfig, callback) {
         var self = this,
             artie,
+            isProject = self.core.getPath(self.activeNode) === '',
+            exportedFname,
             jsonStr;
-        serialization.export(self.core, self.activeNode, function (err, projectJson) {
+
+        serialization.exportLibraryWithAssets(self.core, self.activeNode, function (err, result) {
             if (err) {
                 callback(err, self.result);
                 return;
             }
-            jsonStr = JSON.stringify(projectJson, null, 4);
-            self.logger.info(projectJson);
+
             artie = self.blobClient.createArtifact('exported');
-            artie.addFile('lib.json', jsonStr, function (err/*, hash*/) {
+            self.gatherAssets(currentConfig, artie, result.assets, function (err) {
                 if (err) {
                     callback(err, self.result);
                     return;
                 }
-                self.blobClient.saveAllArtifacts(function (err, hashes) {
+
+
+                jsonStr = JSON.stringify(result.projectJson, null, 4);
+                if (isProject) {
+                    exportedFname = 'project.json';
+                    //self.logger.debug('Exported project:', result.projectJson);
+                } else {
+                    exportedFname = 'lib.json';
+                    //self.logger.debug('Exported library:', result.projectJson);
+                }
+
+                artie.addFile(exportedFname, jsonStr, function (err) {
                     if (err) {
                         callback(err, self.result);
                         return;
                     }
-                    self.result.addArtifact(hashes[0]);
-                    self.result.setSuccess(true);
-                    callback(null, self.result);
+
+                    artie.save(function (err, hash) {
+                        if (err) {
+                            callback(err, self.result);
+                            return;
+                        }
+
+                        self.result.addArtifact(hash);
+                        self.result.setSuccess(true);
+                        callback(null, self.result);
+                    });
                 });
             });
         });
     };
 
+    ExportImport.prototype.gatherAssets = function (currentConfig, artifact, assets, callback) {
+        var self = this;
+
+        if (currentConfig.assets === false) {
+            self.logger.debug('No assets will be exported..');
+            callback(null);
+            return;
+        }
+
+        Q.allSettled(assets.map(function (assetInfo) {
+            // assetInfo = {
+            //  hash: value,
+            //  attrName: names[i],
+            //  nodePath: _core.getPath(node)
+            // }
+            return Q.ninvoke(self.blobClient, 'getMetadata', assetInfo.hash)
+                .then(function (metadata) {
+                    return self.gatherFilesFromMetadataHashRec(metadata, assetInfo.hash, artifact);
+                });
+        }))
+            .then(function (result) {
+                var i,
+                    errDeferred,
+                    errorCheckPromises = [],
+                    error;
+
+                for (i = 0; i < result.length; i += 1) {
+                    if (result[i].state === 'rejected') {
+                        error = result[i].reason instanceof Error ? result[i].reason : new Error(result[i].reason);
+                        self.logger.debug('Gathering returned with error', assets[i], error);
+
+                        if (error.message === 'Requested object does not exist: ' + assets[i].hash ||
+                            error.message === 'Not Found') {
+                            errorCheckPromises.push(self._checkIfAssetAttribute(assets[i]));
+                        } else if (error.message.indexOf('Another content with the same name was already added.') > -1) {
+                            self.logger.debug('Same .content or .metadata encountered, only adding one');
+                        } else {
+                            self.logger.error('Unhandled error for asset:', assets[i], error);
+                            errDeferred = Q.defer(error);
+                            errDeferred.reject(error);
+                            errorCheckPromises.push(errDeferred.promise);
+                        }
+                    }
+                }
+
+                return Q.all(errorCheckPromises);
+            })
+            .then(function () {
+                self.logger.info('artifact size', artifact.descriptor.size);
+                callback(null);
+            })
+            .catch(callback);
+
+    };
+
+    ExportImport.prototype.gatherFilesFromMetadataHashRec = function (metadata, assetHash, artifact, callback) {
+        var self = this,
+            deferred = Q.defer(),
+            filenameMetadata = assetHash + '.metadata',
+            softLinkNames,
+            filenameContent;
+
+        self.logger.debug('gatherFilesFromMetadataHashRec, metadata:', metadata);
+
+        if (metadata.contentType === BlobMetadata.CONTENT_TYPES.OBJECT) {
+            filenameContent = assetHash + '.content';
+
+            Q.ninvoke(artifact, 'addMetadataHash', filenameContent, assetHash, metadata.size)
+                .then(function () {
+                    return Q.ninvoke(artifact, 'addFile', filenameMetadata, JSON.stringify(metadata));
+                })
+                .then(function () {
+                    deferred.resolve();
+                })
+                .catch(function (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    if (err.message.indexOf('Another content with the same name was already added.') > -1) {
+                        deferred.resolve();
+                    } else {
+                        deferred.reject(new Error(err));
+                    }
+                });
+
+        } else if (metadata.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
+            // Add .metadata and .content for all linked soft-links (recursively).
+            softLinkNames = Object.keys(metadata.content);
+            Q.all(softLinkNames.map(function (softLinkName) {
+                var softLinkMetadataHash = metadata.content[softLinkName].content;
+                self.logger.debug('Complex object, softLinkMetadataHash:', softLinkMetadataHash);
+                return Q.ninvoke(self.blobClient, 'getMetadata', softLinkMetadataHash)
+                    .then(function (softLinkMetadata) {
+                        return self.gatherFilesFromMetadataHashRec(softLinkMetadata, softLinkMetadataHash, artifact);
+                    });
+            }))
+                .then(function () {
+                    // Finally add the .metadata for the complex object.
+                    return Q.ninvoke(artifact, 'addFile', filenameMetadata, JSON.stringify(metadata));
+                })
+                .then(function () {
+                    deferred.resolve();
+                })
+                .catch(function (err) {
+                    deferred.reject(new Error(err));
+                });
+        } else {
+            deferred.reject(new Error('Unsupported content type', metadata.contentType));
+        }
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    ExportImport.prototype._checkIfAssetAttribute = function (assetInfo, callback) {
+        var deferred = Q.defer(),
+            self = this;
+
+        self.core.loadByPath(self.rootNode, assetInfo.nodePath, function (err, node) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+            var attrDesc = self.core.getAttributeMeta(node, assetInfo.attrName);
+            if (attrDesc && attrDesc.type === 'asset') {
+                deferred.reject(new Error('Could not get meta data for asset: ', JSON.stringify(assetInfo)));
+            } else {
+                deferred.resolve();
+            }
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    // Importing
     ExportImport.prototype.importOrUpdateLibrary = function (currentConfig, callback) {
         var self = this,
             libraryRoot;
 
-        self.getLibObject(currentConfig, function (err, libObject) {
-            if (err) {
-                callback(err, self.result);
-                return;
-            }
+        self.getLibObjectAndUploadAssets(currentConfig)
+            .then(function (libObject) {
+                if (libObject === null) {
+                    self.createMessage(self.activeNode, 'Library was not imported (still added any uploaded files).');
+                    self.result.setSuccess(false);
+                    callback(null, self.result);
+                    return;
+                }
 
-            if (currentConfig.type === 'ImportLibrary') {
-                if (libObject.root.path === '') {
-                    callback(new Error('Root path in json is empty string and exported from a root - ' +
-                        'use ImportProject.'), self.result);
-                    return;
+                if (currentConfig.type === 'ImportLibrary') {
+                    if (libObject.root.path === '') {
+                        callback(new Error('Root path in json is empty string and exported from a root - ' +
+                            'use ImportProject.'), self.result);
+                        return;
+                    }
+                    libraryRoot = self.core.createNode({
+                        parent: self.activeNode,
+                        base: null
+                    });
+                    self.core.setAttribute(libraryRoot, 'name', 'Import Library');
+                } else if (currentConfig.type === 'UpdateLibrary') {
+                    if (libObject.root.path === '') {
+                        callback(new Error('Root path in json is empty string and exported from a root - ' +
+                            'use ImportProject.'), self.result);
+                        return;
+                    }
+                    libraryRoot = self.activeNode;
+                } else if (currentConfig.type === 'ImportProject') {
+                    if (libObject.root.path !== '') {
+                        callback(new Error('Root path in json is not empty string and not exported from a root node - ' +
+                            'use Import/UpdateLibrary'), self.result);
+                        return;
+                    }
+                    libraryRoot = self.rootNode;
                 }
-                libraryRoot = self.core.createNode({
-                    parent: self.activeNode,
-                    base: null
-                });
-                self.core.setAttribute(libraryRoot, 'name', 'Import Library');
-            } else if (currentConfig.type === 'UpdateLibrary') {
-                if (libObject.root.path === '') {
-                    callback(new Error('Root path in json is empty string and exported from a root - ' +
-                        'use ImportProject.'), self.result);
-                    return;
-                }
-                libraryRoot = self.activeNode;
-            } else if (currentConfig.type === 'ImportProject') {
-                if (libObject.root.path !== '') {
-                    callback(new Error('Root path in json is not empty string and not exported from a root node - ' +
-                        'use Import/UpdateLibrary'), self.result);
-                    return;
-                }
-                libraryRoot = self.rootNode;
-            }
 
-            serialization.import(self.core, libraryRoot, libObject, function (err) {
-                if (err) {
-                    callback(err, self.result);
-                    return;
-                }
-                self.save('Imported Library to "' + self.core.getPath(self.activeNode) + '"', function (err) {
+                self.logger.debug('Building up model...');
+                serialization.import(self.core, libraryRoot, libObject, function (err) {
                     if (err) {
                         callback(err, self.result);
                         return;
                     }
-                    self.createMessage(self.activeNode, 'Library imported');
-                    self.result.setSuccess(true);
-                    callback(null, self.result);
+                    self.save('Imported Library to "' + self.core.getPath(self.activeNode) + '"', function (err) {
+                        if (err) {
+                            callback(err, self.result);
+                            return;
+                        }
+                        self.createMessage(self.activeNode, 'Library imported');
+                        self.result.setSuccess(true);
+                        callback(null, self.result);
+                    });
                 });
+            })
+            .catch(function (err) {
+                callback(err, self.result);
             });
-        });
     };
 
-    ExportImport.prototype.getLibObject = function (currentConfig, callback) {
-        var self = this;
+    ExportImport.prototype.getLibObjectAndUploadAssets = function (currentConfig, callback) {
+        var deferred = new Q.defer(),
+            self = this;
         if (!currentConfig.file) {
-            self.result.setError('Add a json file when importing or updating.');
-            callback(new Error('No file provided.'));
-            return;
+            self.result.setError('Add at least the project json file when importing or updating.');
+            deferred.reject(new Error('No file provided.'));
+        } else {
+            Q.ninvoke(self.blobClient, 'getMetadata', currentConfig.file)
+                .then(function (mainMetadata) {
+                    // Three cases:
+
+                    //name: "project.json"
+                    //contentType: "object"
+                    //mime: "application/json"
+                    //content: <blobHash>
+
+                    //name: "file.zip"
+                    //contentType: "complex"
+                    //mime: "application/zip"
+                    //content: {
+                    //  <blobHash>.metadata: { content: <blobHash>, type: 'softLink'},
+                    //  <blobHash>.content: { ... },
+                    // ...}
+
+                    //name: "exported.zip"
+                    //contentType: "object"
+                    //mime: "application/zip"
+                    //content: <blobHash>
+
+                    self.logger.debug('mainMetadata', mainMetadata);
+
+                    if (mainMetadata.mime === 'application/json' &&
+                        mainMetadata.contentType === BlobMetadata.CONTENT_TYPES.OBJECT) {
+
+                        return self.getLibObject(currentConfig.file);
+                    } else if (mainMetadata.mime === 'application/zip' &&
+                        mainMetadata.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
+
+                        return self.addAssetsFromUploadedComplexArtifact(mainMetadata)
+                            .then(function (projectFileHash) {
+                                self.logger.debug('assets added, projectFileHash', projectFileHash);
+                                if (projectFileHash) {
+                                    return self.getLibObject(projectFileHash);
+                                } else {
+                                    return null;
+                                }
+                            });
+                    } else if (mainMetadata.mime === 'application/zip' &&
+                        mainMetadata.contentType === BlobMetadata.CONTENT_TYPES.OBJECT) {
+                        throw new Error('Zip files not supported yet!' +
+                            '[Drag the entire content from exported project.]');
+                    } else {
+                        throw new Error('Unexpected import file!');
+                    }
+                })
+                .then(deferred.resolve)
+                .catch(deferred.reject);
         }
 
-        self.blobClient.getObject(currentConfig.file, function (err, libOrBuf) {
-            var libObject;
-            if (err) {
-                callback(err);
-                return;
-            }
+        return deferred.promise.nodeify(callback);
+    };
 
-            if (typeof Buffer !== 'undefined' && libOrBuf instanceof Buffer) {
-                try {
+    ExportImport.prototype.addAssetsFromUploadedComplexArtifact = function (mainMetadata, callback) {
+        var self = this,
+            projectFileHash,
+            softLinkNames = Object.keys(mainMetadata.content);
+
+        return Q.allSettled(softLinkNames.map(function (softLinkName) {
+            var softLinkPieces = softLinkName.split('.'),
+                type = softLinkPieces.pop();
+
+            if (type === 'json') {
+                projectFileHash = mainMetadata.content[softLinkName].content;
+            } else if (type === 'metadata') {
+                return self.addMetadataAsMetadata(mainMetadata, softLinkPieces.pop());
+            }
+        }))
+            .then(function (result) {
+                var i,
+                    error;
+                for (i = 0; i < result.length; i += 1) {
+                    if (result[i].state === 'rejected') {
+                        self.logger.error('Adding asset failed with error', softLinkNames[i], result[i].reason);
+                        error = 'Failed adding some of the assets, see error logs';
+                    }
+                }
+                if (error) {
+                    throw new Error(error);
+                }
+                return projectFileHash;
+            })
+            .nodeify(callback);
+    };
+
+    ExportImport.prototype.addMetadataAsMetadata = function (mainMetadata, baseName, callback) {
+        var self = this,
+            orgMetadata,
+            metadataName = baseName + '.metadata';
+
+        return Q.ninvoke(self.blobClient, 'getObject', mainMetadata.content[metadataName].content)
+            .then(function (orgMetadataAsContent) {
+                // Original metadata loaded as content-file.
+                var contentName = baseName + '.content',
+                    softLinkNames,
+                    innerContentHash,
+                    i,
+                    contentMetadataHash;
+
+                if ((typeof Buffer !== 'undefined' && orgMetadataAsContent instanceof Buffer) ||
+                    orgMetadataAsContent instanceof ArrayBuffer) {
+
+                    orgMetadataAsContent = String.fromCharCode.apply(null,
+                        new Uint8Array(orgMetadataAsContent));
+                }
+
+                self.logger.debug('orgMetadataAsContent', orgMetadataAsContent);
+                orgMetadata = JSON.parse(orgMetadataAsContent);
+
+                if (orgMetadata.contentType === BlobMetadata.CONTENT_TYPES.OBJECT) {
+                    contentMetadataHash = mainMetadata.content[contentName].content;
+                    self.logger.debug('contentMetadataHash', contentMetadataHash);
+                    return Q.ninvoke(self.blobClient, 'getMetadata', contentMetadataHash)
+                        .then(function (contentMetadata) {
+                            // The uploaded contents metadata loaded - ensure original meta data matches...
+                            if (contentMetadata.size !== orgMetadata.size ||
+                                contentMetadata.content !== orgMetadata.content) {
+                                throw new Error('Matching content was not uploaded for metadata',
+                                    contentMetadata, orgMetadata);
+                            }
+                            // it did so upload the original metadata as an actual metadata.
+                        });
+                } else if (orgMetadata.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
+                    // Just make sure that the metadata exists among the uploaded files
+                    // (their consistencies will be check).
+                    softLinkNames = Object.keys(orgMetadata.content);
+                    for (i = 0; i < softLinkNames.length; i += 1) {
+                        innerContentHash = orgMetadata.content[softLinkNames[i]].content;
+                        if (mainMetadata.content.hasOwnProperty(innerContentHash + '.metadata') === false) {
+                            throw new Error('Complex object softLink does not have attached .metadata!');
+                        }
+                    }
+                } else {
+                    throw new Error('Unsupported content type', orgMetadata.contentType);
+                }
+            })
+            .then(function () {
+                return Q.ninvoke(self.blobClient, 'putMetadata', orgMetadata);
+            })
+            .nodeify(callback);
+    };
+
+    ExportImport.prototype.getLibObject = function (hash, callback) {
+        var self = this;
+
+        return Q.ninvoke(self.blobClient, 'getObject', hash)
+            .then(function (libOrBuf) {
+                var libObject;
+
+                if (typeof Buffer !== 'undefined' && libOrBuf instanceof Buffer) {
                     libOrBuf = String.fromCharCode.apply(null, new Uint8Array(libOrBuf));
                     libObject = JSON.parse(libOrBuf);
-                    callback(null, libObject);
-                } catch (err) {
-                    callback(err);
-                    return;
+                } else {
+                    libObject = libOrBuf;
                 }
-            } else {
-                callback(null, libOrBuf);
-            }
-        });
+
+                self.logger.debug('gotLibraryObject', libObject);
+                return libObject;
+            })
+            .nodeify(callback);
     };
 
     return ExportImport;
