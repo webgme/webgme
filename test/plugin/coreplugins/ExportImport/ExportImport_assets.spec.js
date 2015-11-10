@@ -302,7 +302,7 @@ describe('Plugin ExportImport - assets', function () {
         Q.ninvoke(pluginManager, 'executePlugin', pluginName, pluginConfig, pluginContext)
             .then(function (result) {
                 expect(result.success).to.equal(true);
-                console.log(result.artifacts[0]);
+                //console.log(result.artifacts[0]);
                 return Q.ninvoke(blobClient, 'getMetadata', result.artifacts[0]);
             })
             .then(function (metadata) {
