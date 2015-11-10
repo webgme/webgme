@@ -98,8 +98,9 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
                     eventData.currNbrOfSockets = Object.keys(webSocket.sockets.adapter.rooms[roomName]).length;
                     eventData.prevNbrOfSockets = eventData.currNbrOfSockets - 1;
+                    eventData.type = CONSTANTS.BRANCH_ROOM_SOCKETS;
 
-                    socket.broadcast.to(roomName).emit(CONSTANTS.BRANCH_ROOM_SOCKETS, eventData);
+                    socket.broadcast.to(roomName).emit(CONSTANTS.NOTIFICATION, eventData);
 
 
                     return Q.ninvoke(workerManager, 'socketRoomChange', workManagerParams);
@@ -128,8 +129,9 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         } else {
             eventData.prevNbrOfSockets = Object.keys(webSocket.sockets.adapter.rooms[roomName]).length;
             eventData.currNbrOfSockets = eventData.prevNbrOfSockets - 1;
+            eventData.type = CONSTANTS.BRANCH_ROOM_SOCKETS;
 
-            socket.broadcast.to(roomName).emit(CONSTANTS.BRANCH_ROOM_SOCKETS, eventData);
+            socket.broadcast.to(roomName).emit(CONSTANTS.NOTIFICATION, eventData);
 
             Q.ninvoke(socket, 'leave', roomName)
                 .then(function () {
@@ -436,7 +438,6 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     });
             });
 
-
             socket.on('setBranchHash', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
@@ -635,6 +636,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     then(function (userId) {
                         parameters.userId = userId;
                         parameters.webGMESessionId = getSessionIdFromSocket(socket);
+                        parameters.socketId = socket.id;
                         workerManager.request(parameters, callback);
                     })
                     .catch(function (err) {
@@ -656,6 +658,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     .then(function (userId) {
                         parameters.userId = userId;
                         parameters.webGMESessionId = getSessionIdFromSocket(socket);
+                        parameters.socketId = socket.id;
                         workerManager.query(workerId, parameters, callback);
                     })
                     .catch(function (err) {
@@ -670,6 +673,19 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                             callback(err.message);
                         }
                     });
+            });
+
+            socket.on('notification', function (data, callback) {
+                if (data.type === CONSTANTS.PLUGIN_NOTIFICATION) {
+                    if (data.socketId) {
+                        webSocket.to(data.socketId).emit(CONSTANTS.NOTIFICATION, data);
+                        callback(null);
+                    } else {
+                        callback('PLUGIN_NOTIFICATION requires provided socketId to emit to.');
+                    }
+                } else {
+                    callback('Unknown notification type: "' + data.type + '"');
+                }
             });
         });
     };

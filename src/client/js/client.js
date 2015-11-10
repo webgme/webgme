@@ -322,22 +322,28 @@ define([
                 if (connectionState === CONSTANTS.STORAGE.CONNECTED) {
                     //N.B. this event will only be triggered once.
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
-                    storage.webSocket.addEventListener(CONSTANTS.STORAGE.BRANCH_ROOM_SOCKETS,
+                    storage.webSocket.addEventListener(CONSTANTS.STORAGE.NOTIFICATION,
                         function (emitter, eventData) {
                             var notification = {
                                 severity: 'INFO',
                                 message: ''
                             };
-                            if (state.project && state.project.projectId === eventData.projectId &&
-                                state.branchName === eventData.branchName) {
-                                if (eventData.currNbrOfSockets > eventData.prevNbrOfSockets) {
-                                    notification.message = 'Another socket joined your branch [' +
-                                        eventData.currNbrOfSockets + ']';
-                                } else {
-                                    notification.message = 'A socket disconnected from your branch [' +
-                                        eventData.currNbrOfSockets + ']';
+                            if (eventData.type === CONSTANTS.STORAGE.BRANCH_ROOM_SOCKETS) {
+                                if (state.project && state.project.projectId === eventData.projectId &&
+                                    state.branchName === eventData.branchName) {
+                                    if (eventData.currNbrOfSockets > eventData.prevNbrOfSockets) {
+                                        notification.message = 'Another socket joined your branch [' +
+                                            eventData.currNbrOfSockets + ']';
+                                    } else {
+                                        notification.message = 'A socket disconnected from your branch [' +
+                                            eventData.currNbrOfSockets + ']';
+                                    }
+                                    self.dispatchEvent(CONSTANTS.NOTIFICATION, notification);
                                 }
-                                self.dispatchEvent(CONSTANTS.NOTIFICATION, notification);
+                            } else if (eventData.type === CONSTANTS.STORAGE.PLUGIN_NOTIFICATION) {
+                                self.dispatchPluginNotification(eventData);
+                            } else {
+                                logger.error('Unknown notification type', eventData.type, eventData);
                             }
                         }
                     );
@@ -1906,6 +1912,19 @@ define([
             }
 
             return filteredNames;
+        };
+
+        this.dispatchPluginNotification = function (data) {
+            var notification = {
+                severity: data.notification.severity || 'info',
+                message: '[Plugin] ' + data.pluginName + ' - ' + data.notification.message
+            };
+
+            if (typeof data.notification.progress === 'number') {
+                notification.message += ' [' + data.notification.progress + '%]';
+            }
+
+            self.dispatchEvent(self.CONSTANTS.NOTIFICATION, notification);
         };
 
         // Constraints

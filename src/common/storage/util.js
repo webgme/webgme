@@ -7,7 +7,7 @@
 define(['common/storage/constants'], function (CONSTANTS) {
     'use strict';
     return {
-
+        CONSTANTS: CONSTANTS,
         getProjectFullNameFromProjectId: function (projectId) {
             if (projectId) {
                 return projectId.replace(CONSTANTS.PROJECT_ID_SEP, CONSTANTS.PROJECT_DISPLAYED_NAME_SEP);

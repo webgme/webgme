@@ -119,6 +119,7 @@ describe('Plugin Result', function () {
         pluginResult.addArtifact('hash1');
         pluginResult.addArtifact('hash2');
         pluginResult.setPluginName('test plugin 11');
+        pluginResult.setProjectId('guest+Test');
         pluginResult.setStartTime('2015-03-09T19:32:10.202Z');
         pluginResult.setFinishTime('2015-03-09T19:32:10.202Z');
         pluginResult.setError(null);
@@ -152,6 +153,7 @@ describe('Plugin Result', function () {
                 }
             ],
             pluginName: 'test plugin 11',
+            projectId: 'guest+Test',
             startTime: '2015-03-09T19:32:10.202Z',
             success: true
         });
@@ -183,6 +185,7 @@ describe('Plugin Result', function () {
                     }
                 ],
                 pluginName: 'test plugin 11',
+                projectId: 'guest+Test',
                 startTime: '2015-03-09T19:32:10.202Z',
                 success: true
             };
@@ -223,6 +226,7 @@ describe('Plugin Result', function () {
                 }
             ],
             pluginName: 'test plugin 11',
+            projectId: 'guest+Test',
             startTime: '2015-03-09T19:32:10.202Z',
             success: true
         });

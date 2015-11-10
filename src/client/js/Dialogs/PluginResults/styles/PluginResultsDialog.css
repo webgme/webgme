@@ -29,6 +29,13 @@
       text-transform: uppercase;
       color: #999999;
       border-bottom: 1px solid #999999; }
+    .plugin-results-dialog .modal-body div.plugin-result .messages .msg .btn-node {
+      font-weight: bold;
+      padding-right: 3px;
+      padding-left: 3px;
+      color: #3a87ad; }
+      .plugin-results-dialog .modal-body div.plugin-result .messages .msg .btn-node:hover {
+        text-decoration: underline; }
   .plugin-results-dialog .modal-body div.plugin-result .artifacts {
     margin-bottom: 5px; }
     .plugin-results-dialog .modal-body div.plugin-result .artifacts .artifacts-title {
@@ -37,3 +44,16 @@
       text-transform: uppercase;
       color: #999999;
       border-bottom: 1px solid #999999; }
+    .plugin-results-dialog .modal-body div.plugin-result .artifacts .artifacts-body a {
+      color: #3a87ad;
+      font-weight: bold;
+      font-size: 10.5px; }
+    .plugin-results-dialog .modal-body div.plugin-result .artifacts.history .btn-commit, .plugin-results-dialog .modal-body div.plugin-result .artifacts.history .btn-branch {
+      font-weight: bold;
+      padding-right: 3px;
+      padding-left: 3px;
+      color: #3a87ad; }
+      .plugin-results-dialog .modal-body div.plugin-result .artifacts.history .btn-commit:hover, .plugin-results-dialog .modal-body div.plugin-result .artifacts.history .btn-branch:hover {
+        text-decoration: underline; }
+
+/*# sourceMappingURL=PluginResultsDialog.css.map */

@@ -93,6 +93,7 @@ var path = require('path'),
         },
 
         plugin: {
+            allowBrowserExecution: true,
             allowServerExecution: false,
             basePaths: [path.join(__dirname, '../src/plugin/coreplugins')],
             displayAll: false,

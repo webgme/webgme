@@ -136,6 +136,7 @@ define([
         }
 
         self.logger.debug('Getting xmp file content');
+        self.sendNotification('Getting xmp file');
 
         self.blobClient.getObject(config.xmpFile, function (err, xmlArrayBuffer) {
             var error;
@@ -152,6 +153,7 @@ define([
                 xmpData = xml2json.convertFromBuffer(xmlArrayBuffer);
             }
 
+            self.sendNotification({message: 'Got xmp file content, processing data...', progress: 10});
             error = self.processParadigm(xmpData);
 
             if (error) {
@@ -161,11 +163,13 @@ define([
                 return;
             }
 
+            self.sendNotification({message: 'Data processed, saving model', progress: 60});
             self.save('Imported meta model ' + xmpData.paradigm['@name'], function (err) {
                 if (err) {
                     self.result.setSuccess(false);
                     self.result.setError(err);
                 }
+                self.sendNotification({message: 'Model saved, plugin done', progress: 100, severity: 'success'});
                 callback(null, self.result);
             });
         });

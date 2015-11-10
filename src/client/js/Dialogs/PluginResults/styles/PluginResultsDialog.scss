@@ -48,6 +48,15 @@
           .msg-body {
 
           }
+          .btn-node {
+            font-weight: bold;
+            padding-right: 3px;
+            padding-left: 3px;
+            color: #3a87ad;
+            &:hover{
+              text-decoration: underline
+            }
+          }
         }
       }
 
@@ -63,7 +72,26 @@
         }
 
         .artifacts-body {
+          a {
+            color: #3a87ad;
+            font-weight: bold;
+            font-size: 10.5px;
+          }
+        }
 
+        &.history {
+          .btn-commit {
+            font-weight: bold;
+            padding-right: 3px;
+            padding-left: 3px;
+            color: #3a87ad;
+            &:hover{
+              text-decoration: underline
+            }
+          }
+          .btn-branch {
+            @extend .btn-commit
+          }
         }
       }
     }

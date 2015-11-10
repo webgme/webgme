@@ -43,13 +43,14 @@ define([
         }
     };
 
-    function getPluginErrorResult(pluginName, message, startTime) {
+    function getPluginErrorResult(pluginName, message, startTime, projectId) {
         var pluginResult = new PluginResult(),
             pluginMessage = new PluginMessage();
         pluginMessage.severity = 'error';
         pluginMessage.message = message;
         pluginResult.setSuccess(false);
-        pluginResult.pluginName = pluginName;
+        pluginResult.setPluginName(pluginName);
+        pluginResult.setProjectId(projectId || 'N/A');
         pluginResult.addMessage(pluginMessage);
         pluginResult.setStartTime(startTime);
         pluginResult.setFinishTime((new Date()).toISOString());
@@ -70,6 +71,7 @@ define([
      */
     InterpreterManager.prototype.run = function (name, silentPluginCfg, callback) {
         var self = this,
+            projectId = self._client.getProjectObject().projectId,
             startTime = (new Date()).toISOString();
         getPlugin(name, function (err, plugin) {
             self.logger.debug('Getting getPlugin in run.');
@@ -79,22 +81,75 @@ define([
                 plugins[name] = plugin;
                 var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, self.logger, plugins,
                     self.gmeConfig);
+                pluginManager.notificationHandlers = [function (data, callback) {
+                    self._client.dispatchPluginNotification(data);
+                    callback(null);
+                }];
                 pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
                     //#1: display config to user
-                    var noServerExecution = self.gmeConfig.plugin.allowServerExecution === false,
+                    var serverAllowedGlobal = self.gmeConfig.plugin.allowServerExecution === true,
+                        serverAllowedPlugin = !plugin.disableServerExecution,
+                        browserAllowedGlobal = self.gmeConfig.plugin.allowBrowserExecution === true,
+                        browserAllowedPlugin = !plugin.disableBrowserExecution,
+                        runOptions = {
+                            name: 'runOnServer',
+                            displayName: 'Execute on Server',
+                            description: '',
+                            value: false,
+                            valueType: 'boolean',
+                            readOnly: false
+                        },
                         hackedConfig = {
-                            'Global Options': [
-                                {
-                                    name: 'runOnServer',
-                                    displayName: 'Execute on Server',
-                                    description: noServerExecution ? 'Server side execution is disabled.' : '',
-                                    value: false, // this is the 'default config'
-                                    valueType: 'boolean',
-                                    readOnly: noServerExecution
-                                }
-                            ]
+                            'Global Options': [runOptions]
                         },
                         i, j, d, len;
+
+                    if (serverAllowedGlobal === false && browserAllowedGlobal === false) {
+                        callback(getPluginErrorResult(name, 'Plugin execution is disabled!', startTime, projectId));
+                        return;
+                    }
+
+                    if (serverAllowedPlugin === false && browserAllowedPlugin === false) {
+                        callback(getPluginErrorResult(name, 'This plugin cannot run on the server nor in the browser!?',
+                            startTime, projectId));
+                        return;
+                    }
+
+                    if (browserAllowedGlobal) {
+                        if (serverAllowedGlobal) {
+                            if (browserAllowedPlugin) {
+                                if (serverAllowedPlugin) {
+                                    // This is the default
+                                } else {
+                                    runOptions.readOnly = true;
+                                    runOptions.description = 'This plugin can not run on the server.';
+                                }
+                            } else {
+                                runOptions.readOnly = true;
+                                runOptions.value = true;
+                                runOptions.description = 'This plugin can not run in the browser.';
+                            }
+                        } else {
+                            if (browserAllowedPlugin) {
+                                runOptions.readOnly = true;
+                                runOptions.description = 'Server execution disabled.';
+                            } else {
+                                callback(getPluginErrorResult(name,
+                                    'This plugin can only run on the server which is disabled!', startTime, projectId));
+                                return;
+                            }
+                        }
+                    } else {
+                        if (browserAllowedPlugin) {
+                            runOptions.readOnly = true;
+                            runOptions.value = true;
+                            runOptions.description = 'Browser execution disabled.';
+                        } else {
+                            callback(getPluginErrorResult(name,
+                                'This plugin can only run on the server which is disabled!', startTime, projectId));
+                            return;
+                        }
+                    }
 
                     for (i in pluginConfigs) {
                         if (pluginConfigs.hasOwnProperty(i)) {
@@ -148,7 +203,7 @@ define([
                                     errMessage += 'while local branch is AHEAD or PULLING changes from server.';
                                 }
                                 self.logger.error(errMessage);
-                                callback(getPluginErrorResult(name, errMessage, startTime));
+                                callback(getPluginErrorResult(name, errMessage, startTime, projectId));
                                 return;
                             }
 
@@ -177,7 +232,7 @@ define([
                                             callback(new PluginResult(result));
                                         } else {
                                             errMessage = 'Plugin execution resulted in error, err: ' + err;
-                                            callback(getPluginErrorResult(name, errMessage, startTime));
+                                            callback(getPluginErrorResult(name, errMessage, startTime, projectId));
                                         }
                                     } else {
                                         var resultObject = new PluginResult(result);
@@ -222,7 +277,7 @@ define([
             } else {
                 self.logger.error(err);
                 self.logger.error('Unable to load plugin');
-                callback(getPluginErrorResult(name, 'Unable to load plugin, err:' + err, startTime));
+                callback(getPluginErrorResult(name, 'Unable to load plugin, err:' + err, startTime, projectId));
             }
         });
     };

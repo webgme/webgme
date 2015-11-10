@@ -30,6 +30,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             this.artifacts = config.artifacts;
             this.error = config.error;
             this.commits = config.commits;
+            this.projectId = config.projectId;
 
             for (i = 0; i < config.messages.length; i += 1) {
                 if (config.messages[i] instanceof PluginMessage) {
@@ -47,6 +48,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             this.startTime = null;
             this.finishTime = null;
             this.error = null;
+            this.projectId = null;
             this.commits = [];
         }
     };
@@ -133,6 +135,15 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
     };
 
     /**
+     * Sets the name of the projectId the result was generated from.
+     *
+     * @param {string} projectId - id of the project
+     */
+    PluginResult.prototype.setProjectId = function (projectId) {
+        this.projectId = projectId;
+    };
+
+    /**
      * Gets the ISO 8601 representation of the time when the plugin started its execution.
      *
      * @returns {string}
@@ -198,6 +209,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
     PluginResult.prototype.serialize = function () {
         var result = {
             success: this.success,
+            projectId: this.projectId,
             messages: [],
             commits: this.commits,
             artifacts: this.artifacts,
