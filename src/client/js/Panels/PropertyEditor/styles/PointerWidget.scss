@@ -5,9 +5,22 @@
  */
 
 .ptr-widget {
-
+  height: 25px;
+  line-height: 25px;
+  vertical-align: middle;
+  border-radius: 4px;
   position: relative;
-
+  background-color: rgba(0, 0, 0, 0.025);
+  &.drop-area {
+    border: 1px dashed #aaaaaa;
+    &.accept-drop {
+      background-color: rgba(0, 255, 0, 0.1);
+    }
+    &.reject-drop {
+      background-color: rgba(255, 0, 0, 0.1);
+  }
+  }
+  padding-left: 3px;
   i {
     margin-top: 6px;
     position: absolute;

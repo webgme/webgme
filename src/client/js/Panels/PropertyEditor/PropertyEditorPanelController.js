@@ -736,6 +736,8 @@ define(['js/logger',
                 keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
                 setterFn = 'setRegistry';
                 getterFn = 'getEditableRegistry';
+            } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_POINTERS) {
+                this._client.makePointer(gmeID, keyArr[1], args.newValue);
             }
 
             if (setterFn && getterFn) {
