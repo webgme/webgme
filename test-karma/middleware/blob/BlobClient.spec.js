@@ -23,6 +23,34 @@ describe('Browser BlobClient', function () {
         expect(bc.putFile).to.exist;
     });
 
+    it('getMetaDataUrl should be concatenation of origin and getRelativeMetaDataUrl', function () {
+        var bc = new BlobClient(),
+            relativeUrl = bc.getRelativeMetadataURL();
+
+        expect(bc.getMetadataURL()).to.equal(bc.origin + relativeUrl);
+    });
+
+    it('getViewURL should be concatenation of origin and getRelativeViewURL', function () {
+        var bc = new BlobClient(),
+            relativeUrl = bc.getRelativeViewURL('someHash', 'someSubPath');
+
+        expect(bc.getViewURL('someHash', 'someSubPath')).to.equal(bc.origin + relativeUrl);
+    });
+
+    it('getDownloadURL should be concatenation of origin and getRelativeDownloadURL', function () {
+        var bc = new BlobClient(),
+            relativeUrl = bc.getRelativeDownloadURL('someHash', 'someSubPath');
+
+        expect(bc.getDownloadURL('someHash', 'someSubPath')).to.equal(bc.origin + relativeUrl);
+    });
+
+    it('getCreateURL should be concatenation of origin and getRelativeCreateURL', function () {
+        var bc = new BlobClient(),
+            relativeUrl = bc.getRelativeCreateURL('someFileName', true);
+
+        expect(bc.getCreateURL('someFileName', true)).to.equal(bc.origin + relativeUrl);
+    });
+
     it('should create json', function (done) {
         var bc = new BlobClient();
 

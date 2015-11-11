@@ -1,5 +1,5 @@
 /** vim: et:ts=4:sw=4:sts=4
- * @license RequireJS 2.1.17 Copyright (c) 2010-2015, The Dojo Foundation All Rights Reserved.
+ * @license RequireJS 2.1.20 Copyright (c) 2010-2015, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
@@ -12,7 +12,7 @@ var requirejs, require, define;
 (function (global) {
     var req, s, head, baseElement, dataMain, src,
         interactiveScript, currentlyAddingScript, mainScript, subPath,
-        version = '2.1.17',
+        version = '2.1.20',
         commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg,
         cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
         jsSuffixRegExp = /\.js$/,
@@ -21,7 +21,6 @@ var requirejs, require, define;
         ostring = op.toString,
         hasOwn = op.hasOwnProperty,
         ap = Array.prototype,
-        apsp = ap.splice,
         isBrowser = !!(typeof window !== 'undefined' && typeof navigator !== 'undefined' && window.document),
         isWebWorker = !isBrowser && typeof importScripts !== 'undefined',
         //PS3 indicates loaded and complete, but need to wait for complete
@@ -554,11 +553,13 @@ var requirejs, require, define;
         function takeGlobalQueue() {
             //Push all the globalDefQueue items into the context's defQueue
             if (globalDefQueue.length) {
-                //Array splice in the values since the context code has a
-                //local var ref to defQueue, so cannot just reassign the one
-                //on context.
-                apsp.apply(defQueue,
-                           [defQueue.length, 0].concat(globalDefQueue));
+                each(globalDefQueue, function(queueItem) {
+                    var id = queueItem[0];
+                    if (typeof id === 'string') {
+                        context.defQueueMap[id] = true;
+                    }
+                    defQueue.push(queueItem);
+                });
                 globalDefQueue = [];
             }
         }
@@ -589,7 +590,7 @@ var requirejs, require, define;
                         id: mod.map.id,
                         uri: mod.map.url,
                         config: function () {
-                            return  getOwn(config.config, mod.map.id) || {};
+                            return getOwn(config.config, mod.map.id) || {};
                         },
                         exports: mod.exports || (mod.exports = {})
                     });
@@ -845,7 +846,10 @@ var requirejs, require, define;
                     factory = this.factory;
 
                 if (!this.inited) {
-                    this.fetch();
+                    // Only fetch if not already in the defQueue.
+                    if (!hasProp(context.defQueueMap, id)) {
+                        this.fetch();
+                    }
                 } else if (this.error) {
                     this.emit('error', this.error);
                 } else if (!this.defining) {
@@ -1117,6 +1121,9 @@ var requirejs, require, define;
                         this.depCount += 1;
 
                         on(depMap, 'defined', bind(this, function (depExports) {
+                            if (this.undefed) {
+                                return;
+                            }
                             this.defineDep(i, depExports);
                             this.check();
                         }));
@@ -1233,13 +1240,15 @@ var requirejs, require, define;
             while (defQueue.length) {
                 args = defQueue.shift();
                 if (args[0] === null) {
-                    return onError(makeError('mismatch', 'Mismatched anonymous define() module: ' + args[args.length - 1]));
+                    return onError(makeError('mismatch', 'Mismatched anonymous define() module: ' +
+                        args[args.length - 1]));
                 } else {
                     //args are id, deps, factory. Should be normalized by the
                     //define() function.
                     callGetModule(args);
                 }
             }
+            context.defQueueMap = {};
         }
 
         context = {
@@ -1249,6 +1258,7 @@ var requirejs, require, define;
             defined: defined,
             urlFetched: urlFetched,
             defQueue: defQueue,
+            defQueueMap: {},
             Module: Module,
             makeModuleMap: makeModuleMap,
             nextTick: req.nextTick,
@@ -1320,7 +1330,7 @@ var requirejs, require, define;
                     each(cfg.packages, function (pkgObj) {
                         var location, name;
 
-                        pkgObj = typeof pkgObj === 'string' ? { name: pkgObj } : pkgObj;
+                        pkgObj = typeof pkgObj === 'string' ? {name: pkgObj} : pkgObj;
 
                         name = pkgObj.name;
                         location = pkgObj.location;
@@ -1347,7 +1357,7 @@ var requirejs, require, define;
                     //late to modify them, and ignore unnormalized ones
                     //since they are transient.
                     if (!mod.inited && !mod.map.unnormalized) {
-                        mod.map = makeModuleMap(id);
+                        mod.map = makeModuleMap(id, null, true);
                     }
                 });
 
@@ -1483,6 +1493,7 @@ var requirejs, require, define;
                         var map = makeModuleMap(id, relMap, true),
                             mod = getOwn(registry, id);
 
+                        mod.undefed = true;
                         removeScript(id);
 
                         delete defined[id];
@@ -1493,10 +1504,11 @@ var requirejs, require, define;
                         //in array so that the splices do not
                         //mess up the iteration.
                         eachReverse(defQueue, function(args, i) {
-                            if(args[0] === id) {
+                            if (args[0] === id) {
                                 defQueue.splice(i, 1);
                             }
                         });
+                        delete context.defQueueMap[id];
 
                         if (mod) {
                             //Hold on to listeners in case the
@@ -1558,6 +1570,7 @@ var requirejs, require, define;
 
                     callGetModule(args);
                 }
+                context.defQueueMap = {};
 
                 //Do this after the cycle of callGetModule in case the result
                 //of those calls/init calls changes the registry.
@@ -1852,6 +1865,9 @@ var requirejs, require, define;
         if (isBrowser) {
             //In the browser so use a script tag
             node = req.createNode(config, moduleName, url);
+            if (config.onNodeCreated) {
+                config.onNodeCreated(node, config, moduleName, url);
+            }
 
             node.setAttribute('data-requirecontext', context.contextName);
             node.setAttribute('data-requiremodule', moduleName);
@@ -1980,7 +1996,7 @@ var requirejs, require, define;
                 //like a module name.
                 mainScript = mainScript.replace(jsSuffixRegExp, '');
 
-                 //If mainScript is still a path, fall back to dataMain
+                //If mainScript is still a path, fall back to dataMain
                 if (req.jsExtRegExp.test(mainScript)) {
                     mainScript = dataMain;
                 }
@@ -2059,13 +2075,17 @@ var requirejs, require, define;
         //where the module name is not known until the script onload event
         //occurs. If no context, use the global queue, and get it processed
         //in the onscript load callback.
-        (context ? context.defQueue : globalDefQueue).push([name, deps, callback]);
+        if (context) {
+            context.defQueue.push([name, deps, callback]);
+            context.defQueueMap[name] = true;
+        } else {
+            globalDefQueue.push([name, deps, callback]);
+        }
     };
 
     define.amd = {
         jQuery: true
     };
-
 
     /**
      * Executes the text. Normally just uses eval, but can be modified
@@ -2170,6 +2190,9 @@ define('common/eventDispatcher',[], function () {
                 handler(this, eventArgs);
             }
         },
+        clearAllEvents: function () {
+            this._eventList = {};
+        },
         _getEventHandler: function (eventName) {
             // Get Event Handler Array for this Event
             var evt = this._getEvent(eventName, false);
@@ -2248,7 +2271,7 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function (BlobConfig) {
                 for (key in this.content) {
                     if (this.content.hasOwnProperty(key)) {
                         if (BlobConfig.hashRegex.test(this.content[key].content) === false) {
-                            throw Error('BlobMetadata is malformed: hash is invalid');
+                            throw new Error('BlobMetadata is malformed: hash \'' + this.content[key].content + '\'is invalid');
                         }
                     }
                 }
@@ -2275,7 +2298,7 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function (BlobConfig) {
      *  size: number,
      *  mime: string,
      *  tags: Array.<string>,
-     *  content: (string|Object},
+     *  content: (string|Object),
      *  contentType: string}}
      */
     BlobMetadata.prototype.serialize = function () {
@@ -2307,6 +2330,7 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function (BlobConfig) {
 
     return BlobMetadata;
 });
+
 /*globals define*/
 /*jshint node: true, browser: true, camelcase: false*/
 
@@ -3076,6 +3100,7 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
      * @param {blob.BlobClient} blobClient
      * @param {blob.BlobMetadata} descriptor
      * @constructor
+     * @alias Artifact
      */
     var Artifact = function (name, blobClient, descriptor) {
         this.name = name;
@@ -3096,7 +3121,7 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
      * Adds content to the artifact as a file.
      * @param {string} name filename
      * @param {Blob} content File object or Blob
-     * @param callback
+     * @param {function(err, hash)} callback
      */
     Artifact.prototype.addFile = function (name, content, callback) {
         var self = this;
@@ -3374,6 +3399,12 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
 define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, BlobMetadata, superagent) {
     'use strict';
 
+    /**
+     * 
+     * @param {object} parameters
+     * @constructor
+     * @alias BlobClient
+     */
     var BlobClient = function (parameters) {
         this.artifacts = [];
 
@@ -3383,14 +3414,17 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
             this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
             this.webgmeclientsession = parameters.webgmeclientsession;
             this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || { /* use defaults */ };
+        } else {
+            this.keepaliveAgentOptions = { /* use defaults */ };
         }
-        this.blobUrl = '';
+        this.origin = '';
         if (this.httpsecure !== undefined && this.server && this.serverPort) {
-            this.blobUrl = (this.httpsecure ? 'https://' : 'http://') + this.server + ':' + this.serverPort;
+            this.origin = (this.httpsecure ? 'https://' : 'http://') + this.server + ':' + this.serverPort;
         }
-
+        this.relativeUrl = '/rest/blob/';
+        this.blobUrl = this.origin + this.relativeUrl;
         // TODO: TOKEN???
-        this.blobUrl = this.blobUrl + '/rest/blob/'; // TODO: any ways to ask for this or get it from the configuration?
+        // TODO: any ways to ask for this or get it from the configuration?
 
         this.isNodeOrNodeWebKit = typeof process !== 'undefined';
         if (this.isNodeOrNodeWebKit) {
@@ -3400,12 +3434,19 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
             } else {
                 this.Agent = require('agentkeepalive');
             }
+            if (this.keepaliveAgentOptions.hasOwnProperty('ca') === false) {
+                this.keepaliveAgentOptions.ca = require('https').globalAgent.options.ca;
+            }
             this.keepaliveAgent = new this.Agent(this.keepaliveAgentOptions);
         }
     };
 
     BlobClient.prototype.getMetadataURL = function (hash) {
-        var metadataBase = this.blobUrl + 'metadata';
+        return this.origin + this.getRelativeMetadataURL(hash);
+    };
+
+    BlobClient.prototype.getRelativeMetadataURL = function (hash) {
+        var metadataBase = this.relativeUrl + 'metadata';
         if (hash) {
             return metadataBase + '/' + hash;
         } else {
@@ -3418,22 +3459,34 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
         if (subpath) {
             subpathURL = subpath;
         }
-        return this.blobUrl + base + '/' + hash + '/' + encodeURIComponent(subpathURL);
+        return this.relativeUrl + base + '/' + hash + '/' + encodeURIComponent(subpathURL);
     };
 
     BlobClient.prototype.getViewURL = function (hash, subpath) {
+        return this.origin + this.getRelativeViewURL(hash, subpath);
+    };
+
+    BlobClient.prototype.getRelativeViewURL = function (hash, subpath) {
         return this._getURL('view', hash, subpath);
     };
 
     BlobClient.prototype.getDownloadURL = function (hash, subpath) {
+        return this.origin + this.getRelativeDownloadURL(hash, subpath);
+    };
+
+    BlobClient.prototype.getRelativeDownloadURL = function (hash, subpath) {
         return this._getURL('download', hash, subpath);
     };
 
     BlobClient.prototype.getCreateURL = function (filename, isMetadata) {
+        return this.origin + this.getRelativeCreateURL(filename, isMetadata);
+    };
+
+    BlobClient.prototype.getRelativeCreateURL = function (filename, isMetadata) {
         if (isMetadata) {
-            return this.blobUrl + 'createMetadata/';
+            return this.relativeUrl + 'createMetadata/';
         } else {
-            return this.blobUrl + 'createFile/' + encodeURIComponent(filename);
+            return this.relativeUrl + 'createFile/' + encodeURIComponent(filename);
         }
     };
 
@@ -3471,8 +3524,10 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
+        if (typeof data !== 'string' && !(data instanceof String)) {
+            req.set('Content-Length', contentLength);
+        }
         req.set('Content-Type', 'application/octet-stream')
-            .set('Content-Length', contentLength)
             .send(data)
             .end(function (err, res) {
                 if (err || res.status > 399) {
@@ -3657,6 +3712,11 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
         });
     };
 
+    /**
+     *
+     * @param {string} name
+     * @returns {Artifact}
+     */
     BlobClient.prototype.createArtifact = function (name) {
         var artifact = new Artifact(name, this);
         this.artifacts.push(artifact);
@@ -3713,6 +3773,25 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
         }
     };
 
+    BlobClient.prototype.getHumanSize = function (bytes, si) {
+        var thresh = si ? 1000 : 1024,
+            units = si ?
+                ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] :
+                ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'],
+            u = -1;
+
+        if (bytes < thresh) {
+            return bytes + ' B';
+        }
+
+        do {
+            bytes = bytes / thresh;
+            u += 1;
+        } while (bytes >= thresh);
+
+        return bytes.toFixed(1) + ' ' + units[u];
+    };
+
     return BlobClient;
 });
 
@@ -3745,20 +3824,27 @@ define('executor/ExecutorClient',['superagent'], function (superagent) {
         if (this.isNodeJS) {
             this.http = this.httpsecure ? require('https') : require('http');
         }
-        this.executorUrl = '';
+
+        this.origin = '';
         if (this.httpsecure !== undefined && this.server && this.serverPort) {
-            this.executorUrl = (this.httpsecure ? 'https://' : 'http://') + this.server + ':' + this.serverPort;
+            this.origin = (this.httpsecure ? 'https://' : 'http://') + this.server + ':' + this.serverPort;
         }
+        this.relativeUrl = '/rest/executor/';
+        this.executorUrl = this.origin + this.relativeUrl;
+
         // TODO: TOKEN???
         // TODO: any ways to ask for this or get it from the configuration?
-        this.executorUrl = this.executorUrl + '/rest/executor/';
         if (parameters.executorNonce) {
             this.executorNonce = parameters.executorNonce;
         }
     };
 
     ExecutorClient.prototype.getInfoURL = function (hash) {
-        var metadataBase = this.executorUrl + 'info';
+        return this.origin + this.getRelativeInfoURL(hash);
+    };
+
+    ExecutorClient.prototype.getRelativeInfoURL = function (hash) {
+        var metadataBase = this.relativeUrl + 'info';
         if (hash) {
             return metadataBase + '/' + hash;
         } else {
@@ -3766,9 +3852,12 @@ define('executor/ExecutorClient',['superagent'], function (superagent) {
         }
     };
 
-
     ExecutorClient.prototype.getCreateURL = function (hash) {
-        var metadataBase = this.executorUrl + 'create';
+        return this.origin + this.getRelativeCreateURL(hash);
+    };
+
+    ExecutorClient.prototype.getRelativeCreateURL = function (hash) {
+        var metadataBase = this.relativeUrl + 'create';
         if (hash) {
             return metadataBase + '/' + hash;
         } else {
@@ -4132,6 +4221,7 @@ define('executor/ExecutorWorker',[
                         function (err, stdout, stderr) {
                             if (err) {
                                 jobInfo.status = 'FAILED_UNZIP';
+                                jobInfo.finishTime = new Date().toISOString();
                                 console.error(stderr);
                                 errorCallback(err);
                                 return;
@@ -4146,39 +4236,39 @@ define('executor/ExecutorWorker',[
                             fs.readFile(path.join(jobDir, self.executorConfigFilename), 'utf8', function (err, data) {
                                 if (err) {
                                     jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
+                                    jobInfo.finishTime = new Date().toISOString();
                                     errorCallback('Could not read ' + self.executorConfigFilename + ' err:' + err);
                                     return;
                                 }
-                                var executorConfig = JSON.parse(data);
-                                if (typeof executorConfig.cmd !== 'string' ||
+                                var executorConfig;
+                                try {
+                                    executorConfig = JSON.parse(data);
+                                } catch (e) {
+                                }
+                                if (typeof executorConfig !== 'object' ||
+                                    typeof executorConfig.cmd !== 'string' ||
                                     typeof executorConfig.resultArtifacts !== 'object') {
 
                                     jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
-                                    errorCallback(self.executorConfigFilename +
-                                    ' is missing or wrong type for cmd and/or resultArtifacts.');
+                                    jobInfo.finishTime = new Date().toISOString();
+                                    errorCallback(self.executorConfigFilename + ' is missing or wrong type for cmd and/or resultArtifacts.');
                                     return;
                                 }
                                 var cmd = executorConfig.cmd;
                                 var args = executorConfig.args || [];
                                 console.log('working directory: ' + jobDir + ' executing: ' + cmd + ' with args: ' +
-                                args.toString());
+                                    args.toString());
 
                                 var child = childProcess.spawn(cmd, args, {
                                     cwd: jobDir,
                                     stdio: ['ignore', 'pipe', 'pipe']
-                                });
-                                var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
-                                child.stdout.pipe(outlog);
-                                child.stdout.pipe(fs.createWriteStream(path.join(self.workingDirectory,
-                                    jobInfo.hash.substr(0, 6) + '_stdout.txt')));
-                                // TODO: maybe put in the same file as stdout
-                                child.stderr.pipe(fs.createWriteStream(path.join(jobDir, 'job_stderr.txt')));
-                                child.on('close', function (code/*, signal*/) {
+                                }), childExit = function (err) {
 
+                                    childExit = function () {}; // "Note that the exit-event may or may not fire after an error has occurred"
                                     jobInfo.finishTime = new Date().toISOString();
 
-                                    if (code !== 0) {
-                                        console.error(jobInfo.hash + ' exec error: ' + code);
+                                    if (err) {
+                                        console.error(jobInfo.hash + ' exec error: ' + util.inspect(err));
                                         jobInfo.status = 'FAILED_TO_EXECUTE';
                                     }
 
@@ -4186,7 +4276,15 @@ define('executor/ExecutorWorker',[
 
                                     successCallback(jobInfo, jobDir, executorConfig);
                                     // normally self.saveJobResults(jobInfo, jobDir, executorConfig);
-                                });
+                                };
+                                var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
+                                child.stdout.pipe(outlog);
+                                child.stdout.pipe(fs.createWriteStream(path.join(self.workingDirectory,
+                                    jobInfo.hash.substr(0, 6) + '_stdout.txt')));
+                                // TODO: maybe put in the same file as stdout
+                                child.stderr.pipe(fs.createWriteStream(path.join(jobDir, 'job_stderr.txt')));
+                                child.on('error', childExit); // FIXME can it happen that the close event arrives before error?
+                                child.on('close', childExit);
                             });
                         });
 
@@ -4571,6 +4669,7 @@ define('executor/ExecutorWorkerController',[], function () {
 /*globals define*/
 /*jshint node:true*/
 /**
+ * @module Executor:NodeWorker
  * @author lattmann / https://github.com/lattmann
  * @author ksmyth / https://github.com/ksmyth
  */

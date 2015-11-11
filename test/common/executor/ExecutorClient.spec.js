@@ -51,6 +51,18 @@ describe('ExecutorClient', function () {
         expect(executorClient.getCreateURL('1234567890abcdef')).to.contain('1234567890abcdef');
     });
 
+    it('getInfoURL should be concatenation of origin and getRelativeInfoURL', function () {
+        var relativeUrl = executorClient.getRelativeInfoURL('someHash');
+
+        expect(executorClient.getInfoURL('someHash')).to.equal(executorClient.origin + relativeUrl);
+    });
+
+    it('getCreateURL  should be concatenation of origin and getRelativeCreateURL ', function () {
+        var relativeUrl = executorClient.getRelativeCreateURL('someHash');
+
+        expect(executorClient.getCreateURL('someHash')).to.equal(executorClient.origin + relativeUrl);
+    });
+
     it('getWorkersInfo should return empty object', function (done) {
         executorClient.getWorkersInfo(function (err, res) {
             if (err) {

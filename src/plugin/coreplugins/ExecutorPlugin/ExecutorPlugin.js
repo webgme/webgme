@@ -238,7 +238,7 @@ define([
                     return;
                 }
                 if (self.getCurrentConfig().update) {
-                    if (newName instanceof Buffer) {
+                    if (typeof Buffer !== 'undefined' && newName instanceof Buffer) {
                         newName = JSON.parse(String.fromCharCode.apply(null, new Uint16Array(newName)));
                     }
                     for (key in newName) {

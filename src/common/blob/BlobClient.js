@@ -29,13 +29,14 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
         } else {
             this.keepaliveAgentOptions = { /* use defaults */ };
         }
-        this.blobUrl = '';
+        this.origin = '';
         if (this.httpsecure !== undefined && this.server && this.serverPort) {
-            this.blobUrl = (this.httpsecure ? 'https://' : 'http://') + this.server + ':' + this.serverPort;
+            this.origin = (this.httpsecure ? 'https://' : 'http://') + this.server + ':' + this.serverPort;
         }
-
+        this.relativeUrl = '/rest/blob/';
+        this.blobUrl = this.origin + this.relativeUrl;
         // TODO: TOKEN???
-        this.blobUrl = this.blobUrl + '/rest/blob/'; // TODO: any ways to ask for this or get it from the configuration?
+        // TODO: any ways to ask for this or get it from the configuration?
 
         this.isNodeOrNodeWebKit = typeof process !== 'undefined';
         if (this.isNodeOrNodeWebKit) {
@@ -53,7 +54,11 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
     };
 
     BlobClient.prototype.getMetadataURL = function (hash) {
-        var metadataBase = this.blobUrl + 'metadata';
+        return this.origin + this.getRelativeMetadataURL(hash);
+    };
+
+    BlobClient.prototype.getRelativeMetadataURL = function (hash) {
+        var metadataBase = this.relativeUrl + 'metadata';
         if (hash) {
             return metadataBase + '/' + hash;
         } else {
@@ -66,22 +71,34 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
         if (subpath) {
             subpathURL = subpath;
         }
-        return this.blobUrl + base + '/' + hash + '/' + encodeURIComponent(subpathURL);
+        return this.relativeUrl + base + '/' + hash + '/' + encodeURIComponent(subpathURL);
     };
 
     BlobClient.prototype.getViewURL = function (hash, subpath) {
+        return this.origin + this.getRelativeViewURL(hash, subpath);
+    };
+
+    BlobClient.prototype.getRelativeViewURL = function (hash, subpath) {
         return this._getURL('view', hash, subpath);
     };
 
     BlobClient.prototype.getDownloadURL = function (hash, subpath) {
+        return this.origin + this.getRelativeDownloadURL(hash, subpath);
+    };
+
+    BlobClient.prototype.getRelativeDownloadURL = function (hash, subpath) {
         return this._getURL('download', hash, subpath);
     };
 
     BlobClient.prototype.getCreateURL = function (filename, isMetadata) {
+        return this.origin + this.getRelativeCreateURL(filename, isMetadata);
+    };
+
+    BlobClient.prototype.getRelativeCreateURL = function (filename, isMetadata) {
         if (isMetadata) {
-            return this.blobUrl + 'createMetadata/';
+            return this.relativeUrl + 'createMetadata/';
         } else {
-            return this.blobUrl + 'createFile/' + encodeURIComponent(filename);
+            return this.relativeUrl + 'createFile/' + encodeURIComponent(filename);
         }
     };
 
