@@ -8,7 +8,7 @@
 define(['js/util',
     'blob/BlobClient',
     'text!./templates/PluginResultsDialog.html',
-    'js/Logger',
+    'js/logger',
     'common/storage/util',
     'css!./styles/PluginResultsDialog.css'
 ], function (clientUtil,
