@@ -175,6 +175,14 @@ define([
                     var resizeFn = self._resizeItem.bind(self, ID);
                     self._modifyItem(ID, resizeFn);
                 }
+            } else if (self.diagramDesigner.connectionIds.indexOf(ID) !== -1) {
+                // If the path is being updated, refresh it
+                if (self._onItemCreateQueue[ID] !== undefined) {  // Should have been added
+                    self.deleteItem(ID);
+                    self.insertConnection(ID);
+                } else {
+                    self.logger.warn('Received update event for nonexistent path');
+                }
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
