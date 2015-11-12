@@ -30,8 +30,14 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
             function (event) {
                 var itemId = $(this).attr('id'),
                     eventDetails = self._processMouseEvent(event, true, true, true, true),
-                    mouseMoved = false;
+                    mouseMoved = false,
+                    selected = self.selectionManager.getSelectedElements(),
+                    newSelection = selected.indexOf(itemId) === -1;
 
+                // If we are creating a new selection, we update the selection on mousedown
+                if (newSelection && self.onItemMouseDown) {
+                    self.onItemMouseDown(itemId, eventDetails, mouseMoved);
+                }
                 logger.debug('mousedown.item, ItemID: ' + itemId + ' eventDetails: ' + JSON.stringify(eventDetails));
 
                 // keep track of mouse movement
@@ -43,7 +49,7 @@ define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetCon
                     self.$el.off('mousemove.' + EVENT_POSTFIX);
                     self.$el.off('mouseup.' + EVENT_POSTFIX);
 
-                    if (self.onItemMouseDown) {
+                    if (self.onItemMouseDown && !newSelection) {
                         self.onItemMouseDown.call(self, itemId, eventDetails, mouseMoved);
                     } else {
                         logger.warn('onItemMouseDown(itemId, eventDetails) is undefined, ItemID: ' + itemId +
