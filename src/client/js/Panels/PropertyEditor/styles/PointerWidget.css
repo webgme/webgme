@@ -4,7 +4,19 @@
  * Author: Robert Kereskenyi
  */
 .ptr-widget {
-  position: relative; }
+  height: 25px;
+  line-height: 25px;
+  vertical-align: middle;
+  border-radius: 4px;
+  position: relative;
+  background-color: rgba(0, 0, 0, 0.025);
+  padding-left: 3px; }
+  .ptr-widget.drop-area {
+    border: 1px dashed #aaaaaa; }
+    .ptr-widget.drop-area.accept-drop {
+      background-color: rgba(0, 255, 0, 0.1); }
+    .ptr-widget.drop-area.reject-drop {
+      background-color: rgba(255, 0, 0, 0.1); }
   .ptr-widget i {
     margin-top: 6px;
     position: absolute;
@@ -31,3 +43,5 @@
         text-overflow: ellipsis; }
 .property-editor .tab-content {
   overflow: visible; }
+
+/*# sourceMappingURL=PointerWidget.css.map */
