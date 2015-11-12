@@ -10,11 +10,13 @@ define([
     'module',
     './AutoRouter.ActionApplier',
     './AutoRouter.Utils',
+    './ConnectionRouteManager2',
     'js/Utils/SaveToDisk'
 ], function (Logger,
              module,
              ActionApplier,
              Utils,
+             ConnectionRouteManager2,
              Saver) {
 
     'use strict';
@@ -58,6 +60,7 @@ define([
         this.logger = (options && options.logger) || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this.diagramDesigner = options ? options.diagramDesigner : null;
+        this.simpleRouter = new ConnectionRouteManager2(options);
 
         if (this.diagramDesigner === undefined || this.diagramDesigner === null) {
             this.logger.error('Trying to initialize a ConnectionRouteManager3 without a canvas...');
@@ -264,7 +267,9 @@ define([
         }
     };
 
-    ConnectionRouteManager3.prototype.redrawConnections = function () {
+    ConnectionRouteManager3.prototype.redrawConnections = function (ids) {
+
+        this.simpleRouter.redrawConnections(ids);
 
         if (!this._initialized) {
             this._initializeGraph();

@@ -80,8 +80,7 @@ var startWorker = function() {
             // If routing async, decorate the request
             if (action === 'routeAsync') {
                 // Send getPathPoints response for each path on each update
-                msg[1] = [{callback: this._updatePaths.bind(this),
-                           first: this._updatePaths.bind(this)}];
+                msg[1] = [{callback: this._updatePaths.bind(this)}];
             }
 
             try {
