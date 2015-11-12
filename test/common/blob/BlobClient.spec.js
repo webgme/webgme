@@ -64,6 +64,34 @@ describe('BlobClient', function () {
                 to.contain('1234567890abcdef/some%2Fpath%2Fto%2Fa%2Ffile.txt');
         });
 
+        it('getMetaDataUrl should be concatenation of origin and getRelativeMetaDataUrl', function () {
+            var bc = new BlobClient(bcParam),
+                relativeUrl = bc.getRelativeMetadataURL();
+
+            expect(bc.getMetadataURL()).to.equal(bc.origin + relativeUrl);
+        });
+
+        it('getViewURL should be concatenation of origin and getRelativeViewURL', function () {
+            var bc = new BlobClient(bcParam),
+                relativeUrl = bc.getRelativeViewURL('someHash', 'someSubPath');
+
+            expect(bc.getViewURL('someHash', 'someSubPath')).to.equal(bc.origin + relativeUrl);
+        });
+
+        it('getDownloadURL should be concatenation of origin and getRelativeDownloadURL', function () {
+            var bc = new BlobClient(bcParam),
+                relativeUrl = bc.getRelativeDownloadURL('someHash', 'someSubPath');
+
+            expect(bc.getDownloadURL('someHash', 'someSubPath')).to.equal(bc.origin + relativeUrl);
+        });
+
+        it('getCreateURL should be concatenation of origin and getRelativeCreateURL', function () {
+            var bc = new BlobClient(bcParam),
+                relativeUrl = bc.getRelativeCreateURL('someFileName', true);
+
+            expect(bc.getCreateURL('someFileName', true)).to.equal(bc.origin + relativeUrl);
+        });
+
         it('should have putFile', function () {
             var bc = new BlobClient(bcParam);
             expect(typeof bc.putFile === 'function').to.equal(true);

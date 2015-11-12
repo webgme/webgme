@@ -27,20 +27,27 @@ define(['superagent'], function (superagent) {
         if (this.isNodeJS) {
             this.http = this.httpsecure ? require('https') : require('http');
         }
-        this.executorUrl = '';
+
+        this.origin = '';
         if (this.httpsecure !== undefined && this.server && this.serverPort) {
-            this.executorUrl = (this.httpsecure ? 'https://' : 'http://') + this.server + ':' + this.serverPort;
+            this.origin = (this.httpsecure ? 'https://' : 'http://') + this.server + ':' + this.serverPort;
         }
+        this.relativeUrl = '/rest/executor/';
+        this.executorUrl = this.origin + this.relativeUrl;
+
         // TODO: TOKEN???
         // TODO: any ways to ask for this or get it from the configuration?
-        this.executorUrl = this.executorUrl + '/rest/executor/';
         if (parameters.executorNonce) {
             this.executorNonce = parameters.executorNonce;
         }
     };
 
     ExecutorClient.prototype.getInfoURL = function (hash) {
-        var metadataBase = this.executorUrl + 'info';
+        return this.origin + this.getRelativeInfoURL(hash);
+    };
+
+    ExecutorClient.prototype.getRelativeInfoURL = function (hash) {
+        var metadataBase = this.relativeUrl + 'info';
         if (hash) {
             return metadataBase + '/' + hash;
         } else {
@@ -48,9 +55,12 @@ define(['superagent'], function (superagent) {
         }
     };
 
-
     ExecutorClient.prototype.getCreateURL = function (hash) {
-        var metadataBase = this.executorUrl + 'create';
+        return this.origin + this.getRelativeCreateURL(hash);
+    };
+
+    ExecutorClient.prototype.getRelativeCreateURL = function (hash) {
+        var metadataBase = this.relativeUrl + 'create';
         if (hash) {
             return metadataBase + '/' + hash;
         } else {
