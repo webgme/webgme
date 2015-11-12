@@ -1000,6 +1000,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 names = fs.readdirSync(gmeConfig.seedProjects.basePaths[i]);
                 for (j = 0; j < names.length; j++) {
                     seedName = path.basename(names[j], '.json');
+                    seedName = path.basename(seedName, '.zip');
                     if (result.indexOf(seedName) === -1) {
                         result.push(seedName);
                     }

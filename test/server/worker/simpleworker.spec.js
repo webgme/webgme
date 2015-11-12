@@ -869,6 +869,58 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
+    it('should seedProject from a file seed containing assets', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'workerSeedFromFileAssets',
+            gmeConfigMod = JSON.parse(JSON.stringify(gmeConfig)),
+            projectId = testFixture.projectName2Id(projectName);
+
+        gmeConfigMod.seedProjects.basePaths.push('./test/server/worker/workerrequests');
+
+        Q.ninvoke(testFixture, 'rimraf', gmeConfig.blob.fsDir)
+            .then(function () {
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfigMod});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    webGMESessionId: webGMESessionId,
+                    projectName: projectName,
+                    ownerId: gmeConfigMod.authentication.guestAccount,
+                    type: 'file',
+                    seedName: 'asExported',
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(msg.result).to.include.keys('projectId');
+                expect(msg.result.projectId).to.equal(projectId);
+
+                return storage.getProjects({branches: true});
+            })
+            .then(function (projects) {
+                var i,
+                    hadProject = false;
+                for (i = 0; i < projects.length; i += 1) {
+                    if (projects[i]._id === projectId) {
+                        hadProject = true;
+                        break;
+                    }
+                }
+                expect(hadProject).to.equal(true,
+                    'getProjects did not return the seeded project' + projectId);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
     it('should fail to seedProject from an unknown file seed', function (done) {
         var worker = getSimpleWorker(),
             projectName = 'workerSeedFromFile2';
@@ -923,7 +975,7 @@ describe('Simple worker', function () {
                 done(new Error('missing error handling'));
             })
             .catch(function (err) {
-                expect(err.message).to.contain('unknown file seed [UnknownSeed');
+                expect(err.message).to.contain('seeding is disabled');
                 done();
             })
             .finally(restoreProcessFunctions)

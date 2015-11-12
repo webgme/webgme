@@ -10,11 +10,13 @@ define([
     'plugin/PluginBase',
     'common/core/users/serialization',
     'blob/BlobMetadata',
+    'blob/util',
     'q'
 ], function (PluginConfig,
              PluginBase,
              serialization,
              BlobMetadata,
+             blobUtil,
              Q) {
     'use strict';
 
@@ -421,7 +423,7 @@ define([
                     } else if (mainMetadata.mime === 'application/zip' &&
                         mainMetadata.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
 
-                        return self.addAssetsFromUploadedComplexArtifact(mainMetadata)
+                        return blobUtil.addAssetsFromExportedProject(self.logger, self.blobClient, mainMetadata)
                             .then(function (projectFileHash) {
                                 self.logger.debug('assets added, projectFileHash', projectFileHash);
                                 if (projectFileHash) {
@@ -443,95 +445,6 @@ define([
         }
 
         return deferred.promise.nodeify(callback);
-    };
-
-    ExportImport.prototype.addAssetsFromUploadedComplexArtifact = function (mainMetadata, callback) {
-        var self = this,
-            projectFileHash,
-            softLinkNames = Object.keys(mainMetadata.content);
-
-        return Q.allSettled(softLinkNames.map(function (softLinkName) {
-            var softLinkPieces = softLinkName.split('.'),
-                type = softLinkPieces.pop();
-
-            if (type === 'json') {
-                projectFileHash = mainMetadata.content[softLinkName].content;
-            } else if (type === 'metadata') {
-                return self.addMetadataAsMetadata(mainMetadata, softLinkPieces.pop());
-            }
-        }))
-            .then(function (result) {
-                var i,
-                    error;
-                for (i = 0; i < result.length; i += 1) {
-                    if (result[i].state === 'rejected') {
-                        self.logger.error('Adding asset failed with error', softLinkNames[i], result[i].reason);
-                        error = 'Failed adding some of the assets, see error logs';
-                    }
-                }
-                if (error) {
-                    throw new Error(error);
-                }
-                return projectFileHash;
-            })
-            .nodeify(callback);
-    };
-
-    ExportImport.prototype.addMetadataAsMetadata = function (mainMetadata, baseName, callback) {
-        var self = this,
-            orgMetadata,
-            metadataName = baseName + '.metadata';
-
-        return Q.ninvoke(self.blobClient, 'getObject', mainMetadata.content[metadataName].content)
-            .then(function (orgMetadataAsContent) {
-                // Original metadata loaded as content-file.
-                var contentName = baseName + '.content',
-                    softLinkNames,
-                    innerContentHash,
-                    i,
-                    contentMetadataHash;
-
-                if ((typeof Buffer !== 'undefined' && orgMetadataAsContent instanceof Buffer) ||
-                    orgMetadataAsContent instanceof ArrayBuffer) {
-
-                    orgMetadataAsContent = String.fromCharCode.apply(null,
-                        new Uint8Array(orgMetadataAsContent));
-                }
-
-                self.logger.debug('orgMetadataAsContent', orgMetadataAsContent);
-                orgMetadata = JSON.parse(orgMetadataAsContent);
-
-                if (orgMetadata.contentType === BlobMetadata.CONTENT_TYPES.OBJECT) {
-                    contentMetadataHash = mainMetadata.content[contentName].content;
-                    self.logger.debug('contentMetadataHash', contentMetadataHash);
-                    return Q.ninvoke(self.blobClient, 'getMetadata', contentMetadataHash)
-                        .then(function (contentMetadata) {
-                            // The uploaded contents metadata loaded - ensure original meta data matches...
-                            if (contentMetadata.size !== orgMetadata.size ||
-                                contentMetadata.content !== orgMetadata.content) {
-                                throw new Error('Matching content was not uploaded for metadata',
-                                    contentMetadata, orgMetadata);
-                            }
-                            // it did so upload the original metadata as an actual metadata.
-                        });
-                } else if (orgMetadata.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
-                    // Just make sure that the metadata exists among the uploaded files
-                    // (their consistencies will be check).
-                    softLinkNames = Object.keys(orgMetadata.content);
-                    for (i = 0; i < softLinkNames.length; i += 1) {
-                        innerContentHash = orgMetadata.content[softLinkNames[i]].content;
-                        if (mainMetadata.content.hasOwnProperty(innerContentHash + '.metadata') === false) {
-                            throw new Error('Complex object softLink does not have attached .metadata!');
-                        }
-                    }
-                } else {
-                    throw new Error('Unsupported content type', orgMetadata.contentType);
-                }
-            })
-            .then(function () {
-                return Q.ninvoke(self.blobClient, 'putMetadata', orgMetadata);
-            })
-            .nodeify(callback);
     };
 
     ExportImport.prototype.getLibObject = function (hash, callback) {
