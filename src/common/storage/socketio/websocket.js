@@ -119,9 +119,9 @@ define([
                     self.dispatchEvent(self.getBranchUpdateEventName(data.projectId, data.branchName), data);
                 });
 
-                self.socket.on(CONSTANTS.BRANCH_ROOM_SOCKETS, function (data) {
-                    logger.debug('BRANCH_ROOM_SOCKETS event', {metadata: data});
-                    self.dispatchEvent(CONSTANTS.BRANCH_ROOM_SOCKETS, data);
+                self.socket.on(CONSTANTS.NOTIFICATION, function (data) {
+                    logger.debug('NOTIFICATION event', {metadata: data});
+                    self.dispatchEvent(CONSTANTS.NOTIFICATION, data);
                 });
             });
         };
@@ -226,6 +226,10 @@ define([
         // Helper functions
         this.getBranchUpdateEventName = function (projectId, branchName) {
             return CONSTANTS.BRANCH_UPDATED + projectId + CONSTANTS.ROOM_DIVIDER + branchName;
+        };
+
+        this.sendNotification = function (data, callback) {
+            self.socket.emit('notification', data, wrapError(callback));
         };
     }
 

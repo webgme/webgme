@@ -230,7 +230,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * Executes a plugin.
      *
      * @param {string} webGMESessionId
-     * @param {string} userId
+     * @param {string} [socketId] - Id of socket that send the request (used for notifications).
      * @param {string} pluginName
      * @param {object} context.managerConfig - where the plugin should execute.
      * @param {string} context.managerConfig.project - id of project.
@@ -241,7 +241,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
      * @param {function} callback
      */
-    function executePlugin(webGMESessionId, pluginName, context, callback) {
+    function executePlugin(webGMESessionId, socketId, pluginName, context, callback) {
         var storage = getConnectedStorage(webGMESessionId),
             errResult,
             pluginManager = new PluginNodeManager(webGMESessionId, null, logger, gmeConfig),
@@ -250,7 +250,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     err = err instanceof Error ? err : new Error(err);
                     logger.error('plugin [' + pluginName + '] failed with error', err);
                     if (!result) {
-                        result = pluginManager.getPluginErrorResult(pluginName, err.message);
+                        result = pluginManager.getPluginErrorResult(pluginName, err.message,
+                            context && context.managerConfig && context.managerConfig.project);
                     }
                 } else {
                     logger.info('plugin [' + pluginName + '] completed');
@@ -295,6 +296,15 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         commitHash: context.managerConfig.commit,
                         branchName: context.managerConfig.branchName
                     };
+                    if (typeof socketId === 'string') {
+                        logger.debug('socketId provided for plugin execution - notifications available.');
+                        pluginManager.notificationHandlers = [function (data, callback) {
+                            data.socketId = socketId;
+                            storage.webSocket.sendNotification(data, callback);
+                        }];
+                    } else {
+                        logger.warn('No socketId provided for plugin execution - notifications NOT available.');
+                    }
 
                     pluginManager.executePlugin(pluginName, context.pluginConfig, pluginContext, finish);
                 });

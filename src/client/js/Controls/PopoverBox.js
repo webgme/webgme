@@ -55,7 +55,12 @@ define(['jquery', 'css!./styles/PopoverBox.css'], function () {
         SUCCESS: 'ddwa-success',
         WARNING: 'ddwa-warning',
         ERROR: 'ddwa-error',
-        INFO: 'ddwa-info'
+        INFO: 'ddwa-info',
+        success: 'ddwa-success',
+        warning: 'ddwa-warning',
+        warn: 'ddwa-warning',
+        error: 'ddwa-error',
+        info: 'ddwa-info'
     };
 
     return PopoverBox;

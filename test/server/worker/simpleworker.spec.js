@@ -47,6 +47,7 @@ describe('Simple worker', function () {
         blobDownloadUrl = protocol + '://127.0.0.1:' + gmeConfig.server.port + '/rest/blob/download/',
         oldSend = process.send,
         oldOn = process.on,
+        socket,
         oldExit = process.exit;
 
 
@@ -112,6 +113,7 @@ describe('Simple worker', function () {
             })
             .then(function (result) {
                 webGMESessionId = result.webGMESessionId;
+                socket = result.socket;
             })
             .nodeify(done);
     });
@@ -988,12 +990,8 @@ describe('Simple worker', function () {
         var worker = getSimpleWorker(),
             pluginContext = {
                 managerConfig: {
-                    host: '127.0.0.1', //FIXME
-                    port: '27017', //FIXME
-                    database: 'webgme_tests', //FIXME
                     project: baseProjectContext.id,
-                    token: '',
-                    selected: '',
+                    activeNode: '/1',
                     commit: baseProjectContext.commitHash,
                     branchName: baseProjectContext.branch,
                     activeSelection: []
@@ -1026,14 +1024,101 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
+    it('should execute a plugin and notify socket', function (done) {
+        var worker = getSimpleWorker(),
+            pluginContext = {
+                managerConfig: {
+                    project: baseProjectContext.id,
+                    token: '',
+                    activeNode: '/1',
+                    commit: baseProjectContext.commitHash,
+                    branchName: baseProjectContext.branch,
+                    activeSelection: []
+                }
+            },
+            deferred = Q.defer();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+                socket.on('NOTIFICATION', function (data) {
+                    try {
+                        expect(data.type).to.equal('PLUGIN_NOTIFICATION');
+                        expect(data.pluginName).to.equal('Export, Import and Update Library');
+                        expect(typeof data.notification.message).to.equal('string');
+                        deferred.resolve();
+                    } catch (err) {
+                        deferred.reject(err);
+                    }
+
+                });
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.executePlugin,
+                    name: 'ExportImport',
+                    socketId: socket.id,
+                    webGMESessionId: webGMESessionId,
+                    context: pluginContext
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(msg.result.success).equal(true);
+                return deferred.promise;
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should execute a plugin and not fail with non existing socketId', function (done) {
+        // This tests the case where user disconnects after starting a plugin that sends notifications.
+        var worker = getSimpleWorker(),
+            pluginContext = {
+                managerConfig: {
+                    project: baseProjectContext.id,
+                    token: '',
+                    activeNode: '/1',
+                    commit: baseProjectContext.commitHash,
+                    branchName: baseProjectContext.branch,
+                    activeSelection: []
+                }
+            };
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.executePlugin,
+                    name: 'ExportImport',
+                    socketId: 'nonExistingSocket',
+                    webGMESessionId: webGMESessionId,
+                    context: pluginContext
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(msg.result.success).equal(true);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
     it('should fail to execute a plugin if the server execution is not allowed', function (done) {
         var worker = getSimpleWorker(),
             gmeConfigCopy = JSON.parse(JSON.stringify(gmeConfig)),
             pluginContext = {
                 managerConfig: {
-                    host: '127.0.0.1', //FIXME
-                    port: '27017', //FIXME
-                    database: 'webgme_tests', //FIXME
                     project: baseProjectContext.name,
                     token: '',
                     selected: '',

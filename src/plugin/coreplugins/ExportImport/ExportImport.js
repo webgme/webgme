@@ -120,7 +120,12 @@ define([
             currentConfig = self.getCurrentConfig();
 
         if (currentConfig.type === 'Export') {
-            self.exportLibrary(currentConfig, callback);
+            self.sendNotification('Starting export from "' + self.core.getPath(self.activeNode) + '"', function (err) {
+                if (err) {
+                    self.logger.error('Failed sending notification');
+                }
+                self.exportLibrary(currentConfig, callback);
+            });
         } else if (currentConfig.type === 'ImportProject') {
             self.importOrUpdateLibrary(currentConfig, callback);
         } else if (currentConfig.type === 'ImportLibrary') {

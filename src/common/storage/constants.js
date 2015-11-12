@@ -89,6 +89,9 @@ define([], function () {
 
         BRANCH_UPDATED: 'BRANCH_UPDATED',
 
-        BRANCH_ROOM_SOCKETS: 'BRANCH_ROOM_SOCKETS'
+        NOTIFICATION: 'NOTIFICATION',
+        // Types of notifications
+        BRANCH_ROOM_SOCKETS: 'BRANCH_ROOM_SOCKETS',
+        PLUGIN_NOTIFICATION: 'PLUGIN_NOTIFICATION'
     };
 });

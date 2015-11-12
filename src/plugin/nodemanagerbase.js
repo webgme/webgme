@@ -24,6 +24,7 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
     var self = this;
 
     this.logger = mainLogger.fork('PluginNodeManagerBase');
+    this.notificationHandlers = [];
 
     /**
      *
@@ -43,7 +44,7 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
         try {
             plugin = self.initializePlugin(pluginName);
         } catch (err) {
-            callback(err.toString(), self.getPluginErrorResult(pluginName, 'Failed to load plugin.'));
+            callback(err.message, self.getPluginErrorResult(pluginName, 'Failed to load plugin: ' + err.message));
             return;
         }
 
@@ -52,7 +53,8 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
                 self.runPluginMain(plugin, callback);
             })
             .catch(function (err) {
-                var pluginResult = self.getPluginErrorResult(pluginName, 'Exception was raised, err: ' + err.stack);
+                var pluginResult = self.getPluginErrorResult(pluginName, 'Exception was raised, err: ' + err.stack,
+                    plugin && plugin.projectId);
                 self.logger.error(err.stack);
                 callback(err.message, pluginResult);
             });
@@ -69,6 +71,9 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
             pluginLogger = self.logger.fork('plugin:' + pluginName);
 
         Plugin = getPlugin(pluginName);
+        if (Plugin.disableServerExecution === true) {
+            throw new Error('disableServerExecution is set to true - plugin will not be executed on server!');
+        }
         plugin = new Plugin();
         plugin.initialize(pluginLogger, blobClient, gmeConfig);
 
@@ -135,9 +140,11 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
 
         if (plugin.isConfigured === false) {
             callback('Plugin is not configured.', self.getPluginErrorResult(plugin.getName(),
-                'Plugin is not configured.'));
+                'Plugin is not configured.', project && project.projectId));
             return;
         }
+
+        plugin.notificationHandlers = self.notificationHandlers;
 
         plugin.main(function (err, result) {
             var stackTrace;
@@ -166,6 +173,7 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
                 callback('The main callback is being called more than once!', result);
             } else {
                 result.setError(err);
+                plugin.notificationHandlers = [];
                 callback(err, result);
             }
         });
@@ -177,13 +185,14 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
         return requireJS(pluginPath);
     }
 
-    this.getPluginErrorResult = function (pluginName, message) {
+    this.getPluginErrorResult = function (pluginName, message, projectId) {
         var pluginResult = new PluginResult(),
             pluginMessage = new PluginMessage();
         pluginMessage.severity = 'error';
         pluginMessage.message = message;
         pluginResult.setSuccess(false);
-        pluginResult.pluginName = pluginName;
+        pluginResult.setPluginName(pluginName);
+        pluginResult.setProjectId(projectId || 'N/A');
         pluginResult.addMessage(pluginMessage);
         pluginResult.setStartTime((new Date()).toISOString());
         pluginResult.setFinishTime((new Date()).toISOString());

@@ -24,6 +24,7 @@ define(['plugin/PluginBase', 'plugin/PluginContext', 'common/storage/util'],
             this._storage = storage; // webgme storage (project)
             this._plugins = plugins; // key value pair of pluginName: pluginType - plugins are already loaded/downloaded
             this._pluginConfigs = {}; // keeps track of the current configuration for each plugins by name
+            this.notificationHandlers = [];
 
             if (!this.gmeConfig) {
                 // TODO: this error check is temporary
@@ -297,6 +298,8 @@ define(['plugin/PluginBase', 'plugin/PluginContext', 'common/storage/util'],
 
                 var startTime = (new Date()).toISOString();
 
+                plugin.notificationHandlers = self.notificationHandlers;
+
                 plugin.main(function (err, result) {
                     var stackTrace;
                     mainCallbackCalls += 1;
@@ -321,6 +324,7 @@ define(['plugin/PluginBase', 'plugin/PluginContext', 'common/storage/util'],
                         callback('The main callback is being called more than once!', result);
                     } else {
                         result.setError(err);
+                        plugin.notificationHandlers = [];
                         callback(err, result);
                     }
                 });

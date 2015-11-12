@@ -89,7 +89,13 @@ define([
 
         this.isConfigured = false;
 
+        this.notificationHandlers = [];
     };
+
+    PluginBase.disableBrowserExecution = false;
+
+    PluginBase.disableServerExecution = false;
+
 
     //--------------------------------------------------------------------------------------------------------------
     //---------- Methods must be overridden by the derived classes
@@ -310,6 +316,50 @@ define([
     };
 
     /**
+     * Sends a notification back to the invoker of the plugin, can be used to notify about progress.
+     * @param {string|object} message - Message string or object containing message.
+     * @param {string} message.message - If object it must contain a message.
+     * @param {number} [message.progress] - Approximate progress (in %) of the plugin at time of sending.
+     * @param {string} [message.severity='info'] - Severity level ('success', 'info', 'warn', 'error')
+     * @param {string} [callback] - optional callback invoked when message has been emitted from server.
+     */
+    PluginBase.prototype.sendNotification = function (message, callback) {
+        var self = this,
+            cnt = self.notificationHandlers.length,
+            data = {
+                type: STORAGE_CONSTANTS.PLUGIN_NOTIFICATION,
+                notification: typeof message === 'string' ? {message: message} : message,
+                projectId: self.projectId,
+                branchName: self.branchName,
+                pluginName: self.getName(),
+                pluginVersion: self.getVersion()
+            };
+
+        callback = callback || function (err) {
+                if (err) {
+                    self.logger.error(err);
+                }
+            };
+
+        function emitToHandlers() {
+            if (cnt === 0) {
+                callback(null);
+                return;
+            }
+            cnt -= 1;
+            self.notificationHandlers[cnt](data, function (err) {
+                if (err) {
+                    callback(err);
+                } else {
+                    emitToHandlers();
+                }
+            });
+        }
+
+        emitToHandlers();
+    };
+
+    /**
      * Saves all current changes if there is any to a new commit.
      * If the commit result is either 'FORKED' or 'CANCELED', it creates a new branch.
      *
@@ -470,6 +520,7 @@ define([
         this.META = config.META;
 
         this.result = new PluginResult();
+        this.result.setProjectId(this.projectId);
 
         this.addCommitToResult(STORAGE_CONSTANTS.SYNCED);
 
