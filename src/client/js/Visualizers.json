@@ -3,7 +3,8 @@
     "id": "ModelEditor",
     "title": "Composition",
     "panel": "js/Panels/ModelEditor/ModelEditorPanel",
-    "DEBUG_ONLY": false
+    "DEBUG_ONLY": false,
+    "default": true
   },
   {
     "id": "Block Editor",

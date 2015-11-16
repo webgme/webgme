@@ -24,8 +24,7 @@ define(['js/logger',
 
     'use strict';
 
-    var VisualizerPanel,
-        DEFAULT_VISUALIZER = 'ModelEditor';
+    var VisualizerPanel;
 
     VisualizersJSON = JSON.parse(VisualizersJSON);
 
@@ -49,6 +48,7 @@ define(['js/logger',
         this._currentNodeID = null;
         this._visualizers = {};
         this._validVisualizers = null;
+        this.defaultVisualizer = VisualizersJSON[0] || null;
 
         this._loadVisualizers();
 
@@ -128,8 +128,15 @@ define(['js/logger',
     VisualizerPanel.prototype._loadVisualizers = function () {
         var self = this;
 
+        // Set the default visualizer
+        for (var i = VisualizersJSON.length; i--;) {
+            if (VisualizersJSON[i].default) {
+                self.defaultVisualizer = VisualizersJSON[i];
+            }
+        }
+
         this.addRange(VisualizersJSON, function () {
-            self._setActiveVisualizer(DEFAULT_VISUALIZER, self._ul1);
+            self._setActiveVisualizer(self.defaultVisualizer.id, self._ul1);
         });
     };
 
@@ -206,7 +213,9 @@ define(['js/logger',
 
     VisualizerPanel.prototype._updateListedVisualizers = function () {
         var self = this,
-            ul = this._getActivePanelElem();
+            ul = this._getActivePanelElem(),
+            activeVisualizer;
+
         // For the active panel hide/show listed visualizers
         ul.children('li').each(function (index, _li) {
             var li = $(_li);
@@ -224,8 +233,13 @@ define(['js/logger',
 
         this.updateContainerSize();
         if (self._validVisualizers) {
+            // Set this to the global default if it is valid for the project
+            activeVisualizer = self.defaultVisualizer.id;
+            if (self._validVisualizers.indexOf(activeVisualizer) === -1) {
+                activeVisualizer = self._validVisualizers[0];
+            }
             setTimeout(function () {
-                self._setActiveVisualizer(self._validVisualizers[0], ul);
+                self._setActiveVisualizer(activeVisualizer, ul);
             }, 0);
         }
     };
