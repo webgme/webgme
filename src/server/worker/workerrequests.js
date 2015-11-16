@@ -390,7 +390,6 @@ function WorkerRequests(mainLogger, gmeConfig) {
         )
             .then(function () {
                 var metadata = artifact.descriptor;
-                console.log(metadata);
                 return blobUtil.addAssetsFromExportedProject(logger, blobClient, metadata);
             })
             .then(function () {
