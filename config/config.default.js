@@ -48,12 +48,6 @@ var path = require('path'),
             log: {
                 level: 'debug'
             },
-            usedDecorators: ['ModelDecorator',
-                             'CircleDecorator',
-                             'MetaDecorator',
-                             'SVGDecorator',
-                             'UMLStateMachineDecorator',
-                             'DefaultDecorator'],
             // Used in client/WebGME.js to load initial project (if url is specified that has higher priority)
             defaultContext: {
                 project: null,   // This is the projectId, e.g. 'guest+TestProject'
@@ -196,6 +190,7 @@ var path = require('path'),
 
         visualization: {
             decoratorPaths: [path.join(__dirname, '../src/client/decorators')],
+            decoratorsToPreload: null, // array of names (ids)
             svgDirs: [],
             visualizerDescriptors: [path.join(__dirname, '../src/client/js/Visualizers.json')],
 

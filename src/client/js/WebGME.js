@@ -150,11 +150,12 @@ define([
 
                 client.decoratorManager = new DecoratorManager();
                 populateAvailableExtensionPoints(function (err) {
+                    var decorators = gmeConfig.visualization.decoratorsToPreload || WebGMEGlobal.allDecorators || [];
                     if (err) {
                         logger.error('Failed loading extension points', err);
                     }
 
-                    client.decoratorManager.downloadAll(gmeConfig.client.usedDecorators, function (err) {
+                    client.decoratorManager.downloadAll(decorators, function (err) {
                         if (err) {
                             logger.error(err);
                         }
