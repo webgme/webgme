@@ -50,7 +50,6 @@ define([
         //enable SelectionManager specific DOM event listeners
         var self = this;
 
-        // note this is called only when the mouse was down and up
         this._diagramDesigner.onItemMouseDown = function (itemId, eventDetails, mouseMoved) {
             if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.READ_ONLY ||
                 self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
