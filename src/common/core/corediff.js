@@ -398,6 +398,8 @@ define(['common/util/canon',
                 tDiff = getPathOfDiff(diff, paths[i]);
                 if (tDiff.removed !== true) {
                     tDiff.pointer = tDiff.pointer || {source: {}, target: {}};
+                    tDiff.pointer.source = tDiff.pointer.source || {};
+                    tDiff.pointer.target = tDiff.pointer.target || {};
                     names = Object.keys(oDiff.source[paths[i]]);
                     for (j = 0; j < names.length; j++) {
                         tDiff.pointer.source[names[j]] = oDiff.source[paths[i]][names[j]];
@@ -747,6 +749,7 @@ define(['common/util/canon',
             };
 
             normalize(diff);
+
             return isEmptyNodeDiff(diff) ? null : diff;
         };
 
