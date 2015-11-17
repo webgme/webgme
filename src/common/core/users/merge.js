@@ -62,9 +62,9 @@ define([
             });
 
         Q.all([
-            getRoot({project: parameters.project, core: core, id: parameters.branchOrCommitA}),
-            getRoot({project: parameters.project, core: core, id: parameters.branchOrCommitB})
-        ])
+                getRoot({project: parameters.project, core: core, id: parameters.branchOrCommitA}),
+                getRoot({project: parameters.project, core: core, id: parameters.branchOrCommitB})
+            ])
             .then(function (results) {
                 core.generateTreeDiff(results[0].root, results[1].root, function (err, diff) {
                     if (err) {
@@ -158,22 +158,30 @@ define([
                     noApply = false;
 
                 Q.allSettled([
-                    diff({
-                        gmeConfig: parameters.gmeConfig,
-                        logger: parameters.logger,
-                        project: parameters.project,
-                        branchOrCommitA: result.baseCommitHash,
-                        branchOrCommitB: parameters.myBranchOrCommit
-                    }),
-                    diff({
-                        gmeConfig: parameters.gmeConfig,
-                        logger: parameters.logger,
-                        project: parameters.project,
-                        branchOrCommitA: result.baseCommitHash,
-                        branchOrCommitB: parameters.theirBranchOrCommit
-                    })
-                ])
+                        diff({
+                            gmeConfig: parameters.gmeConfig,
+                            logger: parameters.logger,
+                            project: parameters.project,
+                            branchOrCommitA: result.baseCommitHash,
+                            branchOrCommitB: parameters.myBranchOrCommit
+                        }),
+                        diff({
+                            gmeConfig: parameters.gmeConfig,
+                            logger: parameters.logger,
+                            project: parameters.project,
+                            branchOrCommitA: result.baseCommitHash,
+                            branchOrCommitB: parameters.theirBranchOrCommit
+                        })
+                    ])
                     .then(function (diffs) {
+                        if (diffs[0].state === 'rejected') {
+                            parameters.logger.error('Initial diff generation failed (base->mine)', diffs[0].reason);
+                            throw diffs[0].reason;
+                        }
+                        if (diffs[1].state === 'rejected') {
+                            parameters.logger.error('Initial diff generation failed (base->theirs)', diffs[1].reason);
+                            throw diffs[1].reason;
+                        }
                         result.diff = {
                             mine: diffs[0].value,
                             theirs: diffs[1].value
@@ -186,6 +194,7 @@ define([
                         }
 
                         if (!result.conflict) {
+                            parameters.logger.error('Initial diff concatenation failed');
                             throw new Error('error during merged patch calculation');
                         }
 
@@ -226,9 +235,9 @@ define([
             };
 
         Q.allSettled([
-            getRoot({project: parameters.project, core: core, id: parameters.myBranchOrCommit}),
-            getRoot({project: parameters.project, core: core, id: parameters.theirBranchOrCommit})
-        ])
+                getRoot({project: parameters.project, core: core, id: parameters.myBranchOrCommit}),
+                getRoot({project: parameters.project, core: core, id: parameters.theirBranchOrCommit})
+            ])
             .then(function (results) {
                 myRoot = results[0].value.root;
                 theirRoot = results[1].value.root;
@@ -249,7 +258,7 @@ define([
                     result.finalCommitHash = result.theirCommitHash;
                     return;
                 }
-                
+
                 //check fast-forward
                 if (result.theirCommitHash === result.baseCommitHash) {
                     result.finalCommitHash = result.myCommitHash;
