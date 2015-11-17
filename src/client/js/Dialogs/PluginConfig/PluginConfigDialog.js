@@ -118,7 +118,6 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
 
             el = ENTRY_BASE.clone();
             el.data(ATTRIBUTE_DATA_KEY, pluginConfigEntry.name);
-            el.find('.controls').append(widget.el);
 
             el.find('label.control-label').text(pluginConfigEntry.displayName);
 
@@ -141,8 +140,16 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
                 descEl.append(' The maximum value is: ' + pluginConfigEntry.maxValue + '.');
             }
 
-            if (descEl) {
-                el.find('.description').append(descEl);
+            if (pluginName === 'Global Options' && pluginConfigEntry.name === 'runOnServer' &&
+                pluginConfigEntry.readOnly === true) {
+                // Do not display the boolean box #676
+                descEl.css('padding-top', '7px');
+                el.find('.controls').append(descEl);
+            } else {
+                el.find('.controls').append(widget.el);
+                if (descEl) {
+                    el.find('.description').append(descEl);
+                }
             }
 
             containerEl.append(el);
