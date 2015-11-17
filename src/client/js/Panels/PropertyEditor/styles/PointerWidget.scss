@@ -11,6 +11,7 @@
   border-radius: 4px;
   position: relative;
   background-color: rgba(0, 0, 0, 0.025);
+  padding-left: 3px;
   &.drop-area {
     border: 1px dashed #aaaaaa;
     &.accept-drop {
@@ -20,7 +21,7 @@
       background-color: rgba(255, 0, 0, 0.1);
   }
   }
-  padding-left: 3px;
+
   i {
     margin-top: 6px;
     position: absolute;
@@ -29,6 +30,18 @@
   }
 }
 
+span.user-select-on {
+  &.btn-follow-pointer {
+    font-size: 11px;
+    color: #3160ab;
+    padding-left: 0px;
+    padding-right: 0px;
+    &:hover {
+      text-decoration: underline;
+      color: #ff7700;
+    }
+  }
+}
 
 .property-editor {
   ul.nav {

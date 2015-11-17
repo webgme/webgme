@@ -23,6 +23,15 @@
     right: 2px;
     cursor: pointer; }
 
+span.user-select-on.btn-follow-pointer {
+  font-size: 11px;
+  color: #3160ab;
+  padding-left: 0px;
+  padding-right: 0px; }
+  span.user-select-on.btn-follow-pointer:hover {
+    text-decoration: underline;
+    color: #ff7700; }
+
 .property-editor ul.nav {
   position: relative;
   margin-bottom: 0;
@@ -43,5 +52,3 @@
         text-overflow: ellipsis; }
 .property-editor .tab-content {
   overflow: visible; }
-
-/*# sourceMappingURL=PointerWidget.css.map */
