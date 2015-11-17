@@ -49,11 +49,18 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         this.__label = $('<span/>', {class: 'user-select-on'});
         this._div.append(this.__label);
 
-        this.__iconFollowPointer = $('<i/>', {class: 'glyphicon glyphicon-share'});
-        this.__iconFollowPointer.attr('title', 'Follow pointer');
-        this._div.append(this.__iconFollowPointer);
+        this.__iconAssignNullPointer = $('<i/>', {class: 'glyphicon glyphicon-minus-sign'});
+        this.__iconAssignNullPointer.attr('title', 'Assign null-pointer');
 
-        this.__iconFollowPointer.on('click', function (e) {
+        this.__iconAssignNullPointer.on('click', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            self.setValue(null);
+            self.fireFinishChange();
+        });
+
+        this.__label.on('click', function (e) {
             e.stopPropagation();
             e.preventDefault();
 
@@ -76,6 +83,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         }
 
         self._div.addClass('drop-area');
+        self._div.append(this.__iconAssignNullPointer);
 
         dropTarget.makeDroppable(self.__nodeDropTarget, {
             over: function (event, dragInfo) {
@@ -108,6 +116,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         self._div.removeClass('drop-area');
 
         dropTarget.destroyDroppable(self.__nodeDropTarget);
+        this.__iconAssignNullPointer.detach();
     };
 
     PointerWidget.prototype._isValidPointerDrop = function (dragInfo) {
@@ -138,9 +147,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
 
         this._updatePointerName();
 
-        this.__iconFollowPointer.detach();
-        if (ptrTo) {
-            this._div.append(this.__iconFollowPointer);
+        if (ptrTo && ptrTo !== '_nullptr') {
 
             this._removeTerritory();
 
@@ -171,7 +178,11 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             ptrToName,
             ptrToObj;
 
-        if (ptrTo) {
+        if (ptrTo === '_nullptr') {
+            ptrToName = 'NULL';
+            ptrTo = 'Null-pointer';
+            this.__label.removeClass('btn btn-micro btn-follow-pointer');
+        } else if (ptrTo) {
             ptrToObj = this._client.getNode(ptrTo);
             if (ptrToObj) {
                 ptrToName = displayFormat.resolve(ptrToObj);
@@ -179,8 +190,11 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
                     ptrToName = ptrToObj.getAttribute('name');
                 }
 
-                ptrTo = ptrToName + ' (' + ptrTo + ')';
+                ptrTo = 'Follow Pointer: [' + ptrTo + ']';
             }
+            this.__label.addClass('btn btn-micro btn-follow-pointer');
+        } else {
+            this.__label.removeClass('btn btn-micro btn-follow-pointer');
         }
 
         this.__label.text(ptrToName);
@@ -192,7 +206,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             client = this._client,
             targetNodeObj;
 
-        if (ptrTo) {
+        if (ptrTo && ptrTo !== '_nullptr') {
             targetNodeObj = client.getNode(ptrTo);
             if (targetNodeObj) {
                 if (targetNodeObj.getParentId() || targetNodeObj.getParentId() === CONSTANTS.PROJECT_ROOT_ID) {
