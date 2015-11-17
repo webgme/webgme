@@ -13,20 +13,39 @@ var Core = requireJS('common/core/core'),
     BlobClient = requireJS('common/blob/BlobClient'),
     constraint = requireJS('common/core/users/constraintchecker'),
 
+// JsZip can't for some reason extract the exported files..
+    AdmZip = require('adm-zip'),
+
+    blobUtil = requireJS('blob/util'),
+
     FS = require('fs'),
     Q = require('q'),
 
     PluginNodeManager = require('../../plugin/nodemanager');
 
-
+/**
+ *
+ * @param {GmeLogger} mainLogger
+ * @param {GmeConfig} gmeConfig
+ * @constructor
+ */
 function WorkerRequests(mainLogger, gmeConfig) {
     var logger = mainLogger.fork('WorkerFunctions');
 
-    function getConnectedStorage(webGMESessionId) {
-        var host = '127.0.0.1', //TODO: this should come from gmeConfig
+    function getConnectedStorage(webGMESessionId, callback) {
+        var deferred = Q.defer(),
+            host = '127.0.0.1', //TODO: this should come from gmeConfig
             storage = Storage.createStorage(host, webGMESessionId, logger, gmeConfig);
 
-        return storage;
+        storage.open(function (networkState) {
+            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
+                deferred.resolve(storage);
+            } else {
+                deferred.reject(new Error('Problems connecting to the webgme server, network state: ' + networkState));
+            }
+        });
+
+        return deferred.promise.nodeify(callback);
     }
 
     function _getCoreAndRootNode(storage, projectId, commitHash, branchName, callback) {
@@ -151,7 +170,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {function} callback
      */
     function exportLibrary(webGMESessionId, projectId, libraryRootPath, parameters, callback) {
-        var storage = getConnectedStorage(webGMESessionId),
+        var storage,
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
@@ -175,8 +194,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
             return;
         }
 
-        storage.open(function (networkState) {
-            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
+        getConnectedStorage(webGMESessionId)
+            .then(function (storage_) {
+                storage = storage_;
 
                 storage.openProject(projectId, function (err, project, branches) {
                     var commitHash,
@@ -220,10 +240,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                             finish);
                     });
                 });
-            } else {
-                finish(new Error('Problems connecting to the webgme server, network state: ' + networkState));
-            }
-        });
+            })
+            .catch(finish);
     }
 
     /**
@@ -242,7 +260,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {function} callback
      */
     function executePlugin(webGMESessionId, socketId, pluginName, context, callback) {
-        var storage = getConnectedStorage(webGMESessionId),
+        var storage,
             errResult,
             pluginManager = new PluginNodeManager(webGMESessionId, null, logger, gmeConfig),
             finish = function (err, result) {
@@ -278,15 +296,16 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
         logger.debug('executePlugin context', {metadata: context});
 
-        storage.open(function (networkState) {
-            logger.debug('storage is open');
-            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
+        getConnectedStorage(webGMESessionId)
+            .then(function (storage_) {
+                storage = storage_;
                 storage.openProject(context.managerConfig.project, function (err, project, branches) {
                     var pluginContext;
                     if (err) {
                         finish(err);
                         return;
                     }
+
                     logger.debug('Opened project, got branches:', context.managerConfig.project, branches);
 
                     pluginContext = {
@@ -308,51 +327,122 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
                     pluginManager.executePlugin(pluginName, context.pluginConfig, pluginContext, finish);
                 });
-            } else {
-                finish(new Error('Problems connecting to the webgme server, network state: ' + networkState));
-            }
-        });
+            })
+            .catch(finish);
     }
 
     // Seeding functionality
+    function _findSeedFilename(name) {
+        var deferred = Q.defer(),
+            i,
+            filename,
+            names;
 
-    function _getSeedFromFile(name) {
-        var i, names;
+        // TODO: maybe read the dirs async.
+        // It uses a promise here to avoid extra try-catch in _getSeedFromFile..
+
         if (gmeConfig.seedProjects.enable !== true) {
-            return null;
-        }
-
-        try {
+            deferred.reject(new Error('seeding is disabled'));
+        } else {
             for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
                 names = FS.readdirSync(gmeConfig.seedProjects.basePaths[i]);
                 if (names.indexOf(name + '.json') !== -1) {
-                    return JSON.parse(
-                        FS.readFileSync(gmeConfig.seedProjects.basePaths[i] + '/' + name + '.json', 'utf8')
-                    );
+                    filename = gmeConfig.seedProjects.basePaths[i] + '/' + name + '.json';
+                    break;
+                } else if (names.indexOf(name + '.zip') !== -1) {
+                    filename = gmeConfig.seedProjects.basePaths[i] + '/' + name + '.zip';
+                    break;
                 }
             }
-            return null;
-        } catch (e) {
-            return null;
+
+            if (filename) {
+                deferred.resolve(filename);
+            } else {
+                deferred.reject(new Error('unknown file seed [' + name + ']'));
+            }
         }
+
+        return deferred.promise;
+    }
+
+    /**
+     * Extracts the exported zip file and adds the contained files to the blob using
+     * the import-part of ExportImport Plugin.
+     * @param {string} filename
+     * @param {BlobClient} blobClient
+     * @param function [callback]
+     * @returns {string} - The project json as a string
+     * @private
+     */
+    function _addZippedExportToBlob(filename, blobClient, callback) {
+        var zip = new AdmZip(filename),
+            artifact = blobClient.createArtifact('files'),
+            projectStr;
+
+        return Q.all(zip.getEntries().map(function (entry) {
+                var entryName = entry.entryName;
+                if (entryName === 'project.json') {
+                    projectStr = zip.readAsText(entry);
+                } else {
+                    return Q.ninvoke(artifact, 'addFileAsSoftLink', entryName, zip.readFile(entry));
+                }
+            })
+        )
+            .then(function () {
+                var metadata = artifact.descriptor;
+                return blobUtil.addAssetsFromExportedProject(logger, blobClient, metadata);
+            })
+            .then(function () {
+                return projectStr;
+            })
+            .nodeify(callback);
+    }
+
+    function _getSeedFromFile(name, webGMESessionId) {
+        return _findSeedFilename(name)
+            .then(function (filename) {
+                var blobClient;
+
+                if (filename.indexOf('.json') > -1) {
+                    logger.debug('Found .json seed at:', filename);
+                    return Q.ninvoke(FS, 'readFile', filename);
+                } else if (filename.indexOf('.zip') > -1) {
+
+                    logger.debug('Found .zip seed at:', filename);
+                    blobClient = new BlobClient({
+                        serverPort: gmeConfig.server.port,
+                        httpsecure: gmeConfig.server.https.enable,
+                        server: '127.0.0.1',
+                        webgmeclientsession: webGMESessionId
+                    });
+
+                    return _addZippedExportToBlob(filename, blobClient);
+                } else {
+                    throw new Error('Unexpected file');
+                }
+            })
+            .then(function (projectStr) {
+                return JSON.parse(projectStr);
+            });
     }
 
     function _getSeedFromProject(storage, projectId, branchName, callback) {
+        var deferred = Q.defer();
         branchName = branchName || 'master';
 
         _getCoreAndRootNode(storage, projectId, null, branchName)
             .then(function (res) {
                 Serialization.export(res.core, res.rootNode, function (err, jsonExport) {
                     if (err) {
-                        callback(new Error(err));
-                        return;
+                        deferred.reject(new Error(err));
+                    } else {
+                        deferred.resolve(jsonExport);
                     }
-                    callback(null, jsonExport);
                 });
             })
-            .catch(function (err) {
-                callback(err);
-            });
+            .catch(deferred.reject);
+
+        return deferred.promise.nodeify(callback);
     }
 
     function _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, seedName, callback) {
@@ -410,7 +500,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param [function} callback
      */
     function seedProject(webGMESessionId, projectName, ownerId, parameters, callback) {
-        var storage = getConnectedStorage(webGMESessionId),
+        var storage,
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
@@ -424,42 +514,32 @@ function WorkerRequests(mainLogger, gmeConfig) {
             };
 
         logger.info('seedProject');
+
         if (typeof projectName !== 'string' || parameters === null || typeof parameters !== 'object' ||
             typeof parameters.seedName !== 'string' || typeof parameters.type !== 'string') {
             callback(new Error('Invalid parameters'));
             return;
         }
 
-        storage.open(function (networkState) {
-            var jsonSeed;
-            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
+        getConnectedStorage(webGMESessionId)
+            .then(function (storage_) {
+                storage = storage_;
                 logger.debug('seedProject - storage is connected');
 
                 if (parameters.type === 'file') {
                     logger.debug('seedProject - seeding from file:', parameters.seedName);
-                    jsonSeed = _getSeedFromFile(parameters.seedName);
-                    if (jsonSeed === null) {
-                        finish(new Error('unknown file seed [' + parameters.seedName + ']'));
-                    } else {
-                        _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, parameters.seedName, finish);
-                    }
+                    return _getSeedFromFile(parameters.seedName, webGMESessionId);
                 } else if (parameters.type === 'db') {
                     logger.debug('seedProject - seeding from existing project:', parameters.seedName);
-                    _getSeedFromProject(storage, parameters.seedName, parameters.seedBranch, function (err, jsonSeed_) {
-                        if (err) {
-                            finish(err);
-                        } else {
-                            _createProjectFromSeed(storage, projectName, ownerId, jsonSeed_, parameters.seedName,
-                                finish);
-                        }
-                    });
+                    return _getSeedFromProject(storage, parameters.seedName, parameters.seedBranch);
                 } else {
-                    finish(new Error('Unknown seeding type [' + parameters.type + ']'));
+                    throw new Error('Unknown seeding type [' + parameters.type + ']');
                 }
-            } else {
-                finish(new Error('Problems connecting to the webgme server, network state: ' + networkState));
-            }
-        });
+            })
+            .then(function (jsonSeed) {
+                _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, parameters.seedName, finish);
+            })
+            .catch(finish);
     }
 
     /**
@@ -471,7 +551,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {function} callback
      */
     function autoMerge(webGMESessionId, projectId, mine, theirs, callback) {
-        var storage = getConnectedStorage(webGMESessionId),
+        var storage,
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
@@ -486,8 +566,10 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
         logger.info('autoMerge ' + projectId + ' ' + mine + ' -> ' + theirs);
 
-        storage.open(function (networkState) {
-            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
+        getConnectedStorage(webGMESessionId)
+            .then(function (storage_) {
+                storage = storage_;
+
                 storage.openProject(projectId, function (err, project /*, branches*/) {
                     if (err) {
                         finish(err);
@@ -504,10 +586,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     })
                         .nodeify(finish);
                 });
-            } else {
-                finish(new Error('Problems connecting to the webgme server, network state: ' + networkState));
-            }
-        });
+            })
+            .catch(finish);
     }
 
     /**
@@ -517,7 +597,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {function} callback
      */
     function resolve(webGMESessionId, partial, callback) {
-        var storage = getConnectedStorage(webGMESessionId),
+        var storage,
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
@@ -532,8 +612,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
         logger.info('resolve ' + partial.projectId + ' ' + partial.baseCommitHash + ' -> ' + partial.branchName);
 
-        storage.open(function (networkState) {
-            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
+        getConnectedStorage(webGMESessionId)
+            .then(function (storage_) {
+                storage = storage_;
                 storage.openProject(partial.projectId, function (err, project /*, branches*/) {
                     if (err) {
                         finish(err);
@@ -548,10 +629,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     })
                         .nodeify(finish);
                 });
-            } else {
-                finish(new Error('Problems connecting to the webgme server, network state: ' + networkState));
-            }
-        });
+            })
+            .catch(finish);
     }
 
     /**
@@ -566,7 +645,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {function} callback
      */
     function checkConstraints(webGMESessionId, projectId, parameters, callback) {
-        var storage = getConnectedStorage(webGMESessionId),
+        var storage,
             checkType,
             finish = function (err, result) {
                 if (err) {
@@ -598,28 +677,27 @@ function WorkerRequests(mainLogger, gmeConfig) {
             checkType = constraint.TYPES.META;
         }
 
-        storage.open(function (networkState) {
-            if (networkState === STORAGE_CONSTANTS.CONNECTED) {
-                _getCoreAndRootNode(storage, projectId, parameters.commitHash)
-                    .then(function (res) {
-                        var constraintChecker = new constraint.Checker(res.core, logger);
-                        function checkFromPath(nodePath) {
-                            if (parameters.includeChildren) {
-                                return constraintChecker.checkModel(nodePath);
-                            } else {
-                                return constraintChecker.checkNode(nodePath);
-                            }
-                        }
+        getConnectedStorage(webGMESessionId)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, projectId, parameters.commitHash);
+            })
+            .then(function (res) {
+                var constraintChecker = new constraint.Checker(res.core, logger);
 
-                        constraintChecker.initialize(res.rootNode, parameters.commitHash, checkType);
+                function checkFromPath(nodePath) {
+                    if (parameters.includeChildren) {
+                        return constraintChecker.checkModel(nodePath);
+                    } else {
+                        return constraintChecker.checkNode(nodePath);
+                    }
+                }
 
-                        return Q.all(parameters.nodePaths.map(checkFromPath));
-                    })
-                    .nodeify(finish);
-            } else {
-                finish(new Error('Problems connecting to the webgme server, network state: ' + networkState));
-            }
-        });
+                constraintChecker.initialize(res.rootNode, parameters.commitHash, checkType);
+
+                return Q.all(parameters.nodePaths.map(checkFromPath));
+            })
+            .nodeify(finish);
     }
 
     return {
@@ -628,7 +706,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
         seedProject: seedProject,
         autoMerge: autoMerge,
         resolve: resolve,
-        checkConstraints: checkConstraints
+        checkConstraints: checkConstraints,
+        // This is exposed for unit tests..
+        _addZippedExportToBlob: _addZippedExportToBlob
     };
 }
 

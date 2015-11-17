@@ -23,6 +23,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "adm-zip": "=0.4.7",
     "agentkeepalive": "=2.0.3",
     "aws-sdk": "=2.2.0",
     "bcryptjs": "=2.3.0",
