@@ -577,6 +577,29 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
+    router.get('/projects/:ownerId/:projectName', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req),
+            projectId =  StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            data = {
+                username: userId,
+                projectId: projectId
+            },
+            branches;
+
+        safeStorage.getBranches(data)
+            .then(function (branches_) {
+                branches = branches_;
+                return gmeAuth.getProject(projectId);
+            })
+            .then(function (projectData) {
+                projectData.branches = branches;
+                res.json(projectData);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
     /**
      * Creating project by seed
      * Available body parameters:

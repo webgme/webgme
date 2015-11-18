@@ -273,9 +273,16 @@ SafeStorage.prototype.createProject = function (data, callback) {
                 }
             })
             .then(function (ownerId) {
-                var info = {
-                    createdAt: (new Date()).toISOString()
-                };
+                var now = (new Date()).toISOString(),
+                    info = {
+                        createdAt: now,
+                        lastViewed: now,
+                        lastModified: now,
+                        creator: data.username,
+                        lastViewer: data.username,
+                        lastModifier: data.username
+                    };
+
                 return self.gmeAuth.addProject(ownerId, data.projectName, info);
             })
             .then(function (projectId) {

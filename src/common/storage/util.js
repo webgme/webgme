@@ -31,6 +31,11 @@ define(['common/storage/constants'], function (CONSTANTS) {
                 return projectId.substring(projectId.indexOf(CONSTANTS.PROJECT_ID_SEP) + 1);
             }
         },
+        getOwnerFromProjectId: function (projectId) {
+            if (projectId) {
+                return projectId.substring(0, projectId.indexOf(CONSTANTS.PROJECT_ID_SEP) + 1);
+            }
+        },
         getHashTaggedHash: function (hash) {
             if (typeof hash === 'string') {
                 return hash[0] === '#' ? hash : '#' + hash;
