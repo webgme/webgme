@@ -33,6 +33,7 @@ define([
         CREATE_TYPE_IMPORT = 'create_import',
         LI_BASE = $('<li class="center pointer"><a class="btn-env"></a>'),
         READ_ONLY_BASE = $('<span class="ro">[READ-ONLY]</span>'),
+        TABLE_ROW_BASE = $('<tr class="project-row"></tr>'),
         ngConfirmDialog,
         rootScope;
 
@@ -51,7 +52,7 @@ define([
         this._logger = Logger.create('gme:Dialogs:Projects:ProjectsDialog', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
-        this._projectNames = [];
+        this._projectIds = [];
         this._projectList = {};
         this._filter = undefined;
         this._ownerId = null; // TODO get this from dropdown list
@@ -116,7 +117,7 @@ define([
             var val = self._txtNewProjectName.val(),
                 d;
 
-            if (val !== '' && self._projectNames.indexOf(val) === -1) {
+            if (val !== '' && self._projectIds.indexOf(val) === -1) {
                 self._btnNewProjectImport.disable(true);
                 self._dialog.modal('hide');
                 d = new CreateFromSeedDialog(self._client, self._logger.fork('CreateFromSeedDialog'));
@@ -185,7 +186,7 @@ define([
             var val = self._txtNewProjectName.val(),
                 d;
 
-            if (val !== '' && self._projectNames.indexOf(val) === -1) {
+            if (val !== '' && self._projectIds.indexOf(val) === -1) {
                 self._btnNewProjectImport.disable(true);
                 self._dialog.modal('hide');
                 d = new ImportDialog();
@@ -200,6 +201,9 @@ define([
         //get controls
         this._el = this._dialog.find('.modal-body').first();
         this._ul = this._el.find('ul').first();
+        this._table = this._el.find('table').first();
+        this._tableHead = this._table.find('thead').first();
+        this._tableBody = this._table.find('tbody').first();
 
         this._panelButtons = this._dialog.find('.panel-buttons');
         this._panelCreateNew = this._dialog.find('.panel-create-new').hide();
@@ -248,6 +252,24 @@ define([
             }
         });
 
+        this._tableBody.on('click', 'tr:not(.disabled)', function (event) {
+            selectedId = $(this).data(DATA_PROJECT_ID);
+
+            event.stopPropagation();
+            event.preventDefault();
+
+            if (self._projectList[selectedId].rights.read === true) {
+                self._tableBody.find('.active').removeClass('active');
+                $(this).addClass('active');
+
+                if (selectedId === self._activeProject) {
+                    self._showButtons(false, selectedId);
+                } else {
+                    self._showButtons(true, selectedId);
+                }
+            }
+        });
+
         //open on double click
         this._ul.on('dblclick', 'li:not(.disabled)', function (event) {
             selectedId = $(this).data(DATA_PROJECT_ID);
@@ -256,6 +278,24 @@ define([
             event.preventDefault();
 
             openProject(selectedId);
+        });
+
+        this._tableBody.on('dblclick', 'tr:not(.disabled)', function (event) {
+            selectedId = $(this).data(DATA_PROJECT_ID);
+
+            event.stopPropagation();
+            event.preventDefault();
+
+            if (self._projectList[selectedId].rights.read === true) {
+                self._ul.find('.active').removeClass('active');
+                $(this).addClass('active');
+
+                if (selectedId === self._activeProject) {
+                    self._showButtons(false, selectedId);
+                } else {
+                    self._showButtons(true, selectedId);
+                }
+            }
         });
 
         this._btnOpen.on('click', function (event) {
@@ -322,7 +362,7 @@ define([
 
             return (
                 re.test(aProjectName) &&
-                self._projectNames.indexOf(projectId) === -1
+                self._projectIds.indexOf(projectId) === -1
             );
         }
 
@@ -387,7 +427,8 @@ define([
     ProjectsDialog.prototype._refreshProjectList = function () {
         var self = this,
             params = {
-                rights: true
+                rights: true,
+                info: true
             };
 
 
@@ -399,10 +440,10 @@ define([
             var i;
             self._activeProject = self._client.getActiveProjectId();
             self._projectList = {};
-            self._projectNames = [];
+            self._projectIds = [];
 
             for (i = 0; i < projectList.length; i += 1) {
-                self._projectNames.push(projectList[i]._id);
+                self._projectIds.push(projectList[i]._id);
                 self._projectList[projectList[i]._id] = projectList[i];
                 //self._projectList[p].projectId = p;
             }
@@ -423,7 +464,7 @@ define([
             //1: read & write
             //2: read only
             //3: no read at all
-            self._projectNames.sort(function compare(a, b) {
+            self._projectIds.sort(function compare(a, b) {
                 var userRightA = getProjectUserRightSortValue(self._projectList[a]),
                     userRightB = getProjectUserRightSortValue(self._projectList[b]),
                     result;
@@ -482,21 +523,29 @@ define([
     };
 
     ProjectsDialog.prototype._updateProjectNameList = function () {
-        var len = this._projectNames.length,
+        var len = this._projectIds.length,
             i,
             li,
             displayProject,
             projectDisplayedName,
             projectName,
+            owner,
+            projectData,
+            tblRow,
             count = 0,
             emptyLi = $('<li class="center"><i>No projects in this group...</i></li>');
 
         this._ul.empty();
+        this._tableBody.empty();
 
         if (len > 0) {
             for (i = 0; i < len; i += 1) {
                 displayProject = false;
-                projectName = StorageUtil.getProjectNameFromProjectId(this._projectNames[i]);
+
+                projectData = this._projectList[this._projectIds[i]];
+                projectName = StorageUtil.getProjectNameFromProjectId(this._projectIds[i]);
+                owner = StorageUtil.getOwnerFromProjectId(this._projectIds[i]);
+
                 if (this._filter === undefined) {
                     displayProject = true;
                 } else {
@@ -506,25 +555,38 @@ define([
 
                 if (displayProject) {
                     li = LI_BASE.clone();
-                    projectDisplayedName = StorageUtil.getProjectDisplayedNameFromProjectId(this._projectNames[i]);
+                    projectDisplayedName = StorageUtil.getProjectDisplayedNameFromProjectId(this._projectIds[i]);
                     li.find('a').text(projectDisplayedName);
-                    li.data(DATA_PROJECT_ID, this._projectNames[i]);
+                    li.data(DATA_PROJECT_ID, this._projectIds[i]);
 
-                    if (this._projectNames[i] === this._activeProject) {
+                    tblRow = TABLE_ROW_BASE.clone();
+                    //'<tb class="name"></tb><tb class="owner"></tb><tb class="modified"></tb><tb class="viewed"></tb>'
+                    tblRow.append('<td class="name">' + projectName + '</td>');
+                    tblRow.append('<td class="owner">' + owner + '</td>');
+                    tblRow.append('<td class="modified">' + projectData.info.lastModified + '</td>');
+                    tblRow.append('<td class="viewed">' + projectData.info.lastViewed + '</td>');
+
+                    tblRow.data(DATA_PROJECT_ID, this._projectIds[i]);
+
+                    if (this._projectIds[i] === this._activeProject) {
                         li.addClass('active');
+                        tblRow.addClass('active');
                     }
 
                     //check to see if the user has READ access to this project
-                    if (this._projectList[this._projectNames[i]].rights.read !== true) {
+                    if (projectData.rights.read !== true) {
                         li.disable(true);
+                        tblRow.disable(true);
                     } else {
                         //check if user has only READ rights for this project
-                        if (this._projectList[this._projectNames[i]].rights.write !== true) {
+                        if (projectData.rights.write !== true) {
                             li.find('a.btn-env').append(READ_ONLY_BASE.clone());
+                            //TODO: set this
                         }
                     }
 
                     this._ul.append(li);
+                    this._tableBody.append(tblRow);
 
                     count++;
                 }

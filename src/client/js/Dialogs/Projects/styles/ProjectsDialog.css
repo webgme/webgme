@@ -11,6 +11,8 @@
     margin-left: 5px;
     color: #999999;
     font-size: 9px; }
+  .projects-dialog .modal-body table.table-projects tbody.project-list tr.project-row:hover {
+    background-color: #999999; }
 
 .txt-project-name {
   width: 50%; }
@@ -19,3 +21,5 @@ a.btn-env {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none; }
+
+/*# sourceMappingURL=ProjectsDialog.css.map */

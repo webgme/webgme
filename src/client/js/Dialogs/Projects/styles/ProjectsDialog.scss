@@ -28,6 +28,15 @@
         }
       }
     }
+    table.table-projects {
+      tbody.project-list {
+        tr.project-row {
+          &:hover {
+            background-color: #999999;
+          }
+        }
+      }
+    }
   }
 }
 
