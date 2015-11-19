@@ -13,10 +13,10 @@ var path = require('path'),
         },
 
         authentication: {
-            enable: true,
+            enable: false,
             allowGuests: true,
             guestAccount: 'guest',
-            logOutUrl: '/login',
+            logOutUrl: '/',
             salts: 10
         },
 
