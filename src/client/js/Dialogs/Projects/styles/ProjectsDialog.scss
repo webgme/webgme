@@ -86,10 +86,12 @@
           }
           &.read-only {
             td {
-              opacity: 0.75;
-              &.icons {
-                i.locked {
-                  visibility: unset;
+              opacity: 1;
+              &.name {
+                span.name-read-only {
+                  display: unset;
+                  color: grey;
+                  padding-left: 0.5ex;
                 }
               }
             }
@@ -109,12 +111,18 @@
                   color: #ff7700;
                 }
               }
+              span.name-read-only {
+                display: none;
+              }
             }
             &.icons {
-              i.locked {
-                visibility: hidden;
-              }
               text-align: right;
+              i.delete-project {
+                cursor: pointer;
+                &:hover {
+                  color: #b30404;
+                }
+              }
             }
             &.modified {
               font-style: italic;

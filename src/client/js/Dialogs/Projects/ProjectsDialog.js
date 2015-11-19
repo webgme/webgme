@@ -134,7 +134,7 @@ define([
         function deleteProject(projectId) {
 
             var refreshList = function () {
-                    self._refreshProjectList.call(self);
+                    //self._refreshProjectList.call(self);
                 },
                 refreshPage = function () {
                     document.location.href = window.location.href.split('?')[0];
@@ -162,8 +162,6 @@ define([
                             } else {
                                 refreshList();
                             }
-
-
                         });
                     },
                     scope: myScope
@@ -199,7 +197,6 @@ define([
 
         //get controls
         this._el = this._dialog.find('.modal-body').first();
-        this._ul = this._el.find('ul').first();
         this._table = this._el.find('table').first();
         this._tableHead = this._table.find('thead').first();
         this._tableBody = this._table.find('tbody').first();
@@ -207,8 +204,6 @@ define([
         this._panelButtons = this._dialog.find('.panel-buttons');
         this._panelCreateNew = this._dialog.find('.panel-create-new').hide();
 
-        this._btnOpen = this._dialog.find('.btn-open');
-        this._btnDelete = this._dialog.find('.btn-delete');
         this._btnCreateNew = this._dialog.find('.btn-create-new');
         this._btnCreateFromFile = this._dialog.find('.btn-import-file');
         this._btnRefresh = this._dialog.find('.btn-refresh');
@@ -226,35 +221,16 @@ define([
 
         this._dialog.find('.tabContainer').first().groupedAlphabetTabs({
             onClick: function (filter) {
-                self._updateFiler(filter);
+                self._filter = filter;
+                self._updateFilter();
             },
             noMatchText: 'Nothing matched your filter, please click another letter.'
         });
 
         //hook up event handlers - SELECT project in the list
-        this._tableBody.on('click', 'tr', function (event) {
-            selectedId = $(this).data(DATA_PROJECT)._id;
-
-            event.stopPropagation();
-            event.preventDefault();
-
-            if (self._projectList[selectedId].rights.read === true) {
-                self._tableBody.find('.active').removeClass('active');
-                $(this).addClass('active');
-
-                if (selectedId === self._activeProject) {
-                    self._showButtons(false, selectedId);
-                } else {
-                    self._showButtons(true, selectedId);
-                }
-            }
-        });
 
         this._tableBody.on('dblclick', 'tr', function (event) {
             selectedId = $(this).data(DATA_PROJECT)._id;
-
-            self._btnOpen.disable(true);
-            self._btnDelete.disable(true);
 
             event.stopPropagation();
             event.preventDefault();
@@ -264,8 +240,6 @@ define([
 
         this._tableBody.on('click', 'span.open-link', function (event) {
             selectedId = $(this).data('projectId');
-            self._btnOpen.disable(true);
-            self._btnDelete.disable(true);
 
             event.stopPropagation();
             event.preventDefault();
@@ -277,10 +251,12 @@ define([
                 show = elm.hasClass('glyphicon-plus');
             if (show) {
                 self._table.find('.extra-info').removeClass('info-hidden');
+                self._table.addClass('info-displayed');
                 elm.removeClass('glyphicon-plus');
                 elm.addClass('glyphicon-minus');
             } else {
                 self._table.find('.extra-info').addClass('info-hidden');
+                self._table.removeClass('info-displayed');
                 elm.removeClass('glyphicon-minus');
                 elm.addClass('glyphicon-plus');
             }
@@ -348,24 +324,12 @@ define([
             sortedRows.detach().appendTo(self._tableBody);
         });
 
-        this._btnOpen.on('click', function (event) {
-            self._btnOpen.disable(true);
-            self._btnDelete.disable(true);
+        this._tableBody.on('click', 'i.delete-project', function (event) {
+            selectedId = $(this).data('projectId');
 
             event.stopPropagation();
             event.preventDefault();
-
-            openProject(selectedId);
-        });
-
-        this._btnDelete.on('click', function (event) {
-            self._btnOpen.disable(true);
-            self._btnDelete.disable(true);
-
             deleteProject(selectedId);
-
-            event.stopPropagation();
-            event.preventDefault();
         });
 
         this._btnCreateNew.on('click', function (event) {
@@ -387,8 +351,7 @@ define([
             self._btnNewProjectCreate.show();
             self._btnNewProjectImport.show();
 
-            self._filter = self._dialog.find('.tabContainer li.active').data('filter');
-            self._updateProjectNameList();
+            self._updateFilter();
 
             event.stopPropagation();
             event.preventDefault();
@@ -418,11 +381,13 @@ define([
 
         this._txtNewProjectName.on('keyup', function () {
             var val = self._txtNewProjectName.val(),
-                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(self._dialog.find('.username').text(), val);
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(
+                    self._dialog.find('.username').text(), val);
 
             if (val.length === 1) {
-                self._filter = [projectId.toUpperCase()[0], projectId.toUpperCase()[0]];
-                self._updateProjectNameList();
+                self._updateFilter([val.toUpperCase()[0], val.toUpperCase()[0]]);
+            } else if (val.length === 0) {
+                self._updateFilter();
             }
 
             if (isValidProjectName(val, projectId) === false) {
@@ -452,7 +417,8 @@ define([
 
             var enterPressed = event.which === 13,
                 newProjectName = self._txtNewProjectName.val(),
-                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(self._dialog.find('.username').text(), newProjectName);
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(
+                    self._dialog.find('.username').text(), newProjectName);
 
 
             if (enterPressed && isValidProjectName(newProjectName, projectId)) {
@@ -543,40 +509,12 @@ define([
         });
     };
 
-    ProjectsDialog.prototype._showButtons = function (enabled, projectId) {
-
-        if (enabled === true) {
-            //btnOpen
-            if (this._projectList[projectId].rights.read === true) {
-                this._btnOpen.show();
-                this._btnOpen.disable(false);
-            } else {
-                this._btnOpen.hide();
-                this._btnOpen.disable(true);
-            }
-
-            //btnDelete
-            if (this._projectList[projectId].rights.delete === true) {
-                this._btnDelete.show();
-                this._btnDelete.disable(false);
-            } else {
-                this._btnDelete.hide();
-                this._btnDelete.disable(true);
-            }
-        } else {
-            this._btnOpen.hide();
-            this._btnOpen.disable(true);
-            this._btnDelete.hide();
-            this._btnDelete.disable(true);
-        }
-
-    };
-
     ProjectsDialog.prototype._updateProjectNameList = function () {
         var self = this,
             len = this._projectIds.length,
             i,
             span,
+            iconsEl,
             displayProject,
             lastModified,
             lastViewed,
@@ -586,7 +524,6 @@ define([
             projectData,
             tblRow;
 
-        this._ul.empty();
         this._tableBody.empty();
         this._tableHead.find('th').removeClass('reverse-order in-order');
 
@@ -629,7 +566,10 @@ define([
                 // name
                 span = $('<span/>').addClass('open-link').attr('title', 'Open').text(projectName)
                     .data('projectId', this._projectIds[i]);
-                $('<td/>').addClass('name').append(span).appendTo(tblRow);
+
+                $('<td/>').addClass('name').append(span)
+                    .append('<span class="name-read-only">[Read-Only]</span>')
+                    .appendTo(tblRow);
 
                 // modified
                 span = $('<span/>').attr('title', getTitle(i, 'modified', projectData.info.modifier, lastModified))
@@ -647,16 +587,23 @@ define([
                 $('<td/>').addClass('created extra-info info-hidden').append(span).appendTo(tblRow);
 
                 // icons
-                $('<td/>').addClass('icons').append('<i class="glyphicon glyphicon-lock locked"/>')
-                    .appendTo(tblRow);
+                iconsEl = $('<td/>').addClass('icons').appendTo(tblRow);
 
                 if (this._projectIds[i] === this._activeProject) {
                     tblRow.addClass('active');
                 }
 
                 //check if user has only READ rights for this project
-                if (projectData.rights.write !== true) {
+                if (projectData.rights.write !== true || projectName === 'Something') {
                     tblRow.addClass('read-only');
+                }
+
+                if (projectData.rights.delete === true && projectName !== 'Something') {
+                    iconsEl.append(
+                        $('<i class="glyphicon glyphicon-remove-sign delete-project extra-info info-hidden"/>')
+                        .data('projectId', this._projectIds[i]));
+                } else {
+                    iconsEl.append('<i class="glyphicon glyphicon-lock locked extra-info info-hidden"/>');
                 }
 
                 this._tableBody.append(tblRow);
@@ -665,13 +612,18 @@ define([
             this._table.addClass('no-children');
         }
 
-        this._showButtons(false, null);
+        if (this._table.hasClass('info-displayed')) {
+            this._table.find('.extra-info').removeClass('info-hidden');
+        }
+
+        self._updateFilter();
     };
 
-    ProjectsDialog.prototype._updateFiler = function (filter) {
+    ProjectsDialog.prototype._updateFilter = function (filter) {
         var self = this,
             cnt = 0;
 
+        filter = filter || self._filter;
         self._tableBody.children('tr').each(function () {
             var tableRow = $(this),
                 firstChar = tableRow.data(DATA_PROJECT).name.toUpperCase()[0];

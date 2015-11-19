@@ -42,9 +42,11 @@
   .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row.active:hover td {
     background-color: #a5afbe !important; }
   .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row.read-only td {
-    opacity: 0.75; }
-    .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row.read-only td.icons i.locked {
-      visibility: unset; }
+    opacity: 1; }
+    .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row.read-only td.name span.name-read-only {
+      display: unset;
+      color: grey;
+      padding-left: 0.5ex; }
   .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row.filtered-out {
     display: none; }
   .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td {
@@ -56,10 +58,14 @@
         .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.name span.open-link:hover {
           text-decoration: underline;
           color: #ff7700; }
+      .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.name span.name-read-only {
+        display: none; }
     .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons {
       text-align: right; }
-      .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons i.locked {
-        visibility: hidden; }
+      .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons i.delete-project {
+        cursor: pointer; }
+        .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons i.delete-project:hover {
+          color: #b30404; }
     .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.modified {
       font-style: italic;
       color: grey; }
