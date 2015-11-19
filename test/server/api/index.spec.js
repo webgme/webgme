@@ -1453,7 +1453,7 @@ describe('REST API', function () {
         });
     });
 
-    describe.only('PROJECT SPECIFIC API', function () {
+    describe('PROJECT SPECIFIC API', function () {
 
         describe('auth disabled, allowGuests false', function () {
             var server,

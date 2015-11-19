@@ -777,8 +777,6 @@ function GMEAuth(session, gmeConfig) {
      *
      * @param projectId
      * @param {object} info
-     * @param {string} [info.lastViewed]
-     * @param {string} [info.lastModified]
      * @param callback
      * @returns {*}
      */
@@ -794,6 +792,9 @@ function GMEAuth(session, gmeConfig) {
 
                 projectData.info.modifiedAt = info.modifiedAt || projectData.info.modifiedAt;
                 projectData.info.modifier = info.modifier || projectData.info.modifier;
+
+                projectData.info.createdAt = info.createdAt || projectData.info.createdAt;
+                projectData.info.creator = info.creator || projectData.info.creator;
 
                 return projectCollection.update({_id: projectId}, projectData, {upsert: true});
             })
