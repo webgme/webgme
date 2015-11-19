@@ -279,8 +279,8 @@ SafeStorage.prototype.createProject = function (data, callback) {
                         lastViewed: now,
                         lastModified: now,
                         creator: data.username,
-                        lastViewer: data.username,
-                        lastModifier: data.username
+                        viewer: data.username,
+                        modifier: data.username
                     };
 
                 return self.gmeAuth.addProject(ownerId, data.projectName, info);

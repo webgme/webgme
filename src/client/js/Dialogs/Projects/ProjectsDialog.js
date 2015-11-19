@@ -15,6 +15,7 @@ define([
     'js/Dialogs/Import/ImportDialog',
     'js/Dialogs/CreateFromSeed/CreateFromSeedDialog',
     'common/storage/util',
+    'js/util',
     'text!./templates/ProjectsDialog.html',
 
     'isis-ui-components/simpleDialog/simpleDialog',
@@ -23,16 +24,14 @@ define([
     'css!./styles/ProjectsDialog.css'
 
 ], function (ng, Logger, CONSTANTS, LoaderCircles, GMEConcepts, ImportDialog, CreateFromSeedDialog, StorageUtil,
-             projectsDialogTemplate, ConfirmDialog, DeleteDialogTemplate) {
+             clientUtil, projectsDialogTemplate, ConfirmDialog, DeleteDialogTemplate) {
 
     'use strict';
 
     var ProjectsDialog,
-        DATA_PROJECT_ID = 'PROJECT_ID',
+        DATA_PROJECT = 'DATA_PROJECT',
         CREATE_TYPE_EMPTY = 'create_empty',
         CREATE_TYPE_IMPORT = 'create_import',
-        LI_BASE = $('<li class="center pointer"><a class="btn-env"></a>'),
-        READ_ONLY_BASE = $('<span class="ro">[READ-ONLY]</span>'),
         TABLE_ROW_BASE = $('<tr class="project-row"></tr>'),
         ngConfirmDialog,
         rootScope;
@@ -227,33 +226,14 @@ define([
 
         this._dialog.find('.tabContainer').first().groupedAlphabetTabs({
             onClick: function (filter) {
-                self._filter = filter;
-                self._updateProjectNameList();
+                self._updateFiler(filter);
             },
             noMatchText: 'Nothing matched your filter, please click another letter.'
         });
 
         //hook up event handlers - SELECT project in the list
-        this._ul.on('click', 'li:not(.disabled)', function (event) {
-            selectedId = $(this).data(DATA_PROJECT_ID);
-
-            event.stopPropagation();
-            event.preventDefault();
-
-            if (self._projectList[selectedId].rights.read === true) {
-                self._ul.find('.active').removeClass('active');
-                $(this).addClass('active');
-
-                if (selectedId === self._activeProject) {
-                    self._showButtons(false, selectedId);
-                } else {
-                    self._showButtons(true, selectedId);
-                }
-            }
-        });
-
-        this._tableBody.on('click', 'tr:not(.disabled)', function (event) {
-            selectedId = $(this).data(DATA_PROJECT_ID);
+        this._tableBody.on('click', 'tr', function (event) {
+            selectedId = $(this).data(DATA_PROJECT)._id;
 
             event.stopPropagation();
             event.preventDefault();
@@ -270,9 +250,11 @@ define([
             }
         });
 
-        //open on double click
-        this._ul.on('dblclick', 'li:not(.disabled)', function (event) {
-            selectedId = $(this).data(DATA_PROJECT_ID);
+        this._tableBody.on('dblclick', 'tr', function (event) {
+            selectedId = $(this).data(DATA_PROJECT)._id;
+
+            self._btnOpen.disable(true);
+            self._btnDelete.disable(true);
 
             event.stopPropagation();
             event.preventDefault();
@@ -280,22 +262,90 @@ define([
             openProject(selectedId);
         });
 
-        this._tableBody.on('dblclick', 'tr:not(.disabled)', function (event) {
-            selectedId = $(this).data(DATA_PROJECT_ID);
+        this._tableBody.on('click', 'span.open-link', function (event) {
+            selectedId = $(this).data('projectId');
+            self._btnOpen.disable(true);
+            self._btnDelete.disable(true);
+
+            event.stopPropagation();
+            event.preventDefault();
+            openProject(selectedId);
+        });
+
+        this._tableHead.on('click', 'i.btn-info-toggle', function (event) {
+            var elm = $(this),
+                show = elm.hasClass('glyphicon-plus');
+            if (show) {
+                self._table.find('.extra-info').removeClass('info-hidden');
+                elm.removeClass('glyphicon-plus');
+                elm.addClass('glyphicon-minus');
+            } else {
+                self._table.find('.extra-info').addClass('info-hidden');
+                elm.removeClass('glyphicon-minus');
+                elm.addClass('glyphicon-plus');
+            }
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        this._tableHead.on('click', 'th', function (event) {
+            var elm = $(this),
+                sortedRows,
+                type,
+                reverse = elm.hasClass('reverse-order');
 
             event.stopPropagation();
             event.preventDefault();
 
-            if (self._projectList[selectedId].rights.read === true) {
-                self._ul.find('.active').removeClass('active');
-                $(this).addClass('active');
-
-                if (selectedId === self._activeProject) {
-                    self._showButtons(false, selectedId);
-                } else {
-                    self._showButtons(true, selectedId);
-                }
+            if (elm.hasClass('title-owner')) {
+                type = 'owner';
+            } else if (elm.hasClass('title-name')) {
+                type = 'name';
+            } else if (elm.hasClass('title-modified')) {
+                type = 'modified';
+            } else if (elm.hasClass('title-viewed')) {
+                type = 'viewed';
+            } else if (elm.hasClass('title-created')) {
+                type = 'created';
+            } else {
+                return;
             }
+
+            self._tableHead.find('th').removeClass('reverse-order in-order');
+            if (reverse) {
+                elm.addClass('in-order');
+            } else {
+                elm.addClass('reverse-order');
+            }
+
+            sortedRows = self._tableBody.children('tr');
+            sortedRows.sort(function (a, b) {
+                var rowAData = $(a).data(DATA_PROJECT),
+                    rowBData = $(b).data(DATA_PROJECT),
+                    result = 0;
+
+                if (rowAData[type] > rowBData[type]) {
+                    result = 1;
+                } else if (rowAData[type] < rowBData[type]) {
+                    result = -1;
+                }
+
+                if (type === 'modified' || type === 'viewed' || type === 'created') {
+                    result = result * (-1);
+                }
+
+                if (result === 0) {
+                    if (rowAData._id.toUpperCase() > rowBData._id.toUpperCase()) {
+                        result = 1;
+                    } else {
+                        result = -1;
+                    }
+                }
+
+                return reverse ? result * (- 1) : result;
+            });
+
+            sortedRows.detach().appendTo(self._tableBody);
         });
 
         this._btnOpen.on('click', function (event) {
@@ -523,20 +573,28 @@ define([
     };
 
     ProjectsDialog.prototype._updateProjectNameList = function () {
-        var len = this._projectIds.length,
+        var self = this,
+            len = this._projectIds.length,
             i,
-            li,
+            span,
             displayProject,
-            projectDisplayedName,
+            lastModified,
+            lastViewed,
+            createdAt,
             projectName,
             owner,
             projectData,
-            tblRow,
-            count = 0,
-            emptyLi = $('<li class="center"><i>No projects in this group...</i></li>');
+            tblRow;
 
         this._ul.empty();
         this._tableBody.empty();
+        this._tableHead.find('th').removeClass('reverse-order in-order');
+
+        function getTitle(projectIdx, type, username, date) {
+            var name = StorageUtil.getProjectDisplayedNameFromProjectId(self._projectIds[projectIdx]);
+
+            return name + ' was ' + type + ' by ' + (username || 'N/A') + ' at ' + clientUtil.formattedDate(date);
+        }
 
         if (len > 0) {
             for (i = 0; i < len; i += 1) {
@@ -546,58 +604,96 @@ define([
                 projectName = StorageUtil.getProjectNameFromProjectId(this._projectIds[i]);
                 owner = StorageUtil.getOwnerFromProjectId(this._projectIds[i]);
 
-                if (this._filter === undefined) {
-                    displayProject = true;
-                } else {
-                    displayProject = (projectName.toUpperCase()[0] >= this._filter[0] &&
-                    projectName.toUpperCase()[0] <= this._filter[1]);
+                tblRow = TABLE_ROW_BASE.clone();
+                // Else time is when the #677 introduced.
+                lastViewed = projectData.info.lastViewed ?
+                    new Date(projectData.info.lastViewed) : new Date(1447879297957);
+                lastModified = projectData.info.lastModified ?
+                    new Date(projectData.info.lastModified) : new Date(1447879297957);
+                // createdAt was introduced at #419
+                createdAt = projectData.info.createdAt ?
+                    new Date(projectData.info.createdAt) : new Date(1431343297957);
+
+                tblRow.data(DATA_PROJECT, {
+                    _id: this._projectIds[i],
+                    modified: lastModified.getTime(),
+                    viewed: lastViewed.getTime(),
+                    created: createdAt.getTime(),
+                    name: projectName.toUpperCase(),
+                    owner: owner.toUpperCase()
+                });
+
+                // owner
+                $('<td/>').addClass('owner').text(owner).appendTo(tblRow);
+
+                // name
+                span = $('<span/>').addClass('open-link').attr('title', 'Open').text(projectName)
+                    .data('projectId', this._projectIds[i]);
+                $('<td/>').addClass('name').append(span).appendTo(tblRow);
+
+                // modified
+                span = $('<span/>').attr('title', getTitle(i, 'modified', projectData.info.modifier, lastModified))
+                    .text(clientUtil.formattedDate(lastModified, 'elapsed'));
+                $('<td/>').addClass('modified').append(span).appendTo(tblRow);
+
+                // viewed
+                span = $('<span/>').attr('title', getTitle(i, 'viewed', projectData.info.viewer, lastViewed))
+                    .text(clientUtil.formattedDate(lastViewed, 'elapsed'));
+                $('<td/>').addClass('viewed extra-info info-hidden').append(span).appendTo(tblRow);
+
+                // created
+                span = $('<span/>').attr('title', getTitle(i, 'created', projectData.info.creator, createdAt))
+                    .text(clientUtil.formattedDate(createdAt, 'elapsed'));
+                $('<td/>').addClass('created extra-info info-hidden').append(span).appendTo(tblRow);
+
+                // icons
+                $('<td/>').addClass('icons').append('<i class="glyphicon glyphicon-lock locked"/>')
+                    .appendTo(tblRow);
+
+                if (this._projectIds[i] === this._activeProject) {
+                    tblRow.addClass('active');
                 }
 
-                if (displayProject) {
-                    li = LI_BASE.clone();
-                    projectDisplayedName = StorageUtil.getProjectDisplayedNameFromProjectId(this._projectIds[i]);
-                    li.find('a').text(projectDisplayedName);
-                    li.data(DATA_PROJECT_ID, this._projectIds[i]);
-
-                    tblRow = TABLE_ROW_BASE.clone();
-                    //'<tb class="name"></tb><tb class="owner"></tb><tb class="modified"></tb><tb class="viewed"></tb>'
-                    tblRow.append('<td class="name">' + projectName + '</td>');
-                    tblRow.append('<td class="owner">' + owner + '</td>');
-                    tblRow.append('<td class="modified">' + projectData.info.lastModified + '</td>');
-                    tblRow.append('<td class="viewed">' + projectData.info.lastViewed + '</td>');
-
-                    tblRow.data(DATA_PROJECT_ID, this._projectIds[i]);
-
-                    if (this._projectIds[i] === this._activeProject) {
-                        li.addClass('active');
-                        tblRow.addClass('active');
-                    }
-
-                    //check to see if the user has READ access to this project
-                    if (projectData.rights.read !== true) {
-                        li.disable(true);
-                        tblRow.disable(true);
-                    } else {
-                        //check if user has only READ rights for this project
-                        if (projectData.rights.write !== true) {
-                            li.find('a.btn-env').append(READ_ONLY_BASE.clone());
-                            //TODO: set this
-                        }
-                    }
-
-                    this._ul.append(li);
-                    this._tableBody.append(tblRow);
-
-                    count++;
+                //check if user has only READ rights for this project
+                if (projectData.rights.write !== true) {
+                    tblRow.addClass('read-only');
                 }
+
+                this._tableBody.append(tblRow);
             }
-        }
-
-        if (count === 0) {
-            this._ul.append(emptyLi.clone());
+        } else {
+            this._table.addClass('no-children');
         }
 
         this._showButtons(false, null);
+    };
+
+    ProjectsDialog.prototype._updateFiler = function (filter) {
+        var self = this,
+            cnt = 0;
+
+        self._tableBody.children('tr').each(function () {
+            var tableRow = $(this),
+                firstChar = tableRow.data(DATA_PROJECT).name.toUpperCase()[0];
+
+            if (filter) {
+                if (firstChar >= filter[0] && firstChar <= filter[1]) {
+                    tableRow.removeClass('filtered-out');
+                    cnt += 1;
+                } else {
+                    tableRow.addClass('filtered-out');
+                }
+            } else {
+                tableRow.removeClass('filtered-out');
+                cnt += 1;
+            }
+        });
+
+        if (cnt === 0) {
+            self._table.addClass('no-children');
+        } else {
+            self._table.removeClass('no-children');
+        }
     };
 
     ProjectsDialog.prototype._createProjectFromFile = function (projectName, jsonContent) {

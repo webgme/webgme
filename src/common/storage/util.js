@@ -33,7 +33,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
         },
         getOwnerFromProjectId: function (projectId) {
             if (projectId) {
-                return projectId.substring(0, projectId.indexOf(CONSTANTS.PROJECT_ID_SEP) + 1);
+                return projectId.substring(0, projectId.indexOf(CONSTANTS.PROJECT_ID_SEP));
             }
         },
         getHashTaggedHash: function (hash) {

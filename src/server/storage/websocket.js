@@ -338,7 +338,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         access = access_;
                         return gmeAuth.updateProjectInfo(data.projectId, {
                             lastViewed: (new Date()).toISOString(),
-                            lastViewer: username
+                            viewer: username
                         });
                     })
                     .then(function () {
@@ -359,7 +359,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     .then(function (userId) {
                         return gmeAuth.updateProjectInfo(data.projectId, {
                             lastViewed: (new Date()).toISOString(),
-                            lastViewer: userId || this.gmeConfig.authentication.guestAccount
+                            viewer: userId || this.gmeConfig.authentication.guestAccount
                         });
                     })
                     .then(function () {
@@ -423,8 +423,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         return gmeAuth.updateProjectInfo(data.projectId, {
                             lastModified: now,
                             lastViewed: now,
-                            lastViewer: username,
-                            lastModifier: username
+                            viewer: username,
+                            modifier: username
                         });
                     })
                     .then(function () {
@@ -493,8 +493,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         return gmeAuth.updateProjectInfo(data.projectId, {
                             lastModified: now,
                             lastViewed: now,
-                            lastViewer: username,
-                            lastModifier: username
+                            viewer: username,
+                            modifier: username
                         });
                     })
                     .then(function () {

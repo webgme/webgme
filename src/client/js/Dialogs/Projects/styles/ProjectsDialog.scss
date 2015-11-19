@@ -28,11 +28,106 @@
         }
       }
     }
-    table.table-projects {
+    table.table.table-projects {
+      .info-hidden {
+        display: none;
+      }
+      &.no-children {
+        tr.with-children {
+          display: none
+        }
+        tr.with-no-children {
+          display: inherit;
+          th {
+            border-bottom: white;
+            border-top: white;
+            font-style: italic;
+            padding-left: 20px;
+            cursor: default;
+          }
+        }
+      }
+
+      thead {
+        th {
+          text-align: left;
+          cursor: pointer;
+          &.reverse-order {
+            text-decoration: underline;
+          }
+          &.in-order {
+            text-decoration: underline;
+          }
+          &.title-icons {
+            text-align: right;
+            padding: 0;
+          }
+        }
+        tr.with-no-children {
+          display: none;
+        }
+      }
       tbody.project-list {
         tr.project-row {
           &:hover {
-            background-color: #999999;
+            td {
+              background-color: #f5f5f5;
+            }
+          }
+          &.active {
+            td {
+              background-color: #a5afbe;
+            }
+            &:hover {
+              td {
+                background-color: #a5afbe !important;
+              }
+            }
+          }
+          &.read-only {
+            td {
+              opacity: 0.75;
+              &.icons {
+                i.locked {
+                  visibility: unset;
+                }
+              }
+            }
+          }
+          &.filtered-out {
+            display: none;
+          }
+
+          td {
+            text-align: left;
+            &.name {
+              color: #3160ab;
+              span.open-link {
+                cursor: pointer;
+                &:hover {
+                  text-decoration: underline;
+                  color: #ff7700;
+                }
+              }
+            }
+            &.icons {
+              i.locked {
+                visibility: hidden;
+              }
+              text-align: right;
+            }
+            &.modified {
+              font-style: italic;
+              color: grey;
+            }
+            &.viewed {
+              font-style: italic;
+              color: grey;
+            }
+            &.created {
+              font-style: italic;
+              color: grey;
+            }
           }
         }
       }
