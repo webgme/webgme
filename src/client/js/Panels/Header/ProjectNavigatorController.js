@@ -209,7 +209,7 @@ define([
                             }
                             self.logger.debug('Got branches before joining room:', Object.keys(branches));
                             //TODO: Should include rights, for now complete rights are assumed.
-                            self.addProject(data.projectId, null, {lastModified: (new Date).toISOString()}, true,
+                            self.addProject(data.projectId, null, {modifiedAt: (new Date()).toISOString()}, true,
                                 function (err) {
                                     if (err) {
                                         self.logger.error(err);
@@ -533,7 +533,7 @@ define([
             iconClass: rights.write ? '' : 'glyphicon glyphicon-lock',
             iconPullRight: !rights.write,
             disabled: !rights.read,
-            lastModified: info.lastModified,
+            modifiedAt: info.modifiedAt,
             isSelected: false,
             branches: {},
             action: selectProject,
@@ -629,7 +629,7 @@ define([
 
                 // convert indexed projects to an array
                 self.root.menu[i].items = self.mapToArray(self.projects, [
-                    {key: 'lastModified', reverse: true}, {key: 'name'}, {key: 'id'}]);
+                    {key: 'modifiedAt', reverse: true}, {key: 'name'}, {key: 'id'}]);
                 break;
             }
         }
@@ -947,7 +947,7 @@ define([
 
                     // convert indexed projects to an array
                     self.root.menu[i].items = self.mapToArray(self.projects, [
-                        {key: 'lastModified', reverse: true}, {key: 'name'}, {key: 'id'}]);
+                        {key: 'modifiedAt', reverse: true}, {key: 'name'}, {key: 'id'}]);
                     break;
                 }
             }

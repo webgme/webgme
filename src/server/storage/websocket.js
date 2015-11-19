@@ -337,7 +337,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         var username = data.username || this.gmeConfig.authentication.guestAccount;
                         access = access_;
                         return gmeAuth.updateProjectInfo(data.projectId, {
-                            lastViewed: (new Date()).toISOString(),
+                            viewedAt: (new Date()).toISOString(),
                             viewer: username
                         });
                     })
@@ -358,7 +358,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
                         return gmeAuth.updateProjectInfo(data.projectId, {
-                            lastViewed: (new Date()).toISOString(),
+                            viewedAt: (new Date()).toISOString(),
                             viewer: userId || this.gmeConfig.authentication.guestAccount
                         });
                     })
@@ -421,8 +421,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                             username = data.username || this.gmeConfig.authentication.guestAccount;
                         commitStatus = status;
                         return gmeAuth.updateProjectInfo(data.projectId, {
-                            lastModified: now,
-                            lastViewed: now,
+                            modifiedAt: now,
+                            viewedAt: now,
                             viewer: username,
                             modifier: username
                         });
@@ -491,8 +491,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         status = result;
 
                         return gmeAuth.updateProjectInfo(data.projectId, {
-                            lastModified: now,
-                            lastViewed: now,
+                            modifiedAt: now,
+                            viewedAt: now,
                             viewer: username,
                             modifier: username
                         });

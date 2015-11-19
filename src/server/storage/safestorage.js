@@ -276,8 +276,8 @@ SafeStorage.prototype.createProject = function (data, callback) {
                 var now = (new Date()).toISOString(),
                     info = {
                         createdAt: now,
-                        lastViewed: now,
-                        lastModified: now,
+                        viewedAt: now,
+                        modifiedAt: now,
                         creator: data.username,
                         viewer: data.username,
                         modifier: data.username

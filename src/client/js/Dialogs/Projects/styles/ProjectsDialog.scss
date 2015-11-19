@@ -119,6 +119,7 @@
               text-align: right;
               i.delete-project {
                 cursor: pointer;
+                color: darkred;
                 &:hover {
                   color: #b30404;
                 }

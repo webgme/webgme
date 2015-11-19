@@ -63,7 +63,8 @@
     .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons {
       text-align: right; }
       .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons i.delete-project {
-        cursor: pointer; }
+        cursor: pointer;
+        color: darkred; }
         .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons i.delete-project:hover {
           color: #b30404; }
     .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.modified {

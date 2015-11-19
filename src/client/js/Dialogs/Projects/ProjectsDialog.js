@@ -248,7 +248,7 @@ define([
 
         this._tableHead.on('click', 'i.btn-info-toggle', function (event) {
             var elm = $(this),
-                show = elm.hasClass('glyphicon-plus');
+                show = !self._table.hasClass('info-displayed');
             if (show) {
                 self._table.find('.extra-info').removeClass('info-hidden');
                 self._table.addClass('info-displayed');
@@ -543,10 +543,10 @@ define([
 
                 tblRow = TABLE_ROW_BASE.clone();
                 // Else time is when the #677 introduced.
-                lastViewed = projectData.info.lastViewed ?
-                    new Date(projectData.info.lastViewed) : new Date(1447879297957);
-                lastModified = projectData.info.lastModified ?
-                    new Date(projectData.info.lastModified) : new Date(1447879297957);
+                lastViewed = projectData.info.viewedAt ?
+                    new Date(projectData.info.viewedAt) : new Date(1447879297957);
+                lastModified = projectData.info.modifiedAt ?
+                    new Date(projectData.info.modifiedAt) : new Date(1447879297957);
                 // createdAt was introduced at #419
                 createdAt = projectData.info.createdAt ?
                     new Date(projectData.info.createdAt) : new Date(1431343297957);
@@ -600,7 +600,7 @@ define([
 
                 if (projectData.rights.delete === true && projectName !== 'Something') {
                     iconsEl.append(
-                        $('<i class="glyphicon glyphicon-remove-sign delete-project extra-info info-hidden"/>')
+                        $('<i class="glyphicon glyphicon-trash delete-project extra-info info-hidden"/>')
                         .data('projectId', this._projectIds[i]));
                 } else {
                     iconsEl.append('<i class="glyphicon glyphicon-lock locked extra-info info-hidden"/>');

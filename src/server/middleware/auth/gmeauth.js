@@ -789,9 +789,10 @@ function GMEAuth(session, gmeConfig) {
                     return Q.reject(new Error('no such project [' + projectId + ']'));
                 }
 
-                projectData.info.lastViewed = info.lastViewed || projectData.info.lastViewed;
+                projectData.info.viewedAt = info.viewedAt || projectData.info.viewedAt;
                 projectData.info.viewer = info.viewer || projectData.info.viewer;
-                projectData.info.lastModified = info.lastModified || projectData.info.lastModified;
+
+                projectData.info.modifiedAt = info.modifiedAt || projectData.info.modifiedAt;
                 projectData.info.modifier = info.modifier || projectData.info.modifier;
 
                 return projectCollection.update({_id: projectId}, projectData, {upsert: true});
