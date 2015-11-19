@@ -775,6 +775,37 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
+     * @param projectId
+     * @param {object} info
+     * @param callback
+     * @returns {*}
+     */
+    function updateProjectInfo(projectId, info, callback) {
+        return projectCollection.findOne({_id: projectId})
+            .then(function (projectData) {
+                if (!projectData) {
+                    return Q.reject(new Error('no such project [' + projectId + ']'));
+                }
+
+                projectData.info.viewedAt = info.viewedAt || projectData.info.viewedAt;
+                projectData.info.viewer = info.viewer || projectData.info.viewer;
+
+                projectData.info.modifiedAt = info.modifiedAt || projectData.info.modifiedAt;
+                projectData.info.modifier = info.modifier || projectData.info.modifier;
+
+                projectData.info.createdAt = info.createdAt || projectData.info.createdAt;
+                projectData.info.creator = info.creator || projectData.info.creator;
+
+                return projectCollection.update({_id: projectId}, projectData, {upsert: true});
+            })
+            .then(function () {
+                return getProject(projectId);
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
      * All users previous access will be lost, new owner will get full access.
      *
      * @param orgOrUserId
@@ -1084,6 +1115,7 @@ function GMEAuth(session, gmeConfig) {
         addProject: addProject,
         getProject: getProject,
         transferProject: transferProject,
+        updateProjectInfo: updateProjectInfo,
 
         CONSTANTS: CONSTANTS
     };

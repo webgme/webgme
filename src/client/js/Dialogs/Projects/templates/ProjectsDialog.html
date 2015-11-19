@@ -9,8 +9,25 @@
                 <div class="tabContainer"></div>
             </div>
             <div class="modal-body">
-                <ul class="nav nav-pills nav-stacked">
-                </ul>
+                <table class="table table-projects">
+                    <thead>
+                        <tr class="with-children">
+                            <th class="title-owner">Owner</th>
+                            <th class="title-name">Name</th>
+                            <th class="title-modified">Last Modified</th>
+                            <th class="title-viewed extra-info info-hidden">Last Viewed</th>
+                            <th class="title-created extra-info info-hidden">Created</th>
+                            <th class="title-icons">
+                                <i class="btn btn-micro btn-default btn-info-toggle glyphicon glyphicon-plus" title="Show/Hide Info"/>
+                            </th>
+                        </tr>
+                        <tr class="with-no-children">
+                            <th>No projects in this group...</th>
+                        </tr>
+                    </thead>
+                    <tbody class="project-list">
+                    </tbody>
+                </table>
             </div>
             <div class="modal-footer">
                 <div class="panel-buttons">
@@ -18,8 +35,6 @@
                             style="position: relative;"><i class="glyphicon glyphicon-refresh"></i></button>
                     <button class="btn btn-default pull-left btn-create-new">Create new...</button>
                     <button class="btn btn-default pull-left btn-import-file">Create from file...</button>
-                    <button class="btn btn-primary btn-open">Open</button>
-                    <button class="btn btn-danger btn-delete">Delete</button>
                     <button class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
                 <div class="panel-create-new control-group">

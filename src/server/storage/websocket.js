@@ -321,7 +321,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             // model editing functions
             socket.on('openProject', function (data, callback) {
-                var branches;
+                var branches,
+                    access;
                 logger.debug('openProject', {metadata: data});
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
@@ -332,7 +333,15 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         branches = branches_;
                         return projectAccess(socket, data.projectId);
                     })
-                    .then(function (access) {
+                    .then(function (access_) {
+                        var username = data.username || this.gmeConfig.authentication.guestAccount;
+                        access = access_;
+                        return gmeAuth.updateProjectInfo(data.projectId, {
+                            viewedAt: (new Date()).toISOString(),
+                            viewer: username
+                        });
+                    })
+                    .then(function () {
                         callback(null, branches, access);
                     })
                     .catch(function (err) {
@@ -346,7 +355,23 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('closeProject', function (data, callback) {
                 logger.debug('closeProject', {metadata: data});
-                callback();
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        return gmeAuth.updateProjectInfo(data.projectId, {
+                            viewedAt: (new Date()).toISOString(),
+                            viewer: userId || this.gmeConfig.authentication.guestAccount
+                        });
+                    })
+                    .then(function () {
+                        callback();
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
             });
 
             socket.on('openBranch', function (data, callback) {
@@ -382,6 +407,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('makeCommit', function (data, callback) {
+                var commitStatus;
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
                         if (socket.rooms.indexOf(data.projectId + CONSTANTS.ROOM_DIVIDER + data.branchName) > -1) {
@@ -391,7 +417,18 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         return storage.makeCommit(data);
                     })
                     .then(function (status) {
-                        callback(null, status);
+                        var now = (new Date()).toISOString(),
+                            username = data.username || this.gmeConfig.authentication.guestAccount;
+                        commitStatus = status;
+                        return gmeAuth.updateProjectInfo(data.projectId, {
+                            modifiedAt: now,
+                            viewedAt: now,
+                            viewer: username,
+                            modifier: username
+                        });
+                    })
+                    .then(function () {
+                        callback(null, commitStatus);
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {
@@ -439,6 +476,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('setBranchHash', function (data, callback) {
+                var status;
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
                         if (socket.rooms.indexOf(data.projectId) > -1) {
@@ -448,7 +486,19 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         return storage.setBranchHash(data);
                     })
                     .then(function (result) {
-                        callback(null, result);
+                        var now = (new Date()).toISOString(),
+                            username = data.username || this.gmeConfig.authentication.guestAccount;
+                        status = result;
+
+                        return gmeAuth.updateProjectInfo(data.projectId, {
+                            modifiedAt: now,
+                            viewedAt: now,
+                            viewer: username,
+                            modifier: username
+                        });
+                    })
+                    .then(function () {
+                        callback(null, status);
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {

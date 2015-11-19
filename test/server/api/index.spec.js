@@ -1614,6 +1614,26 @@ describe('REST API', function () {
                     });
             });
 
+            it('should get info and branches for project /projects/:ownerId/:projectId', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.have.property('branches');
+                        expect(res.body).to.have.property('info');
+                        expect(res.body.info).to.include.keys('creator', 'viewer', 'modifier',
+                            'createdAt', 'viewedAt', 'modifiedAt');
+                        done();
+                    });
+            });
+
+            it('should not get info and branches for non-existent project', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath('does_not_exist'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+                        done();
+                    });
+            });
+
             it('should branches for project /projects/:ownerId/:projectId/branches', function (done) {
                 agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches')
                     .end(function (err, res) {

@@ -260,10 +260,10 @@ describe('GME authentication', function () {
     });
 
     it('should add a project with supplied info', function (done) {
-        var projectName = 'project_with_info',
+        var projectName = 'project_with_info1',
             ownerName = 'someUser',
             projId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerName, projectName);
-        auth.addProject(ownerName, projectName, {created: 'justNow'})
+        auth.addProject(ownerName, projectName, {createdAt: 'justNow'})
             .then(function (projectId) {
                 expect(projectId).to.equal(projId);
                 return auth.getProject(projectId);
@@ -271,10 +271,83 @@ describe('GME authentication', function () {
             .then(function (project) {
                 expect(project).to.deep.equal({
                     _id: projId,
-                    info: {created: 'justNow'},
+                    info: {createdAt: 'justNow'},
                     owner: ownerName,
                     name: projectName,
                 });
+            })
+            .nodeify(done);
+    });
+
+    it('should add a project and update info', function (done) {
+        var projectName = 'project_with_info2',
+            ownerName = 'someUser',
+            projId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerName, projectName);
+        auth.addProject(ownerName, projectName, {createdAt: 'justNow'})
+            .then(function (projectId) {
+                expect(projectId).to.equal(projId);
+                return auth.updateProjectInfo(projectId, {createdAt: 'aBitLater'});
+            })
+            .then(function (data) {
+                expect(data.info).to.deep.equal({createdAt: 'aBitLater', modifiedAt: null, viewedAt: null,
+                viewer: null, modifier: null, creator: null});
+            })
+            .nodeify(done);
+    });
+
+    it('should add a project and succeed with empty info', function (done) {
+        var projectName = 'project_with_info3',
+            ownerName = 'someUser',
+            projId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerName, projectName);
+        auth.addProject(ownerName, projectName, {createdAt: 'justNow'})
+            .then(function (projectId) {
+                expect(projectId).to.equal(projId);
+                return auth.updateProjectInfo(projectId, {});
+            })
+            .then(function (data) {
+                expect(data.info).to.deep.equal({createdAt: 'justNow', modifiedAt: null, viewedAt: null,
+                    viewer: null, modifier: null, creator: null});
+            })
+            .nodeify(done);
+    });
+
+    it('should add a project and not update with non allowed info', function (done) {
+        var projectName = 'project_with_info4',
+            ownerName = 'someUser',
+            projId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerName, projectName);
+        auth.addProject(ownerName, projectName, {createdAt: 'justNow'})
+            .then(function (projectId) {
+                expect(projectId).to.equal(projId);
+                return auth.updateProjectInfo(projectId, {aaa: 'should not persist'});
+            })
+            .then(function (data) {
+                expect(data.info).to.deep.equal({createdAt: 'justNow', modifiedAt: null, viewedAt: null,
+                    viewer: null, modifier: null, creator: null});
+            })
+            .nodeify(done);
+    });
+
+    it('should add a project and not update all info', function (done) {
+        var projectName = 'project_with_info5',
+            ownerName = 'someUser',
+            projId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerName, projectName),
+            now = 'nu',
+            info = {
+                createdAt: now,
+                viewedAt: now,
+                modifiedAt: now,
+                creator: 'user',
+                viewer: 'user',
+                modifier: 'user'
+            };
+        auth.addProject(ownerName, projectName, info)
+            .then(function (projectId) {
+                expect(projectId).to.equal(projId);
+                info.createdAt = info.viewedAt = info.modifiedAt = 'nu1';
+                return auth.updateProjectInfo(projectId, info);
+            })
+            .then(function (data) {
+                expect(data.info).to.deep.equal(info);
             })
             .nodeify(done);
     });

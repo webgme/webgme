@@ -209,22 +209,24 @@ define([
                             }
                             self.logger.debug('Got branches before joining room:', Object.keys(branches));
                             //TODO: Should include rights, for now complete rights are assumed.
-                            self.addProject(data.projectId, null, true, function (err) {
-                                if (err) {
-                                    self.logger.error(err);
-                                    return;
-                                }
-                                self.gmeClient.getBranches(data.projectId, function (err, branches) {
+                            self.addProject(data.projectId, null, {modifiedAt: (new Date()).toISOString()}, true,
+                                function (err) {
                                     if (err) {
                                         self.logger.error(err);
                                         return;
                                     }
-                                    self.logger.debug('Got branches after joining room:', Object.keys(branches));
-                                    Object.keys(branches).map(function (branchId) {
-                                        self.addBranch(data.projectId, branchId);
+                                    self.gmeClient.getBranches(data.projectId, function (err, branches) {
+                                        if (err) {
+                                            self.logger.error(err);
+                                            return;
+                                        }
+                                        self.logger.debug('Got branches after joining room:', Object.keys(branches));
+                                        Object.keys(branches).map(function (branchId) {
+                                            self.addBranch(data.projectId, branchId);
+                                        });
                                     });
-                                });
-                            });
+                                }
+                            );
                         });
                     } else if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_DELETED) {
                         self.removeProject(data.projectId);
@@ -328,7 +330,8 @@ define([
             params = {
                 asObject: true,
                 rights: true,
-                branches: true
+                branches: true,
+                info: true
             };
         self.logger.debug('updateProjectList');
         self.projects = {};
@@ -348,7 +351,7 @@ define([
 
             for (projectId in projectList) {
                 if (projectList.hasOwnProperty(projectId)) {
-                    self.addProject(projectId, projectList[projectId].rights, true);
+                    self.addProject(projectId, projectList[projectId].rights, projectList[projectId].info, true);
                     for (branchId in projectList[projectId].branches) {
                         if (projectList[projectId].branches.hasOwnProperty(branchId)) {
                             self.addBranch(projectId, branchId, projectList[projectId].branches[branchId], true);
@@ -366,7 +369,7 @@ define([
         });
     };
 
-    ProjectNavigatorController.prototype.addProject = function (projectId, rights, noUpdate, callback) {
+    ProjectNavigatorController.prototype.addProject = function (projectId, rights, info, noUpdate, callback) {
         var self = this,
             i,
             showHistory,
@@ -530,6 +533,7 @@ define([
             iconClass: rights.write ? '' : 'glyphicon glyphicon-lock',
             iconPullRight: !rights.write,
             disabled: !rights.read,
+            modifiedAt: info.modifiedAt,
             isSelected: false,
             branches: {},
             action: selectProject,
@@ -624,7 +628,8 @@ define([
             if (self.root.menu[i].id === 'projects') {
 
                 // convert indexed projects to an array
-                self.root.menu[i].items = self.mapToArray(self.projects, ['name', 'id']);
+                self.root.menu[i].items = self.mapToArray(self.projects, [
+                    {key: 'modifiedAt', reverse: true}, {key: 'name'}, {key: 'id'}]);
                 break;
             }
         }
@@ -915,7 +920,7 @@ define([
 
                 // convert indexed branches to an array
                 self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches,
-                    ['name', 'id']);
+                    [{key: 'name'}]);
                 break;
             }
         }
@@ -941,7 +946,8 @@ define([
                 if (self.root.menu[i].id === 'projects') {
 
                     // convert indexed projects to an array
-                    self.root.menu[i].items = self.mapToArray(self.projects);
+                    self.root.menu[i].items = self.mapToArray(self.projects, [
+                        {key: 'modifiedAt', reverse: true}, {key: 'name'}, {key: 'id'}]);
                     break;
                 }
             }
@@ -1155,7 +1161,7 @@ define([
                 }
             }
 
-            self.addProject(id, rights);
+            self.addProject(id, rights, {});
         }
     };
 
@@ -1185,16 +1191,18 @@ define([
 
         values.sort(function (a, b) {
             var i,
+                reverse,
                 key;
 
             for (i = 0; i < orderBy.length; i += 1) {
-                key = orderBy[i];
+                key = orderBy[i].key;
+                reverse = orderBy[i].reverse === true ? -1 : 1;
                 if (a.hasOwnProperty(key) && b.hasOwnProperty(key)) {
                     if (a[key] > b[key]) {
-                        return 1;
+                        return 1 * reverse;
                     }
                     if (a[key] < b[key]) {
-                        return -1;
+                        return -1 * reverse;
                     }
                 }
             }
