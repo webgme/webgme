@@ -132,7 +132,7 @@ define([
                         } else {
                             if (browserAllowedPlugin) {
                                 runOptions.readOnly = true;
-                                runOptions.description = 'Server execution disabled.';
+                                runOptions.description = 'Server execution is disabled.';
                             } else {
                                 callback(getPluginErrorResult(name,
                                     'This plugin can only run on the server which is disabled!', startTime, projectId));
@@ -143,7 +143,7 @@ define([
                         if (browserAllowedPlugin) {
                             runOptions.readOnly = true;
                             runOptions.value = true;
-                            runOptions.description = 'Browser execution disabled.';
+                            runOptions.description = 'Browser execution is disabled.';
                         } else {
                             callback(getPluginErrorResult(name,
                                 'This plugin can only run on the server which is disabled!', startTime, projectId));
