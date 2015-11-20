@@ -695,7 +695,7 @@ define(['jquery',
         var result = [],
             EXCLUDED_SETS = [],
             nodeObj = client.getNode(containerId),
-            setNames = _.difference(nodeObj.getSetNames(), EXCLUDED_SETS),
+            setNames = _.difference(nodeObj.getValidSetNames(), EXCLUDED_SETS),
             len = setNames.length;
 
         while (len--) {

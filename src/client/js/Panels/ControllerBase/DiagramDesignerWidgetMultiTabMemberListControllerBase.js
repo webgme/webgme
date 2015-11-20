@@ -689,6 +689,7 @@ define(['js/logger',
 
         this._selectedMemberListMembers = [];
         this._delayedConnections = [];
+        this._delayedConnectionsAsItems = {};
 
         //remove current territory patterns
         if (this._selectedMemberListMembersTerritoryId) {
@@ -786,6 +787,15 @@ define(['js/logger',
         this.logger.debug('_dispatchEvents "' + events.length + '" items: ' + JSON.stringify(events));
 
         this._widget.beginUpdate();
+        //first call the updates of the decorators so they can pu out any port they use
+        j = Object.keys(this._GMEID2ComponentID || {});
+        for (i = 0; i < j.length; i += 1) {
+            if (this._widget.items[this._GMEID2ComponentID[j[i]]] &&
+                this._widget.items[this._GMEID2ComponentID[j[i]]]._decoratorInstance) {
+                this._widget.items[this._GMEID2ComponentID[j[i]]]._decoratorInstance.update();
+            }
+        }
+        //decorators have been updated we can move on
 
         /********** ORDER EVENTS BASED ON DEPENDENCY ************/
         /** 1: items first, no dependency **/
@@ -1148,8 +1158,8 @@ define(['js/logger',
                             objDesc.srcSubCompId = sources[k].subCompId;
                             objDesc.dstObjId = destinations[l].objId;
                             objDesc.dstSubCompId = destinations[l].subCompId;
-                            objDesc.reconnectable = false;
-                            objDesc.editable = false;
+                            objDesc.reconnectable = desc.reconnectable === undefined ? false : desc.reconnectable;
+                            objDesc.editable = desc.editable === undefined ? false : desc.editable;
 
                             delete objDesc.source;
                             delete objDesc.target;
@@ -1252,8 +1262,8 @@ define(['js/logger',
                         objDesc.srcSubCompId = sources[k].subCompId;
                         objDesc.dstObjId = destinations[l].objId;
                         objDesc.dstSubCompId = destinations[l].subCompId;
-                        objDesc.reconnectable = true;
-                        objDesc.editable = true;
+                        objDesc.reconnectable = desc.reconnectable === undefined ? true : desc.reconnectable;
+                        objDesc.editable = desc.editable === undefined ? true : desc.editable;
 
                         delete objDesc.source;
                         delete objDesc.target;
@@ -1282,12 +1292,23 @@ define(['js/logger',
                     len += 1;
                     while (len--) {
                         componentID = this._GMEID2ComponentID[gmeID][len];
-                        this._widget.deleteComponent(componentID);
-                        this._GMEID2ComponentID[gmeID].splice(len, 1);
-                        delete this._ComponentID2GMEID[componentID];
+                        //TODO plain designer items associated with the connection should not be removed
+                        if (componentID.indexOf('C_') === 0) {
+                            this._widget.deleteComponent(componentID);
+                            this._GMEID2ComponentID[gmeID].splice(len, 1);
+                            delete this._ComponentID2GMEID[componentID];
+                        }
                     }
                 }
             }
+        } else if (this._selectedMemberListMembers.indexOf(gmeID) === -1 &&
+            this._GMEID2ComponentID[gmeID]) {
+            //item have been removed from the set but remained in the territory
+            this._onUpdatePortToItem(gmeID, true, desc);
+
+        } else if (this._selectedMemberListMembers.indexOf(gmeID) !== -1 && !this._GMEID2ComponentID[gmeID]) {
+            //the item have been added to the set but was already in the territory
+            this._onUpdatePortToItem(gmeID, false, desc);
         }
 
         //check if one of the decorators' is dependent on this
@@ -1386,6 +1407,45 @@ define(['js/logger',
         return territoryChanged;
     };
 
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onUpdatePortToItem =
+        function (gmeID, remove, desc) {
+            var members = this._selectedMemberListMembers,
+                i,
+                node, src, dst,
+                connections = [];
+
+            for (i = 0; i < members.length; i += 1) {
+                node = this._client.getNode(members[i]);
+                if (node && node.isConnection()) {
+                    src = node.getPointer(SRC_POINTER_NAME).to;
+                    dst = node.getPointer(DST_POINTER_NAME).to;
+                    if (src === gmeID || dst === gmeID) {
+                        this._onUnload.call(this, members[i]);
+                        connections.push(members[i]);
+                    }
+                }
+            }
+
+            if (remove === true) {
+                this._onUnload(gmeID);
+            } else {
+                this._onLoad(gmeID, desc);
+            }
+
+            for (i = 0; i < connections.length; i += 1) {
+                node = this._client.getNode(connections[i]);
+                src = node.getPointer(SRC_POINTER_NAME).to;
+                dst = node.getPointer(DST_POINTER_NAME).to;
+                this._onLoad.call(this, connections[i], {
+                    isConnection: true,
+                    srcID: src,
+                    dstID: dst,
+                    reconnectable: false,
+                    editable: false
+                });
+            }
+        };
+
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.registerComponentIDForPartID = function (componentID,
                                                                                                              partId) {
         this._componentIDPartIDMap[componentID] = this._componentIDPartIDMap[componentID] || [];
@@ -1413,6 +1473,7 @@ define(['js/logger',
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._checkComponentDependency = function (gmeID,
                                                                                                           eventType) {
         var len;
+
         if (this._componentIDPartIDMap && this._componentIDPartIDMap[gmeID]) {
             len = this._componentIDPartIDMap[gmeID].length;
             while (len--) {

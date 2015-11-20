@@ -65,21 +65,21 @@ define([
             this.toolbarItems.radioButtonGroupRouteManager.addButton({
                 title: 'Basic route manager',
                 icon: btnIconBase.clone().addClass('gme icon-gme_diagonal-arrow'),
-                selected: WebGMEGlobal.gmeConfig.client.defaultConnectionRouter === 'basic',
+                selected: this._defaultConnectionRouteManagerType === 'basic',
                 data: {type: 'basic'}
             });
 
             this.toolbarItems.radioButtonGroupRouteManager.addButton({
                 title: 'Basic+ route manager',
                 icon: btnIconBase.clone().addClass('gme icon-gme_broken-arow'),
-                selected: WebGMEGlobal.gmeConfig.client.defaultConnectionRouter === 'basic2',
+                selected: this._defaultConnectionRouteManagerType === 'basic2',
                 data: {type: 'basic2'}
             });
 
             this.toolbarItems.radioButtonGroupRouteManager.addButton({
                 title: 'AutoRouter',
                 icon: btnIconBase.clone().addClass('gme icon-gme_broken-arrow-with-box'),
-                selected: WebGMEGlobal.gmeConfig.client.defaultConnectionRouter === 'basic3',
+                selected: this._defaultConnectionRouteManagerType === 'basic3',
                 data: {type: 'basic3'}
             });
             /************** END OF - ROUTING MANAGER SELECTION **************************/
