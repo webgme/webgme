@@ -143,7 +143,11 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
             if (pluginName === 'Global Options' && pluginConfigEntry.name === 'runOnServer' &&
                 pluginConfigEntry.readOnly === true) {
                 // Do not display the boolean box #676
-                descEl.css('padding-top', '7px');
+                descEl.css({
+                    color: 'grey',
+                    'padding-top': '7px',
+                    'font-style': 'italic'
+                });
                 el.find('.controls').append(descEl);
             } else {
                 el.find('.controls').append(widget.el);
