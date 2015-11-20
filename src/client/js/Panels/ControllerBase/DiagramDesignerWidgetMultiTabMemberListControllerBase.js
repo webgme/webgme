@@ -689,6 +689,7 @@ define(['js/logger',
 
         this._selectedMemberListMembers = [];
         this._delayedConnections = [];
+        this._delayedConnectionsAsItems = {};
 
         //remove current territory patterns
         if (this._selectedMemberListMembersTerritoryId) {
@@ -1868,7 +1869,6 @@ define(['js/logger',
         this._GMEID2ComponentID[gmeID].push(uiComponent.id);
         this._ComponentID2GMEID[uiComponent.id] = gmeID;
 
-        this._delayedConnectionsAsItems = this._delayedConnectionsAsItems || {};
         this._delayedConnectionsAsItems[gmeID] = uiComponent.id;
     };
 
