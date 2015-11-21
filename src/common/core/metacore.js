@@ -7,10 +7,9 @@
 
 define([
     'common/util/assert',
-    'common/core/core',
     'common/core/tasync',
     'common/util/canon'
-], function (ASSERT, Core, TASYNC, CANON) {
+], function (ASSERT, TASYNC, CANON) {
     'use strict';
 
     // ----------------- CoreType -----------------

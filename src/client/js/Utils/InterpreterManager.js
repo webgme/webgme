@@ -8,7 +8,7 @@
  */
 
 define([
-    'common/core/core',
+    'common/core/coreQ',
     'plugin/PluginManagerBase',
     'plugin/PluginResult',
     'plugin/PluginMessage',

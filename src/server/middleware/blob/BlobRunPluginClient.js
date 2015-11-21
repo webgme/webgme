@@ -11,7 +11,7 @@
 
 var BlobClient = requireJS('blob/BlobClient'),
     BlobMetadata = requireJS('blob/BlobMetadata'),
-
+    Q = require('q'),
     BufferStreamReader = require('../../util/BufferStreamReader'),
     StringStreamWriter = require('../../util/StringStreamWriter');
 
@@ -35,43 +35,59 @@ BlobRunPluginClient.prototype = Object.create(BlobClient.prototype);
 BlobRunPluginClient.prototype.constructor = BlobRunPluginClient;
 
 BlobRunPluginClient.prototype.getMetadata = function (metadataHash, callback) {
-    var self = this;
+    var self = this,
+        deferred = Q.defer();
 
     self.blobBackend.getMetadata(metadataHash, function (err, hash, metadata) {
-        callback(err, metadata);
+        if (err) {
+            deferred.reject(err);
+        } else {
+            deferred.resolve(metadata);
+        }
     });
 
+    return deferred.promise.nodeify(callback);
 };
 
 BlobRunPluginClient.prototype.getObject = function (metadataHash, callback, subpath) {
-    var self = this;
-    var writeStream = new StringStreamWriter();
+    var self = this,
+        writeStream = new StringStreamWriter(),
+        deferred = Q.defer();
 
     // TODO: we need to get the content and save as a local file.
     // if we just proxy the stream we cannot set errors correctly.
 
     self.blobBackend.getFile(metadataHash, subpath || '', writeStream, function (err /*, hash*/) {
         if (err) {
-            callback(err);
-            return;
+            deferred.reject(err);
+        } else {
+            deferred.resolve(writeStream.getBuffer());
         }
-
-        callback(null, writeStream.getBuffer());
     });
+
+    return deferred.promise.nodeify(callback);
 };
 
 
 BlobRunPluginClient.prototype.putMetadata = function (metadataDescriptor, callback) {
-    var self = this;
-    var metadata = new BlobMetadata(metadataDescriptor);
+    var self = this,
+        metadata = new BlobMetadata(metadataDescriptor),
+        deferred = Q.defer();
 
     self.blobBackend.putMetadata(metadata, function (err, hash) {
-        callback(err, hash);
+        if (err) {
+            deferred.reject(err);
+        } else {
+            deferred.resolve(hash);
+        }
     });
+
+    return deferred.promise.nodeify(callback);
 };
 
 
 BlobRunPluginClient.prototype.putFile = function (name, data, callback) {
+    var deferred = Q.defer();
 
     if (Buffer.isBuffer(data)) {
         data = new BufferStreamReader(data);
@@ -79,12 +95,13 @@ BlobRunPluginClient.prototype.putFile = function (name, data, callback) {
 
     this.blobBackend.putFile(name, data, function (err, hash) {
         if (err) {
-            callback(err);
-            return;
+            deferred.reject(err);
+        } else {
+            deferred.resolve(hash);
         }
-
-        callback(null, hash);
     });
+
+    return deferred.promise.nodeify(callback);
 };
 
 module.exports = BlobRunPluginClient;

@@ -7,7 +7,7 @@
 
 define([
     'common/regexp',
-    'common/core/core',
+    'common/core/coreQ',
     'common/storage/constants',
     'q',
     'common/core/users/getroot'

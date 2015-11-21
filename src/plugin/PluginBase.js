@@ -379,47 +379,37 @@ define([
             self.logger.warn('save invoked with no changes, will still proceed');
         }
 
-        self.project.makeCommit(self.branchName,
+        return self.project.makeCommit(self.branchName,
             [self.currentHash],
             persisted.rootHash,
             persisted.objects,
-            commitMessage,
-            function (err, commitResult) {
-                if (err) {
-                    self.logger.error('project.makeCommit failed.');
-                    callback(err);
-                    return;
-                }
+            commitMessage)
+            .then(function (commitResult) {
                 self.currentHash = commitResult.hash;
 
                 if (commitResult.status === STORAGE_CONSTANTS.SYNCED) {
                     self.logger.info('"' + self.branchName + '" was updated to the new commit.');
                     self.addCommitToResult(STORAGE_CONSTANTS.SYNCED);
-                    callback(null, {status: STORAGE_CONSTANTS.SYNCED, hash: self.currentHash});
+                    return commitResult;
                 } else if (commitResult.status === STORAGE_CONSTANTS.FORKED) {
-                    self._createFork(callback);
+                    return self._createFork();
                 } else if (commitResult.status === STORAGE_CONSTANTS.CANCELED) {
                     // Plugin running in the browser and the client has made changes since plugin was invoked.
                     // Since the commitData was never sent to the server, a commit w/o branch is made before forking.
-                    self.project.makeCommit(null,
+                    return self.project.makeCommit(null,
                         [self.currentHash],
                         persisted.rootHash,
                         persisted.objects,
-                        commitMessage,
-                        function (err, commitResult) {
-                            if (err) {
-                                self.logger.error('project.makeCommit failed.');
-                                callback(err);
-                                return;
-                            }
+                        commitMessage)
+                        .then(function (commitResult) {
                             self.currentHash = commitResult.hash; // This is needed in case hash is randomly generated.
-                            self._createFork(callback);
+                            return self._createFork();
                         });
                 } else {
-                    callback('setBranchHash returned unexpected status' + commitResult.status);
+                    throw new Error('setBranchHash returned unexpected status' + commitResult.status);
                 }
-            }
-        );
+            })
+            .nodeify(callback);
     };
 
     PluginBase.prototype._createFork = function (callback) {
@@ -429,30 +419,27 @@ define([
             forkName = self.forkName || self.branchName + '_' + (new Date()).getTime();
         self.logger.warn('Plugin got forked from "' + self.branchName + '". ' +
             'Trying to create a new branch "' + forkName + '".');
-        self.project.createBranch(forkName, self.currentHash, function (err, forkResult) {
-            if (err) {
-                self.logger.error('createBranch failed with error.');
-                callback(err);
-                return;
-            }
-            if (forkResult.status === STORAGE_CONSTANTS.SYNCED) {
-                self.branchName = forkName;
-                self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
-                    '(Successive saves will try to save to this new branch.)');
-                self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
 
-                callback(null, {status: STORAGE_CONSTANTS.FORKED, forkName: forkName, hash: forkResult.hash});
+        return self.project.createBranch(forkName, self.currentHash)
+            .then(function (forkResult) {
+                if (forkResult.status === STORAGE_CONSTANTS.SYNCED) {
+                    self.branchName = forkName;
+                    self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
+                        '(Successive saves will try to save to this new branch.)');
+                    self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
 
-            } else if (forkResult.status === STORAGE_CONSTANTS.FORKED) {
-                self.branchName = null;
-                self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
+                    return {status: STORAGE_CONSTANTS.FORKED, forkName: forkName, hash: forkResult.hash};
+                } else if (forkResult.status === STORAGE_CONSTANTS.FORKED) {
+                    self.branchName = null;
+                    self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
 
-                callback('Plugin got forked from "' + oldBranchName + '". ' +
-                    'And got forked from "' + forkName + '" too.');
-            } else {
-                callback('createBranch returned unexpected status' + forkResult.status);
-            }
-        });
+                    throw new Error('Plugin got forked from "' + oldBranchName + '". ' +
+                        'And got forked from "' + forkName + '" too.');
+                } else {
+                    throw new Error('createBranch returned unexpected status' + forkResult.status);
+                }
+            })
+            .nodeify(callback);
     };
 
     PluginBase.prototype.addCommitToResult = function (status) {

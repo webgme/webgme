@@ -5,7 +5,7 @@
  */
 'use strict';
 
-var Core = requireJS('common/core/core'),
+var Core = requireJS('common/core/coreQ'),
     Storage = requireJS('common/storage/nodestorage'),
     Serialization = requireJS('common/core/users/serialization'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),

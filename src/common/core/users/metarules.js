@@ -10,19 +10,14 @@ define(['q'], function (Q) {
 
     // Helper functions.
     function loadNode(core, rootNode, nodePath) {
-        var deferred = new Q.defer();
-
-        core.loadByPath(rootNode, nodePath, function (err, node) {
-            if (err) {
-                deferred.reject(new Error(err));
-            } else if (core.isEmpty(node)) {
-                deferred.reject(new Error('Given nodePath does not exist "' + nodePath + '"!'));
-            } else {
-                deferred.resolve(node);
-            }
-        });
-
-        return deferred.promise;
+        return core.loadByPath(rootNode, nodePath)
+            .then(function (node) {
+                if (core.isEmpty(node)) {
+                    throw new Error('Given nodePath does not exist "' + nodePath + '"!');
+                } else {
+                    return node;
+                }
+            });
     }
 
     function loadNodes(core, node, nodePaths) {
