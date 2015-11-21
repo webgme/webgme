@@ -23,6 +23,10 @@ define([
 
         this._acceptDroppable = false;
 
+        // Used from outside (ModelDecorator) when the default drop handling needs to take place in order to
+        // 'clear' event, keep the droppable enabled, but not bringing up the options for drop.
+        this.acceptDropTempDisabled = false;
+
         this.skinParts.$dropRegion = $('<div/>', {class: DiagramDesignerWidgetConstants.DROP_REGION_CLASS});
 
         this.skinParts.$dropRegion.insertBefore(this.skinParts.$itemsContainer);
@@ -96,7 +100,11 @@ define([
         this.logger.debug('_onBackgroundDrop: ' + JSON.stringify(dragInfo));
 
         if (this._acceptDroppable === true) {
-            this.onBackgroundDrop(event, dragInfo, {x: posX, y: posY});
+            if (this.acceptDropTempDisabled === true) {
+                this.acceptDropTempDisabled = false;
+            } else {
+                this.onBackgroundDrop(event, dragInfo, {x: posX, y: posY});
+            }
         }
 
         this._doAcceptDroppable(false, false);
