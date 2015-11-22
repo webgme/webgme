@@ -9,14 +9,12 @@ var testFixture = require('../../_globals');
 describe('Core AddOns', function () {
     'use strict';
 
-    var expect = testFixture.expect,
+    var expect,
         logger = testFixture.logger.fork('CoreAddOns.spec'),
-        AddOnUpdateResult = requireJS('addon/AddOnUpdateResult'),
-        BlobFSBackend = require('../../../src/server/middleware/blob/BlobFSBackend'),
-        BlobRunPluginClient = require('../../../src/server/middleware/blob/BlobRunPluginClient'),
-
-        Q = testFixture.Q,
+        AddOnUpdateResult,
+        BlobClient = testFixture.getBlobTestClient(),
         gmeConfig = testFixture.getGmeConfig(),
+        Q,
         ir,
 
         addOns = [
@@ -27,6 +25,10 @@ describe('Core AddOns', function () {
         gmeAuth;
 
     before(function (done) {
+        AddOnUpdateResult = requireJS('addon/AddOnUpdateResult');
+        Q = testFixture.Q;
+        expect = testFixture.expect;
+
         testFixture.clearDBAndGetGMEAuth(gmeConfig)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
@@ -61,8 +63,7 @@ describe('Core AddOns', function () {
         describe(addOnId, function () {
             var AddOnClass = testFixture.requirejs('addon/' + addOnId + '/' + addOnId + '/' + addOnId),
                 addOn = new AddOnClass(logger, gmeConfig),
-                blobBackend = new BlobFSBackend(gmeConfig),
-                blobClient = new BlobRunPluginClient(blobBackend);
+                blobClient = new BlobClient(gmeConfig);
 
             it('should getName, description, version etc', function (done) {
                 expect(typeof addOn.getName()).to.equal('string');

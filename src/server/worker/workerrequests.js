@@ -445,6 +445,34 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
+    function _getSeedFromBlob(hash, webGMESessionId) {
+        var blobClient = new BlobClient({
+            serverPort: gmeConfig.server.port,
+            httpsecure: gmeConfig.server.https.enable,
+            server: '127.0.0.1',
+            webgmeclientsession: webGMESessionId
+        });
+
+        return Q.ninvoke(blobClient, 'getMetadata', hash)
+            .then(function (metadata) {
+                if (metadata.mime !== 'application/json') {
+                    throw new Error('Wrong file type of blob seed: ' + JSON.stringify(metadata));
+                }
+
+                return Q.ninvoke(blobClient, 'getObject', hash);
+            })
+            .then(function (buffer) {
+                var jsonProj = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(buffer)));
+
+                if (jsonProj.root && jsonProj.root.path === '') {
+                    return jsonProj;
+                } else {
+                    throw new Error('Provided blob-seed json was not an exported project');
+                }
+            });
+    }
+
+
     function _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, seedName, callback) {
         logger.debug('_createProjectFromSeed');
         storage.createProject(projectName, ownerId, function (err, projectId) {
@@ -532,6 +560,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 } else if (parameters.type === 'db') {
                     logger.debug('seedProject - seeding from existing project:', parameters.seedName);
                     return _getSeedFromProject(storage, parameters.seedName, parameters.seedBranch);
+                } else if (parameters.type === 'blob') {
+                    return _getSeedFromBlob(parameters.seedName, webGMESessionId);
                 } else {
                     throw new Error('Unknown seeding type [' + parameters.type + ']');
                 }
