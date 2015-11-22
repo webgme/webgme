@@ -467,6 +467,9 @@ module.exports = {
     getMongoStorage: getMongoStorage,
     getMemoryStorage: getMemoryStorage,
     getRedisStorage: getRedisStorage,
+    getBlobTestClient: function () {
+        return require('../src/server/middleware/blob/BlobClientWithFSBackend');
+    },
     Project: Project,
     Logger: Logger,
     Core: Core,

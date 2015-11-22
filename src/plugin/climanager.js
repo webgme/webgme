@@ -6,9 +6,7 @@
 'use strict';
 
 var PluginNodeManagerBase = require('./nodemanagerbase'),
-
-    BlobFSBackend = require('../server/middleware/blob/BlobFSBackend'),
-    BlobRunPluginClient = require('../server/middleware/blob/BlobRunPluginClient');
+    BlobClientWithFSBackend = require('../server/middleware/blob/BlobClientWithFSBackend');
 
 /**
  * Creates a new instance of PluginCliManager
@@ -18,8 +16,7 @@ var PluginNodeManagerBase = require('./nodemanagerbase'),
  * @constructor
  */
 function PluginCliManager(project, mainLogger, gmeConfig) {
-    var blobBackend = new BlobFSBackend(gmeConfig),
-        blobClient = new BlobRunPluginClient(blobBackend);
+    var blobClient = new BlobClientWithFSBackend(gmeConfig);
 
     PluginNodeManagerBase.call(this, blobClient, project, mainLogger, gmeConfig);
 }
