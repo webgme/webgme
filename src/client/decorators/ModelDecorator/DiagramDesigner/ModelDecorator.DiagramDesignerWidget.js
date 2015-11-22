@@ -480,8 +480,8 @@ define([
             this.__onBackgroundDrop($.ui.ddmanager.current.helper);
             this.__onDragOver = false;
 
-            //FIXME This brings up the dropdown menu for the canvas-drop or allow execution of a single drop-command
-            this.hostDesignerItem.canvas._enableDroppable(true);
+            // Temporarily suppress the drop action (i.e. the drop select menu) of the canvas.
+            this.hostDesignerItem.canvas.acceptDropTempDisabled = true;
         }
     };
 
@@ -526,8 +526,8 @@ define([
                 }
 
                 menu = new ContextMenu({
-                    'items': menuItems,
-                    'callback': function (key) {
+                    items: menuItems,
+                    callback: function (key) {
                         self._navigateToPointerTarget(ptrTargets[key]);
                     }
                 });
