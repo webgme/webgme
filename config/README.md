@@ -73,8 +73,6 @@ ubuntu
  - Directory from where to serve the static files for the webapp. This should only be modified if you are using a custom UI.
 - `config.client.log.level = 'debug'`
  - When [debug](https://github.com/visionmedia/debug) is activated in the browser (type `localStorage.debug = gme*` in the console and refresh the page) messages below this level will not be printed.
-- `config.client.usedDecorators = ['ModelDecorator', 'MetaDecorator', ... see config]`
- - Decorators to load from the server before the editor starts.
 - `config.client.defaultContext.project = null`
  - ID of project to open when visiting the webapp (e.g. `guest+TestProject`). If the URL query is specified (`?project=SomeProject`) - the URL has higher priority.
 - `config.client.defaultContext.branch = null`
@@ -114,6 +112,8 @@ ubuntu
  - Options for [MongoClient.connect](https://mongodb.github.io/node-mongodb-native/api-generated/mongoclient.html#connect)
 
 ##### plugin
+- `config.plugin.allowBrowserExecution = true`
+ - If true will enable execution of plugins on the server.
 - `config.plugin.allowServerExecution = false`
  - If true will enable execution of plugins on the server.
 - `config.plugin.basePaths = ['./src/plugin/coreplugins']`
@@ -194,6 +194,8 @@ ubuntu
 ##### visualization
 - `config.visualization.decoratorPaths = ['./src/client/decorators']`
  - Array of paths to decorators that should be available.
+- `config.visualization.decoratorToPreload = null`
+ - Array of decorators (by id) that should be downloaded from the server before the editor starts - when set to null all available decorators will be downloaded.
 - `config.visualization.svgDirs = []`
  - Array of paths to directories containing SVG-files that will be copied and made available as SVGs for decorators (`ConstraintIcons` is currently reserved).
 - `config.visualization.visualizerDescriptors = ['../src/client/js/Visualizers.json']`
