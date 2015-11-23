@@ -33,13 +33,6 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
         exportLibraryNodeByNode(core, libraryRoot, {withAssets: true}, callback);
     }
 
-                return;
-            }
-
-            callback(null, {projectJson: projectJson, assets: _assetLike});
-        });
-    }
-
     function exportLibrary(core, libraryRoot, callback) {
         exportLibraryNodeByNode(core, libraryRoot, {withAssets: false}, callback);
     }
