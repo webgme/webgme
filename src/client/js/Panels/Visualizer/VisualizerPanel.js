@@ -58,6 +58,17 @@ define(['js/logger',
     //inherit from PanelBaseWithHeader
     _.extend(VisualizerPanel.prototype, PanelBaseWithHeader.prototype);
 
+    VisualizerPanel.prototype._isAvailableVisualizer = function (visualizerId) {
+        var i;
+
+        for (i = 0; i < VisualizersJSON.length; i += 1) {
+            if (visualizerId === VisualizersJSON[i].id) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     VisualizerPanel.prototype._initialize = function () {
         var self = this,
             toolbar = WebGMEGlobal.Toolbar,
@@ -116,7 +127,7 @@ define(['js/logger',
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
             if (self._settingVisualizer !== true) {
-                self._setActiveVisualizer(activeVisualizer,self._ul1);
+                self._setActiveVisualizer(activeVisualizer, self._ul1);
             }
         });
 
@@ -148,8 +159,8 @@ define(['js/logger',
 
         if (this._activeVisualizer[panel] !== visualizer && this._visualizers.hasOwnProperty(visualizer)) {
             //we should change the selected tab to 0 in case of visualizer change to get the 'default' behaviour
-            WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB,0);
-            WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_ASPECT,'All');
+            WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB, 0);
+            WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_ASPECT, 'All');
 
 
             //destroy current visualizer
@@ -232,12 +243,29 @@ define(['js/logger',
         });
 
         this.updateContainerSize();
+
         if (self._validVisualizers) {
+            activeVisualizer = self._validVisualizers[0];
+            if (!self._isAvailableVisualizer(activeVisualizer)) {
+                //fallback to the global default
+                activeVisualizer = self.defaultVisualizer.id;
+            }
+        } else {
             // Set this to the global default if it is valid for the project
             activeVisualizer = self.defaultVisualizer.id;
-            if (self._validVisualizers.indexOf(activeVisualizer) === -1) {
-                activeVisualizer = self._validVisualizers[0];
+        }
+
+        if (!self._isAvailableVisualizer(activeVisualizer)) {
+            if (self._isAvailableVisualizer(CONSTANTS.DEFAULT_VISUALIZER)) {
+                //fall back to model editor if nothing else works
+                activeVisualizer = CONSTANTS.DEFAULT_VISUALIZER;
+            } else {
+                activeVisualizer = null;
             }
+        }
+
+        //we set the visualizer only if we were able to select some valid one
+        if (activeVisualizer) {
             setTimeout(function () {
                 self._setActiveVisualizer(activeVisualizer, ul);
             }, 0);

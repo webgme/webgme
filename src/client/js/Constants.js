@@ -91,7 +91,10 @@ define([
         PROPERTY_GROUP_META: 'META',
         PROPERTY_GROUP_PREFERENCES: 'Preferences',
         PROPERTY_GROUP_ATTRIBUTES: 'Attributes',
-        PROPERTY_GROUP_POINTERS: 'Pointers'
+        PROPERTY_GROUP_POINTERS: 'Pointers',
+
+        /* Visualizer */
+        DEFAULT_VISUALIZER: 'ModelEditor'
     });
 
     clientConstants.CLIENT = CLIENT_CONSTANTS;
