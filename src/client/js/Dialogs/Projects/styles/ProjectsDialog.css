@@ -1,3 +1,11 @@
+.projects-dialog .modal-header .gme-icon {
+  background-image: url("../../../../img/gme-icon.png");
+  height: 28px;
+  width: 28px;
+  margin-right: 1ex;
+  display: inline-block; }
+.projects-dialog .modal-header span {
+  font-size: 28px; }
 .projects-dialog .pre-body {
   padding: 15px 15px 0 15px; }
   .projects-dialog .pre-body .tabContainer ul.nav.nav-tabs {
@@ -25,11 +33,27 @@
       cursor: default; }
   .projects-dialog .modal-body table.table.table-projects thead th {
     text-align: left;
-    cursor: pointer; }
-    .projects-dialog .modal-body table.table.table-projects thead th.reverse-order {
-      text-decoration: underline; }
-    .projects-dialog .modal-body table.table.table-projects thead th.in-order {
-      text-decoration: underline; }
+    cursor: pointer;
+    border-bottom-width: 1px; }
+    .projects-dialog .modal-body table.table.table-projects thead th.reverse-order i.sorted.rev-order {
+      display: inline-block;
+      visibility: visible;
+      font-size: 90%;
+      padding-left: 1px; }
+    .projects-dialog .modal-body table.table.table-projects thead th.reverse-order i.sorted.in-order {
+      display: none; }
+    .projects-dialog .modal-body table.table.table-projects thead th.in-order i.sorted.in-order {
+      display: inline-block;
+      visibility: visible;
+      font-size: 90%;
+      padding-left: 1px; }
+    .projects-dialog .modal-body table.table.table-projects thead th.in-order i.sorted.rev-order {
+      display: none; }
+    .projects-dialog .modal-body table.table.table-projects thead th i.sorted {
+      visibility: hidden;
+      display: inline-block; }
+      .projects-dialog .modal-body table.table.table-projects thead th i.sorted.rev-order {
+        display: none; }
     .projects-dialog .modal-body table.table.table-projects thead th.title-icons {
       text-align: right;
       padding: 0; }
@@ -44,13 +68,14 @@
   .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row.read-only td {
     opacity: 1; }
     .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row.read-only td.name span.name-read-only {
-      display: unset;
+      display: inline-block;
       color: grey;
       padding-left: 0.5ex; }
   .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row.filtered-out {
     display: none; }
   .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td {
-    text-align: left; }
+    text-align: left;
+    border-top: none; }
     .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.name {
       color: #3160ab; }
       .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.name span.open-link {
@@ -76,11 +101,15 @@
     .projects-dialog .modal-body table.table.table-projects tbody.project-list tr.project-row td.created {
       font-style: italic;
       color: grey; }
+.projects-dialog .modal-footer button.corner-button {
+  margin-top: 0.5ex; }
 
 .txt-project-name {
   width: 50%; }
 
-a.btn-env {
+.projects-dialog * {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none; }
+
+/*# sourceMappingURL=ProjectsDialog.css.map */

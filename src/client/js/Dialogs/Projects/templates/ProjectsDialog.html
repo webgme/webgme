@@ -3,7 +3,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">×</button>
-                <h3>Projects</h3>
+                <i class="gme-icon"></i><span>Projects</span>
             </div>
             <div class="pre-body">
                 <div class="tabContainer"></div>
@@ -12,11 +12,26 @@
                 <table class="table table-projects">
                     <thead>
                         <tr class="with-children">
-                            <th class="title-owner">Owner</th>
-                            <th class="title-name">Name</th>
-                            <th class="title-modified">Last Modified</th>
-                            <th class="title-viewed extra-info info-hidden">Last Viewed</th>
-                            <th class="title-created extra-info info-hidden">Created</th>
+                            <th class="title-owner">Owner
+                                <i class="glyphicon glyphicon-sort-by-attributes-alt sorted in-order"/>
+                                <i class="glyphicon glyphicon-sort-by-attributes sorted rev-order"/>
+                            </th>
+                            <th class="title-name">Name
+                                <i class="glyphicon glyphicon-sort-by-attributes-alt sorted in-order"/>
+                                <i class="glyphicon glyphicon-sort-by-attributes sorted rev-order"/>
+                            </th>
+                            <th class="title-modified">Last Modified
+                                <i class="glyphicon glyphicon-sort-by-attributes-alt sorted in-order"/>
+                                <i class="glyphicon glyphicon-sort-by-attributes sorted rev-order"/>
+                            </th>
+                            <th class="title-viewed extra-info info-hidden">Last Viewed
+                                <i class="glyphicon glyphicon-sort-by-attributes-alt sorted in-order"/>
+                                <i class="glyphicon glyphicon-sort-by-attributes sorted rev-order"/>
+                            </th>
+                            <th class="title-created extra-info info-hidden">Created
+                                <i class="glyphicon glyphicon-sort-by-attributes-alt sorted in-order"/>
+                                <i class="glyphicon glyphicon-sort-by-attributes sorted rev-order"/>
+                            </th>
                             <th class="title-icons">
                                 <i class="btn btn-micro btn-default btn-info-toggle glyphicon glyphicon-plus" title="Show/Hide Info"/>
                             </th>
@@ -34,7 +49,6 @@
                     <button class="btn btn-default pull-left btn-refresh" title="Reload project list..."
                             style="position: relative;"><i class="glyphicon glyphicon-refresh"></i></button>
                     <button class="btn btn-default pull-left btn-create-new">Create new...</button>
-                    <button class="btn btn-default pull-left btn-import-file">Create from file...</button>
                     <button class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
                 <div class="panel-create-new control-group">
@@ -56,11 +70,8 @@
                                placeholder="Project name..." />
                     </div><!-- /input-group -->
 
-
-
-                    <button class="btn btn-primary btn-save" disabled>Create</button>
-                    <button class="btn btn-primary btn-import" disabled>Import file...</button>
-                    <button class="btn btn-default btn-cancel">Cancel</button>
+                    <button class="btn btn-primary btn-save corner-button" disabled>Create</button>
+                    <button class="btn btn-default btn-cancel corner-button">Cancel</button>
                 </div>
             </div>
         </div>

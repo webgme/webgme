@@ -1,0 +1,69 @@
+<div class="create-new-project-dialog modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <i class="gme-icon"></i><span>Create new project</span>
+            </div>
+            <div class="pre-body">
+                <div class="tabContainer">
+                    <ul class="nav nav-tabs">
+                        <li class="tab snap-shot"><a href="#" data-toggle="tab">Seed</a></li>
+                        <!--<li class="tab duplicate"><a href="#" data-toggle="tab">Duplicate</a></li>-->
+                        <li class="tab blob"><a href="#" data-toggle="tab">Import</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal snap-shot activated" role="form">
+                    <h5>Choose an existing seed
+                        <i class="glyphicon glyphicon-info-sign toggle-info-btn snap-shot-info"/>
+                    </h5>
+                    <span class="type-description snap-shot-info hidden">Creates a new project from an existing snapshot.
+                        It can either be a template file-seed available on the server or a branch from one of the existing projects.
+                        The new project will have a single commit and a branch (master) pointing to the commit.
+                     </span>
+                    <span class="selection">
+                        <select class="form-control selector snap-shot pull-left">
+                            <optgroup class="file" label="Template File"/>
+                            <optgroup class="db" label="Existing Projects with a single branch"/>
+                        </select>
+                    </span>
+                </form>
+                <form class="form-horizontal duplicate" role="form">
+                    <h5>Duplicate project
+                        <i class="glyphicon glyphicon-info-sign toggle-info-btn duplicate-info"/>
+                    </h5>
+                    <span class="type-description duplicate-info hidden">This will make a full copy of an existing project
+                        with its entire history. This includes all commits, branches and data-objects.
+                     </span>
+                    <span class="selection">
+                        <select class="form-control selector duplicate-project pull-left">
+                            <optgroup class="project-id" label="Available Projects"/>
+                        </select>
+                    </span>
+                </form>
+                <form class="form-horizontal blob">
+                    <h5>Import from file
+                        <i class="glyphicon glyphicon-info-sign toggle-info-btn blob-info"/>
+                    </h5>
+                    <span class="type-description blob-info hidden"> Creates a new project from the uploaded snapshot.
+                       The new project will have a single commit and a branch (master) pointing to the commit.
+                     </span>
+                    <span class="selection selection-blob">
+
+                    </span>
+                </form>
+                <!--<div class="alert alert-error"-->
+                     <!--style="margin-top:5px; text-align: center;font-weight: bold; overflow: hidden; text-overflow: ellipsis">-->
+                <!--</div>-->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-create btn-create-snap-shot activated">Create</button>
+                <button class="btn btn-primary btn-create btn-duplicate">Create</button>
+                <button class="btn btn-primary btn-create btn-create-blob">Create</button>
+                <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

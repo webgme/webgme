@@ -1,4 +1,16 @@
 .projects-dialog {
+  .modal-header {
+      .gme-icon {
+        background-image: url('../../../../img/gme-icon.png');
+        height: 28px;
+        width: 28px;
+        margin-right: 1ex;
+        display: inline-block;
+      }
+      span {
+        font-size: 28px;
+      }
+  }
   .pre-body {
     padding: 15px 15px 0 15px;
 
@@ -52,15 +64,47 @@
         th {
           text-align: left;
           cursor: pointer;
+          border-bottom-width: 1px;
           &.reverse-order {
-            text-decoration: underline;
+            i.sorted {
+              &.rev-order {
+                display: inline-block;
+                visibility: visible;
+                font-size: 90%;
+                padding-left: 1px;
+              }
+              &.in-order {
+                display: none;
+              }
+            }
           }
           &.in-order {
-            text-decoration: underline;
+            i.sorted {
+              &.in-order {
+                display: inline-block;
+                visibility: visible;
+                font-size: 90%;
+                padding-left: 1px;
+              }
+              &.rev-order {
+                display: none;
+              }
+            }
+
+          }
+          i.sorted {
+            visibility: hidden;
+            display: inline-block;
+            &.rev-order {
+              display: none;
+            }
           }
           &.title-icons {
             text-align: right;
             padding: 0;
+          }
+          &:hover {
+
           }
         }
         tr.with-no-children {
@@ -89,7 +133,7 @@
               opacity: 1;
               &.name {
                 span.name-read-only {
-                  display: unset;
+                  display: inline-block;
                   color: grey;
                   padding-left: 0.5ex;
                 }
@@ -102,6 +146,7 @@
 
           td {
             text-align: left;
+            border-top: none;
             &.name {
               color: #3160ab;
               span.open-link {
@@ -142,13 +187,19 @@
       }
     }
   }
+
+  .modal-footer {
+    button.corner-button {
+      margin-top: 0.5ex;
+    }
+  }
 }
 
 .txt-project-name {
   width: 50%;
 }
 
-a.btn-env {
+.projects-dialog * {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;

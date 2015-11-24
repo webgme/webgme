@@ -11,17 +11,18 @@ var testFixture = require('../../_globals.js');
 describe('Simple worker', function () {
     'use strict';
 
-    var WebGME = testFixture.WebGME,
+    var WebGME,
         gmeConfig = testFixture.getGmeConfig(),
         guestAccount = gmeConfig.authentication.guestAccount,
-        Q = testFixture.Q,
-        expect = testFixture.expect,
-        agent = testFixture.superagent.agent(),
+        Q,
+        expect,
+        agent,
         openSocketIo = testFixture.openSocketIo,
         webGMESessionId,
-        CONSTRAINT_TYPES = requireJS('common/core/users/constraintchecker').TYPES,
-        CONSTANTS = require('./../../../src/server/worker/constants'),
+        CONSTRAINT_TYPES,
+        CONSTANTS,
         server,
+        BlobClient,
 
         gmeAuth,
 
@@ -29,7 +30,7 @@ describe('Simple worker', function () {
             'workerSeedFromDB',
             'WorkerProject'
         ],
-        logger = testFixture.logger.fork('simpleworker.spec'),
+        logger,
         storage,
         baseProjectContext = {
             name: 'WorkerProject',
@@ -40,9 +41,7 @@ describe('Simple worker', function () {
         },
         constraintProjectName = 'ConstraintProject',
         constraintProjectImportResult,
-        baseProjectJson = JSON.parse(
-            testFixture.fs.readFileSync('seeds/ActivePanels.json')
-        ),
+        baseProjectJson,
         protocol = gmeConfig.server.https.enable ? 'https' : 'http',
         blobDownloadUrl = protocol + '://127.0.0.1:' + gmeConfig.server.port + '/rest/blob/download/',
         oldSend = process.send,
@@ -53,6 +52,17 @@ describe('Simple worker', function () {
 
     before(function (done) {
         var project;
+        Q = testFixture.Q;
+        expect = testFixture.expect;
+        WebGME = testFixture.WebGME;
+        BlobClient = testFixture.getBlobTestClient();
+        logger = testFixture.logger.fork('simpleworker.spec');
+        agent = testFixture.superagent.agent();
+        baseProjectJson = JSON.parse(
+            testFixture.fs.readFileSync('seeds/EmptyProject.json')
+        );
+        CONSTANTS = require('./../../../src/server/worker/constants');
+        CONSTRAINT_TYPES = requireJS('common/core/users/constraintchecker').TYPES;
         //gmeConfig.authentication.enable = true;
         gmeConfig.authentication.allowGuests = true;
         gmeConfig.addOn.enable = false;
@@ -69,7 +79,7 @@ describe('Simple worker', function () {
             .then(function () {
                 return testFixture.importProject(storage,
                     {
-                        projectSeed: 'seeds/ActivePanels.json',
+                        projectSeed: 'seeds/EmptyProject.json',
                         projectName: baseProjectContext.name,
                         branchName: baseProjectContext.branch,
                         gmeConfig: gmeConfig,
@@ -515,180 +525,6 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
-    it.skip('should exportLibrary given a branchName when result requested with delay', function (done) {
-        var worker = getSimpleWorker();
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.exportLibrary,
-                    webGMESessionId: webGMESessionId,
-                    projectId: baseProjectContext.id,
-                    branchName: 'master',
-                    path: ''
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return Q.delay(1000);
-            })
-            .then(function () {
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.error).equal(null);
-
-                expect(msg.result).not.equal(null);
-                expect(msg.result).deep.equal(baseProjectJson);
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    // dumpMoreNodes
-    //it.skip('should dumpMoreNodes of a project', function (done) {
-    //    var worker = getSimpleWorker();
-    //
-    //    worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-    //        .then(function (msg) {
-    //            expect(msg.pid).equal(process.pid);
-    //            expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-    //
-    //            return worker.send({
-    //                command: CONSTANTS.workerCommands.dumpMoreNodes,
-    //                webGMESessionId: webGMESessionId,
-    //                projectId: baseProjectContext.id,
-    //                hash: baseProjectContext.rootHash,
-    //                nodes: ['', '/1']
-    //            });
-    //        })
-    //        .then(function (msg) {
-    //            expect(msg.pid).equal(process.pid);
-    //            expect(msg.type).equal(CONSTANTS.msgTypes.request);
-    //            expect(msg.error).equal(null);
-    //
-    //            expect(msg.resid).not.equal(null);
-    //
-    //            return worker.send({command: CONSTANTS.workerCommands.getResult});
-    //        })
-    //        .then(function (msg) {
-    //            expect(msg.pid).equal(process.pid);
-    //            expect(msg.type).equal(CONSTANTS.msgTypes.result);
-    //            expect(msg.error).equal(null);
-    //
-    //            expect(msg.result).not.equal(null);
-    //            expect(msg.result).to.have.length(2);
-    //        })
-    //        .finally(restoreProcessFunctions)
-    //        .nodeify(done);
-    //});
-    //
-    //it.skip('should fail to dumpMoreNodes if invalid hash is given', function (done) {
-    //    var worker = getSimpleWorker(),
-    //        invalidHash = '#4242424242424242424242424242424242424242';
-    //
-    //    worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-    //        .then(function (msg) {
-    //            expect(msg.pid).equal(process.pid);
-    //            expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-    //
-    //            return worker.send({
-    //                command: CONSTANTS.workerCommands.dumpMoreNodes,
-    //                webGMESessionId: webGMESessionId,
-    //                projectId: baseProjectContext.id,
-    //                hash: invalidHash,
-    //                nodes: ['', '/1']
-    //            });
-    //        })
-    //        .then(function (msg) {
-    //            expect(msg.pid).equal(process.pid);
-    //            expect(msg.type).equal(CONSTANTS.msgTypes.request);
-    //            expect(msg.error).equal(null);
-    //
-    //            expect(msg.resid).not.equal(null);
-    //
-    //            return worker.send({command: CONSTANTS.workerCommands.getResult});
-    //        })
-    //        .then(function () {
-    //            done(new Error('missing error handling'));
-    //        })
-    //        .catch(function (err) {
-    //            expect(err.message).to.include(invalidHash);
-    //            done();
-    //        })
-    //        .finally(restoreProcessFunctions)
-    //        .done();
-    //});
-    //
-    //it.skip('should fail to dumpMoreNodes if invalid projectId is given', function (done) {
-    //    var worker = getSimpleWorker();
-    //
-    //    worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-    //        .then(function (msg) {
-    //            expect(msg.pid).equal(process.pid);
-    //            expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-    //
-    //            return worker.send({
-    //                command: CONSTANTS.workerCommands.dumpMoreNodes,
-    //                webGMESessionId: webGMESessionId,
-    //                projectId: 'badProjectId',
-    //                hash: baseProjectContext.rootHash,
-    //                nodes: ['', '/1']
-    //            });
-    //        })
-    //        .then(function (msg) {
-    //            expect(msg.pid).equal(process.pid);
-    //            expect(msg.type).equal(CONSTANTS.msgTypes.request);
-    //            expect(msg.error).equal(null);
-    //
-    //            expect(msg.resid).not.equal(null);
-    //
-    //            return worker.send({command: CONSTANTS.workerCommands.getResult});
-    //        })
-    //        .then(function () {
-    //            done(new Error('missing error handling'));
-    //        })
-    //        .catch(function (err) {
-    //            expect(err.message).to.include('badProjectId');
-    //            done();
-    //        })
-    //        .finally(restoreProcessFunctions)
-    //        .done();
-    //});
-    //
-    //it.skip('should fail to dumpMoreNodes when command parameters are invalid', function (done) {
-    //    var worker = getSimpleWorker();
-    //
-    //    worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-    //        .then(function (msg) {
-    //            expect(msg.pid).equal(process.pid);
-    //            expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-    //
-    //            return worker.send({
-    //                command: CONSTANTS.workerCommands.dumpMoreNodes
-    //            });
-    //        })
-    //        .then(function (/*msg*/) {
-    //            done(new Error('missing error handling'));
-    //        })
-    //        .catch(function (err) {
-    //            expect(err.message).to.include('parameters');
-    //
-    //            done();
-    //        })
-    //        .finally(restoreProcessFunctions)
-    //        .done();
-    //});
-
     // seedProject
     it('should seedProject from an existing project', function (done) {
         var worker = getSimpleWorker(),
@@ -916,6 +752,151 @@ describe('Simple worker', function () {
                 }
                 expect(hadProject).to.equal(true,
                     'getProjects did not return the seeded project' + projectId);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should seedProject from a blob seed', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'workerSeedFromBlob',
+            blobClient = new BlobClient(gmeConfig),
+            artifact = blobClient.createArtifact('valid'),
+            projectId = testFixture.projectName2Id(projectName);
+
+        Q.all([
+            Q.ninvoke(artifact, 'addFileAsSoftLink', 'Empty.json', JSON.stringify(baseProjectJson)),
+            worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+        ])
+            .spread(function (hash, msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    webGMESessionId: webGMESessionId,
+                    projectName: projectName,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    type: 'blob',
+                    seedName: hash,
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(msg.result).to.include.keys('projectId');
+                expect(msg.result.projectId).to.equal(projectId);
+
+                return storage.getProjects({branches: true});
+            })
+            .then(function (projects) {
+                var i,
+                    hadProject = false;
+                for (i = 0; i < projects.length; i += 1) {
+                    if (projects[i]._id === projectId) {
+                        hadProject = true;
+                        break;
+                    }
+                }
+                expect(hadProject).to.equal(true,
+                    'getProjects did not return the seeded project' + projectId);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to seed from a non-existing blob seed', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'workerSeedFromBlobFail1';
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    webGMESessionId: webGMESessionId,
+                    projectName: projectName,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    type: 'blob',
+                    seedName: 'af',
+                });
+            })
+            .then(function () {
+                throw new Error('Should have failed');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Not Found');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to seed from non-json blob seed', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'workerSeedFromBlobFail2',
+            blobClient = new BlobClient(gmeConfig),
+            artifact = blobClient.createArtifact('invalid');
+
+        Q.all([
+            Q.ninvoke(artifact, 'addFileAsSoftLink', 'Empty.txt', 'this is a txtFile'),
+            worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+        ])
+            .spread(function (hash, msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    webGMESessionId: webGMESessionId,
+                    projectName: projectName,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    type: 'blob',
+                    seedName: hash,
+                });
+            })
+            .then(function () {
+                throw new Error('Should have failed');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Wrong file type of blob seed');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to seed from non-project but json blob seed', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'workerSeedFromBlobFail3',
+            blobClient = new BlobClient(gmeConfig),
+            artifact = blobClient.createArtifact('invalid2');
+
+        Q.all([
+            Q.ninvoke(artifact, 'addFileAsSoftLink', 'Empty.json', JSON.stringify({a: 1, b: 2})),
+            worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+        ])
+            .spread(function (hash, msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    webGMESessionId: webGMESessionId,
+                    projectName: projectName,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    type: 'blob',
+                    seedName: hash,
+                });
+            })
+            .then(function () {
+                throw new Error('Should have failed');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Provided blob-seed json was not an exported project');
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);

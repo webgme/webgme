@@ -12,8 +12,7 @@ define([
     'js/Constants',
     'js/Loader/LoaderCircles',
     'js/Utils/GMEConcepts',
-    'js/Dialogs/Import/ImportDialog',
-    'js/Dialogs/CreateFromSeed/CreateFromSeedDialog',
+    'js/Dialogs/CreateProject/CreateProjectDialog',
     'common/storage/util',
     'js/util',
     'text!./templates/ProjectsDialog.html',
@@ -23,15 +22,13 @@ define([
 
     'css!./styles/ProjectsDialog.css'
 
-], function (ng, Logger, CONSTANTS, LoaderCircles, GMEConcepts, ImportDialog, CreateFromSeedDialog, StorageUtil,
+], function (ng, Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, StorageUtil,
              clientUtil, projectsDialogTemplate, ConfirmDialog, DeleteDialogTemplate) {
 
     'use strict';
 
     var ProjectsDialog,
         DATA_PROJECT = 'DATA_PROJECT',
-        CREATE_TYPE_EMPTY = 'create_empty',
-        CREATE_TYPE_IMPORT = 'create_import',
         TABLE_ROW_BASE = $('<tr class="project-row"></tr>'),
         ngConfirmDialog,
         rootScope;
@@ -47,7 +44,7 @@ define([
 
     });
 
-    ProjectsDialog = function (client) {
+    ProjectsDialog = function (client, createNew, createType) {
         this._logger = Logger.create('gme:Dialogs:Projects:ProjectsDialog', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
@@ -55,7 +52,8 @@ define([
         this._projectList = {};
         this._filter = undefined;
         this._ownerId = null; // TODO get this from dropdown list
-
+        this._creatingNew = createNew;
+        this._createType = createType || 'seed';
         this._logger.debug('Created');
     };
 
@@ -66,7 +64,7 @@ define([
 
         this._dialog.modal('show');
 
-        this._dialog.on('hidden.bs.model', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -96,8 +94,7 @@ define([
 
     ProjectsDialog.prototype._initDialog = function () {
         var self = this,
-            selectedId,
-            createType;
+            selectedId;
 
         function openProject(projectId) {
             if (self._projectList[projectId].rights.read === true) {
@@ -119,10 +116,13 @@ define([
             if (val !== '' && self._projectIds.indexOf(val) === -1) {
                 self._btnNewProjectImport.disable(true);
                 self._dialog.modal('hide');
-                d = new CreateFromSeedDialog(self._client, self._logger.fork('CreateFromSeedDialog'));
-                d.show(function (seedType, seedName, seedBranchName, seedCommitHash) {
+
+                d = new CreateProjectDialog(self._client, val, self._createType,
+                    self._logger.fork('CreateProjectDialog'));
+
+                d.show(function (seedType, seedName, seedBranchName, seedCommitHash, blobHash) {
                     if (seedType && seedName) {
-                        self._createProjectFromSeed(val, seedType, seedName, seedBranchName, seedCommitHash);
+                        self._createProjectFromSeed(val, seedType, seedName, seedBranchName, seedCommitHash, blobHash);
                     } else {
                         self._dialog.modal('show');
                     }
@@ -176,20 +176,6 @@ define([
                 });
 
 
-            }
-        }
-
-        function doCreateProjectFromFile() {
-            var val = self._txtNewProjectName.val(),
-                d;
-
-            if (val !== '' && self._projectIds.indexOf(val) === -1) {
-                self._btnNewProjectImport.disable(true);
-                self._dialog.modal('hide');
-                d = new ImportDialog();
-                d.show(function (fileContent) {
-                    self._createProjectFromFile(val, fileContent);
-                });
             }
         }
 
@@ -333,37 +319,22 @@ define([
         });
 
         this._btnCreateNew.on('click', function (event) {
-            createType = CREATE_TYPE_EMPTY;
             self._txtNewProjectName.val('');
             self._panelButtons.hide();
             self._panelCreateNew.show();
             self._txtNewProjectName.focus();
-            self._btnNewProjectImport.hide();
+            self._creatingNew = true;
 
             event.stopPropagation();
             event.preventDefault();
         });
 
         this._btnNewProjectCancel.on('click', function (event) {
-            createType = undefined;
             self._panelButtons.show();
             self._panelCreateNew.hide();
             self._btnNewProjectCreate.show();
-            self._btnNewProjectImport.show();
-
+            self._creatingNew = false;
             self._updateFilter();
-
-            event.stopPropagation();
-            event.preventDefault();
-        });
-
-        this._btnCreateFromFile.on('click', function (event) {
-            createType = CREATE_TYPE_IMPORT;
-            self._txtNewProjectName.val('');
-            self._panelButtons.hide();
-            self._panelCreateNew.show();
-            self._txtNewProjectName.focus();
-            self._btnNewProjectCreate.hide();
 
             event.stopPropagation();
             event.preventDefault();
@@ -393,22 +364,14 @@ define([
             if (isValidProjectName(val, projectId) === false) {
                 self._panelCreateNew.addClass('has-error');
                 self._btnNewProjectCreate.disable(true);
-                self._btnNewProjectImport.disable(true);
             } else {
                 self._panelCreateNew.removeClass('has-error');
                 self._btnNewProjectCreate.disable(false);
-                self._btnNewProjectImport.disable(false);
             }
         });
 
         this._btnNewProjectCreate.on('click', function (event) {
             doCreateProject();
-            event.stopPropagation();
-            event.preventDefault();
-        });
-
-        this._btnNewProjectImport.on('click', function (event) {
-            doCreateProjectFromFile();
             event.stopPropagation();
             event.preventDefault();
         });
@@ -422,11 +385,7 @@ define([
 
 
             if (enterPressed && isValidProjectName(newProjectName, projectId)) {
-                if (createType === CREATE_TYPE_EMPTY) {
-                    doCreateProject(self._client);
-                } else if (createType === CREATE_TYPE_IMPORT) {
-                    doCreateProjectFromFile();
-                }
+                doCreateProject(self._client);
                 event.stopPropagation();
                 event.preventDefault();
             }
@@ -453,7 +412,8 @@ define([
         this._btnRefresh.find('i').css('opacity', '0');
 
         this._client.getProjects(params, function (err, projectList) {
-            var i;
+            var i,
+                newProjectVal;
             self._activeProject = self._client.getActiveProjectId();
             self._projectList = {};
             self._projectIds = [];
@@ -506,6 +466,18 @@ define([
             self._loader.stop();
             self._btnRefresh.find('i').css('opacity', '1');
             self._btnRefresh.disable(false);
+            if (self._creatingNew) {
+                newProjectVal = self._txtNewProjectName.val();
+                if (newProjectVal && newProjectVal.length > 0) {
+                    self._updateFilter([newProjectVal.toUpperCase()[0], newProjectVal.toUpperCase()[0]]);
+                }
+                self._panelButtons.hide();
+                self._panelCreateNew.show();
+
+                setTimeout(function () {
+                    self._txtNewProjectName.focus();
+                }, 500);
+            }
         });
     };
 
@@ -594,11 +566,11 @@ define([
                 }
 
                 //check if user has only READ rights for this project
-                if (projectData.rights.write !== true || projectName === 'Something') {
+                if (projectData.rights.write !== true) {
                     tblRow.addClass('read-only');
                 }
 
-                if (projectData.rights.delete === true && projectName !== 'Something') {
+                if (projectData.rights.delete === true) {
                     iconsEl.append(
                         $('<i class="glyphicon glyphicon-trash delete-project extra-info info-hidden"/>')
                         .data('projectId', this._projectIds[i]));
@@ -648,33 +620,13 @@ define([
         }
     };
 
-    ProjectsDialog.prototype._createProjectFromFile = function (projectName, jsonContent) {
-        var self = this,
-            loader = new LoaderCircles({containerElement: $('body')});
-
-        loader.start();
-
-        self._client.createProjectFromFile(projectName, null, jsonContent, self._ownerId,
-            function (err, projectId, branchName) {
-                if (err) {
-                    self._logger.error('CANNOT CREATE NEW PROJECT FROM FILE: ', err);
-                    loader.stop();
-                } else {
-                    self._logger.debug('CREATE NEW PROJECT FROM FILE FINISHED SUCCESSFULLY');
-                    self._client.selectProject(projectId, branchName, function (err) {
-                        if (err) {
-                            self._logger.error('CANNOT SELECT NEWLY CREATED PROJECT FROM FILE: ', err.message);
-                        } else {
-                            WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
-                        }
-                        loader.stop();
-                    });
-                }
-            }
-        );
-    };
-
-    ProjectsDialog.prototype._createProjectFromSeed = function (projectName, type, seedName, branchName, commitHash) {
+    ProjectsDialog.prototype._createProjectFromSeed = function (
+        projectName,
+        type,
+        seedName,
+        branchName,
+        commitHash
+    ) {
         var self = this,
             parameters = {
                 type: type,
