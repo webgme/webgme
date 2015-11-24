@@ -5,16 +5,21 @@
  * @author mmaroti / https://github.com/mmaroti
  */
 
-define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], function (ASSERT, CoreTree, TASYNC) {
+define([
+    'common/util/assert',
+    'common/core/coretree',
+    'common/core/tasync',
+    'common/util/random'
+], function (ASSERT, CoreTree, TASYNC, RANDOM) {
 
     'use strict';
 
     // ----------------- RELID -----------------
 
-    var ATTRIBUTES = 'atr';
-    var REGISTRY = 'reg';
-    var OVERLAYS = 'ovr';
-    var COLLSUFFIX = '-inv';
+    var ATTRIBUTES = 'atr',
+        REGISTRY = 'reg',
+        OVERLAYS = 'ovr',
+        COLLSUFFIX = '-inv';
 
     function isPointerName(name) {
         ASSERT(typeof name === 'string');
@@ -25,9 +30,9 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
         return name.slice(-COLLSUFFIX.length) !== COLLSUFFIX;
     }
 
-    function isValidRelid(relid) {
-        return typeof relid === 'string' && parseInt(relid, 10).toString() === relid;
-    }
+    //function isValidRelid(relid) {
+    //    return typeof relid === 'string' && parseInt(relid, 10).toString() === relid;
+    //}
 
     function __test(text, cond) {
         if (!cond) {
@@ -529,7 +534,7 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
         function getChildrenRelids(node) {
             ASSERT(isValidNode(node));
 
-            return coretree.getKeys(node, isValidRelid);
+            return coretree.getKeys(node, RANDOM.isValidRelid);
         }
 
         function getChildrenPaths(node) {
@@ -546,7 +551,7 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
         function loadChildren(node) {
             ASSERT(isValidNode(node));
 
-            var children = coretree.getKeys(node, isValidRelid);
+            var children = coretree.getKeys(node, RANDOM.isValidRelid);
             for (var i = 0; i < children.length; ++i) {
                 children[i] = coretree.loadChild(node, children[i]);
             }
@@ -827,7 +832,7 @@ define(['common/util/assert', 'common/core/coretree', 'common/core/tasync'], fun
         }
 
         corerel.isValidNode = isValidNode;
-        corerel.isValidRelid = isValidRelid;
+        corerel.isValidRelid = RANDOM.isValidRelid;
 
         corerel.getChildrenRelids = getChildrenRelids;
         corerel.getChildrenPaths = getChildrenPaths;

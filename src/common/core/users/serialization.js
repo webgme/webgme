@@ -34,10 +34,8 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             maxParalelTasks = 100,
             ongoingTaskCounter = 0,
             timerId,
-            root = core.getRoot(libraryRoot),
-            counter = 0,
-            nodeCount = 0;
-
+            root = core.getRoot(libraryRoot);
+            
         function getAttributes(node) {
             var names = core.getOwnAttributeNames(node).sort(),
                 i,
@@ -388,12 +386,12 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             for (i = 0; i < keys.length; i++) {
                 if (keys[i].indexOf('MetaAspectSet') === 0) {
                     elements = core.getMemberPaths(root, keys[i]);
+                    sheets[keys[i]] = sheets[keys[i]] || {};
                     for (j = 0; j < elements.length; j++) {
                         guid = {guid: elements[j]};
                         pathToGuidInObject(guid);
                         guid = guid.guid;
                         if (guid.indexOf('/') === -1) {
-                            sheets[keys[i]] = sheets[keys[i]] || {};
                             sheets[keys[i]][guid] = {
                                 registry: getMemberRegistry(keys[i], elements[j]),
                                 attributes: getMemberAttributes(keys[i], elements[j])
@@ -1211,10 +1209,16 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                     }
                 },
                 updateSheet = function (name) {
-                    //the removed object should be already removed...
                     //if some element is extra in the place of import, then it stays untouched
                     var oldMemberGuids = Object.keys(oldSheets[name]),
-                        i;
+                        newMemberGuids = Object.keys(newSheets[name]);
+
+                    for (i = 0; i < newMemberGuids.length; i += 1) {
+                        if (oldMemberGuids.indexOf(newMemberGuids[i]) === -1 && nodes[newMemberGuids[i]]) {
+                            //it was only removed from the sheet
+                            core.delMember(root, name, newMemberGuids[i]);
+                        }
+                    }
 
                     if (oldMemberGuids.indexOf('global') !== -1) {
                         oldMemberGuids.splice(oldMemberGuids.indexOf('global'), 1);

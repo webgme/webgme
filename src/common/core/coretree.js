@@ -8,45 +8,15 @@
 define([
     'common/util/assert',
     'common/util/key',
-    'common/core/tasync'
-], function (ASSERT, GENKEY, TASYNC) {
+    'common/core/tasync',
+    'common/util/random',
+    'common/regexp'
+], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP) {
 
     'use strict';
 
-    var HASH_REGEXP = new RegExp('#[0-9a-f]{40}');
-    var isValidHash = function (key) {
-        return typeof key === 'string' && key.length === 41 && HASH_REGEXP.test(key);
-    };
-
-    var MAX_RELID = Math.pow(2, 31);
-    var createRelid = function (data) {
-        ASSERT(data && typeof data === 'object');
-
-        var relid;
-        do {
-            relid = Math.floor(Math.random() * MAX_RELID);
-            // relid = relid.toString();
-        } while (data[relid] !== undefined);
-
-        return '' + relid;
-    };
-
-    //// make relids deterministic
-    //if (false) {
-    //    var nextRelid = 0;
-    //    createRelid = function (data) {
-    //        ASSERT(data && typeof data === 'object');
-    //
-    //        var relid;
-    //        do {
-    //            relid = (nextRelid += -1);
-    //        } while (data[relid] !== undefined);
-    //
-    //        return '' + relid;
-    //    };
-    //}
-
-    var rootCounter = 0;
+    var HASH_REGEXP = new RegExp('#[0-9a-f]{40}'),
+        rootCounter = 0;
 
     return function (storage, options) {
         ASSERT(typeof options === 'object');
@@ -250,7 +220,7 @@ define([
                     parent.children.push(node);
 
                     temp = __getChildData(parent.data, node.relid);
-                    if (!isValidHash(temp) || temp !== __getChildData(node.data, ID_NAME)) {
+                    if (!REGEXP.DB_HASH.test(temp) || temp !== __getChildData(node.data, ID_NAME)) {
                         node.data = temp;
                     }
                 } else {
@@ -367,7 +337,7 @@ define([
                 throw new Error('invalid node data');
             }
 
-            var relid = createRelid(node.data);
+            var relid = RANDOM.generateRelid(node.data);
             var child = {
                 parent: node,
                 relid: relid,
@@ -492,7 +462,7 @@ define([
                 var child = node.children[i];
 
                 var data = __getChildData(node.data, child.relid);
-                if (!isValidHash(data) || data !== __getChildData(child.data, ID_NAME)) {
+                if (!REGEXP.DB_HASH.test(data) || data !== __getChildData(child.data, ID_NAME)) {
                     child.data = data;
                     __reloadChildrenData(child);
                 }
@@ -714,7 +684,6 @@ define([
                 }
             }
 
-
             if (done !== __getEmptyData()) {
                 hash = data[ID_NAME];
                 ASSERT(hash === '' || typeof hash === 'undefined');
@@ -756,7 +725,7 @@ define([
         };
 
         var loadRoot = function (hash) {
-            ASSERT(isValidHash(hash));
+            ASSERT(REGEXP.DB_HASH.test(hash));
 
             return TASYNC.call(__loadRoot2, storage.loadObject(hash));
         };
@@ -781,7 +750,7 @@ define([
 
             node = getChild(node, relid);
 
-            if (isValidHash(node.data)) {
+            if (REGEXP.DB_HASH.test(node.data)) {
                 // TODO: this is a hack, we should avoid loading it multiple
                 // times
                 return TASYNC.call(__loadChild2, node, storage.loadObject(node.data));
@@ -795,7 +764,7 @@ define([
 
             node = getChild(node, relid);
 
-            if (isValidHash(node.data)) {
+            if (REGEXP.DB_HASH.test(node.data)) {
                 // TODO: this is a hack, we should avoid loading it multiple
                 // times
                 return node.data;
@@ -804,12 +773,11 @@ define([
             }
         };
 
-
         var __loadChild2 = function (node, newdata) {
             node = normalize(node);
 
             // TODO: this is a hack, we should avoid loading it multiple times
-            if (isValidHash(node.data)) {
+            if (REGEXP.DB_HASH.test(node.data)) {
                 ASSERT(node.data === newdata[ID_NAME]);
 
                 node.data = newdata;
