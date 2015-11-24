@@ -210,7 +210,7 @@ define([
                 return self.blobClient.getMetadata(jobInfo.resultHashes.resultFile);
             })
             .then(function (metaData) {
-                console.log(metaData);
+                self.logger.debug(metaData);
                 return self.blobClient.getObject(metaData.content['new_name.json'].content);
             })
             .then(function (newName) {
