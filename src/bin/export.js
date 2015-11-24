@@ -17,9 +17,11 @@ var webgme = require('../../webgme'),
     logger,
     Serialization = webgme.serializer,
     STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
+    REGEXP = webgme.requirejs('common/regexp'),
     main,
     mainDeferred,
     runInternal,
+    runRaw,
     run,
     getMissingRequiredParam;
 
@@ -29,7 +31,7 @@ var webgme = require('../../webgme'),
  * @param {Object} params
  * @return {String|null} missing param
  */
-getMissingRequiredParam = function(params) {
+getMissingRequiredParam = function (params) {
     var requiredParams = ['projectName', 'source'];
     for (var i = requiredParams.length; i--;) {
         if (!params[requiredParams[i]]) {
@@ -57,16 +59,17 @@ main = function (argv) {
     program
         .version('0.2.0')
         .option('-m, --mongo-database-uri [url]',
-        'URI of the MongoDB [by default we use the one from the configuration file]')
+            'URI of the MongoDB [by default we use the one from the configuration file]')
         .option('-u, --user [string]', 'the user of the command [if not given we use the default user]')
         .option('-p, --project-name [string]', 'project name [mandatory]')
         .option('-o, --owner [string]', 'the owner of the project [by default, the user is the owner]')
         .option('-s, --source [branch/commit]', 'the branch or commit that should be exported')
         .option('-f, --out-file [path]', 'the path of the output file')
+        .option('-t, --type [json|raw]', 'the type of output [by default it is json]')
         .parse(argv);
 
     if (getMissingRequiredParam(program)) {
-        logger.error(getMissingRequiredParam(program)+' is a mandatory parameter!');
+        logger.error(getMissingRequiredParam(program) + ' is a mandatory parameter!');
         syntaxFailure = true;
     }
 
@@ -84,13 +87,13 @@ main = function (argv) {
  * @param {Dictionary<String,String>} params
  * @return {undefined}
  */
-run = function(params) {
+run = function (params) {
     var missingParam = getMissingRequiredParam(params);
     gmeConfig = params.gmeConfig;
     mainDeferred = Q.defer();
 
     if (missingParam) {
-        logger.error(missingParam+' is a mandatory parameter!');
+        logger.error(missingParam + ' is a mandatory parameter!');
     }
     logger = webgme.Logger.create('gme:bin:export', gmeConfig.bin.log, false);
     webgme.addToRequireJsPaths(gmeConfig);
@@ -98,8 +101,60 @@ run = function(params) {
     return runInternal(params);
 };
 
+runRaw = function (project, rootHash) {
+    var deferred = Q.defer(),
+        exportedObjects = [],
+        taskQueue = [rootHash],
+        loadedObjects = [],
+        working = false,
+        task,
+        error = null,
+        timerId;
+
+    timerId = setInterval(function () {
+        if (!working) {
+            task = taskQueue.shift();
+            if (task === undefined) {
+                if (error) {
+                    deferred.reject(error);
+                } else {
+                    deferred.resolve(exportedObjects);
+                }
+                return;
+            }
+
+            if (loadedObjects.indexOf(task) === -1) {
+                working = true;
+                project.loadObject(task, function (err, object) {
+                    loadedObjects.push(task);
+                    var keys,
+                        i;
+                    error = error || err;
+                    if (object) {
+                        exportedObjects.push(object);
+                        //now put every sub-object on top of the queue
+                        keys = Object.keys(object);
+                        for (i = 0; i < keys.length; i += 1) {
+                            if (typeof object[keys[i]] === 'string' &&
+                                REGEXP.HASH.test(object[keys[i]]) &&
+                                loadedObjects.indexOf(object[keys[i]]) === -1) {
+                                taskQueue.push(object[keys[i]]);
+                            }
+                        }
+                    }
+                    working = false;
+                });
+            }
+
+        }
+    }, 10);
+
+    return deferred.promise;
+};
+
 runInternal = function (params) {
     var core,
+        rawProject,
         finishUp = function (error) {
             var ended = function () {
                 if (error) {
@@ -167,10 +222,15 @@ runInternal = function (params) {
                 project.setUser(params.user);
             }
 
+            rawProject = project;
             return getRoot({project: project, core: core, id: params.source});
         })
         .then(function (result) {
-            return Q.nfcall(Serialization.export, core, result.root);
+            if (params.type && params.type === 'raw') {
+                return runRaw(rawProject, core.getHash(result.root));
+            } else {
+                return Q.nfcall(Serialization.export, core, result.root);
+            }
         })
         .then(function (jsonExport) {
             if (params.outFile) {

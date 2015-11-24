@@ -61,10 +61,16 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
             return TASYNC.call(checkNodes, oldcore.loadChildren(node));
         });
 
+        // core.loadOwnChildren = TASYNC.unwrap(oldcore.loadOwnChildren);
+        core.loadOwnChildren = TASYNC.unwrap(function (node) {
+            return TASYNC.call(checkNodes, oldcore.loadOwnChildren(node));
+        });
+
         core.loadPointer = TASYNC.unwrap(oldcore.loadPointer);
         core.loadCollection = TASYNC.unwrap(oldcore.loadCollection);
 
         core.loadSubTree = TASYNC.unwrap(oldcore.loadSubTree);
+        core.loadOwnSubTree = TASYNC.unwrap(oldcore.loadOwnSubTree);
         core.loadTree = TASYNC.unwrap(oldcore.loadTree);
 
         //core diff async functions

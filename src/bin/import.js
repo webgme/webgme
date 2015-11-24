@@ -16,7 +16,7 @@ var webgme = require('../../webgme'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
     gmeAuth,
     logger = webgme.Logger.create('gme:bin:import', gmeConfig.bin.log),
-    //REGEXP = webgme.REGEXP,
+//REGEXP = webgme.REGEXP,
     Serialization = webgme.serializer,
     main;
 
@@ -31,6 +31,7 @@ main = function (argv) {
         root,
         params,
         commitHash,
+        persisted = null,
         finishUp = function (error) {
             var ended = function () {
                 if (error) {
@@ -59,12 +60,12 @@ main = function (argv) {
         .version('0.2.0')
         .usage('<project-file> [options]')
         .option('-m, --mongo-database-uri [url]',
-        'URI of the MongoDB [by default we use the one from the configuration file]')
+            'URI of the MongoDB [by default we use the one from the configuration file]')
         .option('-u, --user [string]', 'the user of the command [if not given we use the default user]')
         .option('-p, --project-name [string]', 'project name [mandatory]')
         .option('-o, --owner [string]', 'the owner of the project [by default, the user is the owner]')
         .option('-b, --branch [branch]',
-        'the branch that should be created with the imported data [by default it is the \'master\']')
+            'the branch that should be created with the imported data [by default it is the \'master\']')
         .option('-w --overwrite [boolean]', 'if a project exist it will be deleted and created again')
         .parse(argv);
 
@@ -158,26 +159,44 @@ main = function (argv) {
         })
         .then(function (project_) {
             project = project_;
-            core = new webgme.core(project, {
-                globConf: gmeConfig,
-                logger: logger.fork('core')
-            });
-            root = core.createNode({parent: null, base: null});
-
 
             if (program.user) {
                 project.setUser(program.user);
             }
 
-            return Q.nfcall(Serialization.import, core, root, jsonProject);
+            if (jsonProject instanceof Array) {
+                //if the input is an array, then we handle them as an array of objects
+                persisted = {
+                    rootHash: jsonProject[0][STORAGE_CONSTANTS.MONGO_ID],
+                    objects: jsonProject
+                };
+                return;
+            } else {
+                //right now if the input is an object it should be an ordinary export
+                core = new webgme.core(project, {
+                    globConf: gmeConfig,
+                    logger: logger.fork('core')
+                });
+                root = core.createNode({parent: null, base: null});
+
+                persisted = null;
+
+                return Q.nfcall(Serialization.import, core, root, jsonProject);
+            }
+
         })
         .then(function () {
-            var persisted = core.persist(root);
+            var msg = 'raw project imported by import.js CLI';
+            if (persisted === null) {
+                persisted = core.persist(root);
+                msg = 'project imported by import.js CLI';
+            }
+
             return project.makeCommit(null,
                 [],
                 persisted.rootHash,
                 persisted.objects,
-                'project imported by import.js CLI');
+                msg);
         })
         .then(function (commitResult) {
             commitHash = commitResult.hash;

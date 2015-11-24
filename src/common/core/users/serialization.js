@@ -30,17 +30,440 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
     }
 
     function exportLibraryWithAssets(core, libraryRoot, callback) {
-        exportLibrary(core, libraryRoot, function (err, projectJson) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback(null, {projectJson: projectJson, assets: _assetLike});
-        });
+        exportLibraryNodeByNode(core, libraryRoot, {withAssets: true}, callback);
     }
 
     function exportLibrary(core, libraryRoot, callback) {
+        exportLibraryNodeByNode(core, libraryRoot, {withAssets: false}, callback);
+    }
+
+    function exportLibraryNodeByNode(core, libraryRoot, options, callback) {
+        var exportProject = {
+                root: {
+                    path: core.getPath(libraryRoot),
+                    guid: core.getGuid(libraryRoot)
+                },
+                containment: {},
+                bases: {},
+                relids: {},
+                nodes: {}
+            },
+            assetInfos = [],
+            pathToGuid = {},
+            ancestorPathToGuid = {},
+            taskQueue = [{path: core.getPath(libraryRoot), containment: exportProject.containment}],
+            maxParalelTasks = 100,
+            ongoingTaskCounter = 0,
+            timerId,
+            root = core.getRoot(libraryRoot),
+            counter = 0,
+            nodeCount = 0;
+
+
+        function getAttributes(node) {
+            var names = core.getOwnAttributeNames(node).sort(),
+                i,
+                result = {};
+            for (i = 0; i < names.length; i++) {
+                result[names[i]] = core.getAttribute(node, names[i]);
+                if (BlobConfig.hashRegex.test(result[names[i]])) {
+                    assetInfos.push({
+                        hash: result[names[i]],
+                        attrName: names[i],
+                        nodePath: core.getPath(node)
+                    });
+                }
+            }
+            return result;
+        }
+
+        function getRegistry(node) {
+            var names = core.getOwnRegistryNames(node).sort(),
+                i,
+                result = {};
+            for (i = 0; i < names.length; i++) {
+                result[names[i]] = core.getRegistry(node, names[i]);
+            }
+            return result;
+        }
+
+        function getPointers(node) {
+            var names = core.getOwnPointerNames(node).sort(),
+                i,
+                result = {};
+
+            for (i = 0; i < names.length; i++) {
+                result[names[i]] = core.getPointerPath(node, names[i]);
+            }
+            return result;
+        }
+
+        function getSets(node) {
+            var setsInfo = {},
+                setNames = core.getSetNames(node).sort(),
+                i, j, k,
+                keys,
+                members,
+                memberInfo;
+            for (i = 0; i < setNames.length; i += 1) {
+                members = core.getOwnMemberPaths(node, setNames[i]);
+                setsInfo[setNames[i]] = [];
+
+                for (j = 0; j < members.length; j += 1) {
+                    memberInfo = {
+                        attributes: {},
+                        guid: members[j],
+                        registry: {}
+                    };
+
+                    //attributes
+                    keys = core.getMemberAttributeNames(node, setNames[i], members[j]).sort();
+                    for (k = 0; k < keys.length; k += 1) {
+                        memberInfo.attributes[keys[k]] =
+                            core.getMemberAttribute(node, setNames[i], members[j], keys[k]);
+                    }
+
+                    //registry
+                    keys = core.getMemberRegistryNames(node, setNames[i], members[j]).sort();
+                    for (k = 0; k < keys.length; k += 1) {
+                        memberInfo.registry[keys[k]] =
+                            core.getMemberRegistry(node, setNames[i], members[j], keys[k]);
+                    }
+
+                    //overridden flag
+                    if (core.isFullyOverriddenMember(node, setNames[i], members[j])) {
+                        memberInfo.overridden = true;
+                    }
+
+                    setsInfo[setNames[i]].push(memberInfo);
+                }
+            }
+            return setsInfo;
+        }
+
+        function getConstraints(node) {
+            var names = core.getOwnConstraintNames(node).sort(),
+                i,
+                result = {};
+            for (i = 0; i < names.length; i++) {
+                result[names[i]] = core.getConstraint(node, names[i]);
+            }
+            return result;
+        }
+
+        function fillAncestorHashes(node) {
+            var base = core.getBase(node);
+            while (base) {
+                ancestorPathToGuid[core.getPath(base)] = core.getGuid(base);
+                base = core.getBase(base);
+            }
+        }
+
+        function addChildrenTasks(node, containment) {
+            var childrenPaths = core.getOwnChildrenPaths(node),
+                i;
+
+            for (i = 0; i < childrenPaths.length; i += 1) {
+                taskQueue.push({path: childrenPaths[i], containment: containment});
+            }
+        }
+
+        function expNode(node, containment) {
+            var guid = core.getGuid(node);
+
+            containment[guid] = {};
+            addChildrenTasks(node, containment[guid]);
+
+            pathToGuid[core.getPath(node)] = guid;
+            fillAncestorHashes(node);
+
+            exportProject.relids[guid] = core.getRelid(node);
+            exportProject.nodes[guid] = {
+                attributes: getAttributes(node),
+                base: core.getBase(node) ? core.getGuid(core.getBase(node)) : null,
+                meta: JSON.parse(JSON.stringify(core.getOwnJsonMeta(node))) || {},
+                parent: core.getParent(node) ? core.getGuid(core.getParent(node)) : null,
+                pointers: getPointers(node),
+                registry: getRegistry(node),
+                sets: getSets(node),
+                constraints: getConstraints(node)
+            };
+        }
+
+        function pathToGuidInObject(object) {
+            var keys = Object.keys(object),
+                i;
+
+            for (i = 0; i < keys.length; i += 1) {
+                if (typeof object[keys[i]] === 'string' &&
+                    object[keys[i]].indexOf('/') === 0 &&
+                    (ancestorPathToGuid[object[keys[i]]] || pathToGuid[object[keys[i]]])) {
+                    object[keys[i]] = ancestorPathToGuid[object[keys[i]]] || pathToGuid[object[keys[i]]];
+                } else if (typeof object[keys[i]] === 'object' && object[keys[i]] !== null) {
+                    pathToGuidInObject(object[keys[i]]);
+                }
+            }
+        }
+
+        function replacePathsWithGuid() {
+            var keys = Object.keys(exportProject.nodes || {}),
+                i,
+                node;
+
+            for (i = 0; i < keys.length; i += 1) {
+                node = exportProject.nodes[keys[i]];
+                pathToGuidInObject(node.pointers || {});
+                pathToGuidInObject(node.sets || {});
+                pathToGuidInObject(node.meta || {});
+            }
+        }
+
+        function gatherAncestorInfo() {
+            var i,
+                keys = Object.keys(ancestorPathToGuid),
+                bases = {};
+
+            for (i = 0; i < keys.length; i += 1) {
+                if (pathToGuid[keys[i]] === undefined) {
+                    bases[ancestorPathToGuid[keys[i]]] = keys[i];
+                }
+            }
+
+            exportProject.bases = bases;
+        }
+
+        function orderNodesByGuid() {
+            //TODO this function can be removed if we stop counting on the stringify implicit ordering of keys
+            var orderedNodes = {},
+                guids = Object.keys(exportProject.nodes).sort(),
+                i;
+            for (i = 0; i < guids.length; i += 1) {
+                orderedNodes[guids[i]] = exportProject.nodes[guids[i]];
+            }
+
+            delete exportProject.nodes;
+            exportProject.nodes = orderedNodes;
+        }
+
+        function orderSetMembersByGuid() {
+            var guids = Object.keys(exportProject.nodes),
+                i, setNames, j,
+                node,
+                sorting = function (aObj, bObj) {
+                    if (aObj.guid === bObj.guid) {
+                        return 0;
+                    }
+
+                    if (aObj.guid < bObj.guid) {
+                        return -1;
+                    }
+
+                    return 1;
+                };
+
+            for (i = 0; i < guids.length; i += 1) {
+                node = exportProject.nodes[guids[i]];
+                setNames = Object.keys(node.sets || {});
+                for (j = 0; j < setNames.length; j += 1) {
+                    node.sets[setNames[j]] = node.sets[setNames[j]].sort(sorting);
+                }
+            }
+        }
+
+        function orderMetaInformationByGuid() {
+            var guids = Object.keys(exportProject.nodes),
+                i, names, j,
+                sortItemedObjects = function (input) {
+                    var output = {
+                            items: [],
+                            minItems: [],
+                            maxItems: []
+                        },
+                        itemGuids = (input.items || []).sort(),
+                        i;
+
+                    if (input.max !== undefined) {
+                        output.max = input.max;
+                    }
+                    if (input.min !== undefined) {
+                        output.min = input.min;
+                    }
+                    for (i = 0; i < itemGuids.length; i += 1) {
+                        output.items.push(itemGuids[i]);
+                        output.minItems.push(input.minItems[input.items.indexOf(itemGuids[i])]);
+                        output.maxItems.push(input.maxItems[input.items.indexOf(itemGuids[i])]);
+                    }
+                    return output;
+                },
+                node;
+
+            for (i = 0; i < guids.length; i += 1) {
+                node = exportProject.nodes[guids[i]];
+                if (node.meta) {
+                    if (node.meta.children) {
+                        node.meta.children = sortItemedObjects(node.meta.children);
+                    }
+                    if (node.meta.pointers) {
+                        names = Object.keys(node.meta.pointers);
+                        for (j = 0; j < names.length; j += 1) {
+                            node.meta.pointers[names[j]] = sortItemedObjects(node.meta.pointers[names[j]]);
+                        }
+                    }
+
+                    if (node.meta.aspects) {
+                        names = Object.keys(node.meta.aspects);
+                        for (j = 0; j < names.length; j += 1) {
+                            node.meta.aspects[names[j]] = node.meta.aspects[names[j]].sort();
+                        }
+                    }
+                }
+            }
+        }
+
+        function orderRelidHashByGuids() {
+            //TODO this function can be removed if we stop counting on the stringify implicit ordering of keys
+            var orderedNodes = {},
+                guids = Object.keys(exportProject.relids).sort(),
+                i;
+            for (i = 0; i < guids.length; i += 1) {
+                orderedNodes[guids[i]] = exportProject.relids[guids[i]];
+            }
+
+            delete exportProject.relids;
+            exportProject.relids = orderedNodes;
+        }
+
+        function removeRootLevelFromContainmentInfo() {
+            exportProject.containment = exportProject.containment[exportProject.root.guid];
+        }
+
+        function orderContainmentByGuidRecursively(containment) {
+            var keys = Object.keys(containment).sort(),
+                i,
+                orderedContainment = {};
+            for (i = 0; i < keys.length; i += 1) {
+                orderedContainment[keys[i]] = orderContainmentByGuidRecursively(containment[keys[i]]);
+            }
+
+            return orderedContainment;
+        }
+
+        function orderContainment() {
+            //TODO this function can be removed if we stop counting on the stringify implicit ordering of keys
+            exportProject.containment = orderContainmentByGuidRecursively(exportProject.containment);
+        }
+
+        function getMetaSheetsInformation() {
+            var getMemberRegistry = function (setname, memberpath) {
+                    var names = core.getMemberRegistryNames(root, setname, memberpath),
+                        i,
+                        registry = {};
+                    for (i = 0; i < names.length; i++) {
+                        registry[names[i]] = core.getMemberRegistry(root, setname, memberpath, names[i]);
+                    }
+                    return registry;
+                },
+                getMemberAttributes = function (setname, memberpath) {
+                    var names = core.getMemberAttributeNames(root, setname, memberpath),
+                        i,
+                        attributes = {};
+                    for (i = 0; i < names.length; i++) {
+                        attributes[names[i]] = core.getMemberAttribute(root, setname, memberpath, names[i]);
+                    }
+                    return attributes;
+                },
+                getRegistryEntry = function (setname) {
+                    var index = registry.length;
+
+                    while (--index >= 0) {
+                        if (registry[index].SetID === setname) {
+                            return registry[index];
+                        }
+                    }
+                    return {};
+                },
+                sheets = {},
+                registry = core.getRegistry(root, 'MetaSheets'),
+                keys = core.getSetNames(root),
+                elements, guid,
+                i,
+                j;
+
+            if (core.getParent(libraryRoot) === null) {
+                exportProject.metaSheets = {};
+                return;
+            }
+
+            for (i = 0; i < keys.length; i++) {
+                if (keys[i].indexOf('MetaAspectSet') === 0) {
+                    elements = core.getMemberPaths(root, keys[i]);
+                    for (j = 0; j < elements.length; j++) {
+                        guid = {guid: elements[j]};
+                        pathToGuidInObject(guid);
+                        guid = guid.guid;
+                        if (guid.indexOf('/') === -1) {
+                            sheets[keys[i]] = sheets[keys[i]] || {};
+                            sheets[keys[i]][guid] = {
+                                registry: getMemberRegistry(keys[i], elements[j]),
+                                attributes: getMemberAttributes(keys[i], elements[j])
+                            };
+                        }
+                    }
+
+                    if (sheets[keys[i]] && keys[i] !== 'MetaAspectSet') {
+                        //we add the global registry values as well
+                        sheets[keys[i]].global = getRegistryEntry(keys[i]);
+                    }
+                }
+            }
+            exportProject.metaSheets = sheets;
+        }
+
+        function finalProcesses() {
+            replacePathsWithGuid();
+            gatherAncestorInfo();
+            orderNodesByGuid();
+            orderRelidHashByGuids();
+            orderSetMembersByGuid();
+            orderMetaInformationByGuid();
+            removeRootLevelFromContainmentInfo();
+            orderContainment();
+            getMetaSheetsInformation();
+
+            if (options.withAssets) {
+                exportProject = {projectJson: exportProject, assets: assetInfos};
+            }
+
+            callback(null, exportProject);
+        }
+
+        //here starts the export function
+        timerId = setInterval(function () {
+            var task;
+            if (ongoingTaskCounter < maxParalelTasks) {
+                task = taskQueue.shift();
+
+                if (!task && ongoingTaskCounter === 0) {
+                    //we are done
+                    clearInterval(timerId);
+                    finalProcesses();
+                    return;
+                }
+
+                if (task) {
+                    ongoingTaskCounter += 1;
+                    core.loadByPath(root, task.path, function (err, node) {
+                        if (!err && node) {
+                            expNode(node, task.containment);
+                        }
+                        ongoingTaskCounter -= 1;
+                    });
+                }
+            }
+        }, 1);
+    }
+
+    function exportLibraryCached(core, libraryRoot, options, callback) {
         //initialization
         _core = core;
         _nodes = {};
@@ -78,6 +501,9 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             //we export MetaSheet info only if not the whole project is exported!!!
             _export.metaSheets = core.getParent(libraryRoot) ? getMetaSheetInfo(_core.getRoot(libraryRoot)) : {};
 
+            if (options.withAssets) {
+                _export = {projectJson: _export, assets: _assetLike};
+            }
             callback(null, _export);
 
         });
@@ -575,7 +1001,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
         _log = '';
 
         synchronizeRoots(originLibraryRoot, _import.root.guid);
-        exportLibrary(core, originLibraryRoot, function (err) {
+        exportLibraryCached(core, originLibraryRoot, {}, function (err) {
             //we do not need the returned json object as that is stored in our global _export variable
             if (err) {
                 return callback(err);

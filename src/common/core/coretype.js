@@ -248,9 +248,32 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             return ownRelIds;
         };
 
+        core.getOwnChildrenRelids = function (node) {
+            return oldcore.getChildrenRelids(node);
+        };
+
         core.loadChildren = function (node) {
             ASSERT(isValidNode(node));
             var relids = core.getChildrenRelids(node);
+            relids = relids.sort(); //TODO this should be temporary
+            var children = [];
+            for (var i = 0; i < relids.length; i++) {
+                children[i] = core.loadChild(node, relids[i]);
+            }
+            return TASYNC.call(function (n) {
+                var newn = [];
+                for (var i = 0; i < n.length; i++) {
+                    if (n[i] !== null) {
+                        newn.push(n[i]);
+                    }
+                }
+                return newn;
+            }, TASYNC.lift(children));
+        };
+
+        core.loadOwnChildren = function (node) {
+            ASSERT(isValidNode(node));
+            var relids = core.getOwnChildrenRelids(node);
             relids = relids.sort(); //TODO this should be temporary
             var children = [];
             for (var i = 0; i < relids.length; i++) {
@@ -948,6 +971,10 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
             }
 
             return relids;
+        };
+
+        core.getOwnChildrenPaths = function (node) {
+            return oldcore.getChildrenPaths(node);
         };
 
         core.deleteNode = function (node, technical) {

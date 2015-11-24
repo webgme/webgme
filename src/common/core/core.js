@@ -281,7 +281,7 @@ define([
         this.loadByPath = core.loadByPath;
 
         /**
-         * Loads the all children of the given parent. As it first checks the already reserved relative ids of
+         * Loads all the children of the given parent. As it first checks the already reserved relative ids of
          * the parent, it only loads the already existing children (so no on-demand empty node creation).
          * @param {module:Core~Node} parent - the container node in question.
          * @param {function(string, module:Core~Node[])} callback
@@ -289,6 +289,17 @@ define([
          * @func
          */
         this.loadChildren = core.loadChildren;
+
+        /**
+         * Loads all the children of the given parent that has some data and not just inherited. As it first checks
+         * the already reserved relative ids of the parent, it only loads the already existing children
+         * (so no on-demand empty node creation).
+         * @param {module:Core~Node} parent - the container node in question.
+         * @param {function(string, module:Core~Node[])} callback
+         *
+         * @func
+         */
+        this.loadOwnChildren = core.loadOwnChildren;
 
         /**
          * Loads the target of the given pointer of the given node. In the callback the node can have three values:
@@ -323,6 +334,16 @@ define([
         this.loadSubTree = core.loadSubTree;
 
         /**
+         * Loads a complete sub-tree of the containment hierarchy starting from the given node, but load only those
+         * children that has some additional data and not purely inherited.
+         * @param {module:Core~Node} node - the container node in question.
+         * @param {function(string, module:Core~Node[])} callback
+         *
+         * @func
+         */
+        this.loadOwnSubTree = core.loadOwnSubTree;
+
+        /**
          * Loads a complete containment hierarchy using the data object - pointed by the given hash -
          * as the root.
          * @param {module:Core~ObjectHash} rootHash - hash of the root node.
@@ -347,6 +368,16 @@ define([
         this.getChildrenRelids = core.getChildrenRelids;
 
         /**
+         * Collects the relative ids of all the children of the given node that has some data and not just inherited.
+         * @param {module:Core~Node} parent - the container node in question.
+         *
+         * @return {string[]} The function returns an array of the relative ids.
+         *
+         * @func
+         */
+        this.getOwnChildrenRelids = core.getOwnChildrenRelids;
+
+        /**
          * Collects the paths of all the children of the given node.
          * @param {module:Core~Node} parent - the container node in question.
          *
@@ -355,6 +386,16 @@ define([
          * @func
          */
         this.getChildrenPaths = core.getChildrenPaths;
+
+        /**
+         * Collects the paths of all the children of the given node that has some data as well and not just inherited.
+         * @param {module:Core~Node} parent - the container node in question.
+         *
+         *@return {string[]} The function returns an array of the absolute paths of the children.
+         *
+         * @func
+         */
+        this.getOwnChildrenPaths = core.getOwnChildrenPaths;
 
         /**
          * Creates a node according to the given parameters.

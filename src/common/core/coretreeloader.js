@@ -22,14 +22,15 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
         }
         logger.debug('initialized');
         //adding load functions
-        core.loadSubTree = function (root) {
+        var loadSubTree = function (root, own) {
             var loadSubTrees = function (nodes) {
-                for (var i = 0; i < nodes.length; i++) {
-                    nodes[i] = core.loadSubTree(nodes[i]);
-                }
-                return TASYNC.lift(nodes);
+                    for (var i = 0; i < nodes.length; i++) {
+                        nodes[i] = core.loadSubTree(nodes[i], own);
+                    }
+                    return TASYNC.lift(nodes);
 
-            };
+                },
+                childLoading = own === true ? core.loadOwnChildren : core.loadChildren;
             return TASYNC.call(function (children) {
                 if (children.length < 1) {
                     return [root];
@@ -44,10 +45,19 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                         return nodes;
                     }, loadSubTrees(children));
                 }
-            }, core.loadChildren(root));
+            }, childLoading(root));
         };
+
         core.loadTree = function (rootHash) {
             return TASYNC.call(core.loadSubTree, core.loadRoot(rootHash));
+        };
+
+        core.loadSubTree = function (root) {
+            return loadSubTree(root, false);
+        };
+
+        core.loadOwnSubTree = function (root) {
+            return loadSubTree(root, true);
         };
 
         return core;
