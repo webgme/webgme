@@ -1,5 +1,5 @@
 /** vim: et:ts=4:sw=4:sts=4
- * @license RequireJS 2.1.20 Copyright (c) 2010-2015, The Dojo Foundation All Rights Reserved.
+ * @license RequireJS 2.1.22 Copyright (c) 2010-2015, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
@@ -12,7 +12,7 @@ var requirejs, require, define;
 (function (global) {
     var req, s, head, baseElement, dataMain, src,
         interactiveScript, currentlyAddingScript, mainScript, subPath,
-        version = '2.1.20',
+        version = '2.1.22',
         commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg,
         cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
         jsSuffixRegExp = /\.js$/,
@@ -861,21 +861,10 @@ var requirejs, require, define;
 
                     if (this.depCount < 1 && !this.defined) {
                         if (isFunction(factory)) {
-                            //If there is an error listener, favor passing
-                            //to that instead of throwing an error. However,
-                            //only do it for define()'d  modules. require
-                            //errbacks should not be called for failures in
-                            //their callbacks (#699). However if a global
-                            //onError is set, use that.
-                            if ((this.events.error && this.map.isDefine) ||
-                                req.onError !== defaultOnError) {
-                                try {
-                                    exports = context.execCb(id, factory, depExports, exports);
-                                } catch (e) {
-                                    err = e;
-                                }
-                            } else {
+                            try {
                                 exports = context.execCb(id, factory, depExports, exports);
+                            } catch (e) {
+                                err = e;
                             }
 
                             // Favor return value over exports. If node/cjs in play,
@@ -892,12 +881,30 @@ var requirejs, require, define;
                             }
 
                             if (err) {
-                                err.requireMap = this.map;
-                                err.requireModules = this.map.isDefine ? [this.map.id] : null;
-                                err.requireType = this.map.isDefine ? 'define' : 'require';
-                                return onError((this.error = err));
+                                // If there is an error listener, favor passing
+                                // to that instead of throwing an error. However,
+                                // only do it for define()'d  modules. require
+                                // errbacks should not be called for failures in
+                                // their callbacks (#699). However if a global
+                                // onError is set, use that.
+                                if ((this.events.error && this.map.isDefine) ||
+                                    req.onError !== defaultOnError) {
+                                    err.requireMap = this.map;
+                                    err.requireModules = this.map.isDefine ? [this.map.id] : null;
+                                    err.requireType = this.map.isDefine ? 'define' : 'require';
+                                    return onError((this.error = err));
+                                } else if (typeof console !== 'undefined' &&
+                                           console.error) {
+                                    // Log the error for debugging. If promises could be
+                                    // used, this would be different, but making do.
+                                    console.error(err);
+                                } else {
+                                    // Do not want to completely lose the error. While this
+                                    // will mess up processing and lead to similar results
+                                    // as bug 1440, it at least surfaces the error.
+                                    req.onError(err);
+                                }
                             }
-
                         } else {
                             //Just a literal value
                             exports = factory;
@@ -909,7 +916,11 @@ var requirejs, require, define;
                             defined[id] = exports;
 
                             if (req.onResourceLoad) {
-                                req.onResourceLoad(context, this.map, this.depMaps);
+                                var resLoadMaps = [];
+                                each(this.depMaps, function (depMap) {
+                                    resLoadMaps.push(depMap.normalizedMap || depMap);
+                                });
+                                req.onResourceLoad(context, this.map, resLoadMaps);
                             }
                         }
 
@@ -968,6 +979,7 @@ var requirejs, require, define;
                                                       this.map.parentMap);
                         on(normalizedMap,
                             'defined', bind(this, function (value) {
+                                this.map.normalizedMap = normalizedMap;
                                 this.init([], function () { return value; }, null, {
                                     enabled: true,
                                     ignore: true
@@ -1706,7 +1718,21 @@ var requirejs, require, define;
             onScriptError: function (evt) {
                 var data = getScriptData(evt);
                 if (!hasPathFallback(data.id)) {
-                    return onError(makeError('scripterror', 'Script error for: ' + data.id, evt, [data.id]));
+                    var parents = [];
+                    eachProp(registry, function(value, key) {
+                        if (key.indexOf('_@r') !== 0) {
+                            each(value.depMaps, function(depMap) {
+                                if (depMap.id === data.id) {
+                                    parents.push(key);
+                                }
+                                return true;
+                            });
+                        }
+                    });
+                    return onError(makeError('scripterror', 'Script error for "' + data.id +
+                                             (parents.length ?
+                                             '", needed by: ' + parents.join(', ') :
+                                             '"'), evt, [data.id]));
                 }
             }
         };
@@ -1933,9 +1959,9 @@ var requirejs, require, define;
                 //In a web worker, use importScripts. This is not a very
                 //efficient use of importScripts, importScripts will block until
                 //its script is downloaded and evaluated. However, if web workers
-                //are in play, the expectation that a build has been done so that
-                //only one script needs to be loaded anyway. This may need to be
-                //reevaluated if other use cases become common.
+                //are in play, the expectation is that a build has been done so
+                //that only one script needs to be loaded anyway. This may need
+                //to be reevaluated if other use cases become common.
                 importScripts(url);
 
                 //Account for anonymous modules
@@ -3092,8 +3118,14 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function (BlobConfig) {
  * @author lattmann / https://github.com/lattmann
  */
 
-define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function (BlobMetadata, BlobConfig, tasync) {
+define('blob/Artifact',[
+    'blob/BlobMetadata',
+    'blob/BlobConfig',
+    'common/core/tasync',
+    'q'
+], function (BlobMetadata, BlobConfig, tasync, Q) {
     'use strict';
+
     /**
      * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.
      * @param {string} name Artifact's name without extension
@@ -3109,12 +3141,12 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
         this.blobClientGetMetadata = tasync.unwrap(tasync.throttle(tasync.wrap(blobClient.getMetadata), 5));
         // TODO: use BlobMetadata class here
         this.descriptor = descriptor || {
-            name: name + '.zip',
-            size: 0,
-            mime: 'application/zip',
-            content: {},
-            contentType: 'complex'
-        }; // name and hash pairs
+                name: name + '.zip',
+                size: 0,
+                mime: 'application/zip',
+                content: {},
+                contentType: 'complex'
+            }; // name and hash pairs
     };
 
     /**
@@ -3124,29 +3156,38 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
      * @param {function(err, hash)} callback
      */
     Artifact.prototype.addFile = function (name, content, callback) {
-        var self = this;
-        var filename = name.substring(name.lastIndexOf('/') + 1);
+        var self = this,
+            filename = name.substring(name.lastIndexOf('/') + 1),
+            deferred = Q.defer();
 
         self.blobClientPutFile.call(self.blobClient, filename, content, function (err, hash) {
             if (err) {
-                callback(err);
+                deferred.reject(err);
                 return;
             }
 
             self.addObjectHash(name, hash, function (err, hash) {
-                callback(err, hash);
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
+
+                deferred.resolve(hash);
             });
         });
+
+        return deferred.promise.nodeify(callback);
     };
 
     Artifact.prototype.addFileAsSoftLink = function (name, content, callback) {
-        var self = this;
-        var filename = name.substring(name.lastIndexOf('/') + 1);
+        var deferred = Q.defer(),
+            self = this,
+            filename = name.substring(name.lastIndexOf('/') + 1);
 
         self.blobClientPutFile.call(self.blobClient, filename, content,
             function (err, hash) {
                 if (err) {
-                    callback(err);
+                    deferred.reject(err);
                     return;
                 }
                 var size;
@@ -3157,10 +3198,12 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
                     size = content.length;
                 }
 
-                self.addMetadataHash(name, hash, size, function (err, hash) {
-                    callback(err, hash);
-                });
+                self.addMetadataHash(name, hash, size)
+                    .then(deferred.resolve)
+                    .catch(deferred.reject);
             });
+
+        return deferred.promise.nodeify(callback);
     };
 
     /**
@@ -3170,41 +3213,44 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
      * @param callback
      */
     Artifact.prototype.addObjectHash = function (name, hash, callback) {
-        var self = this;
+        var self = this,
+            deferred = Q.defer();
 
         if (BlobConfig.hashRegex.test(hash) === false) {
-            callback('Blob hash is invalid');
-            return;
+            deferred.reject('Blob hash is invalid');
+        } else {
+            self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
+
+                if (self.descriptor.content.hasOwnProperty(name)) {
+                    deferred.reject('Another content with the same name was already added. ' +
+                        JSON.stringify(self.descriptor.content[name]));
+
+                } else {
+                    self.descriptor.size += metadata.size;
+
+                    self.descriptor.content[name] = {
+                        content: metadata.content,
+                        contentType: BlobMetadata.CONTENT_TYPES.OBJECT
+                    };
+                    deferred.resolve(hash);
+                }
+            });
         }
 
-        self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            if (self.descriptor.content.hasOwnProperty(name)) {
-                callback('Another content with the same name was already added. ' +
-                JSON.stringify(self.descriptor.content[name]));
-
-            } else {
-                self.descriptor.size += metadata.size;
-
-                self.descriptor.content[name] = {
-                    content: metadata.content,
-                    contentType: BlobMetadata.CONTENT_TYPES.OBJECT
-                };
-                callback(null, hash);
-            }
-        });
+        return deferred.promise.nodeify(callback);
     };
 
     Artifact.prototype.addMetadataHash = function (name, hash, size, callback) {
         var self = this,
+            deferred = Q.defer(),
             addMetadata = function (size) {
                 if (self.descriptor.content.hasOwnProperty(name)) {
-                    callback('Another content with the same name was already added. ' +
-                    JSON.stringify(self.descriptor.content[name]));
+                    deferred.reject('Another content with the same name was already added. ' +
+                        JSON.stringify(self.descriptor.content[name]));
 
                 } else {
                     self.descriptor.size += size;
@@ -3213,7 +3259,7 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
                         content: hash,
                         contentType: BlobMetadata.CONTENT_TYPES.SOFT_LINK
                     };
-                    callback(null, hash);
+                    deferred.resolve(hash);
                 }
             };
 
@@ -3223,13 +3269,11 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
         }
 
         if (BlobConfig.hashRegex.test(hash) === false) {
-            callback('Blob hash is invalid');
-            return;
-        }
-        if (size === undefined) {
+            deferred.reject('Blob hash is invalid');
+        } else if (size === undefined) {
             self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
                 if (err) {
-                    callback(err);
+                    deferred.reject(err);
                     return;
                 }
                 addMetadata(metadata.size);
@@ -3237,6 +3281,8 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
         } else {
             addMetadata(size);
         }
+
+        return deferred.promise.nodeify(callback);
     };
 
     /**
@@ -3246,31 +3292,11 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
      */
     Artifact.prototype.addFiles = function (files, callback) {
         var self = this,
-            fileNames = Object.keys(files),
-            nbrOfFiles = fileNames.length,
-            hashes = [],
-            error = '',
-            i,
-            counterCallback = function (err, hash) {
-                error = err ? error + err : error;
-                nbrOfFiles -= 1;
-                hashes.push(hash);
-                if (nbrOfFiles === 0) {
-                    if (error) {
-                        return callback('Failed adding files: ' + error, hashes);
-                    }
-                    callback(null, hashes);
-                }
-            };
+            fileNames = Object.keys(files);
 
-        if (nbrOfFiles === 0) {
-            callback(null, hashes);
-            return;
-        }
-
-        for (i = 0; i < fileNames.length; i += 1) {
-            self.addFile(fileNames[i], files[fileNames[i]], counterCallback);
-        }
+        return Q.all(fileNames.map(function (fileName) {
+            return self.addFile(fileName, files[fileName]);
+        })).nodeify(callback);
     };
 
     /**
@@ -3280,31 +3306,11 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
      */
     Artifact.prototype.addFilesAsSoftLinks = function (files, callback) {
         var self = this,
-            fileNames = Object.keys(files),
-            nbrOfFiles = fileNames.length,
-            hashes = [],
-            error = '',
-            i,
-            counterCallback = function (err, hash) {
-                error = err ? error + err : error;
-                nbrOfFiles -= 1;
-                hashes.push(hash);
-                if (nbrOfFiles === 0) {
-                    if (error) {
-                        return callback('Failed adding files as soft-links: ' + error, hashes);
-                    }
-                    callback(null, hashes);
-                }
-            };
+            fileNames = Object.keys(files);
 
-        if (nbrOfFiles === 0) {
-            callback(null, hashes);
-            return;
-        }
-
-        for (i = 0; i < fileNames.length; i += 1) {
-            self.addFileAsSoftLink(fileNames[i], files[fileNames[i]], counterCallback);
-        }
+        return Q.all(fileNames.map(function (fileName) {
+            return self.addFileAsSoftLink(fileName, files[fileName]);
+        })).nodeify(callback);
     };
 
     /**
@@ -3314,31 +3320,11 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
      */
     Artifact.prototype.addObjectHashes = function (objectHashes, callback) {
         var self = this,
-            fileNames = Object.keys(objectHashes),
-            nbrOfFiles = fileNames.length,
-            hashes = [],
-            error = '',
-            i,
-            counterCallback = function (err, hash) {
-                error = err ? error + err : error;
-                nbrOfFiles -= 1;
-                hashes.push(hash);
-                if (nbrOfFiles === 0) {
-                    if (error) {
-                        return callback('Failed adding objectHashes: ' + error, hashes);
-                    }
-                    callback(null, hashes);
-                }
-            };
+            fileNames = Object.keys(objectHashes);
 
-        if (nbrOfFiles === 0) {
-            callback(null, hashes);
-            return;
-        }
-
-        for (i = 0; i < fileNames.length; i += 1) {
-            self.addObjectHash(fileNames[i], objectHashes[fileNames[i]], counterCallback);
-        }
+        return Q.all(fileNames.map(function (fileName) {
+            return self.addObjectHash(fileName, objectHashes[fileName]);
+        })).nodeify(callback);
     };
 
     /**
@@ -3348,31 +3334,11 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
      */
     Artifact.prototype.addMetadataHashes = function (objectHashes, callback) {
         var self = this,
-            fileNames = Object.keys(objectHashes),
-            nbrOfFiles = fileNames.length,
-            hashes = [],
-            error = '',
-            i,
-            counterCallback = function (err, hash) {
-                error = err ? error + err : error;
-                nbrOfFiles -= 1;
-                hashes.push(hash);
-                if (nbrOfFiles === 0) {
-                    if (error) {
-                        return callback('Failed adding objectHashes: ' + error, hashes);
-                    }
-                    callback(null, hashes);
-                }
-            };
+            fileNames = Object.keys(objectHashes);
 
-        if (nbrOfFiles === 0) {
-            callback(null, hashes);
-            return;
-        }
-
-        for (i = 0; i < fileNames.length; i += 1) {
-            self.addMetadataHash(fileNames[i], objectHashes[fileNames[i]], counterCallback);
-        }
+        return Q.all(fileNames.map(function (fileName) {
+            return self.addMetadataHash(fileName, objectHashes[fileName]);
+        })).nodeify(callback);
     };
 
     /**
@@ -3380,7 +3346,17 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
      * @param callback
      */
     Artifact.prototype.save = function (callback) {
-        this.blobClient.putMetadata(this.descriptor, callback);
+        var deferred = Q.defer();
+
+        this.blobClient.putMetadata(this.descriptor, function (err, hash) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve(hash);
+            }
+        });
+
+        return deferred.promise.nodeify(callback);
     };
 
     return Artifact;
@@ -3396,7 +3372,7 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tas
  * @author ksmyth / https://github.com/ksmyth
  */
 
-define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, BlobMetadata, superagent) {
+define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q'], function (Artifact, BlobMetadata, superagent, Q) {
     'use strict';
 
     /**
@@ -3491,7 +3467,8 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
     };
 
     BlobClient.prototype.putFile = function (name, data, callback) {
-        var contentLength,
+        var deferred = Q.defer(),
+            contentLength,
             req;
 
         function toArrayBuffer(buffer) {
@@ -3531,18 +3508,21 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
             .send(data)
             .end(function (err, res) {
                 if (err || res.status > 399) {
-                    callback(err || res.status);
+                    deferred.reject(err || res.status);
                     return;
                 }
                 var response = res.body;
                 // Get the first one
                 var hash = Object.keys(response)[0];
-                callback(null, hash);
+                deferred.resolve(hash);
             });
+
+        return deferred.promise.nodeify(callback);
     };
 
     BlobClient.prototype.putMetadata = function (metadataDescriptor, callback) {
         var metadata = new BlobMetadata(metadataDescriptor),
+            deferred = Q.defer(),
             blob,
             contentLength,
             req;
@@ -3569,26 +3549,30 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
             .send(blob)
             .end(function (err, res) {
                 if (err || res.status > 399) {
-                    callback(err || res.status);
+                    deferred.reject(err || res.status);
                     return;
                 }
                 // Uploaded.
                 var response = JSON.parse(res.text);
                 // Get the first one
                 var hash = Object.keys(response)[0];
-                callback(null, hash);
+                deferred.resolve(hash);
             });
+
+        return deferred.promise.nodeify(callback);
     };
 
     BlobClient.prototype.putFiles = function (o, callback) {
         var self = this,
+            deferred = Q.defer(),
             error = '',
             filenames = Object.keys(o),
             remaining = filenames.length,
             hashes = {},
             putFile;
+
         if (remaining === 0) {
-            callback(null, hashes);
+            deferred.resolve(hashes);
         }
         putFile = function (filename, data) {
             self.putFile(filename, data, function (err, hash) {
@@ -3601,7 +3585,11 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
                 }
 
                 if (remaining === 0) {
-                    callback(error, hashes);
+                    if (error) {
+                        deferred.reject(error);
+                    } else {
+                        deferred.resolve(hashes);
+                    }
                 }
             });
         };
@@ -3609,6 +3597,8 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
         for (var j = 0; j < filenames.length; j += 1) {
             putFile(filenames[j], o[filenames[j]]);
         }
+
+        return deferred.promise.nodeify(callback);
     };
 
     BlobClient.prototype.getSubObject = function (hash, subpath, callback) {
@@ -3616,6 +3606,8 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
     };
 
     BlobClient.prototype.getObject = function (hash, callback, subpath) {
+        var deferred = Q.defer();
+
         superagent.parse['application/zip'] = function (obj, parseCallback) {
             if (parseCallback) {
                 // Running on node; this should be unreachable due to req.pipe() below
@@ -3645,20 +3637,21 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
             };
             require('util').inherits(BuffersWritable, Writable);
 
-            BuffersWritable.prototype._write = function (chunk, encoding, callback) {
+            BuffersWritable.prototype._write = function (chunk, encoding, cb) {
                 this.buffers.push(chunk);
-                callback();
+                cb();
             };
 
             var buffers = new BuffersWritable();
             buffers.on('finish', function () {
                 if (req.req.res.statusCode > 399) {
-                    return callback(req.req.res.statusCode);
+                    deferred.reject(req.req.res.statusCode);
+                } else {
+                    deferred.resolve(Buffer.concat(buffers.buffers));
                 }
-                callback(null, Buffer.concat(buffers.buffers));
             });
             buffers.on('error', function (err) {
-                callback(err);
+                deferred.reject(err);
             });
             req.pipe(buffers);
         } else {
@@ -3671,7 +3664,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
             // req.on('error', callback);
             req.on('end', function () {
                 if (req.xhr.status > 399) {
-                    callback(req.xhr.status);
+                    deferred.reject(req.xhr.status);
                 } else {
                     var contentType = req.xhr.getResponseHeader('content-type');
                     var response = req.xhr.response; // response is an arraybuffer
@@ -3686,15 +3679,26 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
                         };
                         response = JSON.parse(utf8ArrayToString(new Uint8Array(response)));
                     }
-                    callback(null, response);
+                    deferred.resolve(response);
                 }
             });
-            req.end(callback);
+            // TODO: Why is there an end here too? Isn't req.on('end',..) enough?
+            req.end(function (err, result) {
+                if (err) {
+                    deferred.reject(err);
+                } else {
+                    deferred.resolve(result);
+                }
+            });
         }
+
+        return deferred.promise.nodeify(callback);
     };
 
     BlobClient.prototype.getMetadata = function (hash, callback) {
-        var req = superagent.get(this.getMetadataURL(hash));
+        var req = superagent.get(this.getMetadataURL(hash)),
+            deferred = Q.defer();
+
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
@@ -3705,11 +3709,13 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
 
         req.end(function (err, res) {
             if (err || res.status > 399) {
-                callback(err || res.status);
+                deferred.reject(err || res.status);
             } else {
-                callback(null, JSON.parse(res.text));
+                deferred.resolve(JSON.parse(res.text));
             }
         });
+
+        return deferred.promise.nodeify(callback);
     };
 
     /**
@@ -3726,7 +3732,8 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
     BlobClient.prototype.getArtifact = function (metadataHash, callback) {
         // TODO: get info check if complex flag is set to true.
         // TODO: get info get name.
-        var self = this;
+        var self = this,
+            deferred = Q.defer();
         this.getMetadata(metadataHash, function (err, info) {
             if (err) {
                 callback(err);
@@ -3736,41 +3743,24 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
             if (info.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
                 var artifact = new Artifact(info.name, self, info);
                 self.artifacts.push(artifact);
-                callback(null, artifact);
+                deferred.resolve(artifact);
             } else {
-                callback('not supported contentType ' + JSON.stringify(info, null, 4));
+                deferred.reject(new Error('not supported contentType ' + JSON.stringify(info, null, 4)));
             }
 
         });
+
+        return deferred.promise.nodeify(callback);
     };
 
     BlobClient.prototype.saveAllArtifacts = function (callback) {
-        var remaining = this.artifacts.length,
-            hashes = [],
-            error = '',
-            saveCallback;
-
-        if (remaining === 0) {
-            callback(null, hashes);
-        }
-
-        saveCallback = function (err, hash) {
-            remaining -= 1;
-
-            hashes.push(hash);
-
-            if (err) {
-                error += 'artifact.save err: ' + err.toString();
-            }
-            if (remaining === 0) {
-                callback(error, hashes);
-            }
-        };
+        var promises = [];
 
         for (var i = 0; i < this.artifacts.length; i += 1) {
-
-            this.artifacts[i].save(saveCallback);
+            promises.push(this.artifacts[i].save());
         }
+
+        return Q.all(promises).nodeify(callback);
     };
 
     BlobClient.prototype.getHumanSize = function (bytes, si) {
@@ -3806,7 +3796,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent'], f
  */
 
 
-define('executor/ExecutorClient',['superagent'], function (superagent) {
+define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
     'use strict';
 
     var ExecutorClient = function (parameters) {
@@ -3839,6 +3829,148 @@ define('executor/ExecutorClient',['superagent'], function (superagent) {
         }
     };
 
+    /**
+     * Creates a new configuration file for the job execution.
+     *
+     * @param {string} cmd - command to execute.
+     * @param {string[]} [args] - command arguments.
+     * @returns {{cmd: *, resultArtifacts: Array}}
+     */
+    ExecutorClient.prototype.getNewExecutorConfig = function (cmd, args) {
+        var config = {
+            cmd: cmd,
+            resultArtifacts: []
+        };
+
+        if (args) {
+            config.args = args;
+        }
+
+        /**
+         *
+         * @param {string} name - name of the artifact.
+         * @param {string[]} [patterns=[]] - inclusive pattern for files to be returned in this artifact.
+         */
+        config.defineResultArtifact = function (name, patterns) {
+            this.resultArtifacts.push({
+                name: name,
+                resultPatterns: patterns || []
+            });
+        };
+
+        return config;
+    };
+
+    /**
+     * @param {object} jobInfo - initial information about the job must contain the hash.
+     * @param {object} jobInfo.hash - a unique id for the job (e.g. the hash of the artifact containing the executor_config.json).
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with
+     * {JobInfo} <b>result</b>.<br>
+     * On error the promise will be rejected with {Error} <b>error</b>.
+     */
+    ExecutorClient.prototype.createJob = function (jobInfo, callback) {
+        var deferred = Q.defer();
+        if (typeof jobInfo === 'string') {
+            jobInfo = { hash: jobInfo }; // old API
+        }
+        this.sendHttpRequestWithData('POST', this.getCreateURL(jobInfo.hash), jobInfo, function (err, response) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            deferred.resolve(JSON.parse(response));
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    ExecutorClient.prototype.updateJob = function (jobInfo, callback) {
+        var deferred = Q.defer();
+        this.sendHttpRequestWithData('POST', this.executorUrl + 'update/' + jobInfo.hash, jobInfo,
+            function (err, response) {
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
+
+                deferred.resolve(response);
+            }
+        );
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    /**
+     * @param {string} hash - unique id for the job (e.g. the hash of the artifact containing the executor_config.json).
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with
+     * {JobInfo} <b>result</b>.<br>
+     * On error the promise will be rejected with {Error} <b>error</b>.
+     */
+    ExecutorClient.prototype.getInfo = function (hash, callback) {
+        var deferred = Q.defer();
+        this.sendHttpRequest('GET', this.getInfoURL(hash), function (err, response) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            deferred.resolve(JSON.parse(response));
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    ExecutorClient.prototype.getAllInfo = function (callback) {
+        var deferred = Q.defer();
+
+        this.sendHttpRequest('GET', this.getInfoURL(), function (err, response) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            deferred.resolve(JSON.parse(response));
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    ExecutorClient.prototype.getInfoByStatus = function (status, callback) {
+        var deferred = Q.defer();
+
+        this.sendHttpRequest('GET', this.executorUrl + '?status=' + status, function (err, response) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            deferred.resolve(JSON.parse(response));
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    ExecutorClient.prototype.getWorkersInfo = function (callback) {
+        var deferred = Q.defer();
+
+        this.sendHttpRequest('GET', this.executorUrl + 'worker', function (err, response) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            deferred.resolve(JSON.parse(response));
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    // Helper methods
     ExecutorClient.prototype.getInfoURL = function (hash) {
         return this.origin + this.getRelativeInfoURL(hash);
     };
@@ -3863,80 +3995,6 @@ define('executor/ExecutorClient',['superagent'], function (superagent) {
         } else {
             return metadataBase;
         }
-    };
-
-    ExecutorClient.prototype.createJob = function (jobInfo, callback) {
-        if (typeof jobInfo === 'string') {
-            jobInfo = { hash: jobInfo }; // old API
-        }
-        this.sendHttpRequestWithData('POST', this.getCreateURL(jobInfo.hash), jobInfo, function (err, response) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback(null, JSON.parse(response));
-        });
-    };
-
-    ExecutorClient.prototype.updateJob = function (jobInfo, callback) {
-        this.sendHttpRequestWithData('POST', this.executorUrl + 'update/' + jobInfo.hash, jobInfo,
-            function (err, response) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                callback(null, response);
-            }
-        );
-    };
-
-    ExecutorClient.prototype.getInfo = function (hash, callback) {
-        this.sendHttpRequest('GET', this.getInfoURL(hash), function (err, response) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback(null, JSON.parse(response));
-        });
-    };
-
-    ExecutorClient.prototype.getAllInfo = function (callback) {
-
-        this.sendHttpRequest('GET', this.getInfoURL(), function (err, response) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback(null, JSON.parse(response));
-        });
-    };
-
-    ExecutorClient.prototype.getInfoByStatus = function (status, callback) {
-
-        this.sendHttpRequest('GET', this.executorUrl + '?status=' + status, function (err, response) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback(null, JSON.parse(response));
-        });
-    };
-
-    ExecutorClient.prototype.getWorkersInfo = function (callback) {
-
-        this.sendHttpRequest('GET', this.executorUrl + 'worker', function (err, response) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback(null, JSON.parse(response));
-        });
     };
 
     ExecutorClient.prototype.sendHttpRequest = function (method, url, callback) {
@@ -4778,7 +4836,8 @@ if (nodeRequire.main === module) {
         'child_process',
         'minimatch',
         'rimraf',
-        'url'
+        'url',
+        'q'
     ].forEach(function (name) {
             'use strict';
             requirejs.s.contexts._.defined[name] = nodeRequire(name);

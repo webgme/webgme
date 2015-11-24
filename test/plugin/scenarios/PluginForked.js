@@ -180,7 +180,7 @@ describe('Run PluginForked', function () {
                 expect(result.status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
 
                 pluginManager.executePlugin(pluginName, pluginConfig, pluginContext, function (err, result) {
-                    expect(err).to.equal('Plugin got forked from "master". And got forked from "fork2" too.');
+                    expect(err.message).to.equal('Plugin got forked from "master". And got forked from "fork2" too.');
                     expect(result.commits.length).to.equal(2);
                     expect(result.commits[0].status).to.equal(testFixture.STORAGE_CONSTANTS.SYNCED);
                     expect(result.commits[1].status).to.equal(testFixture.STORAGE_CONSTANTS.FORKED);

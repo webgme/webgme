@@ -5,7 +5,7 @@
  * @author mmaroti / https://github.com/mmaroti
  */
 
-define(['common/util/assert', 'common/core/core', 'common/core/tasync'], function (ASSERT, Core, TASYNC) {
+define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
     'use strict';
 
     // ----------------- CoreType -----------------
@@ -56,8 +56,7 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
 
         //check of inheritance chain and containment hierarchy collision
         core.isInheritanceContainmentCollision = function (node, parent) {
-            var parentPath = core.getPath(parent),
-                bases = [];
+            var bases = [];
 
             while (node) {
                 bases.push(core.getPath(node));
@@ -138,7 +137,8 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
         core.loadChild = function (node, relid) {
             return TASYNC.call(function (child) {
                 if (child && core.isInheritanceContainmentCollision(child, core.getParent(child))) {
-                    logger.error('node[' + core.getPath(child) + '] was deleted due to inheritance-containment collision');
+                    logger.error('node[' + core.getPath(child) +
+                        '] was deleted due to inheritance-containment collision');
                     core.deleteNode(child);
                     //core.persist(core.getRoot(child));
                     return null;
@@ -193,7 +193,9 @@ define(['common/util/assert', 'common/core/core', 'common/core/tasync'], functio
                     oldcore.deleteNode(node);
                     //core.persist(core.getRoot(node));
                     //TODO a notification should be generated towards the user
-                    logger.warn('node [' + path + '] removed due to missing base'); //TODO check if some identification can be passed
+                    logger.warn('node [' + path + '] removed due to missing base');
+
+                    //TODO check if some identification can be passed
                     return null;
                 } else {
                     var basePath = oldcore.getPointerPath(node, 'base');

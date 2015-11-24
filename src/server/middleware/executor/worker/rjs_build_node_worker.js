@@ -15,7 +15,8 @@
         child_process: 'empty:', // jshint ignore:line
         minimatch: 'empty:',
         rimraf: 'empty:',
-        url: 'empty:'
+        url: 'empty:',
+        q: 'empty:'
     },
     optimize: 'none',
     include: ['./node_modules/requirejs/require'],

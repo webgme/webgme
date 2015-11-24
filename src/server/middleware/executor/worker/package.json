@@ -2,10 +2,11 @@
   "name": "executor_worker",
   "main": "index.html",
   "dependencies": {
-    "agentkeepalive": "=2.0.0",
+    "agentkeepalive": "=2.0.3",
     "mime": ">=1.2.11",
     "minimatch": ">=0.3.0",
     "pkginfo": ">=0.3.0",
+    "q": "=1.4.1",
     "requirejs": "^2.1.15",
     "rimraf": "^2.2.8",
     "ssl-root-cas": "^1.1.7",

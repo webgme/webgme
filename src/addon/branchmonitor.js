@@ -7,7 +7,7 @@
 
 var Q = require('q'),
     BlobClient = requireJS('common/blob/BlobClient'),
-    Core = requireJS('common/core/core');
+    Core = requireJS('common/core/coreQ');
 
 /**
  * Monitors given branch and starts, stops and updates registered addOns.

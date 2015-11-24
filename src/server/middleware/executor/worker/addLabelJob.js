@@ -19,20 +19,22 @@ requirejs.config({
     baseUrl: __dirname + '/..',
     paths: {
         //WebGME custom modules
-        'eventDispatcher': '../webgme/common/EventDispatcher',
-        'notificationManager': 'js/NotificationManager',
-        'clientUtil': 'js/util',
-        'loaderCircles': 'js/Loader/LoaderCircles',
-        'loaderProgressBar': 'js/Loader/LoaderProgressBar',
+        eventDispatcher: '../webgme/common/EventDispatcher',
+        notificationManager: 'js/NotificationManager',
+        clientUtil: 'js/util',
+        loaderCircles: 'js/Loader/LoaderCircles',
+        loaderProgressBar: 'js/Loader/LoaderProgressBar',
 
-        'codemirror': 'lib/codemirror/codemirror.amd',
+        codemirror: 'lib/codemirror/codemirror.amd',
         'jquery-csszoom': 'lib/jquery/jquery.csszoom',
 
-        'jszip': 'lib/jszip/jszip',
-        'executor': 'src/rest/executor',
-        'executor_old': 'src/rest/executor_old',
-        'blob': '../webgme/src/middleware/blob',
-        'superagent': 'lib/superagent/superagent'
+        jszip: 'lib/jszip/jszip',
+        executor: 'src/rest/executor',
+        executor_old: 'src/rest/executor_old',
+        blob: '../webgme/src/middleware/blob',
+        superagent: 'lib/superagent/superagent',
+        q: 'lib/q/q',
+        debug: 'lib/debug/debug'
     },
     nodeRequire: nodeRequire
 });

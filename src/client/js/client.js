@@ -8,7 +8,7 @@ define([
     'js/logger',
     'common/storage/browserstorage',
     'common/EventDispatcher',
-    'common/core/core',
+    'common/core/coreQ',
     'js/client/constants',
     'common/core/users/meta',
     'common/util/assert',

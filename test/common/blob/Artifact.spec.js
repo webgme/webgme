@@ -328,7 +328,7 @@ describe('Artifact', function () {
                 artifact = new Artifact('testartifact', bc);
 
             artifact.addObjectHashes(objHashes, function (err/*, hashes*/) {
-                if (err.indexOf('Failed adding objectHashes:') > -1) {
+                if (err) {
                     done();
                     return;
                 }
@@ -344,7 +344,7 @@ describe('Artifact', function () {
                 artifact = new Artifact('testartifact', bc);
 
             artifact.addMetadataHashes(objHashes, function (err/*, hashes*/) {
-                if (err.indexOf('Failed adding objectHashes:') > -1) {
+                if (err) {
                     done();
                     return;
                 }

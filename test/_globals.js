@@ -22,7 +22,7 @@ var WebGME = require('../webgme'),
         }
         return JSON.parse(JSON.stringify(gmeConfig));
     },
-    Core = requireJS('common/core/core'),
+    Core = requireJS('common/core/coreQ'),
     NodeStorage = requireJS('../src/common/storage/nodestorage'),
     storageUtil = requireJS('common/storage/util'),
     Mongo = require('../src/server/storage/mongo'),

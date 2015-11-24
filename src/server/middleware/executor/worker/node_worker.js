@@ -110,7 +110,8 @@ if (nodeRequire.main === module) {
         'child_process',
         'minimatch',
         'rimraf',
-        'url'
+        'url',
+        'q'
     ].forEach(function (name) {
             'use strict';
             requirejs.s.contexts._.defined[name] = nodeRequire(name);

@@ -5,8 +5,14 @@
  * @author lattmann / https://github.com/lattmann
  */
 
-define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function (BlobMetadata, BlobConfig, tasync) {
+define([
+    'blob/BlobMetadata',
+    'blob/BlobConfig',
+    'common/core/tasync',
+    'q'
+], function (BlobMetadata, BlobConfig, tasync, Q) {
     'use strict';
+
     /**
      * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.
      * @param {string} name Artifact's name without extension
@@ -22,12 +28,12 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
         this.blobClientGetMetadata = tasync.unwrap(tasync.throttle(tasync.wrap(blobClient.getMetadata), 5));
         // TODO: use BlobMetadata class here
         this.descriptor = descriptor || {
-            name: name + '.zip',
-            size: 0,
-            mime: 'application/zip',
-            content: {},
-            contentType: 'complex'
-        }; // name and hash pairs
+                name: name + '.zip',
+                size: 0,
+                mime: 'application/zip',
+                content: {},
+                contentType: 'complex'
+            }; // name and hash pairs
     };
 
     /**
@@ -37,29 +43,38 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
      * @param {function(err, hash)} callback
      */
     Artifact.prototype.addFile = function (name, content, callback) {
-        var self = this;
-        var filename = name.substring(name.lastIndexOf('/') + 1);
+        var self = this,
+            filename = name.substring(name.lastIndexOf('/') + 1),
+            deferred = Q.defer();
 
         self.blobClientPutFile.call(self.blobClient, filename, content, function (err, hash) {
             if (err) {
-                callback(err);
+                deferred.reject(err);
                 return;
             }
 
             self.addObjectHash(name, hash, function (err, hash) {
-                callback(err, hash);
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
+
+                deferred.resolve(hash);
             });
         });
+
+        return deferred.promise.nodeify(callback);
     };
 
     Artifact.prototype.addFileAsSoftLink = function (name, content, callback) {
-        var self = this;
-        var filename = name.substring(name.lastIndexOf('/') + 1);
+        var deferred = Q.defer(),
+            self = this,
+            filename = name.substring(name.lastIndexOf('/') + 1);
 
         self.blobClientPutFile.call(self.blobClient, filename, content,
             function (err, hash) {
                 if (err) {
-                    callback(err);
+                    deferred.reject(err);
                     return;
                 }
                 var size;
@@ -70,10 +85,12 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
                     size = content.length;
                 }
 
-                self.addMetadataHash(name, hash, size, function (err, hash) {
-                    callback(err, hash);
-                });
+                self.addMetadataHash(name, hash, size)
+                    .then(deferred.resolve)
+                    .catch(deferred.reject);
             });
+
+        return deferred.promise.nodeify(callback);
     };
 
     /**
@@ -83,41 +100,44 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
      * @param callback
      */
     Artifact.prototype.addObjectHash = function (name, hash, callback) {
-        var self = this;
+        var self = this,
+            deferred = Q.defer();
 
         if (BlobConfig.hashRegex.test(hash) === false) {
-            callback('Blob hash is invalid');
-            return;
+            deferred.reject('Blob hash is invalid');
+        } else {
+            self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
+
+                if (self.descriptor.content.hasOwnProperty(name)) {
+                    deferred.reject('Another content with the same name was already added. ' +
+                        JSON.stringify(self.descriptor.content[name]));
+
+                } else {
+                    self.descriptor.size += metadata.size;
+
+                    self.descriptor.content[name] = {
+                        content: metadata.content,
+                        contentType: BlobMetadata.CONTENT_TYPES.OBJECT
+                    };
+                    deferred.resolve(hash);
+                }
+            });
         }
 
-        self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            if (self.descriptor.content.hasOwnProperty(name)) {
-                callback('Another content with the same name was already added. ' +
-                JSON.stringify(self.descriptor.content[name]));
-
-            } else {
-                self.descriptor.size += metadata.size;
-
-                self.descriptor.content[name] = {
-                    content: metadata.content,
-                    contentType: BlobMetadata.CONTENT_TYPES.OBJECT
-                };
-                callback(null, hash);
-            }
-        });
+        return deferred.promise.nodeify(callback);
     };
 
     Artifact.prototype.addMetadataHash = function (name, hash, size, callback) {
         var self = this,
+            deferred = Q.defer(),
             addMetadata = function (size) {
                 if (self.descriptor.content.hasOwnProperty(name)) {
-                    callback('Another content with the same name was already added. ' +
-                    JSON.stringify(self.descriptor.content[name]));
+                    deferred.reject('Another content with the same name was already added. ' +
+                        JSON.stringify(self.descriptor.content[name]));
 
                 } else {
                     self.descriptor.size += size;
@@ -126,7 +146,7 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
                         content: hash,
                         contentType: BlobMetadata.CONTENT_TYPES.SOFT_LINK
                     };
-                    callback(null, hash);
+                    deferred.resolve(hash);
                 }
             };
 
@@ -136,13 +156,11 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
         }
 
         if (BlobConfig.hashRegex.test(hash) === false) {
-            callback('Blob hash is invalid');
-            return;
-        }
-        if (size === undefined) {
+            deferred.reject('Blob hash is invalid');
+        } else if (size === undefined) {
             self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
                 if (err) {
-                    callback(err);
+                    deferred.reject(err);
                     return;
                 }
                 addMetadata(metadata.size);
@@ -150,6 +168,8 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
         } else {
             addMetadata(size);
         }
+
+        return deferred.promise.nodeify(callback);
     };
 
     /**
@@ -159,31 +179,11 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
      */
     Artifact.prototype.addFiles = function (files, callback) {
         var self = this,
-            fileNames = Object.keys(files),
-            nbrOfFiles = fileNames.length,
-            hashes = [],
-            error = '',
-            i,
-            counterCallback = function (err, hash) {
-                error = err ? error + err : error;
-                nbrOfFiles -= 1;
-                hashes.push(hash);
-                if (nbrOfFiles === 0) {
-                    if (error) {
-                        return callback('Failed adding files: ' + error, hashes);
-                    }
-                    callback(null, hashes);
-                }
-            };
+            fileNames = Object.keys(files);
 
-        if (nbrOfFiles === 0) {
-            callback(null, hashes);
-            return;
-        }
-
-        for (i = 0; i < fileNames.length; i += 1) {
-            self.addFile(fileNames[i], files[fileNames[i]], counterCallback);
-        }
+        return Q.all(fileNames.map(function (fileName) {
+            return self.addFile(fileName, files[fileName]);
+        })).nodeify(callback);
     };
 
     /**
@@ -193,31 +193,11 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
      */
     Artifact.prototype.addFilesAsSoftLinks = function (files, callback) {
         var self = this,
-            fileNames = Object.keys(files),
-            nbrOfFiles = fileNames.length,
-            hashes = [],
-            error = '',
-            i,
-            counterCallback = function (err, hash) {
-                error = err ? error + err : error;
-                nbrOfFiles -= 1;
-                hashes.push(hash);
-                if (nbrOfFiles === 0) {
-                    if (error) {
-                        return callback('Failed adding files as soft-links: ' + error, hashes);
-                    }
-                    callback(null, hashes);
-                }
-            };
+            fileNames = Object.keys(files);
 
-        if (nbrOfFiles === 0) {
-            callback(null, hashes);
-            return;
-        }
-
-        for (i = 0; i < fileNames.length; i += 1) {
-            self.addFileAsSoftLink(fileNames[i], files[fileNames[i]], counterCallback);
-        }
+        return Q.all(fileNames.map(function (fileName) {
+            return self.addFileAsSoftLink(fileName, files[fileName]);
+        })).nodeify(callback);
     };
 
     /**
@@ -227,31 +207,11 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
      */
     Artifact.prototype.addObjectHashes = function (objectHashes, callback) {
         var self = this,
-            fileNames = Object.keys(objectHashes),
-            nbrOfFiles = fileNames.length,
-            hashes = [],
-            error = '',
-            i,
-            counterCallback = function (err, hash) {
-                error = err ? error + err : error;
-                nbrOfFiles -= 1;
-                hashes.push(hash);
-                if (nbrOfFiles === 0) {
-                    if (error) {
-                        return callback('Failed adding objectHashes: ' + error, hashes);
-                    }
-                    callback(null, hashes);
-                }
-            };
+            fileNames = Object.keys(objectHashes);
 
-        if (nbrOfFiles === 0) {
-            callback(null, hashes);
-            return;
-        }
-
-        for (i = 0; i < fileNames.length; i += 1) {
-            self.addObjectHash(fileNames[i], objectHashes[fileNames[i]], counterCallback);
-        }
+        return Q.all(fileNames.map(function (fileName) {
+            return self.addObjectHash(fileName, objectHashes[fileName]);
+        })).nodeify(callback);
     };
 
     /**
@@ -261,31 +221,11 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
      */
     Artifact.prototype.addMetadataHashes = function (objectHashes, callback) {
         var self = this,
-            fileNames = Object.keys(objectHashes),
-            nbrOfFiles = fileNames.length,
-            hashes = [],
-            error = '',
-            i,
-            counterCallback = function (err, hash) {
-                error = err ? error + err : error;
-                nbrOfFiles -= 1;
-                hashes.push(hash);
-                if (nbrOfFiles === 0) {
-                    if (error) {
-                        return callback('Failed adding objectHashes: ' + error, hashes);
-                    }
-                    callback(null, hashes);
-                }
-            };
+            fileNames = Object.keys(objectHashes);
 
-        if (nbrOfFiles === 0) {
-            callback(null, hashes);
-            return;
-        }
-
-        for (i = 0; i < fileNames.length; i += 1) {
-            self.addMetadataHash(fileNames[i], objectHashes[fileNames[i]], counterCallback);
-        }
+        return Q.all(fileNames.map(function (fileName) {
+            return self.addMetadataHash(fileName, objectHashes[fileName]);
+        })).nodeify(callback);
     };
 
     /**
@@ -293,7 +233,17 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
      * @param callback
      */
     Artifact.prototype.save = function (callback) {
-        this.blobClient.putMetadata(this.descriptor, callback);
+        var deferred = Q.defer();
+
+        this.blobClient.putMetadata(this.descriptor, function (err, hash) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve(hash);
+            }
+        });
+
+        return deferred.promise.nodeify(callback);
     };
 
     return Artifact;

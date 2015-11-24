@@ -9,7 +9,7 @@
  */
 
 
-define(['superagent'], function (superagent) {
+define(['superagent', 'q'], function (superagent, Q) {
     'use strict';
 
     var ExecutorClient = function (parameters) {
@@ -42,6 +42,148 @@ define(['superagent'], function (superagent) {
         }
     };
 
+    /**
+     * Creates a new configuration file for the job execution.
+     *
+     * @param {string} cmd - command to execute.
+     * @param {string[]} [args] - command arguments.
+     * @returns {{cmd: *, resultArtifacts: Array}}
+     */
+    ExecutorClient.prototype.getNewExecutorConfig = function (cmd, args) {
+        var config = {
+            cmd: cmd,
+            resultArtifacts: []
+        };
+
+        if (args) {
+            config.args = args;
+        }
+
+        /**
+         *
+         * @param {string} name - name of the artifact.
+         * @param {string[]} [patterns=[]] - inclusive pattern for files to be returned in this artifact.
+         */
+        config.defineResultArtifact = function (name, patterns) {
+            this.resultArtifacts.push({
+                name: name,
+                resultPatterns: patterns || []
+            });
+        };
+
+        return config;
+    };
+
+    /**
+     * @param {object} jobInfo - initial information about the job must contain the hash.
+     * @param {object} jobInfo.hash - a unique id for the job (e.g. the hash of the artifact containing the executor_config.json).
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with
+     * {JobInfo} <b>result</b>.<br>
+     * On error the promise will be rejected with {Error} <b>error</b>.
+     */
+    ExecutorClient.prototype.createJob = function (jobInfo, callback) {
+        var deferred = Q.defer();
+        if (typeof jobInfo === 'string') {
+            jobInfo = { hash: jobInfo }; // old API
+        }
+        this.sendHttpRequestWithData('POST', this.getCreateURL(jobInfo.hash), jobInfo, function (err, response) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            deferred.resolve(JSON.parse(response));
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    ExecutorClient.prototype.updateJob = function (jobInfo, callback) {
+        var deferred = Q.defer();
+        this.sendHttpRequestWithData('POST', this.executorUrl + 'update/' + jobInfo.hash, jobInfo,
+            function (err, response) {
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
+
+                deferred.resolve(response);
+            }
+        );
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    /**
+     * @param {string} hash - unique id for the job (e.g. the hash of the artifact containing the executor_config.json).
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with
+     * {JobInfo} <b>result</b>.<br>
+     * On error the promise will be rejected with {Error} <b>error</b>.
+     */
+    ExecutorClient.prototype.getInfo = function (hash, callback) {
+        var deferred = Q.defer();
+        this.sendHttpRequest('GET', this.getInfoURL(hash), function (err, response) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            deferred.resolve(JSON.parse(response));
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    ExecutorClient.prototype.getAllInfo = function (callback) {
+        var deferred = Q.defer();
+
+        this.sendHttpRequest('GET', this.getInfoURL(), function (err, response) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            deferred.resolve(JSON.parse(response));
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    ExecutorClient.prototype.getInfoByStatus = function (status, callback) {
+        var deferred = Q.defer();
+
+        this.sendHttpRequest('GET', this.executorUrl + '?status=' + status, function (err, response) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            deferred.resolve(JSON.parse(response));
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    ExecutorClient.prototype.getWorkersInfo = function (callback) {
+        var deferred = Q.defer();
+
+        this.sendHttpRequest('GET', this.executorUrl + 'worker', function (err, response) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            deferred.resolve(JSON.parse(response));
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    // Helper methods
     ExecutorClient.prototype.getInfoURL = function (hash) {
         return this.origin + this.getRelativeInfoURL(hash);
     };
@@ -66,80 +208,6 @@ define(['superagent'], function (superagent) {
         } else {
             return metadataBase;
         }
-    };
-
-    ExecutorClient.prototype.createJob = function (jobInfo, callback) {
-        if (typeof jobInfo === 'string') {
-            jobInfo = { hash: jobInfo }; // old API
-        }
-        this.sendHttpRequestWithData('POST', this.getCreateURL(jobInfo.hash), jobInfo, function (err, response) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback(null, JSON.parse(response));
-        });
-    };
-
-    ExecutorClient.prototype.updateJob = function (jobInfo, callback) {
-        this.sendHttpRequestWithData('POST', this.executorUrl + 'update/' + jobInfo.hash, jobInfo,
-            function (err, response) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                callback(null, response);
-            }
-        );
-    };
-
-    ExecutorClient.prototype.getInfo = function (hash, callback) {
-        this.sendHttpRequest('GET', this.getInfoURL(hash), function (err, response) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback(null, JSON.parse(response));
-        });
-    };
-
-    ExecutorClient.prototype.getAllInfo = function (callback) {
-
-        this.sendHttpRequest('GET', this.getInfoURL(), function (err, response) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback(null, JSON.parse(response));
-        });
-    };
-
-    ExecutorClient.prototype.getInfoByStatus = function (status, callback) {
-
-        this.sendHttpRequest('GET', this.executorUrl + '?status=' + status, function (err, response) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback(null, JSON.parse(response));
-        });
-    };
-
-    ExecutorClient.prototype.getWorkersInfo = function (callback) {
-
-        this.sendHttpRequest('GET', this.executorUrl + 'worker', function (err, response) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            callback(null, JSON.parse(response));
-        });
     };
 
     ExecutorClient.prototype.sendHttpRequest = function (method, url, callback) {

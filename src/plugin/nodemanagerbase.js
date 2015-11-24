@@ -5,7 +5,7 @@
  */
 'use strict';
 
-var Core = requireJS('common/core/core'),
+var Core = requireJS('common/core/coreQ'),
     PluginResult = requireJS('plugin/PluginResult'),
     PluginMessage = requireJS('plugin/PluginMessage'),
     ProjectInterface = requireJS('common/storage/project/interface'),

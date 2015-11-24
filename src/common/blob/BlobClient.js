@@ -8,7 +8,7 @@
  * @author ksmyth / https://github.com/ksmyth
  */
 
-define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, BlobMetadata, superagent) {
+define(['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q'], function (Artifact, BlobMetadata, superagent, Q) {
     'use strict';
 
     /**
@@ -103,7 +103,8 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
     };
 
     BlobClient.prototype.putFile = function (name, data, callback) {
-        var contentLength,
+        var deferred = Q.defer(),
+            contentLength,
             req;
 
         function toArrayBuffer(buffer) {
@@ -143,18 +144,21 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             .send(data)
             .end(function (err, res) {
                 if (err || res.status > 399) {
-                    callback(err || res.status);
+                    deferred.reject(err || res.status);
                     return;
                 }
                 var response = res.body;
                 // Get the first one
                 var hash = Object.keys(response)[0];
-                callback(null, hash);
+                deferred.resolve(hash);
             });
+
+        return deferred.promise.nodeify(callback);
     };
 
     BlobClient.prototype.putMetadata = function (metadataDescriptor, callback) {
         var metadata = new BlobMetadata(metadataDescriptor),
+            deferred = Q.defer(),
             blob,
             contentLength,
             req;
@@ -181,26 +185,30 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             .send(blob)
             .end(function (err, res) {
                 if (err || res.status > 399) {
-                    callback(err || res.status);
+                    deferred.reject(err || res.status);
                     return;
                 }
                 // Uploaded.
                 var response = JSON.parse(res.text);
                 // Get the first one
                 var hash = Object.keys(response)[0];
-                callback(null, hash);
+                deferred.resolve(hash);
             });
+
+        return deferred.promise.nodeify(callback);
     };
 
     BlobClient.prototype.putFiles = function (o, callback) {
         var self = this,
+            deferred = Q.defer(),
             error = '',
             filenames = Object.keys(o),
             remaining = filenames.length,
             hashes = {},
             putFile;
+
         if (remaining === 0) {
-            callback(null, hashes);
+            deferred.resolve(hashes);
         }
         putFile = function (filename, data) {
             self.putFile(filename, data, function (err, hash) {
@@ -213,7 +221,11 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
                 }
 
                 if (remaining === 0) {
-                    callback(error, hashes);
+                    if (error) {
+                        deferred.reject(error);
+                    } else {
+                        deferred.resolve(hashes);
+                    }
                 }
             });
         };
@@ -221,6 +233,8 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
         for (var j = 0; j < filenames.length; j += 1) {
             putFile(filenames[j], o[filenames[j]]);
         }
+
+        return deferred.promise.nodeify(callback);
     };
 
     BlobClient.prototype.getSubObject = function (hash, subpath, callback) {
@@ -228,6 +242,8 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
     };
 
     BlobClient.prototype.getObject = function (hash, callback, subpath) {
+        var deferred = Q.defer();
+
         superagent.parse['application/zip'] = function (obj, parseCallback) {
             if (parseCallback) {
                 // Running on node; this should be unreachable due to req.pipe() below
@@ -257,20 +273,21 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             };
             require('util').inherits(BuffersWritable, Writable);
 
-            BuffersWritable.prototype._write = function (chunk, encoding, callback) {
+            BuffersWritable.prototype._write = function (chunk, encoding, cb) {
                 this.buffers.push(chunk);
-                callback();
+                cb();
             };
 
             var buffers = new BuffersWritable();
             buffers.on('finish', function () {
                 if (req.req.res.statusCode > 399) {
-                    return callback(req.req.res.statusCode);
+                    deferred.reject(req.req.res.statusCode);
+                } else {
+                    deferred.resolve(Buffer.concat(buffers.buffers));
                 }
-                callback(null, Buffer.concat(buffers.buffers));
             });
             buffers.on('error', function (err) {
-                callback(err);
+                deferred.reject(err);
             });
             req.pipe(buffers);
         } else {
@@ -283,7 +300,7 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             // req.on('error', callback);
             req.on('end', function () {
                 if (req.xhr.status > 399) {
-                    callback(req.xhr.status);
+                    deferred.reject(req.xhr.status);
                 } else {
                     var contentType = req.xhr.getResponseHeader('content-type');
                     var response = req.xhr.response; // response is an arraybuffer
@@ -298,15 +315,26 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
                         };
                         response = JSON.parse(utf8ArrayToString(new Uint8Array(response)));
                     }
-                    callback(null, response);
+                    deferred.resolve(response);
                 }
             });
-            req.end(callback);
+            // TODO: Why is there an end here too? Isn't req.on('end',..) enough?
+            req.end(function (err, result) {
+                if (err) {
+                    deferred.reject(err);
+                } else {
+                    deferred.resolve(result);
+                }
+            });
         }
+
+        return deferred.promise.nodeify(callback);
     };
 
     BlobClient.prototype.getMetadata = function (hash, callback) {
-        var req = superagent.get(this.getMetadataURL(hash));
+        var req = superagent.get(this.getMetadataURL(hash)),
+            deferred = Q.defer();
+
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
         }
@@ -317,11 +345,13 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
 
         req.end(function (err, res) {
             if (err || res.status > 399) {
-                callback(err || res.status);
+                deferred.reject(err || res.status);
             } else {
-                callback(null, JSON.parse(res.text));
+                deferred.resolve(JSON.parse(res.text));
             }
         });
+
+        return deferred.promise.nodeify(callback);
     };
 
     /**
@@ -338,7 +368,8 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
     BlobClient.prototype.getArtifact = function (metadataHash, callback) {
         // TODO: get info check if complex flag is set to true.
         // TODO: get info get name.
-        var self = this;
+        var self = this,
+            deferred = Q.defer();
         this.getMetadata(metadataHash, function (err, info) {
             if (err) {
                 callback(err);
@@ -348,41 +379,24 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact,
             if (info.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
                 var artifact = new Artifact(info.name, self, info);
                 self.artifacts.push(artifact);
-                callback(null, artifact);
+                deferred.resolve(artifact);
             } else {
-                callback('not supported contentType ' + JSON.stringify(info, null, 4));
+                deferred.reject(new Error('not supported contentType ' + JSON.stringify(info, null, 4)));
             }
 
         });
+
+        return deferred.promise.nodeify(callback);
     };
 
     BlobClient.prototype.saveAllArtifacts = function (callback) {
-        var remaining = this.artifacts.length,
-            hashes = [],
-            error = '',
-            saveCallback;
-
-        if (remaining === 0) {
-            callback(null, hashes);
-        }
-
-        saveCallback = function (err, hash) {
-            remaining -= 1;
-
-            hashes.push(hash);
-
-            if (err) {
-                error += 'artifact.save err: ' + err.toString();
-            }
-            if (remaining === 0) {
-                callback(error, hashes);
-            }
-        };
+        var promises = [];
 
         for (var i = 0; i < this.artifacts.length; i += 1) {
-
-            this.artifacts[i].save(saveCallback);
+            promises.push(this.artifacts[i].save());
         }
+
+        return Q.all(promises).nodeify(callback);
     };
 
     BlobClient.prototype.getHumanSize = function (bytes, si) {
