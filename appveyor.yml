@@ -15,13 +15,13 @@ services:
 install:
   # Install the Redis
   - nuget install redis-64 -excludeversion
-  - redis-64\redis-server.exe --service-install
-  - redis-64\redis-server.exe --service-start
+  - redis-64\tools\redis-server.exe --service-install
+  - redis-64\tools\redis-server.exe --service-start
   - '@ECHO Redis Started'
   - where npm
   - where node
   - ps: Install-Product node $env:nodejs_version $env:platform
-  - for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install npm@latest
+  - for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install npm@2.14.7
   - for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install node-pre-gyp@latest
   - npm install
 
