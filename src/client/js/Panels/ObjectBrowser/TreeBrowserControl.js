@@ -27,7 +27,6 @@ define(['js/logger',
         GME_CONNECTION_CLASS = 'gme-connection',
         GME_ROOT_ICON = 'gme-root',
         GME_ASPECT_ICON = 'gme-aspect',
-        DEFAULT_VISUALIZER = 'ModelEditor',
         CROSSCUT_VISUALIZER = 'Crosscut',
         SET_VISUALIZER = 'SetEditor',
         TREE_ROOT = CONSTANTS.PROJECT_ROOT_ID,
@@ -272,9 +271,7 @@ define(['js/logger',
             treeBrowser.onNodeDoubleClicked = function (nodeId) {
                 logger.debug('Firing onNodeDoubleClicked with nodeId: ' + nodeId);
                 var settings = {};
-                settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
-                settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = DEFAULT_VISUALIZER;
-                WebGMEGlobal.State.set(settings);
+                WebGMEGlobal.State.registerActiveObject(nodeId);
             };
 
             treeBrowser.onExtendMenuItems = function (nodeId, menuItems) {
