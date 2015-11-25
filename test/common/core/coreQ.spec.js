@@ -5,7 +5,7 @@
  */
 var testFixture = require('../../_globals.js');
 
-describe.only('CoreQ Async with Promises', function () {
+describe('CoreQ Async with Promises', function () {
     'use strict';
 
     var gmeConfig,
