@@ -12,6 +12,7 @@ var Core = requireJS('common/core/coreQ'),
     merger = requireJS('common/core/users/merge'),
     BlobClient = requireJS('common/blob/BlobClient'),
     constraint = requireJS('common/core/users/constraintchecker'),
+    UINT = requireJS('common/util/uint'),
 
 // JsZip can't for some reason extract the exported files..
     AdmZip = require('adm-zip'),
@@ -387,7 +388,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     return Q.ninvoke(artifact, 'addFileAsSoftLink', entryName, zip.readFile(entry));
                 }
             })
-        )
+            )
             .then(function () {
                 var metadata = artifact.descriptor;
                 return blobUtil.addAssetsFromExportedProject(logger, blobClient, metadata);
@@ -462,7 +463,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 return Q.ninvoke(blobClient, 'getObject', hash);
             })
             .then(function (buffer) {
-                var jsonProj = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(buffer)));
+                var jsonProj = JSON.parse(UINT.uint8ArrayToString(new Uint8Array(buffer)));
 
                 if (jsonProj.root && jsonProj.root.path === '') {
                     return jsonProj;
@@ -502,7 +503,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     var persisted = core.persist(rootNode);
 
                     project.makeCommit(null, [], persisted.rootHash, persisted.objects,
-                        'seeding project[' + seedName + ']')
+                            'seeding project[' + seedName + ']')
                         .then(function (commitResult) {
                             logger.debug('seeding project, commitResult:', {metadata: commitResult});
                             return project.createBranch('master', commitResult.hash);
@@ -607,13 +608,13 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     }
 
                     merger.merge({
-                        project: project,
-                        gmeConfig: gmeConfig,
-                        logger: logger.fork('merge'),
-                        myBranchOrCommit: mine,
-                        theirBranchOrCommit: theirs,
-                        auto: true
-                    })
+                            project: project,
+                            gmeConfig: gmeConfig,
+                            logger: logger.fork('merge'),
+                            myBranchOrCommit: mine,
+                            theirBranchOrCommit: theirs,
+                            auto: true
+                        })
                         .nodeify(finish);
                 });
             })
@@ -652,11 +653,11 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     }
 
                     merger.resolve({
-                        project: project,
-                        gmeConfig: gmeConfig,
-                        logger: logger.fork('merge'),
-                        partial: partial
-                    })
+                            project: project,
+                            gmeConfig: gmeConfig,
+                            logger: logger.fork('merge'),
+                            partial: partial
+                        })
                         .nodeify(finish);
                 });
             })
