@@ -178,34 +178,19 @@ function Neo4jAdapter(mainLogger, gmeConfig) {
         var deferred = Q.defer();
 
         if (self.client) {
-            Q.ninvoke(self.client, 'renamenx', projectId, newProjectId)
-                .then(function (result) {
-                    // 1 if key was renamed to newkey.
-                    // 0 if newkey already exists.
-                    if (result === 1) {
-                        // Force rename for branches and commits.
-                        Q.allSettled([
-                            Q.ninvoke(self.client, 'rename',
-                                projectId + self.CONSTANTS.BRANCHES, newProjectId + self.CONSTANTS.BRANCHES),
-                            Q.ninvoke(self.client, 'rename',
-                                projectId + self.CONSTANTS.COMMITS, newProjectId + self.CONSTANTS.COMMITS)
-                        ])
-                            .then(function (/*result*/) {
-                                // Result may contain errors if no branches or commits were created,
-                                // these do not matter.
-                                deferred.resolve();
-                            });
-                    } else {
-                        deferred.reject(new Error('Project already exists ' + newProjectId));
-                    }
-                })
-                .catch(function (err) {
-                    if (err.message === 'ERR no such key') {
-                        deferred.reject(new Error('Project does not exist ' + projectId));
-                    } else {
-                        deferred.reject(err);
-                    }
-                });
+            deferred.reject(new Error('Not Implemented!'));
+        } else {
+            deferred.reject(new Error('Database is not open.'));
+        }
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function duplicateProject(projectId, newProjectId, callback) {
+        var deferred = Q.defer();
+
+        if (self.client) {
+            deferred.reject(new Error('Not Implemented!'));
         } else {
             deferred.reject(new Error('Database is not open.'));
         }
@@ -220,6 +205,7 @@ function Neo4jAdapter(mainLogger, gmeConfig) {
     this.deleteProject = deleteProject;
     this.createProject = createProject;
     this.renameProject = renameProject;
+    this.duplicateProject = duplicateProject;
 }
 
 module.exports = Neo4jAdapter;

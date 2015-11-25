@@ -210,6 +210,46 @@ function RedisAdapter(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
+    function duplicateProject(projectId, newProjectId, callback) {
+        var project,
+            newProject;
+
+        logger.warn('duplicateProject can use a lot of memory for redis', projectId);
+
+        return self.openProject(projectId)
+            .then(function (project_) {
+                project = project_;
+                return self.createProject(newProjectId);
+            })
+            .then(function (newProject_) {
+                newProject = newProject_;
+                // TODO: Is there a more efficient way of doing this?
+                return Q.all([
+                    Q.ninvoke(self.client, 'hgetall', projectId),
+                    Q.ninvoke(self.client, 'hgetall', projectId  + self.CONSTANTS.BRANCHES),
+                    Q.ninvoke(self.client, 'hgetall', projectId  + self.CONSTANTS.COMMITS),
+                ]);
+            })
+            .then(function (result) {
+                var promises = [Q.ninvoke(self.client, 'hmset', newProjectId, result[0])];
+
+                // Branches and Commits might not have been created for the source project
+                if (result[1]) {
+                    promises.push(Q.ninvoke(self.client, 'hmset', newProjectId  + self.CONSTANTS.BRANCHES, result[1]));
+                }
+
+                if (result[2]) {
+                    promises.push(Q.ninvoke(self.client, 'hmset', newProjectId  + self.CONSTANTS.COMMITS, result[2]));
+                }
+
+                return Q.all(promises);
+            })
+            .then(function (result) {
+                return newProject;
+            })
+            .nodeify(callback);
+    }
+
     this.openDatabase = openDatabase;
     this.closeDatabase = closeDatabase;
 
@@ -217,6 +257,7 @@ function RedisAdapter(mainLogger, gmeConfig) {
     this.deleteProject = deleteProject;
     this.createProject = createProject;
     this.renameProject = renameProject;
+    this.duplicateProject = duplicateProject;
 }
 
 module.exports = RedisAdapter;

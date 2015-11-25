@@ -139,6 +139,8 @@ function RedisProject(projectId, adapter) {
                     if (branchHash === oldhash) {
                         Q.ninvoke(adapter.client, 'hdel', branchesHashMap, branch)
                             .then(deferred.resolve);
+                    } else if (branchHash === null) {
+                        deferred.resolve();
                     } else {
                         deferred.reject(new Error('branch hash mismatch'));
                     }

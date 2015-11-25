@@ -110,118 +110,31 @@ function Neo4jProject(projectId, adapter, projectNodeId) {
     };
 
     this.getBranches = function (callback) {
-        return Q.ninvoke(adapter.client, 'hgetall', projectId + adapter.CONSTANTS.BRANCHES)
-            .then(function (result) {
-                return result || {};
-            })
-            .nodeify(callback);
+        throw new Error('Not Implemented');
     };
 
     this.getBranchHash = function (branch, callback) {
-        return Q.ninvoke(adapter.client, 'hget', projectId + adapter.CONSTANTS.BRANCHES, branch)
-            .then(function (branchHash) {
-                return branchHash || '';
-            }).nodeify(callback);
+        throw new Error('Not Implemented');
     };
 
     this.setBranchHash = function (branch, oldhash, newhash, callback) {
-        var deferred = Q.defer(),
-            branchesHashMap = projectId + adapter.CONSTANTS.BRANCHES;
+        var deferred = Q.defer();
 
         if (oldhash === newhash) {
-            Q.ninvoke(adapter.client, 'hget', branchesHashMap, branch)
-                .then(function (branchHash) {
-                    branchHash = branchHash || '';
-                    if (branchHash === oldhash) {
-                        deferred.resolve();
-                    } else {
-                        deferred.reject(new Error('branch hash mismatch'));
-                    }
-                })
-                .catch(deferred.reject);
+            deferred.reject(new Error('Not Implemented'));
         } else if (newhash === '') {
-            Q.ninvoke(adapter.client, 'hget', branchesHashMap, branch)
-                .then(function (branchHash) {
-                    if (branchHash === oldhash) {
-                        Q.ninvoke(adapter.client, 'hdel', branchesHashMap, branch)
-                            .then(deferred.resolve);
-                    } else {
-                        deferred.reject(new Error('branch hash mismatch'));
-                    }
-                })
-                .catch(deferred.reject);
+            deferred.reject(new Error('Not Implemented'));
         } else if (oldhash === '') {
-            Q.ninvoke(adapter.client, 'hsetnx', branchesHashMap, branch, newhash)
-                .then(function (result) {
-                    // 1 if field is a new field in the hash and value was set.
-                    // 0 if field already exists in the hash and no operation was performed.
-                    if (result === 1) {
-                        deferred.resolve();
-                    } else {
-                        deferred.reject(new Error('branch hash mismatch'));
-                    }
-                })
-                .catch(deferred.reject);
+            deferred.reject(new Error('Not Implemented'));
         } else {
-            Q.ninvoke(adapter.client, 'hget', branchesHashMap, branch)
-                .then(function (branchHash) {
-                    if (branchHash === oldhash) {
-                        Q.ninvoke(adapter.client, 'hset', branchesHashMap, branch, newhash)
-                            .then(function () {
-                                deferred.resolve();
-                            })
-                            .catch(deferred.reject);
-                    } else {
-                        deferred.reject(new Error('branch hash mismatch'));
-                    }
-                })
-                .catch(deferred.reject);
+            deferred.reject(new Error('Not Implemented'));
         }
 
         return deferred.promise.nodeify(callback);
     };
 
     this.getCommits = function (before, number, callback) {
-        return Q.ninvoke(adapter.client, 'hgetall', projectId + adapter.CONSTANTS.COMMITS)
-            .then(function (result) {
-                var i,
-                    hashArray,
-                    timestamp,
-                    hashKeys = Object.keys(result || {}),
-                    commitsInfo = [];
-
-                // FIXME: This is not a very optimized implementation
-                for (i = 0; i < hashKeys.length; i += 1) {
-                    timestamp = parseInt(result[hashKeys[i]], 10);
-                    if (timestamp < before) {
-                        commitsInfo.push({
-                            hash: hashKeys[i],
-                            time: timestamp
-                        });
-                    }
-                }
-
-                commitsInfo.sort(function (a, b) {
-                    return b.time - a.time;
-                });
-
-                hashArray = commitsInfo.slice(0, number).map(function (commitInfo) {
-                    return commitInfo.hash;
-                });
-
-                if (hashArray.length > 0) {
-                    hashArray.unshift(projectId);
-                    return Q.ninvoke(adapter.client, 'hmget', hashArray);
-                } else {
-                    return [];
-                }
-            })
-            .then(function (commitObjects) {
-                return commitObjects.map(function (commitObject) {
-                    return JSON.parse(commitObject);
-                });
-            })
-            .nodeify(callback);
+        throw new Error('Not Implemented');
     };
 }
 

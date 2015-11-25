@@ -9,6 +9,8 @@
 
 var Q = require('q'),
 
+    REGEXP = requireJS('common/regexp'),
+    storageHelpers = require('./storagehelpers'),
     EventDispatcher = requireJS('common/EventDispatcher'),
     CONSTANTS = requireJS('common/storage/constants');
 
@@ -321,59 +323,6 @@ Storage.prototype.loadObjects = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
-/**
- * Loads the entire composition chain up till the rootNode for the provided path. And stores the nodes
- * in the loadedObjects. If the any of the objects already exists in loadedObjects - it does not load it
- * from the database.
- *
- * @param {object} dbProject
- * @param {string} rootHash
- * @param {Object<string, object>} loadedObjects
- * @param {string} path
- * @param {boolean} excludeParents - if true will only include the node at the path
- * @returns {function|promise}
- */
-function loadPath(dbProject, rootHash, loadedObjects, path, excludeParents) {
-    var deferred = Q.defer(),
-        pathArray = path.split('/');
-
-    function loadParent(parentHash, relPath) {
-        var hash;
-        if (loadedObjects[parentHash]) {
-            // Object was already loaded.
-            if (relPath) {
-                hash = loadedObjects[parentHash][relPath];
-                loadParent(hash, pathArray.shift());
-            } else {
-                deferred.resolve();
-            }
-        } else {
-            dbProject.loadObject(parentHash)
-                .then(function (object) {
-                    if (relPath) {
-                        hash = object[relPath];
-                        if (!excludeParents) {
-                            loadedObjects[parentHash] = object;
-                        }
-                        loadParent(hash, pathArray.shift());
-                    } else {
-                        loadedObjects[parentHash] = object;
-                        deferred.resolve();
-                    }
-                })
-                .catch(function (err) {
-                    deferred.reject(err);
-                });
-        }
-    }
-
-    // Remove the root-path
-    pathArray.shift();
-
-    loadParent(rootHash, pathArray.shift());
-    return deferred.promise;
-}
-
 Storage.prototype.loadPaths = function (data, callback) {
     var self = this,
         deferred = Q.defer();
@@ -392,7 +341,8 @@ Storage.prototype.loadPaths = function (data, callback) {
                 } else {
                     counter -= 1;
                     pathInfo = data.pathsInfo[counter];
-                    loadPath(dbProject, pathInfo.parentHash, loadedObjects, pathInfo.path, data.excludeParents)
+                    storageHelpers.loadPath(dbProject, pathInfo.parentHash, loadedObjects, pathInfo.path,
+                        data.excludeParents)
                         .then(function () {
                             throttleLoad();
                         })
@@ -479,6 +429,35 @@ Storage.prototype.getCommits = function (data, callback) {
         });
 
     return deferred.promise.nodeify(callback);
+};
+
+Storage.prototype.getHistory = function (data, callback) {
+    var project,
+        start = data.start instanceof Array ? data.start : [data.start];
+
+    return this.database.openProject(data.projectId)
+        .then(function (project_) {
+            project = project_;
+
+            return Q.all(start.map(function (commitOrBranch) {
+                if (REGEXP.HASH.test(commitOrBranch)) {
+                    console.log('commit', commitOrBranch);
+                    return project.loadObject(commitOrBranch);
+                } else {
+                    return project.getBranchHash(commitOrBranch)
+                        .then(function (branchHash) {
+                            console.log('branch', commitOrBranch, branchHash);
+                            if (branchHash) {
+                                return project.loadObject(branchHash);
+                            }
+                        });
+                }
+            }));
+        })
+        .then(function (heads) {
+            return storageHelpers.loadHistory(project, data.number, storageHelpers.filterArray(heads));
+        })
+        .nodeify(callback);
 };
 
 Storage.prototype.getBranchHash = function (data, callback) {

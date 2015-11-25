@@ -16,6 +16,7 @@ var Q = require('q'),
     REGEXP = requireJS('common/regexp'),
     ASSERT = requireJS('common/util/assert'),
     Storage = require('./storage'),
+    filterArray = require('./storagehelpers').filterArray,
     UserProject = require('./userproject');
 
 function check(cond, deferred, msg) {
@@ -26,17 +27,6 @@ function check(cond, deferred, msg) {
     }
 
     return rejected;
-}
-
-function filterArray(arr) {
-    var i,
-        filtered = [];
-    for (i = 0; i < arr.length; i += 1) {
-        if (typeof arr[i] !== 'undefined') {
-            filtered.push(arr[i]);
-        }
-    }
-    return filtered;
 }
 
 /**
@@ -522,13 +512,13 @@ SafeStorage.prototype.getBranches = function (data, callback) {
 };
 
 /**
- * Returns an array of commits for a project.
+ * Returns an array of commits for a project ordered by their timestamp.
  *
  * Authorization level: read access for project
  *
  * @param {object} data - input parameters
  * @param {string} data.projectId - identifier for project.
- * @param {number} data.number - number of commits to load.
+ * @param {number} data.number - maximum number of commits to load.
  * @param {string|number} data.before - timestamp or commitHash to load history from. When number given it will load
  *  data.number of commits strictly before data.before, when commitHash is given it will return that commit too.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
@@ -563,6 +553,61 @@ SafeStorage.prototype.getCommits = function (data, callback) {
             .then(function (projectAccess) {
                 if (projectAccess.read) {
                     return Storage.prototype.getCommits.call(self, data);
+                } else {
+                    throw new Error('Not authorized to read project. ' + data.projectId);
+                }
+            })
+            .then(function (result) {
+                deferred.resolve(result);
+            })
+            .catch(function (err) {
+                deferred.reject(new Error(err));
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
+/**
+ * Returns an array of commits starting from either a branch(es) or commitHash(es).
+ * They are ordered by the rules (applied in order)
+ *  1. Descendants are always before their ancestors
+ *  2. By their timestamp
+ *
+ * Authorization level: read access for project
+ *
+ * @param {object} data - input parameters
+ * @param {string} data.projectId - identifier for project.
+ * @param {number} data.number - maximum number of commits to load.
+ * @param {string|string[]} data.start - BranchName or commitHash or array of such.
+ * @param {string} [data.username=gmeConfig.authentication.guestAccount]
+ * @param {function} [callback]
+ * @returns {promise} //TODO: jsdocify this
+ */
+SafeStorage.prototype.getHistory = function (data, callback) {
+    var deferred = Q.defer(),
+        rejected = false,
+        self = this;
+
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+        check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+        check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
+        check(typeof data.start === 'string' ||
+            (typeof data.start === 'object' && data.start instanceof Array),
+            deferred, 'data.start is not a string or array') ||
+        check(typeof data.number === 'number', deferred, 'data.number is not a number');
+
+    if (data.hasOwnProperty('username')) {
+        rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
+    } else {
+        data.username = this.gmeConfig.authentication.guestAccount;
+    }
+
+    if (rejected === false) {
+        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+            .then(function (projectAccess) {
+                if (projectAccess.read) {
+                    return Storage.prototype.getHistory.call(self, data);
                 } else {
                     throw new Error('Not authorized to read project. ' + data.projectId);
                 }

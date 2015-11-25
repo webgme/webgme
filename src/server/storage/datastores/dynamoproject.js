@@ -145,7 +145,7 @@ function DynamoProject(projectId, adapter) {
                 deferred.reject(err);
                 return;
             }
-            console.log(result);
+
             deferred.reject(new Error('Not implemented'));
         });
 
@@ -336,8 +336,7 @@ function DynamoProject(projectId, adapter) {
             if (result.Item && result.Item.data && result.Item.data.S) {
                 deferred.resolve(JSON.parse(result.Item.data.S));
             } else {
-                logger.error('object does not exist ', hash, result);
-                deferred.reject(new Error('object does not exist ' + hash));
+                deferred.reject(new Error('getCommits query did not return data!'));
             }
         });
 

@@ -7,7 +7,7 @@
 
 var testFixture = require('../../../_globals.js');
 
-describe.skip('RedisAdapter', function () {
+describe('RedisAdapter', function () {
     var RedisAdapter = require('../../../../src/server/storage/datastores/redisadapter'),
         expect = testFixture.expect,
         Q = testFixture.Q,

@@ -417,30 +417,22 @@ function Mongo(mainLogger, gmeConfig) {
 
     function duplicateProject(projectId, newProjectId, callback) {
         var project,
-            newProject,
-            deferred = Q.defer();
+            newProject;
 
         logger.debug('duplicateProject', projectId);
 
-        if (self.client) {
-            self.openProject(projectId)
-                .then(function (project_) {
-                    project = project_;
-                    return self.createProject(newProjectId);
-                })
-                .then(function (newProject_) {
-                    newProject = newProject_;
-                    return Q.ninvoke(project._collection, 'aggregate', [{ $out: newProjectId }]);
-                })
-                .then(function () {
-                    deferred.resolve(newProject);
-                })
-                .catch(deferred.reject);
-        } else {
-            deferred.reject(new Error('Database is not open.'));
-        }
-
-        return deferred.promise.nodeify(callback);
+        return self.openProject(projectId)
+            .then(function (project_) {
+                project = project_;
+                return self.createProject(newProjectId);
+            })
+            .then(function (newProject_) {
+                newProject = newProject_;
+                return Q.ninvoke(project._collection, 'aggregate', [{ $out: newProjectId }]);
+            })
+            .then(function () {
+                return newProject;
+            });
     }
 
     this.openDatabase = openDatabase;

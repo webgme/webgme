@@ -221,6 +221,8 @@ function Memory(mainLogger, gmeConfig) {
                         }));
                     }
                     deferred.resolve();
+                } else if (hash === '' && newhash === '') {
+                    deferred.resolve();
                 } else {
                     deferred.reject(new Error('branch hash mismatch'));
                 }
@@ -379,7 +381,7 @@ function Memory(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
-    function renameProject(projectId, newProjectId, callback) {
+    function _moveProject(projectId, newProjectId, remove, callback) {
         var deferred = Q.defer(),
             key,
             keyArray,
@@ -417,10 +419,13 @@ function Memory(mainLogger, gmeConfig) {
 
                 for (i = 0; i < namesToRemove.length; i += 1) {
                     storage.setItem(namesToAdd[i], storage.getItem(namesToRemove[i]));
-                    storage.removeItem(namesToRemove[i]);
+                    if (remove) {
+                        storage.removeItem(namesToRemove[i]);
+                    }
                 }
-
-                storage.removeItem(oldProjectKey);
+                if (remove) {
+                    storage.removeItem(oldProjectKey);
+                }
 
                 deferred.resolve();
             }
@@ -431,6 +436,16 @@ function Memory(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
+    function renameProject(projectId, newProjectId, callback) {
+        return _moveProject(projectId, newProjectId, true)
+            .nodeify(callback);
+    }
+
+    function duplicateProject(projectId, newProjectId, callback) {
+        return _moveProject(projectId, newProjectId, false)
+            .nodeify(callback);
+    }
+
     this.openDatabase = openDatabase;
     this.closeDatabase = closeDatabase;
 
@@ -438,6 +453,7 @@ function Memory(mainLogger, gmeConfig) {
     this.deleteProject = deleteProject;
     this.openProject = openProject;
     this.renameProject = renameProject;
+    this.duplicateProject = duplicateProject;
 }
 
 module.exports = Memory;
