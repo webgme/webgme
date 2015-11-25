@@ -98,6 +98,25 @@ Storage.prototype.renameProject = function (data, callback) {
         .nodeify(callback);
 };
 
+Storage.prototype.duplicateProject = function (data, callback) {
+    var self = this;
+    return this.database.duplicateProject(data.projectId, data.newProjectId)
+        .then(function (project) {
+            var eventData = {
+                projectId: data.projectId
+            };
+
+            self.logger.debug('Project created will dispatch', data.projectId);
+            if (self.gmeConfig.storage.broadcastProjectEvents) {
+                eventData.socket = data.socket;
+            }
+
+            self.dispatchEvent(CONSTANTS.PROJECT_CREATED, eventData);
+            return project;
+        })
+        .nodeify(callback);
+};
+
 Storage.prototype.getBranches = function (data, callback) {
     return this.database.openProject(data.projectId)
         .then(function (project) {

@@ -7,7 +7,7 @@
 
 var testFixture = require('../../../_globals.js');
 
-describe('MemoryAdapter', function () {
+describe.skip('MemoryAdapter', function () {
     var MemoryAdapter = require('../../../../src/server/storage/memory'),
         expect = testFixture.expect,
         Q = testFixture.Q,

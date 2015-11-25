@@ -23,6 +23,7 @@ function genOpenCloseDatabase(AdapterClass, logger, gmeConfig, Q, expect) {
         expect(databaseAdapter).to.have.property('deleteProject');
         expect(databaseAdapter).to.have.property('openProject');
         expect(databaseAdapter).to.have.property('renameProject');
+        expect(databaseAdapter).to.have.property('duplicateProject');
     });
 
     it('should open and close', function (done) {
@@ -405,6 +406,48 @@ function genCreateOpenDeleteRenameProject(databaseAdapter, Q, expect) {
             })
             .nodeify(done);
     });
+
+    it('should duplicateProject if it exists and old does not', function (done) {
+        databaseAdapter.createProject('project10')
+            .then(function () {
+                return databaseAdapter.duplicateProject('project10', 'newProject10');
+            })
+            .then(function () {
+                return databaseAdapter.openProject('newProject10');
+            })
+            .then(function () {
+                return databaseAdapter.openProject('project10');
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to duplicateProject if new project already exists', function (done) {
+        Q.allDone([
+            databaseAdapter.createProject('project11'),
+            databaseAdapter.createProject('newProject11')
+        ])
+            .then(function () {
+                return databaseAdapter.duplicateProject('project11', 'newProject11');
+            })
+            .then(function () {
+                throw new Error('should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Project already exists newProject11');
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to duplicateProject if it does not exist', function (done) {
+        databaseAdapter.duplicateProject('project12', 'newProject12')
+            .then(function () {
+                throw new Error('should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Project does not exist project12');
+            })
+            .nodeify(done);
+    });
 }
 
 /**
@@ -449,6 +492,17 @@ function genDatabaseClosedErrors(databaseAdapter, Q, expect) {
 
     it('should fail to renameProject', function (done) {
         databaseAdapter.renameProject('project')
+            .then(function () {
+                throw new Error('should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Database is not open');
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to duplicateProject', function (done) {
+        databaseAdapter.duplicateProject('project')
             .then(function () {
                 throw new Error('should have failed!');
             })
@@ -506,7 +560,7 @@ function genInsertLoadAndCommits(databaseAdapter, Q, expect) {
                 return project.insertObject({a: 1, b: 2, _id: '#ab12'});
             })
             .then(function () {
-                project.insertObject({a: 2, b: 2, _id: '#ab12'});
+                return project.insertObject({a: 2, b: 2, _id: '#ab12'});
             })
             .then(function () {
                 throw new Error('should have failed!');
@@ -918,7 +972,7 @@ function genBranchOperations(databaseAdapter, Q, expect) {
                 return project.getBranchHash('master');
             })
             .then(function (branchHash) {
-                expect(branchHash).to.equal('#startHash');
+                expect(branchHash).to.equal('#newHash');
             })
             .nodeify(done);
     });
@@ -1073,6 +1127,52 @@ function genBranchOperations(databaseAdapter, Q, expect) {
                     .nodeify(done);
             })
             .done();
+    });
+
+    it('should contain branches and commits after duplicate', function (done) {
+        var project,
+            commitObj1 = {_id: '#commitHash1', time: 1, type: 'commit'},
+            commitObj2 = {_id: '#commitHash2', time: 2, type: 'commit'},
+            commitObj3 = {_id: '#commitHash3', time: 3, type: 'commit'};
+
+        databaseAdapter.createProject('project19')
+            .then(function (project_) {
+                project = project_;
+                return Q.allDone([
+                    project.setBranchHash('b', '', '#newHash'),
+                    project.setBranchHash('b1', '', '#newHash1'),
+                    project.insertObject(commitObj1),
+                    project.insertObject(commitObj2),
+                    project.insertObject(commitObj3)
+                ]);
+            })
+            .then(function () {
+                return project.closeProject();
+            })
+            .then(function () {
+                return databaseAdapter.duplicateProject('project19', 'newProject19');
+            })
+            .then(function () {
+                return Q.allDone([
+                    databaseAdapter.openProject('newProject19'),
+                    databaseAdapter.openProject('project19')
+                    ]);
+            })
+            .then(function (result) {
+                return Q.allDone([
+                    result[0].getBranches(),
+                    result[1].getBranches(),
+                    result[0].getCommits(10, 10),
+                    result[1].getCommits(10, 10),
+                ]);
+            })
+            .then(function (result) {
+                expect(result[0]).to.deep.equal({b: '#newHash', b1: '#newHash1'});
+                expect(result[1]).to.deep.equal({b: '#newHash', b1: '#newHash1'});
+                expect(result[2]).to.deep.equal([commitObj3, commitObj2, commitObj1]);
+                expect(result[3]).to.deep.equal([commitObj3, commitObj2, commitObj1]);
+            })
+            .nodeify(done);
     });
 }
 

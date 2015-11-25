@@ -36,6 +36,7 @@ function Mongo(mainLogger, gmeConfig) {
      */
     function MongoProject(projectId, collection) {
         this.projectId = projectId;
+        this._collection = collection;
 
         this.closeProject = function (callback) {
             var deferred = Q.defer();
@@ -171,9 +172,17 @@ function Mongo(mainLogger, gmeConfig) {
                     hash: oldhash
                 }, function (err, num) {
                     if (!err && num !== 1) {
-                        err = new Error('branch hash mismatch');
-                    }
-                    if (err) {
+                        collection.findOne({_id: branch}, function (err, obj) {
+                            if (!err && obj) {
+                                err = new Error('branch hash mismatch');
+                            }
+                            if (err) {
+                                deferred.reject(err);
+                            } else {
+                                deferred.resolve();
+                            }
+                        });
+                    } else if (err) {
                         deferred.reject(err);
                     } else {
                         deferred.resolve();
@@ -406,6 +415,34 @@ function Mongo(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
+    function duplicateProject(projectId, newProjectId, callback) {
+        var project,
+            newProject,
+            deferred = Q.defer();
+
+        logger.debug('duplicateProject', projectId);
+
+        if (self.client) {
+            self.openProject(projectId)
+                .then(function (project_) {
+                    project = project_;
+                    return self.createProject(newProjectId);
+                })
+                .then(function (newProject_) {
+                    newProject = newProject_;
+                    return Q.ninvoke(project._collection, 'aggregate', [{ $out: newProjectId }]);
+                })
+                .then(function () {
+                    deferred.resolve(newProject);
+                })
+                .catch(deferred.reject);
+        } else {
+            deferred.reject(new Error('Database is not open.'));
+        }
+
+        return deferred.promise.nodeify(callback);
+    }
+
     this.openDatabase = openDatabase;
     this.closeDatabase = closeDatabase;
 
@@ -413,6 +450,7 @@ function Mongo(mainLogger, gmeConfig) {
     this.deleteProject = deleteProject;
     this.createProject = createProject;
     this.renameProject = renameProject;
+    this.duplicateProject = duplicateProject;
 }
 
 module.exports = Mongo;

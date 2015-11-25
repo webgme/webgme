@@ -311,6 +311,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
 
 /**
  *
+ * Authorization level: canCreate and delete access for project
  * @param data
  * @param callback
  * @returns {*}
@@ -365,6 +366,104 @@ SafeStorage.prototype.transferProject = function (data, callback) {
                 deferred.resolve(newProjectId);
             })
             .catch(function (err) {
+                deferred.reject(new Error(err));
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
+/**
+ * Duplicates a project including all data-objects, commits, branches etc.
+ *
+ * Authorization level: canCreate and read access for project
+ *
+ * @param {object} data - input parameters
+ * @param {string} data.projectId - id of existing project that will be duplicated.
+ * @param {string} data.projectName - name of new project.
+ * @param {string} [data.username=gmeConfig.authentication.guestAccount]
+ * @param {string} [data.ownerId=data.username]
+ * @param {function} [callback]
+ * @returns {promise} //TODO: jsdocify this
+ */
+SafeStorage.prototype.duplicateProject = function (data, callback) {
+    var deferred = Q.defer(),
+        rejected = false,
+        self = this;
+
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+        check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+        check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
+        check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
+        check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
+
+    if (data.hasOwnProperty('username')) {
+        rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
+    } else {
+        data.username = this.gmeConfig.authentication.guestAccount;
+    }
+
+    if (data.ownerId) {
+        rejected = rejected || check(typeof data.ownerId === 'string', deferred, 'data.ownerId is not a string.');
+    } else {
+        data.ownerId = data.username;
+    }
+
+    if (rejected === false) {
+        self.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+            .then(function (projectAccess) {
+                if (!projectAccess.read) {
+                    throw new Error('Not authorized to read project: ' + data.projectId);
+                }
+
+                return self.gmeAuth.getUser(data.username);
+            })
+            .then(function (user) {
+                if (!user.canCreate) {
+                    throw new Error('Not authorized to create a new project.');
+                } else if (data.ownerId === data.username) {
+                    return data.ownerId;
+                } else {
+                    return self.gmeAuth.getAdminsInOrganization(data.ownerId)
+                        .then(function (admins) {
+                            if (admins.indexOf(data.username) > -1) {
+                                return data.ownerId;
+                            } else {
+                                throw new Error('Not authorized to create project in organization ' + data.ownerId);
+                            }
+                        });
+                }
+            })
+            .then(function (ownerId) {
+                var now = (new Date()).toISOString(),
+                    info = {
+                        createdAt: now,
+                        viewedAt: now,
+                        modifiedAt: now,
+                        creator: data.username,
+                        viewer: data.username,
+                        modifier: data.username
+                    };
+
+                return self.gmeAuth.addProject(ownerId, data.projectName, info);
+            })
+            .then(function (projectId) {
+                data.newProjectId = projectId;
+                return self.gmeAuth.authorizeByUserId(data.username, projectId, 'create', {
+                    read: true,
+                    write: true,
+                    delete: true
+                });
+            })
+            .then(function () {
+                return Storage.prototype.duplicateProject.call(self, data);
+            })
+            .then(function (dbProject) {
+                var project = new UserProject(dbProject, self, self.logger, self.gmeConfig);
+                deferred.resolve(project);
+            })
+            .catch(function (err) {
+                // TODO: Clean up appropriately when failure to add to model, user or projects database.
                 deferred.reject(new Error(err));
             });
     }

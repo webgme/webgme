@@ -198,6 +198,10 @@ define([
             self.socket.emit('transferProject', data, wrapError(callback));
         };
 
+        this.duplicateProject = function (data, callback) {
+            self.socket.emit('duplicateProject', data, wrapError(callback));
+        };
+
         this.getBranches = function (data, callback) {
             self.socket.emit('getBranches', data, wrapError(callback));
         };

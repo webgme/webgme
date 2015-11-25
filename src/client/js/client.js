@@ -954,6 +954,14 @@ define([
             }
         };
 
+        this.duplicateProject = function (projectId, projectName, newOwnerId, callback) {
+            if (isConnected()) {
+                storage.duplicateProject(projectId, projectName, newOwnerId, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
         this.createBranch = function (projectId, branchName, newHash, callback) {
             if (isConnected()) {
                 storage.createBranch(projectId, branchName, newHash, callback);

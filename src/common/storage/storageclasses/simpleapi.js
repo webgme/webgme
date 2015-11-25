@@ -164,6 +164,23 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         this.webSocket.transferProject(data, callback);
     };
 
+    StorageSimpleAPI.prototype.duplicateProject = function (projectId, projectName, ownerId, callback) {
+        var data = {
+            projectId: projectId,
+            projectName: projectName,
+            ownerId: ownerId
+        };
+
+        if (callback === undefined && typeof ownerId === 'function') {
+            callback = ownerId;
+            data.ownerId = undefined;
+        }
+
+        this.logger.debug('invoking duplicateProject', {metadata: data});
+        this.webSocket.duplicateProject(data, callback);
+    };
+
+
     StorageSimpleAPI.prototype.setBranchHash = function (projectId, branchName, newHash, oldHash, callback) {
         var data = {
             projectId: projectId,

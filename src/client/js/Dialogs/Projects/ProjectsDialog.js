@@ -122,11 +122,10 @@ define([
 
                 d.show(function (seedType, seedName, seedBranchName, seedCommitHash, blobHash) {
                     if (seedType && seedName) {
-                        self._createProjectFromSeed(val, seedType, seedName, seedBranchName, seedCommitHash, blobHash);
+                        self._createProject(val, seedType, seedName, seedBranchName, seedCommitHash, blobHash);
                     } else {
-                        self._dialog.modal('show');
+                        self._logger.debug('Closed create dialog with arguments', seedType, seedName);
                     }
-
                 });
             }
         }
@@ -621,7 +620,7 @@ define([
         }
     };
 
-    ProjectsDialog.prototype._createProjectFromSeed = function (
+    ProjectsDialog.prototype._createProject = function (
         projectName,
         type,
         seedName,
@@ -639,29 +638,44 @@ define([
             },
             loader = new LoaderCircles({containerElement: $('body')});
 
-
-        self._logger.debug('Creating new project from seed: ', parameters);
+        function selectNewProject(projectId) {
+            self._client.selectProject(projectId, null, function (err) {
+                if (err) {
+                    self._logger.error('Cannot select project', err);
+                } else {
+                    self._logger.debug('Selected project');
+                    WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+                }
+                loader.stop();
+            });
+        }
 
         // TODO: remove these two lines once the create seed API is implemented and functional
         loader.start();
 
-        self._client.seedProject(parameters, function (err, result) {
-            if (err) {
-                self._logger.error('Cannot create seed project', err);
-                loader.stop();
-            } else {
-                self._logger.debug('Created new project from seed');
-                self._client.selectProject(result.projectId, null, function (err) {
-                    if (err) {
-                        self._logger.error('Cannot select project', err);
-                    } else {
-                        self._logger.debug('Selected project');
-                        WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
-                    }
+        if (type === 'duplicate') {
+            self._logger.debug('Duplicating project: ', seedName, projectName, self._ownerId);
+            self._client.duplicateProject(seedName, projectName, self._ownerId, function (err, projectId) {
+                if (err) {
+                    self._logger.error('Failed to duplicate project', err);
                     loader.stop();
-                });
-            }
-        });
+                } else {
+                    self._logger.debug('Duplicated project');
+                    selectNewProject(projectId);
+                }
+            });
+        } else {
+            self._logger.debug('Creating new project from seed: ', parameters);
+            self._client.seedProject(parameters, function (err, result) {
+                if (err) {
+                    self._logger.error('Cannot create seed project', err);
+                    loader.stop();
+                } else {
+                    self._logger.debug('Created new project from seed');
+                    selectNewProject(result.projectId);
+                }
+            });
+        }
     };
 
     return ProjectsDialog;
