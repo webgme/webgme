@@ -167,12 +167,12 @@ define([
                     scope: myScope
                 });
 
-                self._dialog.modal('hide');
+                self._modalContent.addClass('in-background');
 
                 deleteProjectModal.result.then(function () {
-                    self._dialog.modal('show');
+                    self._modalContent.removeClass('in-background');
                 }, function () {
-                    self._dialog.modal('show');
+                    self._modalContent.removeClass('in-background');
                 });
 
 
@@ -182,6 +182,7 @@ define([
         this._dialog = $(projectsDialogTemplate);
 
         //get controls
+        this._modalContent = this._dialog.find('.modal-content').first();
         this._el = this._dialog.find('.modal-body').first();
         this._table = this._el.find('table').first();
         this._tableHead = this._table.find('thead').first();
