@@ -210,6 +210,10 @@ define([
             self.socket.emit('getCommits', data, wrapError(callback));
         };
 
+        this.getHistory = function (data, callback) {
+            self.socket.emit('getHistory', data, wrapError(callback));
+        };
+
         this.getLatestCommitData = function (data, callback) {
             self.socket.emit('getLatestCommitData', data, wrapError(callback));
         };

@@ -665,6 +665,24 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     });
             });
 
+            socket.on('getHistory', function (data, callback) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getHistory(data);
+                    })
+                    .then(function (commits) {
+                        callback(null, commits);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
             socket.on('getLatestCommitData', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {

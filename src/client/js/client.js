@@ -921,6 +921,14 @@ define([
             }
         };
 
+        this.getHistory = function (projectId, start, number, callback) {
+            if (isConnected()) {
+                storage.getHistory(projectId, start, number, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
         this.getLatestCommitData = function (projectId, branchName, callback) {
             if (isConnected()) {
                 storage.getLatestCommitData(projectId, branchName, callback);
