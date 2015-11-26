@@ -8,11 +8,17 @@
  * @author ksmyth / https://github.com/ksmyth
  */
 
-define(['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q'], function (Artifact, BlobMetadata, superagent, Q) {
+define([
+    'blob/Artifact',
+    'blob/BlobMetadata',
+    'superagent',
+    'q',
+    'common/util/uint'
+], function (Artifact, BlobMetadata, superagent, Q, UINT) {
     'use strict';
 
     /**
-     * 
+     *
      * @param {object} parameters
      * @constructor
      * @alias BlobClient
@@ -25,9 +31,9 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q'], function (Arti
             this.serverPort = parameters.serverPort || this.serverPort;
             this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
             this.webgmeclientsession = parameters.webgmeclientsession;
-            this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || { /* use defaults */ };
+            this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || {/* use defaults */};
         } else {
-            this.keepaliveAgentOptions = { /* use defaults */ };
+            this.keepaliveAgentOptions = {/* use defaults */};
         }
         this.origin = '';
         if (this.httpsecure !== undefined && this.server && this.serverPort) {
@@ -305,15 +311,7 @@ define(['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q'], function (Arti
                     var contentType = req.xhr.getResponseHeader('content-type');
                     var response = req.xhr.response; // response is an arraybuffer
                     if (contentType === 'application/json') {
-                        var utf8ArrayToString = function (uintArray) {
-                            var inputString = '',
-                                i;
-                            for (i = 0; i < uintArray.byteLength; i++) {
-                                inputString += String.fromCharCode(uintArray[i]);
-                            }
-                            return decodeURIComponent(escape(inputString));
-                        };
-                        response = JSON.parse(utf8ArrayToString(new Uint8Array(response)));
+                        response = JSON.parse(UINT.uint8ArrayToString(new Uint8Array(response)));
                     }
                     deferred.resolve(response);
                 }
