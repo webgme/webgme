@@ -58,6 +58,8 @@ var testFixture = require('./test/_globals.js'),
         })
         .then(function () {
             // Import all the projects.
+
+
             function importProject(projectInfo) {
                 var branchName = projectInfo.hasOwnProperty('branches') ?
                     projectInfo.branches[0] : 'master';
@@ -84,10 +86,16 @@ var testFixture = require('./test/_globals.js'),
                             }
                         }
                         return Q.allDone(createBranches);
+                    })
+                    .then(function () {
+                        var nextProject = PROJECTS_TO_IMPORT.shift();
+                        if (nextProject) {
+                            return importProject(nextProject);
+                        }
                     });
             }
 
-            return Q.allDone(PROJECTS_TO_IMPORT.map(importProject));
+            return importProject(PROJECTS_TO_IMPORT.shift());
         })
         .then(function () {
             // Close the storage
