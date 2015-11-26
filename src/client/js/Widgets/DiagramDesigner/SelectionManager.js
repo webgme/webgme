@@ -611,9 +611,10 @@ define([
             deleteBtn = DELETE_BUTTON_BASE.clone();
             this._diagramDesigner.skinParts.$selectionOutline.append(deleteBtn);
 
-            moveBtn = MOVE_BUTTON_BASE.clone();
-            this._diagramDesigner.skinParts.$selectionOutline.append(moveBtn);
-            this._diagramDesigner._makeDraggable({$el: moveBtn});
+            // FIXME: There is an issue with the x and y offset, try it with zoom and scroll, too.
+            // moveBtn = MOVE_BUTTON_BASE.clone();
+            // this._diagramDesigner.skinParts.$selectionOutline.append(moveBtn);
+            // this._diagramDesigner._makeDraggable({$el: moveBtn});
         }
 
         //context menu
