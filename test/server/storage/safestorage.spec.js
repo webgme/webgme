@@ -604,8 +604,6 @@ describe('SafeStorage', function () {
                 start: commitHash1
             };
 
-            console.log(commitHash1);
-
             safeStorage.getHistory(data)
                 .then(function (commits) {
                     expect(commits.length).to.equal(2);
@@ -622,8 +620,6 @@ describe('SafeStorage', function () {
                 start: [commitHash1, commitHash]
             };
 
-            console.log(commitHash1);
-
             safeStorage.getHistory(data)
                 .then(function (commits) {
                     expect(commits.length).to.equal(2);
@@ -639,8 +635,6 @@ describe('SafeStorage', function () {
                 number: 1,
                 start: [commitHash1, commitHash]
             };
-
-            console.log(commitHash1);
 
             safeStorage.getHistory(data)
                 .then(function (commits) {
@@ -688,8 +682,6 @@ describe('SafeStorage', function () {
                 start: ['b', 'b1']
             };
 
-            console.log(commitHash1);
-
             safeStorage.getHistory(data)
                 .then(function (commits) {
                     expect(commits.length).to.equal(2);
@@ -705,8 +697,6 @@ describe('SafeStorage', function () {
                 number: 10,
                 start: ['b', commitHash1]
             };
-
-            console.log(commitHash1);
 
             safeStorage.getHistory(data)
                 .then(function (commits) {

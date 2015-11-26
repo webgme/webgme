@@ -100,7 +100,7 @@ function DynamoProject(projectId, adapter) {
                     deferred.reject(err);
                     return;
                 }
-                console.log(result);
+
                 if (result.Attributes && result.Attributes.data && result.Attributes.data.S) {
                     var objectStr = result.Attributes.data.S,
                         errMsg;
@@ -168,7 +168,7 @@ function DynamoProject(projectId, adapter) {
                 deferred.reject(err);
                 return;
             }
-            console.log('getBranchHash', result);
+
             if (result.Item && result.Item.hash && result.Item.hash.S) {
                 deferred.resolve(result.Item.hash.S);
             } else {
@@ -233,7 +233,7 @@ function DynamoProject(projectId, adapter) {
                     deferred.reject(err);
                     return;
                 }
-                console.log('delete:', params, result);
+
                 if (result.Attributes && result.Attributes.hash && result.Attributes.hash.S) {
                     if (result.Attributes.hash.S === oldhash) {
                         deferred.resolve();
@@ -265,7 +265,7 @@ function DynamoProject(projectId, adapter) {
                     deferred.reject(err);
                     return;
                 }
-                console.log('create:', result);
+
                 if (result.Attributes && result.Attributes.hash && result.Attributes.hash.S) {
                     deferred.reject(new Error('branch hash mismatch'));
                 } else {
@@ -298,7 +298,7 @@ function DynamoProject(projectId, adapter) {
                     deferred.reject(err);
                     return;
                 }
-                console.log('update:', result);
+
                 if (result.Attributes && result.Attributes.hash && result.Attributes.hash.S) {
                     if (result.Attributes.hash.S === oldhash) {
                         deferred.resolve();

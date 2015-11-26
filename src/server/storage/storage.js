@@ -441,12 +441,10 @@ Storage.prototype.getHistory = function (data, callback) {
 
             return Q.all(start.map(function (commitOrBranch) {
                 if (REGEXP.HASH.test(commitOrBranch)) {
-                    console.log('commit', commitOrBranch);
                     return project.loadObject(commitOrBranch);
                 } else {
                     return project.getBranchHash(commitOrBranch)
                         .then(function (branchHash) {
-                            console.log('branch', commitOrBranch, branchHash);
                             if (branchHash) {
                                 return project.loadObject(branchHash);
                             }
