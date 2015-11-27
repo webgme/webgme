@@ -586,7 +586,7 @@ define([
         this.onRowDelete(id, aData);
     };
 
-    DataGridWidget.prototype.$_editSaveCancel = $('<i class="glyphicon glyphicon-ok glyphicon glyphicon-ok editSave">' +
+    DataGridWidget.prototype.$_editSaveCancel = $('<i class="glyphicon glyphicon-ok editSave">' +
     '</i> <i class="glyphicon glyphicon-remove editCancel"></i>');
 
     DataGridWidget.prototype._onRowEdit = function (rowIndex, id /*, aData*/) {

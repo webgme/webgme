@@ -100,11 +100,11 @@ define(['jquery', './DropDownMenu'], function (_jquery, DropDownMenu) {
             selectedIcon;
 
         //first remove existing
-        this._ul.find('i.icon-ok').remove();
+        this._ul.find('i.icon-ok').remove(); // FIXME: MAGIC CLASS COMING FROM DiagramDesignerWidget.Tabs
 
         if (li) {
             a = li.find('> a');
-            selectedIcon = $('<i class="glyphicon glyphicon-ok glyphicon glyphicon-ok"></i>');
+            selectedIcon = $('<i class="icon-ok glyphicon glyphicon-ok"></i>'); // FIXME: MAGIC CLASS COMING FROM DiagramDesignerWidget.Tabs
 
             selectedIcon.css({
                 'margin-left': '-16px',
