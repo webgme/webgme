@@ -921,6 +921,14 @@ define([
             }
         };
 
+        this.getHistory = function (projectId, start, number, callback) {
+            if (isConnected()) {
+                storage.getHistory(projectId, start, number, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
         this.getLatestCommitData = function (projectId, branchName, callback) {
             if (isConnected()) {
                 storage.getLatestCommitData(projectId, branchName, callback);
@@ -949,6 +957,14 @@ define([
         this.transferProject = function (projectId, newOwnerId, callback) {
             if (isConnected()) {
                 storage.transferProject(projectId, newOwnerId, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
+        this.duplicateProject = function (projectId, projectName, newOwnerId, callback) {
+            if (isConnected()) {
+                storage.duplicateProject(projectId, projectName, newOwnerId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
             }

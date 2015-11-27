@@ -27,7 +27,7 @@ var Path = require('path'),
     contentDisposition = require('content-disposition'),
 
     MongoAdapter = require('./storage/mongo'),
-    RedisAdapter = require('./storage/redisadapter'),
+    RedisAdapter = require('./storage/datastores/redisadapter'),
     MemoryAdapter = require('./storage/memory'),
     Storage = require('./storage/safestorage'),
     WebSocket = require('./storage/websocket'),

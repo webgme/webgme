@@ -182,10 +182,7 @@ define(['js/Loader/LoaderCircles',
             event.stopPropagation();
             self._dialog.modal('hide');
             if (self._fnCallback && self.assetWidget.propertyValue) {
-                self._fnCallback('blob',
-                    self.assetWidget.propertyValue,
-                    null,
-                    null);
+                self._fnCallback('blob', self.assetWidget.propertyValue, null, null);
             }
         });
 
@@ -215,14 +212,11 @@ define(['js/Loader/LoaderCircles',
         this._btnDuplicate.on('click', function (event) {
             event.preventDefault();
             event.stopPropagation();
-            self._logger.debug('Duplicate not yet supported', self._selectDuplicate.val);
-            //self._dialog.modal('hide');
-            //if (self._fnCallback) {
-            //    self._fnCallback('duplicate',
-            //        self.assetWidget.propertyValue,
-            //        null,
-            //        null);
-            //}
+            self._logger.debug('Duplicating with value', self._selectDuplicate.val());
+            self._dialog.modal('hide');
+            if (self._fnCallback) {
+                self._fnCallback('duplicate', self._selectDuplicate.val(), null, null);
+            }
         });
 
         // get seed project list

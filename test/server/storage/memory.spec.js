@@ -149,7 +149,7 @@ describe('Memory storage', function () {
                 })
                 .catch(function (err) {
                     expect(err instanceof Error).to.equal(true);
-                    expect(err.message).to.include('In-memory database has to be initialized.');
+                    expect(err.message).to.include('Database is not open');
                     done();
                 })
                 .done();
@@ -196,7 +196,7 @@ describe('Memory storage', function () {
                 })
                 .catch(function (err) {
                     expect(err instanceof Error).to.equal(true);
-                    expect(err.message).to.include('In-memory database has to be initialized.');
+                    expect(err.message).to.include('Database is not open');
                     done();
                 })
                 .done();
@@ -212,7 +212,7 @@ describe('Memory storage', function () {
                 })
                 .catch(function (err) {
                     expect(err instanceof Error).to.equal(true);
-                    expect(err.message).to.include('In-memory database has to be initialized.');
+                    expect(err.message).to.include('Database is not open');
                     done();
                 })
                 .done();
@@ -231,7 +231,7 @@ describe('Memory storage', function () {
                 })
                 .catch(function (err) {
                     expect(err instanceof Error).to.equal(true);
-                    expect(err.message).to.include('In-memory database has to be initialized.');
+                    expect(err.message).to.include('Database is not open');
                     done();
                 })
                 .done();

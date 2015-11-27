@@ -92,6 +92,16 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         this.webSocket.getCommits(data, callback);
     };
 
+    StorageSimpleAPI.prototype.getHistory = function (projectId, start, number, callback) {
+        var data = {
+            projectId: projectId,
+            start: start,
+            number: number
+        };
+        this.logger.debug('invoking getHistory', {metadata: data});
+        this.webSocket.getHistory(data, callback);
+    };
+
     StorageSimpleAPI.prototype.getBranchHash = function (projectId, branchName, callback) {
         var data = {
             projectId: projectId,
@@ -162,6 +172,22 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         };
         this.logger.debug('invoking transferProject', {metadata: data});
         this.webSocket.transferProject(data, callback);
+    };
+
+    StorageSimpleAPI.prototype.duplicateProject = function (projectId, projectName, ownerId, callback) {
+        var data = {
+            projectId: projectId,
+            projectName: projectName,
+            ownerId: ownerId
+        };
+
+        if (callback === undefined && typeof ownerId === 'function') {
+            callback = ownerId;
+            data.ownerId = undefined;
+        }
+
+        this.logger.debug('invoking duplicateProject', {metadata: data});
+        this.webSocket.duplicateProject(data, callback);
     };
 
     StorageSimpleAPI.prototype.setBranchHash = function (projectId, branchName, newHash, oldHash, callback) {

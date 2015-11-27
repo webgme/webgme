@@ -475,7 +475,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
 
     function _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, seedName, callback) {
-        logger.debug('_createProjectFromSeed');
+        logger.debug('_createProject');
         storage.createProject(projectName, ownerId, function (err, projectId) {
             if (err) {
                 callback(err);

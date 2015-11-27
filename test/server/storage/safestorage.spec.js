@@ -10,13 +10,14 @@ describe('SafeStorage', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
-        logger = testFixture.logger.fork('memory'),
+        logger,
         Q = testFixture.Q,
         gmeAuth,
         projectName = 'newProject',
         projectId = gmeConfig.authentication.guestAccount + testFixture.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
 
     before(function (done) {
+        logger = testFixture.logger.fork('memory');
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
@@ -533,6 +534,223 @@ describe('SafeStorage', function () {
                     done();
                 })
                 .done();
+        });
+    });
+
+    describe('getHistory', function () {
+        var safeStorage,
+            projectId,
+            rootHash,
+            project,
+            commitHash,
+            commitHash1;
+
+        // N.B. This mainly tests the error handling and the different start points.
+        // storagehelpers.spec.js tests the ordering of the commits.
+
+        before(function (done) {
+            safeStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+
+            safeStorage.openDatabase()
+                .then(function () {
+                    return testFixture.importProject(safeStorage, {
+                        projectSeed: 'seeds/EmptyProject.json',
+                        projectName: 'getHistory',
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (result) {
+                    projectId = result.project.projectId;
+                    commitHash = result.commitHash;
+                    rootHash = result.rootHash;
+                    project = result.project;
+
+                    return project.makeCommit(null, [commitHash], rootHash, [], '1a');
+                })
+                .then(function (result) {
+                    commitHash1 = result.hash;
+                    return Q.allDone([
+                        project.setBranchHash('b', commitHash, ''),
+                        project.setBranchHash('b1', commitHash1, ''),
+                    ]);
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            safeStorage.closeDatabase(done);
+        });
+
+        it('should getHistory using commitHash', function (done) {
+            var data = {
+                projectId: projectId,
+                number: 10,
+                start: commitHash
+            };
+
+            safeStorage.getHistory(data)
+                .then(function (commits) {
+                    expect(commits.length).to.equal(1);
+                    expect(commits[0]._id).to.equal(commitHash);
+                })
+                .nodeify(done);
+        });
+
+        it('should getHistory using commitHash1', function (done) {
+            var data = {
+                projectId: projectId,
+                number: 10,
+                start: commitHash1
+            };
+
+            safeStorage.getHistory(data)
+                .then(function (commits) {
+                    expect(commits.length).to.equal(2);
+                    expect(commits[0]._id).to.equal(commitHash1);
+                    expect(commits[1]._id).to.equal(commitHash);
+                })
+                .nodeify(done);
+        });
+
+        it('should getHistory using [commitHash, commitHash1]', function (done) {
+            var data = {
+                projectId: projectId,
+                number: 10,
+                start: [commitHash1, commitHash]
+            };
+
+            safeStorage.getHistory(data)
+                .then(function (commits) {
+                    expect(commits.length).to.equal(2);
+                    expect(commits[0]._id).to.equal(commitHash1);
+                    expect(commits[1]._id).to.equal(commitHash);
+                })
+                .nodeify(done);
+        });
+
+        it('should getHistory using [commitHash, commitHash1] number=1', function (done) {
+            var data = {
+                projectId: projectId,
+                number: 1,
+                start: [commitHash1, commitHash]
+            };
+
+            safeStorage.getHistory(data)
+                .then(function (commits) {
+                    expect(commits.length).to.equal(1);
+                    expect(commits[0]._id).to.equal(commitHash1);
+                })
+                .nodeify(done);
+        });
+
+        it('should getHistory using b', function (done) {
+            var data = {
+                projectId: projectId,
+                number: 10,
+                start: 'b'
+            };
+
+            safeStorage.getHistory(data)
+                .then(function (commits) {
+                    expect(commits.length).to.equal(1);
+                    expect(commits[0]._id).to.equal(commitHash);
+                })
+                .nodeify(done);
+        });
+
+        it('should getHistory using b1', function (done) {
+            var data = {
+                projectId: projectId,
+                number: 10,
+                start: 'b1'
+            };
+
+            safeStorage.getHistory(data)
+                .then(function (commits) {
+                    expect(commits.length).to.equal(2);
+                    expect(commits[0]._id).to.equal(commitHash1);
+                    expect(commits[1]._id).to.equal(commitHash);
+                })
+                .nodeify(done);
+        });
+
+        it('should getHistory using [b, b1]', function (done) {
+            var data = {
+                projectId: projectId,
+                number: 10,
+                start: ['b', 'b1']
+            };
+
+            safeStorage.getHistory(data)
+                .then(function (commits) {
+                    expect(commits.length).to.equal(2);
+                    expect(commits[0]._id).to.equal(commitHash1);
+                    expect(commits[1]._id).to.equal(commitHash);
+                })
+                .nodeify(done);
+        });
+
+        it('should getHistory using [b, commitHash1]', function (done) {
+            var data = {
+                projectId: projectId,
+                number: 10,
+                start: ['b', commitHash1]
+            };
+
+            safeStorage.getHistory(data)
+                .then(function (commits) {
+                    expect(commits.length).to.equal(2);
+                    expect(commits[0]._id).to.equal(commitHash1);
+                    expect(commits[1]._id).to.equal(commitHash);
+                })
+                .nodeify(done);
+        });
+
+        it('should getHistory using [b, commitHash]', function (done) {
+            var data = {
+                projectId: projectId,
+                number: 10,
+                start: ['b', commitHash]
+            };
+
+            safeStorage.getHistory(data)
+                .then(function (commits) {
+                    expect(commits.length).to.equal(1);
+                    expect(commits[0]._id).to.equal(commitHash);
+                })
+                .nodeify(done);
+        });
+
+        it('should getHistory empty with non-existing branch', function (done) {
+            var data = {
+                projectId: projectId,
+                number: 10,
+                start: ['doesNotExist']
+            };
+
+            safeStorage.getHistory(data)
+                .then(function (commits) {
+                    expect(commits.length).to.equal(0);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail getHistory using non-existing commitHash', function (done) {
+            var data = {
+                projectId: projectId,
+                number: 10,
+                start: '#doesNotExist'
+            };
+
+            safeStorage.getHistory(data)
+                .then(function () {
+                    throw new Error('should have failed with error');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('object does not exist #doesNotExist');
+                })
+                .nodeify(done);
         });
     });
 

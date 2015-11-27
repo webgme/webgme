@@ -198,12 +198,20 @@ define([
             self.socket.emit('transferProject', data, wrapError(callback));
         };
 
+        this.duplicateProject = function (data, callback) {
+            self.socket.emit('duplicateProject', data, wrapError(callback));
+        };
+
         this.getBranches = function (data, callback) {
             self.socket.emit('getBranches', data, wrapError(callback));
         };
 
         this.getCommits = function (data, callback) {
             self.socket.emit('getCommits', data, wrapError(callback));
+        };
+
+        this.getHistory = function (data, callback) {
+            self.socket.emit('getHistory', data, wrapError(callback));
         };
 
         this.getLatestCommitData = function (data, callback) {

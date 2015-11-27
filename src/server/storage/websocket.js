@@ -608,6 +608,27 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     });
             });
 
+            socket.on('duplicateProject', function (data, callback) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        if (socket.rooms.indexOf(CONSTANTS.DATABASE_ROOM) > -1) {
+                            data.socket = socket;
+                        }
+                        data.username = userId;
+                        return storage.duplicateProject(data);
+                    })
+                    .then(function (newProject) {
+                        callback(null, newProject.projectId);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
             socket.on('getBranches', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
@@ -631,6 +652,24 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     .then(function (userId) {
                         data.username = userId;
                         return storage.getCommits(data);
+                    })
+                    .then(function (commits) {
+                        callback(null, commits);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
+            socket.on('getHistory', function (data, callback) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getHistory(data);
                     })
                     .then(function (commits) {
                         callback(null, commits);
