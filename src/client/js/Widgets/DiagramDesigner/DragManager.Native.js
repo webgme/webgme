@@ -424,7 +424,8 @@ define([
                 //clear drag descriptor object
                 this._dragDesc = undefined;
 
-                this._diagramDesigner.onDesignerItemsMove(newPositions);
+                // FIXME: how to emit this event?
+                //this._diagramDesigner.onDesignerItemsMove(newPositions);
             }
         }
     };
@@ -462,7 +463,8 @@ define([
             //clear drag descriptor object
             this._dragDesc = undefined;
 
-            this._diagramDesigner.onDesignerItemsCopy(copyDesc);
+            // FIXME: how to emit this event?
+            //this._diagramDesigner.onDesignerItemsCopy(copyDesc);
         }
     };
     /********* END OF --- END DRAGGING *******************************/

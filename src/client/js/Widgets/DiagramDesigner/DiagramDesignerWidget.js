@@ -201,8 +201,8 @@ define([
         };
 
         //initiate Drag Manager (if needed)
-        //this.dragManager = new DragManager({diagramDesigner: this});
-        //this.dragManager.initialize(this.skinParts.$itemsContainer);
+        this.dragManager = new DragManager({diagramDesigner: this});
+        this.dragManager.initialize(this.skinParts.$itemsContainer);
 
         /*********** CONNECTION DRAWING COMPONENT *************/
         this._defaultConnectionRouteManagerType = params.defaultConnectionRouteManagerType;
