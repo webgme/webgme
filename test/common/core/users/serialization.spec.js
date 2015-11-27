@@ -204,7 +204,7 @@ describe('serialization', function () {
             root = core.createNode({}),
             setBase = core.createNode({parent: root}),
             setNode = core.createNode({parent: root, base: setBase, guid: setNodeGuid}),
-            member = core.createNode({parent: root,guid: memberGuid});
+            member = core.createNode({parent: root, guid: memberGuid});
 
         core.addMember(setBase, 'set', member);
         core.addMember(setNode, 'set', member);
@@ -215,6 +215,40 @@ describe('serialization', function () {
                 done();
             })
             .catch(done);
+
+    });
+
+    it('should import multiple projects parallely using the same core object', function (done) {
+        var projects = [
+                JSON.parse(testFixture.fs.readFileSync('./seeds/ActivePanels.json')),
+                JSON.parse(testFixture.fs.readFileSync('./seeds/EmptyProject.json')),
+                JSON.parse(testFixture.fs.readFileSync('./seeds/SignalFlowSystem.json'))
+            ],
+            roots = [
+                contextFrom.core.createNode({}),
+                contextFrom.core.createNode({}),
+                contextFrom.core.createNode({})
+            ],
+            promises = [],
+            i,
+            exportProjects = [];
+
+        for (i = 0; i < projects.length; i += 1) {
+            promises.push(Q.nfcall(Serialization.import, contextFrom.core, roots[i], projects[i]));
+        }
+
+        Q.allDone(promises)
+            .then(function () {
+                promises = [];
+                for (i = 0; i < projects.length; i += 1) {
+                    promises.push(Q.nfcall(Serialization.export, contextFrom.core, roots[i]));
+                }
+                return Q.allDone(promises);
+            })
+            .then(function (exports) {
+                expect(projects).to.deep.equals(exports);
+            })
+            .nodeify(done);
 
     });
 });
