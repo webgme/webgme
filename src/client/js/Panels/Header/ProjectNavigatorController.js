@@ -392,24 +392,6 @@ define([
             };
 
         if (self.gmeClient) {
-            showHistory = function (data) {
-                var prd;
-                if (self.gmeClient.getActiveProjectId() === data.projectId) {
-                    prd = new ProjectRepositoryDialog(self.gmeClient);
-                    prd.show();
-                } else {
-                    self.selectProject({projectId: projectId}, function (err) {
-                        var dialog = new ProjectRepositoryDialog(self.gmeClient);
-
-                        if (err) {
-                            // TODO: handle errors
-                            return;
-                        }
-
-                        dialog.show();
-                    });
-                }
-            };
 
             refreshPage = function () {
                 document.location.href = window.location.href.split('?')[0];
@@ -417,6 +399,10 @@ define([
 
             updateProjectList = function () {
                 self.updateProjectList.call(self);
+            };
+
+            showHistory = function (data) {
+                self.showHistory(data);
             };
 
             deleteProject = function (data) {
@@ -570,7 +556,7 @@ define([
                         },
                         {
                             id: 'showHistory',
-                            label: 'Show history',
+                            label: 'Project history ...',
                             iconClass: 'glyphicon glyphicon-time',
                             disabled: !rights.read,
                             action: showHistory,
@@ -651,6 +637,7 @@ define([
             selectBranch,
             exportBranch,
             createBranch,
+            showBranchHistory,
             deleteBranch,
             mergeBranch,
             createCommitMessage,
@@ -694,9 +681,8 @@ define([
                 );
             };
 
-            createBranch = function (/*data*/) {
-                var prd = new ProjectRepositoryDialog(self.gmeClient);
-                prd.show();
+            showBranchHistory = createBranch = function (data) {
+                self.showHistory(data);
             };
 
             deleteBranch = function (data) {
@@ -883,10 +869,20 @@ define([
                         undoLastCommitItem,
                         redoLastUndoItem,
                         {
+                            id: 'branchHistory',
+                            label: 'Branch history ...',
+                            iconClass: 'glyphicon glyphicon-time',
+                            action: showBranchHistory,
+                            actionData: {
+                                projectId: projectId,
+                                branchId: branchId,
+                                branchInfo: branchInfo
+                            }
+                        },
+                        {
                             id: 'createBranch',
-                            label: 'Create branch',
+                            label: 'Create branch ...',
                             iconClass: 'glyphicon glyphicon-plus',
-//                            disabled: true,
                             action: createBranch,
                             actionData: {
                                 projectId: projectId,
@@ -1216,6 +1212,34 @@ define([
         });
 
         return values;
+    };
+
+    ProjectNavigatorController.prototype.showHistory = function (data) {
+        var self = this,
+            prd,
+            options = {
+                start: null,
+                branches: null
+            };
+
+        if (self.gmeClient.getActiveProjectId() === data.projectId) {
+            prd = new ProjectRepositoryDialog(self.gmeClient);
+            options.branches = Object.keys(self.projects[data.projectId].branches);
+            options.start = data.branchId || options.branches;
+            prd.show(options);
+        } else {
+            self.selectProject({projectId: data.projectId}, function (err) {
+                if (err) {
+                    self.logger.error('Could not show history', err);
+                    return;
+                }
+                prd = new ProjectRepositoryDialog(self.gmeClient);
+                options.branches = Object.keys(self.projects[data.projectId].branches);
+                options.start = data.branchId || options.branches;
+
+                prd.show(options);
+            });
+        }
     };
 
     return ProjectNavigatorController;

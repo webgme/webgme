@@ -602,13 +602,18 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     /**
      * Creating project by seed
-     * Available body parameters:
-     * type {string} - sets if the seed is coming from file (==='file') source or from some existing project(==='db') [mandatory]
-     * seedName {string} - the name of the seed (in case of db, it has to be the complete id of the project) [mandatory]
-     * seedBranch {string} - in case of db seed, it is possible to give the name of the source branch [default=master]
      *
-     * @example {type:'file',seedName:'EmptyProject'}
-     * @example {type:'db',seedName:'me+myOldProject',seedBranch:'release'}
+     * @param {string} req.body.type - sets if the seed is coming from file (==='file') source or from some
+     *  existing project(==='db') or from a blob (==='blob')
+     * @param {string} req.body.seedName - the name or rather id of the seed
+     *          db - projectId
+     *          seed - name of the seed-file (no extension - matches json file)
+     *          blob - hash of metadata for uploaded blob file
+     * @param {string} [req.body.seedBranch='master'] - for 'db' optional branch name to seed from.
+     *
+     * @example {type:'file', seedName:'EmptyProject'}
+     * @example {type:'db', seedName:'me+myOldProject', seedBranch:'release'}
+     * @example {type:'blob', seedName:'d3e41b46b5146a97f865eefd813bb6228682d91f'}
      */
     router.put('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),
@@ -778,6 +783,30 @@ function createAPI(app, mountPath, middlewareOpts) {
                 next(err);
             });
     });
+
+    router.get('/projects/:ownerId/:projectName/branches/:branchId/commits', ensureAuthenticated,
+        function (req, res, next) {
+            var userId = getUserId(req),
+                data = {
+                    username: userId,
+                    projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                        req.params.projectName),
+                    start: req.params.branchId,
+                    number: 100
+                };
+
+            safeStorage.getHistory(data)
+                .then(function (result) {
+                    res.json(result);
+                })
+                .catch(function (err) {
+                    if (err.message.indexOf('not exist') > -1) {
+                        err.status = 404;
+                    }
+                    next(err);
+                });
+        }
+    );
 
     router.get('/projects/:ownerId/:projectName/branches/:branchId/tree/*', ensureAuthenticated,
         function (req, res, next) {

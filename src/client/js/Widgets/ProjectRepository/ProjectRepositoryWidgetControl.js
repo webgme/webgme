@@ -39,6 +39,9 @@ define(['js/logger'], function (Logger) {
 
                 self._refreshBranches();
                 self._refreshActualCommit();
+                if (branchName === self._view._branchName) {
+                    self._view.noMoreCommitsToDisplay();
+                }
             });
         };
 
@@ -56,8 +59,8 @@ define(['js/logger'], function (Logger) {
                 });
         };
 
-        self._view.onLoadMoreCommits = function (num) {
-            self._loadMoreCommits(num);
+        self._view.onLoadMoreCommits = function (num, start) {
+            self._loadMoreCommits(num, start);
         };
 
         self._logger = Logger.create(
@@ -66,7 +69,7 @@ define(['js/logger'], function (Logger) {
         self._logger.debug('Created');
     };
 
-    RepositoryLogControl.prototype._loadMoreCommits = function (num) {
+    RepositoryLogControl.prototype._loadMoreCommits = function (num, start) {
         var self = this,
             commits = null,
             com,
@@ -87,6 +90,12 @@ define(['js/logger'], function (Logger) {
                 }
             } else {
                 commits = data.concat([]);
+
+                if (start) {
+                    self._view.clear();
+                    self._view._initializeUI();
+                    self._lastCommitID = null;
+                }
 
                 cLen = commits.length;
                 if (cLen > 0) {
@@ -128,10 +137,19 @@ define(['js/logger'], function (Logger) {
 
         self._view.showProgressbar();
 
-        self._client.getCommits(self._client.getActiveProjectId(),
-            this._lastCommitID || (new Date()).getTime() + 1,
-            num,
-            commitsLoaded);
+        self._logger.debug('_loadMoreCommits', num, start);
+
+        if (start) {
+            self._client.getHistory(self._client.getActiveProjectId(),
+                start,
+                num,
+                commitsLoaded);
+        } else {
+            self._client.getCommits(self._client.getActiveProjectId(),
+                this._lastCommitID || (new Date()).getTime() + 1,
+                num,
+                commitsLoaded);
+        }
     };
 
     RepositoryLogControl.prototype._refreshActualCommit = function () {
@@ -162,6 +180,7 @@ define(['js/logger'], function (Logger) {
                     sync: true, //data[i].sync TODO: does this matter?
                 });
             }
+            self._view.branchesUpdated();
         });
     };
 
