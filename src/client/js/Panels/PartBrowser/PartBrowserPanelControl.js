@@ -116,12 +116,29 @@ define(['js/logger',
         this._client.updateTerritory(this._guid, this._territoryRules);
     };
 
+    PartBrowserControl.prototype._defaultCompare = function (a, b) {
+        var result = a.name.localeCompare(b.name);
+        // sort alphabetically based on name first
+        if (result) {
+            return result;
+        } else {
+            return a.id.localeCompare(b.id);
+        }
+    };
+
     PartBrowserControl.prototype._updateDescriptor = function (newDescriptor) {
-        var keys = Object.keys(newDescriptor || {}).sort(),
+        var descriptor = newDescriptor || {},
+            keys,
             i,
             self = this,
             div,
             newTerritoryRules;
+
+        // TODO: later we should apply project specific sorting if it is defined.
+        keys = Object.keys(newDescriptor || {})         // get the descriptor keys or empty object
+            .map(function (key) { return descriptor[key]; })  // turn the object into an array
+            .sort(self._defaultCompare)                 // sort the objects, using the default compare
+            .map(function (value, index) { return value.id; }); // get only the ids
 
         //add and update
         for (i = 0; i < keys.length; i += 1) {
