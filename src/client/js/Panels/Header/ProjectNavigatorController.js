@@ -148,7 +148,7 @@ define([
                 label: 'Recent projects',
                 totalItems: 20,
                 items: [],
-                showAllItems: newProject
+                showAllItems: manageProjects
             }
         ];
 
