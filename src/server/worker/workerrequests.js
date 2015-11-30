@@ -271,6 +271,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     if (!result) {
                         result = pluginManager.getPluginErrorResult(pluginName, err.message,
                             context && context.managerConfig && context.managerConfig.project);
+                    } else if (!result.error) {
+                        result.error = err.message;
                     }
                 } else {
                     logger.info('plugin [' + pluginName + '] completed');

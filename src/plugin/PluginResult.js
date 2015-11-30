@@ -216,7 +216,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             pluginName: this.pluginName,
             startTime: this.startTime,
             finishTime: this.finishTime,
-            error: null
+            error: this.error
         },
             i;
 

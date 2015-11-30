@@ -505,6 +505,8 @@ define([
                         } else {
                             logger.error('Unsupported commit status ' + result.status);
                         }
+                    } else {
+                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR);
                     }
                 } else {
                     logger.error('_pushNextQueuedCommit returned from server but the branch was closed, ' +
@@ -547,6 +549,7 @@ define([
                     var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                     if (err) {
                         logger.error('Loading of update commit failed with error', err, {metadata: updateData});
+                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR);
                     } else if (proceed === true) {
                         logger.debug('New commit was successfully loaded, updating localHash.');
                         branch.updateHashes(originHash, null);

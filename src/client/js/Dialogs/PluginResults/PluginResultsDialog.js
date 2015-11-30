@@ -121,6 +121,8 @@ define(['js/util',
                     message = 'started from';
                 } else if (commits[c].status === storageUtil.CONSTANTS.SYNCED) {
                     message = 'updated';
+                } else if (!commits[c].status) {
+                    message = 'made commit';
                 } else {
                     message = 'forked and created';
                 }
@@ -270,9 +272,9 @@ define(['js/util',
                 projectId = commitEl.attr('project-id'),
                 branchName = commitEl.attr('branch-name');
             if (client.getProjectObject() && client.getProjectObject().projectId === projectId) {
-                if (client.getActiveBranchName() === branchName) {
-                    return;
-                }
+                //if (client.getActiveBranchName() === branchName) {
+                //    return;
+                //}
                 client.selectBranch(branchName, null, function (err) {
                     if (err) {
                         self.logger.error(err);
