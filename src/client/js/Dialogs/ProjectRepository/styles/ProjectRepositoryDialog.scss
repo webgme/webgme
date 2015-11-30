@@ -1,0 +1,17 @@
+.repository-dialog {
+  .modal-header {
+    span.title-container {
+      display: inline-flex;
+
+      span.project-repository-title {
+        font-size: 24px;
+        white-space: nowrap;
+        margin-right: 1ex;
+      }
+
+      select {
+        font-size: 12px;
+      }
+    }
+  }
+}

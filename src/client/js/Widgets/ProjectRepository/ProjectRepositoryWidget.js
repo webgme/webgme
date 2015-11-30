@@ -47,12 +47,17 @@ define(['js/logger',
     ProjectRepositoryWidget = function (container, client, params) {
         var commitCount = 'commit_count';
         this._el = container;
-
+        this._historyType = 'commits';
+        this._branchName = null;
         this.clear();
         this._initializeUI();
 
         if (params && params[commitCount]) {
             COMMIT_PACKAGE_COUNT = params[commitCount];
+            this._historyType = params.historyType;
+            if (this._historyType === 'branch') {
+                this._branchName = params.start;
+            }
         }
 
         //attach its controller
@@ -140,14 +145,22 @@ define(['js/logger',
         this._noMoreCommitsToDisplay();
     };
 
-    ProjectRepositoryWidget.prototype.loadMoreCommits = function () {
-        this.onLoadMoreCommits(COMMIT_PACKAGE_COUNT);
+    ProjectRepositoryWidget.prototype.loadMoreCommits = function (start) {
+        if (start) {
+            this.onLoadMoreCommits(this._commits.length + COMMIT_PACKAGE_COUNT, start);
+        } else {
+            this.onLoadMoreCommits(COMMIT_PACKAGE_COUNT, start);
+        }
+    };
+
+    ProjectRepositoryWidget.prototype.branchesUpdated = function () {
+
     };
 
     /******************* PUBLIC API TO BE OVERRIDDEN IN THE CONTROLLER **********************/
 
-    ProjectRepositoryWidget.prototype.onLoadMoreCommits = function (num) {
-        this._logger.warn('onLoadMoreCommits is not overridden in Controller...num: \'' + num + '\'');
+    ProjectRepositoryWidget.prototype.onLoadMoreCommits = function (num, start) {
+        this._logger.warn('onLoadMoreCommits not overridden in Controller num: "' + num + '", start: "' + start + '"');
     };
 
     ProjectRepositoryWidget.prototype.onLoadCommit = function (params) {
@@ -260,7 +273,16 @@ define(['js/logger',
         });
 
         this._btnShowMore.on('click', null, function (event) {
-            self.loadMoreCommits();
+            var start;
+
+            if (self._historyType === 'branch') {
+                start = self._branchName;
+            } else if (self._historyType === 'branches') {
+                start = self._branchNames;
+            }
+
+            self.loadMoreCommits(start);
+
             event.stopPropagation();
             event.preventDefault();
         });
