@@ -1324,7 +1324,7 @@ define([
          *
          * @func
          */
-        this.getBaseType = core.getBaseType;
+        this.getBaseType = this.getMetaType = core.getBaseType;
 
         /**
          * Checks if there is a node with the given name in the nodes inheritance chain (excluding itself).

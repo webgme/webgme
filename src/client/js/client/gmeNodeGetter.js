@@ -293,6 +293,16 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
             return validTypes;
         }
 
+        function getMetaTypeId() {
+            var metaType = state.core.getMetaType(state.nodes[_id].node);
+
+            if (metaType) {
+                return storeNode(metaType);
+            } else {
+                return null;
+            }
+        }
+
         if (state.nodes[_id]) {
             return {
                 getParentId: getParentId,
@@ -338,6 +348,8 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
                 isConnection: isConnection,
                 isAbstract: isAbstract,
                 getCrosscutsInfo: getCrosscutsInfo,
+
+                getMetaTypeId: getMetaTypeId,
 
                 //constraint functions
                 getConstraintNames: getConstraintNames,

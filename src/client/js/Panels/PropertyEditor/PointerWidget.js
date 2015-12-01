@@ -28,6 +28,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             activeNode,
             activeSelection;
         this._gmeNodeId = null;
+        this.USE_ACTUAL_POINTER_NAME = false;
 
         WidgetBase.call(this, propertyDesc);
 
@@ -186,7 +187,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             ptrToObj = this._client.getNode(ptrTo);
             if (ptrToObj) {
                 ptrToName = displayFormat.resolve(ptrToObj);
-                if (ptrToName === '') {
+                if (ptrToName === '' || this.USE_ACTUAL_POINTER_NAME === true) {
                     ptrToName = ptrToObj.getAttribute('name');
                 }
 
