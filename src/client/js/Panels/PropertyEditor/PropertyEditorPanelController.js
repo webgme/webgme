@@ -14,7 +14,8 @@ define(['js/logger',
     'js/Utils/DisplayFormat',
     'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
     'js/Controls/PropertyGrid/PropertyGridWidgets',
-    './PointerWidget'
+    './PointerWidget',
+    './MetaTypeWidget'
 ], function (Logger,
              util,
              nodePropertyNames,
@@ -23,7 +24,8 @@ define(['js/logger',
              displayFormat,
              DecoratorSVGExplorerDialog,
              PropertyGridWidgets,
-             PointerWidget) {
+             PointerWidget,
+             MetaTypeWidget) {
 
     'use strict';
 
@@ -133,6 +135,7 @@ define(['js/logger',
             propList = {},
             selectionLength = selectedObjIDs.length,
             cNode,
+            metaTypeId,
             i,
             flattenedAttrs,
             flattenedPreferences,
@@ -661,6 +664,16 @@ define(['js/logger',
                         isCommon: true,
                         readOnly: true
                     };
+                    metaTypeId = cNode.getMetaTypeId();
+                    if (metaTypeId) {
+                        propList[' Meta Type'] = {
+                            name: 'Meta type',
+                            value: metaTypeId,
+                            isCommon: true,
+                            widget: MetaTypeWidget,
+                            client: _client
+                        };
+                    }
                 }
             }
 
