@@ -104,12 +104,12 @@ define([
 
     SelectionManager.prototype.onSelectionCommandClicked = function (command, selectedIds) {
         this.logger.warn('SelectionManager.prototype.onSelectionCommandClicked IS NOT OVERRIDDEN IN HOST COMPONENT. ' +
-        ' command: "' + command + '", selectedIds: ' + selectedIds);
+            ' command: "' + command + '", selectedIds: ' + selectedIds);
     };
 
     SelectionManager.prototype.onSelectionChanged = function (selectedIDs) {
         this.logger.warn('SelectionManager.prototype.onSelectionChanged IS NOT OVERRIDDEN IN HOST COMPONENT.' +
-        ' selectedIDs: ' + selectedIDs);
+            ' selectedIDs: ' + selectedIDs);
     };
 
 
@@ -250,7 +250,7 @@ define([
         }
 
         this.logger.debug('Select children by rubber band: [' + rbBBox.x + ',' + rbBBox.y + '], [' +
-        rbBBox.x2 + ',' + rbBBox.y2 + ']');
+            rbBBox.x2 + ',' + rbBBox.y2 + ']');
 
         selectionContainsBBox = function (itemBBox) {
             var interSectionRect,
@@ -267,8 +267,8 @@ define([
                     };
 
                     interSectionRatio = (interSectionRect.x2 - interSectionRect.x) *
-                    (interSectionRect.y2 - interSectionRect.y) / ((itemBBox.x2 - itemBBox.x) *
-                    (itemBBox.y2 - itemBBox.y));
+                        (interSectionRect.y2 - interSectionRect.y) / ((itemBBox.x2 - itemBBox.x) *
+                        (itemBBox.y2 - itemBBox.y));
 
                     if (interSectionRatio > SELECTION_OVERLAP_RATIO) {
                         return true;
@@ -644,13 +644,21 @@ define([
         });
 
     ROTATION_BUTTON_BASE.html('' +
-    '<i class="glyphicon glyphicon-repeat"><div class="popover right nowrap rotate-options">' +
-    '<div class="arrow"></div><div class="popover-content narrow"><div class="btn-group">' +
-    '<a class="btn btn-small" id="rotate-left" title="Rotate left">' +
-    '<i class="glyphicon glyphicon-repeat flip-vertical"></i></a>' +
-    '<a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="glyphicon glyphicon-repeat"></i>' +
-    '</a><a class="btn  btn-small" id="rotate-reset" title="Reset rotation">' +
-    '<i class="glyphicon glyphicon-remove"></i></a></div></div></div></i>');
+        '<i class="glyphicon glyphicon-repeat">' +
+        '<div class="popover right nowrap rotate-options">' +
+        '<div class="arrow"></div><div class="popover-content narrow"><div class="btn-group">' +
+        '<a class="btn btn-small" id="rotate-left" title="Rotate left by 90°">' +
+        '<i class="glyphicon glyphicon-repeat flip-vertical" id="icon-rotate-left"></i></a>' +
+        '<a class="btn  btn-small" id="rotate-right" title="Rotate right by 90°">' +
+        '<i class="glyphicon glyphicon-repeat" id="icon-rotate-right"></i></a>' +
+        '<a class="btn btn-small" id="rotate-toleft" title="Rotate left to the closest multiple of 90°">' +
+        '<i class="glyphicon glyphicon-retweet flip-vertical" id="icon-rotate-toleft"></i></a>' +
+        '<a class="btn  btn-small" id="rotate-toright" title="Rotate right to the closest multiple of 90°">' +
+        '<i class="glyphicon glyphicon-retweet" id="icon-rotate-toright"></i></a>' +
+        '<a class="btn  btn-small" id="rotate-reset" title="Set rotation to 0°">' +
+        '<i class="glyphicon glyphicon-minus" id="icon-rotate-reset"></i></a>' +
+        '<a class="btn  btn-small" id="rotate-clear" title="Clear rotation information - reset to inherited">' +
+        '<i class="glyphicon glyphicon-remove" id="icon-rotate-clear"></i></a></div></div></div></i>');
 
     var ROTATION_DEGREE_BASE = $('<div/>', {
         class: 'rotation-deg'
@@ -672,12 +680,15 @@ define([
             this._diagramDesigner.skinParts.$selectionOutline.on('mousedown.' + MOUSE_EVENT_POSTFIX, '.rotate',
                 function (event) {
                     var rotateBtn = $(this);
-                    self.logger.debug('selection rotate button mousedown');
+                    if ($(event.target).attr('id') === undefined) {
+                        self.logger.debug('selection rotate button mousedown');
 
-                    self._startSelectionRotate(rotateBtn, event);
+                        self._startSelectionRotate(rotateBtn, event);
 
-                    event.stopPropagation();
-                    event.preventDefault();
+                        event.stopPropagation();
+                        event.preventDefault();
+                    }
+
                 }
             );
 
@@ -703,6 +714,15 @@ define([
                         break;
                     case DiagramDesignerWidgetConstants.ROTATION_RESET:
                         deg = DiagramDesignerWidgetConstants.ROTATION_RESET;
+                        break;
+                    case DiagramDesignerWidgetConstants.ROTATION_TOLEFT:
+                        deg = DiagramDesignerWidgetConstants.ROTATION_TOLEFT;
+                        break;
+                    case DiagramDesignerWidgetConstants.ROTATION_TORIGHT:
+                        deg = DiagramDesignerWidgetConstants.ROTATION_TORIGHT;
+                        break;
+                    case DiagramDesignerWidgetConstants.ROTATION_CLEAR:
+                        deg = DiagramDesignerWidgetConstants.ROTATION_CLEAR;
                         break;
                 }
 
@@ -796,7 +816,7 @@ define([
 
     SelectionManager.prototype.onSelectionRotated = function (deg, selectedIds) {
         this.logger.warn('SelectionManager.prototype.onSelectionRotated IS NOT OVERRIDDEN IN HOST COMPONENT. deg: "' +
-        deg + '"deg, selectedIds: ' + selectedIds);
+            deg + '"deg, selectedIds: ' + selectedIds);
     };
 
     SelectionManager.prototype.enableRotation = function (enabled) {

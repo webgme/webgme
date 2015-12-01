@@ -981,22 +981,46 @@ define(['js/logger',
                                                                                                    selectedIds) {
         var i = selectedIds.length,
             regDegree,
+            newDegree,
+            setNewValue = true,
+            transaction = false,
             gmeID;
 
-        this._client.startTransaction();
         while (i--) {
             gmeID = this._ComponentID2GmeID[selectedIds[i]];
             regDegree = this._client.getNode(gmeID).getEditableRegistry(REGISTRY_KEYS.ROTATION);
 
             if (degree === DiagramDesignerWidgetConstants.ROTATION_RESET) {
-                regDegree = 0;
+                newDegree = 0;
+            } else if (degree === DiagramDesignerWidgetConstants.ROTATION_TOLEFT) {
+                newDegree = (regDegree || 0) - ((regDegree || 0) % 90);
+            } else if (degree === DiagramDesignerWidgetConstants.ROTATION_TORIGHT) {
+                newDegree = (regDegree || 0) % 90 > 0 ? (regDegree || 0) + 90 - ((regDegree || 0) % 90) : (regDegree || 0);
+            } else if (degree === DiagramDesignerWidgetConstants.ROTATION_CLEAR) {
+                setNewValue = false;
             } else {
-                regDegree = ((regDegree || 0) + degree) % 360;
+                newDegree = ((regDegree || 0) + degree) % 360;
             }
 
-            this._client.setRegistry(gmeID, REGISTRY_KEYS.ROTATION, regDegree);
+            if (setNewValue && newDegree !== regDegree) {
+                if (!transaction) {
+                    transaction = true;
+                    this._client.startTransaction();
+                }
+                this._client.setRegistry(gmeID, REGISTRY_KEYS.ROTATION, newDegree);
+            } else if (!setNewValue &&
+                this._client.getNode(gmeID).getOwnRegistry(REGISTRY_KEYS.ROTATION) !== undefined) {
+                if (!transaction) {
+                    transaction = true;
+                    this._client.startTransaction();
+                }
+                this._client.delRegistry(gmeID, REGISTRY_KEYS.ROTATION);
+            }
         }
-        this._client.completeTransaction();
+
+        if (transaction) {
+            this._client.completeTransaction();
+        }
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSetConnectionProperty = function (params) {
