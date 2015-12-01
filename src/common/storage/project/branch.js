@@ -184,7 +184,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             logger.debug('dispatchBranchStatus old, new', branchStatus, newStatus);
 
             if (branchStatus === CONSTANTS.BRANCH_STATUS.ERROR) {
-                logger.warn('In error state, action from user required');
+                logger.error('In error state, action from user required!');
                 newStatus = branchStatus;
             } else {
                 branchStatus = newStatus;

@@ -249,8 +249,9 @@ define(['plugin/PluginBase', 'plugin/PluginContext', 'common/storage/util'],
                     return;
                 }
                 self.logger.debug(branches);
-                if (managerConfiguration.branchName && !branches.hasOwnProperty(managerConfiguration.branchName)) {
-                    //pluginContext.commitHash = branches[managerConfiguration.branchName];
+                if (managerConfiguration.branchName &&
+                    branches.hasOwnProperty(managerConfiguration.branchName) === false) {
+
                     callback('cannot find branch "' + managerConfiguration.branchName + '"', pluginContext);
                 } else {
                     loadCommitHashAndRun(pluginContext.commitHash);

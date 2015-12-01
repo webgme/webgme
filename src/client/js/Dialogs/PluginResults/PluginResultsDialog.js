@@ -122,6 +122,7 @@ define(['js/util',
                 } else if (commits[c].status === storageUtil.CONSTANTS.SYNCED) {
                     message = 'updated';
                 } else if (!commits[c].status) {
+                    // When null or undefined there was no branch target for the commit..
                     message = 'made commit';
                 } else {
                     message = 'forked and created';

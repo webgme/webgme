@@ -133,6 +133,8 @@ define([
                 self._client.selectBranch(branchName, null, function (err) {
                     if (err) {
                         self._logger.error(err);
+                    } else {
+                        self._logger.debug('branch selected: ', branchName);
                     }
                 });
             }
