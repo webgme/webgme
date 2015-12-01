@@ -1328,7 +1328,7 @@ define([
             }
             if (state.core) {
                 state.inTransaction = true;
-                msg = msg || 'startTransaction()';
+                msg = msg || '[';
                 saveRoot(msg);
             } else {
                 logger.error('Can not start transaction with no core avaliable.');
@@ -1338,7 +1338,7 @@ define([
         this.completeTransaction = function (msg, callback) {
             state.inTransaction = false;
             if (state.core) {
-                msg = msg || 'completeTransaction()';
+                msg = msg || ']';
                 saveRoot(msg, callback);
             }
         };
