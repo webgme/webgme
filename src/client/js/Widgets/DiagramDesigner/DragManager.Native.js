@@ -424,8 +424,7 @@ define([
                 //clear drag descriptor object
                 this._dragDesc = undefined;
 
-                // FIXME: how to emit this event?
-                //this._diagramDesigner.onDesignerItemsMove(newPositions);
+                this._diagramDesigner.onDesignerItemsMove(newPositions);
             }
         }
     };
