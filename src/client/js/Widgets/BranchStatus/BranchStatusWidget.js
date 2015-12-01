@@ -18,7 +18,8 @@ define([
     var BranchStatusWidget,
         ITEM_VALUE_FORK = 'fork',
         ITEM_VALUE_FOLLOW = 'follow',
-        ITEM_VALUE_MERGE = 'merge';
+        ITEM_VALUE_MERGE = 'merge',
+        ITEM_VALUE_SELECT_BRANCH = 'select';
 
     BranchStatusWidget = function (containerEl, client) {
         this._logger = Logger.create('gme:Widgets:BranchStatusWidget', WebGMEGlobal.gmeConfig.client.log);
@@ -128,6 +129,14 @@ define([
                         });
                     }
                 });
+            } else if (value === ITEM_VALUE_SELECT_BRANCH) {
+                self._client.selectBranch(branchName, null, function (err) {
+                    if (err) {
+                        self._logger.error(err);
+                    } else {
+                        self._logger.debug('branch selected: ', branchName);
+                    }
+                });
             }
         };
 
@@ -154,6 +163,9 @@ define([
                 break;
             case CONSTANTS.CLIENT.BRANCH_STATUS.PULLING:
                 this._branchPulling(eventData);
+                break;
+            case CONSTANTS.CLIENT.BRANCH_STATUS.ERROR:
+                this._branchError(eventData);
                 break;
             default:
                 this._noBranch();
@@ -204,6 +216,19 @@ define([
         this._ddBranchStatus.clear();
         this._ddBranchStatus.setTitle('PULLING[' + eventData.updateQueue.length + ']');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.GRAY);
+    };
+
+    BranchStatusWidget.prototype._branchError = function (eventData) {
+        this._ddBranchStatus.clear();
+        this._ddBranchStatus.setTitle('ERROR');
+        this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.RED);
+        this._popoverBox = this._popoverBox || new PopoverBox(this._ddBranchStatus.getEl());
+        this._popoverBox.show('Critical error - detached from branch.',
+            this._popoverBox.alertLevels.ERROR, true);
+        this._ddBranchStatus.addItem({
+            text: 'Reselect branch',
+            value: ITEM_VALUE_SELECT_BRANCH
+        });
     };
 
     BranchStatusWidget.prototype._noBranch = function () {

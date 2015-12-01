@@ -195,13 +195,10 @@ define([
                         if (configSaveCallback) {
                             configSaveCallback(updatedConfig);
 
-                            if (self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC) {
-                                errMessage = 'Not allowed to invoke plugin ';
-                                if (self._client.isProjectReadOnly) {
-                                    errMessage += 'when in readOnly state.';
-                                } else {
-                                    errMessage += 'while local branch is AHEAD or PULLING changes from server.';
-                                }
+                            if (self._client.getBranchStatus() &&
+                                self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC) {
+                                errMessage = 'Not allowed to invoke plugin while local branch is AHEAD or ' +
+                                    'PULLING changes from server.';
                                 self.logger.error(errMessage);
                                 callback(getPluginErrorResult(name, errMessage, startTime, projectId));
                                 return;

@@ -201,11 +201,19 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
         return pluginResult;
     };
 
+    function getBranchHash(project, branchName) {
+        if (branchName) {
+            return project.getBranchHash(branchName);
+        } else {
+            return Q(null);
+        }
+    }
+
     /**
      *
      * @param {object} context
      * @param {object} context.project - project form where to load the context.
-     * @param {string} context.branchName - name of branch that should be updated
+     * @param {string} [context.branchName] - name of branch that should be updated
      * @param {string} [context.commitHash] - commit from which to start the plugin, defaults to latest for branchName.
      * @param {string} [context.activeNode=''] - path to active node
      * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
@@ -232,10 +240,13 @@ function PluginNodeManagerBase(blobClient, project, mainLogger, gmeConfig) {
             };
 
         self.logger.debug('loading context');
-
-        pluginContext.project.getBranchHash(pluginContext.branchName)
-            .then(function (commitHash) {
-                pluginContext.commitHash = context.commitHash || commitHash;
+        getBranchHash(pluginContext.project, pluginContext.branchName)
+            .then(function (branchHash) {
+                pluginContext.commitHash = context.commitHash || branchHash;
+                if (!pluginContext.commitHash) {
+                    throw new Error('Neither commitHash nor branchHash from branch was obtained, branchName: [' +
+                        context.branchName + ']');
+                }
                 return Q.ninvoke(pluginContext.project, 'loadObject', pluginContext.commitHash);
             })
             .then(function (commitObject) {

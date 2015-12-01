@@ -76,7 +76,8 @@ define([], function () {
             SYNC: 'SYNC',
             AHEAD_SYNC: 'AHEAD_SYNC',
             AHEAD_NOT_SYNC: 'AHEAD_NOT_SYNC',
-            PULLING: 'PULLING'
+            PULLING: 'PULLING',
+            ERROR: 'ERROR'
         },
 
         // Events

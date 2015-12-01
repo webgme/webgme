@@ -103,29 +103,28 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
 
         // This will save the changes. If you don't want to save;
         // exclude self.save and call callback directly from this scope.
-        self.result.setSuccess(true);
         if (currentConfiguration.save === true) {
             self.save('added obj', function (err, status) {
                 if (err) {
-                    self.result.setSuccess(false);
-                    self.result.setError(err);
+                    callback(err, self.result);
+                    return;
                 }
                 self.logger.info('saved returned with status', status);
 
                 if (currentConfiguration.shouldFail) {
-                    self.result.setSuccess(false);
-                    self.result.setError('Failed on purpose.');
+                    //self.result.setError('Failed on purpose.');
                     callback('Failed on purpose.', self.result);
                 } else {
+                    self.result.setSuccess(true);
                     callback(null, self.result);
                 }
             });
         } else {
             if (currentConfiguration.shouldFail) {
-                self.result.setSuccess(false);
                 self.result.setError('Failed on purpose.');
                 callback('Failed on purpose.', self.result);
             } else {
+                self.result.setSuccess(true);
                 callback(null, self.result);
             }
         }

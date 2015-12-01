@@ -405,6 +405,8 @@ define([
                             self.currentHash = commitResult.hash; // This is needed in case hash is randomly generated.
                             return self._createFork();
                         });
+                } else if (!self.branchName) {
+                    self.addCommitToResult(null);
                 } else {
                     throw new Error('setBranchHash returned unexpected status' + commitResult.status);
                 }

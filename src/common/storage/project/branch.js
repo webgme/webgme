@@ -182,7 +182,14 @@ define(['common/storage/constants'], function (CONSTANTS) {
             var i;
 
             logger.debug('dispatchBranchStatus old, new', branchStatus, newStatus);
-            branchStatus = newStatus;
+
+            if (branchStatus === CONSTANTS.BRANCH_STATUS.ERROR) {
+                logger.error('In error state, action from user required!');
+                newStatus = branchStatus;
+            } else {
+                branchStatus = newStatus;
+            }
+
             for (i = 0; i < self.branchStatusHandlers.length; i += 1) {
                 self.branchStatusHandlers[i](newStatus, commitQueue, updateQueue);
             }

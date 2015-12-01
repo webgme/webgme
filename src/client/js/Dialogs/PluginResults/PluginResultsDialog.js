@@ -36,7 +36,7 @@ define(['js/util',
     //jscs:disable maximumLineLength
         RESULT_ARTIFACTS_BASE = $('<div class="artifacts collapse"><div class="artifacts-title">Generated artifacts</div><div class="artifacts-body"><ul></ul></div></div>'),
         RESULT_HISTORY_BASE = $('<div class="artifacts history collapse"><div class="artifacts-title history-title">Execution History</div><div class="history-body"><ul></ul></div></div>'),
-        COMMIT_ENTRY = $('<li><span class="btn btn-micro btn-commit"></span><span class="commit-msg"></span><span class="btn btn-micro btn-branch"></span></li>'),
+        COMMIT_ENTRY = $('<li><span class="btn btn-micro btn-commit" title="Select commit"></span><span class="commit-msg"></span><span class="btn btn-micro btn-branch" title="Select branch"></span></li>'),
     //jscs:enable maximumLineLength
         ARTIFACT_ENTRY_BASE = $('<li><a href="#" target="_self">Loading...</a></li>'),
         MESSAGE_PREFIX = 'Message #';
@@ -121,6 +121,9 @@ define(['js/util',
                     message = 'started from';
                 } else if (commits[c].status === storageUtil.CONSTANTS.SYNCED) {
                     message = 'updated';
+                } else if (!commits[c].status) {
+                    // When null or undefined there was no branch target for the commit..
+                    message = 'made commit';
                 } else {
                     message = 'forked and created';
                 }
@@ -270,9 +273,9 @@ define(['js/util',
                 projectId = commitEl.attr('project-id'),
                 branchName = commitEl.attr('branch-name');
             if (client.getProjectObject() && client.getProjectObject().projectId === projectId) {
-                if (client.getActiveBranchName() === branchName) {
-                    return;
-                }
+                //if (client.getActiveBranchName() === branchName) {
+                //    return;
+                //}
                 client.selectBranch(branchName, null, function (err) {
                     if (err) {
                         self.logger.error(err);
