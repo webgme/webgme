@@ -25,6 +25,9 @@ function Mongo(mainLogger, gmeConfig) {
 
 
     this.client = null;
+    this.CONSTANTS = {
+        TAGS: 'TAGS'
+    };
 
     /**
      * Provides methods related to a specific project.
@@ -151,8 +154,6 @@ function Mongo(mainLogger, gmeConfig) {
             var deferred = Q.defer();
             branch = '*' + branch;
 
-            //TODO: Refactor this to a more promise like function (for now keep it close to the original function).
-            //TODO: These error messages need to be more to the point.
             if (oldhash === newhash) {
                 collection.findOne({
                     _id: branch
@@ -194,7 +195,8 @@ function Mongo(mainLogger, gmeConfig) {
                     hash: newhash
                 }, function (err) {
                     if (err) {
-                        if (err.code === 11000) { // insertDocument :: caused by :: 11000 E11000 duplicate key error...
+                        if (err.code === 11000) {
+                            // insertDocument :: caused by :: 11000 E11000 duplicate key error...
                             deferred.reject(new Error('branch hash mismatch'));
                         } else {
                             deferred.reject(err);
@@ -241,6 +243,76 @@ function Mongo(mainLogger, gmeConfig) {
                     return Q(docs);
                 })
                 .nodeify(callback);
+        };
+
+        this.createTag = function (name, commitHash, callback) {
+            var deferred = Q.defer(),
+                query = {
+                    _id: self.CONSTANTS.TAGS,
+                },
+                update = {
+                    $set: {}
+                };
+
+            query[name] = {
+                $exists: false
+            };
+
+            update.$set[name] = commitHash;
+
+            console.log(query, update);
+            collection.update(query, update, {upsert: true}, function (err/*, num*/) {
+                if (err) {
+                    if (err.code === 11000) {
+                        deferred.reject(new Error('Tag already exists [' + name + ']'));
+                    } else {
+                        deferred.reject(err);
+                    }
+                } else {
+                    deferred.resolve();
+                }
+            });
+
+            return deferred.promise.nodeify(callback);
+        };
+
+        this.deleteTag = function (name, callback) {
+            var deferred = Q.defer(),
+                query = {
+                    _id: self.CONSTANTS.TAGS,
+                },
+                update = {
+                    $unset: {}
+                };
+
+            update.$unset[name] = '';
+
+            collection.update(query, update, function (err/*, num*/) {
+                if (err) {
+                    deferred.reject(err);
+                } else {
+                    deferred.resolve();
+                }
+            });
+
+            return deferred.promise.nodeify(callback);
+        };
+
+        this.getTags = function (callback) {
+            var deferred = Q.defer();
+
+            collection.findOne({_id: self.CONSTANTS.TAGS}, {}, function (err, result) {
+                if (err) {
+                    deferred.reject(err);
+                } else if (result) {
+                    delete result._id;
+                    deferred.resolve(result);
+                } else {
+                    deferred.resolve({});
+                }
+            });
+
+            return deferred.promise.nodeify(callback);
         };
     }
 
@@ -428,7 +500,7 @@ function Mongo(mainLogger, gmeConfig) {
             })
             .then(function (newProject_) {
                 newProject = newProject_;
-                return Q.ninvoke(project._collection, 'aggregate', [{ $out: newProjectId }]);
+                return Q.ninvoke(project._collection, 'aggregate', [{$out: newProjectId}]);
             })
             .then(function () {
                 return newProject;

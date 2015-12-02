@@ -1176,10 +1176,139 @@ function genBranchOperations(databaseAdapter, Q, expect) {
     });
 }
 
+/**
+ * @param databaseAdapter
+ * @param Q
+ * @param expect
+ */
+function genTagOperations(databaseAdapter, Q, expect) {
+
+    it('should create a tag if it does not exist', function (done) {
+        var project;
+        databaseAdapter.createProject('project1')
+            .then(function (project_) {
+                project = project_;
+                return project.createTag('tag1', '#someHash');
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({
+                    tag1: '#someHash'
+                });
+            })
+            .nodeify(done);
+    });
+
+    it('should create and delete', function (done) {
+        var project;
+        databaseAdapter.createProject('project2')
+            .then(function (project_) {
+                project = project_;
+                return project.createTag('tag1', '#someHash');
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({
+                    tag1: '#someHash'
+                });
+
+                return project.deleteTag('tag1');
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({});
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to create a tag if it already exists', function (done) {
+        var project;
+        databaseAdapter.createProject('project3')
+            .then(function (project_) {
+                project = project_;
+                return project.createTag('tag1', '#someHash');
+            })
+            .then(function () {
+                return project.createTag('tag1', '#someOtherHash');
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Tag already exists [tag1]');
+                return project.getTags()
+                    .then(function (tags) {
+                        expect(tags).to.deep.equal({
+                            tag1: '#someHash'
+                        });
+                    });
+            })
+            .nodeify(done);
+    });
+
+    it('should delete if not exist', function (done) {
+        var project;
+        databaseAdapter.createProject('project4')
+            .then(function (project_) {
+                project = project_;
+                return project.createTag('tag1', '#someHash');
+            })
+            .then(function () {
+                return project.deleteTag('tag2');
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({
+                    tag1: '#someHash'
+                });
+            })
+            .nodeify(done);
+    });
+
+    it('should delete if not exist and no tags created', function (done) {
+        var project;
+        databaseAdapter.createProject('project5')
+            .then(function (project_) {
+                project = project_;
+
+                return project.deleteTag('tag1');
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({});
+            })
+            .nodeify(done);
+    });
+
+    it('should getTags if no created', function (done) {
+        var project;
+        databaseAdapter.createProject('project6')
+            .then(function (project_) {
+                project = project_;
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({});
+            })
+            .nodeify(done);
+    });
+}
+
 module.exports = {
     genOpenCloseDatabase: genOpenCloseDatabase,
     genCreateOpenDeleteRenameProject: genCreateOpenDeleteRenameProject,
     genDatabaseClosedErrors: genDatabaseClosedErrors,
     genInsertLoadAndCommits: genInsertLoadAndCommits,
-    genBranchOperations: genBranchOperations
+    genBranchOperations: genBranchOperations,
+    genTagOperations: genTagOperations
 }
