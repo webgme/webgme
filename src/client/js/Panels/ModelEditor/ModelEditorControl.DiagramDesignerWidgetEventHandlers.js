@@ -42,10 +42,10 @@ define(['js/logger',
         var self = this;
 
         /*OVERRIDE DESIGNER CANVAS METHODS*/
-        /*this.designerCanvas.onDesignerItemsMove = function (repositionDesc) {
+        this.designerCanvas.onDesignerItemsMove = function (repositionDesc) {
          self._onDesignerItemsMove(repositionDesc);
          };
-
+        /*
          this.designerCanvas.onDesignerItemsCopy = function (copyDesc) {
          self._onDesignerItemsCopy(copyDesc);
          };*/
