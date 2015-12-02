@@ -7,7 +7,7 @@
 
 var testFixture = require('../../../_globals.js');
 
-describe.only('MongoAdapter', function () {
+describe('MongoAdapter', function () {
     var MongoAdapter = require('../../../../src/server/storage/mongo'),
         expect = testFixture.expect,
         Q = testFixture.Q,

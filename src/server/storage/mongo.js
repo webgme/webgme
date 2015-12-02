@@ -260,7 +260,6 @@ function Mongo(mainLogger, gmeConfig) {
 
             update.$set[name] = commitHash;
 
-            console.log(query, update);
             collection.update(query, update, {upsert: true}, function (err/*, num*/) {
                 if (err) {
                     if (err.code === 11000) {

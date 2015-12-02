@@ -9,10 +9,17 @@
 var Q = require('q'),
     REGEXP = requireJS('common/regexp'),
     CANON = requireJS('common/util/canon'),
+    TAGS = 'TAGS',
     SEPARATOR = '$';
 
 /**
  * An in-memory implementation of backing the data for webgme.
+ *
+ * memory$newProject13$ = MemoryProject
+ * memory$newProject13$#commitHash1 = "{"_id":"#commitHash1","time":1,"type":"commit"}"
+ * memory$newProject13$#coreDataObjectHash = "{"_id":"#coreDataObjectHash", ...}"
+ * memory$newProject13$*b1 = "{"_id":"b1","hash":"#newHash1"}"
+ * memory$newProject13$TAGS = "{ "tag1": "#commitHash1", "tag2": "#commitHash2"}
  *
  * @param mainLogger
  * @constructor
@@ -178,17 +185,6 @@ function Memory(mainLogger, gmeConfig) {
 
             hash = (hash && hash.hash) || '';
 
-            //if (hash !== oldhash) {
-            //    deferred.resolve(hash, null);
-            //} else {
-            //    hash = storage.getItem(database + SEPARATOR + projectId + SEPARATOR + '*' + branch);
-            //    if (hash) {
-            //        hash = JSON.parse(hash);
-            //    }
-            //    hash = (hash && hash.hash) || '';
-            //
-            //    deferred.resolve(hash, null);
-            //}
             deferred.resolve(hash);
             return deferred.promise.nodeify(callback);
         };
@@ -261,6 +257,40 @@ function Memory(mainLogger, gmeConfig) {
 
             return deferred.promise.nodeify(callback);
         };
+
+        this.createTag = function (name, commitHash, callback) {
+            var deferred = Q.defer(),
+                tags = storage.getItem(database + SEPARATOR + projectId + SEPARATOR + TAGS);
+
+            if (tags.hasOwnProperty(name) === true) {
+                deferred.reject(new Error('Tag already exists [' + name + ']'));
+            } else {
+                tags[name] = commitHash;
+                deferred.resolve();
+            }
+
+            return deferred.promise.nodeify(callback);
+        };
+
+        this.deleteTag = function (name, callback) {
+            var deferred = Q.defer(),
+                tags = storage.getItem(database + SEPARATOR + projectId + SEPARATOR + TAGS);
+
+            delete tags[name];
+            deferred.resolve();
+
+            return deferred.promise.nodeify(callback);
+        };
+
+        this.getTags = function (callback) {
+            var deferred = Q.defer();
+
+            deferred.resolve(JSON.parse(JSON.stringify(
+                storage.getItem(database + SEPARATOR + projectId + SEPARATOR + TAGS)
+            )));
+
+            return deferred.promise.nodeify(callback);
+        };
     }
 
     function openDatabase(callback) {
@@ -313,6 +343,7 @@ function Memory(mainLogger, gmeConfig) {
                 deferred.reject(new Error('Project already exists ' + projectId));
             } else {
                 storage.setItem(database + SEPARATOR + projectId + SEPARATOR, '{}');
+                storage.setItem(database + SEPARATOR + projectId + SEPARATOR + TAGS, {});
                 deferred.resolve(new MemoryProject(projectId));
             }
 

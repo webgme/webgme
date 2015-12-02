@@ -1001,7 +1001,7 @@ function genBranchOperations(databaseAdapter, Q, expect) {
             .done();
     });
 
-    it('should contain branches and commits after rename', function (done) {
+    it('should contain branches, commits and tags after rename', function (done) {
         var project,
             commitObj1 = {_id: '#commitHash1', time: 1, type: 'commit'},
             commitObj2 = {_id: '#commitHash2', time: 2, type: 'commit'},
@@ -1013,6 +1013,8 @@ function genBranchOperations(databaseAdapter, Q, expect) {
                 return Q.allDone([
                     project.setBranchHash('b', '', '#newHash'),
                     project.setBranchHash('b1', '', '#newHash1'),
+                    project.createTag('tag', '#newHash'),
+                    project.createTag('tag1', '#newHash1'),
                     project.insertObject(commitObj1),
                     project.insertObject(commitObj2),
                     project.insertObject(commitObj3)
@@ -1030,12 +1032,14 @@ function genBranchOperations(databaseAdapter, Q, expect) {
             .then(function (newProject) {
                 return Q.allDone([
                     newProject.getBranches(),
-                    newProject.getCommits(10, 10)
+                    newProject.getCommits(10, 10),
+                    newProject.getTags()
                 ]);
             })
             .then(function (result) {
                 expect(result[0]).to.deep.equal({b: '#newHash', b1: '#newHash1'});
                 expect(result[1]).to.deep.equal([commitObj3, commitObj2, commitObj1]);
+                expect(result[2]).to.deep.equal({tag: '#newHash', tag1: '#newHash1'});
             })
             .nodeify(done);
     });
@@ -1141,6 +1145,8 @@ function genBranchOperations(databaseAdapter, Q, expect) {
                 return Q.allDone([
                     project.setBranchHash('b', '', '#newHash'),
                     project.setBranchHash('b1', '', '#newHash1'),
+                    project.createTag('tag', '#newHash'),
+                    project.createTag('tag1', '#newHash1'),
                     project.insertObject(commitObj1),
                     project.insertObject(commitObj2),
                     project.insertObject(commitObj3)
@@ -1164,6 +1170,8 @@ function genBranchOperations(databaseAdapter, Q, expect) {
                     result[1].getBranches(),
                     result[0].getCommits(10, 10),
                     result[1].getCommits(10, 10),
+                    result[0].getTags(),
+                    result[1].getTags()
                 ]);
             })
             .then(function (result) {
@@ -1171,6 +1179,8 @@ function genBranchOperations(databaseAdapter, Q, expect) {
                 expect(result[1]).to.deep.equal({b: '#newHash', b1: '#newHash1'});
                 expect(result[2]).to.deep.equal([commitObj3, commitObj2, commitObj1]);
                 expect(result[3]).to.deep.equal([commitObj3, commitObj2, commitObj1]);
+                expect(result[4]).to.deep.equal({tag: '#newHash', tag1: '#newHash1'});
+                expect(result[5]).to.deep.equal({tag: '#newHash', tag1: '#newHash1'});
             })
             .nodeify(done);
     });

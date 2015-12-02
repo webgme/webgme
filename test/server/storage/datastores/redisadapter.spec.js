@@ -76,4 +76,22 @@ describe('RedisAdapter', function () {
 
         adapterTests.genBranchOperations(redisAdapter, Q, expect);
     });
+
+    describe('Project: tag operations', function () {
+        var redisAdapter = new RedisAdapter(logger, gmeConfig);
+
+        before(function (done) {
+            redisAdapter.openDatabase()
+                .then(function () {
+                    return Q.ninvoke(redisAdapter.client, 'flushdb');
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            redisAdapter.closeDatabase(done);
+        });
+
+        adapterTests.genTagOperations(redisAdapter, Q, expect);
+    });
 });
