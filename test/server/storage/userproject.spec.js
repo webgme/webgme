@@ -37,7 +37,10 @@ describe('UserProject', function () {
             .then(function (result) {
                 importResult = result;
                 project = result.project;
-                return project.createBranch('b1', result.commitHash);
+                return Q.allDone([
+                    project.createBranch('b1', result.commitHash),
+                    project.createTag('tag', result.commitHash),
+                    ]);
             })
             .nodeify(done);
     });
@@ -58,6 +61,14 @@ describe('UserProject', function () {
         project.getBranches()
             .then(function (branches_) {
                 expect(branches_.hasOwnProperty('master')).to.equal(true);
+            })
+            .nodeify(done);
+    });
+
+    it('should getTags', function (done) {
+        project.getTags()
+            .then(function (tags) {
+                expect(tags).to.deep.equal({tag: importResult.commitHash});
             })
             .nodeify(done);
     });
@@ -144,5 +155,28 @@ describe('UserProject', function () {
                 done();
             })
             .catch(done);
+    });
+
+    it('should create and deleteTag', function (done) {
+        project.createTag('newTag', importResult.commitHash)
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+
+                expect(tags).to.deep.equal({
+                    tag: importResult.commitHash,
+                    newTag: importResult.commitHash
+                });
+
+                return project.deleteTag('newTag');
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({tag: importResult.commitHash});
+            })
+            .nodeify(done);
     });
 })

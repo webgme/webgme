@@ -762,7 +762,6 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-
     router.get('/projects/:ownerId/:projectName/branches/:branchId', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
             data = {
@@ -895,7 +894,61 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
+    router.get('/projects/:ownerId/:projectName/tags', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName)
+            };
+
+        safeStorage.getTags(data)
+            .then(function (result) {
+                res.json(result);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.put('/projects/:ownerId/:projectName/tags/:tagId', function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                    req.params.projectName),
+                tagName: req.params.tagId,
+                hash: req.body.hash
+            };
+
+        safeStorage.createTag(data)
+            .then(function () {
+                res.sendStatus(201);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.delete('/projects/:ownerId/:projectName/tags/:tagId', function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                    req.params.projectName),
+                tagName: req.params.tagName
+            };
+
+        safeStorage.deleteTag(data)
+            .then(function () {
+                res.sendStatus(204);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
     logger.debug('creating list asset rules');
+
     router.get('/decorators', ensureAuthenticated, function (req, res) {
         var result = webgmeUtils.getComponentNames(gmeConfig.visualization.decoratorPaths);
         logger.debug('/decorators', {metadata: result});

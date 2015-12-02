@@ -65,6 +65,21 @@ define([
                 .nodeify(callback);
         };
 
+        this.createTag = function (tagName, commitHash, callback) {
+            return Q.ninvoke(storage, 'createTag', self.projectId, tagName, commitHash)
+                .nodeify(callback);
+        };
+
+        this.deleteTag = function (tagName, callback) {
+            return Q.ninvoke(storage, 'deleteTag', self.projectId, tagName)
+                .nodeify(callback);
+        };
+
+        this.getTags = function (callback) {
+            return Q.ninvoke(storage, 'getTags', self.projectId)
+                .nodeify(callback);
+        };
+
         this.getCommits = function (before, number, callback) {
             return Q.ninvoke(storage, 'getCommits', self.projectId, before, number)
                 .nodeify(callback);

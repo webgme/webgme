@@ -173,6 +173,14 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         getEmitter(data).to(data.projectId).emit(CONSTANTS.BRANCH_HASH_UPDATED, data);
     });
 
+    storage.addEventListener(CONSTANTS.TAG_CREATED, function (_s, data) {
+        getEmitter(data).to(data.projectId).emit(CONSTANTS.TAG_CREATED, data);
+    });
+
+    storage.addEventListener(CONSTANTS.TAG_DELETED, function (_s, data) {
+        getEmitter(data).to(data.projectId).emit(CONSTANTS.TAG_DELETED, data);
+    });
+
     storage.addEventListener(CONSTANTS.BRANCH_UPDATED, function (_s, data) {
         getEmitter(data)
             .to(data.projectId + CONSTANTS.ROOM_DIVIDER + data.branchName)
@@ -637,6 +645,60 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     })
                     .then(function (branches) {
                         callback(null, branches);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
+            socket.on('createTag', function (data, callback) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.createTag(data);
+                    })
+                    .then(function () {
+                        callback(null);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
+            socket.on('deleteTag', function (data, callback) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.deleteTag(data);
+                    })
+                    .then(function () {
+                        callback(null);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
+            socket.on('getTags', function (data, callback) {
+                getUserIdFromSocket(socket)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.getTags(data);
+                    })
+                    .then(function (tags) {
+                        callback(null, tags);
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {

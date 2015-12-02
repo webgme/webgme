@@ -114,6 +114,18 @@ define([
                     self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED + data.projectId, data);
                 });
 
+                self.socket.on(CONSTANTS.TAG_CREATED, function (data) {
+                    data.etype = CONSTANTS.TAG_CREATED;
+                    logger.debug('TAG_CREATED event', {metadata: data});
+                    self.dispatchEvent(CONSTANTS.TAG_CREATED + data.projectId, data);
+                });
+
+                self.socket.on(CONSTANTS.TAG_DELETED, function (data) {
+                    data.etype = CONSTANTS.TAG_DELETED;
+                    logger.debug('TAG_DELETED event', {metadata: data});
+                    self.dispatchEvent(CONSTANTS.TAG_DELETED + data.projectId, data);
+                });
+
                 self.socket.on(CONSTANTS.BRANCH_UPDATED, function (data) {
                     logger.debug('BRANCH_UPDATED event', {metadata: data});
                     self.dispatchEvent(self.getBranchUpdateEventName(data.projectId, data.branchName), data);
@@ -204,6 +216,18 @@ define([
 
         this.getBranches = function (data, callback) {
             self.socket.emit('getBranches', data, wrapError(callback));
+        };
+
+        this.createTag = function (data, callback) {
+            self.socket.emit('createTag', data, wrapError(callback));
+        };
+
+        this.deleteTag = function (data, callback) {
+            self.socket.emit('deleteTag', data, wrapError(callback));
+        };
+
+        this.getTags = function (data, callback) {
+            self.socket.emit('getTags', data, wrapError(callback));
         };
 
         this.getCommits = function (data, callback) {

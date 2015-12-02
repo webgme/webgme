@@ -1013,6 +1013,148 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
 };
 
 /**
+ * Authorization: write access for data.projectId
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
+SafeStorage.prototype.createTag = function (data, callback) {
+    var deferred = Q.defer(),
+        rejected = false,
+        self = this;
+
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+
+        check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+        check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
+
+        check(typeof data.tagName === 'string', deferred, 'data.tagName is not a string.') ||
+        check(REGEXP.TAG.test(data.tagName), deferred, 'data.tagName failed regexp: ' + data.tagName);
+
+
+    if (data.hasOwnProperty('username')) {
+        rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
+    } else {
+        data.username = this.gmeConfig.authentication.guestAccount;
+    }
+
+    if (rejected === false) {
+        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+            .then(function (projectAccess) {
+                if (projectAccess.write) {
+                    return Storage.prototype.createTag.call(self, data);
+                } else {
+                    throw new Error('Not authorized to write project. ' + data.projectId);
+                }
+            })
+            .then(function () {
+                deferred.resolve();
+            })
+            .catch(function (err) {
+                deferred.reject(new Error(err));
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
+/**
+ * Authorization: delete access for data.projectId
+ * @param data
+ * @param callback
+ * @returns {*}
+ */
+SafeStorage.prototype.deleteTag = function (data, callback) {
+    var deferred = Q.defer(),
+        rejected = false,
+        self = this;
+
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+
+        check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+        check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
+
+        check(typeof data.tagName === 'string', deferred, 'data.tagName is not a string.') ||
+        check(REGEXP.TAG.test(data.tagName), deferred, 'data.tagName failed regexp: ' + data.tagName);
+
+
+    if (data.hasOwnProperty('username')) {
+        rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
+    } else {
+        data.username = this.gmeConfig.authentication.guestAccount;
+    }
+
+    if (rejected === false) {
+        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+            .then(function (projectAccess) {
+                if (projectAccess.delete) {
+                    return Storage.prototype.deleteTag.call(self, data);
+                } else {
+                    throw new Error('Not authorized to delete from project. ' + data.projectId);
+                }
+            })
+            .then(function () {
+                deferred.resolve();
+            })
+            .catch(function (err) {
+                deferred.reject(new Error(err));
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
+/**
+ * Returns a dictionary with all the tags and their commitHashes within a project.
+ * Example: {
+ *   tag1: '#someHash',
+ *   taggen: '#someOtherHash'
+ * }
+ *
+ * Authorization level: read access for project
+ *
+ * @param {object} data - input parameters
+ * @param {string} data.projectId - identifier for project.
+ * @param {string} [data.username=gmeConfig.authentication.guestAccount]
+ * @param {function} [callback]
+ * @returns {*}
+ */
+SafeStorage.prototype.getTags = function (data, callback) {
+    var deferred = Q.defer(),
+        rejected = false,
+        self = this;
+
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+        check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+        check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId);
+
+    if (data.hasOwnProperty('username')) {
+        rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
+    } else {
+        data.username = this.gmeConfig.authentication.guestAccount;
+    }
+
+    if (rejected === false) {
+        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+            .then(function (projectAccess) {
+                if (projectAccess.read) {
+                    return Storage.prototype.getTags.call(self, data);
+                } else {
+                    throw new Error('Not authorized to read project: ' + data.projectId);
+                }
+            })
+            .then(function (result) {
+                deferred.resolve(result);
+            })
+            .catch(function (err) {
+                deferred.reject(new Error(err));
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
+/**
  * Authorization: read access
  * @param data
  * @param callback
