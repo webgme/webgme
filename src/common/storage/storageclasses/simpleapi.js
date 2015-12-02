@@ -234,7 +234,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     StorageSimpleAPI.prototype.createTag = function (projectId, tagName, commitHash, callback) {
         var data = {
             projectId: projectId,
-            branchName: tagName,
+            tagName: tagName,
             commitHash: commitHash
         };
         this.logger.debug('invoking createTag', {metadata: data});
@@ -244,7 +244,7 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     StorageSimpleAPI.prototype.deleteTag = function (projectId, tagName, callback) {
         var data = {
             projectId: projectId,
-            branchName: tagName
+            tagName: tagName
         };
         this.logger.debug('invoking deleteTag', {metadata: data});
         this.webSocket.deleteTag(data, callback);
