@@ -96,7 +96,9 @@ describe('GME client', function () {
             expect(client).to.include.keys(
                 'getProjects',
                 'getBranches',
+                'getTags',
                 'getCommits',
+                'getHistory',
                 'getLatestCommitData',
                 'getProjectsAndBranches'
             );
@@ -106,7 +108,9 @@ describe('GME client', function () {
                 'createProject',
                 'deleteProject',
                 'createBranch',
-                'deleteBranch'
+                'deleteBranch',
+                'createTag',
+                'deleteTag'
             );
 
             // Watchers
@@ -563,26 +567,6 @@ describe('GME client', function () {
             });
         });
 
-        it.skip('should create a project with info data', function (done) {
-            var testProjectName = 'createProject',
-                info = {property: 'value'};
-
-            client.deleteProjectAsync(testProjectName, function (err) {
-                expect(err).to.equal(null);
-
-                client.createProjectAsync(testProjectName, info, function (err) {
-                    expect(err).to.equal(null);
-
-                    client.getAvailableProjectsAsync(function (err, names) {
-                        expect(err).to.equal(null);
-                        expect(names).to.include(testProjectName);
-
-                        done();
-                    });
-                });
-            });
-        });
-
         it('should fail to create an already existing project', function (done) {
             var projectName = 'alreadyExists';
             client.createProject(projectName, function (err) {
@@ -966,6 +950,34 @@ describe('GME client', function () {
                                     });
                                 }
                             );
+                        });
+                    });
+                });
+            });
+        });
+
+        it('should create a new tag and delete it', function (done) {
+            var genericProjectName = 'createGenericBranch',
+                genericProjectId = projectName2Id(genericProjectName, gmeConfig, client);
+
+            client.getBranches(projectId, function (err, branches) {
+                expect(err).to.equal(null);
+
+                client.createTag(genericProjectId, 'newTag', branches.master, function (err) {
+                    expect(err).to.equal(null);
+
+                    client.getTags(genericProjectId, function (err, tags) {
+                        expect(err).to.equal(null);
+                        expect(tags).to.deep.equal({newTag: branches.master});
+
+                        client.deleteTag(genericProjectId, 'newTag', function (err, info) {
+                            expect(err).to.equal(null);
+
+                            client.getTags(genericProjectId, function (err, tags) {
+                                expect(err).to.equal(null);
+                                expect(tags).to.deep.equal({});
+                                done();
+                            });
                         });
                     });
                 });

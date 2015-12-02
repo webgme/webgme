@@ -913,6 +913,14 @@ define([
             }
         };
 
+        this.getTags = function (projectId, callback) {
+            if (isConnected()) {
+                storage.getTags(projectId, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
         this.getCommits = function (projectId, before, number, callback) {
             if (isConnected()) {
                 storage.getCommits(projectId, before, number, callback);
@@ -981,6 +989,22 @@ define([
         this.deleteBranch = function (projectId, branchName, oldHash, callback) {
             if (isConnected()) {
                 storage.deleteBranch(projectId, branchName, oldHash, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
+        this.createTag = function (projectId, tagName, commitHash, callback) {
+            if (isConnected()) {
+                storage.createTag(projectId, tagName, commitHash, callback);
+            } else {
+                callback(new Error('There is no open database connection!'));
+            }
+        };
+
+        this.deleteTag = function (projectId, tagName, callback) {
+            if (isConnected()) {
+                storage.deleteTag(projectId, tagName, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
             }
