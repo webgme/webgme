@@ -26,7 +26,9 @@ define(['js/logger',
         this._widget = null;
         this._selector = null;
         this._groupBranches = null;
-        this._branches = null;
+        this._branches = [];
+        this._groupTags = null;
+        this._tags = [];
         this._selectedValue = null;
 
         this._logger.debug('Created');
@@ -58,6 +60,7 @@ define(['js/logger',
 
         this._selector = this._dialog.find('select.selector');
         this._groupBranches = this._selector.find('optgroup.group-branches');
+        this._groupTags = this._selector.find('optgroup.group-tags');
 
         if (typeof options.start === 'string') {
             options.historyType = 'branch';
@@ -86,13 +89,15 @@ define(['js/logger',
             self._selectedValue = value;
             if (value === '$allBranches') {
                 options.start = self._branches;
-                options.historyType = 'branches';
+                options.historyType = 'multi';
             } else if (value === '$commits') {
                 options.start = null;
                 options.historyType = 'commits';
-            } else {
-                options.start = value;
+            } else if (value[0] === '*') {
+                options.start = value.substring(1);
                 options.historyType = 'branch';
+            } else {
+
             }
 
             self._initializeWidget(modalBody, options);
@@ -134,25 +139,40 @@ define(['js/logger',
 
     ProjectRepositoryDialog.prototype._populateOptions = function () {
         var self = this,
-            branchExists = false;
+            selectedExists = false;
 
         this._groupBranches.children().remove();
+        this._groupTags.children().remove();
         this._branches.sort();
+        this._tags.sort();
 
         this._branches.forEach(function (branchName) {
             self._groupBranches.append($('<option>', {
                     text: branchName,
-                    value: branchName
+                    value: '*' + branchName
                 }
             ));
-            if (self._selectedValue === branchName) {
-                branchExists = true;
+
+            if (self._selectedValue === '*' + branchName) {
+                selectedExists = true;
+            }
+        });
+
+        this._tags.forEach(function (tagName) {
+            self._groupTags.append($('<option>', {
+                    text: tagName,
+                    value: tagName
+                }
+            ));
+
+            if (self._selectedValue === tagName) {
+                selectedExists = true;
             }
         });
 
         if (this._selectedValue && this._selectedValue[0].indexOf('$') > -1) {
             this._selector.val(this._selectedValue);
-        } else if (branchExists) {
+        } else if (selectedExists) {
             this._selector.val(this._selectedValue);
         } else {
             this._selector.val('');
@@ -178,9 +198,11 @@ define(['js/logger',
             }
         );
 
-        this._widget.branchesUpdated = function () {
+        this._widget.branchesAndTagsUpdated = function () {
             self._logger.debug('branches, old, new', self._branches, self._widget._branchNames);
+            self._logger.debug('tags, old, new', self._tags, self._widget._tagNames);
             self._branches = self._widget._branchNames.slice();
+            self._tags = self._widget._tagNames.slice();
             self._populateOptions();
         };
 

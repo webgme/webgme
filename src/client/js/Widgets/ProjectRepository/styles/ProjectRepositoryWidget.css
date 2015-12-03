@@ -24,17 +24,17 @@
       position: absolute;
       width: 8px;
       height: 8px;
-      background-color: black;
+      background-color: #000000;
       border-radius: 5px; }
       .project-repository-widget .commits .commit.actual {
-        background-color: #ff7800;
-        -moz-box-shadow: 0 0 10px 3px #ff7800;
-        -webkit-box-shadow: 0 0 10px 3px #ff7800;
-        box-shadow: 0 0 10px 3px #ff7800; }
+        background-color: #FF7800;
+        -moz-box-shadow: 0 0 10px 3px #FF7800;
+        -webkit-box-shadow: 0 0 10px 3px #FF7800;
+        box-shadow: 0 0 10px 3px #FF7800; }
   .project-repository-widget .show-more {
     height: 36px;
     line-height: 36px;
-    background-color: #f7f7f7;
+    background-color: #F7F7F7;
     border-bottom: 1px solid #3a87ad;
     border-top: 1px solid #3a87ad;
     text-align: center;
@@ -53,6 +53,9 @@
       .project-repository-widget table tr th.actions,
       .project-repository-widget table tr td.actions {
         text-align: left; }
+        .project-repository-widget table tr th.actions button i,
+        .project-repository-widget table tr td.actions button i {
+          color: #404040; }
         .project-repository-widget table tr th.actions > div.input-group,
         .project-repository-widget table tr td.actions > div.input-group {
           margin-bottom: 0;
@@ -66,23 +69,33 @@
       .project-repository-widget table tr th.commit-hash,
       .project-repository-widget table tr td.commit-hash {
         font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace; }
+        .project-repository-widget table tr th.commit-hash:hover,
+        .project-repository-widget table tr td.commit-hash:hover {
+          cursor: pointer;
+          text-decoration: underline;
+          color: #ff7700; }
       .project-repository-widget table tr th div.commit-message,
       .project-repository-widget table tr td div.commit-message {
         overflow: hidden;
         text-overflow: ellipsis;
         text-align: left;
         min-width: 200px; }
-      .project-repository-widget table tr th .branch-label,
-      .project-repository-widget table tr td .branch-label {
+      .project-repository-widget table tr th .common-label,
+      .project-repository-widget table tr td .common-label {
         margin-right: 2px; }
-        .project-repository-widget table tr th .branch-label [class*="icon-"],
-        .project-repository-widget table tr td .branch-label [class*="icon-"] {
-          margin-left: 2px; }
-        .project-repository-widget table tr th .branch-label [class*="icon-white"]:hover,
-        .project-repository-widget table tr td .branch-label [class*="icon-white"]:hover {
-          cursor: pointer; }
-        .project-repository-widget table tr th .branch-label.label,
-        .project-repository-widget table tr td .branch-label.label {
+        .project-repository-widget table tr th .common-label i.icon-white,
+        .project-repository-widget table tr td .common-label i.icon-white {
+          margin-left: 2px;
+          font-size: 10px; }
+          .project-repository-widget table tr th .common-label i.icon-white:hover,
+          .project-repository-widget table tr td .common-label i.icon-white:hover {
+            cursor: pointer; }
+        .project-repository-widget table tr th .common-label i.tag-label-icon,
+        .project-repository-widget table tr td .common-label i.tag-label-icon {
+          padding-right: 5px;
+          font-size: 9px; }
+        .project-repository-widget table tr th .common-label.label,
+        .project-repository-widget table tr td .common-label.label {
           font-size: 11px;
           font-weight: normal;
           height: 15px; }
@@ -97,3 +110,5 @@
     border-top: 1px solid transparent; }
   .project-repository-widget table.table-hover tbody tr:hover > td, .project-repository-widget table.table-hover tbody tr:hover > th {
     background-color: rgba(236, 236, 236, 0.5); }
+
+/*# sourceMappingURL=ProjectRepositoryWidget.css.map */

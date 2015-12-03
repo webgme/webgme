@@ -95,6 +95,12 @@ $table-row-height: 25px;
         &.actions {
           text-align: left;
 
+          button {
+            i {
+              color: #404040;
+            }
+          }
+
           > div.input-group {
             margin-bottom: 0;
             display: inline-flex;
@@ -109,6 +115,11 @@ $table-row-height: 25px;
 
         &.commit-hash {
           font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+          &:hover {
+            cursor: pointer;
+            text-decoration: underline;
+            color: #ff7700;
+          }
         }
 
         div.commit-message {
@@ -119,15 +130,20 @@ $table-row-height: 25px;
           min-width: 200px;
         }
 
-        .branch-label {
+        .common-label {
           margin-right: 2px;
 
-          [class*="icon-"] {
+          i.icon-white {
             margin-left: 2px;
+            font-size: 10px;
+            &:hover {
+              cursor: pointer;
+            }
           }
 
-          [class*="icon-white"]:hover {
-            cursor: pointer;
+          i.tag-label-icon {
+            padding-right: 5px;
+            font-size: 9px;
           }
 
           &.label {
