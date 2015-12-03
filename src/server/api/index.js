@@ -910,6 +910,27 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
+    router.get('/projects/:ownerId/:projectName/tags/:tagId', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName)
+            };
+
+        safeStorage.getTags(data)
+            .then(function (result) {
+                if (result.hasOwnProperty(req.params.tagId) === true) {
+                    res.redirect(req.baseUrl + '/projects/' + req.params.ownerId + '/' + req.params.projectName +
+                        '/commits/' + result[req.params.tagId].substring(1));
+                } else {
+                    res.sendStatus(404);
+                }
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
     router.put('/projects/:ownerId/:projectName/tags/:tagId', function (req, res, next) {
         var userId = getUserId(req),
             data = {
@@ -917,7 +938,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                     req.params.projectName),
                 tagName: req.params.tagId,
-                hash: req.body.hash
+                commitHash: req.body.hash
             };
 
         safeStorage.createTag(data)
@@ -935,7 +956,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 username: userId,
                 projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                     req.params.projectName),
-                tagName: req.params.tagName
+                tagName: req.params.tagId
             };
 
         safeStorage.deleteTag(data)

@@ -3,6 +3,7 @@
 
 /**
  * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 var testFixture = require('../../_globals.js');
@@ -1008,10 +1009,10 @@ describe('REST API', function () {
             it('should create a new organization as admin with valid data PUT /api/v1/orgs/newOrg', function (done) {
                 var orgId = 'newOrg',
                     newOrg = {
-                    info: {
-                        info: 'new'
-                    }
-                };
+                        info: {
+                            info: 'new'
+                        }
+                    };
 
                 agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
                     .end(function (err, res) {
@@ -1037,10 +1038,10 @@ describe('REST API', function () {
                 function (done) {
                     var orgId = 'newOrgCanCreate',
                         newOrg = {
-                        info: {
-                            info: 'new'
-                        }
-                    };
+                            info: {
+                                info: 'new'
+                            }
+                        };
 
                     agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
                         .end(function (err, res) {
@@ -1068,10 +1069,10 @@ describe('REST API', function () {
                 function (done) {
                     var orgId = 'someOrg',
                         newOrg = {
-                        info: {
-                            info: 'new'
-                        }
-                    };
+                            info: {
+                                info: 'new'
+                            }
+                        };
 
                     agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
                         .end(function (err, res) {
@@ -1093,10 +1094,10 @@ describe('REST API', function () {
                 function (done) {
                     var orgId = 'orgInit',
                         newOrg = {
-                        info: {
-                            info: 'new'
-                        }
-                    };
+                            info: {
+                                info: 'new'
+                            }
+                        };
 
                     agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
                         .end(function (err, res) {
@@ -1515,6 +1516,7 @@ describe('REST API', function () {
                         .then(function (results) {
                             importResult = results[0]; // projectName
                             return Q.allDone([
+                                importResult.project.createTag('tag', importResult.commitHash),
                                 gmeAuth.authorizeByUserId(guestAccount, projectName2Id(unauthorizedProjectName),
                                     'create', {
                                         read: true,
@@ -2143,6 +2145,73 @@ describe('REST API', function () {
                         done();
                     });
             });
+
+            //Tags
+            it('should getTags for project /projects/:ownerId/:projectId/tags', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags')
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.have.property('tag');
+
+                        done();
+                    });
+            });
+
+            it('should return commit for project /projects/:ownerId/:projectId/tags/:tagId', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags/tag')
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body.type).to.equal('commit');
+
+                        done();
+                    });
+            });
+
+            it('should 404 for project /projects/:ownerId/:projectId/tags/:notExist', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags/notExist')
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+
+                        done();
+                    });
+            });
+
+            it('should create tag for put project /projects/:ownerId/:projectId/tags/:newTag', function (done) {
+                agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags/newTag')
+                    .send({hash: importResult.commitHash})
+                    .end(function (err, res) {
+                        expect(res.status).equal(201, err);
+                        agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags')
+                            .end(function (err, res) {
+                                expect(res.status).equal(200, err);
+                                expect(res.body.newTag).to.equal(importResult.commitHash);
+
+                                done();
+                            });
+                    });
+            });
+
+            it('should delete tag for del project /projects/:ownerId/:projectId/tags/:newTag', function (done) {
+                agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags/toDel')
+                    .send({hash: importResult.commitHash})
+                    .end(function (err, res) {
+                        expect(res.status).equal(201, err);
+                        agent.del(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                            '/tags/toDel')
+                            .end(function (err, res) {
+                                expect(res.status).equal(204, err);
+                                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                                    '/tags')
+                                    .end(function (err, res) {
+                                        expect(res.status).equal(200, err);
+                                        expect(res.body.hasOwnProperty('toDel')).to.equal(false);
+
+                                        done();
+                                    });
+                            });
+
+                    });
+            });
         });
     });
 
@@ -2160,11 +2229,11 @@ describe('REST API', function () {
                 })
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
-                            projectSeed: 'seeds/EmptyProject.json',
-                            projectName: 'PluginAPI_Test',
-                            gmeConfig: gmeConfig,
-                            logger: logger
-                        });
+                        projectSeed: 'seeds/EmptyProject.json',
+                        projectName: 'PluginAPI_Test',
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
                 })
                 .then(function (res) {
                     importResult = res;
