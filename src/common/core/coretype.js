@@ -324,7 +324,6 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         function _getInheritedCollectionNames(node) {
             var target = '',
                 names = [],
-                coretree = core.getCoreTree(),
                 startNode = node,
                 endNode = _getInstanceRoot(node),
                 exit;
@@ -343,7 +342,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                     if (core.getPath(node) === core.getPath(endNode)) {
                         exit = true;
                     }
-                    var child = coretree.getProperty(coretree.getChild(node, OVERLAYS), target);
+                    var child = oldcore.getProperty(oldcore.getChild(node, OVERLAYS), target);
                     if (child) {
                         for (var name in child) {
                             if (!isPointerName(name)) {
@@ -355,8 +354,8 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                         }
                     }
 
-                    target = '/' + coretree.getRelid(node) + target;
-                    node = coretree.getParent(node);
+                    target = '/' + oldcore.getRelid(node) + target;
+                    node = oldcore.getParent(node);
                 } while (!exit);
             } while (_isInheritedChild(startNode));
 
@@ -366,7 +365,6 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         function _getInheritedCollectionPaths(node, name) {
             var target = '',
                 result = [],
-                coretree = core.getCoreTree(),
                 startNode = node,
                 endNode = _getInstanceRoot(node),
                 prefixStart = startNode,
@@ -379,10 +377,10 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                         child, target;
 
                     while (core.getPath(tNode) !== core.getPath(eNode)) {
-                        child = coretree.getChild(tNode, OVERLAYS);
-                        child = coretree.getChild(child, source);
+                        child = oldcore.getChild(tNode, OVERLAYS);
+                        child = oldcore.getChild(child, source);
                         if (child) {
-                            target = coretree.getProperty(child, name);
+                            target = oldcore.getProperty(child, name);
                             if (target) {
                                 return false;
                             }
@@ -631,13 +629,12 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                 return ownPointerPath;
             }
             var target,
-                coretree = core.getCoreTree(),
                 basePath,
                 hasNullTarget = false,
                 getProperty = function (node, name) {
                     var property;
                     while (property === undefined && node !== null) {
-                        property = coretree.getProperty(node, name);
+                        property = oldcore.getProperty(node, name);
                         node = core.getBase(node);
                     }
                     return property;
@@ -708,7 +705,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
 
             if (target !== undefined) {
                 ASSERT(node);
-                target = coretree.joinPaths(oldcore.getPath(node), target);
+                target = oldcore.joinPaths(oldcore.getPath(node), target);
             }
 
             if (typeof target === 'string') {

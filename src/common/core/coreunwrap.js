@@ -73,6 +73,8 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         core.loadOwnSubTree = TASYNC.unwrap(oldcore.loadOwnSubTree);
         core.loadTree = TASYNC.unwrap(oldcore.loadTree);
 
+        core.setGuid = TASYNC.unwrap(oldcore.setGuid);
+
         //core diff async functions
         if (typeof oldcore.generateTreeDiff === 'function') {
             core.generateTreeDiff = TASYNC.unwrap(oldcore.generateTreeDiff);

@@ -183,6 +183,14 @@ define(['common/core/core', 'q'], function (Core, Q) {
 
             return deferred.promise.nodeify(callback);
         };
+
+        var setGuidOrg = this.setGuid;
+        this.setGuid = function (node, guid, callback) {
+            var deferred = Q.defer();
+            setGuidOrg(node, guid, deferred.resolve);
+
+            return deferred.promise.nodeify(callback);
+        };
     }
 
     CoreQ.prototype = Object.create(Core.prototype);

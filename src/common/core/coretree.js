@@ -383,39 +383,6 @@ define([
             return child;
         };
 
-        var getDescendant = function (node, head, base) {
-            ASSERT(typeof base === 'undefined' || isAncestor(head, base));
-
-            node = normalize(node);
-            head = normalize(head);
-            base = typeof base === 'undefined' ? null : normalize(base.parent);
-
-            var path = [];
-            while (head.parent !== base) {
-                path.push(head.relid);
-                head = head.parent;
-            }
-
-            var i = path.length;
-            while (--i >= 0) {
-                node = getChild(node, path[i]);
-            }
-
-            return node;
-        };
-
-        var getDescendantByPath = function (node, path) {
-            ASSERT(path === '' || path.charAt(0) === '/');
-
-            path = path.split('/');
-
-            for (var i = 1; i < path.length; ++i) {
-                node = getChild(node, path[i]);
-            }
-
-            return node;
-        };
-
         // ------- data manipulation
 
         var __isMutableData = function (data) {
@@ -971,8 +938,6 @@ define([
             createRoot: createRoot,
             createChild: createChild,
             getChild: getChild,
-            getDescendant: getDescendant,
-            getDescendantByPath: getDescendantByPath,
 
             isMutable: isMutable,
             isObject: isObject,

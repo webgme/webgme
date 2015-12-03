@@ -183,7 +183,7 @@ define([], function () {
             }
         }
 
-        function moveMoreNodes(parameters) {
+        function moveMoreNodes(parameters, msg) {
             var pathsToMove = [],
                 returnParams = {},
                 i,
@@ -231,6 +231,8 @@ define([], function () {
                 }
             }
 
+            msg = msg || 'moveMoreNodes(' + JSON.stringify(returnParams) + ')';
+            saveRoot(msg);
             return returnParams;
         }
 

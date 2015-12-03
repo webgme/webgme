@@ -72,13 +72,6 @@ describe('CoreTree', function () {
         expect(coreTree.getData(node)).to.deep.equal({});
     });
 
-
-    it('should getDescendant', function () {
-        var node = coreTree.createRoot();
-
-        expect(coreTree.getDescendant(node, node, undefined /* base */)).to.deep.equal(node);
-    });
-
     describe('core.getParent', function () {
 
         it('should return with the parent object reference', function () {

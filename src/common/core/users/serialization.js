@@ -1230,87 +1230,87 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
 
         //--- here starts the function ---
         //synchronize roots
-        core.setGuid(originLibraryRoot, updatedLibraryJson.root.guid);
-
-        //create export and build up initial cache
-        exportLibraryCached(core, originLibraryRoot, exportOptions, function (err) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            //set the functionwise available variables
-            nodes = exportOptions.cache.nodes;
-            jsonExport = exportOptions.cache.export;
-
-            //now we will search for the bases of the import and load them
-            loadImportBases(function (err) {
+        core.setGuid(originLibraryRoot, updatedLibraryJson.root.guid, function () {
+            //create export and build up initial cache
+            exportLibraryCached(core, originLibraryRoot, exportOptions, function (err) {
                 if (err) {
                     callback(err);
                     return;
                 }
 
-                //now we fill the insert/update/remove lists of GUIDs
-                var oldkeys = Object.keys(jsonExport.nodes),
-                    newkeys = Object.keys(updatedLibraryJson.nodes),
-                    i;
+                //set the functionwise available variables
+                nodes = exportOptions.cache.nodes;
+                jsonExport = exportOptions.cache.export;
 
-                //TODO now we make three rounds although one would be sufficient on ordered lists
-                for (i = 0; i < oldkeys.length; i++) {
-                    if (newkeys.indexOf(oldkeys[i]) === -1) {
-                        log('node ' + logId(jsonExport.nodes, oldkeys[i]) +
-                            ', all of its sub-types and its children will be removed');
-
-                        toRemoveGuids.push(oldkeys[i]);
+                //now we will search for the bases of the import and load them
+                loadImportBases(function (err) {
+                    if (err) {
+                        callback(err);
+                        return;
                     }
-                }
 
-                for (i = 0; i < oldkeys.length; i++) {
-                    if (newkeys.indexOf(oldkeys[i]) !== -1) {
-                        log('node ' + logId(jsonExport.nodes, oldkeys[i]) + ' will be updated');
-                        toUpdateGuids.push(oldkeys[i]);
+                    //now we fill the insert/update/remove lists of GUIDs
+                    var oldkeys = Object.keys(jsonExport.nodes),
+                        newkeys = Object.keys(updatedLibraryJson.nodes),
+                        i;
+
+                    //TODO now we make three rounds although one would be sufficient on ordered lists
+                    for (i = 0; i < oldkeys.length; i++) {
+                        if (newkeys.indexOf(oldkeys[i]) === -1) {
+                            log('node ' + logId(jsonExport.nodes, oldkeys[i]) +
+                                ', all of its sub-types and its children will be removed');
+
+                            toRemoveGuids.push(oldkeys[i]);
+                        }
                     }
-                }
 
-                for (i = 0; i < newkeys.length; i++) {
-                    if (oldkeys.indexOf(newkeys[i]) === -1) {
-                        log('node ' + logId(jsonExport.nodes, newkeys[i]) + ' will be added');
-                        toInsertGuids.push(newkeys[i]);
+                    for (i = 0; i < oldkeys.length; i++) {
+                        if (newkeys.indexOf(oldkeys[i]) !== -1) {
+                            log('node ' + logId(jsonExport.nodes, oldkeys[i]) + ' will be updated');
+                            toUpdateGuids.push(oldkeys[i]);
+                        }
                     }
-                }
 
-                //Now we normalize the removedGUIDs by containment and remove them
-                var toDelete = [],
-                    parent;
-                for (i = 0; i < toRemoveGuids.length; i++) {
-                    parent = core.getParent(nodes[toRemoveGuids[i]]);
-                    if (parent && toRemoveGuids.indexOf(core.getGuid(parent)) === -1) {
-                        toDelete.push(toRemoveGuids[i]);
+                    for (i = 0; i < newkeys.length; i++) {
+                        if (oldkeys.indexOf(newkeys[i]) === -1) {
+                            log('node ' + logId(jsonExport.nodes, newkeys[i]) + ' will be added');
+                            toInsertGuids.push(newkeys[i]);
+                        }
                     }
-                }
-                //and as a final step we remove all that is needed
-                for (i = 0; i < toDelete.length; i++) {
-                    core.deleteNode(nodes[toDelete[i]]);
-                }
 
-                //as a second step we should deal with the updated nodes
-                //we should go among containment hierarchy
-                updateNodes(updatedLibraryJson.root.guid, null, updatedLibraryJson.containment);
+                    //Now we normalize the removedGUIDs by containment and remove them
+                    var toDelete = [],
+                        parent;
+                    for (i = 0; i < toRemoveGuids.length; i++) {
+                        parent = core.getParent(nodes[toRemoveGuids[i]]);
+                        if (parent && toRemoveGuids.indexOf(core.getGuid(parent)) === -1) {
+                            toDelete.push(toRemoveGuids[i]);
+                        }
+                    }
+                    //and as a final step we remove all that is needed
+                    for (i = 0; i < toDelete.length; i++) {
+                        core.deleteNode(nodes[toDelete[i]]);
+                    }
 
-                //now update inheritance chain
-                //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
-                updateInheritance();
+                    //as a second step we should deal with the updated nodes
+                    //we should go among containment hierarchy
+                    updateNodes(updatedLibraryJson.root.guid, null, updatedLibraryJson.containment);
 
-                //now we can add or modify the relations of the nodes - we go along the hierarchy chain
-                updateRelations();
+                    //now update inheritance chain
+                    //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
+                    updateInheritance();
 
-                //finally we need to update the meta rules of each node - again along the containment hierarchy
-                updateMetaRules(updatedLibraryJson.root.guid, updatedLibraryJson.containment);
+                    //now we can add or modify the relations of the nodes - we go along the hierarchy chain
+                    updateRelations();
 
-                //after everything is done we try to synchronize the metaSheet info
-                importMetaSheetInfo(core.getRoot(originLibraryRoot));
+                    //finally we need to update the meta rules of each node - again along the containment hierarchy
+                    updateMetaRules(updatedLibraryJson.root.guid, updatedLibraryJson.containment);
 
-                callback(null, logTxt);
+                    //after everything is done we try to synchronize the metaSheet info
+                    importMetaSheetInfo(core.getRoot(originLibraryRoot));
+
+                    callback(null, logTxt);
+                });
             });
         });
     }
