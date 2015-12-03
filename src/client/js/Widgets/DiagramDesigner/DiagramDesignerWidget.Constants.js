@@ -62,8 +62,11 @@ define(['js/Constants'], function (CONSTANTS) {
         PATH_SHADOW_ARROW_END_ID_PREFIX: 'p_e_',
 
         /*
-         * ROTATINO RESET CONSTANTS
+         * ROTATION CONSTANTS
          */
-        ROTATION_RESET: 'reset'
+        ROTATION_RESET: 'reset',
+        ROTATION_TOLEFT: 'toleft',
+        ROTATION_TORIGHT: 'toright',
+        ROTATION_CLEAR: 'clear'
     };
 });

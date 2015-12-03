@@ -32,10 +32,14 @@
     -o-user-select: all;
     user-select: all;
 }
+
 .popover .popover-content.narrow {
     padding: 5px 5px;
 }
 
+.popover.right>.arrow {
+    top: 27%;
+}
 
 /* Modals */
 
@@ -44,11 +48,11 @@
     -moz-box-shadow: none;
     box-shadow: none;
 
-    -moz-user-select:-moz-all;
-    -webkit-user-select:all;
-    -o-user-select:all;
-    user-select:all;
-    -ms-user-select:element;
+    -moz-user-select: -moz-all;
+    -webkit-user-select: all;
+    -o-user-select: all;
+    user-select: all;
+    -ms-user-select: element;
 }
 
 .modal-content .row {
@@ -60,7 +64,7 @@
     max-height: 200px;
 }
 
-@media(min-height:700px) {
+@media (min-height: 700px) {
 
     .modal-body {
         max-height: 400px;
@@ -68,8 +72,7 @@
 
 }
 
-
-@media(min-height:850px) {
+@media (min-height: 850px) {
 
     .modal-body {
         max-height: 600px;
@@ -77,7 +80,7 @@
 
 }
 
-@media(min-height:1200px) {
+@media (min-height: 1200px) {
 
     .modal-body {
         max-height: 900px;
@@ -103,7 +106,7 @@
     line-height: 15px;
 }
 
-.btn-micro > i:empty{
+.btn-micro > i:empty {
     margin-right: .75ex;
 }
 
@@ -135,8 +138,7 @@ input[type="submit"].btn.btn-micro {
     top: 0;
 }
 
-.btn-gray.active
-{
+.btn-gray.active {
     color: rgba(255, 255, 255, 0.75);
 }
 
@@ -219,8 +221,7 @@ input[type="submit"].btn.btn-micro {
     height: 16px;
 }
 
-
-.navbar-fixed-bottom .navbar-inner .iCheckBox .txt  {
+.navbar-fixed-bottom .navbar-inner .iCheckBox .txt {
     height: 16px;
     line-height: 16px;
 }
@@ -234,23 +235,22 @@ input[type="submit"].btn.btn-micro {
     margin-bottom: 1px;
 }
 
-
 .navbar {
     margin-bottom: 0;
 }
 
-.nav-tabs>li>a {
+.nav-tabs > li > a {
     border-radius: 0;
 }
 
-.nav-tabs>li.active>a,
-.nav-tabs>li.active>a:hover,
-.nav-tabs>li.active>a:focus {
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus {
     border: 1px solid #C0C0C0;
     border-bottom-color: transparent;
 }
 
-.nav-tabs>li>a>i:empty {
+.nav-tabs > li > a > i:empty {
     margin-left: .5ex;
     font-size: 110%;
     position: relative;
@@ -273,7 +273,6 @@ ul.dropdown-menu {
     min-width: 0;
 }
 
-
 .input-append .add-on.add-on-mini,
 .input-prepend .add-on.add-on-mini {
     height: 12px;
@@ -293,11 +292,11 @@ input.no-focus-collapse:not(:focus) {
 }
 
 .flip-vertical {
-    -webkit-transform:scaleX(-1);
-    -moz-transform:scaleX(-1);
-    -ms-transform:scaleX(-1);
-    -o-transform:scaleX(-1);
-    transform:scaleX(-1);
+    -webkit-transform: scaleX(-1);
+    -moz-transform: scaleX(-1);
+    -ms-transform: scaleX(-1);
+    -o-transform: scaleX(-1);
+    transform: scaleX(-1);
 }
 
 .panel-base .drawing-canvas {
