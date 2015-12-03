@@ -982,40 +982,46 @@ define(['js/logger',
         var i = selectedIds.length,
             regDegree,
             newDegree,
+            ownDegree,
+            node,
             setNewValue = true,
             transaction = false,
             gmeID;
 
         while (i--) {
             gmeID = this._ComponentID2GmeID[selectedIds[i]];
-            regDegree = this._client.getNode(gmeID).getEditableRegistry(REGISTRY_KEYS.ROTATION);
+            node = this._client.getNode(gmeID);
+            if (node) {
+                regDegree = node.getEditableRegistry(REGISTRY_KEYS.ROTATION) || 0;
+                ownDegree = node.getOwnEditableRegistry(REGISTRY_KEYS.ROTATION);
 
-            if (degree === DiagramDesignerWidgetConstants.ROTATION_RESET) {
-                newDegree = 0;
-            } else if (degree === DiagramDesignerWidgetConstants.ROTATION_TOLEFT) {
-                newDegree = (regDegree || 0) - ((regDegree || 0) % 90);
-            } else if (degree === DiagramDesignerWidgetConstants.ROTATION_TORIGHT) {
-                newDegree = (regDegree || 0) % 90 > 0 ? (regDegree || 0) + 90 - ((regDegree || 0) % 90) : (regDegree || 0);
-            } else if (degree === DiagramDesignerWidgetConstants.ROTATION_CLEAR) {
-                setNewValue = false;
-            } else {
-                newDegree = ((regDegree || 0) + degree) % 360;
+                if (degree === DiagramDesignerWidgetConstants.ROTATION_RESET) {
+                    newDegree = 0;
+                } else if (degree === DiagramDesignerWidgetConstants.ROTATION_TOLEFT) {
+                    newDegree = regDegree - (regDegree % 90);
+                } else if (degree === DiagramDesignerWidgetConstants.ROTATION_TORIGHT) {
+                    newDegree = regDegree % 90 > 0 ? regDegree + 90 - (regDegree % 90) : regDegree;
+                } else if (degree === DiagramDesignerWidgetConstants.ROTATION_CLEAR) {
+                    setNewValue = false;
+                } else {
+                    newDegree = (regDegree + degree) % 360;
+                }
+
+                if (setNewValue && newDegree !== ownDegree) {
+                    if (!transaction) {
+                        transaction = true;
+                        this._client.startTransaction();
+                    }
+                    this._client.setRegistry(gmeID, REGISTRY_KEYS.ROTATION, newDegree);
+                } else if (!setNewValue && ownDegree !== undefined) {
+                    if (!transaction) {
+                        transaction = true;
+                        this._client.startTransaction();
+                    }
+                    this._client.delRegistry(gmeID, REGISTRY_KEYS.ROTATION);
+                }
             }
 
-            if (setNewValue && newDegree !== regDegree) {
-                if (!transaction) {
-                    transaction = true;
-                    this._client.startTransaction();
-                }
-                this._client.setRegistry(gmeID, REGISTRY_KEYS.ROTATION, newDegree);
-            } else if (!setNewValue &&
-                this._client.getNode(gmeID).getOwnRegistry(REGISTRY_KEYS.ROTATION) !== undefined) {
-                if (!transaction) {
-                    transaction = true;
-                    this._client.startTransaction();
-                }
-                this._client.delRegistry(gmeID, REGISTRY_KEYS.ROTATION);
-            }
         }
 
         if (transaction) {
