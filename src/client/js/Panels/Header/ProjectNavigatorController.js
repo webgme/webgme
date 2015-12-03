@@ -18,7 +18,8 @@ define([
     'isis-ui-components/simpleDialog/simpleDialog',
     'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html',
     'text!js/Dialogs/Projects/templates/TransferDialogTemplate.html',
-    'js/Utils/SaveToDisk'
+    'js/Utils/SaveToDisk',
+    'q'
 ], function (Logger,
              CONSTANTS,
              ng,
@@ -31,7 +32,8 @@ define([
              ConfirmDialog,
              DeleteDialogTemplate,
              TransferDialogTemplate,
-             saveToDisk) {
+             saveToDisk,
+             Q) {
     'use strict';
 
 
@@ -58,7 +60,6 @@ define([
         self.root = {
             id: 'root',
             label: 'GME',
-//            isSelected: true,
             itemClass: 'gme-root',
             menu: []
         };
@@ -194,49 +195,56 @@ define([
             self.logger.debug('NETWORK_STATUS_CHANGED', networkStatus);
             if (networkStatus === CONSTANTS.CLIENT.STORAGE.CONNECTED) {
                 // get project list
-                self.updateProjectList();
-                self.gmeClient.watchDatabase(function (emitter, data) {
-                    self.logger.debug('watchDatabase event', data);
-                    if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_CREATED) {
-                        //TODO: This call should get the rights..
-                        self.gmeClient.getBranches(data.projectId, function (err, branches) {
-                            if (err) {
-                                if (err.message.indexOf('Not authorized to read project') > -1) {
-                                    // This is anticipated when someone else created the project.
-                                    self.logger.debug(err.message);
-                                } else {
-                                    self.logger.error('Could not get branches for newly created project ' +
-                                        data.projectId);
-                                    self.logger.error(err);
-                                }
-                                return;
-                            }
-                            self.logger.debug('Got branches before joining room:', Object.keys(branches));
-                            //TODO: Should include rights, for now complete rights are assumed.
-                            self.addProject(data.projectId, null, {modifiedAt: (new Date()).toISOString()}, true,
-                                function (err) {
-                                    if (err) {
+                self.updateProjectList(function (err) {
+                    if (err) {
+                        self.logger.error('Failed to populate ProjectNavigator', err);
+                        return;
+                    }
+                    self.gmeClient.watchDatabase(function (emitter, data) {
+                        self.logger.debug('watchDatabase event', data);
+                        if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_CREATED) {
+                            //TODO: This call should get the rights..
+                            self.gmeClient.getBranches(data.projectId, function (err, branches) {
+                                if (err) {
+                                    if (err.message.indexOf('Not authorized to read project') > -1) {
+                                        // This is anticipated when someone else created the project.
+                                        self.logger.debug(err.message);
+                                    } else {
+                                        self.logger.error('Could not get branches for newly created project ' +
+                                            data.projectId);
                                         self.logger.error(err);
-                                        return;
                                     }
-                                    self.gmeClient.getBranches(data.projectId, function (err, branches) {
+                                    return;
+                                }
+                                self.logger.debug('Got branches before joining room:', Object.keys(branches));
+                                //TODO: Should include rights, for now complete rights are assumed.
+                                self.addProject(data.projectId, null, {modifiedAt: (new Date()).toISOString()}, true,
+                                    function (err) {
                                         if (err) {
                                             self.logger.error(err);
                                             return;
                                         }
-                                        self.logger.debug('Got branches after joining room:', Object.keys(branches));
-                                        Object.keys(branches).map(function (branchId) {
-                                            self.addBranch(data.projectId, branchId);
+                                        self.gmeClient.getBranches(data.projectId, function (err, branches) {
+                                            if (err) {
+                                                self.logger.error(err);
+                                                return;
+                                            }
+                                            self.logger.debug('Got branches after joining room:',
+                                                Object.keys(branches));
+                                            Object.keys(branches).forEach(function (branchId) {
+                                                self.addBranch(data.projectId, branchId,
+                                                    {branchHash: branches[branchId]});
+                                            });
                                         });
-                                    });
-                                }
-                            );
-                        });
-                    } else if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_DELETED) {
-                        self.removeProject(data.projectId);
-                    } else {
-                        self.logger.error('Unexpected event type', data.etype);
-                    }
+                                    }
+                                );
+                            });
+                        } else if (data.etype === CONSTANTS.CLIENT.STORAGE.PROJECT_DELETED) {
+                            self.removeProject(data.projectId);
+                        } else {
+                            self.logger.error('Unexpected event type', data.etype);
+                        }
+                    });
                 });
             } else if (networkStatus === CONSTANTS.CLIENT.STORAGE.RECONNECTED) {
                 self.updateProjectList();
@@ -329,7 +337,7 @@ define([
         });
     };
 
-    ProjectNavigatorController.prototype.updateProjectList = function () {
+    ProjectNavigatorController.prototype.updateProjectList = function (callback) {
         var self = this,
             params = {
                 asObject: true,
@@ -337,39 +345,95 @@ define([
                 branches: true,
                 info: true
             };
+
         self.logger.debug('updateProjectList');
         self.projects = {};
-        self.gmeClient.getProjects(params, function (err, projectList) {
+
+        callback = callback || function (err) {
+                self.logger.error(err);
+            };
+
+        self.gmeClient.getProjects(params, function (err, projectsData) {
             var projectId,
-                branchId;
+                branchId,
+                branchPromises = [];
 
             if (err) {
-                self.logger.error(err);
+                callback(err);
                 return;
             }
 
-            self.logger.debug('getProjects', projectList);
+            function getBranchPromise (projectId, branchId, branchHash) {
+                var deferred = Q.defer();
+
+                self.gmeClient.getCommits(projectId, branchHash, 1, function (err, commits) {
+                    if (err) {
+                        self.logger.error(err);
+                        deferred.resolve({
+                            projectId: projectId,
+                            branchId: branchId,
+                            branchHash: branchHash,
+                            commitObject: null
+                        });
+                    } else if (commits.length !== 1) {
+                        self.logger.error(new Error('Could not get commit object', projectId, branchId, branchHash));
+                        deferred.resolve({
+                            projectId: projectId,
+                            branchId: branchId,
+                            branchHash: branchHash,
+                            commitObject: null
+                        });
+                    } else {
+                        deferred.resolve({
+                            projectId: projectId,
+                            branchId: branchId,
+                            branchHash: branchHash,
+                            commitObject: commits[0]
+                        });
+                    }
+                });
+
+                return deferred.promise;
+            }
+
+            self.logger.debug('getProjects', projectsData);
 
             // clear project list
             self.projects = {};
 
-            for (projectId in projectList) {
-                if (projectList.hasOwnProperty(projectId)) {
-                    self.addProject(projectId, projectList[projectId].rights, projectList[projectId].info, true);
-                    for (branchId in projectList[projectId].branches) {
-                        if (projectList[projectId].branches.hasOwnProperty(branchId)) {
-                            self.addBranch(projectId, branchId, projectList[projectId].branches[branchId], true);
+            for (projectId in projectsData) {
+                if (projectsData.hasOwnProperty(projectId)) {
+
+                    self.addProject(projectId, projectsData[projectId].rights, projectsData[projectId].info, true);
+
+                    for (branchId in projectsData[projectId].branches) {
+                        if (projectsData[projectId].branches.hasOwnProperty(branchId)) {
+                            branchPromises.push(getBranchPromise(projectId, branchId,
+                                projectsData[projectId].branches[branchId]));
                         }
                     }
                 }
             }
 
-            if (self.requestedSelection) {
-                self.selectBranch(self.requestedSelection);
-                self.requestedSelection = null;
-            } else {
-                self.update();
-            }
+            Q.all(branchPromises)
+                .then(function (results) {
+
+                    results.forEach(function (result) {
+                        self.addBranch(result.projectId, result.branchId, result, true);
+                    });
+
+                    if (self.requestedSelection) {
+                        self.selectBranch(self.requestedSelection);
+                        self.requestedSelection = null;
+                    } else {
+                        self.update();
+                    }
+
+                    callback(null);
+                })
+                .catch(function (err) {
+                    callback(err);
+                });
         });
     };
 
@@ -582,7 +646,7 @@ define([
                     currentBranch;
                 self.logger.debug('watchProject event', projectId, data);
                 if (data.etype === CONSTANTS.CLIENT.STORAGE.BRANCH_CREATED) {
-                    self.addBranch(projectId, data.branchName, data.newHash);
+                    self.addBranch(projectId, data.branchName, {branchHash: data.newHash});
                 } else if (data.etype === CONSTANTS.CLIENT.STORAGE.BRANCH_DELETED) {
                     self.removeBranch(projectId, data.branchName);
 
@@ -619,7 +683,7 @@ define([
 
                 // convert indexed projects to an array
                 self.root.menu[i].items = self.mapToArray(self.projects, [
-                    {key: 'modifiedAt', reverse: true}, {key: 'name'}, {key: 'id'}]);
+                    {key: 'modifiedAt', reverse: true}, {key: 'id'}]);
                 break;
             }
         }
@@ -696,7 +760,7 @@ define([
                     onOk: function () {
                         self.gmeClient.deleteBranch(data.projectId,
                             data.branchId,
-                            data.branchInfo,
+                            data.branchInfo.branchHash,
                             function (err) {
                                 if (err) {
                                     self.logger.error('Failed deleting branch of project.',
@@ -852,9 +916,8 @@ define([
             id: branchId,
             label: branchId,
             properties: {
-                hashTag: branchInfo || '#1234567890',
-                lastCommiter: 'petike',
-                lastCommitTime: new Date()
+                commitHash: branchInfo.branchHash,
+                commitObject: branchInfo.commitObject || {time: Date.now()}
             },
             isSelected: false,
             action: selectBranch,
@@ -920,7 +983,7 @@ define([
 
                 // convert indexed branches to an array
                 self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches,
-                    [{key: 'name'}]);
+                    [{key: 'properties.commitObject.time', reverse: true}, {key: 'id'}]);
                 break;
             }
         }
@@ -947,7 +1010,7 @@ define([
 
                     // convert indexed projects to an array
                     self.root.menu[i].items = self.mapToArray(self.projects, [
-                        {key: 'modifiedAt', reverse: true}, {key: 'name'}, {key: 'id'}]);
+                        {key: 'modifiedAt', reverse: true}, {key: 'id'}]);
                     break;
                 }
             }
@@ -973,7 +1036,8 @@ define([
                 if (self.projects[projectId].menu[i].id === 'branches') {
 
                     // convert indexed branches to an array
-                    self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches);
+                    self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches,
+                        [{key: 'properties.commitObject.time', reverse: true}, {key: 'id'}]);
                     break;
                 }
             }
@@ -1054,6 +1118,7 @@ define([
                             return;
                         }
                         WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+
                         if (branchId && branchId !== self.gmeClient.getActiveBranchName()) {
                             self.gmeClient.selectBranch(branchId, null, function (err) {
                                 if (err) {
@@ -1126,9 +1191,8 @@ define([
             this.projects[projectId].branches.hasOwnProperty(branchId)) {
 
             this.projects[projectId].branches[branchId].properties = {
-                hashTag: branchInfo || '#1234567890',
-                lastCommiter: 'petike',
-                lastCommitTime: new Date()
+                commitHash: branchInfo,
+                commitObject: null
             };
 
             this.update();
@@ -1165,7 +1229,6 @@ define([
         }
     };
 
-
     ProjectNavigatorController.prototype.dummyBranchGenerator = function (name, maxCount, projectId) {
         var self = this,
             i,
@@ -1192,23 +1255,50 @@ define([
         values.sort(function (a, b) {
             var i,
                 reverse,
+                keys,
+                subA,
+                subB,
+                res = 0,
                 key;
 
             for (i = 0; i < orderBy.length; i += 1) {
-                key = orderBy[i].key;
+                keys = orderBy[i].key.split('.');
                 reverse = orderBy[i].reverse === true ? -1 : 1;
-                if (a.hasOwnProperty(key) && b.hasOwnProperty(key)) {
-                    if (a[key] > b[key]) {
-                        return 1 * reverse;
+                key = keys.shift();
+                subA = a;
+                subB = b;
+
+                while (key) {
+                    if (subA === null || subB === null || typeof subA !== 'object' || typeof subB !== 'object') {
+                        break;
                     }
-                    if (a[key] < b[key]) {
-                        return -1 * reverse;
+
+                    if (subA.hasOwnProperty(key) && subB.hasOwnProperty(key)) {
+                        if (keys.length === 0) {
+                            if (subA[key] > subB[key]) {
+                                res = 1 * reverse;
+                            }
+                            if (subA[key] < subB[key]) {
+                                res = -1 * reverse;
+                            }
+                            break;
+                        } else {
+                            subA = subA[key];
+                            subB = subB[key];
+                            key = keys.shift();
+                        }
+                    } else {
+                        // Move over to the i;
+                        break;
                     }
+                }
+                if (res !== 0) {
+                    break;
                 }
             }
 
             // a must be equal to b
-            return 0;
+            return res;
         });
 
         return values;
