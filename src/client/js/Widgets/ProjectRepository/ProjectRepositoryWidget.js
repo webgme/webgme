@@ -165,7 +165,11 @@ define(['js/logger',
     };
 
     ProjectRepositoryWidget.prototype.branchesAndTagsUpdated = function () {
-
+        if (this._commits.length === 0) {
+            this._table.addClass('no-commits-in-table');
+        } else {
+            this._table.removeClass('no-commits-in-table');
+        }
     };
 
     /******************* PUBLIC API TO BE OVERRIDDEN IN THE CONTROLLER **********************/
@@ -304,15 +308,7 @@ define(['js/logger',
         });
 
         this._btnShowMore.on('click', null, function (event) {
-            var start;
-
-            if (self._historyType === 'branch') {
-                start = self._branchName;
-            } else if (self._historyType === 'branches') {
-                start = self._branchNames;
-            }
-
-            self.loadMoreCommits(this._start);
+            self.loadMoreCommits(self._start);
 
             event.stopPropagation();
             event.preventDefault();

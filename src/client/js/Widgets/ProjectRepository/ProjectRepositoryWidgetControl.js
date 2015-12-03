@@ -39,7 +39,7 @@ define(['js/logger'], function (Logger) {
 
                 self._refreshBranchesAndTags();
                 self._refreshActualCommit();
-                if (branchName === self._view._branchName) {
+                if (self._view._start === branchName) {
                     self._view.noMoreCommitsToDisplay();
                 }
             });
@@ -149,10 +149,9 @@ define(['js/logger'], function (Logger) {
                     self._view.render();
 
                     self._refreshActualCommit();
-
-                    self._refreshBranchesAndTags();
                 }
 
+                self._refreshBranchesAndTags();
                 self._view.hideProgressbar();
 
                 if (cLen < num) {

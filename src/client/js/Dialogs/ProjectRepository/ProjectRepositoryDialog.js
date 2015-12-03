@@ -26,9 +26,10 @@ define(['js/logger',
         this._widget = null;
         this._selector = null;
         this._groupBranches = null;
-        this._branches = [];
+        this._branchNames = [];
         this._groupTags = null;
         this._tags = [];
+        this._tagCommitHashes = [];
         this._selectedValue = null;
 
         this._logger.debug('Created');
@@ -36,7 +37,7 @@ define(['js/logger',
 
     ProjectRepositoryDialog.prototype.show = function (options) {
         var self = this;
-        this._branches = options.branches;
+        this._branchNames = options.branches;
 
         this._initDialog(options);
 
@@ -87,17 +88,17 @@ define(['js/logger',
             }
 
             self._selectedValue = value;
-            if (value === '$allBranches') {
-                options.start = self._branches;
-                options.historyType = 'multi';
+
+            if (value === '$allBranchesAndTags') {
+                options.start = self._branchNames.concat(self._tagCommitHashes);
+            } else if (value === '$allBranches') {
+                options.start = self._branchNames;
+            } else if (value === '$allTags') {
+                options.start = self._tagCommitHashes;
             } else if (value === '$commits') {
                 options.start = null;
-                options.historyType = 'commits';
-            } else if (value[0] === '*') {
-                options.start = value.substring(1);
-                options.historyType = 'branch';
             } else {
-
+                options.start = value;
             }
 
             self._initializeWidget(modalBody, options);
@@ -143,29 +144,41 @@ define(['js/logger',
 
         this._groupBranches.children().remove();
         this._groupTags.children().remove();
-        this._branches.sort();
-        this._tags.sort();
+        this._branchNames.sort();
+        this._tags.sort(function (t1, t2) {
+            if (t1.name > t2.name) {
+                return 1;
+            }
+            if (t1.name < t2.name) {
+                return -1;
+            }
 
-        this._branches.forEach(function (branchName) {
+            return 0;
+        });
+
+        this._tagCommitHashes = [];
+
+        this._branchNames.forEach(function (branchName) {
             self._groupBranches.append($('<option>', {
                     text: branchName,
-                    value: '*' + branchName
+                    value: branchName
                 }
             ));
 
-            if (self._selectedValue === '*' + branchName) {
+            if (self._selectedValue === branchName) {
                 selectedExists = true;
             }
         });
 
-        this._tags.forEach(function (tagName) {
+        this._tags.forEach(function (tag) {
             self._groupTags.append($('<option>', {
-                    text: tagName,
-                    value: tagName
+                    text: tag.name,
+                    value: tag.commitId
                 }
             ));
 
-            if (self._selectedValue === tagName) {
+            self._tagCommitHashes.push(tag.commitId);
+            if (self._selectedValue === tag.commitId) {
                 selectedExists = true;
             }
         });
@@ -199,11 +212,12 @@ define(['js/logger',
         );
 
         this._widget.branchesAndTagsUpdated = function () {
-            self._logger.debug('branches, old, new', self._branches, self._widget._branchNames);
-            self._logger.debug('tags, old, new', self._tags, self._widget._tagNames);
-            self._branches = self._widget._branchNames.slice();
-            self._tags = self._widget._tagNames.slice();
+            self._logger.debug('branches, old, new', self._branchNames, self._widget._branchNames);
+            self._logger.debug('tags, old, new', self._tags, self._widget._tags);
+            self._branchNames = self._widget._branchNames.slice();
+            self._tags = self._widget._tags.slice();
             self._populateOptions();
+            ProjectRepositoryWidget.prototype.branchesAndTagsUpdated.call(self._widget);
         };
 
         if (wasShown) {

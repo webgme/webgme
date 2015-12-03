@@ -10,6 +10,8 @@
   /********* TABLE LAYOUT STYLES ************/ }
   .project-repository-widget table.table.commit-list {
     width: auto; }
+  .project-repository-widget table.no-commits-in-table {
+    display: none; }
   .project-repository-widget .message-column {
     width: 100%; }
   .project-repository-widget .commits {
@@ -110,5 +112,3 @@
     border-top: 1px solid transparent; }
   .project-repository-widget table.table-hover tbody tr:hover > td, .project-repository-widget table.table-hover tbody tr:hover > th {
     background-color: rgba(236, 236, 236, 0.5); }
-
-/*# sourceMappingURL=ProjectRepositoryWidget.css.map */
