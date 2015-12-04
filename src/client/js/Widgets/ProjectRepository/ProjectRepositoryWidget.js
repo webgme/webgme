@@ -961,19 +961,21 @@ define(['js/logger',
 
         //on SAVE save changes and revert DOM
         btnSave.on('click', function (event) {
-            var bName = txtInput.val();
-            if (bName !== '' && self._branchNames.indexOf(bName) === -1) {
+            var newName = txtInput.val(),
+                exists = isBranch ? self._branchNames.indexOf(newName) > -1 : self._tagNames.indexOf(newName) > -1;
+
+            if (newName !== '' && exists === false) {
                 td.find('.' + CREATE_BRANCH_EDIT_CONTROL_CLASS).remove();
                 td.children().css('display', 'inline-block');
                 if (isBranch) {
                     self.onCreateBranchFromCommit({
                         commitId: btn.data(COMMIT_IT),
-                        name: bName
+                        name: newName
                     });
                 } else {
                     self.onCreateTagFromCommit({
                         commitId: btn.data(COMMIT_IT),
-                        name: bName
+                        name: newName
                     });
                 }
             }
