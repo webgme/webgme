@@ -119,6 +119,10 @@ define(['js/Loader/LoaderCircles',
         this._btnCancel = this._dialog.find('.btn-cancel');
 
         // Tab toggling
+        if (WebGMEGlobal.gmeConfig.seedProjects.allowDuplication === false) {
+            this._dialog.find('li.duplicate').addClass('disabled-from-config');
+        }
+
         if (self.initialTab === 'import') {
             toggleActive(this._dialog.find('li.blob').addClass('active'));
         } else {

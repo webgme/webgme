@@ -10,9 +10,11 @@ div.create-new-project-dialog div.modal-content div.modal-header .gme-icon {
   height: 24px;
   width: 24px;
   margin-right: 1ex;
-  display: inline-block; }
+  display: inline-block;
+  vertical-align: middle; }
 div.create-new-project-dialog div.modal-content div.modal-header span {
-  font-size: 24px; }
+  font-size: 24px;
+  vertical-align: middle; }
 div.create-new-project-dialog div.modal-content div.pre-body {
   padding: 15px 15px 0 15px; }
   div.create-new-project-dialog div.modal-content div.pre-body .tabContainer ul.nav.nav-tabs {
@@ -20,6 +22,8 @@ div.create-new-project-dialog div.modal-content div.pre-body {
     div.create-new-project-dialog div.modal-content div.pre-body .tabContainer ul.nav.nav-tabs li {
       width: 86px;
       text-align: center; }
+      div.create-new-project-dialog div.modal-content div.pre-body .tabContainer ul.nav.nav-tabs li.disabled-from-config {
+        display: none; }
 div.create-new-project-dialog div.modal-content div.modal-body form.form-horizontal {
   display: none; }
   div.create-new-project-dialog div.modal-content div.modal-body form.form-horizontal.activated {

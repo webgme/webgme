@@ -36,10 +36,16 @@ test_script:
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test/common
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/blob
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/core
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/executor
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/storage
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/util
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/config
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/issue
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/seeds
-  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test/server
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/api
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/middleware
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/storage
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/util
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/worker

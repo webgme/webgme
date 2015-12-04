@@ -114,7 +114,6 @@ define([
                 d;
 
             if (val !== '' && self._projectIds.indexOf(val) === -1) {
-                self._btnNewProjectImport.disable(true);
                 self._dialog.modal('hide');
 
                 d = new CreateProjectDialog(self._client, val, self._createType,
@@ -191,12 +190,11 @@ define([
         this._panelCreateNew = this._dialog.find('.panel-create-new').hide();
 
         this._btnCreateNew = this._dialog.find('.btn-create-new');
-        this._btnCreateFromFile = this._dialog.find('.btn-import-file');
+
         this._btnRefresh = this._dialog.find('.btn-refresh');
 
         this._btnNewProjectCancel = this._dialog.find('.btn-cancel');
         this._btnNewProjectCreate = this._dialog.find('.btn-save');
-        this._btnNewProjectImport = this._dialog.find('.btn-import');
 
         this._txtNewProjectName = this._dialog.find('.txt-project-name');
         this._dialog.find('.username').text(this._client.getUserId());

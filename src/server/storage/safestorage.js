@@ -399,6 +399,11 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
         data.ownerId = data.username;
     }
 
+    if (self.gmeConfig.seedProjects.allowDuplication === false) {
+        deferred.reject(new Error('gmeConfig.seedProjects.allowDuplication is set to false'));
+        rejected = true;
+    }
+
     if (rejected === false) {
         self.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
             .then(function (projectAccess) {
