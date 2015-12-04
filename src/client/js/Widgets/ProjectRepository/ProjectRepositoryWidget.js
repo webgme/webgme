@@ -10,6 +10,7 @@ define(['js/logger',
     'js/util',
     'js/Loader/LoaderCircles',
     './ProjectRepositoryWidgetControl',
+    'common/regexp',
     'moment',
     'raphaeljs',
     'css!./styles/ProjectRepositoryWidget.css'
@@ -17,6 +18,7 @@ define(['js/logger',
              util,
              LoaderCircles,
              ProjectRepositoryWidgetControl,
+             REGEXP,
              moment) {
     'use strict';
 
@@ -39,25 +41,23 @@ define(['js/logger',
         NON_EXISTING_PARENT_LINE_GRADIENT_NAME = 'grad1',
         CREATE_BRANCH_EDIT_CONTROL_CLASS = 'create-branch-from-commit',
         BRANCH_LABEL_CLASS = 'branch-label',
+        TAG_LABEL_CLASS = 'tag-label',
+        COMMON_LABEL_CLASS = 'common-label',
         BTN_LOAD_COMMIT_CLASS = 'btnLoadCommit',
         COMMIT_IT = 'commitId',
-        MESSAGE_DIV_CLASS = 'commit-message',
-        BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$'); //TODO these kind of rules should be at some centralized point
+        MESSAGE_DIV_CLASS = 'commit-message';
 
     ProjectRepositoryWidget = function (container, client, params) {
         var commitCount = 'commit_count';
         this._el = container;
         this._historyType = 'commits';
-        this._branchName = null;
+        this._start = null;
         this.clear();
         this._initializeUI();
 
-        if (params && params[commitCount]) {
-            COMMIT_PACKAGE_COUNT = params[commitCount];
-            this._historyType = params.historyType;
-            if (this._historyType === 'branch') {
-                this._branchName = params.start;
-            }
+        if (params) {
+            COMMIT_PACKAGE_COUNT = params[commitCount] || COMMIT_PACKAGE_COUNT;
+            this._start = params.start;
         }
 
         //attach its controller
@@ -75,6 +75,9 @@ define(['js/logger',
         this._branches = [];
         this._branchNames = [];
         this._branchListUpdated = false;
+        this._tags = [];
+        this._tagNames = [];
+        this._tagListUpdated = false;
 
         this._y = 0;
         this._trackEnds = [];
@@ -111,6 +114,14 @@ define(['js/logger',
 
     ProjectRepositoryWidget.prototype.clearBranches = function () {
         this._clearBranches();
+    };
+
+    ProjectRepositoryWidget.prototype.addTag = function (obj) {
+        this._addTag(obj);
+    };
+
+    ProjectRepositoryWidget.prototype.clearTags = function () {
+        this._clearTags();
     };
 
     ProjectRepositoryWidget.prototype.addCommit = function (obj) {
@@ -153,8 +164,12 @@ define(['js/logger',
         }
     };
 
-    ProjectRepositoryWidget.prototype.branchesUpdated = function () {
-
+    ProjectRepositoryWidget.prototype.branchesAndTagsUpdated = function () {
+        if (this._commits.length === 0) {
+            this._table.addClass('no-commits-in-table');
+        } else {
+            this._table.removeClass('no-commits-in-table');
+        }
     };
 
     /******************* PUBLIC API TO BE OVERRIDDEN IN THE CONTROLLER **********************/
@@ -172,8 +187,18 @@ define(['js/logger',
             branchName, branchHash);
     };
 
+    ProjectRepositoryWidget.prototype.onDeleteTagClick = function (branchName, branchHash) {
+        this._logger.warn('onDeleteTagClick is not overridden in Controller...branch, branchHash:',
+            branchName, branchHash);
+    };
+
     ProjectRepositoryWidget.prototype.onCreateBranchFromCommit = function (params) {
         this._logger.warn('onCreateBranchFromCommit is not overridden in Controller...params: \'' +
+            JSON.stringify(params) + '\'');
+    };
+
+    ProjectRepositoryWidget.prototype.onCreateTagFromCommit = function (params) {
+        this._logger.warn('onCreateTagFromCommit is not overridden in Controller...params: \'' +
             JSON.stringify(params) + '\'');
     };
 
@@ -272,16 +297,18 @@ define(['js/logger',
             event.preventDefault();
         });
 
+        this._el.on('click.iconRemove', '.remove-tag-button', function (event) {
+            var btn = $(this),
+                tagName = btn.data('tag');
+
+            self.onDeleteTagClick(tagName);
+
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
         this._btnShowMore.on('click', null, function (event) {
-            var start;
-
-            if (self._historyType === 'branch') {
-                start = self._branchName;
-            } else if (self._historyType === 'branches') {
-                start = self._branchNames;
-            }
-
-            self.loadMoreCommits(start);
+            self.loadMoreCommits(self._start);
 
             event.stopPropagation();
             event.preventDefault();
@@ -290,7 +317,12 @@ define(['js/logger',
 
         this._el.off('click.btnCreateBranchFromCommit', '.btnCreateBranchFromCommit');
         this._el.on('click.btnCreateBranchFromCommit', '.btnCreateBranchFromCommit', function () {
-            self._onCreateBranchFromCommitButtonClick($(this));
+            self._onCreateFromCommitButtonClick($(this));
+        });
+
+        this._el.off('click.btnCreateTagFromCommit', '.btnCreateTagFromCommit');
+        this._el.on('click.btnCreateTagFromCommit', '.btnCreateTagFromCommit', function () {
+            self._onCreateFromCommitButtonClick($(this));
         });
     };
 
@@ -424,10 +456,15 @@ define(['js/logger',
         }
 
         this._addBranchHeaderLabels();
+        this._addTagHeaderLabels();
     };
 
     ProjectRepositoryWidget.prototype._removeBranchHeaderLabels = function () {
         this._tBody.find('.' + BRANCH_LABEL_CLASS).remove();
+    };
+
+    ProjectRepositoryWidget.prototype._removeTagHeaderLabels = function () {
+        this._tBody.find('.' + TAG_LABEL_CLASS).remove();
     };
 
     ProjectRepositoryWidget.prototype._addBranchHeaderLabels = function () {
@@ -442,12 +479,31 @@ define(['js/logger',
             while (len--) {
                 idx = this._orderedCommitIds.indexOf(this._branches[len].commitId);
                 if (idx !== -1) {
-                    this._applyBranchHeaderLabel(this._commits[idx],
-                        this._branches[len].name, this._branches[len].sync);
+                    this._applyBranchHeaderLabel(this._commits[idx], this._branches[len].name);
                 }
             }
 
             this._branchListUpdated = false;
+        }
+    };
+
+    ProjectRepositoryWidget.prototype._addTagHeaderLabels = function () {
+        var len = this._tags.length,
+            idx;
+
+        //update branch information only if any update happened
+        if (this._tagListUpdated === true) {
+            //remove existing labels
+            this._removeTagHeaderLabels();
+
+            while (len--) {
+                idx = this._orderedCommitIds.indexOf(this._tags[len].commitId);
+                if (idx !== -1) {
+                    this._applyTagHeaderLabel(this._commits[idx], this._tags[len].name);
+                }
+            }
+
+            this._tagListUpdated = false;
         }
     };
 
@@ -456,7 +512,12 @@ define(['js/logger',
         'class="glyphicon glyphicon-remove icon-white remove-branch-button" title="Delete branch"></i></span>'
     );
 
-    ProjectRepositoryWidget.prototype._applyBranchHeaderLabel = function (commit, branchName, sync) {
+    ProjectRepositoryWidget.prototype._tagLabelDOMBase = $(
+        '<span class="label"><i data-tag="" ' +
+        'class="glyphicon glyphicon-tag tag-label-icon"></i></span>'
+    );
+
+    ProjectRepositoryWidget.prototype._applyBranchHeaderLabel = function (commit, branchName) {
         var label = this._branchLabelDOMBase.clone(),
             td,
             div;
@@ -464,12 +525,29 @@ define(['js/logger',
         label.prepend(branchName);
         label.find('i').attr('data-branch', branchName);
         label.addClass(BRANCH_LABEL_CLASS);
+        label.addClass(COMMON_LABEL_CLASS);
 
-        if (sync === true) {
-            label.addClass('label-success');
-        } else {
-            label.addClass('label-important');
-        }
+        label.addClass('label-success');
+
+        td = this._tBody.children()[this._orderedCommitIds.indexOf(commit.id)].cells[this._tableCellMessageIndex];
+        div = $(td).find('div.' + MESSAGE_DIV_CLASS)[0];
+        div.insertBefore(label[0], div.childNodes[0]);
+    };
+
+    ProjectRepositoryWidget.prototype._applyTagHeaderLabel = function (commit, tagName) {
+        var label = this._tagLabelDOMBase.clone(),
+            td,
+            div;
+
+        label.append(tagName);
+        label.append($('<i data-tag="' + tagName + '" class="glyphicon glyphicon-remove icon-white remove-tag-button"' +
+            ' title="Delete tag"/>'));
+
+        label.addClass(TAG_LABEL_CLASS);
+        label.addClass(COMMON_LABEL_CLASS);
+
+
+        label.addClass('label-danger');
 
         td = this._tBody.children()[this._orderedCommitIds.indexOf(commit.id)].cells[this._tableCellMessageIndex];
         div = $(td).find('div.' + MESSAGE_DIV_CLASS)[0];
@@ -501,6 +579,26 @@ define(['js/logger',
         this._addBranchHeaderLabels();
     };
 
+    ProjectRepositoryWidget.prototype._addTag = function (obj) {
+
+        var tagName = obj.name,
+            idx;
+
+        idx = this._tagNames.indexOf(tagName);
+
+        if (idx !== -1) {
+            //branch info already in the list
+            this._tags[idx] = obj;
+        } else {
+            this._tags.push(obj);
+            this._tagNames.push(tagName);
+        }
+
+        this._tagListUpdated = true;
+
+        this._addTagHeaderLabels();
+    };
+
     ProjectRepositoryWidget.prototype._clearBranches = function () {
         this._branches = [];
         this._branchNames = [];
@@ -510,6 +608,15 @@ define(['js/logger',
         this._branchListUpdated = true;
     };
 
+    ProjectRepositoryWidget.prototype._clearTags = function () {
+        this._tags = [];
+        this._tagNames = [];
+
+        this._removeTagHeaderLabels();
+
+        this._tagListUpdated = true;
+    };
+
     ProjectRepositoryWidget.prototype._trDOMBase = $(
         '<tr><td></td><td class="actions"></td><td class="commit-hash"></td><td class="message-column">' +
         '<div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
@@ -517,12 +624,18 @@ define(['js/logger',
     ProjectRepositoryWidget.prototype._createBranchBtnDOMBase = $(
         '<button class="btn btn-default btn-xs btnCreateBranchFromCommit" ' +
         'href="#" title="Create new branch from here">' +
-        '<i class="glyphicon glyphglyphicon glyphicon-edit"></i></button>'
+        '<i class="glyphicon glyphicon-edit create-branch-icon"></i></button>'
     );
-    ProjectRepositoryWidget.prototype._loadCommitBtnDOMBase = $('' +
-        '<button class="btn btn-default btn-xs ' + BTN_LOAD_COMMIT_CLASS + '" href="#" title="Load this commit">' +
-        '<i class="glyphicon glyphicon-share"></i></button>'
+    ProjectRepositoryWidget.prototype._createTagBtnDOMBase = $(
+        '<button class="btn btn-default btn-xs btnCreateTagFromCommit" ' +
+        'href="#" title="Create a tag here">' +
+        '<i class="glyphicon glyphicon-tags create-tag-icon"></i></button>'
     );
+
+    //ProjectRepositoryWidget.prototype._loadCommitBtnDOMBase = $('' +
+    //    '<button class="btn btn-default btn-xs ' + BTN_LOAD_COMMIT_CLASS + '" href="#" title="Load this commit">' +
+    //    '<i class="glyphicon glyphicon-share"></i></button>'
+    //);
 
 
     ProjectRepositoryWidget.prototype._createItem = function (params) {
@@ -565,6 +678,8 @@ define(['js/logger',
 
         $(tr[0].cells[this._tableCellCommitIDIndex]).append(params.id.substr(0, 7));
         $(tr[0].cells[this._tableCellCommitIDIndex]).attr('title', params.id);
+        $(tr[0].cells[this._tableCellCommitIDIndex]).addClass(BTN_LOAD_COMMIT_CLASS);
+        $(tr[0].cells[this._tableCellCommitIDIndex]).data(COMMIT_IT, params.id);
 
         $(tr[0].cells[this._tableCellMessageIndex]).find('div.' + MESSAGE_DIV_CLASS).text(params.message);
         $(tr[0].cells[this._tableCellUserIndex]).append(params.user || '');
@@ -582,21 +697,26 @@ define(['js/logger',
         btn.data(COMMIT_IT, params.id);
         tr[0].cells[this._tableCellActionsIndex].appendChild(btn[0]);
 
-        //generate 'switch to this commit' button
-        btn = this._generateLoadCommitBtnForCommit(params.id);
+        //generate 'Create tag here' button
+        btn = this._createTagBtnDOMBase.clone();
+        btn.data(COMMIT_IT, params.id);
         tr[0].cells[this._tableCellActionsIndex].appendChild(btn[0]);
+
+        //generate 'switch to this commit' button
+        //btn = this._generateLoadCommitBtnForCommit(params.id);
+        //tr[0].cells[this._tableCellActionsIndex].appendChild(btn[0]);
 
         this._tBody.append(tr);
 
         return itemObj;
     };
 
-    ProjectRepositoryWidget.prototype._generateLoadCommitBtnForCommit = function (commitId) {
-        var btn = this._loadCommitBtnDOMBase.clone();
-        btn.data(COMMIT_IT, commitId);
-
-        return btn;
-    };
+    //ProjectRepositoryWidget.prototype._generateLoadCommitBtnForCommit = function (commitId) {
+    //    var btn = this._loadCommitBtnDOMBase.clone();
+    //    btn.data(COMMIT_IT, commitId);
+    //
+    //    return btn;
+    //};
 
     ProjectRepositoryWidget.prototype.setActualCommitId = function (commitId) {
         var oldId = this._actualCommitId;
@@ -609,17 +729,16 @@ define(['js/logger',
     };
 
     ProjectRepositoryWidget.prototype._updateActualCommitUI = function (oldId, newId) {
-        var idx = this._orderedCommitIds.indexOf(oldId),
-            btn;
+        var idx = this._orderedCommitIds.indexOf(oldId);
 
         //remove old actual marker
         if (idx !== -1) {
             this._commits[idx].ui.removeClass(ACTUAL_COMMIT_CLASS);
 
-            btn = this._generateLoadCommitBtnForCommit(oldId);
+            //btn = this._generateLoadCommitBtnForCommit(oldId);
 
             //add 'LoadCommit' button to that row
-            this._tBody.children()[idx].cells[this._tableCellActionsIndex].appendChild(btn[0]);
+            //this._tBody.children()[idx].cells[this._tableCellActionsIndex].appendChild(btn[0]);
         }
 
         //add 'actual' marker to new value
@@ -633,7 +752,6 @@ define(['js/logger',
                 find('.' + BTN_LOAD_COMMIT_CLASS).remove();
         }
     };
-
 
     ProjectRepositoryWidget.prototype._drawLine = function (srcDesc, dstDesc) {
         var pathDef,
@@ -701,7 +819,6 @@ define(['js/logger',
         }
     };
 
-
     ProjectRepositoryWidget.prototype._resizeDialog = function (contentWidth, contentHeight) {
         var WINDOW_PADDING = 30,
             DIALOG_HEADER_HEIGHT = 70,
@@ -726,7 +843,6 @@ define(['js/logger',
         this._showMoreContainer.css('width', tWidth);
     };
 
-
     ProjectRepositoryWidget.prototype._noMoreCommitsToDisplay = function () {
         this._btnShowMore.hide();
 
@@ -739,7 +855,6 @@ define(['js/logger',
         this._showMoreContainer.remove();
         this._showMoreContainer = undefined;
     };
-
 
     ProjectRepositoryWidget.prototype._generateSVGGradientDefinition = function () {
         if (!this._svgPaper.canvas.getElementById(NON_EXISTING_PARENT_LINE_GRADIENT_NAME)) {
@@ -772,12 +887,13 @@ define(['js/logger',
         }
     };
 
-    ProjectRepositoryWidget.prototype._onCreateBranchFromCommitButtonClick = function (btn) {
+    ProjectRepositoryWidget.prototype._onCreateFromCommitButtonClick = function (btn) {
         var td = btn.parent(),
             currentBranchCreateCtrl,
+            isBranch = btn.hasClass('btnCreateBranchFromCommit'),
             createBranchHTML = $('<div class="input-group form-group"></div>'),
             txtInput = $('<input class="form-control span2 input-mini" type="text">'),
-            btnSave = $('<button class="btn btn-default btn-xs" type="button" title="Create branch">' +
+            btnSave = $('<button class="btn btn-default btn-xs" type="button" title="Create">' +
                 '<i class="glyphicon glyphicon-ok"></i></button>'),
             btnCancel = $('<button class="btn btn-default btn-xs" type="button" title="Cancel">' +
                 '<i class="glyphicon glyphicon-remove"></i></button>'),
@@ -807,9 +923,18 @@ define(['js/logger',
         });
 
         txtInput.on('keyup', function (event) {
-            var textVal = txtInput.val();
+            var textVal = txtInput.val(),
+                hasError = false;
 
-            if (textVal === '' || self._branchNames.indexOf(textVal) !== -1 || !BRANCH_REGEXP.test(textVal)) {
+            if (textVal === '') {
+                hasError = true;
+            } else if (isBranch) {
+                hasError = self._branchNames.indexOf(textVal) !== -1 || !REGEXP.BRANCH.test(textVal);
+            } else {
+                hasError = self._tagNames.indexOf(textVal) !== -1 || !REGEXP.TAG.test(textVal);
+            }
+
+            if (hasError) {
                 createBranchHTML.addClass('has-error');
                 btnSave.disable(true);
             } else {
@@ -836,15 +961,23 @@ define(['js/logger',
 
         //on SAVE save changes and revert DOM
         btnSave.on('click', function (event) {
-            var bName = txtInput.val();
-            if (bName !== '' && self._branchNames.indexOf(bName) === -1) {
+            var newName = txtInput.val(),
+                exists = isBranch ? self._branchNames.indexOf(newName) > -1 : self._tagNames.indexOf(newName) > -1;
+
+            if (newName !== '' && exists === false) {
                 td.find('.' + CREATE_BRANCH_EDIT_CONTROL_CLASS).remove();
                 td.children().css('display', 'inline-block');
-
-                self.onCreateBranchFromCommit({
-                    commitId: td.find('.btnCreateBranchFromCommit').data(COMMIT_IT),
-                    name: bName
-                });
+                if (isBranch) {
+                    self.onCreateBranchFromCommit({
+                        commitId: btn.data(COMMIT_IT),
+                        name: newName
+                    });
+                } else {
+                    self.onCreateTagFromCommit({
+                        commitId: btn.data(COMMIT_IT),
+                        name: newName
+                    });
+                }
             }
             event.stopPropagation();
         });

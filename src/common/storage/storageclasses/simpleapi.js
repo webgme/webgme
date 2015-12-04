@@ -102,6 +102,14 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         this.webSocket.getHistory(data, callback);
     };
 
+    StorageSimpleAPI.prototype.getTags = function (projectId, callback) {
+        var data = {
+            projectId: projectId
+        };
+        this.logger.debug('invoking getTags', {metadata: data});
+        this.webSocket.getTags(data, callback);
+    };
+
     StorageSimpleAPI.prototype.getBranchHash = function (projectId, branchName, callback) {
         var data = {
             projectId: projectId,
@@ -221,6 +229,25 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         };
         this.logger.debug('invoking deleteBranch', {metadata: data});
         this.webSocket.setBranchHash(data, callback);
+    };
+
+    StorageSimpleAPI.prototype.createTag = function (projectId, tagName, commitHash, callback) {
+        var data = {
+            projectId: projectId,
+            tagName: tagName,
+            commitHash: commitHash
+        };
+        this.logger.debug('invoking createTag', {metadata: data});
+        this.webSocket.createTag(data, callback);
+    };
+
+    StorageSimpleAPI.prototype.deleteTag = function (projectId, tagName, callback) {
+        var data = {
+            projectId: projectId,
+            tagName: tagName
+        };
+        this.logger.debug('invoking deleteTag', {metadata: data});
+        this.webSocket.deleteTag(data, callback);
     };
 
     //temporary simple request and result functions

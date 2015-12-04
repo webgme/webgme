@@ -80,4 +80,22 @@ describe('MongoAdapter', function () {
 
         adapterTests.genBranchOperations(mongoAdapter, Q, expect);
     });
+
+    describe('Project: tag operations', function () {
+        var mongoAdapter = new MongoAdapter(logger, gmeConfig);
+
+        before(function (done) {
+            testFixture.clearDatabase(gmeConfig)
+                .then(function () {
+                    return mongoAdapter.openDatabase();
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            mongoAdapter.closeDatabase(done);
+        });
+
+        adapterTests.genTagOperations(mongoAdapter, Q, expect);
+    });
 });

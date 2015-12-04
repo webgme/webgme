@@ -219,6 +219,37 @@ function RedisProject(projectId, adapter) {
             })
             .nodeify(callback);
     };
+
+    this.createTag = function (name, commitHash, callback) {
+        var deferred = Q.defer();
+
+        Q.ninvoke(adapter.client, 'hsetnx', projectId + adapter.CONSTANTS.TAGS, name, commitHash)
+            .then(function (result) {
+                // 1 if field is a new field in the hash and value was set.
+                // 0 if field already exists in the hash and no operation was performed.
+                if (result === 1) {
+                    deferred.resolve();
+                } else {
+                    deferred.reject(new Error('Tag already exists [' + name + ']'));
+                }
+            })
+            .catch(deferred.reject);
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    this.deleteTag = function (name, callback) {
+        return Q.ninvoke(adapter.client, 'hdel', projectId + adapter.CONSTANTS.TAGS, name)
+            .nodeify(callback);
+    };
+
+    this.getTags = function (callback) {
+        return Q.ninvoke(adapter.client, 'hgetall', projectId + adapter.CONSTANTS.TAGS)
+            .then(function (result) {
+                return result || {};
+            })
+            .nodeify(callback);
+    };
 }
 
 module.exports = RedisProject;

@@ -221,6 +221,43 @@ define([
         };
 
         /**
+         * Creates a new tag pointing to the provided commit hash.
+         * @param {string} tagName - Name of tag to create.
+         * @param {module:Storage~CommitHash} commitHash - Commit hash tag will point to.
+         * @param {function} [callback] - if provided no promise will be returned.
+         *
+         * @return {external:Promise}  On success the promise will be resolved with nothing.<br>
+         * On error the promise will be rejected with {Error} <b>error</b>.
+         */
+        this.createTag = function (tagName, commitHash, callback) {
+            throw new Error('createTag must be overridden in derived class');
+        };
+
+        /**
+         * Deletes the given tag.
+         * @param {string} tagName - Name of tag to delete.
+         * @param {function} [callback] - if provided no promise will be returned.
+         *
+         * @return {external:Promise}  On success the promise will be resolved with nothing.<br>
+         * On error the promise will be rejected with {Error} <b>error</b>.
+         */
+        this.deleteTag = function (tagName, callback) {
+            throw new Error('deleteTag must be overridden in derived class');
+        };
+
+        /**
+         * Retrieves all tags and their commits hashes within the project.
+         * @param {function} [callback] - if provided no promise will be returned.
+         *
+         * @return {external:Promise}  On success the promise will be resolved with
+         * Object.<string, {@link module:Storage~CommitHash}> <b>result</b>.<br>
+         * On error the promise will be rejected with {Error} <b>error</b>.
+         */
+        this.getTags = function (callback) {
+            throw new Error('getTags must be overridden in derived class');
+        };
+
+        /**
          * Attempts to retrieve the common ancestor of two commits. If no ancestor exists it will result in an error.
          *
          * @param {string} commitA - Commit hash.

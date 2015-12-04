@@ -81,4 +81,18 @@ describe('MemoryAdapter', function () {
 
         adapterTests.genBranchOperations(memoryAdapter, Q, expect);
     });
+
+    describe('Project: tag operations', function () {
+        var memoryAdapter = new MemoryAdapter(logger, gmeConfig);
+
+        before(function (done) {
+            memoryAdapter.openDatabase(done);
+        });
+
+        after(function (done) {
+            memoryAdapter.closeDatabase(done);
+        });
+
+        adapterTests.genTagOperations(memoryAdapter, Q, expect);
+    });
 });

@@ -1001,7 +1001,7 @@ function genBranchOperations(databaseAdapter, Q, expect) {
             .done();
     });
 
-    it('should contain branches and commits after rename', function (done) {
+    it('should contain branches, commits and tags after rename', function (done) {
         var project,
             commitObj1 = {_id: '#commitHash1', time: 1, type: 'commit'},
             commitObj2 = {_id: '#commitHash2', time: 2, type: 'commit'},
@@ -1013,6 +1013,8 @@ function genBranchOperations(databaseAdapter, Q, expect) {
                 return Q.allDone([
                     project.setBranchHash('b', '', '#newHash'),
                     project.setBranchHash('b1', '', '#newHash1'),
+                    project.createTag('tag', '#newHash'),
+                    project.createTag('tag1', '#newHash1'),
                     project.insertObject(commitObj1),
                     project.insertObject(commitObj2),
                     project.insertObject(commitObj3)
@@ -1030,12 +1032,14 @@ function genBranchOperations(databaseAdapter, Q, expect) {
             .then(function (newProject) {
                 return Q.allDone([
                     newProject.getBranches(),
-                    newProject.getCommits(10, 10)
+                    newProject.getCommits(10, 10),
+                    newProject.getTags()
                 ]);
             })
             .then(function (result) {
                 expect(result[0]).to.deep.equal({b: '#newHash', b1: '#newHash1'});
                 expect(result[1]).to.deep.equal([commitObj3, commitObj2, commitObj1]);
+                expect(result[2]).to.deep.equal({tag: '#newHash', tag1: '#newHash1'});
             })
             .nodeify(done);
     });
@@ -1141,6 +1145,8 @@ function genBranchOperations(databaseAdapter, Q, expect) {
                 return Q.allDone([
                     project.setBranchHash('b', '', '#newHash'),
                     project.setBranchHash('b1', '', '#newHash1'),
+                    project.createTag('tag', '#newHash'),
+                    project.createTag('tag1', '#newHash1'),
                     project.insertObject(commitObj1),
                     project.insertObject(commitObj2),
                     project.insertObject(commitObj3)
@@ -1164,6 +1170,8 @@ function genBranchOperations(databaseAdapter, Q, expect) {
                     result[1].getBranches(),
                     result[0].getCommits(10, 10),
                     result[1].getCommits(10, 10),
+                    result[0].getTags(),
+                    result[1].getTags()
                 ]);
             })
             .then(function (result) {
@@ -1171,6 +1179,136 @@ function genBranchOperations(databaseAdapter, Q, expect) {
                 expect(result[1]).to.deep.equal({b: '#newHash', b1: '#newHash1'});
                 expect(result[2]).to.deep.equal([commitObj3, commitObj2, commitObj1]);
                 expect(result[3]).to.deep.equal([commitObj3, commitObj2, commitObj1]);
+                expect(result[4]).to.deep.equal({tag: '#newHash', tag1: '#newHash1'});
+                expect(result[5]).to.deep.equal({tag: '#newHash', tag1: '#newHash1'});
+            })
+            .nodeify(done);
+    });
+}
+
+/**
+ * @param databaseAdapter
+ * @param Q
+ * @param expect
+ */
+function genTagOperations(databaseAdapter, Q, expect) {
+
+    it('should create a tag if it does not exist', function (done) {
+        var project;
+        databaseAdapter.createProject('project1')
+            .then(function (project_) {
+                project = project_;
+                return project.createTag('tag1', '#someHash');
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({
+                    tag1: '#someHash'
+                });
+            })
+            .nodeify(done);
+    });
+
+    it('should create and delete', function (done) {
+        var project;
+        databaseAdapter.createProject('project2')
+            .then(function (project_) {
+                project = project_;
+                return project.createTag('tag1', '#someHash');
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({
+                    tag1: '#someHash'
+                });
+
+                return project.deleteTag('tag1');
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({});
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to create a tag if it already exists', function (done) {
+        var project;
+        databaseAdapter.createProject('project3')
+            .then(function (project_) {
+                project = project_;
+                return project.createTag('tag1', '#someHash');
+            })
+            .then(function () {
+                return project.createTag('tag1', '#someOtherHash');
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('Tag already exists [tag1]');
+                return project.getTags()
+                    .then(function (tags) {
+                        expect(tags).to.deep.equal({
+                            tag1: '#someHash'
+                        });
+                    });
+            })
+            .nodeify(done);
+    });
+
+    it('should delete if not exist', function (done) {
+        var project;
+        databaseAdapter.createProject('project4')
+            .then(function (project_) {
+                project = project_;
+                return project.createTag('tag1', '#someHash');
+            })
+            .then(function () {
+                return project.deleteTag('tag2');
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({
+                    tag1: '#someHash'
+                });
+            })
+            .nodeify(done);
+    });
+
+    it('should delete if not exist and no tags created', function (done) {
+        var project;
+        databaseAdapter.createProject('project5')
+            .then(function (project_) {
+                project = project_;
+
+                return project.deleteTag('tag1');
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({});
+            })
+            .nodeify(done);
+    });
+
+    it('should getTags if no created', function (done) {
+        var project;
+        databaseAdapter.createProject('project6')
+            .then(function (project_) {
+                project = project_;
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({});
             })
             .nodeify(done);
     });
@@ -1181,5 +1319,6 @@ module.exports = {
     genCreateOpenDeleteRenameProject: genCreateOpenDeleteRenameProject,
     genDatabaseClosedErrors: genDatabaseClosedErrors,
     genInsertLoadAndCommits: genInsertLoadAndCommits,
-    genBranchOperations: genBranchOperations
+    genBranchOperations: genBranchOperations,
+    genTagOperations: genTagOperations
 }

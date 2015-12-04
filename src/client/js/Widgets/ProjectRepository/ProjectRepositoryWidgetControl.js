@@ -37,11 +37,23 @@ define(['js/logger'], function (Logger) {
                     self._logger.error(err);
                 }
 
-                self._refreshBranches();
+                self._refreshBranchesAndTags();
                 self._refreshActualCommit();
-                if (branchName === self._view._branchName) {
+                if (self._view._start === branchName) {
                     self._view.noMoreCommitsToDisplay();
                 }
+            });
+        };
+
+        self._view.onDeleteTagClick = function (tagName) {
+            var projectName = self._client.getActiveProjectId();
+            self._client.deleteTag(projectName, tagName, function (err) {
+                if (err) {
+                    self._logger.error(err);
+                }
+
+                self._refreshBranchesAndTags();
+                self._refreshActualCommit();
             });
         };
 
@@ -55,7 +67,21 @@ define(['js/logger'], function (Logger) {
                     if (err) {
                         self._logger.error(err);
                     }
-                    self._refreshBranches();
+                    self._refreshBranchesAndTags();
+                });
+        };
+
+        self._view.onCreateTagFromCommit = function (params) {
+            var projectName = self._client.getActiveProjectId();
+            self._client.createTag(
+                projectName,
+                params.name,
+                params.commitId,
+                function (err) {
+                    if (err) {
+                        self._logger.error(err);
+                    }
+                    self._refreshBranchesAndTags();
                 });
         };
 
@@ -123,10 +149,9 @@ define(['js/logger'], function (Logger) {
                     self._view.render();
 
                     self._refreshActualCommit();
-
-                    self._refreshBranches();
                 }
 
+                self._refreshBranchesAndTags();
                 self._view.hideProgressbar();
 
                 if (cLen < num) {
@@ -156,11 +181,12 @@ define(['js/logger'], function (Logger) {
         this._view.setActualCommitId(this._client.getActiveCommitHash());
     };
 
-    RepositoryLogControl.prototype._refreshBranches = function () {
+    RepositoryLogControl.prototype._refreshBranchesAndTags = function () {
         var self = this,
             projectName = self._client.getActiveProjectId();
 
         self._view.clearBranches();
+        self._view.clearTags();
 
         self._client.getBranches(projectName, function (err, data) {
             var i,
@@ -176,11 +202,30 @@ define(['js/logger'], function (Logger) {
             for (i = 0; i < branchNames.length; i += 1) {
                 self._view.addBranch({
                     name: branchNames[i],
-                    commitId: data[branchNames[i]],
-                    sync: true, //data[i].sync TODO: does this matter?
+                    commitId: data[branchNames[i]]
                 });
             }
-            self._view.branchesUpdated();
+
+            self._client.getTags(projectName, function (err, data) {
+                var i,
+                    tagNames;
+
+                self._logger.debug('getTags: err, data: ', err, data);
+
+                if (err) {
+                    self._logger.error(err);
+                    return;
+                }
+                tagNames = Object.keys(data);
+                for (i = 0; i < tagNames.length; i += 1) {
+                    self._view.addTag({
+                        name: tagNames[i],
+                        commitId: data[tagNames[i]]
+                    });
+                }
+
+                self._view.branchesAndTagsUpdated();
+            });
         });
     };
 

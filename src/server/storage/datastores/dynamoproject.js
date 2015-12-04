@@ -146,7 +146,7 @@ function DynamoProject(projectId, adapter) {
                 return;
             }
 
-            deferred.reject(new Error('Not implemented'));
+            deferred.reject(new Error('Not Implemented'));
         });
 
         return deferred.promise.nodeify(callback);
@@ -339,6 +339,30 @@ function DynamoProject(projectId, adapter) {
                 deferred.reject(new Error('getCommits query did not return data!'));
             }
         });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    this.createTag = function (name, commitHash, callback) {
+        var deferred = Q.defer();
+
+        deferred.reject(new Error('Not Implemented'));
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    this.deleteTag = function (name, callback) {
+        var deferred = Q.defer();
+
+        deferred.reject(new Error('Not Implemented'));
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    this.getTags = function (callback) {
+        var deferred = Q.defer();
+
+        deferred.reject(new Error('Not Implemented'));
 
         return deferred.promise.nodeify(callback);
     };

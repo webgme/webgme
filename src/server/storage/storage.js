@@ -656,6 +656,58 @@ Storage.prototype.getCommonAncestorCommit = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+Storage.prototype.createTag = function (data, callback) {
+    var self = this;
+    return self.database.openProject(data.projectId)
+        .then(function (project) {
+            return project.createTag(data.tagName, data.commitHash);
+        })
+        .then(function () {
+            var eventData = {
+                projectId: data.projectId,
+                tagName: data.tagName,
+                commitHash: data.commitHash
+            };
+
+            if (self.gmeConfig.storage.broadcastProjectEvents) {
+                eventData.socket = data.socket;
+            }
+
+            self.dispatchEvent(CONSTANTS.TAG_CREATED, eventData);
+        })
+        .nodeify(callback);
+};
+
+Storage.prototype.deleteTag = function (data, callback) {
+    var self = this;
+
+    return self.database.openProject(data.projectId)
+        .then(function (project) {
+            return project.deleteTag(data.tagName);
+        })
+        .then(function () {
+            var eventData = {
+                projectId: data.projectId,
+                tagName: data.tagName
+            };
+
+            if (self.gmeConfig.storage.broadcastProjectEvents) {
+                eventData.socket = data.socket;
+            }
+
+            self.dispatchEvent(CONSTANTS.TAG_DELETED, eventData);
+        })
+        .nodeify(callback);
+};
+
+Storage.prototype.getTags = function (data, callback) {
+    return this.database.openProject(data.projectId)
+        .then(function (project) {
+            return project.getTags();
+        })
+        .nodeify(callback);
+};
+
 Storage.prototype.openProject = function (data, callback) {
     return this.database.openProject(data.projectId).nodeify(callback);
 };

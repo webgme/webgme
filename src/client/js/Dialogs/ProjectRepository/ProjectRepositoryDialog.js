@@ -26,7 +26,10 @@ define(['js/logger',
         this._widget = null;
         this._selector = null;
         this._groupBranches = null;
-        this._branches = null;
+        this._branchNames = [];
+        this._groupTags = null;
+        this._tags = [];
+        this._tagCommitHashes = [];
         this._selectedValue = null;
 
         this._logger.debug('Created');
@@ -34,7 +37,7 @@ define(['js/logger',
 
     ProjectRepositoryDialog.prototype.show = function (options) {
         var self = this;
-        this._branches = options.branches;
+        this._branchNames = options.branches;
 
         this._initDialog(options);
 
@@ -58,6 +61,7 @@ define(['js/logger',
 
         this._selector = this._dialog.find('select.selector');
         this._groupBranches = this._selector.find('optgroup.group-branches');
+        this._groupTags = this._selector.find('optgroup.group-tags');
 
         if (typeof options.start === 'string') {
             options.historyType = 'branch';
@@ -84,15 +88,17 @@ define(['js/logger',
             }
 
             self._selectedValue = value;
-            if (value === '$allBranches') {
-                options.start = self._branches;
-                options.historyType = 'branches';
+
+            if (value === '$allBranchesAndTags') {
+                options.start = self._branchNames.concat(self._tagCommitHashes);
+            } else if (value === '$allBranches') {
+                options.start = self._branchNames;
+            } else if (value === '$allTags') {
+                options.start = self._tagCommitHashes;
             } else if (value === '$commits') {
                 options.start = null;
-                options.historyType = 'commits';
             } else {
                 options.start = value;
-                options.historyType = 'branch';
             }
 
             self._initializeWidget(modalBody, options);
@@ -134,25 +140,52 @@ define(['js/logger',
 
     ProjectRepositoryDialog.prototype._populateOptions = function () {
         var self = this,
-            branchExists = false;
+            selectedExists = false;
 
         this._groupBranches.children().remove();
-        this._branches.sort();
+        this._groupTags.children().remove();
+        this._branchNames.sort();
+        this._tags.sort(function (t1, t2) {
+            if (t1.name > t2.name) {
+                return 1;
+            }
+            if (t1.name < t2.name) {
+                return -1;
+            }
 
-        this._branches.forEach(function (branchName) {
+            return 0;
+        });
+
+        this._tagCommitHashes = [];
+
+        this._branchNames.forEach(function (branchName) {
             self._groupBranches.append($('<option>', {
                     text: branchName,
                     value: branchName
                 }
             ));
+
             if (self._selectedValue === branchName) {
-                branchExists = true;
+                selectedExists = true;
+            }
+        });
+
+        this._tags.forEach(function (tag) {
+            self._groupTags.append($('<option>', {
+                    text: tag.name,
+                    value: tag.commitId
+                }
+            ));
+
+            self._tagCommitHashes.push(tag.commitId);
+            if (self._selectedValue === tag.commitId) {
+                selectedExists = true;
             }
         });
 
         if (this._selectedValue && this._selectedValue[0].indexOf('$') > -1) {
             this._selector.val(this._selectedValue);
-        } else if (branchExists) {
+        } else if (selectedExists) {
             this._selector.val(this._selectedValue);
         } else {
             this._selector.val('');
@@ -178,10 +211,13 @@ define(['js/logger',
             }
         );
 
-        this._widget.branchesUpdated = function () {
-            self._logger.debug('branches, old, new', self._branches, self._widget._branchNames);
-            self._branches = self._widget._branchNames.slice();
+        this._widget.branchesAndTagsUpdated = function () {
+            self._logger.debug('branches, old, new', self._branchNames, self._widget._branchNames);
+            self._logger.debug('tags, old, new', self._tags, self._widget._tags);
+            self._branchNames = self._widget._branchNames.slice();
+            self._tags = self._widget._tags.slice();
             self._populateOptions();
+            ProjectRepositoryWidget.prototype.branchesAndTagsUpdated.call(self._widget);
         };
 
         if (wasShown) {

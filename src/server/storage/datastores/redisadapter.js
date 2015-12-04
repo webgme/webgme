@@ -15,6 +15,7 @@ var redis = require('redis'),
 // guest+test = hashMap(objectHash, objectStr)
 // guest+test:branches = hashMap(branchName, branchHash)
 // guest+test:commits = hashMap(objectHash, timestamp)
+// guest+test:tags = hashMap(objectHash, commitHash)
 
 /**
  * @param mainLogger
@@ -32,7 +33,8 @@ function RedisAdapter(mainLogger, gmeConfig) {
     this.logger = logger;
     this.CONSTANTS = {
         BRANCHES: ':branches',
-        COMMITS: ':commits'
+        COMMITS: ':commits',
+        TAGS: ':tags'
     };
 
     function openDatabase(callback) {
@@ -104,6 +106,7 @@ function RedisAdapter(mainLogger, gmeConfig) {
         if (self.client) {
             Q.ninvoke(self.client, 'del', projectId,
                 projectId + self.CONSTANTS.BRANCHES,
+                projectId + self.CONSTANTS.TAGS,
                 projectId + self.CONSTANTS.COMMITS)
                 .then(function (result) {
                     if (result > 0) {
@@ -185,7 +188,9 @@ function RedisAdapter(mainLogger, gmeConfig) {
                             Q.ninvoke(self.client, 'rename',
                                 projectId + self.CONSTANTS.BRANCHES, newProjectId + self.CONSTANTS.BRANCHES),
                             Q.ninvoke(self.client, 'rename',
-                                projectId + self.CONSTANTS.COMMITS, newProjectId + self.CONSTANTS.COMMITS)
+                                projectId + self.CONSTANTS.COMMITS, newProjectId + self.CONSTANTS.COMMITS),
+                            Q.ninvoke(self.client, 'rename',
+                                projectId + self.CONSTANTS.TAGS, newProjectId + self.CONSTANTS.TAGS)
                         ])
                             .then(function (/*result*/) {
                                 // Result may contain errors if no branches or commits were created,
@@ -228,6 +233,7 @@ function RedisAdapter(mainLogger, gmeConfig) {
                     Q.ninvoke(self.client, 'hgetall', projectId),
                     Q.ninvoke(self.client, 'hgetall', projectId  + self.CONSTANTS.BRANCHES),
                     Q.ninvoke(self.client, 'hgetall', projectId  + self.CONSTANTS.COMMITS),
+                    Q.ninvoke(self.client, 'hgetall', projectId  + self.CONSTANTS.TAGS),
                 ]);
             })
             .then(function (result) {
@@ -242,9 +248,13 @@ function RedisAdapter(mainLogger, gmeConfig) {
                     promises.push(Q.ninvoke(self.client, 'hmset', newProjectId  + self.CONSTANTS.COMMITS, result[2]));
                 }
 
+                if (result[3]) {
+                    promises.push(Q.ninvoke(self.client, 'hmset', newProjectId  + self.CONSTANTS.TAGS, result[3]));
+                }
+
                 return Q.all(promises);
             })
-            .then(function (result) {
+            .then(function () {
                 return newProject;
             })
             .nodeify(callback);

@@ -149,6 +149,39 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
             .nodeify(callback);
     };
 
+    this.createTag = function (tagName, commitHash, callback) {
+        var data = {
+            username: self.userName,
+            projectId: self.projectId,
+            tagName: tagName,
+            commitHash: commitHash
+        };
+
+        return storage.createTag(data)
+            .nodeify(callback);
+    };
+
+    this.deleteTag = function (tagName, callback) {
+        var data = {
+            username: self.userName,
+            projectId: self.projectId,
+            tagName: tagName
+        };
+
+        return storage.deleteTag(data)
+            .nodeify(callback);
+    };
+
+    this.getTags = function (callback) {
+        var data = {
+            username: self.userName,
+            projectId: self.projectId
+        };
+
+        return storage.getTags(data)
+            .nodeify(callback);
+    };
+
     this.getCommits = function (before, number, callback) {
         var data = {
             username: self.userName,

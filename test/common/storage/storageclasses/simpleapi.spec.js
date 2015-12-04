@@ -109,6 +109,7 @@ describe('storage storageclasses simpleapi', function () {
                 })
                 .then(function (result) {
                     commitHash2 = result.hash;
+                    return importResult.project.createTag('tag', originalHash);
                 })
                 .nodeify(done);
         });
@@ -185,10 +186,27 @@ describe('storage storageclasses simpleapi', function () {
             .nodeify(done);
     });
 
+    it('should getTags', function (done) {
+        Q.ninvoke(storage, 'getTags', projectName2Id(projectName))
+            .then(function (tags) {
+                expect(tags).to.deep.equal({tag: originalHash});
+            })
+            .nodeify(done);
+    });
+
     it('should getBranchHash', function (done) {
         Q.ninvoke(storage, 'getBranchHash', projectName2Id(projectName), 'master')
             .then(function (hash) {
                 expect(hash).to.equal(importResult.commitHash);
+            })
+            .nodeify(done);
+    });
+
+    it('should getHistory from master', function (done) {
+        Q.ninvoke(storage, 'getHistory', projectName2Id(projectName), 'master', 10)
+            .then(function (commits) {
+                expect(commits.length).to.deep.equal(1);
+                expect(commits[0]._id).to.deep.equal(importResult.commitHash);
             })
             .nodeify(done);
     });
@@ -283,7 +301,33 @@ describe('storage storageclasses simpleapi', function () {
                 return Q.ninvoke(storage, 'deleteBranch', projectName2Id(projectName), 'newBranchToDelete', importResult.commitHash);
             })
             .then(function (result) {
-                expect(result.status).to.equal('SYNCED'); // FIXME: deleteBranch returns with this data???
+                expect(result.status).to.equal('SYNCED');
+            })
+            .nodeify(done);
+    });
+
+    it('should createBranch', function (done) {
+        Q.ninvoke(storage, 'createBranch', projectName2Id(projectName), 'createdBranch', importResult.commitHash)
+            .then(function (result) {
+                expect(result.status).to.equal('SYNCED');
+            })
+            .nodeify(done);
+    });
+
+    it('should create and delete tag', function (done) {
+        Q.ninvoke(storage, 'createTag', projectName2Id(projectName), 'newTag', originalHash)
+            .then(function () {
+                return Q.ninvoke(storage, 'getTags', projectName2Id(projectName));
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({tag: originalHash, newTag: originalHash});
+                return Q.ninvoke(storage, 'deleteTag', projectName2Id(projectName), 'newTag');
+            })
+            .then(function () {
+                return Q.ninvoke(storage, 'getTags', projectName2Id(projectName));
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({tag: originalHash});
             })
             .nodeify(done);
     });

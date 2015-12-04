@@ -518,10 +518,10 @@ describe('SafeStorage', function () {
 
         it('should fail getCommits using commitHash if hash points to non commit object', function (done) {
             var data = {
-                    projectId: projectId,
-                    number: 1,
-                    before: rootHash
-                };
+                projectId: projectId,
+                number: 1,
+                before: rootHash
+            };
 
             safeStorage.getCommits(data)
                 .then(function () {
@@ -751,6 +751,135 @@ describe('SafeStorage', function () {
                     expect(err.message).to.contain('object does not exist #doesNotExist');
                 })
                 .nodeify(done);
+        });
+    });
+
+    describe('create/delete/getTags', function () {
+        var safeStorage,
+            projectId,
+            rootHash,
+            project,
+            commitHash,
+            commitHash1;
+
+        before(function (done) {
+            safeStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+
+            safeStorage.openDatabase()
+                .then(function () {
+                    return testFixture.importProject(safeStorage, {
+                        projectSeed: 'seeds/EmptyProject.json',
+                        projectName: 'safestorageTags',
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (result) {
+                    projectId = result.project.projectId;
+                    commitHash = result.commitHash;
+                    rootHash = result.rootHash;
+                    project = result.project;
+
+                    return project.makeCommit(null, [commitHash], rootHash, [], '1a');
+                })
+                .then(function (result) {
+                    commitHash1 = result.hash;
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            safeStorage.closeDatabase(done);
+        });
+
+        it('should getTags and return empty', function (done) {
+            var data = {
+                projectId: projectId
+            };
+
+            safeStorage.getTags(data)
+                .then(function (tags) {
+                    expect(tags).to.deep.equal({});
+                })
+                .nodeify(done);
+        });
+
+        it('should createTag', function (done) {
+            var data = {
+                projectId: projectId,
+                tagName: 'taggen',
+                commitHash: commitHash
+            };
+
+            safeStorage.createTag(data)
+                .then(function () {
+                    return safeStorage.getTags({projectId: projectId});
+                })
+                .then(function (result) {
+                    expect(result.taggen).to.equal(commitHash);
+                })
+                .nodeify(done);
+        });
+
+        it('should create and delete a tag', function (done) {
+            var data = {
+                projectId: projectId,
+                tagName: 'taggen2',
+                commitHash: commitHash
+            };
+
+            safeStorage.createTag(data)
+                .then(function () {
+                    return safeStorage.getTags({projectId: projectId});
+                })
+                .then(function (result) {
+                    expect(result.taggen2).to.equal(commitHash);
+                })
+                .nodeify(done);
+        });
+
+        it('should emit TAG_CREATED on create', function (done) {
+            var tagName = 'TAG_CREATED_tag',
+                eventHandler = function (_storage, eventData) {
+                    safeStorage.clearAllEvents();
+                    try {
+                        expect(eventData).to.deep.equal({
+                            tagName: tagName,
+                            commitHash: commitHash,
+                            projectId: projectId
+                        });
+                        done();
+                    } catch (err) {
+                        done(err);
+                    }
+                };
+
+            safeStorage.addEventListener(project.CONSTANTS.TAG_CREATED, eventHandler);
+            project.createTag(tagName, commitHash).catch(done);
+        });
+
+        it('should emit TAG_DELETED on delete tag', function (done) {
+            var tagName = 'TAG_DELETED_tag',
+                eventHandler = function (_storage, eventData) {
+                    safeStorage.clearAllEvents();
+
+                    try {
+                        expect(eventData).to.deep.equal({
+                            projectId: projectId,
+                            tagName: tagName
+                        });
+                        done();
+                    } catch (err) {
+                        done(err);
+                    }
+                };
+
+            safeStorage.addEventListener(project.CONSTANTS.TAG_DELETED, eventHandler);
+            project.createTag(tagName, commitHash)
+                .then(function () {
+                    project.deleteTag(tagName);
+                })
+                .catch(done);
         });
     });
 

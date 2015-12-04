@@ -70,6 +70,10 @@ describe('storage project', function () {
             .then(function (result) {
                 commitHash2 = result.hash;
 
+                return importResult.project.createTag('tag', originalHash);
+            })
+            .then(function () {
+
                 return safeStorage.closeDatabase();
             })
             .then(function () {
@@ -152,6 +156,25 @@ describe('storage project', function () {
             })
             .then(function (branches_) {
                 expect(branches_.hasOwnProperty('master')).to.equal(true);
+            })
+            .nodeify(done);
+    });
+
+    it('should getTags', function (done) {
+        var project,
+            branches,
+            access;
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function (result) {
+                project = result[0];
+                branches = result[1];
+                access = result[2];
+
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({tag: importResult.commitHash});
             })
             .nodeify(done);
     });
@@ -336,13 +359,41 @@ describe('storage project', function () {
             .nodeify(done);
     });
 
+    it('should create and deleteTag', function (done) {
+        var project;
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function (result) {
+                project = result[0];
+
+                return project.createTag('newTag', importResult.commitHash);
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+
+                expect(tags).to.deep.equal({
+                    tag: importResult.commitHash,
+                    newTag: importResult.commitHash
+                });
+
+                return project.deleteTag('newTag');
+            })
+            .then(function () {
+                return project.getTags();
+            })
+            .then(function (tags) {
+                expect(tags).to.deep.equal({tag: importResult.commitHash});
+            })
+            .nodeify(done);
+    });
 
     describe('branch', function () {
 
         it('should cleanUp', function (done) {
             var project,
                 branches,
-                branchName = 'cleanUp_name',
+                branchName = 'cleanUpName',
                 access,
                 hashUpdateHandler = function (data, commitQueue, updateQueue, callback) {
                     callback(null, true);
@@ -367,7 +418,7 @@ describe('storage project', function () {
                 })
                 .then(function (latestCommitData) {
                     expect(latestCommitData).to.include.keys('projectId', 'branchName', 'commitObject', 'coreObjects');
-                    branch = project.branches['cleanUp_name'];
+                    branch = project.branches.cleanUpName;
                     expect(typeof branch).to.equal('object');
                     //expect(branch.commitHandler).to.equal(branchStatusHandler);
                     //expect(branch.localUpdateHandler).to.equal(hashUpdateHandler);
@@ -438,15 +489,15 @@ describe('storage project', function () {
                     branches = result[1];
                     access = result[2];
 
-                    return project.createBranch('updateHashes_name', originalHash);
+                    return project.createBranch('updateHashesName', originalHash);
                 })
                 .then(function (result) {
                     expect(result.status).to.equal('SYNCED');
-                    return Q.nfcall(storage.openBranch, project.projectId, 'updateHashes_name',
+                    return Q.nfcall(storage.openBranch, project.projectId, 'updateHashesName',
                         hashUpdateHandler, branchStatusHandler);
                 })
-                .then(function (result) {
-                    branch = project.branches['updateHashes_name'];
+                .then(function () {
+                    branch = project.branches.updateHashesName;
 
                     branch.updateHashes(originalHash, originalHash);
                     expect(branch.getOriginHash()).to.equal(originalHash);
@@ -459,7 +510,7 @@ describe('storage project', function () {
                     branch.updateHashes(); // setting both to undefined should change the values
                     expect(branch.getOriginHash()).to.equal(undefined);
                     expect(branch.getLocalHash()).to.equal(undefined);
-                    return Q.nfcall(storage.closeBranch, project.projectId, 'updateHashes_name');
+                    return Q.nfcall(storage.closeBranch, project.projectId, 'updateHashesName');
                 })
                 .nodeify(done);
         });
@@ -486,15 +537,15 @@ describe('storage project', function () {
                     branches = result[1];
                     access = result[2];
 
-                    return project.createBranch('queueCommit_name', originalHash);
+                    return project.createBranch('queueCommitName', originalHash);
                 })
                 .then(function (result) {
                     expect(result.status).to.equal('SYNCED');
-                    return Q.nfcall(storage.openBranch, project.projectId, 'queueCommit_name',
+                    return Q.nfcall(storage.openBranch, project.projectId, 'queueCommitName',
                         hashUpdateHandler, branchStatusHandler);
                 })
-                .then(function (result) {
-                    branch = project.branches['queueCommit_name'];
+                .then(function () {
+                    branch = project.branches.queueCommitName;
                     branch.queueCommit(commitData, function () {});
                     expect(branch.getCommitQueue().length).to.equal(1);
                     expect(branch.getFirstCommit()).to.equal(commitData);
@@ -502,7 +553,7 @@ describe('storage project', function () {
                     expect(branch.getFirstCommit(true)).to.equal(commitData);
                     expect(branch.getCommitQueue().length).to.equal(0);
                     expect(branch.getFirstCommit(true)).to.equal(undefined);
-                    return Q.nfcall(storage.closeBranch, project.projectId, 'queueCommit_name');
+                    return Q.nfcall(storage.closeBranch, project.projectId, 'queueCommitName');
                 })
                 .nodeify(done);
         });
@@ -536,15 +587,15 @@ describe('storage project', function () {
                     branches = result[1];
                     access = result[2];
 
-                    return project.createBranch('getCommitsForNewFork_name', originalHash);
+                    return project.createBranch('getCommitsForNewForkName', originalHash);
                 })
                 .then(function (result) {
                     expect(result.status).to.equal('SYNCED');
-                    return Q.nfcall(storage.openBranch, project.projectId, 'getCommitsForNewFork_name',
+                    return Q.nfcall(storage.openBranch, project.projectId, 'getCommitsForNewForkName',
                         hashUpdateHandler, branchStatusHandler);
                 })
-                .then(function (result) {
-                    branch = project.branches['getCommitsForNewFork_name'];
+                .then(function () {
+                    branch = project.branches.getCommitsForNewForkName;
                     branch.updateHashes('hash', 'hash');
                     expect(branch.getCommitsForNewFork('hash_different')).to.equal(false);
                     expect(branch.getCommitsForNewFork()).to.deep.equal({commitHash: 'hash', queue: []});
@@ -555,7 +606,7 @@ describe('storage project', function () {
                     expect(branch.getCommitsForNewFork('asd2').queue.length).to.equal(1);
                     expect(branch.getCommitsForNewFork('asd2').queue[0]).to.equal(commitData2);
                     expect(branch.getCommitsForNewFork().queue[0]).to.equal(commitData2);
-                    return Q.nfcall(storage.closeBranch, project.projectId, 'queueCommit_name');
+                    return Q.nfcall(storage.closeBranch, project.projectId, 'getCommitsForNewForkName');
                 })
                 .nodeify(done);
         });
@@ -589,15 +640,15 @@ describe('storage project', function () {
                     branches = result[1];
                     access = result[2];
 
-                    return project.createBranch('queueUpdate_name', originalHash);
+                    return project.createBranch('queueUpdateName', originalHash);
                 })
                 .then(function (result) {
                     expect(result.status).to.equal('SYNCED');
-                    return Q.nfcall(storage.openBranch, project.projectId, 'queueUpdate_name',
+                    return Q.nfcall(storage.openBranch, project.projectId, 'queueUpdateName',
                         hashUpdateHandler, branchStatusHandler);
                 })
-                .then(function (result) {
-                    branch = project.branches['queueUpdate_name'];
+                .then(function () {
+                    branch = project.branches.queueUpdateName;
                     expect(branch.getUpdateQueue().length).to.equal(0);
                     branch.queueUpdate(commitData);
                     branch.queueUpdate(commitData2);
@@ -607,7 +658,7 @@ describe('storage project', function () {
                     expect(branch.getFirstUpdate(true)).to.equal(commitData);
                     expect(branch.getFirstUpdate(true)).to.equal(commitData2);
                     expect(branch.getFirstUpdate(true)).to.equal(undefined);
-                    return Q.nfcall(storage.closeBranch, project.projectId, 'queueCommit_name');
+                    return Q.nfcall(storage.closeBranch, project.projectId, 'queueUpdateName');
                 })
                 .nodeify(done);
         });
@@ -626,6 +677,9 @@ describe('storage project', function () {
             expect(projectInterface.getBranches).to.throw(Error, /must be overridden in derived class/);
             expect(projectInterface.getCommits).to.throw(Error, /must be overridden in derived class/);
             expect(projectInterface.getCommonAncestorCommit).to.throw(Error, /must be overridden in derived class/);
+            expect(projectInterface.getTags).to.throw(Error, /must be overridden in derived class/);
+            expect(projectInterface.createTag).to.throw(Error, /must be overridden in derived class/);
+            expect(projectInterface.deleteTag).to.throw(Error, /must be overridden in derived class/);
         });
 
     });

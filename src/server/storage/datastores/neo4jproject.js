@@ -136,6 +136,30 @@ function Neo4jProject(projectId, adapter, projectNodeId) {
     this.getCommits = function (before, number, callback) {
         throw new Error('Not Implemented');
     };
+
+    this.createTag = function (name, commitHash, callback) {
+        var deferred = Q.defer();
+
+        deferred.reject(new Error('Not Implemented'));
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    this.deleteTag = function (name, callback) {
+        var deferred = Q.defer();
+
+        deferred.reject(new Error('Not Implemented'));
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    this.getTags = function (callback) {
+        var deferred = Q.defer();
+
+        deferred.reject(new Error('Not Implemented'));
+
+        return deferred.promise.nodeify(callback);
+    };
 }
 
 module.exports = Neo4jProject;
