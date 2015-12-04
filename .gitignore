@@ -6,6 +6,7 @@ bin
 */.idea
 *.class
 *csproj.user
+*.css.map
 
 node_modules
 
