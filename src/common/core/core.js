@@ -193,8 +193,6 @@ define([
          */
         this.getChild = core.getChild;
 
-        //this.getDescendant = core.getDescendant;
-        //this.getDescendantByPath = core.getDescendantByPath;
         //this.isMutable = core.isMutable;
         //this.isObject = core.isObject;
 
@@ -566,11 +564,6 @@ define([
          */
         this.getPointerPath = core.getPointerPath;
 
-        //TODO check if this could be completely removed - or we have to start using it instead of relying on undefined
-        //this.hasPointer = core.hasPointer;
-
-        //this.getOutsidePointerPath = core.getOutsidePointerPath;
-
         /**
          * Removes the pointer from the node.
          * @param {module:Core~Node} node - the node in question.
@@ -611,8 +604,6 @@ define([
          * @func
          */
         this.getCollectionPaths = core.getCollectionPaths;
-
-        //this.getCoreTree = core.getCoreTree;
 
         /**
          * Collects the data hash values of the children of the node.
@@ -958,10 +949,12 @@ define([
 
         //TODO this is only used in import - export use-cases, probably could be removed...
         /**
-         * Get the GUID of a node. As the Core itself do not checks whether the GUID already exists. The use of
+         * Set the GUID of a node. As the Core itself do not checks whether the GUID already exists. The use of
          * this function is only advised during the creation of the node.
          * @param {module:Core~Node} node - the node in question.
          * @param {module:Core~GUID} guid - the new globally unique identifier.
+         * @param {function()} callback
+         *
          * @func
          */
         this.setGuid = core.setGuid;
@@ -1341,12 +1334,11 @@ define([
 
         /**
          * Generates a differential tree among the two states of the project that contains the necessary changes
-         * that can modify the source to be identical to the target.
+         * that can modify the source to be identical to the target. The result is in form of a json object.
          * @param {module:Core~Node} sourceRoot - the root node of the source state.
          * @param {module:Core~Node} targetRoot - the root node of the target state.
          *
-         * @return {object} The function returns a tree structured patch, that contains the necessary modification
-         * that would changes the source state to be identical with the target state.
+         * @param {function(string, object)} callback
          *
          * @func
          */
@@ -1358,6 +1350,7 @@ define([
          * Apply changes to the current project.
          * @param {module:Core~Node} root - the root of the containment hierarchy where we wish to apply the changes
          * @param {object} patch - the tree structured collection of changes represented with a special JSON object
+         * @param {function(string)} callback
          *
          * @func
          */

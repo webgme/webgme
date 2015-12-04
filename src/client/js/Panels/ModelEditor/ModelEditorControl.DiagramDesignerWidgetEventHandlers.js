@@ -627,9 +627,7 @@ define(['js/logger',
                         };
                     }
 
-                    this._client.startTransaction();
                     this._client.moveMoreNodes(params);
-                    this._client.completeTransaction();
                 }
                 break;
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:

@@ -11,6 +11,7 @@ describe('corerel', function () {
         logger = testFixture.logger.fork('corerel.spec'),
         Q = testFixture.Q,
         storage,
+        expect = testFixture.expect,
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),
         TASYNC = testFixture.requirejs('common/core/tasync'),
@@ -83,9 +84,8 @@ describe('corerel', function () {
     it('child should have pointer and root should not', function (done) {
         TASYNC.call(function (children) {
             var child = children[0];
-            core.hasPointer(child, 'parent').should.be.true;
             core.getPointerPath(child, 'parent').should.be.eql(core.getPath(root));
-            core.hasPointer(root, 'parent').should.be.false;
+            expect(core.getPointerPath(root, 'parent')).to.be.equal(undefined);
             done();
         }, core.loadChildren(root));
     });
@@ -128,19 +128,6 @@ describe('corerel', function () {
                 done();
             }, core.loadPointer(child, 'parent'));
         }, core.loadCollection(root, 'parent'));
-    });
-
-    it('getting outside pointer path', function (done) {
-        TASYNC.call(function (children) {
-            var child = children[0],
-                other = core.createNode({parent: root}),
-                grandChild = core.createNode({parent: child});
-            core.setPointer(grandChild, 'ptr', other);
-            core.getOutsidePointerPath(child, 'ptr', '/' + core.getRelid(grandChild))
-                .should.be.eql(core.getPointerPath(grandChild, 'ptr'));
-
-            done();
-        }, core.loadChildren(root));
     });
 
     it('getting children paths', function (done) {
