@@ -19,7 +19,8 @@ define([
         ITEM_VALUE_FORK = 'fork',
         ITEM_VALUE_FOLLOW = 'follow',
         ITEM_VALUE_MERGE = 'merge',
-        ITEM_VALUE_SELECT_BRANCH = 'select';
+        ITEM_VALUE_SELECT_BRANCH = 'select',
+        ITEM_VALUE_DOWNLOAD_ERROR = 'downloadError';
 
     BranchStatusWidget = function (containerEl, client) {
         this._logger = Logger.create('gme:Widgets:BranchStatusWidget', WebGMEGlobal.gmeConfig.client.log);
@@ -137,6 +138,8 @@ define([
                         self._logger.debug('branch selected: ', branchName);
                     }
                 });
+            } else if (value === ITEM_VALUE_DOWNLOAD_ERROR) {
+                self._client.downloadError();
             }
         };
 
@@ -228,6 +231,10 @@ define([
         this._ddBranchStatus.addItem({
             text: 'Reselect branch',
             value: ITEM_VALUE_SELECT_BRANCH
+        });
+        this._ddBranchStatus.addItem({
+            text: 'Download error data',
+            value: ITEM_VALUE_DOWNLOAD_ERROR
         });
     };
 
