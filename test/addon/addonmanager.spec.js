@@ -67,7 +67,7 @@ describe('AddOnManager', function () {
 
         }
 
-        it('should dispatch NO_MONITORS after open branch and closing AFTER the monitor opened the branch',
+        it.skip('should dispatch NO_MONITORS after open branch and closing AFTER the monitor opened the branch',
             function (done) {
                 var manager = new AddOnManager('mockProjectId', logger, gmeConfig),
                     storage = new StorageMock(manager, done),
