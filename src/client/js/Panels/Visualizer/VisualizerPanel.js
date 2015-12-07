@@ -413,7 +413,11 @@ define(['js/logger',
                 this._splitPanel.deletePanel('p2');
                 delete this._ul2;
             }
+
+            WebGMEGlobal.State.registerActiveObject(this._currentNodeID);
         }
+
+        this.updateContainerSize();
     };
 
     return VisualizerPanel;
