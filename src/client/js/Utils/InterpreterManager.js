@@ -268,7 +268,7 @@ define([
                     } else {
                         d = new PluginConfigDialog();
                         silentPluginCfg = {};
-                        d.show(hackedConfig, runWithConfiguration);
+                        d.show(hackedConfig, plugin, runWithConfiguration);
                     }
                 });
             } else {

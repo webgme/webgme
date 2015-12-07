@@ -2001,7 +2001,7 @@ define([
                     filteredNames.push(validPlugins[i]);
                 } else {
                     logger.warn('Registered plugin for node at path "' + nodePath +
-                        '" is not amongst avaliable plugins', pluginNames);
+                        '" is not amongst available plugins', pluginNames);
                 }
             }
 

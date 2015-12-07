@@ -12,52 +12,54 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
 
     PluginToolbar = function (client) {
         this._client = client;
-
+        this._results = [];
+        this.$btnExecutePlugin = null;
         this._initialize();
     };
 
     PluginToolbar.prototype._initialize = function () {
-        var toolbar = WebGMEGlobal.Toolbar,
+        var self = this,
+            toolbar = WebGMEGlobal.Toolbar,
             fillMenuItems,
-            $btnExecutePlugin,
             executePlugin,
             client = this._client,
             unreadResults = 0,
             BADGE_CLASS = 'label',
             showResults,
             setBadgeText,
-            results = [],
             badge;
 
         setBadgeText = function (text) {
-            $btnExecutePlugin.el.find('.' + BADGE_CLASS).text(text);
+            self.$btnExecutePlugin.el.find('.' + BADGE_CLASS).text(text);
         };
 
         fillMenuItems = function () {
             var pluginNames = WebGMEGlobal.gmeConfig.plugin.displayAll ? WebGMEGlobal.allPlugins :
-                    client.filterPlugins(WebGMEGlobal.allPlugins),
+                    client.filterPlugins(WebGMEGlobal.allPlugins, WebGMEGlobal.State.getActiveObject()),
                 i, executeClickFunction = function (data) {
                     executePlugin(data.name);
                 };
 
             //clear dropdown
-            $btnExecutePlugin.clear();
+            self.$btnExecutePlugin.clear();
 
             //add read menu if needed
-            if (results.length > 0) {
-                $btnExecutePlugin.addButton({
+            if (self._results.length > 0) {
+                self.$btnExecutePlugin.addButton({
                     title: 'Show results...',
                     text: 'Show results...',
                     clickFn: function () {
                         showResults();
                     }
                 });
-                $btnExecutePlugin.addDivider();
+                if (pluginNames.length > 0) {
+                    self.$btnExecutePlugin.addDivider();
+                }
             }
 
             //add plugin names
             for (i = 0; i < pluginNames.length; i++) {
-                $btnExecutePlugin.addButton({
+                self.$btnExecutePlugin.addButton({
                     title: 'Run ' + pluginNames[i],
                     text: 'Run ' + pluginNames[i],
                     data: {name: pluginNames[i]},
@@ -68,8 +70,9 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
 
         executePlugin = function (name) {
             WebGMEGlobal.InterpreterManager.run(name, null, function (result) {
-                result.__unread = true;
-                results.splice(0, 0, result);
+                self._results.__unread = true;
+                self._results.splice(0, 0, result);
+                self.$btnExecutePlugin.el.find('.btn').disable(false);
                 unreadResults += 1;
                 if (unreadResults > 0) {
                     setBadgeText(unreadResults);
@@ -79,13 +82,13 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
 
         showResults = function () {
             var dialog = new PluginResultsDialog();
-            dialog.show(client, results);
+            dialog.show(client, self._results);
             unreadResults = 0;
             setBadgeText('');
         };
 
         /************** EXECUTE PLUG-IN BUTTON ****************/
-        $btnExecutePlugin = toolbar.addDropDownButton(
+        this.$btnExecutePlugin = toolbar.addDropDownButton(
             {
                 title: 'Execute plug-in',
                 icon: 'glyphicon glyphicon-play',
@@ -95,13 +98,17 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
                 }
             });
 
-        $btnExecutePlugin.el.find('a > i').css({'margin-top': '0px'});
+        this.$btnExecutePlugin.el.find('a > i').css({'margin-top': '0px'});
 
         badge = BADGE_BASE.clone();
-        badge.insertAfter($btnExecutePlugin.el.find('a > i'));
+        badge.insertAfter(this.$btnExecutePlugin.el.find('a > i'));
         badge.css('margin-left', '3px');
     };
 
+    PluginToolbar.prototype.disableButtons = function (disable) {
+        disable = disable && this._results.length === 0;
+        this.$btnExecutePlugin.el.find('.btn').disable(disable);
+    };
 
     return PluginToolbar;
 });
