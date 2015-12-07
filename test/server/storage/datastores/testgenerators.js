@@ -407,7 +407,7 @@ function genCreateOpenDeleteRenameProject(databaseAdapter, Q, expect) {
             .nodeify(done);
     });
 
-    it.skip('should duplicateProject if it exists and old does not', function (done) {
+    it('should duplicateProject if it exists and old does not', function (done) {
         databaseAdapter.createProject('project10')
             .then(function () {
                 return databaseAdapter.duplicateProject('project10', 'newProject10');
@@ -421,7 +421,7 @@ function genCreateOpenDeleteRenameProject(databaseAdapter, Q, expect) {
             .nodeify(done);
     });
 
-    it.skip('should fail to duplicateProject if new project already exists', function (done) {
+    it('should fail to duplicateProject if new project already exists', function (done) {
         Q.allDone([
             databaseAdapter.createProject('project11'),
             databaseAdapter.createProject('newProject11')
@@ -438,7 +438,7 @@ function genCreateOpenDeleteRenameProject(databaseAdapter, Q, expect) {
             .nodeify(done);
     });
 
-    it.skip('should fail to duplicateProject if it does not exist', function (done) {
+    it('should fail to duplicateProject if it does not exist', function (done) {
         databaseAdapter.duplicateProject('project12', 'newProject12')
             .then(function () {
                 throw new Error('should have failed!');
@@ -1133,7 +1133,7 @@ function genBranchOperations(databaseAdapter, Q, expect) {
             .done();
     });
 
-    it.skip('should contain branches and commits after duplicate', function (done) {
+    it('should contain branches and commits after duplicate', function (done) {
         var project,
             commitObj1 = {_id: '#commitHash1', time: 1, type: 'commit'},
             commitObj2 = {_id: '#commitHash2', time: 2, type: 'commit'},

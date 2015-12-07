@@ -7,9 +7,11 @@
   height: 28px;
   width: 28px;
   margin-right: 1ex;
-  display: inline-block; }
+  display: inline-block;
+  vertical-align: middle; }
 .projects-dialog .modal-content .modal-header span {
-  font-size: 28px; }
+  font-size: 28px;
+  vertical-align: middle; }
 .projects-dialog .modal-content .pre-body {
   padding: 15px 15px 0 15px; }
   .projects-dialog .modal-content .pre-body .tabContainer ul.nav.nav-tabs {

@@ -136,6 +136,8 @@ ubuntu
 ##### seedProjects
 - `config.seedProjects.enable = true`
  - Enables creation of new projects using seeds.
+- `config.seedProjects.allowDuplication = true`
+ - Enables duplication of entire project with full history (requires at least mongodb 2.6).
 - `config.seedProjects.defaultProject = 'EmptyProject'`
  - Used by the GUI when highlighting/selecting the default project to seed from.
 - `config.seedProjects.basePaths = ['./seeds']`

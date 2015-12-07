@@ -102,6 +102,7 @@ var path = require('path'),
 
         seedProjects: {
             enable: true,
+            allowDuplication: true, //requires mongodb >= 2.6
             defaultProject: 'EmptyProject',
             basePaths: [path.join(__dirname, '../seeds')]
         },

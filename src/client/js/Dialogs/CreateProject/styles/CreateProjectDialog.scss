@@ -17,9 +17,11 @@ div.create-new-project-dialog {
         width: 24px;
         margin-right: 1ex;
         display: inline-block;
+        vertical-align: middle;
       }
       span {
         font-size: 24px;
+        vertical-align: middle;
       }
     }
     div.pre-body {
@@ -32,6 +34,9 @@ div.create-new-project-dialog {
           li {
             width: 86px;
             text-align: center;
+            &.disabled-from-config {
+              display: none;
+            }
           }
         }
       }
