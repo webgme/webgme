@@ -17,7 +17,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         PLUGIN_DATA_KEY = 'plugin',
         ATTRIBUTE_DATA_KEY = 'attribute',
     //jscs:disable maximumLineLength
-        PLUGIN_CONFIG_SECTION_BASE = $('<div><fieldset><legend></legend><form class="form-horizontal" role="form"></form><fieldset></div>'),
+        PLUGIN_CONFIG_SECTION_BASE = $('<div><fieldset><form class="form-horizontal" role="form"></form><fieldset></div>'),
         ENTRY_BASE = $('<div class="form-group"><div class="row"><label class="col-sm-4 control-label">NAME</label><div class="col-sm-8 controls"></div></div><div class="row description"><div class="col-sm-4"></div></div></div>'),
     //jscs:enable maximumLineLength
         DESCRIPTION_BASE = $('<div class="desc muted col-sm-8"></div>');
@@ -27,9 +27,9 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         this._propertyGridWidgetManager.registerWidgetForType('boolean', 'iCheckBox');
     };
 
-    PluginConfigDialog.prototype.show = function (pluginConfigs, fnCallback) {
+    PluginConfigDialog.prototype.show = function (pluginConfigs, pluginClass, fnCallback) {
         var self = this;
-
+        this._currentPluginClass = pluginClass;
         this._fnCallback = fnCallback;
 
         this._initDialog(pluginConfigs);
@@ -72,6 +72,8 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
 
         this._divContainer = this._dialog.find('.modal-body');
 
+        this._title = this._dialog.find('.modal-title');
+        this._title.text((new this._currentPluginClass()).getName());
         this._widgets = {};
 
         this._btnSave.on('click', function (event) {
@@ -84,7 +86,6 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
             if (pluginConfigs.hasOwnProperty(p)) {
                 pluginSectionEl = PLUGIN_CONFIG_SECTION_BASE.clone();
                 pluginSectionEl.data(PLUGIN_DATA_KEY, p);
-                pluginSectionEl.find('legend').text('Plugin: ' + p);
                 this._divContainer.append(pluginSectionEl);
                 this._generatePluginSection(p, pluginConfigs[p], pluginSectionEl.find('.form-horizontal'));
             }
@@ -146,6 +147,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
                 descEl.css({
                     color: 'grey',
                     'padding-top': '7px',
+                    'padding-left': '0px',
                     'font-style': 'italic'
                 });
                 el.find('.controls').append(descEl);

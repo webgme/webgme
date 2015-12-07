@@ -596,19 +596,17 @@ define(['js/logger',
                                     }
                                 } else if (prefix === CONSTANTS.PROPERTY_GROUP_META + '.') {
                                     if (i === REGISTRY_KEYS.VALID_VISUALIZERS) {
-                                        if (onlyRootSelected) {
-                                            dstList[extKey].value = dstList[extKey].value === undefined ?
+                                        dstList[extKey].value = dstList[extKey].value === undefined ?
                                                 '' : dstList[extKey].value;
-                                        }
                                         dstList[extKey].regex = '/[^\w\W]/';
                                         dstList[extKey].regexMessage = getHintMessage('Visualizers');
+                                    } else if (i === REGISTRY_KEYS.VALID_PLUGINS) {
+                                        dstList[extKey].value = dstList[extKey].value === undefined ?
+                                            '' : dstList[extKey].value;
+                                        dstList[extKey].regex = '/[^\w\W]/';
+                                        dstList[extKey].regexMessage = getHintMessage('Plugins');
                                     } else if (onlyRootSelected) {
-                                        if (i === REGISTRY_KEYS.VALID_PLUGINS) {
-                                            dstList[extKey].value = dstList[extKey].value === undefined ?
-                                                '' : dstList[extKey].value;
-                                            dstList[extKey].regex = '/[^\w\W]/';
-                                            dstList[extKey].regexMessage = getHintMessage('Plugins');
-                                        } else if (i === REGISTRY_KEYS.VALID_DECORATORS) {
+                                        if (i === REGISTRY_KEYS.VALID_DECORATORS) {
                                             dstList[extKey].value = dstList[extKey].value === undefined ?
                                                 '' : dstList[extKey].value;
                                             dstList[extKey].regex = '/[^\w\W]/';
