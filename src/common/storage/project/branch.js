@@ -25,6 +25,11 @@ define(['common/storage/constants'], function (CONSTANTS) {
         this.hashUpdateHandlers = [];
         this.callbackQueue = [];
 
+        /**
+         * @type {Error[]}
+         */
+        this.errorList = [];
+
         this._remoteUpdateHandler = null;
 
         this.cleanUp = function () {
@@ -178,7 +183,7 @@ define(['common/storage/constants'], function (CONSTANTS) {
             return false;
         };
 
-        this.dispatchBranchStatus = function (newStatus) {
+        this.dispatchBranchStatus = function (newStatus, err) {
             var i;
 
             logger.debug('dispatchBranchStatus old, new', branchStatus, newStatus);
@@ -188,6 +193,10 @@ define(['common/storage/constants'], function (CONSTANTS) {
                 newStatus = branchStatus;
             } else {
                 branchStatus = newStatus;
+            }
+
+            if (err) {
+                this.errorList.push(err instanceof Error ? err : new Error(err));
             }
 
             for (i = 0; i < self.branchStatusHandlers.length; i += 1) {

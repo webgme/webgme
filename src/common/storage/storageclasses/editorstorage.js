@@ -400,6 +400,7 @@ define([
                     var commitData;
                     if (err) {
                         logger.error('setBranchHash, faild to load in commitObject');
+                        //branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR, err);
                         callback(err);
                         return;
                     }
@@ -449,6 +450,7 @@ define([
                     logger.debug('_commitToBranch, dispatchHashUpdate done. [err, proceed]', err, proceed);
 
                     if (err) {
+                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR, err);
                         callback(new Error('Commit failed being loaded in users: ' + err));
                     } else if (proceed === true) {
                         if (wasFirstInQueue) {
@@ -503,10 +505,12 @@ define([
                             branch.inSync = false;
                             branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
                         } else {
-                            logger.error('Unsupported commit status ' + result.status);
+                            err = new Error('Unsupported commit status ' + result.status);
+                            logger.error(err);
+                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR, err);
                         }
                     } else {
-                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR);
+                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR, err);
                     }
                 } else {
                     logger.error('_pushNextQueuedCommit returned from server but the branch was closed, ' +
@@ -549,7 +553,7 @@ define([
                     var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                     if (err) {
                         logger.error('Loading of update commit failed with error', err, {metadata: updateData});
-                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR);
+                        branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR, err);
                     } else if (proceed === true) {
                         logger.debug('New commit was successfully loaded, updating localHash.');
                         branch.updateHashes(originHash, null);
@@ -626,12 +630,11 @@ define([
 
                                 project.getCommonAncestorCommit(branchHash, queuedCommitHash)
                                     .then(function (commonCommitHash) {
-                                        var result,
-                                            branch = project.branches[branchName];
+                                        var result;
 
                                         logger.debug('_rejoinBranchRooms getCommonAncestorCommit',
                                             projectId, branchName, commonCommitHash);
-                                        if (!branch) {
+                                        if (branch.isOpen === false) {
                                             logger.error('_rejoinBranchRooms, branch had been closed after disconnect',
                                                 projectId, branchName);
                                             return;
@@ -680,6 +683,7 @@ define([
                                             self._pushNextQueuedCommit(projectId, branchName);
                                         } else {
                                             logger.error(err);
+                                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR, err);
                                         }
                                     })
                                     .done();

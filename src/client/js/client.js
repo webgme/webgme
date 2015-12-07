@@ -18,7 +18,8 @@ define([
     'js/client/gmeNodeGetter',
     'js/client/gmeNodeSetter',
     'common/core/users/serialization',
-    'blob/BlobClient'
+    'blob/BlobClient',
+    'js/Utils/SaveToDisk'
 ], function (Logger,
              Storage,
              EventDispatcher,
@@ -32,7 +33,8 @@ define([
              getNode,
              getNodeSetters,
              Serialization,
-             BlobClient) {
+             BlobClient,
+             saveToDisk) {
     'use strict';
 
     function Client(gmeConfig) {
@@ -44,7 +46,7 @@ define([
                 project: null,
                 core: null,
                 branchName: null,
-                branchStatus: null, //CONSTANTS.BRANCH_STATUS. SYNC/AHEAD_SYNC/AHEAD_FORKED/PULLING or null
+                branchStatus: null, //CONSTANTS.BRANCH_STATUS. SYNC/AHEAD_SYNC/AHEAD_FORKED/PULLING/ERROR or null
                 readOnlyProject: false,
                 viewer: false, // This means that a specific commit is selected w/o regards to any branch.
 
@@ -88,80 +90,79 @@ define([
 
         this.CONSTANTS = CONSTANTS;
 
-        function logState(level, msg) {
-            var lightState;
-
-            function replacer(key, value) {
-                var chainItem,
-                    prevChain,
-                    nextChain,
-                    chain;
-                if (key === 'project') {
-                    if (value) {
-                        return value.name;
-                    } else {
-                        return null;
-                    }
-
-                } else if (key === 'core') {
-                    if (value) {
-                        return 'instantiated';
-                    } else {
-                        return 'notInstantiated';
-                    }
-                } else if (key === 'metaNodes') {
-                    return Object.keys(value);
-                } else if (key === 'nodes') {
-                    return Object.keys(value);
-                } else if (key === 'loadNodes') {
-                    return Object.keys(value);
-                } else if (key === 'users') {
-                    return Object.keys(value);
-                } else if (key === 'rootObject') {
-                    return;
-                } else if (key === 'undoRedoChain') {
-                    if (value) {
-                        chain = {
-                            previous: null,
-                            next: null
-                        };
-                        if (value.previous) {
-                            prevChain = {};
-                            chain.previous = prevChain;
-                        }
-                        chainItem = value;
-                        while (chainItem.previous) {
-                            prevChain.previous = {
-                                commitHash: chainItem.commitHash,
-                                previous: null
-                            };
-                            prevChain = prevChain.previous;
-                            chainItem = chainItem.previous;
-                        }
-                        if (value.next) {
-                            nextChain = {};
-                            chain.next = nextChain;
-                        }
-                        chainItem = value;
-                        while (chainItem.next) {
-                            nextChain.next = {
-                                commitHash: chainItem.commitHash,
-                                next: null
-                            };
-                            nextChain = nextChain.next;
-                            chainItem = chainItem.next;
-                        }
-                        return chain;
-                    }
+        function stateLogReplacer(key, value) {
+            var chainItem,
+                prevChain,
+                nextChain,
+                chain;
+            if (key === 'project') {
+                if (value) {
+                    return value.name;
+                } else {
+                    return null;
                 }
 
-                return value;
+            } else if (key === 'core') {
+                if (value) {
+                    return 'instantiated';
+                } else {
+                    return 'notInstantiated';
+                }
+            } else if (key === 'metaNodes') {
+                return Object.keys(value);
+            } else if (key === 'nodes') {
+                return Object.keys(value);
+            } else if (key === 'loadNodes') {
+                return Object.keys(value);
+            } else if (key === 'users') {
+                return Object.keys(value);
+            } else if (key === 'rootObject') {
+                return;
+            } else if (key === 'undoRedoChain') {
+                if (value) {
+                    chain = {
+                        previous: null,
+                        next: null
+                    };
+                    if (value.previous) {
+                        prevChain = {};
+                        chain.previous = prevChain;
+                    }
+                    chainItem = value;
+                    while (chainItem.previous) {
+                        prevChain.previous = {
+                            commitHash: chainItem.commitHash,
+                            previous: null
+                        };
+                        prevChain = prevChain.previous;
+                        chainItem = chainItem.previous;
+                    }
+                    if (value.next) {
+                        nextChain = {};
+                        chain.next = nextChain;
+                    }
+                    chainItem = value;
+                    while (chainItem.next) {
+                        nextChain.next = {
+                            commitHash: chainItem.commitHash,
+                            next: null
+                        };
+                        nextChain = nextChain.next;
+                        chainItem = chainItem.next;
+                    }
+                    return chain;
+                }
             }
 
-            if (gmeConfig.debug) {
-                logger[level]('state at ' + msg, JSON.stringify(state, replacer, 2));
+            return value;
+        }
+
+        function getStateLogString(fullState, indent) {
+            indent = indent || 0;
+            if (fullState === true) {
+                return JSON.stringify(state, stateLogReplacer, indent);
             } else {
-                lightState = {
+                return JSON.stringify({
                     connection: self.getNetworkStatus(),
                     projectId: self.getActiveProjectId(),
                     branchName: self.getActiveBranchName(),
@@ -170,12 +171,17 @@ define([
                     rootHash: self.getActiveRootHash(),
                     projectReadOnly: self.isProjectReadOnly(),
                     commitReadOnly: self.isCommitReadOnly()
-                };
-                if (level === 'console') {
-                    console.log('state at ' + msg, JSON.stringify(lightState));
-                } else {
-                    logger[level]('state at ' + msg, JSON.stringify(lightState));
-                }
+                }, null, indent);
+            }
+        }
+
+        function logState(level, msg) {
+            var indent = gmeConfig.debug ? 2 : 0;
+
+            if (level === 'console') {
+                console.log('state at ' + msg, getStateLogString(gmeConfig.debug, indent));
+            } else {
+                logger[level]('state at ' + msg, getStateLogString(gmeConfig.debug, indent));
             }
         }
 
@@ -761,6 +767,52 @@ define([
 
         this.getProjectObject = function () {
             return state.project;
+        };
+
+        this.downloadError = function () {
+            var blob,
+                fileUrl,
+                errData = {
+                    timestamp: (new Date()).toISOString(),
+                    webgme: {
+                        NpmVersion: 'n/a',
+                        version: 'n/a',
+                        GitHubVersion: 'n/a'
+                    },
+                    branchErrors: [],
+                    browserInfo: {
+                        appCodeName: window.navigator.appCodeName,
+                        appName: window.navigator.appName,
+                        appVersion: window.navigator.appVersion,
+                        onLine: window.navigator.onLine,
+                        cookieEnabled: window.navigator.cookieEnabled,
+                        platform: window.navigator.platform,
+                        product: window.navigator.product,
+                        userAgent: window.navigator.userAgent
+                    },
+                    clientState: JSON.parse(getStateLogString(true))
+                };
+
+            if (typeof WebGMEGlobal !== 'undefined') {
+                /* jshint -W117 */
+                errData.webgme.NpmVersion = WebGMEGlobal.NpmVersion;
+                errData.webgme.GitHubVersion = WebGMEGlobal.GitHubVersion;
+                errData.webgme.version = WebGMEGlobal.version;
+                /* jshint +W117 */
+            }
+
+            if (state.project && state.branchName && state.project.branches[state.branchName]) {
+                state.project.branches[state.branchName].errorList.forEach(function (err) {
+                    errData.branchErrors.push({
+                        message: err.message,
+                        stack: err.stack});
+                });
+            }
+
+            blob = new Blob([JSON.stringify(errData, null, 2)], {type: 'application/json'});
+            fileUrl = window.URL.createObjectURL(blob);
+
+            saveToDisk.saveUrlToDisk(fileUrl, 'webgme-client-error.json');
         };
 
         // Undo/Redo functionality
@@ -1553,8 +1605,9 @@ define([
                 patternsToLoad = [];
 
             if (state.ongoingLoadPatternsCounter !== 0) {
-                throw new Error('at the start of loading counter should bee zero!!! [' +
-                    state.ongoingLoadPatternsCounter + ']');
+                callback(new Error('at the start of loading counter should bee zero!!! [' +
+                    state.ongoingLoadPatternsCounter + ']'));
+                return;
             }
 
             state.loadingStatus = null;
@@ -1565,7 +1618,8 @@ define([
 
             state.core.loadRoot(state.loading.rootHash, function (err, root) {
                 if (err) {
-                    return state.loading.next(err);
+                    state.loading.next(err);
+                    return;
                 }
 
                 state.inLoading = true;

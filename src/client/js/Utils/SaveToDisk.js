@@ -27,7 +27,7 @@ define(['blob/BlobClient'], function (BlobClient) {
             save.href = fileURL;
             save.target = '_self';
 
-            if(fileName){
+            if (fileName) {
                 save.download = fileName;
             }
 
