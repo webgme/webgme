@@ -547,7 +547,7 @@ define(['js/logger',
         label.addClass(COMMON_LABEL_CLASS);
 
 
-        label.addClass('label-danger');
+        label.addClass('label-primary');
 
         td = this._tBody.children()[this._orderedCommitIds.indexOf(commit.id)].cells[this._tableCellMessageIndex];
         div = $(td).find('div.' + MESSAGE_DIV_CLASS)[0];
@@ -677,7 +677,7 @@ define(['js/logger',
         when = new Date(parseInt(params.timestamp, 10));
 
         $(tr[0].cells[this._tableCellCommitIDIndex]).append(params.id.substr(0, 7));
-        $(tr[0].cells[this._tableCellCommitIDIndex]).attr('title', params.id);
+        $(tr[0].cells[this._tableCellCommitIDIndex]).attr('title', 'Select commit ' + params.id);
         $(tr[0].cells[this._tableCellCommitIDIndex]).addClass(BTN_LOAD_COMMIT_CLASS);
         $(tr[0].cells[this._tableCellCommitIDIndex]).data(COMMIT_IT, params.id);
 
