@@ -134,14 +134,4 @@ describe('configuration', function () {
 
         should.equal(clientConfig.server.hasOwnProperty('sessionCookieSecret'), false);
     });
-
-    it('clientconfig should not expose server.https.certificateFile', function () {
-        var config,
-            clientConfig;
-        process.env.NODE_ENV = '';
-        config = require('../../config');
-        clientConfig = getClientConfig(config);
-
-        should.equal(clientConfig.server.https.hasOwnProperty('certificateFile'), false);
-    });
 });

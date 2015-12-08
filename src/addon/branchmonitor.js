@@ -68,7 +68,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
     function getConfiguration() {
         var blobClient = new BlobClient({
             serverPort: gmeConfig.server.port,
-            httpsecure: gmeConfig.server.https.enable,
+            httpsecure: false, // N.B.: addons are running on the server only
             server: '127.0.0.1',
             webgmeclientsession: webGMESessionId
         });

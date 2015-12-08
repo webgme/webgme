@@ -85,13 +85,11 @@ describe('Plugin Manager Base', function () {
 
             gmeConfig = testFixture.getGmeConfig();
 
-        gmeConfig.server.https.enable = false;
-
         before(function (done) {
             // we have to set the config here
             bcParam.serverPort = gmeConfig.server.port;
             bcParam.server = '127.0.0.1';
-            bcParam.httpsecure = gmeConfig.server.https.enable;
+            bcParam.httpsecure = false;
             server = testFixture.WebGME.standaloneServer(gmeConfig);
 
             testFixture.clearDBAndGetGMEAuth(gmeConfig, 'PluginManagerBase')

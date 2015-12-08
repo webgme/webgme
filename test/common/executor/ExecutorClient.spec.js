@@ -24,7 +24,7 @@ describe('ExecutorClient', function () {
         gmeConfig.executor.enable = true;
 
         param.serverPort = gmeConfig.server.port;
-        param.httpsecure = gmeConfig.server.https.enable;
+        param.httpsecure = false;
 
         rimraf('./test-tmp/executor', function (err) {
             if (err) {

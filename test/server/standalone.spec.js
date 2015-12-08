@@ -20,7 +20,6 @@ describe('standalone server', function () {
         agent = superagent.agent(),
 
         http = require('http'),
-        https = require('https'),
         fs = require('fs'),
 
         server,
@@ -89,28 +88,70 @@ describe('standalone server', function () {
         });
     });
 
-    it('should fail to start https server if port is in use', function (done) {
-        this.timeout(5000);
-        // we have to set the config here
-        var gmeConfig = testFixture.getGmeConfig(),
-            httpServer = https.createServer({
-                key: fs.readFileSync(gmeConfig.server.https.keyFile),
-                cert: fs.readFileSync(gmeConfig.server.https.certificateFile)
-            });
+    describe('[https]', function () {
+        var nodeTLSRejectUnauthorized;
 
-        gmeConfig.server.type = 'https';
-        gmeConfig.server.port = gmeConfig.server.port + 1;
+        before(function () {
+            nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+        });
 
-        httpServer.listen(gmeConfig.server.port, function (err) {
-            expect(err).to.equal(undefined);
+        after(function () {
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = nodeTLSRejectUnauthorized;
+        });
+
+        it('should get main page with an https reverse proxy', function (done) {
+            var gmeConfig = testFixture.getGmeConfig(),
+                httpProxy = require('http-proxy'),
+                path = require('path'),
+                proxyServerPort = gmeConfig.server.port - 1,
+                proxy;
 
             server = WebGME.standaloneServer(gmeConfig);
+            //
+            // Create the HTTPS proxy server in front of a HTTP server
+            //
+            proxy = new httpProxy.createServer({
+                target: {
+                    host: 'localhost',
+                    port: gmeConfig.server.port
+                },
+                ssl: {
+                    key: fs.readFileSync(path.join(__dirname, '..', 'certificates', 'sample-key.pem'), 'utf8'),
+                    cert: fs.readFileSync(path.join(__dirname, '..', 'certificates', 'sample-cert.pem'), 'utf8')
+                }
+            });
+
             server.start(function (err) {
-                expect(err.code).to.equal('EADDRINUSE');
-                httpServer.close(done);
+                if (err) {
+                    done(err);
+                    return;
+                }
+                proxy.listen(proxyServerPort, function (err) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+
+                    agent.get('https://localhost:' + proxyServerPort + '/index.html').end(function (err, res) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        should.equal(res.status, 200, err);
+                        should.equal(/WebGME/.test(res.text), true, 'Index page response must contain WebGME');
+
+                        server.stop(function (err) {
+                            proxy.close(function (err1) {
+                                done(err || err1);
+                            });
+                        });
+                    });
+                });
             });
         });
     });
+
 
     scenarios = [{
         type: 'http',
@@ -175,7 +216,6 @@ describe('standalone server', function () {
             //excluded extlib paths.
             {code: 200, url: '/extlib/config/index.js'},
             {code: 403, url: '/extlib/config/config.default.js'},
-            {code: 403, url: '/extlib/someCertificate.pem'},
 
             //{code: 410, url: '/getToken'},
             //{code: 410, url: '/checktoken/does_not_exist'},
@@ -209,20 +249,6 @@ describe('standalone server', function () {
             {code: 401, url: '/api/plugins'},
             {code: 401, url: '/api/decorators'},
             {code: 401, url: '/api/visualizers'}
-        ]
-    }, {
-        type: 'https',
-        authentication: false,
-        port: 9001,
-        requests: [
-            {code: 200, url: '/'}
-        ]
-    }, {
-        type: 'https',
-        authentication: true,
-        port: 9001,
-        requests: [
-            {code: 200, url: '/', redirectUrl: '/login'}
         ]
     }];
 
@@ -282,10 +308,6 @@ describe('standalone server', function () {
                 gmeConfig.authentication.enable = scenario.authentication;
                 gmeConfig.authentication.allowGuests = false;
                 gmeConfig.authentication.guestAccount = 'guestUserName';
-                gmeConfig.server.https.enable = scenario.type === 'https';
-
-                // https://github.com/visionmedia/superagent/issues/205
-                process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
                 dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
                     .then(function (db_) {

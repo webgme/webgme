@@ -187,11 +187,6 @@ function validateConfig(configOrFileName) {
     // server log
     assertObject('config.server.log', config.server.log);
     assertArray('config.server.log.transports', config.server.log.transports);
-    // server https
-    assertObject('config.server.https', config.server.https);
-    assertBoolean('config.server.https.enable', config.server.https.enable);
-    assertString('config.server.https.certificateFile', config.server.https.certificateFile);
-    assertString('config.server.https.keyFile', config.server.https.keyFile);
     // server extlib
     assertArray('config.server.extlibExcludes', config.server.extlibExcludes);
 
