@@ -406,25 +406,25 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                     if (core.getPath(node) === core.getPath(endNode)) {
                         exit = true;
                     }
-                    var child = coretree.getChild(node, OVERLAYS);
-                    child = coretree.getChild(child, target);
+                    var child = oldcore.getChild(node, OVERLAYS);
+                    child = oldcore.getChild(child, target);
                     if (child) {
-                        var sources = coretree.getProperty(child, collName);
+                        var sources = oldcore.getProperty(child, collName);
                         if (sources) {
                             ASSERT(Array.isArray(sources) && sources.length >= 1);
 
-                            var prefix = coretree.getPath(prefixNode);
+                            var prefix = oldcore.getPath(prefixNode);
 
                             for (var i = 0; i < sources.length; ++i) {
                                 if (notOverwritten(prefixNode, node, sources[i])) {
-                                    result.push(coretree.joinPaths(prefix, sources[i]));
+                                    result.push(oldcore.joinPaths(prefix, sources[i]));
                                 }
                             }
                         }
                     }
 
-                    target = '/' + coretree.getRelid(node) + target;
-                    node = coretree.getParent(node);
+                    target = '/' + oldcore.getRelid(node) + target;
+                    node = oldcore.getParent(node);
                     prefixNode = core.getParent(prefixNode);
                 } while (!exit);
             } while (_isInheritedChild(startNode));
