@@ -160,6 +160,52 @@ describe('coretype', function () {
             done();
         }, core.loadCollection(root, 'parent'));
     });
+    it('check inherited collections in case of instance internal relations', function (done) {
+        //first we build the template model
+        var model = core.createNode({parent: root}),
+            childA = core.createNode({parent: model}),
+            childB = core.createNode({parent: model}),
+            childC = core.createNode({parent: model}),
+            instance = core.createNode({parent: root, base: model});
+
+        //create pointer A->B
+        core.setPointer(childA, 'ref', childB);
+
+        //name the children to know them later
+        core.setAttribute(childA, 'name', 'A');
+        core.setAttribute(childB, 'name', 'B');
+        core.setAttribute(childC, 'name', 'C');
+
+        //now we load the children of the instance and check their collections
+        TASYNC.call(function (children) {
+            children.should.have.length(3);
+            var childrenDictionary = {},
+                i;
+
+            for (i = 0; i < children.length; i += 1) {
+                childrenDictionary[core.getAttribute(children[i], 'name')] = children[i];
+            }
+
+            //check if collection name is properly inherited
+            expect(core.getCollectionNames(childrenDictionary['B'])).to.eql(['ref']);
+
+            //add pointer C->B
+            core.setPointer(childrenDictionary['C'], 'ref', childrenDictionary['B']);
+
+            TASYNC.call(function (collection) {
+                collection.should.have.length(2);
+                var collDictionary = {},
+                    i;
+                for (i = 0; i < collection.length; i += 1) {
+                    collDictionary[core.getAttribute(collection[i], 'name')] = collection[i];
+                }
+
+                expect(core.getPath(collDictionary['A'])).to.equal(core.getPath(childrenDictionary['A']));
+                expect(core.getPath(collDictionary['C'])).to.equal(core.getPath(childrenDictionary['C']));
+                done();
+            }, core.loadCollection(childrenDictionary['B'], 'ref'));
+        }, core.loadChildren(instance));
+    });
     it('check pointer', function (done) {
         TASYNC.call(function (children) {
             var base, instance, i;
