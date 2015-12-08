@@ -248,6 +248,11 @@ define(['js/logger',
     GraphVizControl.prototype.onActivate = function () {
         this._attachClientEventListeners();
         this._displayToolbarItems();
+
+        //setting the active object to the root of the graph
+        if (typeof this._currentNodeId === 'string') {
+            WebGMEGlobal.State.registerActiveObject(this._currentNodeId);
+        }
     };
 
     GraphVizControl.prototype.onDeactivate = function () {

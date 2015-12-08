@@ -995,6 +995,10 @@ define(['js/logger',
     ModelEditorControl.prototype.onActivate = function () {
         this._attachClientEventListeners();
         this._displayToolbarItems();
+
+        if (this.currentNodeInfo && typeof this.currentNodeInfo.id === 'string') {
+            WebGMEGlobal.State.registerActiveObject(this.currentNodeInfo.id);
+        }
     };
 
     ModelEditorControl.prototype.onDeactivate = function () {

@@ -208,6 +208,11 @@ define(['js/logger',
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.onActivate = function () {
         this._attachClientEventListeners();
         this._displayToolbarItems();
+
+        //setting the active object to the container
+        if (typeof this._memberListContainerID === 'string') {
+            WebGMEGlobal.State.registerActiveObject(this._memberListContainerID);
+        }
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.onDeactivate = function () {
