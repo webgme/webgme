@@ -106,20 +106,27 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
             limit = self.runningAddOns.length;
 
         function getUpdateCallback(addOn, counter) {
-            return function (err, data) {
+            return function (err, addOnResult) {
                 if (err) {
                     // TODO: How to handle this?
                     logger.error('AddOn [' + addOn.id + '] returned error at init/update', err);
                 }
 
-                if (data.commitMessage) {
-                    self.commitMessage += data.commitMessage;
+                if (addOnResult.commitMessage) {
+                    self.commitMessage += addOnResult.commitMessage;
                     logger.debug('AddOn [' + addOn.id + '] added to commitMessage', self.commitMessage);
                 }
 
-                if (data.notification) {
-                    logger.warn('AddOn [' + addOn.id + '] sent not yet supported notification!', data.notification);
-                }
+                addOnResult.notifications.forEach(function (notification) {
+                    // Do not wait/block for the notification result.
+                    storage.webSocket.sendNotification(notification, function (err) {
+                        if (err) {
+                            logger.error('Failed sending notification', notification, err);
+                        } else {
+                            logger.debug('Sent notification', notification);
+                        }
+                    });
+                });
 
                 updateAddOn(self.runningAddOns[counter]);
             };

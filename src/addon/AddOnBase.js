@@ -5,7 +5,10 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
+define([
+    'addon/AddOnUpdateResult',
+    'common/storage/constants'
+], function (AddOnUpdateResult, STORAGE_CONSTANTS) {
     'use strict';
 
     /**
@@ -61,6 +64,7 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
         this.project = configuration.project;
         this.branchName = configuration.branchName;
         this.blobClient = configuration.blobClient;
+        this.projectId = this.project.projectId;
     };
 
     /**
@@ -139,8 +143,34 @@ define(['addon/AddOnUpdateResult'], function (AddOnUpdateResult) {
         this.initialize(rootNode, commitObj, callback);
     };
 
+    /**
+     * Creats or appends commit message for the current update-cycle.
+     * @param {string} msg
+     */
     AddOnBase.prototype.addCommitMessage = function (msg) {
         this.updateResult.addCommitMessage(this, msg);
+    };
+
+    /**
+     * Adds a notification to all sockets connected to the branch room. The notification will be sent after
+     * the update-callback has been invoked.
+     * @param {string|object} message - Message string or object containing message.
+     * @param {string} message.message - If object it must contain a message.
+     * @param {string} [message.severity='info'] - Severity level ('success', 'info', 'warn', 'error')
+     */
+    AddOnBase.prototype.addNotification = function (message) {
+        var self = this,
+            data = {
+                type: STORAGE_CONSTANTS.ADD_ON_NOTIFICATION,
+                notification: typeof message === 'string' ? {message: message} : message,
+                projectId: self.projectId,
+                branchName: self.branchName,
+                commitHash: self.updateResult.commitObj._id,
+                addOnName: self.getName(),
+                addOnVersion: self.getVersion()
+            };
+
+        self.updateResult.addNotification(self, data);
     };
 
     // TODO: Query related

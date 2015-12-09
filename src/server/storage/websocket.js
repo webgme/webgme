@@ -834,6 +834,9 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     } else {
                         callback('PLUGIN_NOTIFICATION requires provided socketId to emit to.');
                     }
+                } else if (data.type === CONSTANTS.ADD_ON_NOTIFICATION) {
+                    socket.broadcast.to(data.projectId + CONSTANTS.ROOM_DIVIDER + data.branchName)
+                        .emit(CONSTANTS.NOTIFICATION, data);
                 } else {
                     callback('Unknown notification type: "' + data.type + '"');
                 }

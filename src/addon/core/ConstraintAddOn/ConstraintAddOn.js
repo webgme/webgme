@@ -3,10 +3,6 @@
 
 /**
  * Continuously validates the meta rules for the entire project.
- * If there are violations the Root node will be renamed Meta Rules Violation else No Violations.
- *
- * TODO: This is just to illustrate a not a very nice way to show changes.
- * TODO: Until AddOns support notifications - this will have to do.
  *
  * @author kecso / https://github.com/kecso
  * @author pmeijer / https://github.com/pmeijer
@@ -19,13 +15,14 @@ define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (Add
         AddOnBase.call(this, logger, gmeConfig);
         this.constraintChecker = null;
         this.rootNode = null;
+        this.hadViolation = false;
     };
 
     ConstraintAddOn.prototype = Object.create(AddOnBase.prototype);
     ConstraintAddOn.prototype.constructor = ConstraintAddOn;
 
     ConstraintAddOn.prototype.getName = function () {
-        return 'ConstraintAddOn';
+        return 'Constraint AddOn';
     };
 
     ConstraintAddOn.prototype.getVersion = function () {
@@ -55,23 +52,17 @@ define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (Add
         self.logger.debug('update invoked, checking project for meta violations.');
         self.constraintChecker.checkModel(self.core.getPath(self.rootNode))
             .then(function (result) {
-                var previousName = self.core.getAttribute(self.rootNode, 'name');
                 if (result.hasViolation === true) {
-                    self.logger.debug('There were violations, will name rootNode "Violations", previous name:',
-                        previousName);
-
-                    if (previousName !== 'Violations') {
-                        self.core.setAttribute(self.rootNode, 'name', 'Violations');
-                        self.addCommitMessage('Found meta-rule violations, please check meta rules for details.');
-                    }
+                    self.addNotification({message: 'Model contains META violations', severity: 'warn'});
+                    self.hadViolation = true;
                 } else {
-                    self.logger.debug('There were no violations, will name rootNode "No Violations", previous name:',
-                        previousName);
-                    if (previousName !== 'No Violations') {
-                        self.core.setAttribute(self.rootNode, 'name', 'No Violations');
-                        self.addCommitMessage('No meta-rule violations.');
+                    self.logger.debug('There were no violations');
+                    if (self.hadViolation === true) {
+                        self.addNotification({message: 'No more META violations', severity: 'success'});
+                        self.hadViolation = false;
                     }
                 }
+
                 callback(null, self.updateResult);
             })
             .catch(callback);

@@ -266,6 +266,8 @@ define([
                                 }
                             } else if (eventData.type === CONSTANTS.STORAGE.PLUGIN_NOTIFICATION) {
                                 self.dispatchPluginNotification(eventData);
+                            } else if (eventData.type === CONSTANTS.STORAGE.ADD_ON_NOTIFICATION) {
+                                self.dispatchAddOnNotification(eventData);
                             } else {
                                 logger.error('Unknown notification type', eventData.type, eventData);
                             }
@@ -1899,7 +1901,20 @@ define([
                 notification.message += ' [' + data.notification.progress + '%]';
             }
 
+            logger.debug('plugin notification', data);
             self.dispatchEvent(self.CONSTANTS.NOTIFICATION, notification);
+            self.dispatchEvent(self.CONSTANTS.PLUGIN_NOTIFICATION, data);
+        };
+
+        this.dispatchAddOnNotification = function (data) {
+            var notification = {
+                severity: data.notification.severity || 'info',
+                message: '[AddOn] ' + data.addOnName + ' - ' + data.notification.message
+            };
+
+            logger.debug('addOn notification', data);
+            self.dispatchEvent(self.CONSTANTS.NOTIFICATION, notification);
+            self.dispatchEvent(self.CONSTANTS.ADD_ON_NOTIFICATION, data);
         };
 
         // Constraints
