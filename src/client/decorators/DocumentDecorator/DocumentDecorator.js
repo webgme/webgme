@@ -10,7 +10,7 @@ define([
 	'js/Decorators/DecoratorBase',
 	'./DiagramDesigner/DocumentDecorator.DiagramDesignerWidget',
 	'./PartBrowser/DocumentDecorator.PartBrowserWidget'
-], function (DecoratorBase, DocumentDecoratorDiagramDesignerWidget, DocumentDecoratorPartBrowserWidget) {
+], function (DecoratorBase, DocumentDecoratorDiagramDesignerWidget, DocumentDecoratorPartBrowserWidget){
 
 	'use strict';
 
