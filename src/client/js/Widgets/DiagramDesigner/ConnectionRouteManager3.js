@@ -68,7 +68,6 @@ define([
         }
 
         this.logger.debug('ConnectionRouteManager3 ctor finished');
-        this._portSeparator = DESIGNERITEM_SUBCOMPONENT_SEPARATOR;
     };
 
     // These next 2 methods are only used if a web worker is used; otherwise, 
@@ -231,6 +230,8 @@ define([
 
                 self._modifyItem(eventArgs.ID, self._invokeAutoRouterMethod
                     .bind(self, 'move', [eventArgs.ID, {x: x, y: y}]));
+
+                self._movedItems.push(eventArgs.ID);
             } else {
                 self.logger.warn('Received ITEM_POSITION_CHANGED event for nonexistent item! (' + eventArgs.ID + ')');
             }
@@ -275,9 +276,18 @@ define([
         }
     };
 
-    ConnectionRouteManager3.prototype.redrawConnections = function (ids) {
+    ConnectionRouteManager3.prototype.redrawConnections = function () {
 
-        this.simpleRouter.redrawConnections(ids);
+        var disconnectedIds = [],
+            id;
+        for (var i = this._movedItems.length; i--;) {
+            id = this._movedItems[i];
+            if (this._pathsForItem[id]) {
+                disconnectedIds = disconnectedIds.concat(this._pathsForItem[id]);
+            }
+        }
+        this._movedItems = [];
+        this.simpleRouter.redrawSomeConnections(disconnectedIds);
 
         if (!this._initialized) {
             this._initializeGraph();
@@ -324,6 +334,9 @@ define([
         this.initialized = false;
         this.readyToDownload = true;
         this._onItemCreateQueue = {};
+
+        this._pathsForItem = {};
+        this._movedItems = [];
     };
 
     ConnectionRouteManager3.prototype._initializeGraph = function () {
@@ -354,6 +367,17 @@ define([
             this.worker.postMessage(this.workerQueue[i]);
         }
         this.workerQueue = [];
+    };
+
+    ConnectionRouteManager3.prototype._getBoxIdsFor = function(connId) {
+        var canvas = this.diagramDesigner,
+            srcObjId = canvas.connectionEndIDs[connId].srcObjId,
+            srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId,
+            dstObjId = canvas.connectionEndIDs[connId].dstObjId,
+            dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId,
+            sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId,
+            tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId;
+        return [sId, tId];
     };
 
     ConnectionRouteManager3.prototype.insertConnection = function (connId) {
@@ -389,6 +413,8 @@ define([
         if (srcPorts.length !== 0 && dstPorts.length !== 0) {
             this._invokeAutoRouterMethod('addPath',
                 [{src: srcPorts, dst: dstPorts}, connId]);
+            // Record the path
+            this.recordPathFor(connId, sId, tId);
         }
 
         //Set custom points, if applicable
@@ -399,6 +425,17 @@ define([
                 [{'path': connId, 'points': customPoints}]);
         }
 
+    };
+
+    ConnectionRouteManager3.prototype.recordPathFor = function (connId/*, sId, tId*/) {
+        var id;
+        for (var i = arguments.length; i--; i > 0) {
+            id = arguments[i];
+            if (!this._pathsForItem[id]) {
+                this._pathsForItem[id] = [];
+            }
+            this._pathsForItem[id].push(connId);
+        }
     };
 
     ConnectionRouteManager3.prototype.insertBox = function (objId) {
@@ -441,9 +478,26 @@ define([
     ConnectionRouteManager3.prototype.deleteItem = function (objId) {
         // If I can query them from the objId, I can clear the entries with that info
         // Make sure that the path/box has been created
-        var removeFn = this._invokeAutoRouterMethod.bind(this, 'remove', [objId]);
+        var removeFn = this._invokeAutoRouterMethod.bind(this, 'remove', [objId]),
+            boxIds = [objId],
+            index;
 
         this._modifyItem(objId, removeFn);
+
+        // Update moved item records
+        if (this.diagramDesigner.connectionIds.indexOf(objId) !== -1) {
+            boxIds = this._getBoxIdsFor(objId);
+            for (var i = boxIds.length; i--;) {
+                index = this._pathsForItem[boxIds[i]].indexOf(objId);
+                this._pathsForItem[boxIds[i]].splice(index, 1);
+            }
+        } else {
+            delete this._pathsForItem[objId];
+            index = this._movedItems.indexOf(objId);
+            if (index > -1) {
+                this._movedItems.splice(index, 1);
+            }
+        }
     };
 
     ConnectionRouteManager3.prototype._resizeItem = function (objId) {
