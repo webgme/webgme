@@ -3,7 +3,7 @@
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
- * @author Qishen Zhang
+ * @author Qishen Zhang  https://github.com/VictorCoder123
  */
 
 define([

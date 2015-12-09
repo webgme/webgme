@@ -1,12 +1,12 @@
 /**
- * @author Qishen Zhang
+ * @author Qishen Zhang  https://github.com/VictorCoder123
  */
 
 define(['js/util',
 		'../Libs/EpicEditor/js/epiceditor',
-    	'text!./DocumentEditorDialog.html',
-    	'css!./DocumentEditorDialog.css',
-    	'css!../Libs/EpicEditor/themes/base/epiceditor.css'], 
+		'text!./DocumentEditorDialog.html',
+		'css!./DocumentEditorDialog.css',
+		'css!../Libs/EpicEditor/themes/base/epiceditor.css'], 
 	function(Util, 
 			marked,
 			DocumentEditorDialogTemplate){
@@ -24,26 +24,26 @@ define(['js/util',
 			this._dialog.appendTo($(document.body));
 
 			// Get element nodes
-	        this._el = this._dialog.find('.modal-body').first();
-	        this._btnSave = this._dialog.find('.btn-save').first();
-	        this._pMeta = this._el.find('#pMeta').first();
-	        this._content = this._pMeta.find('div.controls').first();
+			this._el = this._dialog.find('.modal-body').first();
+			this._btnSave = this._dialog.find('.btn-save').first();
+			this._pMeta = this._el.find('#pMeta').first();
+			this._content = this._pMeta.find('div.controls').first();
 
-	        /* Create Markdown Editor with options, but load() function should be 
-	         * invoked in callback function when container is rendered on DOM */ 
-	        var editorOptions = {
-	        	container: this._content.get(0), // Get raw DOM element
-	        	basePath: 'decorators/DocumentDecorator/Libs/EpicEditor/',
-	        	autogrow: {
-	        		minHeight: 300,
-	        	},
-	        	button: {
-	        		fullscreen: true,
-	        	},
-	        	parser: marked,
-	        };
-	        this.editor = new EpicEditor(editorOptions);
-	        this.text = ''; // Keep track modified text in editor
+			/* Create Markdown Editor with options, but load() function should be 
+			 * invoked in callback function when container is rendered on DOM */ 
+			var editorOptions = {
+				container: this._content.get(0), // Get raw DOM element
+				basePath: 'decorators/DocumentDecorator/Libs/EpicEditor/',
+				autogrow: {
+					minHeight: 300,
+				},
+				button: {
+					fullscreen: true,
+				},
+				parser: marked,
+			};
+			this.editor = new EpicEditor(editorOptions);
+			this.text = ''; // Keep track modified text in editor
 		}
 
 		/**
@@ -63,30 +63,30 @@ define(['js/util',
 			// Initialize Modal and append it to main DOM
 			this._dialog.modal({ show: false});
 
-	        // Event listener on click for SAVE button
-	        this._btnSave.on('click', function (event) {
-	        	// Close dialog and invoke callback
-	            self._dialog.modal('hide');
-	            // Invoke callback to deal with modified text, like save it in client.
-	            if(saveCallback)
-	            	saveCallback.call(self, self.editor.exportFile());
-	            event.stopPropagation();
-	            event.preventDefault();
-	        });
+			// Event listener on click for SAVE button
+			this._btnSave.on('click', function (event) {
+				// Close dialog and invoke callback
+				self._dialog.modal('hide');
+				// Invoke callback to deal with modified text, like save it in client.
+				if(saveCallback)
+					saveCallback.call(self, self.editor.exportFile());
+				event.stopPropagation();
+				event.preventDefault();
+			});
 
-	        // Listener on event when dialog is shown
+			// Listener on event when dialog is shown
 			// Use callback to show editor after Modal window is shown.
-	        this._dialog.on('shown.bs.modal', function () {
-	        	if(!self.editor.is('loaded')) // Load editor only once
-	            	self.editor.load();
-	           	// Render text from params into Editor and store it in local storage
-	        	self.editor.importFile('epiceditor', self.text);
-	        });	     
+			this._dialog.on('shown.bs.modal', function () {
+				if(!self.editor.is('loaded')) // Load editor only once
+					self.editor.load();
+				// Render text from params into Editor and store it in local storage
+				self.editor.importFile('epiceditor', self.text);
+			});	     
 
-	        // Listener on event when dialog is hidden
-	        this._dialog.on('hidden.bs.modal', function () {
-	            self.text = self.editor.exportFile();
-	        });
+			// Listener on event when dialog is hidden
+			this._dialog.on('hidden.bs.modal', function () {
+				self.text = self.editor.exportFile();
+			});
 		};
 
 		/**
