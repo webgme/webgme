@@ -156,6 +156,11 @@ $table-row-height: 25px;
             font-size: 11px;
             font-weight: normal;
             height: 15px;
+            &.delete-prohibited {
+              i.icon-white {
+                display: none;
+              }
+            }
           }
         }
 

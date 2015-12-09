@@ -19,7 +19,7 @@ define([
     'js/client/gmeNodeSetter',
     'common/core/users/serialization',
     'blob/BlobClient',
-    'js/Utils/SaveToDisk'
+    'js/client/stateloghelpers'
 ], function (Logger,
              Storage,
              EventDispatcher,
@@ -34,7 +34,7 @@ define([
              getNodeSetters,
              Serialization,
              BlobClient,
-             saveToDisk) {
+             stateLogHelpers) {
     'use strict';
 
     function Client(gmeConfig) {
@@ -44,6 +44,7 @@ define([
             state = {
                 connection: null, // CONSTANTS.STORAGE. CONNECTED/DISCONNECTED/RECONNECTED
                 project: null,
+                projectAccess: null,
                 core: null,
                 branchName: null,
                 branchStatus: null, //CONSTANTS.BRANCH_STATUS. SYNC/AHEAD_SYNC/AHEAD_FORKED/PULLING/ERROR or null
@@ -90,98 +91,15 @@ define([
 
         this.CONSTANTS = CONSTANTS;
 
-        function stateLogReplacer(key, value) {
-            var chainItem,
-                prevChain,
-                nextChain,
-                chain;
-            if (key === 'project') {
-                if (value) {
-                    return value.name;
-                } else {
-                    return null;
-                }
-
-            } else if (key === 'core') {
-                if (value) {
-                    return 'instantiated';
-                } else {
-                    return 'notInstantiated';
-                }
-            } else if (key === 'metaNodes') {
-                return Object.keys(value);
-            } else if (key === 'nodes') {
-                return Object.keys(value);
-            } else if (key === 'loadNodes') {
-                return Object.keys(value);
-            } else if (key === 'users') {
-                return Object.keys(value);
-            } else if (key === 'rootObject') {
-                return;
-            } else if (key === 'undoRedoChain') {
-                if (value) {
-                    chain = {
-                        previous: null,
-                        next: null
-                    };
-                    if (value.previous) {
-                        prevChain = {};
-                        chain.previous = prevChain;
-                    }
-                    chainItem = value;
-                    while (chainItem.previous) {
-                        prevChain.previous = {
-                            commitHash: chainItem.commitHash,
-                            previous: null
-                        };
-                        prevChain = prevChain.previous;
-                        chainItem = chainItem.previous;
-                    }
-                    if (value.next) {
-                        nextChain = {};
-                        chain.next = nextChain;
-                    }
-                    chainItem = value;
-                    while (chainItem.next) {
-                        nextChain.next = {
-                            commitHash: chainItem.commitHash,
-                            next: null
-                        };
-                        nextChain = nextChain.next;
-                        chainItem = chainItem.next;
-                    }
-                    return chain;
-                }
-            }
-
-            return value;
-        }
-
-        function getStateLogString(fullState, indent) {
-            indent = indent || 0;
-            if (fullState === true) {
-                return JSON.stringify(state, stateLogReplacer, indent);
-            } else {
-                return JSON.stringify({
-                    connection: self.getNetworkStatus(),
-                    projectId: self.getActiveProjectId(),
-                    branchName: self.getActiveBranchName(),
-                    branchStatus: self.getBranchStatus(),
-                    commitHash: self.getActiveCommitHash(),
-                    rootHash: self.getActiveRootHash(),
-                    projectReadOnly: self.isProjectReadOnly(),
-                    commitReadOnly: self.isCommitReadOnly()
-                }, null, indent);
-            }
-        }
-
         function logState(level, msg) {
             var indent = gmeConfig.debug ? 2 : 0;
 
             if (level === 'console') {
-                console.log('state at ' + msg, getStateLogString(gmeConfig.debug, indent));
+                console.log('state at ' + msg,
+                    stateLogHelpers.getStateLogString(self, state, gmeConfig.debug, indent));
             } else {
-                logger[level]('state at ' + msg, getStateLogString(gmeConfig.debug, indent));
+                logger[level]('state at ' + msg,
+                    stateLogHelpers.getStateLogString(self, state, gmeConfig.debug, indent));
             }
         }
 
@@ -421,6 +339,7 @@ define([
                     globConf: gmeConfig,
                     logger: logger.fork('core')
                 });
+                state.projectAccess = access;
                 self.meta.initialize(state.core, state.metaNodes, saveRoot);
                 logState('info', 'projectOpened');
                 logger.debug('projectOpened, branches: ', branches);
@@ -769,50 +688,12 @@ define([
             return state.project;
         };
 
+        this.getProjectAccess = function () {
+            return state.projectAccess;
+        };
+
         this.downloadError = function () {
-            var blob,
-                fileUrl,
-                errData = {
-                    timestamp: (new Date()).toISOString(),
-                    webgme: {
-                        NpmVersion: 'n/a',
-                        version: 'n/a',
-                        GitHubVersion: 'n/a'
-                    },
-                    branchErrors: [],
-                    browserInfo: {
-                        appCodeName: window.navigator.appCodeName,
-                        appName: window.navigator.appName,
-                        appVersion: window.navigator.appVersion,
-                        onLine: window.navigator.onLine,
-                        cookieEnabled: window.navigator.cookieEnabled,
-                        platform: window.navigator.platform,
-                        product: window.navigator.product,
-                        userAgent: window.navigator.userAgent
-                    },
-                    clientState: JSON.parse(getStateLogString(true))
-                };
-
-            if (typeof WebGMEGlobal !== 'undefined') {
-                /* jshint -W117 */
-                errData.webgme.NpmVersion = WebGMEGlobal.NpmVersion;
-                errData.webgme.GitHubVersion = WebGMEGlobal.GitHubVersion;
-                errData.webgme.version = WebGMEGlobal.version;
-                /* jshint +W117 */
-            }
-
-            if (state.project && state.branchName && state.project.branches[state.branchName]) {
-                state.project.branches[state.branchName].errorList.forEach(function (err) {
-                    errData.branchErrors.push({
-                        message: err.message,
-                        stack: err.stack});
-                });
-            }
-
-            blob = new Blob([JSON.stringify(errData, null, 2)], {type: 'application/json'});
-            fileUrl = window.URL.createObjectURL(blob);
-
-            saveToDisk.saveUrlToDisk(fileUrl, 'webgme-client-error.json');
+            stateLogHelpers.downloadStateDump(self, state);
         };
 
         // Undo/Redo functionality
