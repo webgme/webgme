@@ -101,6 +101,9 @@
           font-size: 11px;
           font-weight: normal;
           height: 15px; }
+          .project-repository-widget table tr th .common-label.label.delete-prohibited i.icon-white,
+          .project-repository-widget table tr td .common-label.label.delete-prohibited i.icon-white {
+            display: none; }
       .project-repository-widget table tr th > .btn,
       .project-repository-widget table tr td > .btn {
         margin-left: 2px;

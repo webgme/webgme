@@ -52,6 +52,7 @@ define(['js/logger',
         this._el = container;
         this._historyType = 'commits';
         this._start = null;
+        this._projectAccess = client.getProjectAccess();
         this.clear();
         this._initializeUI();
 
@@ -529,6 +530,11 @@ define(['js/logger',
 
         label.addClass('label-success');
 
+        if (this._projectAccess.write === false) {
+            label.addClass('delete-prohibited');
+        }
+
+
         td = this._tBody.children()[this._orderedCommitIds.indexOf(commit.id)].cells[this._tableCellMessageIndex];
         div = $(td).find('div.' + MESSAGE_DIV_CLASS)[0];
         div.insertBefore(label[0], div.childNodes[0]);
@@ -546,8 +552,11 @@ define(['js/logger',
         label.addClass(TAG_LABEL_CLASS);
         label.addClass(COMMON_LABEL_CLASS);
 
-
         label.addClass('label-primary');
+
+        if (this._projectAccess.delete === false) {
+            label.addClass('delete-prohibited');
+        }
 
         td = this._tBody.children()[this._orderedCommitIds.indexOf(commit.id)].cells[this._tableCellMessageIndex];
         div = $(td).find('div.' + MESSAGE_DIV_CLASS)[0];
