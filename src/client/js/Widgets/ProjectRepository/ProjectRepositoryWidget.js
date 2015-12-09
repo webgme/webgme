@@ -555,7 +555,7 @@ define(['js/logger',
         label.addClass('label-primary');
 
         if (this._projectAccess.delete === false) {
-            //label.addClass('delete-prohibited');
+            label.addClass('delete-prohibited');
         }
 
         td = this._tBody.children()[this._orderedCommitIds.indexOf(commit.id)].cells[this._tableCellMessageIndex];
