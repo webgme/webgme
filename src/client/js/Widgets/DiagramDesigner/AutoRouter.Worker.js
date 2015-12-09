@@ -67,7 +67,11 @@ var startWorker = function() {
         AutoRouterWorker.prototype.handleMessage = function(msg) {
             this.logger.debug('Received:', msg.data);
 
-            this._handleMessage(msg.data);
+            if (msg.data[0] !== 'DownloadReplay') {
+                this._handleMessage(msg.data);
+            } else {
+                worker.postMessage(['BugReplayList', this._getActionSequence()]);
+            }
         };
 
         AutoRouterWorker.prototype._handleMessage = function(msg) {

@@ -206,15 +206,12 @@ define([
 
         /*********** CONNECTION DRAWING COMPONENT *************/
         this._defaultConnectionRouteManagerType = params.defaultConnectionRouteManagerType;
-        //initiate Connection Router (if needed)
+
+        //initiate Connection Router
         if (params.connectionRouteManager) {
             this.connectionRouteManager = params.connectionRouteManager;
-        } else if (params.defaultConnectionRouteManagerType === 'basic') {
-            this.connectionRouteManager = new ConnectionRouteManagerBasic({diagramDesigner: this});
-        } else if (params.defaultConnectionRouteManagerType === 'basic2') {
-            this.connectionRouteManager = new ConnectionRouteManager2({diagramDesigner: this});
-        } else if (params.defaultConnectionRouteManagerType === 'basic3') {
-            this.connectionRouteManager = new ConnectionRouteManager3({diagramDesigner: this});
+        } else {
+            this._onConnectionRouteManagerChanged(params.defaultConnectionRouteManagerType);
         }
 
         this.connectionRouteManager.initialize();
@@ -1079,6 +1076,15 @@ define([
             default:
                 this.connectionRouteManager = new ConnectionRouteManagerBasic({diagramDesigner: this});
                 break;
+        }
+
+        // Update the autorouter debug download button
+        if (DEBUG && this._toolbarInitialized) {
+            if (type === 'basic3') {
+                this._ARReplayDownloadBtn.show();
+            } else {
+                this._ARReplayDownloadBtn.hide();
+            }
         }
 
         this.connectionRouteManager.initialize();
