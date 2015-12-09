@@ -3,10 +3,10 @@
  */
 
 define(['js/util',
-		'../Libs/EpicEditor/js/epiceditor',
-		'text!./DocumentEditorDialog.html',
-		'css!./DocumentEditorDialog.css',
-		'css!../Libs/EpicEditor/themes/base/epiceditor.css'], 
+	'../Libs/EpicEditor/js/epiceditor',
+	'text!./DocumentEditorDialog.html',
+	'css!./DocumentEditorDialog.css',
+	'css!../Libs/EpicEditor/themes/base/epiceditor.css'], 
 	function(Util, 
 			marked,
 			DocumentEditorDialogTemplate){
