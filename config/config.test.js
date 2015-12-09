@@ -25,6 +25,8 @@ config.storage.database.options = {
     //port: 6666
 };
 
+config.addOn.basePaths.push(path.join(__dirname, '../test/addon/addOns'));
+
 config.server.log = {
     transports: [{
         transportType: 'Console',

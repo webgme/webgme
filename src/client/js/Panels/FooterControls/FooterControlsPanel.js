@@ -98,13 +98,13 @@ define(['js/PanelBase/PanelBase',
         n = new NetworkStatusWidget(networkStatusEl, this._client);
         navBarInner.append(networkStatusEl).append(separator.clone());
 
-        branchStatusEl = widgetPlaceHolder.clone();
-        b = new BranchStatusWidget(branchStatusEl, this._client);
-        navBarInner.append(branchStatusEl).append(separator.clone());
-
         notificationEl = widgetPlaceHolder.clone();
         new NotificationWidget(notificationEl, this._client);
         navBarInner.append(notificationEl).append(separator.clone());
+
+        branchStatusEl = widgetPlaceHolder.clone();
+        b = new BranchStatusWidget(branchStatusEl, this._client);
+        navBarInner.append(branchStatusEl).append(separator.clone());
     };
 
     return FooterControlsPanel;
