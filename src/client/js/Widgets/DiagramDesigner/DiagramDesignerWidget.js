@@ -210,11 +210,10 @@ define([
         //initiate Connection Router
         if (params.connectionRouteManager) {
             this.connectionRouteManager = params.connectionRouteManager;
+            this.connectionRouteManager.initialize();
         } else {
             this._onConnectionRouteManagerChanged(params.defaultConnectionRouteManagerType);
         }
-
-        this.connectionRouteManager.initialize();
 
         //initiate connection drawing component and hook up event callbacks
         this.connectionDrawingManager = new ConnectionDrawingManager({diagramDesigner: this});
