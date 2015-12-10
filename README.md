@@ -8,7 +8,7 @@ Options to deploy and run WebGME:
 
 1. Fetch the latest version from git directly and start using it
  * install packages with npm `npm install`
- * launch mongod locally
+ * launch mongod (>=2.6) locally
  * start the server `npm start`
 2. Use WebGME as a library
  * install webgme `npm install webgme`
