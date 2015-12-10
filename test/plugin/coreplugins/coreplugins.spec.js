@@ -32,14 +32,16 @@ describe('CorePlugins', function () {
             'VisualizerGenerator',
             'LayoutGenerator',
             'MultipleMainCallbackCalls',
-            'PluginForked'
+            'PluginForked',
+            'InvalidActiveNode'
         ],
 
         pluginsShouldFail = [
             'ExecutorPlugin',
             'MergeExample',
             'MetaGMEParadigmImporter',
-            'MultipleMainCallbackCalls'
+            'MultipleMainCallbackCalls',
+            'InvalidActiveNode'
         ],
         projects = [],// N.B.: this is getting populated by the createTests function
 

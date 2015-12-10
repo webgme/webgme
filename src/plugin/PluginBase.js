@@ -454,6 +454,22 @@ define([
         this.logger.debug('newCommit added', newCommit);
     };
 
+    /**
+     * Checks if the activeNode has registered the plugin.
+     *
+     * @param {string} pluginId - Id of plugin
+     * @returns {Error} - returns undefined if valid and an Error if not.
+     */
+    PluginBase.prototype.isInvalidActiveNode = function (pluginId) {
+        var validPlugins = this.core.getRegistry(this.activeNode,  'validPlugins') || '';
+        this.logger.debug('validPlugins for activeNode', validPlugins);
+
+        if (validPlugins.split(' ').indexOf(pluginId) === -1) {
+            return new Error('Plugin not registered as validPlugin for active node, validPlugins "' +
+                validPlugins + '"');
+        }
+    };
+
     //--------------------------------------------------------------------------------------------------------------
     //---------- Methods that are used by the Plugin Manager. Derived classes should not use these methods
 

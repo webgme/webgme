@@ -304,32 +304,6 @@ function importProject(storage, parameters, callback) {
     return deferred.promise.nodeify(callback);
 }
 
-function saveChanges(parameters, done) {
-    var persisted,
-        newRootHash;
-    expect(typeof parameters.project).to.equal('object');
-    expect(typeof parameters.core).to.equal('object');
-    expect(typeof parameters.rootNode).to.equal('object');
-
-    persisted = parameters.core.persist(parameters.rootNode);
-
-    newRootHash = parameters.core.getHash(parameters.rootNode);
-    parameters.project.makeCommit([], newRootHash, 'create empty project', function (err, commitHash) {
-        if (err) {
-            done(err);
-            return;
-        }
-
-        parameters.project.setBranchHash(parameters.branchName || 'master', '', commitHash, function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            done(null, newRootHash, commitHash);
-        });
-    });
-}
-
 /**
  *
  * @param core
@@ -505,7 +479,6 @@ module.exports = {
 
     loadJsonFile: loadJsonFile,
     importProject: importProject,
-    saveChanges: saveChanges,
     projectName2Id: projectName2Id,
     logIn: logIn,
     openSocketIo: openSocketIo,
