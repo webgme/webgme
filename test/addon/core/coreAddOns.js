@@ -19,7 +19,8 @@ describe('Core AddOns', function () {
 
         addOns = [
             'TestAddOn',
-            'ConstraintAddOn'
+            'ConstraintAddOn',
+            'NotificationAddOn'
         ],
         safeStorage,
         gmeAuth;

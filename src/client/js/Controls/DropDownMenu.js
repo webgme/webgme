@@ -100,7 +100,13 @@ define(['jquery'], function () {
     };
 
     DropDownMenu.prototype._addItem = function (item) {
-        var li = $('<li><a href="#">' + item.text + '</a></li>');
+        var li;
+
+        if (item.html) {
+            li = $(item.html);
+        } else {
+            li = $('<li><a href="#">' + item.text + '</a></li>');
+        }
 
         li.data('val', item.value);
 

@@ -77,7 +77,7 @@ describe('Connected worker', function () {
             })
             .then(function () {
                 var persisted;
-                ir2.core.setRegistry(ir2.rootNode, 'usedAddOns', 'ConstraintAddOn');
+                ir2.core.setRegistry(ir2.rootNode, 'usedAddOns', 'UpdateModelAddOn');
                 persisted = ir2.core.persist(ir2.rootNode);
 
                 return ir2.project.makeCommit('b1', [ir2.commitHash], persisted.rootHash,
@@ -285,7 +285,7 @@ describe('Connected worker', function () {
             .nodeify(done);
     });
 
-    it('should be able to start-start-stop connectedWorker and start constraintAddOn', function (done) {
+    it('should be able to start-start-stop connectedWorker and start UpdateModelAddOn', function (done) {
         var worker = getConnectedWorker(),
             params = {
                 command: CONSTANTS.workerCommands.connectedWorkerStart,
@@ -336,7 +336,7 @@ describe('Connected worker', function () {
             })
             .then(function (newRoot) {
                 var stopParams = Object.create(params);
-                expect(ir2.core.getAttribute(newRoot, 'name')).to.equal('No Violations');
+                expect(ir2.core.getAttribute(newRoot, 'name')).to.equal('ROOT_');
 
                 stopParams.command = CONSTANTS.workerCommands.connectedWorkerStop;
 
