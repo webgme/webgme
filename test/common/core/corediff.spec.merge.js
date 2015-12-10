@@ -40,38 +40,38 @@ describe('corediff-merge', function () {
 
     describe('merge', function () {
         var applyChange = function (changeObject, next) {
-                core.applyTreeDiff(rootNode, changeObject.diff, function (err) {
-                    var persisted;
-                    if (err) {
-                        next(err);
-                        return;
-                    }
-                    persisted = core.persist(rootNode);
-                    changeObject.rootHash = core.getHash(rootNode);
-                    changeObject.root = rootNode;
-                    project.makeCommit(null,
-                        [commit],
-                        changeObject.rootHash,
-                        persisted.objects,
-                        'apply change finished ' + new Date().getTime(),
-                        function (err, commitResult) {
+            core.applyTreeDiff(rootNode, changeObject.diff, function (err) {
+                var persisted;
+                if (err) {
+                    next(err);
+                    return;
+                }
+                persisted = core.persist(rootNode);
+                changeObject.rootHash = core.getHash(rootNode);
+                changeObject.root = rootNode;
+                project.makeCommit(null,
+                    [commit],
+                    changeObject.rootHash,
+                    persisted.objects,
+                    'apply change finished ' + new Date().getTime(),
+                    function (err, commitResult) {
+                        if (err) {
+                            next(err);
+                            return;
+                        }
+                        changeObject.commitHash = commitResult.hash;
+                        //we restore the root object
+                        core.loadRoot(baseRootHash, function (err, r) {
                             if (err) {
                                 next(err);
                                 return;
                             }
-                            changeObject.commitHash = commitResult.hash;
-                            //we restore the root object
-                            core.loadRoot(baseRootHash, function (err, r) {
-                                if (err) {
-                                    next(err);
-                                    return;
-                                }
-                                rootNode = r;
-                                next(null);
-                            });
+                            rootNode = r;
+                            next(null);
                         });
-                });
-            };
+                    });
+            });
+        };
 
         before(function (done) {
             storage.openDatabase()

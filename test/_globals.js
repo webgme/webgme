@@ -9,7 +9,7 @@
 global.TESTING = true;
 global.WebGMEGlobal = {};
 
-process.env.NODE_ENV = 'test';
+process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 
 //adding a local storage class to the global Namespace
 var WebGME = require('../webgme'),

@@ -12,7 +12,8 @@ describe('webgme', function () {
     'use strict';
 
     var expect = testFixture.expect,
-        logger = testFixture.logger.fork('webgme.spec');
+        logger = testFixture.logger.fork('webgme.spec'),
+        MongoURI = require('mongodb-uri');
 
     it('should export public API functions and classes', function () {
         var webGME = testFixture.WebGME;
@@ -70,11 +71,23 @@ describe('webgme', function () {
 
     it('should fail to getGmeAuth if mongo is not running', function (done) {
         var webGME = testFixture.WebGME,
-            gmeConfig = testFixture.getGmeConfig();
+            gmeConfig = testFixture.getGmeConfig(),
+            uri = MongoURI.parse(gmeConfig.mongo.uri),
+            i, ports = [], port;
 
         this.timeout(5000);
 
-        gmeConfig.mongo.uri = gmeConfig.mongo.uri.replace('27017', '27016');
+        //change all ports so they will point to
+        for (i = 0; i < uri.hosts.length; i += 1) {
+            ports.push(uri.hosts[i].port);
+        }
+        for (i = 0; i < uri.hosts.length; i += 1) {
+            do {
+                port = 20000 + Math.round(Math.random() * 10000);
+            } while (ports.indexOf(port) !== -1);
+            uri.hosts[i].port = port;
+        }
+        gmeConfig.mongo.uri = MongoURI.format(uri);
 
         webGME.getGmeAuth(gmeConfig)
             .then(function () {
