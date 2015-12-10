@@ -37,6 +37,7 @@ define([
         SHADOW_MARKER_SIZE_INCREMENT = 3,
         SHADOW_MARKER_SIZE_INCREMENT_X = 1,
         SHADOW_MARKER_BLOCK_FIX_OFFSET = 2,
+        ANIMATION_DURATION = 500,
         JUMP_XING_RADIUS = 3;
 
     Connection = function (objId) {
@@ -349,7 +350,7 @@ define([
         return p;
     };
 
-    Connection.prototype.setConnectionRenderData = function (segPoints) {
+    Connection.prototype.setConnectionRenderData = function (segPoints, animate) {
         var i = 0,
             len,
             pathDef = [],
@@ -449,7 +450,13 @@ define([
 
                 if (this.skinParts.path) {
                     this.logger.debug('Redrawing connection with ID: "' + this.id + '"');
-                    this.skinParts.path.attr({path: pathDef});
+                    if (animate) {
+                        this.skinParts.path.animate({path: pathDef}, ANIMATION_DURATION);
+                        setTimeout(this._renderTexts.bind(this), ANIMATION_DURATION);
+                    } else {
+                        this.skinParts.path.attr({path: pathDef});
+                    }
+
                     if (this.skinParts.pathShadow) {
                         this._updatePathShadow(this._pathPoints);
                     }
@@ -485,8 +492,8 @@ define([
             }
 
             this._showConnectionAreaMarker();
-
             this._renderTexts();
+
         } else {
             this.pathDef = null;
             this._removePath();
