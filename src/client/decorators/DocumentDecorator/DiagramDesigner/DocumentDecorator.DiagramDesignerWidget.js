@@ -3,26 +3,25 @@
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
- * @author Qishen Zhang  https://github.com/VictorCoder123
+ * @author Qishen Zhang / https://github.com/VictorCoder123
  */
 
 define([
-    '../Libs/EpicEditor/js/epiceditor',
+    '../Libs/EpicEditor/js/epiceditor.min.js',
     'js/RegistryKeys',
     'js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     './DocumentEditorDialog',
     'text!./DocumentDecorator.DiagramDesignerWidget.html',
-    'css!./DocumentDecorator.DiagramDesignerWidget'
-], function (
-    marked,
-    REGISTRY_KEYS,
-    CONSTANTS, 
-    nodePropertyNames, 
-    DiagramDesignerWidgetDecoratorBase, 
-    DocumentEditorDialog,
-    DocumentDecoratorTemplate) {
+    'css!./DocumentDecorator.DiagramDesignerWidget.css'
+], function (marked,
+             REGISTRY_KEYS,
+             CONSTANTS,
+             nodePropertyNames,
+             DiagramDesignerWidgetDecoratorBase,
+             DocumentEditorDialog,
+             DocumentDecoratorTemplate) {
 
     'use strict';
 
@@ -30,7 +29,7 @@ define([
         __parent__ = DiagramDesignerWidgetDecoratorBase,
         __parent_proto__ = DiagramDesignerWidgetDecoratorBase.prototype,
         DECORATOR_ID = 'DocumentDecorator',
-        TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta"/>');
+        TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta" title="Edit documentation" />');
 
     DocumentDecorator = function (options) {
         var opts = _.extend({}, options);
@@ -47,13 +46,13 @@ define([
 
         // Use default marked options
         marked.setOptions({
-          gfm: true,
-          tables: true,
-          breaks: false,
-          pedantic: false,
-          sanitize: true,
-          smartLists: true,
-          smartypants: false
+            gfm: true,
+            tables: true,
+            breaks: false,
+            pedantic: false,
+            sanitize: true,
+            smartLists: true,
+            smartypants: false
         });
 
         this.logger.debug('DocumentDecorator ctor');
@@ -80,13 +79,13 @@ define([
         this.$el.append(this._skinParts.$EditorBtn);
 
         // Show error message if documentation attribute is not defined
-        if(nodeObj.getAttribute('documentation') === undefined){
+        if (nodeObj.getAttribute('documentation') === undefined) {
             this.$doc.append('Editor is disabled because attribute "documentation" is not found in Meta-Model');
         }
 
         // Load EpicEditor on click
         this._skinParts.$EditorBtn.on('click', function (event) {
-            if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true && 
+            if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true &&
                 nodeObj.getAttribute('documentation') !== undefined) {
                 self.editorDialog.show();
             }
@@ -112,7 +111,7 @@ define([
         this.skinParts.$name.on('click', function (event) {
             self.skinParts.$name.popover({});
             self.skinParts.$name.popover('show');
-            console.log(self.skinParts.$name.popover);
+            self.logger.debug(self.skinParts.$name.popover);
             event.stopPropagation();
             event.preventDefault();
         });
@@ -123,7 +122,7 @@ define([
 
     DocumentDecorator.prototype._renderName = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);    
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
         //render GME-ID in the DOM, for debugging
         this.$el.attr({'data-id': this._metaInfo[CONSTANTS.GME_ID]});
         if (nodeObj) {
@@ -275,19 +274,19 @@ define([
 
     /**
      * Initialize Dialog and Editor creation
-     * @return {void} 
+     * @return {void}
      */
     DocumentDecorator.prototype._initDialog = function () {
         var self = this;
         var client = this._control._client;
         var nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
         var documentation = nodeObj.getAttribute('documentation') || 'Click to enter documentation.';
-        if(nodeObj.getAttribute('documentation') !== undefined){
+        if (nodeObj.getAttribute('documentation') !== undefined) {
             this.$doc.append($(marked(documentation)));
-        } 
+        }
 
         // Initialize with documentation attribute and save callback function
-        this.editorDialog.initialize(documentation, 
+        this.editorDialog.initialize(documentation,
             function (text) {
                 try {
                     client.setAttributes(self._metaInfo[CONSTANTS.GME_ID], 'documentation', text);
