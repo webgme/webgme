@@ -88,7 +88,7 @@ describe('Executor Plugin', function () {
                 clientsParam.serverPort = gmeConfig.server.port;
                 clientsParam.sessionId = 'testingNodeWorker';
                 clientsParam.server = '127.0.0.1';
-                clientsParam.httpsecure = gmeConfig.server.https.enable;
+                clientsParam.httpsecure = false;
                 clientsParam.executorNonce = gmeConfig.executor.nonce;
 
                 executorClient = new ExecutorClient(clientsParam);
@@ -140,7 +140,6 @@ describe('Executor Plugin', function () {
             this.timeout(15000);
             gmeConfig.executor.enable = true;
             gmeConfig.executor.nonce = null;
-            gmeConfig.server.https.enable = false;
 
             startServer(gmeConfig, null, function (err, result) {
                 if (err) {

@@ -22,7 +22,6 @@ var Path = require('path'),
     Passport = require('passport'),
     PassGoogle = require('passport-google'),
     Http = require('http'),
-    Https = require('https'),
     URL = require('url'),
     contentDisposition = require('content-disposition'),
 
@@ -128,15 +127,7 @@ function StandAloneServer(gmeConfig) {
             return self.serverUrl;
         }
 
-        if (gmeConfig.server.https.enable) {
-            url += 'https://';
-        } else {
-            url += 'http://';
-        }
-
-        url += '127.0.0.1';
-        url += ':';
-        url += gmeConfig.server.port;
+        url = 'http://127.0.0.1:' + gmeConfig.server.port;
 
         // cache it
         self.serverUrl = url;
@@ -170,25 +161,18 @@ function StandAloneServer(gmeConfig) {
         sockets = {};
 
 
-        if (gmeConfig.server.https.enable) {
-            __httpServer = Https.createServer({
-                key: __secureSiteInfo.key,
-                cert: __secureSiteInfo.certificate
-            }, __app);
-        } else {
-            __httpServer = Http.createServer(__app);
-        }
+        __httpServer = Http.createServer(__app);
 
         function handleNewConnection(socket) {
             var socketId = socket.remoteAddress + ':' + socket.remotePort;
-            
+
             if (socket.encrypted) { // https://nodejs.org/api/tls.html#tls_tlssocket_encrypted
                 socketId += ':encrypted';
             }
-            
+
             sockets[socketId] = socket;
             logger.debug('socket connected (added to list) ' + socketId);
-            
+
             socket.on('close', function () {
                 if (sockets.hasOwnProperty(socketId)) {
                     logger.debug('socket closed (removed from list) ' + socketId);
@@ -447,7 +431,7 @@ function StandAloneServer(gmeConfig) {
     }
 
     /**
-     * Unlike `getGoodExtraAssetRouteFor`, `getRouteFor` does not assume that the 
+     * Unlike `getGoodExtraAssetRouteFor`, `getRouteFor` does not assume that the
      * resource hosts a main file which has the same structure as the parent directory.
      * That is, there are examples of panels (such as SplitPanel) in which the
      * main file does not adhere to the format "NAME/NAME+'Panel'"
@@ -543,7 +527,6 @@ function StandAloneServer(gmeConfig) {
         __webSocket = null,
         __gmeAuth = null,
         apiReady,
-        __secureSiteInfo = {},
         __app = null,
         __sessionStore,
         __workerManager,
@@ -565,10 +548,6 @@ function StandAloneServer(gmeConfig) {
 
     logger.debug('starting standalone server initialization');
     //initializing https extra infos
-    if (gmeConfig.server.https.enable === true) { //TODO move this from here
-        __secureSiteInfo.key = FS.readFileSync(gmeConfig.server.https.keyFile);
-        __secureSiteInfo.certificate = FS.readFileSync(gmeConfig.server.https.certificateFile);
-    }
 
     logger.debug('initializing session storage');
     __sessionStore = new SSTORE(logger, gmeConfig);
@@ -862,7 +841,7 @@ function StandAloneServer(gmeConfig) {
         addresses = 'Valid addresses of gme web server: ',
         forEveryNetIf = function (netIf) {
             if (netIf.family === 'IPv4') {
-                var address = (gmeConfig.server.https.enable ? 'https' : 'http') + '://' +
+                var address = 'http' + '://' +
                     netIf.address + ':' + gmeConfig.server.port;
                 addresses = addresses + '  ' + address;
             }

@@ -23,11 +23,10 @@ describe('BlobClient', function () {
         before(function (done) {
             // we have to set the config here
             var gmeConfig = testFixture.getGmeConfig();
-            gmeConfig.server.https.enable = false;
             serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
             bcParam.serverPort = gmeConfig.server.port;
             bcParam.server = '127.0.0.1';
-            bcParam.httpsecure = gmeConfig.server.https.enable;
+            bcParam.httpsecure = false;
             server = testFixture.WebGME.standaloneServer(gmeConfig);
             server.start(function () {
                 done();
@@ -214,9 +213,9 @@ describe('BlobClient', function () {
         if (typeof global !== 'undefined') {
             it('should create zip', function (done) {
                 var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5ia' +
-                'W5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
-                'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
-                'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
+                                          'W5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
+                                          'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
+                                          'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
                 createZip(data, done);
             });
         }
@@ -225,9 +224,9 @@ describe('BlobClient', function () {
             // need this in package.json: "node-remote": "localhost"
             it('should create zip from Buffer', function (done) {
                 var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5ia' +
-                'W5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
-                'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
-                'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
+                                          'W5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
+                                          'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
+                                          'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
                 createZip(new Buffer(data), done);
             });
         }
@@ -386,20 +385,37 @@ describe('BlobClient', function () {
     });
 
     describe('[https]', function () {
+        var proxy; // https reverse proxy
         before(function (done) {
             // we have to set the config here
             nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
             var gmeConfig = testFixture.getGmeConfig();
-            gmeConfig.server.https.enable = true;
-            serverBaseUrl = 'https://127.0.0.1:' + gmeConfig.server.port;
-            bcParam.serverPort = gmeConfig.server.port;
+            var proxyServerPort = gmeConfig.server.port - 1;
+            serverBaseUrl = 'https://127.0.0.1:' + proxyServerPort;
+            bcParam.serverPort = proxyServerPort; // use https reverse proxy port
             bcParam.server = '127.0.0.1';
-            bcParam.httpsecure = gmeConfig.server.https.enable;
+            bcParam.httpsecure = true;
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
             server = testFixture.WebGME.standaloneServer(gmeConfig);
+            var httpProxy = require('http-proxy');
+            var fs = require('fs');
+            var path = require('path');
+            //
+            // Create the HTTPS proxy server in front of a HTTP server
+            //
+            proxy = new httpProxy.createServer({
+                target: {
+                    host: 'localhost',
+                    port: gmeConfig.server.port
+                },
+                ssl: {
+                    key: fs.readFileSync(path.join(__dirname, '..', '..', 'certificates', 'sample-key.pem'), 'utf8'),
+                    cert: fs.readFileSync(path.join(__dirname, '..', '..', 'certificates', 'sample-cert.pem'), 'utf8')
+                }
+            });
 
             server.start(function () {
-                done();
+                proxy.listen(proxyServerPort, done);
             });
         });
 
@@ -416,7 +432,9 @@ describe('BlobClient', function () {
         after(function (done) {
             server.stop(function (err) {
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = nodeTLSRejectUnauthorized;
-                done(err);
+                proxy.close(function (err1) {
+                    done(err || err1);
+                });      
             });
         });
 
@@ -479,9 +497,9 @@ describe('BlobClient', function () {
         if (typeof global !== 'undefined') {
             it('should create zip', function (done) {
                 var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5ia' +
-                'W5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
-                'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
-                'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
+                                          'W5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
+                                          'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
+                                          'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
                 createZip(data, done);
             });
         }
@@ -490,9 +508,9 @@ describe('BlobClient', function () {
             // need this in package.json: "node-remote": "localhost"
             it('should create zip from Buffer', function (done) {
                 var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5ia' +
-                'W5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
-                'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
-                'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
+                                          'W5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
+                                          'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
+                                          'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
                 createZip(new Buffer(data), done);
             });
         }

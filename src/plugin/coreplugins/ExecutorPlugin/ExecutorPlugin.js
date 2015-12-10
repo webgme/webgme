@@ -117,8 +117,8 @@ define([
         var self = this,
             config = self.getCurrentConfig(),
             executorClient = new ExecutorClient({
-                httpsecure: self.gmeConfig.server.https.enable,
-                serverPort: self.gmeConfig.server.port
+                httpsecure: typeof window === 'undefined' ? false : window.location.protocol === 'https:',
+                serverPort: typeof window === 'undefined' ? self.gmeConfig.server.port : window.location.port
             }),
             executorConfig,
             finalJobInfo,

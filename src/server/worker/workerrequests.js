@@ -103,7 +103,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             }),
             blobClient = new BlobClient({
                 serverPort: gmeConfig.server.port,
-                httpsecure: gmeConfig.server.https.enable,
+                httpsecure: false,
                 server: '127.0.0.1',
                 webgmeclientsession: webGMESessionId
             }),
@@ -414,7 +414,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     logger.debug('Found .zip seed at:', filename);
                     blobClient = new BlobClient({
                         serverPort: gmeConfig.server.port,
-                        httpsecure: gmeConfig.server.https.enable,
+                        httpsecure: false,
                         server: '127.0.0.1',
                         webgmeclientsession: webGMESessionId
                     });
@@ -451,7 +451,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
     function _getSeedFromBlob(hash, webGMESessionId) {
         var blobClient = new BlobClient({
             serverPort: gmeConfig.server.port,
-            httpsecure: gmeConfig.server.https.enable,
+            httpsecure: false,
             server: '127.0.0.1',
             webgmeclientsession: webGMESessionId
         });

@@ -158,12 +158,6 @@ ubuntu
  - Name of session cookie.
 - `config.server.log = see config`
  - Transports and options for the server (winston) logger.
-- `config.server.https.enable = false`
- - If true the server will be hosted over the HTTPS protocol.
-- `config.server.https.certificateFile = './certificates/sample-cert.pem'`
- - Path to certificate file for HTTPS (only applicable if https is enabled).
-- `config.server.https.keyFile = './certificates/sample-key.pem'`
- - Path to key file for HTTPS (only applicable if https is enabled).
 - `config.server.extlibExcludes = ['.\.pem$', 'config\/config\..*\.js$']`
  - Array of regular expressions that will hinder access to files via the '/extlib/' route. Requests to files matching any of the provided pattern will result in 403.
 

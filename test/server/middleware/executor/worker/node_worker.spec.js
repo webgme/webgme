@@ -9,7 +9,9 @@ describe('NodeWorker', function () {
         'use strict';
 
         var Q = testFixture.Q,
+            path = testFixture.path,
             fs = testFixture.fs,
+            httpProxy = require('http-proxy'),
             rimraf = testFixture.rimraf,
             childProcess = testFixture.childProcess,
             should = testFixture.should,
@@ -18,9 +20,14 @@ describe('NodeWorker', function () {
             executorClient,
             blobClient,
             server,
-            nodeWorkerProcess;
+            nodeWorkerProcess,
+            proxyServer,
+            port;
 
-        function startServer(gmeConfig, workerNonce, callback) {
+        function startServer(gmeConfig, workerNonce, useHttpsProxy, callback) {
+            proxyServer = null;
+            port = null;
+
             Q.nfcall(rimraf, './test-tmp/blob-local-storage')
                 .then(function () {
                     return Q.nfcall(rimraf, './test-tmp/executor');
@@ -39,16 +46,61 @@ describe('NodeWorker', function () {
                     var workerConfig = {},
                         clientsParam = {};
 
-                    clientsParam.serverPort = gmeConfig.server.port;
+                    useHttpsProxy = useHttpsProxy === true;
+                    if (useHttpsProxy) {
+                        port = gmeConfig.server.port - 1;
+                        proxyServer = new httpProxy.createServer({
+                            target: {
+                                host: 'localhost',
+                                port: gmeConfig.server.port
+                            },
+                            ssl: {
+                                key: fs.readFileSync(path.join(__dirname,
+                                    '..',
+                                    '..',
+                                    '..',
+                                    '..',
+                                    'certificates',
+                                    'sample-key.pem'), 'utf8'),
+                                cert: fs.readFileSync(path.join(__dirname,
+                                    '..',
+                                    '..',
+                                    '..',
+                                    '..',
+                                    'certificates',
+                                    'sample-cert.pem'), 'utf8')
+                            }
+                        });
+
+                    } else {
+                        port = gmeConfig.server.port;
+                    }
+
+                    clientsParam.serverPort = port;
                     clientsParam.sessionId = 'testingNodeWorker';
                     clientsParam.server = '127.0.0.1';
-                    clientsParam.httpsecure = gmeConfig.server.https.enable;
+                    clientsParam.httpsecure = useHttpsProxy;
                     clientsParam.executorNonce = gmeConfig.executor.nonce;
 
                     executorClient = new ExecutorClient(clientsParam);
                     blobClient = new BlobClient(clientsParam);
                     workerConfig[server.getUrl()] = workerNonce ? {executorNonce: workerNonce} : {};
                     return Q.nfcall(fs.writeFile, 'test-tmp/worker_config.json', JSON.stringify(workerConfig));
+                })
+                .then(function () {
+                    if (proxyServer) {
+                        var deferred = Q.defer();
+                        proxyServer.listen(port, function (err) {
+                            if (err) {
+                                deferred.reject(err);
+                            } else {
+                                deferred.resolve();
+                            }
+                        });
+                        return deferred.promise;
+                    } else {
+                        return;
+                    }
                 })
                 .then(function () {
                     var deferred = Q.defer(),
@@ -94,9 +146,8 @@ describe('NodeWorker', function () {
                 this.timeout(5000);
                 gmeConfig.executor.enable = true;
                 gmeConfig.executor.nonce = null;
-                gmeConfig.server.https.enable = false;
 
-                startServer(gmeConfig, null, function (err, result) {
+                startServer(gmeConfig, null, false, function (err, result) {
                     if (err) {
                         done(err);
                         return;
@@ -105,7 +156,7 @@ describe('NodeWorker', function () {
                         done();
                     } else {
                         done(new Error('Worker did not attach, stdout: ' + result.stdout + ', stderr: ' +
-                            result.stderr));
+                                       result.stderr));
                     }
                 });
             });
@@ -113,7 +164,13 @@ describe('NodeWorker', function () {
             after(function (done) {
                 nodeWorkerProcess.kill('SIGINT');
                 server.stop(function (err) {
-                    done(err);
+                    if (proxyServer) {
+                        proxyServer.close(function (err1) {
+                            done(err || err1);
+                        })
+                    } else {
+                        done(err);
+                    }
                 });
             });
 
@@ -185,9 +242,8 @@ describe('NodeWorker', function () {
                 this.timeout(5000);
                 gmeConfig.executor.enable = true;
                 gmeConfig.executor.nonce = 'aReallyLongSecret';
-                gmeConfig.server.https.enable = false;
 
-                startServer(gmeConfig, 'aReallyLongSecret', function (err, result) {
+                startServer(gmeConfig, 'aReallyLongSecret', false, function (err, result) {
                     if (err) {
                         done(err);
                         return;
@@ -196,7 +252,7 @@ describe('NodeWorker', function () {
                         done();
                     } else {
                         done(new Error('Worker did not attach, stdout: ' + result.stdout + ', stderr: ' +
-                        result.stderr));
+                                       result.stderr));
                     }
                 });
             });
@@ -204,7 +260,13 @@ describe('NodeWorker', function () {
             after(function (done) {
                 nodeWorkerProcess.kill('SIGINT');
                 server.stop(function (err) {
-                    done(err);
+                    if (proxyServer) {
+                        proxyServer.close(function (err1) {
+                            done(err || err1);
+                        })
+                    } else {
+                        done(err);
+                    }
                 });
             });
 
@@ -484,16 +546,15 @@ describe('NodeWorker', function () {
                 this.timeout(5000);
                 gmeConfig.executor.enable = true;
                 gmeConfig.executor.nonce = 'aReallyLongSecret';
-                gmeConfig.server.https.enable = false;
 
-                startServer(gmeConfig, 'notMatching', function (err, result) {
+                startServer(gmeConfig, 'notMatching', false, function (err, result) {
                     if (err) {
                         done(err);
                         return;
                     }
                     if (result.connected) {
                         done(new Error('Worker did attach when should not, stdout: ' + result.stdout + ', stderr: ' +
-                        result.stderr));
+                                       result.stderr));
                     } else {
                         done();
                     }
@@ -503,7 +564,13 @@ describe('NodeWorker', function () {
             after(function (done) {
                 nodeWorkerProcess.kill('SIGINT');
                 server.stop(function (err) {
-                    done(err);
+                    if (proxyServer) {
+                        proxyServer.close(function (err1) {
+                            done(err || err1);
+                        })
+                    } else {
+                        done(err);
+                    }
                 });
             });
         });
@@ -518,10 +585,9 @@ describe('NodeWorker', function () {
                 this.timeout(5000);
                 gmeConfig.executor.enable = true;
                 gmeConfig.executor.nonce = 'aReallyLongSecret';
-                gmeConfig.server.https.enable = true;
 
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-                startServer(gmeConfig, 'aReallyLongSecret', function (err, result) {
+                startServer(gmeConfig, 'aReallyLongSecret', true, function (err, result) {
                     if (err) {
                         done(err);
                         return;
@@ -530,7 +596,7 @@ describe('NodeWorker', function () {
                         done();
                     } else {
                         done(new Error('Worker did not attach, stdout: ' + result.stdout + ', stderr: ' +
-                        result.stderr));
+                                       result.stderr));
                     }
                 });
             });
@@ -539,7 +605,13 @@ describe('NodeWorker', function () {
                 nodeWorkerProcess.kill('SIGINT');
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = nodeTLSRejectUnauthorized;
                 server.stop(function (err) {
-                    done(err);
+                    if (proxyServer) {
+                        proxyServer.close(function (err1) {
+                            done(err || err1);
+                        })
+                    } else {
+                        done(err);
+                    }
                 });
             });
 
