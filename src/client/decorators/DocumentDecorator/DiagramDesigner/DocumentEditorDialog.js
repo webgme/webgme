@@ -10,6 +10,7 @@ define(['js/util',
     function(Util, 
         marked,
         DocumentEditorDialogTemplate){
+        'use strict';
 
         var DocumentEditorDialog;
 
@@ -18,7 +19,7 @@ define(['js/util',
          * Insert dialog modal into body and initialize editor with
          * customized options
          */
-        DocumentEditorDialog = function(){
+        DocumentEditorDialog = function () {
             // Get Modal Template node for Editor Dialog and append it to body
             this._dialog = $(DocumentEditorDialogTemplate);
             this._dialog.appendTo($(document.body));
@@ -44,7 +45,7 @@ define(['js/util',
             };
             this.editor = new EpicEditor(editorOptions);
             this.text = ''; // Keep track modified text in editor
-        }
+        };
 
         /**
          * Initialize DocumentEditorDialog by creating EpicEditor in Bootstrap modal
@@ -56,7 +57,7 @@ define(['js/util',
          * @param  {Function}   saveCallback   Callback function after click save button
          * @return {void}              
          */
-        DocumentEditorDialog.prototype.initialize = function(text, saveCallback){
+        DocumentEditorDialog.prototype.initialize = function (text, saveCallback) {
             var self = this;    
             this.text = text; // Initial text from Attribute documentation
 
@@ -68,8 +69,9 @@ define(['js/util',
                 // Close dialog and invoke callback
                 self._dialog.modal('hide');
                 // Invoke callback to deal with modified text, like save it in client.
-                if(saveCallback)
+                if(saveCallback){
                     saveCallback.call(self, self.editor.exportFile());
+                }
                 event.stopPropagation();
                 event.preventDefault();
             });
@@ -77,8 +79,9 @@ define(['js/util',
             // Listener on event when dialog is shown
             // Use callback to show editor after Modal window is shown.
             this._dialog.on('shown.bs.modal', function () {
-                if(!self.editor.is('loaded')) // Load editor only once
+                if(!self.editor.is('loaded')){ // Load editor only once
                     self.editor.load();
+                }
                 // Render text from params into Editor and store it in local storage
                 self.editor.importFile('epiceditor', self.text);
             });      
@@ -93,9 +96,9 @@ define(['js/util',
          * Update text in editor area
          * @param  {String} newtext [new text to replace old one]
          */
-        DocumentEditorDialog.prototype.updateText = function(newtext){
+        DocumentEditorDialog.prototype.updateText = function (newtext) {
             this.text = newtext;
-        }
+        };
         
         /**
          * Show actual text editor in its container by loading EpicEditor, this method
@@ -103,19 +106,10 @@ define(['js/util',
          * into DOM at this point and load() cannot access other DOM elements.
          * @return {void} 
          */
-        DocumentEditorDialog.prototype.show = function(){
+        DocumentEditorDialog.prototype.show = function () {
             var self = this;    
             self._dialog.modal('show');   
-        }
+        };
 
         return DocumentEditorDialog;
-})
-
-
-
-
-
-
-
-
-
+});
