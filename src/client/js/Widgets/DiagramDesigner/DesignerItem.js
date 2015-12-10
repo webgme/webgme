@@ -297,7 +297,7 @@ define([
         this.canvas.onDesignerItemDoubleClick(this.id, event);
     };
 
-    DesignerItem.prototype.onSelect = function (multiSelection) {
+    DesignerItem.prototype.onSelect = function (multiSelection, callback) {
         this.selected = true;
         this.selectedInMultiSelection = multiSelection;
         this.$el.addClass('selected');
@@ -309,6 +309,7 @@ define([
 
         //let the decorator know that this item became selected
         this._callDecoratorMethod('onSelect');
+        callback(this);
     };
 
     DesignerItem.prototype.onDeselect = function () {

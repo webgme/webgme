@@ -327,12 +327,22 @@ define([
 
     /*********************** SET SELECTION *********************************/
     SelectionManager.prototype._setSelection = function (idList, addToExistingSelection, mouseMoved) {
-        var i,
+        var self = this,
+            i,
             len = idList.length,
             item,
             items = this._diagramDesigner.items,
             itemId,
-            changed = false;
+            changed = false,
+            selectionCount = len,
+            onceRendered = function(item) {
+                if (idList.indexOf(item.id) > -1) {
+                    if (--selectionCount === 0) {
+                        // Update the selection box
+                        self.showSelectionOutline();
+                    }
+                }
+            };
 
         this.logger.debug('setSelection: ' + idList + ', addToExistingSelection: ' + addToExistingSelection);
 
@@ -352,7 +362,7 @@ define([
                     }
 
                     if ($.isFunction(item.onSelect)) {
-                        item.onSelect(true);
+                        item.onSelect(true, onceRendered);
                     }
                 }
 
@@ -368,7 +378,7 @@ define([
                         item = items[itemId];
 
                         if ($.isFunction(item.onSelect)) {
-                            item.onSelect(len > 1);
+                            item.onSelect(len > 1, onceRendered);
                         }
 
                         changed = true;
@@ -389,7 +399,7 @@ define([
                 if (this._selectedElements.length === 1) {
                     item = items[this._selectedElements[0]];
                     if ($.isFunction(item.onSelect)) {
-                        item.onSelect(false);
+                        item.onSelect(false, onceRendered);
                     }
                 }
             } else {
@@ -407,7 +417,7 @@ define([
                         this._selectedElements.push(itemId);
 
                         if ($.isFunction(item.onSelect)) {
-                            item.onSelect(true);
+                            item.onSelect(true, onceRendered);
                         }
                     }
                 } else {
@@ -422,7 +432,7 @@ define([
                         item = items[itemId];
 
                         if ($.isFunction(item.onSelect)) {
-                            item.onSelect(false);
+                            item.onSelect(false, onceRendered);
                         }
 
                         changed = true;
@@ -433,8 +443,6 @@ define([
 
 
         this.logger.debug('selected elements: ' + this._selectedElements);
-
-        this.showSelectionOutline();
 
         if (changed) {
             this.onSelectionChanged(this._selectedElements);

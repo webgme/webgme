@@ -70,6 +70,7 @@ define([
 
         this.selected = false;
         this.selectedInMultiSelection = false;
+        this.onRenderCallback = null;
 
         this.designerAttributes = {};
 
@@ -481,6 +482,9 @@ define([
                     if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
                         this._createPathShadow(this._pathPoints);
                     }
+                    if (this.selected) {
+                        this.onSelect(this.selectedInMultiSelection);
+                    }
                 }
             }
 
@@ -794,28 +798,35 @@ define([
 
     /************** HANDLING SELECTION EVENT *********************/
 
-    Connection.prototype.onSelect = function (multiSelection) {
+    Connection.prototype.onSelect = function (multiSelection, callback) {
         this.selected = true;
         this.selectedInMultiSelection = multiSelection;
 
-        this._highlightPath();
+        callback = callback || this.onRenderCallback;
+        if (this.skinParts.path) {  // Only highlight if rendered
+            this._highlightPath();
 
-        //in edit mode and when not participating in a multiple selection,
-        //show endpoint connectors
-        if (this.selectedInMultiSelection === true) {
-            this._setEditMode(false);
-        } else {
             //in edit mode and when not participating in a multiple selection,
-            //show connectors
-            if (this.diagramDesigner.mode === this.diagramDesigner.OPERATING_MODES.DESIGN) {
-                this._setEditMode(true);
+            //show endpoint connectors
+            if (this.selectedInMultiSelection === true) {
+                this._setEditMode(false);
+            } else {
+                //in edit mode and when not participating in a multiple selection,
+                //show connectors
+                if (this.diagramDesigner.mode === this.diagramDesigner.OPERATING_MODES.DESIGN) {
+                    this._setEditMode(true);
+                }
             }
+            callback(this);
+        } else {  // Not yet rendered
+            this.onRenderCallback = callback;
         }
     };
 
     Connection.prototype.onDeselect = function () {
         this.selected = false;
         this.selectedInMultiSelection = false;
+        this.onRenderCallback = null;
 
         this._unHighlightPath();
         this._setEditMode(false);
