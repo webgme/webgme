@@ -3,7 +3,7 @@
 // Generated on Thu Mar 12 2015 16:54:00 GMT-0500 (Central Daylight Time)
 
 // use test configuration
-process.env.NODE_ENV = 'test';
+process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 
 // load gme configuration
 var testFixture = require('./test/_globals.js'),

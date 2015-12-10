@@ -329,13 +329,13 @@ describe('User manager command line interface (CLI)', function () {
                 });
         });
 
-        it('should add user if db port and name are not defined', function (done) {
+        it('should add user if db name is not defined', function (done) {
             suppressLogAndExit();
 
             userManager.main(['node',
                     filename,
                     '--db',
-                    'mongodb://' + uri.hosts[0],
+                    'mongodb://' + uri.hosts[0]+ ':' + uri.ports[0],
                     'useradd',
                     'user',
                     'user@example.com',
